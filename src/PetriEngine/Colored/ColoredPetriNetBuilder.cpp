@@ -225,7 +225,7 @@ namespace PetriEngine {
             std::set<const Colored::Variable *> variables;
             std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
             std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifiersMap;
-            arc.expr->getVariables(variables, varPositions, varModifiersMap);
+            arc.expr->getVariables(variables, varPositions, varModifiersMap, false);
 
             Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varModifiersMap);
             res[arc.place] = newArcInterval;               

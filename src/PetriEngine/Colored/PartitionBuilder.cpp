@@ -69,8 +69,8 @@ namespace PetriEngine {
                 auto place = _places->operator[](placeId);
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
-                    //std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
-                    //printPartion(); 
+                    std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
+                    printPartion(); 
                                       
                     handleTransition(transitionId, placeId);
                     
@@ -126,7 +126,7 @@ namespace PetriEngine {
             std::set<const PetriEngine::Colored::Variable *>guardVars;
             std::set<const Colored::Variable*> diagonalVars;
             
-            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap);
+            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
 
             for(auto varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
@@ -188,7 +188,7 @@ namespace PetriEngine {
                     std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> preVarModifierMap;
                     std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap);
+                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
                     for(auto placeVariables : placeVariableMap){
                         for(auto variable : preVarPositionMap){
                             for(auto varPosition : placeVariables.second){
@@ -198,7 +198,11 @@ namespace PetriEngine {
                                         addToQueue(inArc.place);
                                     } else {
                                         diagonalVars.insert(variable.second);
-                                        _partition[inArc.place].diagonalTuplePositions[variable.first] = true;
+                                        
+                                        if(!_partition[inArc.place].diagonalTuplePositions[variable.first]){
+                                            addToQueue(placeVariables.first);
+                                            _partition[inArc.place].diagonalTuplePositions[variable.first] = true;
+                                        }
                                     } 
 
                                     if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
@@ -238,7 +242,10 @@ namespace PetriEngine {
                                         _partition[inArc.place].diagonal = true;
                                     } else {
                                         diagonalVars.insert(preVar.second);
-                                        _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                        if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]){
+                                            addToQueue(inArc.place);
+                                            _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                        }
                                     }
                                 }
                             }
@@ -269,7 +276,10 @@ namespace PetriEngine {
                                 } else {
                                     diagonalVars.insert(varModMap.first);
                                     for(auto pos : positions){
-                                        _partition[inArc.place].diagonalTuplePositions[pos] = true;
+                                        if(!_partition[inArc.place].diagonalTuplePositions[pos]){
+                                            addToQueue(inArc.place);
+                                            _partition[inArc.place].diagonalTuplePositions[pos] = true;
+                                        }
                                     }
                                 }
                                 
@@ -299,7 +309,10 @@ namespace PetriEngine {
                                 addToQueue(inArc.place);
                                 break;
                             } else {
-                                _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]){
+                                    addToQueue(inArc.place);
+                                    _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                }
                             }                           
                         }
                     }

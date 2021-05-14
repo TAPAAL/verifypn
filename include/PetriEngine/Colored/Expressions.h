@@ -92,17 +92,17 @@ namespace PetriEngine {
         public:
             Expression() {}
         
-            virtual void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const {}
+            virtual void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const {}
 
-            virtual void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap) const {
+            virtual void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts) const {
                 uint32_t index = 0;
-                getVariables(variables, varPositions, varModifierMap, &index);
+                getVariables(variables, varPositions, varModifierMap, includeSubtracts, &index);
             }
 
             virtual void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions) const {
                 std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
                 uint32_t index = 0;
-                getVariables(variables, varPositions, varModifierMap, &index);
+                getVariables(variables, varPositions, varModifierMap, false, &index);
             }
 
             virtual bool isTuple() const {
@@ -115,7 +115,7 @@ namespace PetriEngine {
                 std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
                 std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
 
-                getVariables(variables, varPositions, varModifierMap);
+                getVariables(variables, varPositions, varModifierMap, false);
             }
             
             virtual void expressionType() {
@@ -214,7 +214,7 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 variables.insert(_variable);
                 varPositions[*index] = _variable;
                 if(varModifierMap.count(_variable) == 0){
@@ -417,7 +417,7 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
@@ -482,7 +482,7 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
@@ -604,7 +604,7 @@ namespace PetriEngine {
                 return true;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 for (auto elem : _colors) {
                     elem->getVariables(variables, varPositions, varModifierMap, index);
                     (*index)++;
@@ -696,9 +696,9 @@ namespace PetriEngine {
                 return false;
             }
 
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             bool isTuple() const override {
@@ -715,8 +715,8 @@ namespace PetriEngine {
                 std::set<const Variable *> leftVars;
                 std::set<const Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -760,9 +760,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
@@ -775,8 +775,8 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> leftVars;
                 std::set<const Colored::Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -820,9 +820,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
@@ -835,8 +835,8 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> leftVars;
                 std::set<const Colored::Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -881,9 +881,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
@@ -896,8 +896,8 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> leftVars;
                 std::set<const Colored::Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -941,9 +941,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
 
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
             
 
@@ -957,8 +957,8 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> leftVars;
                 std::set<const Colored::Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -1002,9 +1002,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
@@ -1040,7 +1040,7 @@ namespace PetriEngine {
                 return _expr->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 _expr->getVariables(variables, varPositions, varModifierMap, index);
             }
 
@@ -1089,9 +1089,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
@@ -1130,9 +1130,9 @@ namespace PetriEngine {
                 return _left->isTuple() || _right->isTuple();
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
-                _right->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override{
@@ -1322,7 +1322,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 if (_all != nullptr)
                     return;
                 for (auto elem : _color) {
@@ -1446,13 +1446,13 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 for (auto elem : _constituents) {
                     for(auto& pair : varModifierMap){
                         std::unordered_map<uint32_t, int32_t> newMap;
                         pair.second.push_back(newMap);
                     }
-                    elem->getVariables(variables, varPositions, varModifierMap);
+                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 }
             }
 
@@ -1547,10 +1547,12 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 //We ignore the restrictions imposed by the subtraction for now
-                //_right->getVariables(variables, varPositions, varModifierMap);
+                if(includeSubtracts){
+                    _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
+                }
             }
 
             bool isTuple() const override {
@@ -1616,8 +1618,8 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
-                _expr->getVariables(variables, varPositions,varModifierMap);
+            void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
+                _expr->getVariables(variables, varPositions,varModifierMap, includeSubtracts);
             }
 
             bool isTuple() const override {
