@@ -95,7 +95,6 @@ namespace PetriEngine {
                         }
                     } 
                 }
-
                 for(auto index = indexesForRemoval.rbegin(); index != indexesForRemoval.rend(); ++index){
                     _equivalenceClasses.erase(_equivalenceClasses.begin() + *index);
                 }

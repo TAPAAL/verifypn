@@ -74,7 +74,7 @@ namespace PetriEngine {
                                       
                     handleTransition(transitionId, placeId);
                     
-                    // std::cout << "---------------------------------------------------" << std::endl;
+                    std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }          
         }
@@ -128,6 +128,8 @@ namespace PetriEngine {
             
             postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
 
+            std::cout << "Checkpoint 1" << std::endl;
+
             for(auto varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
                     uint32_t actualSize = 0;
@@ -157,8 +159,16 @@ namespace PetriEngine {
                 transition.guard->getVariables(guardVars);
             }
 
-            auto placePartition = _partition[postPlaceId]._equivalenceClasses;
             
+
+            std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
+            if(placePartition.empty()){
+                std::cout << "~~~~~~~~~~~~~~~~~~~~~ no partitions for this place ~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+                std::cout << postPlaceId << std::endl;
+            }
+
+            std::cout << "Partition size " << placePartition.size() << "/" <<placePartition.back()._colorType->size(&_partition[postPlaceId].diagonalTuplePositions) << " for place " << _places->operator[](postPlaceId).name << std::endl;
+
             for(auto eqClass : placePartition){
                 auto varMaps = prepareVariables(varModifierMap, &eqClass, postArc, postPlaceId);
 
@@ -182,13 +192,15 @@ namespace PetriEngine {
                     }
 
                     if(_partition[inArc.place].diagonal){
+                        std::cout << "checkpoint charlie" << std::endl;
                         continue;
                     }
-                    
                     std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> preVarModifierMap;
                     std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
                     inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
+
+                    std::cout << "checkpoint 2" << std::endl;
 
                     for(auto placeVariables : placeVariableMap){
                         for(auto variable : preVarPositionMap){
@@ -197,7 +209,6 @@ namespace PetriEngine {
                                     diagonalVars.insert(variable.second);
                                     if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
                                         _partition[inArc.place].diagonal = true;
-                                        addToQueue(inArc.place);
                                     } else if(!_partition[inArc.place].diagonalTuplePositions[variable.first]) {                                      
                                         addToQueue(inArc.place);
                                         _partition[inArc.place].diagonalTuplePositions[variable.first] = true;                            
@@ -249,6 +260,7 @@ namespace PetriEngine {
                         continue;
                     }
 
+
                     for(auto varModMap : preVarModifierMap){
                         if(varModMap.second.size() > 1){
                             uint32_t actualSize = 0;
@@ -272,10 +284,14 @@ namespace PetriEngine {
                                             _partition[inArc.place].diagonalTuplePositions[pos] = true;
                                         }
                                     }
-                                }
-                                
+                                }                                
                             }                            
                         }
+                    }
+
+                    if(_partition[inArc.place].diagonal){
+                        addToQueue(inArc.place);
+                        continue;
                     }
 
                     bool allPositionsDiagonal = true;
@@ -293,17 +309,22 @@ namespace PetriEngine {
                     }
 
 
+
                     for(auto preVar : preVarPositionMap){
                         if(diagonalVars.count(preVar.second)){
                             if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
                                 _partition[inArc.place].diagonal = true;
-                                addToQueue(inArc.place);
                                 break;
                             } else if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]) {
                                 addToQueue(inArc.place);
                                 _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
                             }                           
                         }
+                    }
+
+                    if(_partition[inArc.place].diagonal){
+                        addToQueue(inArc.place);
+                        continue;
                     }
 
                     auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
@@ -320,10 +341,10 @@ namespace PetriEngine {
                             break;
                         }
                     }
+
                     
                     _partition[inArc.place].mergeEqClasses();
-                    //We could also check if there are more or equal eqclasses than there are color combinations that are not marked diagonal
-                    //but requires that we merge partitions after we have marked things as diagonal;
+                    std::cout << "checkpoint 3" << std::endl;
 
                     if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
                         _partition[inArc.place].diagonal = true;
@@ -333,6 +354,7 @@ namespace PetriEngine {
                         addToQueue(inArc.place);
                     }
                     _partition[inArc.place].mergeEqClasses();
+                    std::cout << "checkpoint 4" << std::endl;
                 }
             }
         }
