@@ -144,10 +144,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePartition(){
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        std::cout << "Start partitioning" << std::endl;
         pBuilder.partitionNet();
-        std::cout << "End partitioning " << std::endl;
-        pBuilder.printPartion();
+        //pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         pBuilder.assignColorMap(_partition);
         _partitionComputed = true;
@@ -216,7 +214,7 @@ namespace PetriEngine {
         _fixpointDone = true;
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
-        printPlaceTable();
+        //printPlaceTable();
         _placeColorFixpoints.clear();
     }
 
@@ -466,6 +464,8 @@ namespace PetriEngine {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
             
+            //std::cout <<  "Place time " << _placeTime << " arc time " << _arcTime << std::endl;
+
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
@@ -500,26 +500,29 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
+        auto start = std::chrono::high_resolution_clock::now();
         size_t tokenSize = 0;
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
         }else {
             const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
+            const size_t &tupleSize = _partition[placeId].diagonalTuplePositions.size();
+            const uint32_t &classId = _partition[placeId].colorEQClassMap[color]->_id;
+            const auto &diagonalTuplePos = _partition[placeId].diagonalTuplePositions;
+
             for(const auto &colorEqClassPair : _partition[placeId].colorEQClassMap){
-                if(colorEqClassPair.second->_id == _partition[placeId].colorEQClassMap[color]->_id){
+                if(colorEqClassPair.second->_id == classId){
                     const std::vector<const Colored::Color*>& testColors = colorEqClassPair.first->getTupleColors();
                     bool match = true;
-                    for(uint32_t i = 0; i < _partition[placeId].diagonalTuplePositions.size(); i++){
-                        if(_partition[placeId].diagonalTuplePositions[i]){
-                            if(tupleColors[i]->getId() != testColors[i]->getId()){
-                                match = false;
-                            }
+                    for(uint32_t i = 0; i < tupleSize; i++){
+                        if(diagonalTuplePos[i] && tupleColors[i]->getId() != testColors[i]->getId()){
+                            match = false;
+                            break;
                         }
                     }
                     if(match){
                         tokenSize += place->marking[colorEqClassPair.first];
                     }
-                    
                 }                    
             }
         }
@@ -528,6 +531,8 @@ namespace PetriEngine {
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
         ++_nptplaces;
+        auto end = std::chrono::high_resolution_clock::now();
+        _placeTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {        
@@ -569,6 +574,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
+        auto start = std::chrono::high_resolution_clock::now();
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
@@ -579,13 +585,14 @@ namespace PetriEngine {
         auto ms = arc.expr->eval(context);  
 
         const Colored::Color *newColor;
+        std::vector<uint32_t> tupleIds;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
 
             if(!_partition[arc.place].diagonal){
-                std::vector<uint32_t> tupleIds;
+                tupleIds.clear();
                 color.first->getTupleId(&tupleIds);
 
                 _partition[arc.place].applyPartition(&tupleIds);
@@ -613,6 +620,8 @@ namespace PetriEngine {
             }
             ++_nptarcs;
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        _arcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
     //----------------------- Strip Colors -----------------------//

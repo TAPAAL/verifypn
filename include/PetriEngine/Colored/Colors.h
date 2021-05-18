@@ -350,14 +350,7 @@ namespace PetriEngine {
                 return constituents[index];
             }
 
-            const Color* getColor(std::vector<uint32_t> ids){
-                assert(ids.size() == constituents.size());
-                std::vector<const Color *> colors;
-                for(uint32_t i = 0; i < ids.size(); i++){
-                    colors.push_back(&constituents[i]->operator[](ids[i]));
-                }
-                return getColor(colors);
-            }
+            const Color* getColor(std::vector<uint32_t> ids);
 
             const Color* getColor(const std::vector<const Color*>& colors);
 

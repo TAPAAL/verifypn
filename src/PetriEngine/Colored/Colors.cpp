@@ -242,6 +242,18 @@ namespace PetriEngine {
             return &operator[](sum);
         }
 
+        const Color* ProductType::getColor(std::vector<uint32_t> ids){
+            assert(ids.size() == constituents.size());
+            size_t product = 1;
+            size_t sum = 0;
+
+            for (size_t i = 0; i < constituents.size(); ++i) {
+                sum += product * ids[i];
+                product *= constituents[i]->size();
+            }
+            return &operator[](sum);
+        }
+
         const Color* ProductType::operator[](const char* index) {
             return operator[](std::string(index));
         }
