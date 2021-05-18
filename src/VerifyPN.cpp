@@ -180,6 +180,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "--partition-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.partitionTimeout) != 1 || options.partitionTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -440,8 +449,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
                     "                                       write -q 0 to disable query reduction\n"
-                    "  --interval-timeout <timeout>       Time in seconds before the max intervals is halved (default 10)\n"
-                    "                                     write --interval-timeout 0 to disable max interval halving\n"
+                    "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
+                    "                                       write --interval-timeout 0 to disable max interval halving\n"
+                    "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
@@ -1051,7 +1061,7 @@ int main(int argc, char* argv[]) {
     }
 
     if(options.computePartition){
-        cpnBuilder.computePartition();
+        cpnBuilder.computePartition(options.partitionTimeout);
     }
     if(options.computeCFP){
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);

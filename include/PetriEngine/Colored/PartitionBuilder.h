@@ -20,7 +20,7 @@ namespace PetriEngine {
                 ~PartitionBuilder() {}
 
                 //void initPartition();
-                void partitionNet();
+                bool partitionNet(int32_t timeout);
                 void refinePartition();
                 void printPartion();
                 void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition);

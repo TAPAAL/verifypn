@@ -41,7 +41,7 @@ struct options_t {
     bool printstatistics = true;
     std::set<size_t> querynumbers;
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
-    int queryReductionTimeout = 30, intervalTimeout = 10, lpsolveTimeout = 10;
+    int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
     uint32_t siphontrapTimeout = 0;

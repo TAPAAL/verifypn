@@ -58,10 +58,13 @@ namespace PetriEngine {
             }
         }
         
-        void PartitionBuilder::partitionNet(){
+        bool PartitionBuilder::partitionNet(int32_t timeout){
+            const auto start = std::chrono::high_resolution_clock::now();
             handleLeafTransitions();            
             
-            while(!_placeQueue.empty()){
+            auto end = std::chrono::high_resolution_clock::now();
+            
+            while(!_placeQueue.empty() && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - start).count() < timeout){
                 auto placeId = _placeQueue.back();
                 _placeQueue.pop_back();
                 _inQueue[placeId] = false;
@@ -75,8 +78,10 @@ namespace PetriEngine {
                     handleTransition(transitionId, placeId);
                     
                     // std::cout << "---------------------------------------------------" << std::endl;
-                }               
-            }          
+                }
+                end = std::chrono::high_resolution_clock::now();
+            }
+            return _placeQueue.empty();         
         }
 
         void PartitionBuilder::assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition){

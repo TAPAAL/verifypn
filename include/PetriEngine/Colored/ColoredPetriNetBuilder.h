@@ -138,7 +138,7 @@ namespace PetriEngine {
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
         void computePlaceColorFixpoint(uint32_t max_intervals, uint32_t max_intervals_reduced, int32_t timeout);
-        void computePartition();
+        void computePartition(int32_t timeout);
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;

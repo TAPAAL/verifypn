@@ -141,14 +141,15 @@ namespace PetriEngine {
 
     //----------------------- Partitioning -----------------------//
 
-    void ColoredPetriNetBuilder::computePartition(){
+    void ColoredPetriNetBuilder::computePartition(int32_t timeout){
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        pBuilder.partitionNet();
-        //pBuilder.printPartion();
-        _partition = pBuilder.getPartition();
-        pBuilder.assignColorMap(_partition);
-        _partitionComputed = true;
+        if(pBuilder.partitionNet(timeout)){
+            //pBuilder.printPartion();
+            _partition = pBuilder.getPartition();
+            pBuilder.assignColorMap(_partition);
+            _partitionComputed = true;
+        }         
         auto partitionEnd = std::chrono::high_resolution_clock::now();
         _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
     }
@@ -450,10 +451,7 @@ namespace PetriEngine {
             findStablePlaces();
             
             if(!_fixpointDone && _partitionComputed){
-                auto startPart = std::chrono::high_resolution_clock::now();
                 createPartionVarmaps();
-                auto endPart = std::chrono::high_resolution_clock::now();
-                std::cout << "Partition varmaps took " << (std::chrono::duration_cast<std::chrono::microseconds>(endPart - startPart).count())*0.000001 << " seconds" << std::endl;
             }
             
             for (auto& transition : _transitions) {
@@ -590,15 +588,15 @@ namespace PetriEngine {
             if (color.second == 0) {
                 continue;
             }
-
-            if(!_partition[arc.place].diagonal){
+ 
+            if(!_partitionComputed && _partition[arc.place].diagonal){
+                newColor = color.first;
+            } else {
                 tupleIds.clear();
                 color.first->getTupleId(&tupleIds);
 
                 _partition[arc.place].applyPartition(&tupleIds);
                 newColor = place.type->getColor(tupleIds);
-            } else {
-                newColor = color.first;
             }
             
 
