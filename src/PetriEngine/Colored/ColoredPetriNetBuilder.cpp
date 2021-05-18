@@ -537,7 +537,6 @@ namespace PetriEngine {
                 _pttransitionnames[transition.name] = std::vector<std::string>();
             }           
         } else {
-            std::cout << "Entered naive" << std::endl;
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
             for (auto b : gen) {              
