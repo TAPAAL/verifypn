@@ -424,6 +424,7 @@ namespace PetriEngine {
                 ExprError error("Unable to resolve identifier \"" + _name + "\"",
                         _name.length());
                 context.reportError(error);
+                return;
             }            
 
             assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
