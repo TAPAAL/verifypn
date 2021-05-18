@@ -487,6 +487,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 //TODO This option is currently undocumented. It should either be removed or get a proper interface.
                 options.ltlHeuristic.heuristic = LTLHeuristic::SumComposed;
             }
+            else if (strcmp(argv[i+1], "sum-composed-weight") == 0) {
+                //TODO This option is very temporary and should not be merged to trunk
+                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposedWeightAutLogFire;
+            }
             else {
                 std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-heur\n";
                 return ErrorCode;

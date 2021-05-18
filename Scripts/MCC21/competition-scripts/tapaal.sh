@@ -368,6 +368,23 @@ function verifyparallel {
     rm $MF
 }
 
+function LTL {
+    unset STRATEGIES_PAR
+    STRATEGIES_PAR[0]="-ltl tarjan --ltl-heur dist -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[1]="-ltl tarjan --ltl-heur weight-aut -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[2]="-ltl tarjan --ltl-heur sum-composed-weight --log-fire-count-threshold 5000  -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
+    unset STRATEGIES_SEQ
+    STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED -s BestFS --ltl-por mix --ltl-heur aut"
+    unset STRATEGIES_RAND
+    STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_RAND[2]="-ltl tarjan -s RDFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_RAND[3]="-ltl tarjan -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
+    PARALLEL_SIMPLIFICATION_OPTIONS="-ltl"
+    verifyparallel
+}
+
 case "$BK_EXAMINATION" in
 
     StateSpace)
@@ -504,21 +521,8 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
 	      CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
-        unset STRATEGIES_PAR
-        STRATEGIES_PAR[0]="-ltl tarjan -s DFS -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[1]="-ltl tarjan -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
-        unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED"
-        unset STRATEGIES_RAND
-        STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[2]="-ltl tarjan -s RDFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[3]="-ltl tarjan -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
-        PARALLEL_SIMPLIFICATION_OPTIONS="-ltl"
-        verifyparallel
-        ;;
+        LTL
+       ;;
 
     LTLFireability)
         echo        
@@ -528,20 +532,7 @@ case "$BK_EXAMINATION" in
  	      CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
-        unset STRATEGIES_PAR
-        STRATEGIES_PAR[0]="-ltl tarjan -s DFS -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[1]="-ltl tarjan -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
-        unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED"
-        unset STRATEGIES_RAND
-        STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[2]="-ltl tarjan -s RDFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
-        STRATEGIES_RAND[3]="-ltl tarjan -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
-        PARALLEL_SIMPLIFICATION_OPTIONS="-ltl"
-        verifyparallel
+        LTL
         ;;
     *)
         echo "DO_NOT_COMPETE"  
