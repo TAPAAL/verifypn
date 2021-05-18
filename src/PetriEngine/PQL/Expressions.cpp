@@ -461,6 +461,8 @@ namespace PetriEngine {
                     return;
                 } 
                 if(names.size() < 1){
+                    //If the transition points to empty vector we know that it has 
+                    //no legal bindings and can never fire
                     _compiled = std::make_shared<BooleanCondition>(false);
                     _compiled->analyze(context);
                     return;
