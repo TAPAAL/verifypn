@@ -194,6 +194,9 @@ namespace LTL {
                             case LTLHeuristic::SumComposedWeightAutLogFire:
                                 heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<WeightedAutomatonHeuristic>(net, automaton), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
                                 break;
+                            case LTLHeuristic::SumComposedCountLogFire:
+                                heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<DistanceHeuristic>(net, negated_formula), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
+                                break;
                             default:
                                 std::cerr << "Error unhandled heuristic type. This is a bug!" << std::endl;
                                 exit(1);

@@ -491,6 +491,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 //TODO This option is very temporary and should not be merged to trunk
                 options.ltlHeuristic.heuristic = LTLHeuristic::SumComposedWeightAutLogFire;
             }
+            else if (strcmp(argv[i+1], "sum-composed-count") == 0) {
+                //TODO This option is very temporary and should not be merged to trunk
+                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposedCountLogFire;
+            }
             else {
                 std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-heur\n";
                 return ErrorCode;

@@ -50,7 +50,8 @@ enum class LTLHeuristic {
     FireCount,
     LogFireCount,
     SumComposed,
-    SumComposedWeightAutLogFire
+    SumComposedWeightAutLogFire,
+    SumComposedCountLogFire
 };
 
 struct LTLHeuristicOptions {
