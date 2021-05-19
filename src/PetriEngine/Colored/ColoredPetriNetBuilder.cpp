@@ -498,7 +498,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
-        auto start = std::chrono::high_resolution_clock::now();
+        // auto start = std::chrono::high_resolution_clock::now();
         size_t tokenSize = 0;
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
@@ -529,8 +529,8 @@ namespace PetriEngine {
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
         ++_nptplaces;
-        auto end = std::chrono::high_resolution_clock::now();
-        _placeTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+        // auto end = std::chrono::high_resolution_clock::now();
+        // _placeTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {        
@@ -572,7 +572,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
-        auto start = std::chrono::high_resolution_clock::now();
+        // auto start = std::chrono::high_resolution_clock::now();
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
@@ -589,7 +589,7 @@ namespace PetriEngine {
                 continue;
             }
  
-            if(!_partitionComputed && _partition[arc.place].diagonal){
+            if(!_partitionComputed || _partition[arc.place].diagonal){
                 newColor = color.first;
             } else {
                 tupleIds.clear();
@@ -618,8 +618,8 @@ namespace PetriEngine {
             }
             ++_nptarcs;
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        _arcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+        // auto end = std::chrono::high_resolution_clock::now();
+        // _arcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
     //----------------------- Strip Colors -----------------------//
