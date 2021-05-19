@@ -64,7 +64,8 @@ namespace PetriEngine {
                 int) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                const Colored::ArcExpression_ptr& expr) override;
+                const Colored::ArcExpression_ptr& expr,
+                bool inhibitor, int weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) override;
@@ -149,15 +150,15 @@ namespace PetriEngine {
         std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
-        uint32_t _nptplaces = 0;
-        uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
         uint32_t _maxIntervals = 0;
         PetriEngine::IntervalGenerator intervalGenerator;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
+        std::vector<Colored::Arc> _inhibitorArcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
+        std::unordered_map<uint32_t, std::string> _sumPlacesNames;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
@@ -186,7 +187,7 @@ namespace PetriEngine {
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool input);
+                bool input, bool inhibitor, int weight);
 
         void findStablePlaces();
 
@@ -198,6 +199,7 @@ namespace PetriEngine {
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
+        void unfoldInhibitorArc(const std::string &oldname, const std::string &newname);
 
         void unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& name);
     };

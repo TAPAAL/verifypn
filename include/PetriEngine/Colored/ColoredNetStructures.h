@@ -35,6 +35,7 @@ namespace PetriEngine {
             uint32_t transition;
             ArcExpression_ptr expr;
             bool input;
+            uint32_t weight;
         };
         
         struct Transition {
@@ -50,6 +51,7 @@ namespace PetriEngine {
             std::string name;
             ColorType* type;
             Multiset marking;
+            bool inhibitor;
             bool stable = true;
         };
     }

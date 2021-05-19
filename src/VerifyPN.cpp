@@ -340,6 +340,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-unfolded-net") == 0)
+        {
+            options.unfolded_out_file = std::string(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--write-unfolded-queries") == 0)
+        {
+            options.unfold_query_out_file = std::string(argv[++i]);
+        }
         else if (strcmp(argv[i], "--write-buchi") == 0)
         {
             options.buchi_out_file = std::string(argv[++i]);
@@ -482,6 +490,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                  <interval count>     Default is 250 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --write-unfolded <filename>          Outputs the model to the given file before structural reduction but after unfolding\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
                     "                                       - 0 MCC XML format for Input and Output\n"
                     "                                       - 1 Input is binary, output is XML\n"
@@ -1075,6 +1084,8 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
 
+    
+
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
@@ -1087,7 +1098,24 @@ int main(int argc, char* argv[]) {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
     }
+    if(options.unfold_query_out_file.size() > 0)
+    {
+        //Don't know if this is needed
+        std::vector<uint32_t> reorder(queries.size());
+        for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
+        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
 
+            if(queries[a]->isReachability() != queries[b]->isReachability())
+                return queries[a]->isReachability() > queries[b]->isReachability();
+            if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
+                return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
+            if(queries[a]->containsNext() != queries[b]->containsNext())
+                return queries[a]->containsNext() < queries[b]->containsNext();
+            return queries[a]->formulaSize() < queries[b]->formulaSize();
+        });
+        writeQueries(queries, querynames, reorder, options.unfold_query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
+
+    }
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
@@ -1205,9 +1233,9 @@ int main(int argc, char* argv[]) {
                     if(options.cpnOverApprox && wasAGCPNApprox)
                     {
                         if(queries[i]->isTriviallyTrue())
-                            queries[i] = std::make_shared<BooleanCondition>(false);
-                        else if(queries[i]->isTriviallyFalse())
                             queries[i] = std::make_shared<BooleanCondition>(true);
+                        else if(queries[i]->isTriviallyFalse())
+                            queries[i] = std::make_shared<BooleanCondition>(false);
                         queries[i]->setInvariant(wasAGCPNApprox);
                     }
 
@@ -1302,6 +1330,15 @@ int main(int argc, char* argv[]) {
     }
 
     options.queryReductionTimeout = 0;
+
+    auto unfoldedNet = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
+    if(options.unfolded_out_file.size() > 0)
+    {
+        std::fstream file;
+        file.open(options.unfolded_out_file, std::ios::out);
+        unfoldedNet->toXML(file);
+    }
 
     //--------------------- Apply Net Reduction ---------------//
 
