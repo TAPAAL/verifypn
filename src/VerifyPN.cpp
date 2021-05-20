@@ -478,7 +478,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                  <interval count>     Default is 255 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
-                    "  --write-unfolded <filename>          Outputs the model to the given file before structural reduction but after unfolding\n"
+                    "  --write-unfolded-net <filename>      Outputs the model to the given file before structural reduction but after unfolding\n"
+                    "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
                     "                                       - 0 MCC XML format for Input and Output\n"
                     "                                       - 1 Input is binary, output is XML\n"
@@ -779,8 +780,11 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
     //if (options.printstatistics) {
         if (!builder.isColored() && !builder.isUnfolded())
             return;
-        std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
-        std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
+        if(options.computeCFP){
+            std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
+            std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
+        }
+        
         std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
@@ -790,7 +794,10 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
-        std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
+        if(options.computePartition){
+            std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
+        }
+        
         
 
         if(!options.output_stats.empty()){
