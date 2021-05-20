@@ -3547,6 +3547,7 @@ namespace PetriEngine {
             }, stats, context, nested, negated, initrw);
         }
 
+        /*LTL negation push*/
         Condition_ptr
         UntilCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                      bool initrw) {
@@ -3623,14 +3624,17 @@ namespace PetriEngine {
 
         Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
-            return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+            return ECondition(std::make_shared<NotCondition>(_cond))
+                .pushNegation(stats, context, nested, !negated, initrw);
         }
 
 
         Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
-            auto _sub = _cond->pushNegation(stats, context, nested, !negated, initrw);
-            return negated ? (Condition_ptr)std::make_shared<ACondition>(_sub) : (Condition_ptr)std::make_shared<ECondition>(_sub);
+            // we forward the negated flag, we flip the outer quantifier later!
+            auto _sub = _cond->pushNegation(stats, context, nested, negated, initrw);
+            if(negated) return std::make_shared<ACondition>(_sub);
+            else        return std::make_shared<ECondition>(_sub);
         }
 
         Condition_ptr GCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
@@ -3638,6 +3642,7 @@ namespace PetriEngine {
             return FCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
 
+        /*Boolean connectives */
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
             std::vector<Condition_ptr> nef, other;            
