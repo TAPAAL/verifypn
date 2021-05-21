@@ -244,7 +244,7 @@ namespace PetriEngine {
                 if (varMap.count(_variable) == 0){
                     Colored::intervalTuple_t intervalTuple;
                     intervalTuple.addInterval(_variable->colorType->getFullInterval());
-                    varMap[_variable] = intervalTuple;
+                    varMap[_variable] = std::move(intervalTuple);
                 }
 
                 for(auto interval : varMap[_variable]._intervals){
@@ -1141,13 +1141,14 @@ namespace PetriEngine {
                 _left->restrictVars(variableMap, diagonalVars);
                 _right->restrictVars(varMapCopy, diagonalVars);
 
-                for(size_t i = 0; i < variableMap.size(); i++){
-                    for(auto& varPair : varMapCopy[i]){
-                        for(auto& interval : varPair.second._intervals){
-                            variableMap[i][varPair.first].addInterval(std::move(interval));
-                        }
-                    }
-                }
+                // for(size_t i = 0; i < variableMap.size(); i++){
+                //     for(auto& varPair : varMapCopy[i]){
+                //         for(auto& interval : varPair.second._intervals){
+                //             variableMap[i][varPair.first].addInterval(std::move(interval));
+                //         }
+                //     }
+                // }
+                variableMap.insert(variableMap.end(), varMapCopy.begin(), varMapCopy.end());
             }
 
             std::string toString() const override {
@@ -1179,14 +1180,14 @@ namespace PetriEngine {
 
             virtual uint32_t weight() const = 0;
 
-            virtual Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec) const {
+            virtual std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec) const {
                 std::vector<const Colored::ColorType *> colortypes;
                 
                 return getOutputIntervals(varMapVec, &colortypes);
             }
 
-            virtual Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const {
-                return Colored::intervalTuple_t();
+            virtual std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const{
+                return std::vector<Colored::intervalTuple_t>(0);
             }
         };
 
@@ -1347,26 +1348,26 @@ namespace PetriEngine {
                 return true;
             }
 
-            Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
-                Colored::intervalTuple_t intervals;
+            std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+                std::vector<Colored::intervalTuple_t> intervalsVec;
                 if (_all == nullptr) {
                     for (auto elem : _color) {
                         for(auto& varMap : varMapVec){
-                            auto nestedIntervals = elem->getOutputIntervals(varMap, colortypes);
+                            intervalsVec.push_back(elem->getOutputIntervals(varMap, colortypes));
 
-                            if (intervals._intervals.empty()) {
-                                intervals = nestedIntervals;
-                            } else {
-                                for(auto interval : nestedIntervals._intervals) {
-                                    intervals.addInterval(interval);
-                                }
-                            }
+                            // if (intervals._intervals.empty()) {
+                            //     intervals = nestedIntervals;
+                            // } else {
+                            //     for(auto interval : nestedIntervals._intervals) {
+                            //         intervals.addInterval(interval);
+                            //     }
+                            // }
                         }                        
                     }
                 } else {
-                    return _all->getOutputIntervals(varMapVec, colortypes);
+                    intervalsVec.push_back(_all->getOutputIntervals(varMapVec, colortypes));
                 }
-                return intervals;
+                return intervalsVec;
             }
 
             void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
@@ -1485,21 +1486,23 @@ namespace PetriEngine {
                 return true;
             }            
 
-            Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
-                Colored::intervalTuple_t intervals;
+            std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+                std::vector<Colored::intervalTuple_t> intervalsVec;
                 
                 for (auto elem : _constituents) {
                     auto nestedIntervals = elem->getOutputIntervals(varMapVec, colortypes);
 
-                    if (intervals._intervals.empty()) {
-                        intervals = nestedIntervals;
-                    } else {
-                        for(auto interval : nestedIntervals._intervals) {
-                            intervals.addInterval(interval);
-                        }
-                    }
+                    intervalsVec.insert(intervalsVec.end(), nestedIntervals.begin(), nestedIntervals.end());
+
+                    // if (intervals._intervals.empty()) {
+                    //     intervals = nestedIntervals;
+                    // } else {
+                    //     for(auto interval : nestedIntervals._intervals) {
+                    //         intervals.addInterval(interval);
+                    //     }
+                    // }
                 }
-                return intervals;
+                return intervalsVec;
             }
 
             void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
@@ -1566,11 +1569,9 @@ namespace PetriEngine {
                 //_right->getArcIntervals(arcIntervals, cfp, &rightIndex);
             }
 
-            Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
-                auto leftIntervals = _left->getOutputIntervals(varMapVec, colortypes);
-
-                return leftIntervals;
+                return _left->getOutputIntervals(varMapVec, colortypes);
             }   
 
             void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
@@ -1631,7 +1632,7 @@ namespace PetriEngine {
                return _expr ->getArcIntervals(arcIntervals, cfp, index, modifier);
             }
 
-            Colored::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            std::vector<Colored::intervalTuple_t> getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 return _expr->getOutputIntervals(varMapVec, colortypes);
             }
 

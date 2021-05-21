@@ -156,7 +156,7 @@ namespace PetriEngine {
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
         if(pBuilder.partitionNet(timeout)){
-            //pBuilder.printPartion();
+            pBuilder.printPartion();
             _partition = pBuilder.getPartition();
             pBuilder.assignColorMap(_partition);
             _partitionComputed = true;
@@ -383,10 +383,13 @@ namespace PetriEngine {
             }
 
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
-            intervals.simplify();
+            
 
-            for(auto& interval : intervals._intervals){
-                placeFixpoint.constraints.addInterval(std::move(interval));    
+            for(auto& intervalTuple : intervals){
+                intervalTuple.simplify();
+                for(auto& interval : intervalTuple._intervals){
+                    placeFixpoint.constraints.addInterval(std::move(interval)); 
+                }                   
             }
             placeFixpoint.constraints.simplify();
 

@@ -69,7 +69,17 @@ namespace PetriEngine {
                 _placeQueue.pop_back();
                 _inQueue[placeId] = false;
 
-                auto place = _places->operator[](placeId);
+                bool allPositionsDiagonal = true;
+                for(auto diag : _partition[placeId].diagonalTuplePositions){
+                    if(!diag){
+                        allPositionsDiagonal = false;
+                        break;
+                    }
+                }
+
+                if(allPositionsDiagonal || _partition[placeId]._equivalenceClasses.size() >= _partition[placeId]._equivalenceClasses.back()._colorType->size(&_partition[placeId].diagonalTuplePositions)){
+                    _partition[placeId].diagonal = true;
+                }
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
                     // std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
@@ -158,9 +168,7 @@ namespace PetriEngine {
 
             if(transition.guard != nullptr){
                 transition.guard->getVariables(guardVars);
-            }
-
-            
+            }           
 
             std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
 
@@ -320,10 +328,12 @@ namespace PetriEngine {
                     }
 
                     auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
-                    outIntervals.simplify();
                     EquivalenceVec newEqVec;
-                    EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, outIntervals);
-                    newEqVec._equivalenceClasses.push_back(newEqClass);
+                    for(auto& intervalTuple : outIntervals){
+                        intervalTuple.simplify();
+                        EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, std::move(intervalTuple));
+                        newEqVec._equivalenceClasses.push_back(std::move(newEqClass));
+                    }                    
                     newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;
 
                     allPositionsDiagonal = true;
@@ -333,7 +343,6 @@ namespace PetriEngine {
                             break;
                         }
                     }
-
                     
                     _partition[inArc.place].mergeEqClasses();
 
