@@ -56,7 +56,7 @@ void PNMLParser::parse(std::ifstream& xml,
         exit(ErrorCode);
     }
     
-        auto declarations = root->first_node("declaration");
+    auto declarations = root->first_node("declaration");
     if(declarations == nullptr){
         declarations = root->first_node("net")->first_node("declaration");
     }
@@ -69,9 +69,10 @@ void PNMLParser::parse(std::ifstream& xml,
 
     auto netType = root->first_node("net");
     rapidxml::xml_node<> *placeElement = netType->first_node("place");
+    netType = netType->first_node();
     while(placeElement == nullptr && netType != nullptr){
-        netType = netType->first_node();
         placeElement = netType->first_node("place");
+        netType = netType->first_node();
     }
 
     parseElement(root);

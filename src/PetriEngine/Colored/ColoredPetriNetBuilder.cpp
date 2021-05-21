@@ -546,7 +546,7 @@ namespace PetriEngine {
         if(_fixpointDone || _partitionComputed){ 
             FixpointBindingGenerator gen(&transition, _colors);
             size_t i = 0;
-            for (auto b : gen) {  
+            for (const auto &b : gen) {  
                              
                 const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
