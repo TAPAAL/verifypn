@@ -370,11 +370,11 @@ function verifyparallel {
 function LTL {
     unset STRATEGIES_PAR
     STRATEGIES_PAR[0]="-ltl tarjan --ltl-heur dist -q 0 -l 0 -d $SHORTRED"
-    STRATEGIES_PAR[1]="-ltl tarjan --ltl-heur weight-aut -q 0 -l 0 -d $SHORTRED"
-    STRATEGIES_PAR[2]="-ltl tarjan --ltl-heur sum-composed-weight --log-fire-count-threshold 5000  -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[1]="-ltl tarjan --ltl-heur sum-composed-weight --log-fire-count-threshold 5000  -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[2]="-ltl tarjan -s DFS -p -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
     unset STRATEGIES_SEQ
-    STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED -s BestFS --ltl-por mix --ltl-heur aut"
+    STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED -s BestFS --ltl-por mix --ltl-heur weight-aut"
     unset STRATEGIES_RAND
     STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
