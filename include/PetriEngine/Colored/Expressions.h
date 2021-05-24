@@ -109,7 +109,9 @@ namespace PetriEngine {
                 return false;
             }
 
-            
+            virtual bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const{
+                return false;
+            }
 
             virtual void getVariables(std::set<const Colored::Variable*>& variables) const {
                 std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
@@ -1300,6 +1302,16 @@ namespace PetriEngine {
                 
                 return Multiset(col);
             }
+            bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const{
+                //What to do?
+                if(_color.size() > 1){
+                    return false;
+                }
+                numbers.push_back(_number);
+                //Maybe we need to check color expression also
+                return true;
+            }
+
 
             const bool equals(ArcExpression *other) override {
                 if(instanceof<NumberOfExpression>(other)){
@@ -1431,6 +1443,27 @@ namespace PetriEngine {
                     ms += expr->eval(context);
                 }
                 return ms;
+            }
+
+            bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const{
+                for(auto elem : _constituents){
+                    if(!elem->isEligibleForSymmetry(numbers)){
+                        return false;
+                    }
+                }
+                
+                if(numbers.size() < 2){
+                    return false;
+                }
+                //pick a number
+                //every number has to be equal
+                uint32_t firstNumber = numbers[0];
+                for(uint32_t number : numbers){
+                    if(firstNumber != number){
+                        return false;
+                    }
+                }
+                return true;
             }
 
             const bool equals(ArcExpression *other) override {

@@ -150,6 +150,103 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::sort() {
     }
 
+    //------------------- Symmetric Variables --------------------//
+    void ColoredPetriNetBuilder::computeSymmetricVariables(){
+        for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+            Colored::Transition &transition = _transitions[transitionId];
+            std::set<const Colored::Variable*> transitionVars;
+            if(transition.guard){
+                continue;
+                //the variables cannot appear on the guard
+                //transition.guard->getVariables(transitionVars);
+            }
+            
+            for(auto &inArc : transition.input_arcs){
+                std::set<const Colored::Variable*> inArcVars;
+                std::vector<uint32_t> numbers;
+                
+                //the expressions is eligible if it is an addexpression that contains only 
+                //numberOfExpressions with the same number
+                bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
+
+                if(isEligible && numbers.size() > 1){
+                    inArc.expr->getVariables(inArcVars);
+                    //It cannot be symmetric with anything
+                    if(inArcVars.size() < 2){
+                        continue;
+                    }
+                    //The variables may appear only on one input arc and one output arc
+                    for(auto& otherInArc : transition.input_arcs){
+                        if(inArc.place == otherInArc.place){
+                            continue;
+                        }
+                        std::set<const Colored::Variable*> otherArcVars;
+                        otherInArc.expr->getVariables(otherArcVars);
+                        for(auto var : inArcVars){
+                            if(otherArcVars.find(var) != otherArcVars.end()){
+                                isEligible = false;
+                                break;
+                            }
+                        }
+                    }
+                    uint32_t numArcs = 0;
+                    bool foundSomeVars = false;
+                    //All the variables have to appear on exactly one output arc and nowhere else
+                    for(auto& outputArc : transition.output_arcs){
+                        bool foundArc = true;
+                        std::set<const Colored::Variable*> otherArcVars;
+                        outputArc.expr->getVariables(otherArcVars);
+                        for(auto var : inArcVars){
+                            if(otherArcVars.find(var) == otherArcVars.end()){
+                                foundArc = false;
+                            } else{
+                                foundSomeVars = true;
+                            } 
+                        }
+                        if(foundArc){
+                            numArcs++;
+                            //All vars were present
+                            foundSomeVars = false;
+                        }
+                        //If some vars are present the vars are not eligible
+                        if(foundSomeVars){
+                            isEligible = false;
+                            break;
+                        }  
+                    }
+                    if(numArcs != 1){
+                        isEligible = false;
+                    }
+                }else{
+                    isEligible = false;
+                }
+                if(isEligible){
+                    symmetric_var_map[transitionId].emplace_back(inArcVars);
+                }
+            }
+        }
+    }
+
+    void ColoredPetriNetBuilder::printSymmetricVariables() {
+        for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+            Colored::Transition &transition = _transitions[transitionId];
+            if ( symmetric_var_map.find(transitionId) == symmetric_var_map.end() ) {
+                //continue;
+                std::cout << "Transition " << transition.name << " has no symmetric variables" << std::endl;
+            }else{
+                std::cout << "Transition " << transition.name << " has symmetric variables: " << std::endl;
+                for(auto set : symmetric_var_map[transitionId]){
+                    std::string toPrint = "SET: ";
+                    for(auto variable : set){
+                        toPrint += variable->name + ", ";
+                    }
+                    std::cout << toPrint << std::endl;
+                }
+            }
+        }
+    }
+
+
     //----------------------- Partitioning -----------------------//
 
     void ColoredPetriNetBuilder::computePartition(int32_t timeout){
@@ -470,9 +567,12 @@ namespace PetriEngine {
                 createPartionVarmaps();
             }
             
-            for (auto& transition : _transitions) {
-                unfoldTransition(transition);
+            for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+                unfoldTransition(transitionId);
             }
+            /*for (auto& transition : _transitions) {
+                unfoldTransition(transition);
+            }*/
             auto& unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
@@ -551,12 +651,13 @@ namespace PetriEngine {
         // _placeTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
-    void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {        
+    void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
+        Colored::Transition &transition = _transitions[transitionId];
+        
         if(_fixpointDone || _partitionComputed){ 
-            FixpointBindingGenerator gen(&transition, _colors);
+            FixpointBindingGenerator gen(&transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
             for (const auto &b : gen) {  
-                             
                 const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 

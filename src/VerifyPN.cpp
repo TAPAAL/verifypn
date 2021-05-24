@@ -432,6 +432,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.computePartition = false;
         }else if (strcmp(argv[i], "--noverify") == 0) {
             options.doVerification = false;
+        }else if (strcmp(argv[i], "--disable-symmetry-vars") == 0) {
+            options.symmetricVariables = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering CTL, LTL and reachability queries\n"
@@ -1068,6 +1070,10 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+    if(options.symmetricVariables){
+        cpnBuilder.computeSymmetricVariables();
+    }
+    //cpnBuilder.printSymmetricVariables();
 
     if(options.computePartition){
         cpnBuilder.computePartition(options.partitionTimeout);
@@ -1488,6 +1494,7 @@ int main(int argc, char* argv[]) {
                             options.seed());
         }
     }
+
 
     return SuccessCode;
 }

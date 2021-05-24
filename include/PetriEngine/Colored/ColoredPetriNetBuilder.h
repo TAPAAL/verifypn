@@ -140,6 +140,8 @@ namespace PetriEngine {
         PetriNetBuilder& stripColors();
         void computePlaceColorFixpoint(uint32_t max_intervals, uint32_t max_intervals_reduced, int32_t timeout);
         void computePartition(int32_t timeout);
+        void computeSymmetricVariables();
+        void printSymmetricVariables();
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
@@ -158,6 +160,9 @@ namespace PetriEngine {
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _inhibitorArcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
+        //transition id to vector of vectors of variables, where variable in vector are symmetric
+        std::unordered_map<uint32_t, std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
+
         std::unordered_map<uint32_t, std::string> _sumPlacesNames;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
@@ -196,7 +201,7 @@ namespace PetriEngine {
         void processOutputArcs(Colored::Transition& transition);
         
         void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t unfoldPlace, uint32_t id);
-        void unfoldTransition(Colored::Transition& transition);
+        void unfoldTransition(uint32_t transitionId);
         void handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
         void unfoldInhibitorArc(const std::string &oldname, const std::string &newname);

@@ -159,8 +159,8 @@ namespace PetriEngine {
     }
 
     FixpointBindingGenerator::FixpointBindingGenerator(Colored::Transition* transition,
-        const ColorTypeMap& colorTypes)
-    : _colorTypes(colorTypes), _transition(transition)
+        const ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars)
+    : _colorTypes(colorTypes), _transition(transition), _symmetric_vars(symmetric_vars)
     {
         _isDone = false;
         _noValidBindings = false;
@@ -234,12 +234,23 @@ namespace PetriEngine {
                     next = false;
                     break;                    
                 } else {
-                    _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
-                    
-                    if(!nextIntervalBinding.equals(varInterval.getFirst())){
-                        next = false;
-                        break;
-                    }              
+                    bool unorderedVar = false;
+                    for(auto& set : _symmetric_vars){
+                        if(set.find(_binding.first) != set.end()){
+                            if(nextIntervalBinding.equals(varInterval.getFirst())){
+                                unorderedVar = true;
+                                break;
+                            }  
+                        }
+                    }
+                    if(!unorderedVar){   
+                        _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                        
+                        if(!nextIntervalBinding.equals(varInterval.getFirst())){
+                            next = false;
+                            break;
+                        }   
+                    }           
                 }
             }
             if(next){
