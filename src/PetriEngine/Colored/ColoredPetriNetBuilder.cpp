@@ -156,7 +156,7 @@ namespace PetriEngine {
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
         if(pBuilder.partitionNet(timeout)){
-            pBuilder.printPartion();
+            //pBuilder.printPartion();
             _partition = pBuilder.getPartition();
             pBuilder.assignColorMap(_partition);
             _partitionComputed = true;
@@ -409,6 +409,8 @@ namespace PetriEngine {
         }
     }
 
+    //Find places for which the marking cannot change as all input arcs are matched 
+    //by an output arc with an equivalent arc expression and vice versa
     void ColoredPetriNetBuilder::findStablePlaces(){
         for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
             if(_placePostTransitionMap.count(placeId) != 0 && 
@@ -513,6 +515,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
         // auto start = std::chrono::high_resolution_clock::now();
         size_t tokenSize = 0;
+
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
         }else {
@@ -537,8 +540,11 @@ namespace PetriEngine {
                 }                    
             }
         }
+
+        
         
         const std::string &name = place->name + "_" + std::to_string(color->getId());
+
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
         // auto end = std::chrono::high_resolution_clock::now();

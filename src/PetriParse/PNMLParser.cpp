@@ -67,14 +67,6 @@ void PNMLParser::parse(std::ifstream& xml,
         parseDeclarations(declarations);
     }
 
-    auto netType = root->first_node("net");
-    rapidxml::xml_node<> *placeElement = netType->first_node("place");
-    netType = netType->first_node();
-    while(placeElement == nullptr && netType != nullptr){
-        placeElement = netType->first_node("place");
-        netType = netType->first_node();
-    }
-
     parseElement(root);
 
     //Add all the transition
@@ -549,11 +541,11 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapi
         first = num;
     }
 
-    if(strcmp(first->first_node()->name(), "tuple") == 0){
-        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
-        collectColorsInTuple(first->first_node(), collectedColors);	
-        return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
-    }
+    // if(strcmp(first->first_node()->name(), "tuple") == 0){
+    //     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
+    //     collectColorsInTuple(first->first_node(), collectedColors);	
+    //     return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
+    // }
 
     auto allExpr = parseAllExpression(first);
     if (allExpr) {
