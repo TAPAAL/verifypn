@@ -1073,7 +1073,7 @@ int main(int argc, char* argv[]) {
     if(options.symmetricVariables){
         cpnBuilder.computeSymmetricVariables();
     }
-    //cpnBuilder.printSymmetricVariables();
+    cpnBuilder.printSymmetricVariables();
 
     if(options.computePartition){
         cpnBuilder.computePartition(options.partitionTimeout);

@@ -85,6 +85,9 @@ namespace PetriEngine {
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
+        uint32_t _currentId = 1;
+        uint32_t _symmetric_vars_set = 0;
+        bool reset = false;
         
         bool eval();
         

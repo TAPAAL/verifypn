@@ -658,6 +658,12 @@ namespace PetriEngine {
             FixpointBindingGenerator gen(&transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
             for (const auto &b : gen) {  
+                if(transition.name == "trans_489"){
+                    std::cout << "new binding" << std::endl;
+                    for(auto& binding : b){
+                        std::cout << "color: " << binding.second->toString() << " for var " << binding.first->name << std::endl;
+                    }
+                }
                 const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 

@@ -222,35 +222,71 @@ namespace PetriEngine {
         bool test = false;
         while (!test) {
             bool next = true;
-
+            
             for (auto& _binding : _bindings) {               
                 auto varInterval = _transition->variableMaps[_nextIndex][_binding.first];                
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);
                 auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
-
-                if (nextIntervalBinding.size() == 0){                    
+                
+                bool varSymmetric = false;
+                for(auto& set : _symmetric_vars){
+                    if(set.find(_binding.first) != set.end()){
+                         varSymmetric = true;
+                         break;
+                    }
+                }
+                if(reset && _symmetric_vars_set > 1 && varSymmetric){
+                    _binding.second = &_binding.second->getColorType()->operator[](0);
+                    _symmetric_vars_set--;
+                } else if (nextIntervalBinding.size() == 0 && !(varSymmetric && _binding.second->getId() >= _currentId)){                   
                     _binding.second = &_binding.second->operator++();
-                    next = false;
-                    break;                    
-                } else {
-                    bool unorderedVar = false;
-                    for(auto& set : _symmetric_vars){
-                        if(set.find(_binding.first) != set.end()){
-                            if(nextIntervalBinding.equals(varInterval.getFirst())){
-                                unorderedVar = true;
-                                break;
-                            }  
+                    if(varSymmetric && _binding.second->getId() == _currentId){
+                        _symmetric_vars_set++;
+                        if(_transition->name == "trans_489"){
+                            std::cout << "1symmetric vars set = " << _symmetric_vars_set << " where var = " << _binding.first->name << " and color = " << _binding.second->toString() << std::endl;
                         }
                     }
-                    if(!unorderedVar){   
+                    next = false;
+                    if(_transition->name == "trans_489"){
+                        std::cout << "break1" <<std::endl;
+                    }
+                    break;                    
+                } else if(reset && _symmetric_vars_set == 1 && varSymmetric){
+                    _currentId++;
+                     _binding.second = &_binding.second->operator++();
+                    reset = false;
+                    next = false;
+                    if(_transition->name == "trans_489"){
+                        std::cout << "break2" <<std::endl;
+                    }
+                    break;
+                } else {
+                    if(!(varSymmetric && _binding.second->getId() >= _currentId)){
                         _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
-                        
+                        if(varSymmetric && _binding.second->getId() == _currentId){
+                            _symmetric_vars_set++;
+                            if(_transition->name == "trans_489"){
+                                std::cout << "2symmetric vars set = " << _symmetric_vars_set << " where var = " << _binding.first->name << " and color = " << _binding.second->toString() << std::endl;
+                            }
+                        }
                         if(!nextIntervalBinding.equals(varInterval.getFirst())){
                             next = false;
+                            if(_transition->name == "trans_489"){
+                                std::cout << "break3" <<std::endl;
+                            }
                             break;
-                        }   
-                    }           
+                        }
+                    }         
+                }
+                
+                //Assume there is only one set; probably bad
+                if(!reset && !(_symmetric_vars.empty()) && _symmetric_vars_set >= _symmetric_vars[0].size()){
+                    reset = true;
+                    //next = false;
+                    if(_transition->name == "trans_489"){
+                        std::cout << "current id set to " << _currentId << " where size= " << _symmetric_vars[0].size() << std::endl;
+                    }
                 }
             }
             if(next){
