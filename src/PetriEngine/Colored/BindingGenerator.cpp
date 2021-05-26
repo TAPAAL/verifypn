@@ -192,6 +192,13 @@ namespace PetriEngine {
         for (auto arc : _transition->output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
+        }
+
+        for(auto varSet : symmetric_vars){
+            std::vector<std::vector<uint32_t>> combinations;
+            std::vector<uint32_t> temp;
+            generateCombinations(varSet.begin().operator*()->colorType->size()-1, varSet.size(), combinations, temp);
+            _symmetric_var_combinations.push_back(combinations);
         }       
         
         
@@ -203,9 +210,36 @@ namespace PetriEngine {
             auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex][var].getFirst().getLowerIds());
             _bindings[var] = color;
         }
+        assignSymmetricVars();
         
         if (!_noValidBindings && !eval())
             nextBinding();
+    }
+
+    bool FixpointBindingGenerator::assignSymmetricVars(){
+        if(_currentOuterId < _symmetric_vars.size()){
+            if(_currentInnerId >= _symmetric_var_combinations[_currentOuterId].size()){
+                _currentOuterId++;
+                _currentInnerId = 0;
+            }
+        } else {
+            return false;
+        }
+        uint32_t j = 0;
+        for(auto var : _symmetric_vars[_currentOuterId]){
+            _bindings[var] = &var->colorType->operator[](_symmetric_var_combinations[_currentOuterId][_currentInnerId][j]);
+            j++;
+        }
+        _currentInnerId++;
+        if(_currentInnerId >= _symmetric_var_combinations[_currentOuterId].size()){
+            if(_currentOuterId < _symmetric_vars.size()){
+                _currentOuterId++;
+                _currentInnerId = 0;
+            } else {
+                return false;
+            }
+        }
+        return true;        
     }
 
 
@@ -222,73 +256,48 @@ namespace PetriEngine {
         bool test = false;
         while (!test) {
             bool next = true;
-            
-            for (auto& _binding : _bindings) {               
-                auto varInterval = _transition->variableMaps[_nextIndex][_binding.first];                
-                std::vector<uint32_t> colorIds;
-                _binding.second->getTupleId(&colorIds);
-                auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
-                
-                bool varSymmetric = false;
-                for(auto& set : _symmetric_vars){
-                    if(set.find(_binding.first) != set.end()){
-                         varSymmetric = true;
-                         break;
-                    }
-                }
-                if(reset && _symmetric_vars_set > 1 && varSymmetric){
-                    _binding.second = &_binding.second->getColorType()->operator[](0);
-                    _symmetric_vars_set--;
-                } else if (nextIntervalBinding.size() == 0 && !(varSymmetric && _binding.second->getId() >= _currentId)){                   
-                    _binding.second = &_binding.second->operator++();
-                    if(varSymmetric && _binding.second->getId() == _currentId){
-                        _symmetric_vars_set++;
-                        if(_transition->name == "trans_489"){
-                            std::cout << "1symmetric vars set = " << _symmetric_vars_set << " where var = " << _binding.first->name << " and color = " << _binding.second->toString() << std::endl;
-                        }
-                    }
-                    next = false;
-                    if(_transition->name == "trans_489"){
-                        std::cout << "break1" <<std::endl;
-                    }
-                    break;                    
-                } else if(reset && _symmetric_vars_set == 1 && varSymmetric){
-                    _currentId++;
-                     _binding.second = &_binding.second->operator++();
-                    reset = false;
-                    next = false;
-                    if(_transition->name == "trans_489"){
-                        std::cout << "break2" <<std::endl;
-                    }
-                    break;
-                } else {
-                    if(!(varSymmetric && _binding.second->getId() >= _currentId)){
-                        _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
-                        if(varSymmetric && _binding.second->getId() == _currentId){
-                            _symmetric_vars_set++;
-                            if(_transition->name == "trans_489"){
-                                std::cout << "2symmetric vars set = " << _symmetric_vars_set << " where var = " << _binding.first->name << " and color = " << _binding.second->toString() << std::endl;
-                            }
-                        }
-                        if(!nextIntervalBinding.equals(varInterval.getFirst())){
-                            next = false;
-                            if(_transition->name == "trans_489"){
-                                std::cout << "break3" <<std::endl;
-                            }
+
+            if(assignSymmetricVars()){
+                next = false;
+            } else {
+                for (auto& _binding : _bindings) { 
+                    bool varSymmetric = false;
+                    for(auto& set : _symmetric_vars){
+                        if(set.find(_binding.first) != set.end()){
+                            varSymmetric = true;
                             break;
                         }
-                    }         
-                }
-                
-                //Assume there is only one set; probably bad
-                if(!reset && !(_symmetric_vars.empty()) && _symmetric_vars_set >= _symmetric_vars[0].size()){
-                    reset = true;
-                    //next = false;
-                    if(_transition->name == "trans_489"){
-                        std::cout << "current id set to " << _currentId << " where size= " << _symmetric_vars[0].size() << std::endl;
+                    }
+                    if(varSymmetric){
+                        continue;
+                    }
+
+                    auto varInterval = _transition->variableMaps[_nextIndex][_binding.first];                
+                    std::vector<uint32_t> colorIds;
+                    _binding.second->getTupleId(&colorIds);
+                    auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
+
+                    if (nextIntervalBinding.size() == 0){                    
+                        _binding.second = &_binding.second->operator++();
+                        _currentInnerId = 0;
+                        _currentOuterId = 0;
+                        assignSymmetricVars();
+                        next = false;
+                        break;                    
+                    } else {
+                        _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                        _currentInnerId = 0;
+                        _currentOuterId = 0;
+                        assignSymmetricVars();
+                        if(!nextIntervalBinding.equals(varInterval.getFirst())){
+                            next = false;
+                            
+                            break;
+                        }              
                     }
                 }
-            }
+            }            
+
             if(next){
                 _nextIndex++;
                 if(isInitial()){
@@ -305,11 +314,27 @@ namespace PetriEngine {
         return _bindings;
     }
 
+    void FixpointBindingGenerator::generateCombinations(
+            uint32_t options,
+            uint32_t samples,
+            std::vector<std::vector<uint32_t>> &result,
+            std::vector<uint32_t> &current) {
+        if (samples == 0) {
+            result.push_back(current);
+            return;
+        }
+        for (uint32_t i = 0; i <= options; i++) {
+            current.push_back(i);
+            generateCombinations(i, samples - 1, result, current);
+            current.pop_back();
+        }
+    }
+
     Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::currentBinding() {
         return _bindings;
     }
 
-    bool FixpointBindingGenerator::isInitial() const{        
+    bool FixpointBindingGenerator::isInitial() const{     
         return _nextIndex >= _transition->variableMaps.size();
     }
 

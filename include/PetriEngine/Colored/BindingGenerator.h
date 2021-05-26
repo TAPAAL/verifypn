@@ -80,16 +80,24 @@ namespace PetriEngine {
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
         const std::vector<std::set<const Colored::Variable *>>& _symmetric_vars;
+        std::vector<std::vector<std::vector<uint32_t>>> _symmetric_var_combinations;
         const ColorTypeMap& _colorTypes;
         Colored::Transition *_transition;
+        PetriEngine::Colored::ExpressionContext::BindingMap::iterator _bindingIterator;
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
-        uint32_t _currentId = 1;
+        uint32_t _currentOuterId = 0;
+        uint32_t _currentInnerId = 0;
         uint32_t _symmetric_vars_set = 0;
-        bool reset = false;
         
         bool eval();
+        bool assignSymmetricVars();
+        void generateCombinations(
+            uint32_t options,
+            uint32_t samples,
+            std::vector<std::vector<uint32_t>> &result,
+            std::vector<uint32_t> &current);
         
     public:
         FixpointBindingGenerator(Colored::Transition *transition,

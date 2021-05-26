@@ -164,6 +164,11 @@ namespace PetriEngine {
             for(auto &inArc : transition.input_arcs){
                 std::set<const Colored::Variable*> inArcVars;
                 std::vector<uint32_t> numbers;
+
+                //Application of symmetric variables for partitioned places is currently unhandled
+                if(_partitionComputed && !_partition[inArc.place].diagonal){
+                    continue;
+                }
                 
                 //the expressions is eligible if it is an addexpression that contains only 
                 //numberOfExpressions with the same number
@@ -204,6 +209,11 @@ namespace PetriEngine {
                             } 
                         }
                         if(foundArc){
+                            //Application of symmetric variables for partitioned places is currently unhandled
+                            if(_partitionComputed && !_partition[outputArc.place].diagonal){
+                                isEligible = false;
+                                break;
+                            }
                             numArcs++;
                             //All vars were present
                             foundSomeVars = false;
@@ -639,10 +649,7 @@ namespace PetriEngine {
                     }
                 }                    
             }
-        }
-
-        
-        
+        } 
         const std::string &name = place->name + "_" + std::to_string(color->getId());
 
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
@@ -658,12 +665,6 @@ namespace PetriEngine {
             FixpointBindingGenerator gen(&transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
             for (const auto &b : gen) {  
-                if(transition.name == "trans_489"){
-                    std::cout << "new binding" << std::endl;
-                    for(auto& binding : b){
-                        std::cout << "color: " << binding.second->toString() << " for var " << binding.first->name << std::endl;
-                    }
-                }
                 const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 
@@ -786,10 +787,7 @@ namespace PetriEngine {
                 }
                 ++_nptarcs;
             }
-        }
-
-        
-                
+        }       
     }
 
     //----------------------- Strip Colors -----------------------//

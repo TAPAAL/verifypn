@@ -483,6 +483,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                     "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
                     "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
+                    "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
                     "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
@@ -1070,13 +1071,14 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    if(options.symmetricVariables){
-        cpnBuilder.computeSymmetricVariables();
-    }
-    cpnBuilder.printSymmetricVariables();
+
 
     if(options.computePartition){
         cpnBuilder.computePartition(options.partitionTimeout);
+    }
+    if(options.symmetricVariables){
+        cpnBuilder.computeSymmetricVariables();
+        //cpnBuilder.printSymmetricVariables();
     }
     if(options.computeCFP){
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
