@@ -141,6 +141,8 @@ namespace PetriEngine {
             
             postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
 
+            //Check if a variable appears more than once on the output arc
+            //If the place is does not have a product colortype mark the whole place as diagonal, otherwise only the positions
             for(auto varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
                     uint32_t actualSize = 0;
@@ -172,9 +174,12 @@ namespace PetriEngine {
 
             std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
 
+            //Partition each of the equivalence classes
             for(auto eqClass : placePartition){
                 auto varMaps = prepareVariables(varModifierMap, &eqClass, postArc, postPlaceId);
 
+                //If there are variables in the guard, that doesn't come from the postPlace
+                //we give them the full interval
                 for(auto& varMap : varMaps){
                     for(auto var : guardVars){
                         if(varMap.count(var) == 0){
@@ -202,6 +207,8 @@ namespace PetriEngine {
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
                     inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
 
+                    //Check if the variales on this preArc also appear on other preArcs for the transition
+                    //and mark them as diagonal if they do
                     for(auto placeVariables : placeVariableMap){
                         for(auto variable : preVarPositionMap){
                             for(auto varPosition : placeVariables.second){
@@ -239,7 +246,8 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    
+                    //Check if the preArc share variables with the postArc and mark diagonal if the 
+                    //variable positions are diagonal in the post place
                     for(auto preVar : preVarPositionMap){
                         for(auto postVar : varPositionMap){
                             if(preVar.second == postVar.second){
@@ -261,6 +269,7 @@ namespace PetriEngine {
                     }
 
 
+                    //Check if a variable appears more than once on the preArc and mark it diagonal if it does
                     for(auto varModMap : preVarModifierMap){
                         if(varModMap.second.size() > 1){
                             uint32_t actualSize = 0;
@@ -294,22 +303,7 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    bool allPositionsDiagonal = true;
-                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
-                        if(!diag){
-                            allPositionsDiagonal = false;
-                            break;
-                        }
-                    }
-
-                    if(allPositionsDiagonal){
-                        _partition[inArc.place].diagonal = true;
-                        addToQueue(inArc.place);
-                        continue;
-                    }
-
-
-
+                    //Check if any of the variables on the preArc was part of a diagonal constraint in the gaurd
                     for(auto preVar : preVarPositionMap){
                         if(diagonalVars.count(preVar.second)){
                             if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
@@ -327,6 +321,24 @@ namespace PetriEngine {
                         continue;
                     }
 
+                    //Check if we have marked all positions in the product type of the place as diagonal
+                    //and mark the whole place as diagonal if it is the case
+                    bool allPositionsDiagonal = true;
+                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
+                        if(!diag){
+                            allPositionsDiagonal = false;
+                            break;
+                        }
+                    }
+
+                    if(allPositionsDiagonal){
+                        _partition[inArc.place].diagonal = true;
+                        addToQueue(inArc.place);
+                        continue;
+                    }                    
+
+                    //Retrieve the intervals for the current place, 
+                    //based on the intervals from the postPlace, the postArc, preArc and guard
                     auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
                     EquivalenceVec newEqVec;
                     for(auto& intervalTuple : outIntervals){
@@ -334,22 +346,14 @@ namespace PetriEngine {
                         EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, std::move(intervalTuple));
                         newEqVec._equivalenceClasses.push_back(std::move(newEqClass));
                     }                    
-                    newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;
-
-                    allPositionsDiagonal = true;
-                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
-                        if(!diag){
-                            allPositionsDiagonal = false;
-                            break;
-                        }
-                    }
-                    
+                    newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;                    
                     _partition[inArc.place].mergeEqClasses();
 
-                    if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
+                    if(_partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
                         _partition[inArc.place].diagonal = true;
                     }
 
+                    //If the prePlace has not been marked as diagonal, then split the current partitions based on the new intervals
                     if((_partition[inArc.place].diagonal || splitPartition(std::move(newEqVec), inArc.place))){
                         addToQueue(inArc.place);
                     }
@@ -377,17 +381,7 @@ namespace PetriEngine {
                     auto ec1 = equivalenceVec._equivalenceClasses[ecPos1];
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
                     auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.diagonalTuplePositions, false);
-                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions, false);
-                    //if((_places->operator[](placeId).name == "NB_ATTENTE_A") || (_places->operator[](placeId).name == "COMPTEUR") || (_places->operator[](placeId).name == "NB_ATTENTE_B")) {
-                        // std::cout << _places->operator[](placeId).name << std::endl;
-                        // std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
-
-                        // std::cout << "Intersection: " << intersection.toString() << std::endl;
-                        // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
-                        // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
-                        //ec2.subtract(ec1, true);
-                    //}
-                    
+                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions, false);                    
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
                     _partition[placeId]._equivalenceClasses.erase(_partition[placeId]._equivalenceClasses.begin() + ecPos2);
@@ -402,11 +396,7 @@ namespace PetriEngine {
                     }
                     if(!rightSubtractEc.isEmpty()){
                         equivalenceVec._equivalenceClasses.push_back(rightSubtractEc);
-                    }
-                    // std::cout << "Partition is now: " << std::endl;
-                    // for(auto eqClass : _partition[placeId]._equivalenceClasses){
-                    //     std::cout << eqClass.toString() << std::endl;
-                    // }                                       
+                    }                                     
                 }
             }
             return split;
