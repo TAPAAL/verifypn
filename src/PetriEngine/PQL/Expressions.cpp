@@ -424,6 +424,7 @@ namespace PetriEngine {
                 ExprError error("Unable to resolve identifier \"" + _name + "\"",
                         _name.length());
                 context.reportError(error);
+                return;
             }            
 
             assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
@@ -455,13 +456,17 @@ namespace PetriEngine {
             if(coloredContext != nullptr && coloredContext->isColored()) {
                 std::vector<std::string> names;
                 if (!coloredContext->resolveTransition(_name, names)) {
-                    // ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    // coloredContext->reportError(error);
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext->reportError(error);
+                    return;
+                } 
+                if(names.size() < 1){
+                    //If the transition points to empty vector we know that it has 
+                    //no legal bindings and can never fire
                     _compiled = std::make_shared<BooleanCondition>(false);
                     _compiled->analyze(context);
                     return;
-                } 
-
+                }
                 if (names.size() == 1) {
                     _compiled = std::make_shared<UnfoldedFireableCondition>(names[0]);
                 } else {

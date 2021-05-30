@@ -664,8 +664,11 @@ namespace PetriEngine {
         if(_fixpointDone || _partitionComputed){ 
             FixpointBindingGenerator gen(&transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
+            bool hasBindings = false;
             for (const auto &b : gen) {  
                 const std::string &name = transition.name + "_" + std::to_string(i++);
+              
+                hasBindings = true;            
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 
                 for (auto& arc : transition.input_arcs) {
@@ -677,7 +680,10 @@ namespace PetriEngine {
                 
                 _pttransitionnames[transition.name].push_back(std::move(name));
                 unfoldInhibitorArc(transition.name, name);                
-            }            
+            }                            
+            if(!hasBindings){
+                _pttransitionnames[transition.name] = std::vector<std::string>();
+            }           
         } else {
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
