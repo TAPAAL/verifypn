@@ -853,7 +853,7 @@ void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<
     std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
     std::fstream out;
-
+    
     if(binary)
     {
         out.open(filename, std::ios::binary | std::ios::out);
@@ -899,6 +899,30 @@ void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<
     {
         out << "</property-set>\n";
     }
+    out.close();
+}
+
+void writeCompactQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+    std::string& filename, ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net)
+{
+    std::fstream out;
+    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
+
+    out.open(filename, std::ios::out);
+    out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+
+    for(uint32_t j = 0; j < queries.size(); j++) {
+        auto i = order[j];
+        if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
+
+            out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
+            queries[i]->toCompactXML(out,0, context);
+            out << "    </formula>\n  </property>\n";
+        
+    }
+
+    out << "</property-set>\n";
+    
     out.close();
 }
 
@@ -1101,29 +1125,31 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
-    {
-        std::cerr << "Could not analyze the queries" << std::endl;
-        return ErrorCode;
-    }
     if(options.unfold_query_out_file.size() > 0)
     {
         //Don't know if this is needed
         std::vector<uint32_t> reorder(queries.size());
         for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
+        // std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
 
-            if(queries[a]->isReachability() != queries[b]->isReachability())
-                return queries[a]->isReachability() > queries[b]->isReachability();
-            if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-                return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-            if(queries[a]->containsNext() != queries[b]->containsNext())
-                return queries[a]->containsNext() < queries[b]->containsNext();
-            return queries[a]->formulaSize() < queries[b]->formulaSize();
-        });
-        writeQueries(queries, querynames, reorder, options.unfold_query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
+        //     if(queries[a]->isReachability() != queries[b]->isReachability())
+        //         return queries[a]->isReachability() > queries[b]->isReachability();
+        //     if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
+        //         return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
+        //     if(queries[a]->containsNext() != queries[b]->containsNext())
+        //         return queries[a]->containsNext() < queries[b]->containsNext();
+        //     return queries[a]->formulaSize() < queries[b]->formulaSize();
+        // });
+        writeCompactQueries(queries, querynames, reorder, options.unfold_query_out_file,cpnBuilder, b2, qnet.get());
 
     }
+
+    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
+    {
+        std::cerr << "Could not analyze the queries" << std::endl;
+        return ErrorCode;
+    }
+    
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.

@@ -1905,6 +1905,42 @@ namespace PetriEngine {
         void LiteralExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
             generateTabs(out,tabs) << "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
+
+        void LiteralExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            out << "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
+        }
+
+        void UnfoldedFireableCondition::toXML(std::ostream& out, uint32_t tabs) const{
+            generateTabs(out, tabs) << "<is-fireable><transition>" + _name << "</transition></is-fireable>\n";
+        }
+
+        void UnfoldedFireableCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
+            out << "<is-fireable><transition>" + _name << "</transition></is-fireable>\n";
+        }
+
+        void FireableCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored()) {
+                std::vector<std::string> names;
+                if (!coloredContext->resolveTransition(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext->reportError(error);
+                    return;
+                } 
+                if(names.size() < 1){
+                    //If the transition points to empty vector we know that it has 
+                    //no legal bindings and can never fire
+                    out << "<false/>";
+                    return;
+                }
+                
+                out << "<is-fireable>";
+                for (auto& unfoldedName : names) {
+                    out << "<transition>" + unfoldedName << "</transition>";
+                }
+                out << "</is-fireable>";
+            }
+        }
         
         void UnfoldedIdentifierExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
             if (tokencount) {
@@ -1915,6 +1951,47 @@ namespace PetriEngine {
                 generateTabs(out,tabs) << "<tokens-count>\n"; 
                 generateTabs(out,tabs+1) << "<place>" << _name << "</place>\n";
                 generateTabs(out,tabs) << "</tokens-count>\n";
+            }
+        }
+
+        void UnfoldedIdentifierExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            if (tokencount) {
+                out << "<place>" << _name << "</place>\n";
+            }
+            else
+            {
+                out << "<tokens-count>\n"; 
+                out << "<place>" << _name << "</place>\n";
+                out << "</tokens-count>\n";
+            }
+        }
+
+        void IdentifierExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored()) {
+                std::unordered_map<uint32_t, std::string> names;
+                if (!coloredContext->resolvePlace(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext->reportError(error);
+                    return;
+                } 
+                
+                
+                out << "<tokens-count>\n";
+                for (auto& unfoldedName : names) {
+                    out << "<place>" << unfoldedName.second << "</place>\n";
+                }
+                out <<"</tokens-count>\n";
+            } else {
+                if (tokencount) {
+                out << "<place>" << _name << "</place>\n";
+                }
+                else
+                {
+                    out << "<tokens-count>\n"; 
+                    out << "<place>" << _name << "</place>\n";
+                    out << "</tokens-count>\n";
+                }
             }
         }
         
@@ -1942,17 +2019,54 @@ namespace PetriEngine {
             for(auto& e : _exprs) e->toXML(ss,tabs+1, tokencount);
             generateTabs(ss,tabs) << "</integer-sum>\n";
         }
+
+        void PlusExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            if (tokencount) {
+                for(auto& e : _exprs) e->toCompactXML(out,tabs, context, tokencount);
+                return;
+            }
+            
+            if(tk) {
+                out << "<tokens-count>\n";
+                for(auto& e : _ids) out << "<place>" << e.second << "</place>\n";
+                for(auto& e : _exprs) e->toCompactXML(out,tabs, context, true);
+                out << "</tokens-count>\n";
+                return;
+            }
+            out << "<integer-sum>\n";
+            out << "<integer-constant>" + std::to_string(_constant) + "</integer-constant>\n";
+            for(auto& i : _ids)
+            {
+                out << "<tokens-count>\n"; 
+                out << "<place>" << i.second << "</place>\n";
+                out << "</tokens-count>\n";                
+            }
+            for(auto& e : _exprs) e->toCompactXML(out,tabs, context, tokencount);
+            out << "</integer-sum>\n";
+        }
         
         void SubtractExpr::toXML(std::ostream& ss,uint32_t tabs, bool tokencount) const {
             generateTabs(ss,tabs) << "<integer-difference>\n";
             for(auto& e : _exprs) e->toXML(ss,tabs+1);
             generateTabs(ss,tabs) << "</integer-difference>\n";
         }
+
+        void SubtractExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            out << "<integer-difference>\n";
+            for(auto& e : _exprs) e->toCompactXML(out,tabs, context);
+            out << "</integer-difference>\n";
+        }
         
         void MultiplyExpr::toXML(std::ostream& ss,uint32_t tabs, bool tokencount) const {
             generateTabs(ss,tabs) << "<integer-product>\n";
             for(auto& e : _exprs) e->toXML(ss,tabs+1);
             generateTabs(ss,tabs) << "</integer-product>\n";
+        }
+
+        void MultiplyExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            out << "<integer-product>\n";
+            for(auto& e : _exprs) e->toCompactXML(out,tabs, context);
+            out << "</integer-product>\n";
         }
         
         void MinusExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
@@ -1964,6 +2078,15 @@ namespace PetriEngine {
                     "<integer-constant>1</integer-constant>\n" ; generateTabs(out,tabs+1) <<
                     "</integer-difference>\n" ; generateTabs(out,tabs) << "</integer-product>\n";
         }
+
+        void MinusExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
+            out << "<integer-product>\n";
+            _expr->toCompactXML(out,tabs, context);
+            out << "<integer-difference>\n" ; out <<
+                    "<integer-constant>0</integer-constant>\n" ; out << 
+                    "<integer-constant>1</integer-constant>\n" ; out <<
+                    "</integer-difference>\n" ; out << "</integer-product>\n";
+        }
         
         void EXCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<next>\n";
@@ -1971,10 +2094,22 @@ namespace PetriEngine {
             generateTabs(out,tabs+1) << "</next>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
 
+        void EXCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
+            out << "<exists-path>\n" ; out << "<next>\n";
+            _cond->toCompactXML(out,tabs, context);
+            out << "</next>\n" ; out << "</exists-path>\n";
+        }
+
         void AXCondition::toXML(std::ostream& out,uint32_t tabs) const {           
             generateTabs(out,tabs) << "<all-paths>\n"; generateTabs(out,tabs+1) << "<next>\n";
             _cond->toXML(out,tabs+2);            
             generateTabs(out,tabs+1) << "</next>\n"; generateTabs(out,tabs) << "</all-paths>\n";
+        }
+
+        void AXCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<all-paths>\n" ;out << "<next>\n";
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</next>\n" ; out << "</all-paths>\n";
         }
         
         void EFCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1982,11 +2117,23 @@ namespace PetriEngine {
             _cond->toXML(out,tabs+2);
             generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
+
+        void EFCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<exists-path>\n" ;out << "<finally>\n";
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</finally>\n" ; out << "</exists-path>\n";
+        }
         
         void AFCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<all-paths>\n" ; generateTabs(out,tabs+1) << "<finally>\n";
             _cond->toXML(out,tabs+2);
             generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</all-paths>\n";
+        }
+
+        void AFCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<all-paths>\n" ;out << "<finally>\n";
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</finally>\n" ; out << "</all-paths>\n";
         }
         
         void EGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
@@ -1994,11 +2141,23 @@ namespace PetriEngine {
             _cond->toXML(out,tabs+2);            
             generateTabs(out,tabs+1) <<  "</globally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
+
+        void EGCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<exists-path>\n" ;out << "<globally>\n";
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</globally>\n" ; out << "</exists-path>\n";
+        }
         
         void AGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
             generateTabs(out,tabs) << "<all-paths>\n" ; generateTabs(out,tabs+1) << "<globally>\n";
             _cond->toXML(out,tabs+2);
             generateTabs(out,tabs+1) << "</globally>\n" ; generateTabs(out,tabs) << "</all-paths>\n";
+        }
+
+        void AGCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<all-paths>\n" ;out << "<globally>\n";
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</globally>\n" ; out << "</all-paths>\n";
         }
         
         void EUCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -2007,6 +2166,14 @@ namespace PetriEngine {
             generateTabs(out,tabs+2) << "</before>\n" ; generateTabs(out,tabs+2) << "<reach>\n";
             _cond2->toXML(out,tabs+3);
             generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
+        }
+
+        void EUCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<exists-path>\n" ; out << "<until>\n" ; out << "<before>\n";
+            _cond1->toCompactXML(out,tabs+2, context);
+            out << "</before>\n" ; out << "<reach>\n";
+            _cond2->toCompactXML(out,tabs+2, context);
+            out << "</reach>\n" ; out << "</until>\n" ; out << "</exists-path>\n";
         }
         
         void AUCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -2017,10 +2184,24 @@ namespace PetriEngine {
             generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</all-paths>\n";
         }
 
+        void AUCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<all-paths>\n" ; out << "<until>\n" ; out << "<before>\n";
+            _cond1->toCompactXML(out,tabs+2, context);
+            out << "</before>\n" ; out << "<reach>\n";
+            _cond2->toCompactXML(out,tabs+2, context);
+            out << "</reach>\n" ; out << "</until>\n" ; out << "</all-paths>\n";
+        }
+
         void ACondition::toXML(std::ostream& out, uint32_t tabs) const {
             generateTabs(out, tabs) << "<all-paths>\n";
             _cond->toXML(out, tabs+1);
             generateTabs(out, tabs) << "</all-paths>\n";
+        }
+
+        void ACondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<all-paths>\n" ;
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</all-paths>\n";
         }
 
         void ECondition::toXML(std::ostream& out, uint32_t tabs) const {
@@ -2029,10 +2210,22 @@ namespace PetriEngine {
             generateTabs(out, tabs) << "</exists-path>\n";
         }
 
+        void ECondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<exists-path>\n" ;
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</exists-path>\n";
+        }
+
         void FCondition::toXML(std::ostream& out, uint32_t tabs) const {
             generateTabs(out, tabs) << "<finally>\n";
             _cond->toXML(out, tabs+1);
             generateTabs(out, tabs) << "</finally>\n";
+        }
+
+        void FCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<finally>\n" ;
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</finally>\n";
         }
 
         void GCondition::toXML(std::ostream& out, uint32_t tabs) const {
@@ -2041,10 +2234,22 @@ namespace PetriEngine {
             generateTabs(out, tabs) << "</globally>\n";
         }
 
+        void GCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<globally>\n" ;
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</globally>\n";
+        }
+
         void XCondition::toXML(std::ostream& out, uint32_t tabs) const {
             generateTabs(out, tabs) << "<next>\n";
             _cond->toXML(out, tabs+1);
             generateTabs(out, tabs) << "</next>\n";
+        }
+
+        void XCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<next>\n" ;
+            _cond->toCompactXML(out,tabs+2, context);
+            out << "</next>\n";
         }
 
         void UntilCondition::toXML(std::ostream& out, uint32_t tabs) const {
@@ -2055,7 +2260,13 @@ namespace PetriEngine {
             generateTabs(out,tabs+1) << "</reach>\n" ; generateTabs(out,tabs) << "</until>\n" ;
         }
 
-
+        void UntilCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<until>\n" ; out << "<before>\n";
+            _cond1->toCompactXML(out,tabs+2, context);
+            out << "</before>\n" ; out << "<reach>\n";
+            _cond2->toCompactXML(out,tabs+2, context);
+            out << "</reach>\n"; out << "</until>\n" ;
+        }
 
         void AndCondition::toXML(std::ostream& out,uint32_t tabs) const {
             if(_conds.size() == 0)
@@ -2088,6 +2299,38 @@ namespace PetriEngine {
             }
             generateTabs(out,tabs) << "</conjunction>\n";              
         }
+
+        void AndCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            if(_conds.size() == 0)
+            {
+                BooleanCondition::TRUE_CONSTANT->toCompactXML(out,tabs, context);
+                return;
+            }
+            if(_conds.size() == 1)
+            {
+                _conds[0]->toCompactXML(out,tabs, context);
+                return;
+            }
+            out << "<conjunction>\n";
+            _conds[0]->toCompactXML(out,tabs, context);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                if(i + 1 == _conds.size())
+                {
+                    _conds[i]->toCompactXML(out,tabs, context);
+                }
+                else
+                {
+                    out << "<conjunction>\n";
+                    _conds[i]->toCompactXML(out,tabs, context);
+                }
+            }
+            for(size_t i = _conds.size() - 1; i > 1; --i)
+            {
+                out << "</conjunction>\n";                
+            }
+            out << "</conjunction>\n";      
+        }
         
         void OrCondition::toXML(std::ostream& out,uint32_t tabs) const {
             if(_conds.size() == 0)
@@ -2119,6 +2362,38 @@ namespace PetriEngine {
                 generateTabs(out,tabs + i) << "</disjunction>\n";                
             }
             generateTabs(out,tabs) << "</disjunction>\n";               
+        }
+
+        void OrCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            if(_conds.size() == 0)
+            {
+                BooleanCondition::FALSE_CONSTANT->toCompactXML(out,tabs, context);
+                return;
+            }
+            if(_conds.size() == 1)
+            {
+                _conds[0]->toCompactXML(out,tabs, context);
+                return;
+            }
+            out << "<disjunction>\n";
+            _conds[0]->toCompactXML(out,tabs, context);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                if(i + 1 == _conds.size())
+                {
+                    _conds[i]->toCompactXML(out,tabs, context);
+                }
+                else
+                {
+                    out << "<disjunction>\n";
+                    _conds[i]->toCompactXML(out,tabs, context);
+                }
+            }
+            for(size_t i = _conds.size() - 1; i > 1; --i)
+            {
+                out << "</disjunction>\n";                
+            }
+            out << "</disjunction>\n";      
         }
 
         void CompareConjunction::toXML(std::ostream& out, uint32_t tabs) const
@@ -2159,11 +2434,55 @@ namespace PetriEngine {
             if(_negated) generateTabs(out,--tabs) << "</negation>";
         }
 
+        void CompareConjunction::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            if(_negated) out << "<negation>";
+            if(_constraints.size() == 0) BooleanCondition::TRUE_CONSTANT->toCompactXML(out,tabs, context);
+            else
+            {
+                bool single = _constraints.size() == 1 && 
+                                (_constraints[0]._lower == 0 ||
+                                 _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+                if(!single) 
+                    out << "<conjunction>\n";
+                for(auto& c : _constraints)
+                {
+                    if(c._lower != 0)
+                    {
+                        out << "<integer-ge>\n";
+                        out << "<tokens-count>\n";
+                        out << "<place>" << c._name << "</place>\n";
+                        out << "</tokens-count>\n";
+                        out << "<integer-constant>" << c._lower << "</integer-constant>\n";
+                        out << "</integer-ge>\n";  
+                    }
+                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    {
+                        out << "<integer-le>\n";
+                        out << "<tokens-count>\n";
+                        out << "<place>" << c._name << "</place>\n";
+                        out << "</tokens-count>\n";
+                        out << "<integer-constant>" << c._upper << "</integer-constant>\n";
+                        out << "</integer-le>\n";                      
+                    }
+                }
+                if(!single)
+                    out << "</conjunction>\n";
+            }
+            if(_negated) out << "</negation>";      
+        }
+
         void EqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<integer-eq>\n";
             _expr1->toXML(out,tabs+1);
             _expr2->toXML(out,tabs+1);
             generateTabs(out,tabs) << "</integer-eq>\n";  
+        }
+
+        void EqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<integer-eq>\n";
+            _expr1->toCompactXML(out,tabs, context);
+            _expr2->toCompactXML(out,tabs, context);
+            out << "</integer-eq>\n";
         }
         
         void NotEqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -2172,12 +2491,26 @@ namespace PetriEngine {
             _expr2->toXML(out,tabs+1);
             generateTabs(out,tabs) << "</integer-ne>\n";  
         }
+
+        void NotEqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<integer-ne>\n";
+            _expr1->toCompactXML(out,tabs, context);
+            _expr2->toCompactXML(out,tabs, context);
+            out << "</integer-ne>\n";
+        }
         
         void LessThanCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<integer-lt>\n";
             _expr1->toXML(out,tabs+1);
             _expr2->toXML(out,tabs+1);
             generateTabs(out,tabs) << "</integer-lt>\n";  
+        }
+
+        void LessThanCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<integer-lt>\n";
+            _expr1->toCompactXML(out,tabs, context);
+            _expr2->toCompactXML(out,tabs, context);
+            out << "</integer-lt>\n";
         }
         
         void LessThanOrEqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -2186,6 +2519,13 @@ namespace PetriEngine {
             _expr2->toXML(out,tabs+1);
             generateTabs(out,tabs) << "</integer-le>\n";  
         }
+
+        void LessThanOrEqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<integer-le>\n";
+            _expr1->toCompactXML(out,tabs, context);
+            _expr2->toCompactXML(out,tabs, context);
+            out << "</integer-le>\n";
+        }
         
         void NotCondition::toXML(std::ostream& out,uint32_t tabs) const {
             
@@ -2193,9 +2533,21 @@ namespace PetriEngine {
             _cond->toXML(out,tabs+1);
             generateTabs(out,tabs) << "</negation>\n";  
         }
+
+        void NotCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<negation>\n";
+            _cond->toCompactXML(out,tabs, context);
+            out << "</negation>\n";
+        }
         
         void BooleanCondition::toXML(std::ostream& out,uint32_t tabs) const {            
             generateTabs(out,tabs) << "<" << 
+                    (value ? "true" : "false")
+                    << "/>\n"; 
+        }
+
+        void BooleanCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<" << 
                     (value ? "true" : "false")
                     << "/>\n"; 
         }
@@ -2203,12 +2555,23 @@ namespace PetriEngine {
         void DeadlockCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<deadlock/>\n"; 
         }
+
+        void DeadlockCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<deadlock/>\n";
+        }
         
         void UnfoldedUpperBoundsCondition::toXML(std::ostream& out, uint32_t tabs) const {
             generateTabs(out, tabs) << "<place-bound>\n";
             for(auto& p : _places)
                 generateTabs(out, tabs + 1) << "<place>" << p._name << "</place>\n";
             generateTabs(out, tabs) << "</place-bound>\n";
+        }
+
+        void UnfoldedUpperBoundsCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
+            out << "<place-bound>\n";
+            for(auto& p : _places)
+                out << "<place>" << p._name << "</place>\n";
+            out << "</place-bound>\n"; 
         }
         
         /******************** Query Simplification ********************/       
