@@ -190,11 +190,13 @@ namespace LTL {
                 assert(false);
                 std::cerr << "Error: cannot LTL verify with algorithm None";
         }
+        bool answer = result.satisfied ^ negate_answer;
         std::cout << "FORMULA " << queryName
-                  << (result.satisfied ^ negate_answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                  << (answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
                   << LTL::to_string(options.ltlalgorithm)
                   << (result.is_weak ? " WEAK_SKIP" : "")
                   << std::endl;
+        std::cout << "Query is" << (answer ? "" : " NOT") << " satisfied." << std::endl;
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
