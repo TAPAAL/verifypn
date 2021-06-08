@@ -1325,10 +1325,11 @@ int main(int argc, char* argv[]) {
 
     options.queryReductionTimeout = 0;
 
-    auto unfoldedNet = std::unique_ptr<PetriNet>(builder.makePetriNet());
 
     if(options.unfolded_out_file.size() > 0)
     {
+        auto unfoldedNet = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
         std::fstream file;
         file.open(options.unfolded_out_file, std::ios::out);
         unfoldedNet->toXML(file);
