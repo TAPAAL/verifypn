@@ -120,6 +120,7 @@ namespace PetriEngine {
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
             virtual void toBinary(std::ostream&) const = 0;
+            virtual void toCompactXML(std::ostream&, uint32_t tabs, AnalysisContext& context, bool tokencount = false) const = 0;
 
             /** Count size of the entire formula in number of nodes */
             [[nodiscard]] virtual int formulaSize() const = 0;
@@ -231,6 +232,7 @@ namespace PetriEngine {
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
+            virtual void toCompactXML(std::ostream&, uint32_t tabs, AnalysisContext& context) const = 0;
             virtual void toBinary(std::ostream& out) const = 0;
 
             /** Checks if the condition is trivially true */

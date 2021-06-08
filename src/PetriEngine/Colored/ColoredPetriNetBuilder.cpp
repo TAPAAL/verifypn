@@ -150,17 +150,123 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::sort() {
     }
 
+    //------------------- Symmetric Variables --------------------//
+    void ColoredPetriNetBuilder::computeSymmetricVariables(){
+        for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+            Colored::Transition &transition = _transitions[transitionId];
+            std::set<const Colored::Variable*> transitionVars;
+            if(transition.guard){
+                continue;
+                //the variables cannot appear on the guard
+                //transition.guard->getVariables(transitionVars);
+            }
+            
+            for(auto &inArc : transition.input_arcs){
+                std::set<const Colored::Variable*> inArcVars;
+                std::vector<uint32_t> numbers;
+
+                //Application of symmetric variables for partitioned places is currently unhandled
+                if(_partitionComputed && !_partition[inArc.place].diagonal){
+                    continue;
+                }
+                
+                //the expressions is eligible if it is an addexpression that contains only 
+                //numberOfExpressions with the same number
+                bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
+
+                if(isEligible && numbers.size() > 1){
+                    inArc.expr->getVariables(inArcVars);
+                    //It cannot be symmetric with anything
+                    if(inArcVars.size() < 2){
+                        continue;
+                    }
+                    //The variables may appear only on one input arc and one output arc
+                    for(auto& otherInArc : transition.input_arcs){
+                        if(inArc.place == otherInArc.place){
+                            continue;
+                        }
+                        std::set<const Colored::Variable*> otherArcVars;
+                        otherInArc.expr->getVariables(otherArcVars);
+                        for(auto var : inArcVars){
+                            if(otherArcVars.find(var) != otherArcVars.end()){
+                                isEligible = false;
+                                break;
+                            }
+                        }
+                    }
+                    uint32_t numArcs = 0;
+                    bool foundSomeVars = false;
+                    //All the variables have to appear on exactly one output arc and nowhere else
+                    for(auto& outputArc : transition.output_arcs){
+                        bool foundArc = true;
+                        std::set<const Colored::Variable*> otherArcVars;
+                        outputArc.expr->getVariables(otherArcVars);
+                        for(auto var : inArcVars){
+                            if(otherArcVars.find(var) == otherArcVars.end()){
+                                foundArc = false;
+                            } else{
+                                foundSomeVars = true;
+                            } 
+                        }
+                        if(foundArc){
+                            //Application of symmetric variables for partitioned places is currently unhandled
+                            if(_partitionComputed && !_partition[outputArc.place].diagonal){
+                                isEligible = false;
+                                break;
+                            }
+                            numArcs++;
+                            //All vars were present
+                            foundSomeVars = false;
+                        }
+                        //If some vars are present the vars are not eligible
+                        if(foundSomeVars){
+                            isEligible = false;
+                            break;
+                        }  
+                    }
+                    if(numArcs != 1){
+                        isEligible = false;
+                    }
+                }else{
+                    isEligible = false;
+                }
+                if(isEligible){
+                    symmetric_var_map[transitionId].emplace_back(inArcVars);
+                }
+            }
+        }
+    }
+
+    void ColoredPetriNetBuilder::printSymmetricVariables() {
+        for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+            Colored::Transition &transition = _transitions[transitionId];
+            if ( symmetric_var_map.find(transitionId) == symmetric_var_map.end() ) {
+                std::cout << "Transition " << transition.name << " has no symmetric variables" << std::endl;
+            }else{
+                std::cout << "Transition " << transition.name << " has symmetric variables: " << std::endl;
+                for(auto set : symmetric_var_map[transitionId]){
+                    std::string toPrint = "SET: ";
+                    for(auto variable : set){
+                        toPrint += variable->name + ", ";
+                    }
+                    std::cout << toPrint << std::endl;
+                }
+            }
+        }
+    }
+
+
     //----------------------- Partitioning -----------------------//
 
-    void ColoredPetriNetBuilder::computePartition(){
+    void ColoredPetriNetBuilder::computePartition(int32_t timeout){
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        
-        pBuilder.partitionNet();
-        //pBuilder.printPartion();
-        _partition = pBuilder.getPartition();
-        pBuilder.assignColorMap(_partition);
-        _partitionComputed = true;
+        if(pBuilder.partitionNet(timeout)){
+            //pBuilder.printPartion();
+            _partition = pBuilder.getPartition();
+            pBuilder.assignColorMap(_partition);
+            _partitionComputed = true;
+        }         
         auto partitionEnd = std::chrono::high_resolution_clock::now();
         _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
     }
@@ -237,7 +343,7 @@ namespace PetriEngine {
             std::set<const Colored::Variable *> variables;
             std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
             std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifiersMap;
-            arc.expr->getVariables(variables, varPositions, varModifiersMap);
+            arc.expr->getVariables(variables, varPositions, varModifiersMap, false);
 
             Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varModifiersMap);
             res[arc.place] = newArcInterval;               
@@ -262,6 +368,7 @@ namespace PetriEngine {
                 cfp.constraints = intervalTuple;                              
 
                 inArc.expr->getArcIntervals(arcInterval, cfp, &index, 0);
+
                 _partition[inArc.place].applyPartition(arcInterval);
             }
 
@@ -301,7 +408,7 @@ namespace PetriEngine {
             }
             
             if(_partitionComputed){
-                _partition[arc.place].applyPartition(arcInterval);  
+                _partition[arc.place].applyPartition(arcInterval);
             }                  
         }
     }
@@ -382,10 +489,13 @@ namespace PetriEngine {
             }
 
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
-            intervals.simplify();
+            
 
-            for(auto& interval : intervals._intervals){
-                placeFixpoint.constraints.addInterval(std::move(interval));    
+            for(auto& intervalTuple : intervals){
+                intervalTuple.simplify();
+                for(auto& interval : intervalTuple._intervals){
+                    placeFixpoint.constraints.addInterval(std::move(interval)); 
+                }                   
             }
             placeFixpoint.constraints.simplify();
 
@@ -405,6 +515,8 @@ namespace PetriEngine {
         }
     }
 
+    //Find places for which the marking cannot change as all input arcs are matched 
+    //by an output arc with an equivalent arc expression and vice versa
     void ColoredPetriNetBuilder::findStablePlaces(){
         for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
             if(_placePostTransitionMap.count(placeId) != 0 && 
@@ -431,11 +543,11 @@ namespace PetriEngine {
                         }
                     }
                     bool mirroredArcs = false;
-                    for(auto arc : _transitions[transitionId].output_arcs){
+                    for(auto& arc : _transitions[transitionId].output_arcs){
                         if(arc.place == placeId){
                             if(arc.expr->toString() == inArc->expr->toString()){
                                 mirroredArcs = true;
-                            }
+                            } 
                             break;
                         }
                     }
@@ -459,15 +571,16 @@ namespace PetriEngine {
             auto start = std::chrono::high_resolution_clock::now();
 
             findStablePlaces();
-
+            
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();
             }
             
-            for (auto& transition : _transitions) {
-                unfoldTransition(transition);
+            for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+                unfoldTransition(transitionId);
             }
-            auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
+
+            auto& unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
@@ -483,84 +596,106 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap) {
+    void ColoredPetriNetBuilder::handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
         if(_ptplacenames.count(place.name) <= 0){
-            std::string name = place.name + "_orphan";
+            const std::string &name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
-        } /*else {
+        } else {
             uint32_t usedTokens = 0;
             
-            for(std::pair<const uint32_t, std::string> unfoldedPlace : _ptplacenames[place.name]){
+            for(const std::pair<const uint32_t, std::string> &unfoldedPlace : _ptplacenames[place.name]){
                 auto unfoldedMarking = _ptBuilder.initMarking();
-                auto unfoldedPlaceId = unfoldedPlaceMap[unfoldedPlace.second];
-                usedTokens += unfoldedMarking[unfoldedPlaceId];
+                usedTokens += unfoldedMarking[unfoldedPlaceMap.find(unfoldedPlace.second)->second];
             }
             
             if(place.marking.size() > usedTokens){
-                std::string name = place.name + "_orphan";
+                const std::string &name = place.name + "_orphan";
                 _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);
             }
-        }*/
-        
-        //++_nptplaces;        
+        }     
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
         size_t tokenSize = 0;
+
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
         }else {
-            for(auto colorEqClassPair : _partition[placeId].colorEQClassMap){
-                if(colorEqClassPair.second->_id == _partition[placeId].colorEQClassMap[color]->_id){
-                    tokenSize += place->marking[colorEqClassPair.first];
+            const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
+            const size_t &tupleSize = _partition[placeId].diagonalTuplePositions.size();
+            const uint32_t &classId = _partition[placeId].colorEQClassMap[color]->_id;
+            const auto &diagonalTuplePos = _partition[placeId].diagonalTuplePositions;
+
+            for(const auto &colorEqClassPair : _partition[placeId].colorEQClassMap){
+                if(colorEqClassPair.second->_id == classId){
+                    const std::vector<const Colored::Color*>& testColors = colorEqClassPair.first->getTupleColors();
+                    bool match = true;
+                    for(uint32_t i = 0; i < tupleSize; i++){
+                        if(diagonalTuplePos[i] && tupleColors[i]->getId() != testColors[i]->getId()){
+                            match = false;
+                            break;
+                        }
+                    }
+                    if(match){
+                        tokenSize += place->marking[colorEqClassPair.first];
+                    }
                 }                    
             }
-        }
-            
-        std::string name = place->name + "_" + std::to_string(color->getId());
+        } 
+        const std::string &name = place->name + "_" + std::to_string(color->getId());
+
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
     }
 
-    void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        if(_fixpointDone || _partitionComputed){            
-            FixpointBindingGenerator gen(transition, _colors);
+    void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
+        Colored::Transition &transition = _transitions[transitionId];
+        
+        if(_fixpointDone || _partitionComputed){ 
+            FixpointBindingGenerator gen(&transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
-            
-            for (auto b : gen) {                 
-                std::string name = transition.name + "_" + std::to_string(i++);
+            bool hasBindings = false;
+            for (const auto &b : gen) {  
+                const std::string &name = transition.name + "_" + std::to_string(i++);
+              
+                hasBindings = true;            
                 _ptBuilder.addTransition(name, 0.0, 0.0);
-                _pttransitionnames[transition.name].push_back(name);
                 
                 for (auto& arc : transition.input_arcs) {
-                    unfoldArc(arc, b, name );
+                    unfoldArc(arc, b, name);
                 }
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }
+                
+                _pttransitionnames[transition.name].push_back(std::move(name));
                 unfoldInhibitorArc(transition.name, name);                
-            }            
+            }                            
+            if(!hasBindings){
+                _pttransitionnames[transition.name] = std::vector<std::string>();
+            }           
         } else {
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
-            for (auto b : gen) {              
-                std::string name = transition.name + "_" + std::to_string(i++);
+            for (const auto &b : gen) {              
+                const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
-                _pttransitionnames[transition.name].push_back(name);
-                for (auto& arc : transition.input_arcs) {
+                
+                for (const auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name);
                 }
-                for (auto& arc : transition.output_arcs) {
+                for (const auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }
-                unfoldInhibitorArc(transition.name, name);                
+                _pttransitionnames[transition.name].push_back(std::move(name));
+                unfoldInhibitorArc(transition.name, name);
             }
-        }        
+        }
     }
 
-    void ColoredPetriNetBuilder::unfoldInhibitorArc(std::string &oldname, std::string &newname) {
+    void ColoredPetriNetBuilder::unfoldInhibitorArc(const std::string &oldname, const std::string &newname) {
         for (uint32_t i = 0; i < _inhibitorArcs.size(); ++i) {
             if (_transitions[_inhibitorArcs[i].transition].name.compare(oldname) == 0) {
                 const Colored::Arc &inhibArc = _inhibitorArcs[i];
@@ -570,7 +705,6 @@ namespace PetriEngine {
                     const PetriEngine::Colored::Place& place = _places[inhibArc.place]; 
                     std::string sumPlaceName = place.name + "Sum";
                     _ptBuilder.addPlace(sumPlaceName, place.marking.size(),0.0,0.0);
-                    //_ptplacenames[place.name][color.getId()] = std::move(placeName);
                     if(_ptplacenames.count(place.name) <= 0){
                         _ptplacenames[place.name][0] = sumPlaceName;
                     }
@@ -581,7 +715,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+    void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
@@ -592,21 +726,33 @@ namespace PetriEngine {
         auto ms = arc.expr->eval(context);   
         int shadowWeight = 0;
 
+        const Colored::Color *newColor;
+        std::vector<uint32_t> tupleIds;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
+            }
+ 
+            if(!_partitionComputed || _partition[arc.place].diagonal){
+                newColor = color.first;
+            } else {
+                tupleIds.clear();
+                color.first->getTupleId(&tupleIds);
+
+                _partition[arc.place].applyPartition(&tupleIds);
+                newColor = place.type->getColor(tupleIds);
             }
             
             shadowWeight += color.second;
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].diagonal){
-                id = color.first->getId();
+                id = newColor->getId();
             } else {
-                id = _partition[arc.place].colorEQClassMap[color.first]->_id;
+                id = _partition[arc.place].colorEQClassMap[newColor]->_id + newColor->getId();
             }
             const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               
-                unfoldPlace(&place, color.first, arc.place, id);               
+                unfoldPlace(&place, newColor, arc.place, id);               
             }
             
             if (arc.input) {
@@ -622,7 +768,6 @@ namespace PetriEngine {
             if(sumPlaceName.empty()){
                 const std::string &newSumPlaceName = place.name + "Sum";
                 _ptBuilder.addPlace(newSumPlaceName, place.marking.size(),0.0,0.0);
-                //_ptplacenames[place.name][color.getId()] = std::move(placeName);
                 _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
             }
             
@@ -635,10 +780,7 @@ namespace PetriEngine {
                 }
                 ++_nptarcs;
             }
-        }
-
-        
-                
+        }       
     }
 
     //----------------------- Strip Colors -----------------------//

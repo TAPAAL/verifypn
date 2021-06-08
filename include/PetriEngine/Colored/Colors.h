@@ -57,7 +57,7 @@ namespace PetriEngine {
 
             void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
             
-            std::vector<const Color*> getTupleColors() const {
+            const std::vector<const Color*>& getTupleColors() const {
                 return _tuple;
             }
 
@@ -187,6 +187,10 @@ namespace PetriEngine {
                 return _colors.size();
             }
 
+            virtual size_t size(std::vector<bool> *excludedFields) const {
+                return _colors.size();
+            }
+
             virtual size_t productSize() {
                 return 1;
             }
@@ -284,6 +288,16 @@ namespace PetriEngine {
                 return product;
             }
 
+            size_t size(std::vector<bool> *excludedFields) const override {
+                size_t product = 1;
+                for (uint32_t i = 0; i < constituents.size(); i++) {
+                    if(!excludedFields->operator[](i)){
+                        product *= constituents[i]->size();
+                    }                    
+                }
+                return product;
+            }
+
             virtual size_t productSize() {
                 size_t size = 0;
                 for (auto ct : constituents){
@@ -336,14 +350,7 @@ namespace PetriEngine {
                 return constituents[index];
             }
 
-            const Color* getColor(std::vector<uint32_t> ids){
-                assert(ids.size() == constituents.size());
-                std::vector<const Color *> colors;
-                for(uint32_t i = 0; i < ids.size(); i++){
-                    colors.push_back(&constituents[i]->operator[](i));
-                }
-                return getColor(colors);
-            }
+            const Color* getColor(std::vector<uint32_t> ids);
 
             const Color* getColor(const std::vector<const Color*>& colors);
 

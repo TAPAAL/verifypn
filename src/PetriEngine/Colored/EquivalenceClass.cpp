@@ -34,7 +34,7 @@ namespace PetriEngine {
         }
 
 
-        EquivalenceClass EquivalenceClass::subtract(EquivalenceClass other, bool print){
+        EquivalenceClass EquivalenceClass::subtract(EquivalenceClass other, const std::vector<bool> &diagonalPositions, bool print){
             EquivalenceClass result = EquivalenceClass();
             if(_colorType != other._colorType){
                 return result;
@@ -44,7 +44,7 @@ namespace PetriEngine {
             for(auto interval : _colorIntervals._intervals){ 
                 intervalTuple_t intervalSubRes;                   
                 for(auto otherInterval : other._colorIntervals._intervals){
-                    auto subtractedIntervals = interval.getSubtracted(otherInterval, _colorType->size());
+                    auto subtractedIntervals = interval.getSubtracted(otherInterval, diagonalPositions, _colorType->size());
                     if(print){
                         std::cout << interval.toString() << " - " << otherInterval.toString() << " = " << std::endl;
                         for(auto subinter : subtractedIntervals){
@@ -93,12 +93,12 @@ namespace PetriEngine {
             return result;
         }
 
-        bool EquivalenceClass::containsColor(std::vector<uint32_t> ids){
+        bool EquivalenceClass::containsColor(std::vector<uint32_t> ids, const std::vector<bool> &diagonalPositions){
             interval_t interval;
             for(auto id : ids){
                 interval.addRange(id,id);
             }
-            return _colorIntervals.contains(interval);
+            return _colorIntervals.contains(interval, diagonalPositions);
         }
 
         size_t EquivalenceClass::size(){

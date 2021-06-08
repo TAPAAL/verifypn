@@ -56,7 +56,7 @@ void PNMLParser::parse(std::ifstream& xml,
         exit(ErrorCode);
     }
     
-        auto declarations = root->first_node("declaration");
+    auto declarations = root->first_node("declaration");
     if(declarations == nullptr){
         declarations = root->first_node("net")->first_node("declaration");
     }
@@ -65,13 +65,6 @@ void PNMLParser::parse(std::ifstream& xml,
     if (isColored) {
         builder->enableColors();
         parseDeclarations(declarations);
-    }
-
-    auto netType = root->first_node("net");
-    rapidxml::xml_node<> *placeElement = netType->first_node("place");
-    while(placeElement == nullptr && netType != nullptr){
-        netType = netType->first_node();
-        placeElement = netType->first_node("place");
     }
 
     parseElement(root);
@@ -548,11 +541,11 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapi
         first = num;
     }
 
-    if(strcmp(first->first_node()->name(), "tuple") == 0){
-        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
-        collectColorsInTuple(first->first_node(), collectedColors);	
-        return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
-    }
+    // if(strcmp(first->first_node()->name(), "tuple") == 0){
+    //     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
+    //     collectColorsInTuple(first->first_node(), collectedColors);	
+    //     return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
+    // }
 
     auto allExpr = parseAllExpression(first);
     if (allExpr) {

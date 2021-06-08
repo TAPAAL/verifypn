@@ -86,10 +86,6 @@ namespace PetriEngine {
             return _partitionTimer;
         }
 
-        double getPartitionVarMapTime() const {
-            return _partitionVarMapTimer;
-        }
-
         double getFixpointTime() const {
             return _fixPointCreationTime;
         }
@@ -143,7 +139,9 @@ namespace PetriEngine {
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
         void computePlaceColorFixpoint(uint32_t max_intervals, uint32_t max_intervals_reduced, int32_t timeout);
-        void computePartition();
+        void computePartition(int32_t timeout);
+        void computeSymmetricVariables();
+        void printSymmetricVariables();
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
@@ -162,6 +160,9 @@ namespace PetriEngine {
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _inhibitorArcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
+        //transition id to vector of vectors of variables, where variable in vector are symmetric
+        std::unordered_map<uint32_t, std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
+
         std::unordered_map<uint32_t, std::string> _sumPlacesNames;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
@@ -177,8 +178,8 @@ namespace PetriEngine {
         double _fixPointCreationTime;
 
         double _partitionTimer = 0;
-
-        double _partitionVarMapTimer = 0;
+        double _placeTime = 0;
+        double _arcTime = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
 
@@ -200,12 +201,12 @@ namespace PetriEngine {
         void processOutputArcs(Colored::Transition& transition);
         
         void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t unfoldPlace, uint32_t id);
-        void unfoldTransition(Colored::Transition& transition);
-        void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap);
+        void unfoldTransition(uint32_t transitionId);
+        void handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
-        void unfoldInhibitorArc(std::string &oldname, std::string &newname);
+        void unfoldInhibitorArc(const std::string &oldname, const std::string &newname);
 
-        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
+        void unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& name);
     };
     
     //Used for checking if a variable is inside either a succ or pred expression
