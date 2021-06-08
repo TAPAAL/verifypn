@@ -241,7 +241,6 @@ namespace PetriEngine {
         for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
             Colored::Transition &transition = _transitions[transitionId];
             if ( symmetric_var_map.find(transitionId) == symmetric_var_map.end() ) {
-                //continue;
                 std::cout << "Transition " << transition.name << " has no symmetric variables" << std::endl;
             }else{
                 std::cout << "Transition " << transition.name << " has symmetric variables: " << std::endl;
@@ -580,16 +579,12 @@ namespace PetriEngine {
             for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
                 unfoldTransition(transitionId);
             }
-            /*for (auto& transition : _transitions) {
-                unfoldTransition(transition);
-            }*/
+
             auto& unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
             
-            //std::cout <<  "Place time " << _placeTime << " arc time " << _arcTime << std::endl;
-
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
@@ -623,7 +618,6 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
-        // auto start = std::chrono::high_resolution_clock::now();
         size_t tokenSize = 0;
 
         if(!_partitionComputed || _partition[placeId].diagonal){
@@ -654,8 +648,6 @@ namespace PetriEngine {
 
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
-        // auto end = std::chrono::high_resolution_clock::now();
-        // _placeTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
@@ -713,7 +705,6 @@ namespace PetriEngine {
                     const PetriEngine::Colored::Place& place = _places[inhibArc.place]; 
                     std::string sumPlaceName = place.name + "Sum";
                     _ptBuilder.addPlace(sumPlaceName, place.marking.size(),0.0,0.0);
-                    //_ptplacenames[place.name][color.getId()] = std::move(placeName);
                     if(_ptplacenames.count(place.name) <= 0){
                         _ptplacenames[place.name][0] = sumPlaceName;
                     }
@@ -725,7 +716,6 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
-        // auto start = std::chrono::high_resolution_clock::now();
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
@@ -772,15 +762,12 @@ namespace PetriEngine {
             }
             ++_nptarcs;
         }
-        // auto end = std::chrono::high_resolution_clock::now();
-        // _arcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
         if(place.inhibitor){
             const std::string &sumPlaceName = _sumPlacesNames[arc.place];
             if(sumPlaceName.empty()){
                 const std::string &newSumPlaceName = place.name + "Sum";
                 _ptBuilder.addPlace(newSumPlaceName, place.marking.size(),0.0,0.0);
-                //_ptplacenames[place.name][color.getId()] = std::move(placeName);
                 _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
             }
             
