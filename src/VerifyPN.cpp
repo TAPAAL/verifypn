@@ -856,7 +856,7 @@ std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::
     return ss.str();
 }
 
-void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
     std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
     std::fstream out;
@@ -909,8 +909,8 @@ void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<
     out.close();
 }
 
-void writeCompactQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net)
+void writeCompactQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+    std::string& filename, const ColoredPetriNetBuilder& cpnBuilder, const PetriNetBuilder& builder, const PetriNet* net)
 {
     std::fstream out;
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
@@ -1032,6 +1032,41 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     return cond;
 }
 
+void outputNet(const PetriNetBuilder &builder, std::string out_file) {
+    PetriNetBuilder b2(builder);
+    auto unfoldedNet = std::unique_ptr<PetriNet>(b2.makePetriNet(false));
+    std::fstream file;
+    file.open(out_file, std::ios::out);
+    unfoldedNet->toXML(file);
+}
+
+void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
+        std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io){
+    std::vector<uint32_t> reorder(queries.size());
+    for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
+    std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
+
+        if(queries[a]->isReachability() != queries[b]->isReachability())
+            return queries[a]->isReachability() > queries[b]->isReachability();
+        if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
+            return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
+        if(queries[a]->containsNext() != queries[b]->containsNext())
+            return queries[a]->containsNext() < queries[b]->containsNext();
+        return queries[a]->formulaSize() < queries[b]->formulaSize();
+    });
+    writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
+}
+
+void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder &b2, const PetriNet *net, 
+        const PetriEngine::ColoredPetriNetBuilder& cpnBuilder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries, 
+        std::vector<std::string> &querynames, std::string filename){
+    //Don't know if this is needed
+    std::vector<uint32_t> reorder(queries.size());
+    for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
+
+    writeCompactQueries(queries, querynames, reorder, filename,cpnBuilder, b2, net);
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -1123,7 +1158,9 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
 
-    
+    if(options.unfolded_out_file.size() > 0) {
+        outputNet(builder, options.unfolded_out_file);
+    }
 
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
@@ -1132,48 +1169,17 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(options.unfold_query_out_file.size() > 0)
-    {
-        //Don't know if this is needed
-        std::vector<uint32_t> reorder(queries.size());
-        for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        // std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
-
-        //     if(queries[a]->isReachability() != queries[b]->isReachability())
-        //         return queries[a]->isReachability() > queries[b]->isReachability();
-        //     if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-        //         return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-        //     if(queries[a]->containsNext() != queries[b]->containsNext())
-        //         return queries[a]->containsNext() < queries[b]->containsNext();
-        //     return queries[a]->formulaSize() < queries[b]->formulaSize();
-        // });
-        writeCompactQueries(queries, querynames, reorder, options.unfold_query_out_file,cpnBuilder, b2, qnet.get());
-
+    if(options.unfold_query_out_file.size() > 0) {
+        outputCompactQueries(builder, b2, qnet.get(), cpnBuilder, queries, querynames, options.unfold_query_out_file);
     }
+
 
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
     }
-    if(options.unfold_query_out_file.size() > 0)
-    {
-        //Don't know if this is needed
-        std::vector<uint32_t> reorder(queries.size());
-        for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
-
-            if(queries[a]->isReachability() != queries[b]->isReachability())
-                return queries[a]->isReachability() > queries[b]->isReachability();
-            if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-                return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-            if(queries[a]->containsNext() != queries[b]->containsNext())
-                return queries[a]->containsNext() < queries[b]->containsNext();
-            return queries[a]->formulaSize() < queries[b]->formulaSize();
-        });
-        writeQueries(queries, querynames, reorder, options.unfold_query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
-
-    }
+    
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
@@ -1329,21 +1335,8 @@ int main(int argc, char* argv[]) {
         } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
     }
 
-    if(options.query_out_file.size() > 0)
-    {
-        std::vector<uint32_t> reorder(queries.size());
-        for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
-
-            if(queries[a]->isReachability() != queries[b]->isReachability())
-                return queries[a]->isReachability() > queries[b]->isReachability();
-            if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-                return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-            if(queries[a]->containsNext() != queries[b]->containsNext())
-                return queries[a]->containsNext() < queries[b]->containsNext();
-            return queries[a]->formulaSize() < queries[b]->formulaSize();
-        });
-        writeQueries(queries, querynames, reorder, options.query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
+    if(options.query_out_file.size() > 0) {
+        outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
     }
 
     qnet = nullptr;
@@ -1384,21 +1377,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if(alldone && options.unfolded_out_file.size() == 0) return SuccessCode;
+        if(alldone && options.model_out_file.size() == 0) return SuccessCode;
     }
 
     options.queryReductionTimeout = 0;
-
-
-    if(options.unfolded_out_file.size() > 0)
-    {
-        auto unfoldedNet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
-        std::fstream file;
-        file.open(options.unfolded_out_file, std::ios::out);
-        unfoldedNet->toXML(file);
-    }
-
-    if(options.model_out_file.size() == 0 && alldone) return SuccessCode;
 
     //--------------------- Apply Net Reduction ---------------//
 
