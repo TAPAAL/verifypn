@@ -712,27 +712,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
-        std::array tarjanStrategies { DFS, RDFS, HEUR };
-        std::array ndfsStrategies { DFS, RDFS };
+        std::array ltlStrategies{DFS, RDFS, HEUR};
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
-
-            if (options.ltlalgorithm == LTL::Algorithm::Tarjan &&
-                std::find(std::begin(tarjanStrategies), std::end(tarjanStrategies), options.strategy) ==
-                std::end(tarjanStrategies)) {
-                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
-                return ErrorCode;
-            }
-            if (options.ltlalgorithm == LTL::Algorithm::NDFS &&
-                    std::find(std::begin(ndfsStrategies), std::end(ndfsStrategies), options.strategy) ==
-                    std::end(ndfsStrategies)) {
-                std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
-                return ErrorCode;
-            }
-            if (options.trace != TraceLevel::None
-                && options.strategy == RDFS
-                && options.ltlalgorithm == LTL::Algorithm::NDFS) {
-                std::cerr << "Argument Error: Random search order NDFS does not support traces" << std::endl;
+            if (std::find(std::begin(ltlStrategies), std::end(ltlStrategies), options.strategy) ==
+                std::end(ltlStrategies)) {
+                std::cerr << "Argument Error: Unsupported search strategy for LTL. Supported values are DFS, RDFS, and BestFS."
+                          << std::endl;
                 return ErrorCode;
             }
         }

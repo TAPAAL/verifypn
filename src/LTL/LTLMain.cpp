@@ -88,6 +88,47 @@ namespace LTL {
         return result;
     }
 
+    std::unique_ptr<Heuristic> make_heuristic(const PetriNet *net,
+                                              const Condition_ptr &negated_formula,
+                                              const Structures::BuchiAutomaton& automaton,
+                                              options_t &options) {
+        if (options.strategy == Reachability::Strategy::RDFS) {
+            return std::make_unique<RandomHeuristic>(options.seed());
+        }
+        if (options.strategy != Reachability::Strategy::HEUR) {
+            return nullptr;
+        }
+        switch (options.ltlHeuristic.heuristic) {
+            case LTLHeuristic::Distance:
+                return std::make_unique<DistanceHeuristic>(net, negated_formula);
+            case LTLHeuristic::Automaton:
+                return std::make_unique<AutomatonHeuristic>(net, automaton);
+            case LTLHeuristic::WeightedAutomaton:
+                return std::make_unique<WeightedAutomatonHeuristic>(net, automaton);
+            case LTLHeuristic::FireCount:
+                return std::make_unique<FireCountHeuristic>(net);
+            case LTLHeuristic::LogFireCount:
+                return std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold);
+            case LTLHeuristic::SumComposed:
+                return std::make_unique<SumComposedHeuristic>(
+                        std::make_unique<AutomatonHeuristic>(net, automaton),
+                        std::make_unique<LogFireCountHeuristic>(net,
+                                                                         options.ltlHeuristic.fire_count_threshold));
+            case LTLHeuristic::SumComposedWeightAutLogFire:
+                return std::make_unique<SumComposedHeuristic>(
+                        std::make_unique<WeightedAutomatonHeuristic>(net, automaton),
+                        std::make_unique<LogFireCountHeuristic>(net,
+                                                                         options.ltlHeuristic.fire_count_threshold));
+            case LTLHeuristic::SumComposedCountLogFire:
+                return std::make_unique<SumComposedHeuristic>(std::make_unique<DistanceHeuristic>(net, negated_formula),
+                                                              std::make_unique<LogFireCountHeuristic>(net,
+                                                                                                               options.ltlHeuristic.fire_count_threshold));
+            default:
+                std::cerr << "Error unhandled heuristic type. This is a bug!" << std::endl;
+                exit(1);
+        }
+    }
+
     ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
@@ -120,34 +161,44 @@ namespace LTL {
         bool is_stubborn = is_visible_stub || is_autreach_stub || is_buchi_stub;
 
         std::unique_ptr<SuccessorSpooler> spooler;
-        std::unique_ptr<Heuristic> heuristic = nullptr;
+        std::unique_ptr<Heuristic> heuristic = make_heuristic(net, negated_formula, automaton, options);
 
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.strategy == PetriEngine::Reachability::RDFS) {
+                if (options.strategy != PetriEngine::Reachability::DFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
-                    heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
 
-                    result = _verify(net, negated_formula,
-                                     std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>>(net, negated_formula, automaton, &gen),
-                                     options);
+                    if (options.trace != TraceLevel::None) {
+                        result = _verify(
+                                net, negated_formula,
+                                std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                                        net, negated_formula, automaton, &gen),
+                                options);
+                    } else {
+                        result = _verify(
+                                net, negated_formula,
+                                std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                                        net, negated_formula, automaton, &gen),
+                                options);
+                    }
                 } else {
                     ResumingSuccessorGenerator gen{net};
-
                     if (options.trace != TraceLevel::None) {
-                        result = _verify(net, negated_formula,
-                                         std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
-                                                 net, negated_formula, automaton, &gen),
-                                         options);
+                        result = _verify(
+                                net, negated_formula,
+                                std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                                        net, negated_formula, automaton, &gen),
+                                options);
                     } else {
-                        result = _verify(net, negated_formula,
-                                         std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
-                                                 net, negated_formula, automaton, &gen),
-                                         options);
+                        result = _verify(
+                                net, negated_formula,
+                                std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                                        net, negated_formula, automaton, &gen),
+                                options);
                     }
                 }
                 break;
@@ -167,44 +218,12 @@ namespace LTL {
                         spooler = std::make_unique<EnabledSpooler>(net, gen);
                     }
 
-                    if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        heuristic = std::make_unique<RandomHeuristic>(options.seed());
-                    } else if (options.strategy == PetriEngine::Reachability::HEUR
-                               || options.strategy == PetriEngine::Reachability::DEFAULT) {
-                        switch (options.ltlHeuristic.heuristic) {
-                            case LTLHeuristic::Distance:
-                                heuristic = std::make_unique<DistanceHeuristic>(net, negated_formula);
-                                break;
-                            case LTLHeuristic::Automaton:
-                                heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
-                                break;
-                            case LTLHeuristic::WeightedAutomaton:
-                                heuristic = std::make_unique<WeightedAutomatonHeuristic>(net, automaton);
-                                break;
-                            case LTLHeuristic::FireCount:
-                                heuristic = std::make_unique<FireCountHeuristic>(net);
-                                break;
-                            case LTLHeuristic::LogFireCount:
-                                heuristic = std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold);
-                                break;
-
-                            case LTLHeuristic::SumComposed:
-                                heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
-                                break;
-                            case LTLHeuristic::SumComposedWeightAutLogFire:
-                                heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<WeightedAutomatonHeuristic>(net, automaton), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
-                                break;
-                            case LTLHeuristic::SumComposedCountLogFire:
-                                heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<DistanceHeuristic>(net, negated_formula), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
-                                break;
-                            default:
-                                std::cerr << "Error unhandled heuristic type. This is a bug!" << std::endl;
-                                exit(1);
-                        }
-                    }
                     assert(spooler);
                     gen.setSpooler(spooler.get());
-                    if (heuristic) {
+                    if (options.strategy != PetriEngine::Reachability::DFS) {
+                        assert(heuristic != nullptr);
+                    }
+                    else {
                         gen.setHeuristic(heuristic.get());
                     }
 
