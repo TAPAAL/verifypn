@@ -24,13 +24,13 @@ namespace PetriEngine {
                     return false;
                 }
 
-                bool containsColor(std::vector<uint32_t> ids, const std::vector<bool> &diagonalPositions);
+                bool containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions);
 
                 size_t size();
 
                 EquivalenceClass intersect(EquivalenceClass other);
 
-                EquivalenceClass subtract(EquivalenceClass other, const std::vector<bool> &diagonalPositions,  bool print);
+                EquivalenceClass subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions);
 
                 static uint32_t idCounter;
                 uint32_t _id;
@@ -49,7 +49,7 @@ namespace PetriEngine {
             bool diagonal = false;
 
             void applyPartition(Colored::ArcIntervals& arcInterval){
-                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(&diagonalTuplePositions)){
+                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(diagonalTuplePositions)){
                     diagonal = true;
                     return;
                 }
@@ -101,7 +101,7 @@ namespace PetriEngine {
             }
 
             void applyPartition(std::vector<uint32_t> *colorIds){
-                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(&diagonalTuplePositions)){
+                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(diagonalTuplePositions)){
                     diagonal = true;
                     return;
                 }
@@ -122,27 +122,6 @@ namespace PetriEngine {
                     }
                 }
             }
-
-            // void setDiagonal(uint32_t position, uint32_t numColors){
-            //     std::vector<EquivalenceClass> newEqClasses;
-            //     for(auto eqClass : _equivalenceClasses){
-            //         for(uint i = 0; i < numColors; i++){
-            //             auto newEqClass = EquivalenceClass(eqClass._colorType);
-            //             for(auto interval : eqClass._colorIntervals._intervals){
-            //                 if(interval[position].contains(i)){
-            //                     interval_t newInterval = interval;
-            //                     newInterval[position]._lower = i;
-            //                     newInterval[position]._upper = i;
-            //                     newEqClass._colorIntervals.addInterval(newInterval);
-            //                 }                          
-            //             }
-            //             if(!newEqClass._colorIntervals._intervals.empty()){
-            //                 newEqClasses.push_back(std::move(newEqClass));
-            //             }
-            //         }
-            //     }
-            //     _equivalenceClasses = std::move(newEqClasses);
-            // }
         };
 
     }

@@ -77,17 +77,12 @@ namespace PetriEngine {
                     }
                 }
 
-                if(allPositionsDiagonal || _partition[placeId]._equivalenceClasses.size() >= _partition[placeId]._equivalenceClasses.back()._colorType->size(&_partition[placeId].diagonalTuplePositions)){
+                if(allPositionsDiagonal || _partition[placeId]._equivalenceClasses.size() >= _partition[placeId]._equivalenceClasses.back()._colorType->size(_partition[placeId].diagonalTuplePositions)){
                     _partition[placeId].diagonal = true;
                 }
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
-                    // std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
-                    // printPartion(); 
-                                      
                     handleTransition(transitionId, placeId);
-                    
-                    // std::cout << "---------------------------------------------------" << std::endl;
                 }
                 end = std::chrono::high_resolution_clock::now();
             }
@@ -132,17 +127,9 @@ namespace PetriEngine {
             handleTransition(transition, postPlaceId, &postArc);
         }
 
-        void PartitionBuilder::handleTransition(const Transition &transition, const uint32_t postPlaceId, const Arc *postArc) {
-            std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
-            std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> varPositionMap;
-            std::set<const PetriEngine::Colored::Variable *> postArcVars;
-            std::set<const PetriEngine::Colored::Variable *>guardVars;
-            std::set<const Colored::Variable*> diagonalVars;
-            
-            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
-
-            //Check if a variable appears more than once on the output arc
-            //If the place is does not have a product colortype mark the whole place as diagonal, otherwise only the positions
+        //Check if a variable appears more than once on the output arc
+        //If the place is does not have a product colortype mark the whole place as diagonal, otherwise only the positions
+        void PartitionBuilder::checkVarOnArc(const VariableModifierMap &varModifierMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId, bool inputArc){
             for(auto varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
                     uint32_t actualSize = 0;
@@ -157,22 +144,150 @@ namespace PetriEngine {
                     }
                     if(actualSize > 1) {
                         diagonalVars.insert(varModMap.first);
-                        if(_partition[postPlaceId]._equivalenceClasses.back()._colorType->productSize() == 1){
-                            _partition[postPlaceId].diagonal = true;
+                        if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
+                            _partition[placeId].diagonal = true;
                         } else {                            
                             for(auto pos : positions){
-                                _partition[postPlaceId].diagonalTuplePositions[pos] = true;
+                                if(!_partition[placeId].diagonalTuplePositions[pos]){
+                                    if(inputArc) addToQueue(placeId);
+                                    _partition[placeId].diagonalTuplePositions[pos] = true;
+                                }
                             }
                         }
                     } 
                 }
             }
+        }
+        //Check if the variales on this preArc also appear on other preArcs for the transition
+        //and mark them as diagonal if they do
+        void PartitionBuilder::checkVarOnInputArcs(std::unordered_map<uint32_t,PositionVariableMap> &placeVariableMap, const PositionVariableMap &preVarPositionMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
+            for(auto placeVariables : placeVariableMap){
+                for(auto variable : preVarPositionMap){
+                    for(auto varPosition : placeVariables.second){
+                        if(varPosition.second == variable.second){
+                            diagonalVars.insert(variable.second);
+                            if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                _partition[placeId].diagonal = true;
+                            } else if(!_partition[placeId].diagonalTuplePositions[variable.first]) {                                      
+                                addToQueue(placeId);
+                                _partition[placeId].diagonalTuplePositions[variable.first] = true;                            
+                            } 
+
+                            if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                _partition[placeVariables.first].diagonal = true;
+                                addToQueue(placeVariables.first);
+                            } else if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]) {
+                                addToQueue(placeVariables.first);
+                                _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
+                            }                                     
+                            break;                                
+                        }
+                    }
+                    if(_partition[placeId].diagonal){
+                        break;
+                    }                            
+                }
+                if(_partition[placeId].diagonal){
+                    break;
+                }
+            }
+            placeVariableMap[placeId] = preVarPositionMap;
+        }
+        //Check if the preArc share variables with the postArc and mark diagonal if the 
+        //variable positions are diagonal in the post place
+        void PartitionBuilder::markSharedVars(const PositionVariableMap &preVarPositionMap, const PositionVariableMap &varPositionMap, uint32_t postPlaceId, uint32_t prePlaceId){                   
+            for(auto preVar : preVarPositionMap){
+                for(auto postVar : varPositionMap){
+                    if(preVar.second == postVar.second){
+                        if(_partition[postPlaceId].diagonal || _partition[postPlaceId].diagonalTuplePositions[postVar.first]){
+                            if(_partition[prePlaceId]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                _partition[prePlaceId].diagonal = true;
+                            } else if(!_partition[prePlaceId].diagonalTuplePositions[preVar.first]) {
+                                addToQueue(prePlaceId);
+                                _partition[prePlaceId].diagonalTuplePositions[preVar.first] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //Check if any of the variables on the preArc was part of a diagonal constraint in the gaurd
+        void PartitionBuilder::checkVarInGuard(const PositionVariableMap &preVarPositionMap, const std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
+            for(auto preVar : preVarPositionMap){
+                if(diagonalVars.count(preVar.second)){
+                    if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
+                        _partition[placeId].diagonal = true;
+                        break;
+                    } else if(!_partition[placeId].diagonalTuplePositions[preVar.first]) {
+                        addToQueue(placeId);
+                        _partition[placeId].diagonalTuplePositions[preVar.first] = true;
+                    }                           
+                }
+            }
+        }
+
+        //Check if we have marked all positions in the product type of the place as diagonal
+        //and mark the whole place as diagonal if it is the case
+        bool PartitionBuilder::checkTupleDiagonal(uint32_t placeId){
+            bool allPositionsDiagonal = true;
+            for(auto diag : _partition[placeId].diagonalTuplePositions){
+                if(!diag){
+                    allPositionsDiagonal = false;
+                    break;
+                }
+            }
+
+            if(allPositionsDiagonal){
+                _partition[placeId].diagonal = true;
+                addToQueue(placeId);
+                return true;
+            }
+            return false; 
+        }
+
+        bool PartitionBuilder::checkDiagonal(uint32_t placeId){
+            if(_partition[placeId].diagonal){
+                addToQueue(placeId);
+                return true;
+            }
+            return false;
+        }
+
+        void PartitionBuilder::applyNewIntervals(const Arc &inArc, std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps){
+            //Retrieve the intervals for the current place, 
+            //based on the intervals from the postPlace, the postArc, preArc and guard
+            auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
+            EquivalenceVec newEqVec;
+            for(auto& intervalTuple : outIntervals){
+                intervalTuple.simplify();
+                EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, std::move(intervalTuple));
+                newEqVec._equivalenceClasses.push_back(std::move(newEqClass));
+            }                    
+            newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;                    
+            
+            //If the prePlace has not been marked as diagonal, then split the current partitions based on the new intervals
+            if(splitPartition(std::move(newEqVec), inArc.place)){
+                addToQueue(inArc.place);
+            }
+            _partition[inArc.place].mergeEqClasses();
+        }
+
+        void PartitionBuilder::handleTransition(const Transition &transition, const uint32_t postPlaceId, const Arc *postArc) {
+            VariableModifierMap varModifierMap;
+            PositionVariableMap varPositionMap;
+            std::set<const PetriEngine::Colored::Variable *> postArcVars;
+            std::set<const PetriEngine::Colored::Variable *>guardVars;
+            std::set<const Colored::Variable*> diagonalVars;
+            
+            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
+
+            checkVarOnArc(varModifierMap, diagonalVars, postPlaceId, false);
 
             if(transition.guard != nullptr){
                 transition.guard->getVariables(guardVars);
             }           
 
-            std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
+            const std::vector<Colored::EquivalenceClass> &placePartition = _partition[postPlaceId]._equivalenceClasses;
 
             //Partition each of the equivalence classes
             for(auto eqClass : placePartition){
@@ -192,173 +307,50 @@ namespace PetriEngine {
                     transition.guard->restrictVars(varMaps, diagonalVars);
                 }
 
-                std::unordered_map<uint32_t, std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *>> placeVariableMap;
-                for(auto inArc : transition.input_arcs){
-                    //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
-                    if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
-                        _partition[inArc.place].diagonal = true;
-                    }
+                handleInArcs(transition, diagonalVars, varPositionMap, varMaps, postPlaceId);
+            }
+        }
 
-                    if(_partition[inArc.place].diagonal){
-                        continue;
-                    }
-                    std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> preVarModifierMap;
-                    std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
-                    std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
-
-                    //Check if the variales on this preArc also appear on other preArcs for the transition
-                    //and mark them as diagonal if they do
-                    for(auto placeVariables : placeVariableMap){
-                        for(auto variable : preVarPositionMap){
-                            for(auto varPosition : placeVariables.second){
-                                if(varPosition.second == variable.second){
-                                    diagonalVars.insert(variable.second);
-                                    if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                        _partition[inArc.place].diagonal = true;
-                                    } else if(!_partition[inArc.place].diagonalTuplePositions[variable.first]) {                                      
-                                        addToQueue(inArc.place);
-                                        _partition[inArc.place].diagonalTuplePositions[variable.first] = true;                            
-                                    } 
-
-                                    if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                        _partition[placeVariables.first].diagonal = true;
-                                        addToQueue(placeVariables.first);
-                                    } else if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]) {
-                                        addToQueue(placeVariables.first);
-                                        _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
-                                    }                                     
-                                    break;                                
-                                }
-                            }
-                            if(_partition[inArc.place].diagonal){
-                                break;
-                            }                            
-                        }
-                        if(_partition[inArc.place].diagonal){
-                            break;
-                        }
-                    }
-                    placeVariableMap[inArc.place] = preVarPositionMap;
-
-                    if(_partition[inArc.place].diagonal){
-                        addToQueue(inArc.place);
-                        continue;
-                    }
-
-                    //Check if the preArc share variables with the postArc and mark diagonal if the 
-                    //variable positions are diagonal in the post place
-                    for(auto preVar : preVarPositionMap){
-                        for(auto postVar : varPositionMap){
-                            if(preVar.second == postVar.second){
-                                if(_partition[postPlaceId].diagonal || _partition[postPlaceId].diagonalTuplePositions[postVar.first]){
-                                    if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                        _partition[inArc.place].diagonal = true;
-                                    } else if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]) {
-                                        addToQueue(inArc.place);
-                                        _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    if(_partition[inArc.place].diagonal){
-                        addToQueue(inArc.place);
-                        continue;
-                    }
-
-
-                    //Check if a variable appears more than once on the preArc and mark it diagonal if it does
-                    for(auto varModMap : preVarModifierMap){
-                        if(varModMap.second.size() > 1){
-                            uint32_t actualSize = 0;
-                            std::vector<uint32_t> positions;
-                            for(auto map : varModMap.second){
-                                if(!map.empty()){
-                                    for(auto position : map){
-                                        positions.push_back(position.first);
-                                    }
-                                    actualSize++;
-                                }
-                            }
-                            if(actualSize > 1) {
-                                diagonalVars.insert(varModMap.first);
-                                if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                    _partition[inArc.place].diagonal = true;
-                                } else {                                    
-                                    for(auto pos : positions){
-                                        if(!_partition[inArc.place].diagonalTuplePositions[pos]){
-                                            addToQueue(inArc.place);
-                                            _partition[inArc.place].diagonalTuplePositions[pos] = true;
-                                        }
-                                    }
-                                }                                
-                            }                            
-                        }
-                    }
-
-                    if(_partition[inArc.place].diagonal){
-                        addToQueue(inArc.place);
-                        continue;
-                    }
-
-                    //Check if any of the variables on the preArc was part of a diagonal constraint in the gaurd
-                    for(auto preVar : preVarPositionMap){
-                        if(diagonalVars.count(preVar.second)){
-                            if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                _partition[inArc.place].diagonal = true;
-                                break;
-                            } else if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]) {
-                                addToQueue(inArc.place);
-                                _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                            }                           
-                        }
-                    }
-
-                    if(_partition[inArc.place].diagonal){
-                        addToQueue(inArc.place);
-                        continue;
-                    }
-
-                    //Check if we have marked all positions in the product type of the place as diagonal
-                    //and mark the whole place as diagonal if it is the case
-                    bool allPositionsDiagonal = true;
-                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
-                        if(!diag){
-                            allPositionsDiagonal = false;
-                            break;
-                        }
-                    }
-
-                    if(allPositionsDiagonal){
-                        _partition[inArc.place].diagonal = true;
-                        addToQueue(inArc.place);
-                        continue;
-                    }                    
-
-                    //Retrieve the intervals for the current place, 
-                    //based on the intervals from the postPlace, the postArc, preArc and guard
-                    auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
-                    EquivalenceVec newEqVec;
-                    for(auto& intervalTuple : outIntervals){
-                        intervalTuple.simplify();
-                        EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, std::move(intervalTuple));
-                        newEqVec._equivalenceClasses.push_back(std::move(newEqClass));
-                    }                    
-                    newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;                    
-                    _partition[inArc.place].mergeEqClasses();
-
-                    if(_partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
-                        _partition[inArc.place].diagonal = true;
-                    }
-
-                    //If the prePlace has not been marked as diagonal, then split the current partitions based on the new intervals
-                    if((_partition[inArc.place].diagonal || splitPartition(std::move(newEqVec), inArc.place))){
-                        addToQueue(inArc.place);
-                    }
-                    _partition[inArc.place].mergeEqClasses();
+        void PartitionBuilder::handleInArcs(const Transition &transition, std::set<const Colored::Variable*> &diagonalVars, const PositionVariableMap &varPositionMap, std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps, uint32_t postPlaceId){
+            std::unordered_map<uint32_t,PositionVariableMap> placeVariableMap;
+            for(auto inArc : transition.input_arcs){
+                //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
+                if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
+                    _partition[inArc.place].diagonal = true;
                 }
+
+                if(_partition[inArc.place].diagonal){
+                    continue;
+                }
+                VariableModifierMap preVarModifierMap;
+                PositionVariableMap preVarPositionMap;
+                std::set<const PetriEngine::Colored::Variable *> preArcVars;
+                inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
+
+                checkVarOnInputArcs(placeVariableMap, preVarPositionMap, diagonalVars, inArc.place);
+                if(checkDiagonal(inArc.place)) continue;
+
+                markSharedVars(preVarPositionMap, varPositionMap, postPlaceId, inArc.place);
+                if(checkDiagonal(inArc.place)) continue;
+
+                checkVarOnArc(preVarModifierMap, diagonalVars, inArc.place, true);
+                if(checkDiagonal(inArc.place)) continue;
+
+                checkVarInGuard(preVarPositionMap, diagonalVars, inArc.place);
+                if(checkDiagonal(inArc.place)) continue;
+
+                _partition[inArc.place].mergeEqClasses();
+
+                if(_partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(_partition[inArc.place].diagonalTuplePositions)){
+                    _partition[inArc.place].diagonal = true;
+                    continue;
+                }
+
+                if(checkTupleDiagonal(inArc.place)){
+                    continue;
+                }                
+
+                applyNewIntervals(inArc, varMaps);
             }
         }
 
@@ -380,8 +372,8 @@ namespace PetriEngine {
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
                     auto ec1 = equivalenceVec._equivalenceClasses[ecPos1];
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
-                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.diagonalTuplePositions, false);
-                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions, false);                    
+                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.diagonalTuplePositions);
+                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions);                    
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
                     _partition[placeId]._equivalenceClasses.erase(_partition[placeId]._equivalenceClasses.begin() + ecPos2);
@@ -420,12 +412,12 @@ namespace PetriEngine {
             return false;
         }
 
-        std::vector<std::unordered_map<const Variable *, intervalTuple_t>> 
+        std::vector<VariableIntervalMap> 
         PartitionBuilder::prepareVariables(
-                    std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 
+                    VariableModifierMap varModifierMap, 
                     EquivalenceClass *eqClass , const Arc *arc, uint32_t placeId){
-            std::vector<std::unordered_map<const Variable *, intervalTuple_t>> varMaps;
-            std::unordered_map<const Variable *, intervalTuple_t> varMap;
+            std::vector<VariableIntervalMap> varMaps;
+            VariableIntervalMap varMap;
             varMaps.push_back(varMap);
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;

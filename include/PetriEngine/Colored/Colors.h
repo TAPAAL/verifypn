@@ -187,11 +187,11 @@ namespace PetriEngine {
                 return _colors.size();
             }
 
-            virtual size_t size(std::vector<bool> *excludedFields) const {
+            virtual size_t size(const std::vector<bool> &excludedFields) const {
                 return _colors.size();
             }
 
-            virtual size_t productSize() {
+            virtual size_t productSize() const {
                 return 1;
             }
 
@@ -235,7 +235,7 @@ namespace PetriEngine {
                 return (*this)[index.c_str()];
             }
 
-            virtual const Color* getColor(std::vector<uint32_t> ids){
+            virtual const Color* getColor(const std::vector<uint32_t> &ids){
                 assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
@@ -288,10 +288,10 @@ namespace PetriEngine {
                 return product;
             }
 
-            size_t size(std::vector<bool> *excludedFields) const override {
+            size_t size(const std::vector<bool> &excludedFields) const override {
                 size_t product = 1;
                 for (uint32_t i = 0; i < constituents.size(); i++) {
-                    if(!excludedFields->operator[](i)){
+                    if(!excludedFields[i]){
                         product *= constituents[i]->size();
                     }                    
                 }
@@ -350,7 +350,7 @@ namespace PetriEngine {
                 return constituents[index];
             }
 
-            const Color* getColor(std::vector<uint32_t> ids);
+            const Color* getColor(const std::vector<uint32_t> &ids);
 
             const Color* getColor(const std::vector<const Color*>& colors);
 
@@ -399,6 +399,12 @@ namespace PetriEngine {
             std::vector<const Color *> colors;
             std::string name;
         };
+
+        typedef std::unordered_map<uint32_t, const Colored::Variable *> PositionVariableMap;
+        //Map from variables to a vector of maps from variable positions to the modifiers applied to the variable in that position
+        typedef std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> VariableModifierMap;
+        typedef std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> VariableIntervalMap;
+        typedef std::unordered_map<uint32_t, std::vector<const Color*>> PositionColorsMap;
     }
 }
 

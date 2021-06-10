@@ -119,22 +119,6 @@ void PNMLParser::parse(std::ifstream& xml,
                     target.id.c_str());
         }
     }
-
-    // for(Arc& inhibitor : inhibarcs)
-    // {
-    //     NodeName source = id2name[inhibitor.source];
-    //     NodeName target = id2name[inhibitor.target];
-    //     if (source.isPlace && !target.isPlace) {
-    //         builder->addInputArc(source.id, target.id, true, inhibitor.weight);
-    //     }
-    //     else
-    //     {
-    //         fprintf(stderr,
-    //                 "XML Parsing error: Inhibitor from \"%s\" to \"%s\" is not valid!\n",
-    //                 source.id.c_str(),
-    //                 target.id.c_str());
-    //     }
-    // }
     
     //Unset the builder
     this->builder = nullptr;
@@ -545,12 +529,6 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapi
         first = num;
     }
 
-    // if(strcmp(first->first_node()->name(), "tuple") == 0){
-    //     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
-    //     collectColorsInTuple(first->first_node(), collectedColors);	
-    //     return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
-    // }
-
     auto allExpr = parseAllExpression(first);
     if (allExpr) {
         return std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(allExpr), number);
@@ -579,16 +557,16 @@ void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(),"inhibitorArc") == 0) {
             parseArc(it, true);
         } else if (strcmp(it->name(), "variable") == 0) {
-            std::cerr << "variable not supported" << std::endl;
+            std::cerr << "ERROR: variable not supported" << std::endl;
             exit(ErrorCode);
         } else if (strcmp(it->name(),"queries") == 0) {
             parseQueries(it);
         } else if (strcmp(it->name(), "k-bound") == 0) {
-            std::cerr << "k-bound should be given as command line option -k" << std::endl;
-            //exit(ErrorCode);
+            std::cerr << "ERROR: k-bound should be given as command line option -k" << std::endl;
+            exit(ErrorCode);
         } else if (strcmp(it->name(),"query") == 0) {
-            std::cerr << "query tag not supported, please use PQL or XML-style queries instead" << std::endl;
-            //exit(ErrorCode);            
+            std::cerr << "ERROR: query tag not supported, please use PQL or XML-style queries instead" << std::endl;
+            exit(ErrorCode);            
         }
         else
         {
@@ -691,11 +669,11 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
             std::string text;
             parseValue(it, text);
             weight = atoi(text.c_str());
-            // if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
-            // {
-            //     std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
-            //     exit(ErrorCode);
-            // }
+            if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
+            {
+                std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
+                exit(ErrorCode);
+            }
             assert(weight > 0);
             if(!first)
             {

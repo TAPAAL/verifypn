@@ -50,7 +50,7 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
 
-    NaiveBindingGenerator::NaiveBindingGenerator(Colored::Transition& transition,
+    NaiveBindingGenerator::NaiveBindingGenerator(const Colored::Transition& transition,
             ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
@@ -80,7 +80,7 @@ namespace PetriEngine {
             return true;
         Colored::EquivalenceVec placePartition;
 
-        Colored::ExpressionContext context {_bindings, _colorTypes, placePartition};
+        const Colored::ExpressionContext &context {_bindings, _colorTypes, placePartition};
         return _expr->eval(context);
     }
 
@@ -157,7 +157,7 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
 
-    FixpointBindingGenerator::FixpointBindingGenerator(Colored::Transition* transition,
+    FixpointBindingGenerator::FixpointBindingGenerator(const Colored::Transition* transition,
         const ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars)
     : _colorTypes(colorTypes), _transition(transition), _symmetric_vars(symmetric_vars)
     {
@@ -188,11 +188,11 @@ namespace PetriEngine {
         
         
         for (auto var : variables) {
-            if(_transition->variableMaps.empty() || _transition->variableMaps[_nextIndex][var]._intervals.empty()){
+            if(_transition->variableMaps.empty() || _transition->variableMaps[_nextIndex].find(var)->second._intervals.empty()){
                 _noValidBindings = true;
                 break;
             }
-            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex][var].getFirst().getLowerIds());
+            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex].find(var)->second.getFirstConst().getLowerIds());
             _bindings[var] = color;
         }
         assignSymmetricVars();
@@ -233,7 +233,7 @@ namespace PetriEngine {
             return true;
 
         Colored::EquivalenceVec placePartition;
-        Colored::ExpressionContext context {_bindings, _colorTypes, placePartition};
+        const Colored::ExpressionContext &context {_bindings, _colorTypes, placePartition};
         return _expr->eval(context);
     }
 
@@ -257,7 +257,7 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    auto varInterval = _transition->variableMaps[_nextIndex][_binding.first];                
+                    auto varInterval = _transition->variableMaps[_nextIndex].find(_binding.first)->second;                
                     std::vector<uint32_t> colorIds;
                     _binding.second->getTupleId(&colorIds);
                     auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
@@ -290,7 +290,7 @@ namespace PetriEngine {
                     break;
                 }
                 for(auto& _binding : _bindings){
-                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex][_binding.first].getFirst().getLowerIds());
+                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex].find(_binding.first)->second.getFirstConst().getLowerIds());
                 }
             }                 
             test = eval();

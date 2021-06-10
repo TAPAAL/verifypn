@@ -44,7 +44,7 @@ namespace PetriEngine {
             interval_t(std::vector<Reachability::range_t> ranges) : _ranges(ranges) {
             }
 
-            size_t size(){
+            size_t size() const{
                 return _ranges.size();
             }
 
@@ -88,7 +88,7 @@ namespace PetriEngine {
                 return _ranges[index];
             }
             
-            Reachability::range_t& operator[] (int index) {
+            Reachability::range_t& operator[] (int index)  {
                 return _ranges[index];
             }
             
@@ -105,7 +105,7 @@ namespace PetriEngine {
                 return _ranges.back();
             }
 
-            std::vector<uint32_t> getLowerIds(){
+            std::vector<uint32_t> getLowerIds() const{
                 std::vector<uint32_t> ids;
                 for(auto range : _ranges){
                     ids.push_back(range._lower);
@@ -162,7 +162,7 @@ namespace PetriEngine {
                 return true;
             }
 
-            bool contains(interval_t other, const std::vector<bool> &diagonalPositions){
+            bool contains(interval_t &other, const std::vector<bool> &diagonalPositions) const{
                 if(other.size() != size()){
                     return false;
                 }
@@ -180,7 +180,7 @@ namespace PetriEngine {
                 }
             }
 
-            interval_t getOverlap(interval_t other){
+            interval_t getOverlap(interval_t &other) const{
                 interval_t overlapInterval;
                 if(size() != other.size()){
                     return overlapInterval;
@@ -289,7 +289,7 @@ namespace PetriEngine {
                 return _intervals[0];
             }
 
-            const interval_t& getFirstConst(){
+            const interval_t& getFirstConst() const{
                 return _intervals[0];
             }
 
@@ -609,8 +609,8 @@ namespace PetriEngine {
                 _intervals = std::move(collectedIntervals);
             }
 
-            bool contains(interval_t interval){
-                for(auto localInterval : _intervals){
+            bool contains(const interval_t &interval){
+                for(auto &localInterval : _intervals){
                     if(localInterval.contains(interval)){
                         return true;
                     }
@@ -618,8 +618,8 @@ namespace PetriEngine {
                 return false;
             }
 
-            bool contains(interval_t interval, const std::vector<bool> &diagonalPositions){
-                for(auto localInterval : _intervals){
+            bool contains(interval_t &interval, const std::vector<bool> &diagonalPositions){
+                for(auto &localInterval : _intervals){
                     if(localInterval.contains(interval, diagonalPositions)){
                         return true;
                     }
@@ -673,14 +673,7 @@ namespace PetriEngine {
                             for(uint32_t k = 0; k < interval->size(); k++) {
                                 int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
                                 int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
-                                // int32_t lowerDist = interval->operator[](k)._lower > otherInterval->operator[](k)._lower? 
-                                //     interval->operator[](k)._lower - otherInterval->operator[](k)._lower : 
-                                //     otherInterval->operator[](k)._lower - interval->operator[](k)._lower;
-                                // int32_t upperDist = interval->operator[](k)._upper > otherInterval->operator[](k)._upper? 
-                                //     interval->operator[](k)._upper - otherInterval->operator[](k)._upper : 
-                                //     otherInterval->operator[](k)._upper - interval->operator[](k)._upper;
                                 dist += std::max(0, std::max(val1, val2));
-                                //dist += std::max(upperDist + lowerDist, upperDist + lowerDist + std::max(val1, val2));
                                 if(dist >= currentBest.distance){
                                     break;
                                 }

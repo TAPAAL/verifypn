@@ -70,7 +70,7 @@ namespace PetriEngine {
                     for(uint32_t i = 0; i < varIntervals.size(); i++){
                         auto varInterval = &varIntervals[i];
                         for(auto& interval : intervals){
-                            auto overlap = varInterval->getOverlap(std::move(interval));
+                            auto overlap = varInterval->getOverlap(interval);
                             if(overlap.isSound()){ 
                                 newVarIntervals.addInterval(std::move(overlap));
                                 //break;
@@ -83,8 +83,8 @@ namespace PetriEngine {
         }
 
         void populateLocalMap(Colored::ArcIntervals *arcIntervals, 
-                            std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> &varMap,
-                            std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> &localVarMap,
+                            Colored::VariableIntervalMap &varMap,
+                            Colored::VariableIntervalMap &localVarMap,
                             Colored::interval_t* interval, bool& allVarsAssigned,  uint32_t tuplePos){
             for(auto& pair : arcIntervals->_varIndexModMap){                     
                 Colored::intervalTuple_t varIntervals; 
@@ -118,13 +118,13 @@ namespace PetriEngine {
             }         
         }
 
-        void fillVarMaps(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>> &variableMaps,
+        void fillVarMaps(std::vector<Colored::VariableIntervalMap> &variableMaps,
                                             Colored::ArcIntervals *arcIntervals,
                                             uint32_t *intervalTupleSize,
                                             uint32_t *tuplePos)
         {
             for(uint32_t i = 0; i < *intervalTupleSize; i++){
-                std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> localVarMap;
+                Colored::VariableIntervalMap localVarMap;
                 bool validInterval = true;
                 auto interval = &arcIntervals->_intervalTupleVec[*tuplePos]._intervals[i];
             
@@ -151,7 +151,7 @@ namespace PetriEngine {
             }  
         }
 
-        bool getVarIntervals(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMaps, std::unordered_map<uint32_t, Colored::ArcIntervals> placeArcIntervals){
+        bool getVarIntervals(std::vector<Colored::VariableIntervalMap>& variableMaps, std::unordered_map<uint32_t, Colored::ArcIntervals> placeArcIntervals){
             for(auto& placeArcInterval : placeArcIntervals){            
                 for(uint32_t j = 0; j < placeArcInterval.second._intervalTupleVec.size(); j++){
                     uint32_t intervalTupleSize = placeArcInterval.second._intervalTupleVec[j].size();
@@ -160,11 +160,11 @@ namespace PetriEngine {
                     if(variableMaps.empty()){                    
                         fillVarMaps(variableMaps, &placeArcInterval.second, &intervalTupleSize, &j);                                            
                     } else {
-                        std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>> newVarMapVec;
+                        std::vector<Colored::VariableIntervalMap> newVarMapVec;
                         
                         for(auto& varMap : variableMaps){          
                             for(uint32_t i = 0; i < intervalTupleSize; i++){
-                                std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> localVarMap;
+                                Colored::VariableIntervalMap localVarMap;
                                 bool allVarsAssigned = true;
                                 auto interval = &placeArcInterval.second._intervalTupleVec[j]._intervals[i];
                                 

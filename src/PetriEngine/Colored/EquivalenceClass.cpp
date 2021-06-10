@@ -34,7 +34,7 @@ namespace PetriEngine {
         }
 
 
-        EquivalenceClass EquivalenceClass::subtract(EquivalenceClass other, const std::vector<bool> &diagonalPositions, bool print){
+        EquivalenceClass EquivalenceClass::subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions){
             EquivalenceClass result = EquivalenceClass();
             if(_colorType != other._colorType){
                 return result;
@@ -45,13 +45,6 @@ namespace PetriEngine {
                 intervalTuple_t intervalSubRes;                   
                 for(auto otherInterval : other._colorIntervals._intervals){
                     auto subtractedIntervals = interval.getSubtracted(otherInterval, diagonalPositions, _colorType->size());
-                    if(print){
-                        std::cout << interval.toString() << " - " << otherInterval.toString() << " = " << std::endl;
-                        for(auto subinter : subtractedIntervals){
-                            std::cout << subinter.toString() << std::endl;
-                        }
-                        std::cout << "~~~~~~" << std::endl;
-                    }
                     
 
                     if(subtractedIntervals.empty() || subtractedIntervals[0].size() == 0){
@@ -71,34 +64,34 @@ namespace PetriEngine {
                                 }
                             }
                         }
-                        intervalSubRes = std::move(newIntervals);   
-                        // for(auto newInterval : subtractedIntervals){
-                        //     resIntervals.addInterval(newInterval);
-                        // }                            
-                    }
-                    if(print){
-                        std::cout << "intermediate res is now: " << intervalSubRes.toString() << std::endl;
+                        intervalSubRes = std::move(newIntervals);                              
                     }
                 }
-                if(print) std::cout << "Done looping inner" << std::endl;
                 for(auto interval : intervalSubRes._intervals){
                     resIntervals.addInterval(interval);
-                }
-                if(print){
-                    std::cout << "Subtract res is now: " << resIntervals.toString() << std::endl;
-                }
-                
+                }                
             }
             result._colorIntervals = resIntervals;                  
             return result;
         }
 
-        bool EquivalenceClass::containsColor(std::vector<uint32_t> ids, const std::vector<bool> &diagonalPositions){
-            interval_t interval;
-            for(auto id : ids){
-                interval.addRange(id,id);
+        bool EquivalenceClass::containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions){
+            if(ids.size() != _colorIntervals.getFirstConst().size()){
+                return false;
             }
-            return _colorIntervals.contains(interval, diagonalPositions);
+            for(auto &interval : _colorIntervals._intervals){
+                bool contained = true;
+                for(uint32_t i = 0; i < ids.size(); i++){
+                    if(!interval[i].contains(ids[i])){
+                        contained = false;
+                        break;
+                    }
+                }
+                if(contained){
+                    return true;
+                }
+            }
+            return false;
         }
 
         size_t EquivalenceClass::size(){
