@@ -275,27 +275,36 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
 }
 
 PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof){	
-	auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
-	for(uint32_t i = 2; i < collectedColors.size(); i++){	
-		initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
-	}	
-	std::vector<PetriEngine::Colored::NumberOfExpression_ptr> numberOfExpressions;	
-	for(auto set : initCartesianSet){	
-		std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
-		for (auto color : set) {	
-			colors.push_back(color);	
-		}	
-		std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));	
-		tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
-		std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
-		placeholderVector.push_back(tupleExpr);	
-		numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
-	}	
-	std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
+    std::vector<PetriEngine::Colored::ArcExpression_ptr> numberOfExpressions;	
+    if(collectedColors.size() < 2){
+        for(auto exp : collectedColors[0]){
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
+			colors.push_back(exp);
+            numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(colors),numberof));	
+        }
+    }else{
+         auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
+        for(uint32_t i = 2; i < collectedColors.size(); i++){	
+            initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
+        }	
+        for(auto set : initCartesianSet){	
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
+            for (auto color : set) {	
+                colors.push_back(color);	
+            }	
+            std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));	
+            tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
+            placeholderVector.push_back(tupleExpr);	
+            numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
+        }	
+    }
+   
+	/*std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
 	for (auto expr : numberOfExpressions) {	
 		constituents.push_back(expr);	
-	}	
-	return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));	
+	}*/	
+	return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(numberOfExpressions));	
 }	
 	
 std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){	
