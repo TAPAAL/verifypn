@@ -720,7 +720,8 @@ namespace PetriEngine {
                 }
                 
                 // well, ok. the right way to do this operation would be to do the
-                // removal inline with the previous loop
+                // removal inline with the previous loop.
+                // i.e. the previous loop would have to iterate backwards also.
                 for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
                     _intervals.erase(_intervals.begin() + *i);
                 }
