@@ -56,11 +56,11 @@ namespace PetriEngine {
                 return no_lower() && no_upper();
             }
 
-            bool isSound() {
+            bool isSound() const {
                 return _lower <= _upper;
             }
 
-            bool contains(uint32_t id){
+            bool contains(uint32_t id) const {
                 return _lower <= id && id <= _upper;
             }
 
@@ -69,7 +69,7 @@ namespace PetriEngine {
                 _lower = min();
             }
 
-            uint32_t size(){
+            uint32_t size() const {
                 return 1 + _upper - _lower;
             }
 

@@ -192,7 +192,7 @@ namespace PetriEngine {
                 _noValidBindings = true;
                 break;
             }
-            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex].find(var)->second.getFirstConst().getLowerIds());
+            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex].find(var)->second.front().getLowerIds());
             _bindings[var] = color;
         }
         assignSymmetricVars();
@@ -274,7 +274,7 @@ namespace PetriEngine {
                         _currentInnerId = 0;
                         _currentOuterId = 0;
                         assignSymmetricVars();
-                        if(!nextIntervalBinding.equals(varInterval.getFirst())){
+                        if(!nextIntervalBinding.equals(varInterval.front())){
                             next = false;
                             
                             break;
@@ -290,7 +290,7 @@ namespace PetriEngine {
                     break;
                 }
                 for(auto& _binding : _bindings){
-                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex].find(_binding.first)->second.getFirstConst().getLowerIds());
+                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex].find(_binding.first)->second.front().getLowerIds());
                 }
             }                 
             test = eval();

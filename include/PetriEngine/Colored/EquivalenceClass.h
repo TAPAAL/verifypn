@@ -18,7 +18,7 @@ namespace PetriEngine {
                 }
 
                 bool isEmpty(){
-                    if(_colorIntervals.size() < 1 || _colorIntervals.getFirst().size() < 1){
+                    if(_colorIntervals.size() < 1 || _colorIntervals.front().size() < 1){
                         return true;
                     } 
                     return false;

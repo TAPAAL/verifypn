@@ -76,7 +76,7 @@ namespace PetriEngine {
         }
 
         bool EquivalenceClass::containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions){
-            if(ids.size() != _colorIntervals.getFirstConst().size()){
+            if(ids.size() != _colorIntervals.front().size()){
                 return false;
             }
             for(auto &interval : _colorIntervals._intervals){
