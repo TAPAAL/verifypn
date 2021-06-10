@@ -299,11 +299,6 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTu
             numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
         }	
     }
-   
-	/*std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
-	for (auto expr : numberOfExpressions) {	
-		constituents.push_back(expr);	
-	}*/	
 	return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(numberOfExpressions));	
 }	
 	
