@@ -233,7 +233,7 @@ namespace PetriEngine {
                     varInterval.addInterval(interval);
                 }
                                            
-                std::vector<ColorType*> varColorTypes;
+                std::vector<const ColorType*> varColorTypes;
                 _variable->colorType->getColortypes(varColorTypes);
 
                 for(auto ct : varColorTypes){

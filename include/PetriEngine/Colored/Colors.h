@@ -195,32 +195,28 @@ namespace PetriEngine {
                 return 1;
             }
 
-            virtual std::vector<size_t> getConstituentsSizes(){
+            virtual std::vector<size_t> getConstituentsSizes() const{
                 std::vector<size_t> result;                
                 result.push_back(_colors.size());
                 
                 return result;
             }
 
-            virtual Colored::interval_t getFullInterval(){
+            virtual Colored::interval_t getFullInterval() const{
                 Colored::interval_t interval;
-                interval.addRange(Reachability::range_t(0, size()-1));
+                interval.addRange(0, size()-1);
                 return interval;
             }
 
-            virtual void getColortypes(std::vector<ColorType *> &colorTypes){
-                colorTypes.push_back(this);
-            }
-
-            virtual void printConstituents(){
-                std::cout << _name << std::endl;
+            virtual void getColortypes(std::vector<const ColorType *> &colorTypes) const{
+                colorTypes.emplace_back(this);
             }
             
-            virtual const Color& operator[] (size_t index) {
+            virtual const Color& operator[] (size_t index){
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (int index) {
+            virtual const Color& operator[] (int index){
                 return _colors[index];
             }
             
@@ -235,7 +231,7 @@ namespace PetriEngine {
                 return (*this)[index.c_str()];
             }
 
-            virtual const Color* getColor(const std::vector<uint32_t> &ids){
+            virtual const Color* getColor(const std::vector<uint32_t> &ids) const{
                 assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
@@ -244,7 +240,7 @@ namespace PetriEngine {
                 return _id == other._id;
             }
 
-            uintptr_t getId() {
+            uintptr_t getId() const{
                 return _id;
             }
 
@@ -298,7 +294,7 @@ namespace PetriEngine {
                 return product;
             }
 
-            virtual size_t productSize() {
+            virtual size_t productSize() const{
                 size_t size = 0;
                 for (auto ct : constituents){
                     size += ct->productSize();
@@ -306,7 +302,7 @@ namespace PetriEngine {
                 return size;
             }
 
-            std::vector<size_t> getConstituentsSizes() override{
+            std::vector<size_t> getConstituentsSizes() const override{
                 std::vector<size_t> result;
                 for (auto ct : constituents) {
                     result.push_back(ct->size());
@@ -314,7 +310,7 @@ namespace PetriEngine {
                 return result;
             }
 
-            Colored::interval_t getFullInterval() override{
+            Colored::interval_t getFullInterval() const override{
                 Colored::interval_t interval;
                 for(auto ct : constituents) {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
@@ -322,7 +318,7 @@ namespace PetriEngine {
                 return interval;
             }
 
-            void getColortypes(std::vector<ColorType *> &colorTypes) override{
+            void getColortypes(std::vector<const ColorType *> &colorTypes) const override{
                 for(auto ct : constituents){
                     ct->getColortypes(colorTypes);
                 }
@@ -338,12 +334,6 @@ namespace PetriEngine {
                 }
 
                 return true;
-            }
-
-            void printConstituents() override{
-                for(auto ct : constituents){
-                   ct->printConstituents();
-                }
             }
 
             const ColorType* getNestedColorType(size_t index) {
@@ -374,25 +364,6 @@ namespace PetriEngine {
         struct ColorFixpoint {
             Colored::intervalTuple_t constraints;
             bool inQueue;
-
-            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
-                std::unordered_map<uint32_t, bool> contained;
-                for(auto interval : constraints._intervals) {
-                    for(uint32_t id : constPair.second){
-                        
-                        if(contained[id] != true){
-                            contained[id] = interval[id].contains(constPair.first->getId());
-                        }                        
-                    }
-                }
-
-                for(auto pair : contained){
-                    if (!pair.second){
-                        return false;
-                    }
-                }
-                return true;
-            }
         };
 
         struct ColorTypePartition {

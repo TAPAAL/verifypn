@@ -22,7 +22,7 @@
 
 namespace PetriEngine {
     struct IntervalGenerator {
-        std::vector<Colored::interval_t> getIntervalsFromInterval(Colored::interval_t *interval, uint32_t varPosition, int32_t varModifier, std::vector<Colored::ColorType*> *varColorTypes){
+        std::vector<Colored::interval_t> getIntervalsFromInterval(Colored::interval_t *interval, uint32_t varPosition, int32_t varModifier, std::vector<const Colored::ColorType*> *varColorTypes){
             std::vector<Colored::interval_t> varIntervals;
             Colored::interval_t firstVarInterval;
             varIntervals.push_back(firstVarInterval);
@@ -57,7 +57,7 @@ namespace PetriEngine {
             return varIntervals;
         }
 
-        void getArcVarIntervals(Colored::intervalTuple_t& varIntervals, std::unordered_map<uint32_t, int32_t> *modIndexMap, Colored::interval_t *interval, std::vector<Colored::ColorType*> *varColorTypes){
+        void getArcVarIntervals(Colored::intervalTuple_t& varIntervals, std::unordered_map<uint32_t, int32_t> *modIndexMap, Colored::interval_t *interval, std::vector<const Colored::ColorType*> *varColorTypes){
             for(auto& posModPair : *modIndexMap){
                 auto intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
 
@@ -88,7 +88,7 @@ namespace PetriEngine {
                             Colored::interval_t* interval, bool& allVarsAssigned,  uint32_t tuplePos){
             for(auto& pair : arcIntervals->_varIndexModMap){                     
                 Colored::intervalTuple_t varIntervals; 
-                std::vector<Colored::ColorType*> varColorTypes;
+                std::vector<const Colored::ColorType*> varColorTypes;
                 pair.first->colorType->getColortypes(varColorTypes);
                 
                 getArcVarIntervals(varIntervals, &pair.second[tuplePos], interval, &varColorTypes);                          
@@ -130,7 +130,7 @@ namespace PetriEngine {
             
                 for(auto pair : arcIntervals->_varIndexModMap){
                     Colored::intervalTuple_t varIntervals;
-                    std::vector<Colored::ColorType*> varColorTypes;
+                    std::vector<const Colored::ColorType*> varColorTypes;
                     pair.first->colorType->getColortypes(varColorTypes);
                     getArcVarIntervals(varIntervals, &pair.second[*tuplePos], interval, &varColorTypes); 
 
