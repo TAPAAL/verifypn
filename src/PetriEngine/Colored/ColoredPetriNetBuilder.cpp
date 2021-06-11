@@ -831,15 +831,8 @@ namespace PetriEngine {
                     }
                 }
                 for(const auto& arc : _inhibitorArcs){
-                    try {
-                        _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, true,
+                    _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, true,
                                                 arc.weight);
-                    } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on inhibitor arc: " << arcToString(arc) << std::endl;
-                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
-                        std::cerr << e.what() << std::endl;
-                        exit(ErrorCode);
-                    }
                 }
             }
 

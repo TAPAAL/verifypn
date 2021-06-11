@@ -1297,9 +1297,9 @@ int main(int argc, char* argv[]) {
                     if(options.cpnOverApprox && wasAGCPNApprox)
                     {
                         if(queries[i]->isTriviallyTrue())
-                            queries[i] = std::make_shared<BooleanCondition>(true);
-                        else if(queries[i]->isTriviallyFalse())
                             queries[i] = std::make_shared<BooleanCondition>(false);
+                        else if(queries[i]->isTriviallyFalse())
+                            queries[i] = std::make_shared<BooleanCondition>(true);
                         queries[i]->setInvariant(wasAGCPNApprox);
                     }
 

@@ -231,7 +231,7 @@ namespace PetriEngine {
                 return (*this)[index.c_str()];
             }
 
-            virtual const Color* getColor(const std::vector<uint32_t> &ids) const{
+            virtual const Color* getColor(const std::vector<uint32_t> &ids) {
                 assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
@@ -340,7 +340,7 @@ namespace PetriEngine {
                 return constituents[index];
             }
 
-            const Color* getColor(const std::vector<uint32_t> &ids);
+            const Color* getColor(const std::vector<uint32_t> &ids) override;
 
             const Color* getColor(const std::vector<const Color*>& colors);
 
