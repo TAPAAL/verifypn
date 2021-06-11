@@ -35,7 +35,7 @@ namespace PetriEngine {
                 std::unordered_map<uint32_t,bool> _inQueue;
                 std::vector<Place> *_places;
                 std::unordered_map<uint32_t, EquivalenceVec> _partition;
-                PetriEngine::IntervalGenerator intervalGenerator;
+                const PetriEngine::Colored::IntervalGenerator intervalGenerator = IntervalGenerator();
                 std::vector<uint32_t> _placeQueue;
 
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);

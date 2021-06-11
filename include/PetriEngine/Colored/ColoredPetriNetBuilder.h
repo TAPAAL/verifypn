@@ -154,7 +154,7 @@ namespace PetriEngine {
         PTTransitionMap _pttransitionnames;
         uint32_t _nptarcs = 0;
         uint32_t _maxIntervals = 0;
-        PetriEngine::IntervalGenerator intervalGenerator;
+        const Colored::IntervalGenerator intervalGenerator = Colored::IntervalGenerator();
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
