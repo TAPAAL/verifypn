@@ -45,10 +45,10 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 namespace PetriEngine {
     namespace Colored {
-        std::ostream& operator<<(std::ostream& stream, const Color& color) {
+        /*std::ostream& operator<<(std::ostream& stream, const Color& color) {
             stream << color.toString();
             return stream;
-        }
+        }*/
         
         Color::Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
                 : _tuple(colors), _colorType(colorType), _colorName(""), _id(id)
@@ -62,42 +62,6 @@ namespace PetriEngine {
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
-        }
-        
-        
-        const Color* Color::operator[] (size_t index) const {
-            if (!this->isTuple()) {
-                throw "Cannot access tuple if not a tuple color";
-            }
-            return _tuple[index];
-        }
-        
-        bool Color::operator< (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id < other._id;
-        }
-        
-        bool Color::operator> (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id > other._id;
-        }
-        
-        bool Color::operator<= (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id <= other._id;
-        }
-        
-        bool Color::operator>= (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id >= other._id;
         }
         
         const Color& Color::operator++ () const {

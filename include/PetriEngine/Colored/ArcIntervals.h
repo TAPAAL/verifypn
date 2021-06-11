@@ -25,7 +25,7 @@ namespace PetriEngine {
     namespace Colored {
 
         struct ArcIntervals {
-            std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> _varIndexModMap;
+            VariableModifierMap _varIndexModMap;
             std::vector<Colored::intervalTuple_t> _intervalTupleVec;
             Colored::ColorFixpoint * _source;
             
@@ -36,58 +36,11 @@ namespace PetriEngine {
             ArcIntervals(Colored::ColorFixpoint * source) : _source(source){
             }
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
+            ArcIntervals(Colored::ColorFixpoint * source, VariableModifierMap varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
             };
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap,  std::vector<Colored::intervalTuple_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
+            ArcIntervals(Colored::ColorFixpoint * source, VariableModifierMap varIndexModMap,  std::vector<Colored::intervalTuple_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
             };
-
-            size_t size() {
-                return _intervalTupleVec.size();
-            }
-
-            Colored::intervalTuple_t& operator[] (size_t index) {
-                return _intervalTupleVec[index];
-            }
-            
-            Colored::intervalTuple_t& operator[] (int index) {
-                return _intervalTupleVec[index];
-            }
-            
-            Colored::intervalTuple_t& operator[] (uint32_t index) {
-                assert(index < _intervalTupleVec.size());
-                return _intervalTupleVec[index];
-            }
-
-            Colored::intervalTuple_t& back(){
-                return _intervalTupleVec.back();
-            }
-
-            bool hasValidIntervals(){
-                for(auto intervalTuple : _intervalTupleVec){
-                    if (intervalTuple.hasValidIntervals()){
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            bool containsVariable(Colored::Variable * var){
-                for (auto varModPair : _varIndexModMap){
-                    if(varModPair.first == var){
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            std::set<const Colored::Variable *> getVariables(){
-                std::set<const Colored::Variable *> res;
-                for (auto varModPair : _varIndexModMap){
-                    res.insert(varModPair.first);
-                }
-                return res;
-            }
 
             void print() {
                 std::cout << "[ ";
