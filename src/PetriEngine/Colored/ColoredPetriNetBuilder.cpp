@@ -152,44 +152,46 @@ namespace PetriEngine {
 
     //------------------- Symmetric Variables --------------------//
     void ColoredPetriNetBuilder::computeSymmetricVariables(){
-        for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
-            const Colored::Transition &transition = _transitions[transitionId];
-            std::set<const Colored::Variable*> transitionVars;
-            if(transition.guard){
-                continue;
-                //the variables cannot appear on the guard
-            }
-            
-            for(const auto &inArc : transition.input_arcs){
-                std::set<const Colored::Variable*> inArcVars;
-                std::vector<uint32_t> numbers;
-
-                //Application of symmetric variables for partitioned places is currently unhandled
-                if(_partitionComputed && !_partition[inArc.place].diagonal){
+        if(_isColored){
+            for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
+                const Colored::Transition &transition = _transitions[transitionId];
+                std::set<const Colored::Variable*> transitionVars;
+                if(transition.guard){
                     continue;
+                    //the variables cannot appear on the guard
                 }
                 
-                //the expressions is eligible if it is an addexpression that contains only 
-                //numberOfExpressions with the same number
-                bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
+                for(const auto &inArc : transition.input_arcs){
+                    std::set<const Colored::Variable*> inArcVars;
+                    std::vector<uint32_t> numbers;
 
-                if(isEligible && numbers.size() > 1){
-                    inArc.expr->getVariables(inArcVars);
-                    //It cannot be symmetric with anything if there is only one variable
-                    if(inArcVars.size() < 2){
+                    //Application of symmetric variables for partitioned places is currently unhandled
+                    if(_partitionComputed && !_partition[inArc.place].diagonal){
                         continue;
                     }
-                    //The variables may appear only on one input arc and one output arc
-                    checkSymmetricVarsInArcs(transition, inArc, inArcVars, isEligible);
                     
-                    
-                    //All the variables have to appear on exactly one output arc and nowhere else
-                    checkSymmetricVarsOutArcs(transition, inArcVars, isEligible);                    
-                }else{
-                    isEligible = false;
-                }
-                if(isEligible){
-                    symmetric_var_map[transitionId].emplace_back(inArcVars);
+                    //the expressions is eligible if it is an addexpression that contains only 
+                    //numberOfExpressions with the same number
+                    bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
+
+                    if(isEligible && numbers.size() > 1){
+                        inArc.expr->getVariables(inArcVars);
+                        //It cannot be symmetric with anything if there is only one variable
+                        if(inArcVars.size() < 2){
+                            continue;
+                        }
+                        //The variables may appear only on one input arc and one output arc
+                        checkSymmetricVarsInArcs(transition, inArc, inArcVars, isEligible);
+                        
+                        
+                        //All the variables have to appear on exactly one output arc and nowhere else
+                        checkSymmetricVarsOutArcs(transition, inArcVars, isEligible);                    
+                    }else{
+                        isEligible = false;
+                    }
+                    if(isEligible){
+                        symmetric_var_map[transitionId].emplace_back(inArcVars);
+                    }
                 }
             }
         }
@@ -269,16 +271,18 @@ namespace PetriEngine {
     //----------------------- Partitioning -----------------------//
 
     void ColoredPetriNetBuilder::computePartition(int32_t timeout){
-        auto partitionStart = std::chrono::high_resolution_clock::now();
-        Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        if(pBuilder.partitionNet(timeout)){
-            //pBuilder.printPartion();
-            _partition = pBuilder.getPartition();
-            pBuilder.assignColorMap(_partition);
-            _partitionComputed = true;
-        }         
-        auto partitionEnd = std::chrono::high_resolution_clock::now();
-        _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
+        if(_isColored){
+            auto partitionStart = std::chrono::high_resolution_clock::now();
+            Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
+            if(pBuilder.partitionNet(timeout)){
+                //pBuilder.printPartion();
+                _partition = pBuilder.getPartition();
+                pBuilder.assignColorMap(_partition);
+                _partitionComputed = true;
+            }         
+            auto partitionEnd = std::chrono::high_resolution_clock::now();
+            _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
+        }        
     }
 
     //----------------------- Color fixpoint -----------------------//
@@ -301,47 +305,49 @@ namespace PetriEngine {
     }
  
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout) {
-        //Start timers for timing color fixpoint creation and max interval reduction steps
-        auto start = std::chrono::high_resolution_clock::now();
-        auto end = std::chrono::high_resolution_clock::now();
-        auto reduceTimer = std::chrono::high_resolution_clock::now();        
-        while(!_placeFixpointQueue.empty()){
-            //Reduce max interval once timeout passes
-            if(maxIntervals > maxIntervalsReduced && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
-                maxIntervals = maxIntervalsReduced; 
-            }
+        if(_isColored){
+            //Start timers for timing color fixpoint creation and max interval reduction steps
+            auto start = std::chrono::high_resolution_clock::now();
+            auto end = std::chrono::high_resolution_clock::now();
+            auto reduceTimer = std::chrono::high_resolution_clock::now();        
+            while(!_placeFixpointQueue.empty()){
+                //Reduce max interval once timeout passes
+                if(maxIntervals > maxIntervalsReduced && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
+                    maxIntervals = maxIntervalsReduced; 
+                }
+                
+                uint32_t currentPlaceId = _placeFixpointQueue.back();
+                _placeFixpointQueue.pop_back();
+                _placeColorFixpoints[currentPlaceId].inQueue = false;
+                std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
+
+                for (uint32_t transitionId : connectedTransitions) {                
+                    Colored::Transition& transition = _transitions[transitionId];
+                    // Skip transitions that cannot add anything new,
+                    // such as transitions with only constants on their arcs that have been processed once 
+                    if (transition.considered) continue;
+                    bool transitionActivated = true;
+                    transition.variableMaps.clear();
+
+                    if(!_arcIntervals.count(transitionId)){
+                        _arcIntervals[transitionId] = setupTransitionVars(transition);
+                    }           
+                    processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, maxIntervals);
             
-            uint32_t currentPlaceId = _placeFixpointQueue.back();
-            _placeFixpointQueue.pop_back();
-            _placeColorFixpoints[currentPlaceId].inQueue = false;
-            std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
-
-            for (uint32_t transitionId : connectedTransitions) {                
-                Colored::Transition& transition = _transitions[transitionId];
-                // Skip transitions that cannot add anything new,
-                // such as transitions with only constants on their arcs that have been processed once 
-                if (transition.considered) continue;
-                bool transitionActivated = true;
-                transition.variableMaps.clear();
-
-                if(!_arcIntervals.count(transitionId)){
-                    _arcIntervals[transitionId] = setupTransitionVars(transition);
-                }           
-                processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, maxIntervals);
-         
-                //If there were colors which activated the transitions, compute the intervals produced
-                if (transitionActivated) {
-                    processOutputArcs(transition);
-                }          
+                    //If there were colors which activated the transitions, compute the intervals produced
+                    if (transitionActivated) {
+                        processOutputArcs(transition);
+                    }          
+                }
+                end = std::chrono::high_resolution_clock::now();
             }
-            end = std::chrono::high_resolution_clock::now();
-        }
 
-        _fixpointDone = true;
-        _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+            _fixpointDone = true;
+            _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
-        //printPlaceTable();
-        _placeColorFixpoints.clear();
+            //printPlaceTable();
+            _placeColorFixpoints.clear();
+        }        
     }
 
     //Create Arc interval structures for the transition
@@ -802,7 +808,7 @@ namespace PetriEngine {
 
             for (auto& transition : _transitions) {
                 _ptBuilder.addTransition(transition.name, 0.0, 0.0);
-                for (auto& arc : transition.input_arcs) {
+                for (const auto& arc : transition.input_arcs) {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
                                                 arc.expr->weight());
@@ -813,12 +819,23 @@ namespace PetriEngine {
                         exit(ErrorCode);
                     }
                 }
-                for (auto& arc : transition.output_arcs) {
+                for (const auto& arc : transition.output_arcs) {
                     try {
                         _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
                                                 arc.expr->weight());
                     } catch (Colored::WeightException& e) {
                         std::cerr << "Exception on output arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                        std::cerr << e.what() << std::endl;
+                        exit(ErrorCode);
+                    }
+                }
+                for(const auto& arc : _inhibitorArcs){
+                    try {
+                        _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, true,
+                                                arc.weight);
+                    } catch (Colored::WeightException& e) {
+                        std::cerr << "Exception on inhibitor arc: " << arcToString(arc) << std::endl;
                         std::cerr << "In expression: " << arc.expr->toString() << std::endl;
                         std::cerr << e.what() << std::endl;
                         exit(ErrorCode);
@@ -833,7 +850,7 @@ namespace PetriEngine {
         return _ptBuilder;
     }
 
-    std::string ColoredPetriNetBuilder::arcToString(Colored::Arc& arc) const {
+    std::string ColoredPetriNetBuilder::arcToString(const Colored::Arc& arc) const {
         return !arc.input ? "(" + _transitions[arc.transition].name + ", " + _places[arc.place].name + ")" :
                "(" + _places[arc.place].name + ", " + _transitions[arc.transition].name + ")";
     }
