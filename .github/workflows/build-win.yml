@@ -43,5 +43,5 @@ jobs:
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
-          name: verifytapn-win64
-          path: '${{runner.workspace}}/build/bin/verifypn-win64'
+          name: verifytapn-win64.exe
+          path: '${{runner.workspace}}/build/bin/verifypn-win64.exe'
