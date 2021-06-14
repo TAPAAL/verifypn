@@ -41,7 +41,7 @@ namespace PetriEngine{
                 auto colorVal = val % ctSize;                  
                 interval.addRange(colorVal,colorVal);
             }
-            return std::move(interval); 
+            return interval; 
         }
 
         intervalTuple_t GuardRestrictor::getIntervalOverlap(const std::vector<interval_t> &intervals1, const std::vector<interval_t> &intervals2) const{
@@ -55,7 +55,7 @@ namespace PetriEngine{
                     }
                 }
             }
-            return std::move(newIntervalTuple);
+            return newIntervalTuple;
         }
 
         void GuardRestrictor::expandIdVec(const VariableIntervalMap &varMap,

@@ -55,7 +55,7 @@ namespace PetriEngine {
                     }
                 }            
             }
-            return std::move(varIntervals);
+            return varIntervals;
         }
 
         void IntervalGenerator::getArcVarIntervals(intervalTuple_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{
