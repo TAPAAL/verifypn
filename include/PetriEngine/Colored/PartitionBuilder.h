@@ -63,7 +63,7 @@ namespace PetriEngine {
 
                 std::vector<VariableIntervalMap> prepareVariables(
                             VariableModifierMap varModifierMap, 
-                            EquivalenceClass *eqClass , const Arc *postArc, uint32_t placeId);
+                            const EquivalenceClass& eqClass , const Arc *postArc, uint32_t placeId);
 
                 bool findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
 

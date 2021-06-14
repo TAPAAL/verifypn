@@ -288,11 +288,12 @@ namespace PetriEngine {
                 transition.guard->getVariables(guardVars);
             }           
 
-            const std::vector<Colored::EquivalenceClass> &placePartition = _partition[postPlaceId]._equivalenceClasses;
+            // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
+            const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
 
             //Partition each of the equivalence classes
-            for(auto eqClass : placePartition){
-                auto varMaps = prepareVariables(varModifierMap, &eqClass, postArc, postPlaceId);
+            for(const auto& eqClass : placePartition){
+                auto varMaps = prepareVariables(varModifierMap, eqClass, postArc, postPlaceId);
 
                 //If there are variables in the guard, that doesn't come from the postPlace
                 //we give them the full interval
@@ -416,13 +417,13 @@ namespace PetriEngine {
         std::vector<VariableIntervalMap> 
         PartitionBuilder::prepareVariables(
                     VariableModifierMap varModifierMap, 
-                    EquivalenceClass *eqClass , const Arc *arc, uint32_t placeId){
+                    const EquivalenceClass& eqClass , const Arc *arc, uint32_t placeId){
             std::vector<VariableIntervalMap> varMaps;
             VariableIntervalMap varMap;
             varMaps.push_back(varMap);
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
-            postPlaceFixpoint.constraints = eqClass->_colorIntervals; 
+            postPlaceFixpoint.constraints = eqClass._colorIntervals; 
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
             uint32_t index = 0;
 
