@@ -31,8 +31,12 @@ jobs:
       - name: Build 
         uses: lukka/run-cmake@v2.5
         with:
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
-          cmakeAppendedArgs: '-DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex'
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeAppendedArgs: >-
+            -DVERIFYPN_Static=ON 
+            -DVERIFYPN_MC_Simplification=OFF 
+            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison 
+            -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex
           cmakeBuildType: Release
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'
@@ -43,5 +47,5 @@ jobs:
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
-          name: verifydtapn-linux64
-          path: '${{runner.workspace}}/build/bin/verifypn-linux64'
+          name: verifydtapn-osx64
+          path: '${{runner.workspace}}/build/bin/verifypn-osx64'
