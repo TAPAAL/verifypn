@@ -28,6 +28,7 @@ jobs:
         run: |
           sudo apt-get install build-essential cmake flex bison git
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
+          ls ${{runner.workspace}}/*
         
 
       - name: Build 
@@ -35,7 +36,7 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeAppendedArgs: >-
-            -DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/toolchain-x86_64-w64-mingw32.cmake 
+            -DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/toolchain-x86_64-w64-mingw32.cmake
             -DVERIFYPN_Static=ON 
             -DVERIFYPN_MC_Simplification=OFF
           cmakeBuildType: Release
