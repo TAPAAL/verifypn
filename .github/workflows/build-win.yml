@@ -28,17 +28,13 @@ jobs:
         run: |
           sudo apt-get install build-essential cmake flex bison git make
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
-          pwd
-          ls 
-          ls /home/runner/work/verifypn/toolchain-x86_64-w64-mingw32.cmake
-        
 
       - name: Build 
         uses: lukka/run-cmake@v2.5
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeAppendedArgs: >-
-            -DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/toolchain-x86_64-w64-mingw32.cmake
+            -DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/verifypn/toolchain-x86_64-w64-mingw32.cmake
             -DVERIFYPN_Static=ON 
             -DVERIFYPN_MC_Simplification=OFF
           cmakeBuildType: Release
