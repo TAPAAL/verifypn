@@ -427,6 +427,20 @@ namespace PetriEngine {
         }
     }
 
+    void AddTransitionVars(Colored::Transition& transition){
+        std::set<const Colored::Variable *> variables;
+        transition.guard->getVariables(variables);
+        for(auto var : variables){
+            for(auto &varmap : transition.variableMaps){
+                if(varmap.count(var) == 0){
+                    Colored::intervalTuple_t intervalTuple;
+                    intervalTuple.addInterval(var->colorType->getFullInterval());
+                    varmap[var] = std::move(intervalTuple);
+                }
+            }
+        }
+    }
+
     void removeInvalidVarmaps(Colored::Transition& transition){
         std::vector<Colored::VariableIntervalMap> newVarmaps;
         for(auto& varMap : transition.variableMaps){
@@ -455,6 +469,7 @@ namespace PetriEngine {
         }
         if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
             if(transition.guard != nullptr) {
+                AddTransitionVars(transition);
                 transition.guard->restrictVars(transition.variableMaps);              
                 removeInvalidVarmaps(transition);
 
