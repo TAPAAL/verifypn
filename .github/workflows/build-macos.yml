@@ -4,7 +4,7 @@ name: Build MacOS
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ build-action ]
+    branches: [ build-macos ]
   pull_request:
     branches: [ marster ]
 
@@ -26,17 +26,20 @@ jobs:
       # Runs a single command using the runners shell
       - name: Install Packages
         run: |
-          sudo apt-get install build-essential cmake flex bison git
-          sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
+          sudo brew install flex bison #gcc-9 git cmake 
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtBasic
-          cmakeAppendedArgs: '-DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/toolchain-x86_64-w64-mingw32.cmake -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF'
+          cmakeAppendedArgs: '-DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex'
           cmakeBuildType: Release
           cmakeGenerator: UnixMakefiles
-          buildDirectory: '${{runner.workspace}}/build'     
+          buildDirectory: '${{runner.workspace}}/build'
+        env:
+          CC: gcc-9
+          CXX: g++-9
+          
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
