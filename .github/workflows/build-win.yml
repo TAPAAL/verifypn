@@ -26,9 +26,11 @@ jobs:
       # Runs a single command using the runners shell
       - name: Install Packages
         run: |
-          sudo apt-get install build-essential cmake flex bison git
+          sudo apt-get install build-essential cmake flex bison git make
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
-          ls ${{runner.workspace}}/*
+          pwd
+          ls 
+          ls /home/runner/work/verifypn/toolchain-x86_64-w64-mingw32.cmake
         
 
       - name: Build 
