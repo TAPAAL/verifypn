@@ -82,7 +82,7 @@ namespace PetriEngine {
             for(auto &interval : _colorIntervals._intervals){
                 bool contained = true;
                 for(uint32_t i = 0; i < ids.size(); i++){
-                    if(!interval[i].contains(ids[i])){
+                    if(!diagonalPositions[i] && !interval[i].contains(ids[i])){
                         contained = false;
                         break;
                     }

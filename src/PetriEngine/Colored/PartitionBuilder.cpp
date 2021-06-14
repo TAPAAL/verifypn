@@ -102,6 +102,7 @@ namespace PetriEngine {
                         color->getTupleId(&colorIds);
                         if(eqClass.containsColor(colorIds, eqVec.second.diagonalTuplePositions)){
                             eqVec.second.colorEQClassMap[color] = &eqClass;
+                            break;
                         }
                     }                    
                 }               
