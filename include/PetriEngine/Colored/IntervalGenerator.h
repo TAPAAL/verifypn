@@ -28,7 +28,7 @@ namespace PetriEngine {
                 bool getVarIntervals(std::vector<VariableIntervalMap>& variableMaps, const std::unordered_map<uint32_t, ArcIntervals> &placeArcIntervals) const;
             private:
 
-                std::vector<interval_t>&& getIntervalsFromInterval(const interval_t &interval, uint32_t varPosition, int32_t varModifier, const std::vector<const ColorType*> &varColorTypes) const;
+                std::vector<interval_t> getIntervalsFromInterval(const interval_t &interval, uint32_t varPosition, int32_t varModifier, const std::vector<const ColorType*> &varColorTypes) const;
 
                 void getArcVarIntervals(intervalTuple_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const;
 

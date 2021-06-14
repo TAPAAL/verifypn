@@ -34,7 +34,7 @@ namespace PetriEngine{
             return modifier;
         }
 
-        interval_t&& GuardRestrictor::getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const{
+        interval_t GuardRestrictor::getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const{
             interval_t interval;
             for(auto id : idVec){          
                 int32_t val = ctSize + (id + modifier);
@@ -44,7 +44,7 @@ namespace PetriEngine{
             return std::move(interval); 
         }
 
-        intervalTuple_t&& GuardRestrictor::getIntervalOverlap(const std::vector<interval_t> &intervals1, const std::vector<interval_t> &intervals2) const{
+        intervalTuple_t GuardRestrictor::getIntervalOverlap(const std::vector<interval_t> &intervals1, const std::vector<interval_t> &intervals2) const{
             intervalTuple_t newIntervalTuple;
             for(auto mainInterval : intervals1){
                 for(auto otherInterval : intervals2){

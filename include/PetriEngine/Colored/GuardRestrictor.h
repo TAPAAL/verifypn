@@ -71,8 +71,8 @@ namespace PetriEngine {
 
             private:
                 int32_t getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) const;
-                interval_t&& getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const;
-                intervalTuple_t&& getIntervalOverlap(const std::vector<Colored::interval_t> &intervals1, const std::vector<Colored::interval_t> &intervals2) const;
+                interval_t getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const;
+                intervalTuple_t getIntervalOverlap(const std::vector<Colored::interval_t> &intervals1, const std::vector<Colored::interval_t> &intervals2) const;
 
                 void expandIdVec(const VariableIntervalMap &varMap,
                             const VariableModifierMap &mainVarModifierMap,

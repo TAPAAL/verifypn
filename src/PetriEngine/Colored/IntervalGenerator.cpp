@@ -23,7 +23,7 @@ namespace PetriEngine {
 
         IntervalGenerator::IntervalGenerator(){}
 
-        std::vector<interval_t>&& IntervalGenerator::getIntervalsFromInterval(const interval_t &interval, uint32_t varPosition, int32_t varModifier, const std::vector<const ColorType*> &varColorTypes) const{
+        std::vector<interval_t> IntervalGenerator::getIntervalsFromInterval(const interval_t &interval, uint32_t varPosition, int32_t varModifier, const std::vector<const ColorType*> &varColorTypes) const{
             std::vector<interval_t> varIntervals;
             interval_t firstVarInterval;
             varIntervals.push_back(firstVarInterval);
