@@ -26,7 +26,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Install Packages
         run: |
-          sudo brew install flex bison #gcc-9 git cmake 
+          brew install flex bison #gcc-9 git cmake 
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
