@@ -5,29 +5,7 @@
 namespace PetriEngine {
     namespace Colored {
         class PartitionBuilder {
-            public:
-                PartitionBuilder(std::vector<Transition> *transitions, 
-                                std::vector<Place> *places, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap);
 
-                PartitionBuilder(std::vector<Transition> *transitions, 
-                                std::vector<Place> *places, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap,
-                                std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
-                
-                ~PartitionBuilder() {}
-
-                //void initPartition();
-                bool partitionNet(int32_t timeout);
-                void refinePartition();
-                void printPartion();
-                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition);
-
-                std::unordered_map<uint32_t, EquivalenceVec> getPartition(){
-                    return _partition;
-                }
             private:
                 std::vector<Transition> *_transitions;
                 std::unordered_map<uint32_t,std::vector<uint32_t>> *_placePostTransitionMap;
@@ -68,6 +46,30 @@ namespace PetriEngine {
                 bool findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
 
                 uint32_t eqClassIdCounter = 0;
+
+            public:
+                PartitionBuilder(std::vector<Transition> *transitions, 
+                                std::vector<Place> *places, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap);
+
+                PartitionBuilder(std::vector<Transition> *transitions, 
+                                std::vector<Place> *places, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap,
+                                std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
+                
+                ~PartitionBuilder() {}
+
+                //void initPartition();
+                bool partitionNet(int32_t timeout);
+                void refinePartition();
+                void printPartion();
+                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition);
+
+                std::unordered_map<uint32_t, EquivalenceVec> getPartition(){
+                    return _partition;
+                }
         };
     }
 }

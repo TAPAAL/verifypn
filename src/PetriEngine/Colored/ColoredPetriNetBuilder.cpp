@@ -54,12 +54,23 @@ namespace PetriEngine {
 
             Colored::intervalTuple_t placeConstraints;
             Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
+            uint32_t colorCounter = 0;
+            
+            if(tokens.size() == type->size()) {
+                for(const auto& colorPair : tokens){
+                    if(colorPair.second > 0){
+                        colorCounter++;
+                    } else {
+                        break;
+                    }
+                }
+            }            
 
-            if(tokens.size() == type->size()){
+            if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
             } else {
                 uint32_t index = 0;
-                for (auto colorPair : tokens) {
+                for (const auto& colorPair : tokens) {
                     Colored::interval_t tokenConstraints;
                     colorPair.first->getColorConstraints(&tokenConstraints, &index);
 
@@ -68,7 +79,7 @@ namespace PetriEngine {
                 }
             }
          
-            _placeColorFixpoints.push_back(colorFixpoint);            
+            _placeColorFixpoints.push_back(colorFixpoint);    
         }
     }
 
@@ -499,6 +510,18 @@ namespace PetriEngine {
 
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
+            }
+
+            //If there is a varaible which was not found on an input arc or in the guard, we give it
+            //the full interval
+            for(auto var : variables){
+                for(auto& varmap : transition.variableMaps){
+                    if(varmap.count(var) == 0){
+                        Colored::intervalTuple_t intervalTuple;
+                        intervalTuple.addInterval(var->colorType->getFullInterval());
+                        varmap[var] = std::move(intervalTuple);
+                    }
+                }
             }
 
             //Apply partitioning to unbound outgoing variables such that 
