@@ -27,7 +27,7 @@ namespace PetriEngine {
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) 
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
-       _transitions(orig._transitions), _places(orig._places)
+       _places(orig._places), _transitions(orig._transitions)
     {
     }
 
@@ -177,7 +177,7 @@ namespace PetriEngine {
                     std::vector<uint32_t> numbers;
 
                     //Application of symmetric variables for partitioned places is currently unhandled
-                    if(_partitionComputed && !_partition[inArc.place].diagonal){
+                    if(_partitionComputed && !_partition[inArc.place].isDiagonal()){
                         continue;
                     }
                     
@@ -240,7 +240,7 @@ namespace PetriEngine {
             }
             if(foundArc){
                 //Application of symmetric variables for partitioned places is currently unhandled
-                if(_partitionComputed && !_partition[outputArc.place].diagonal){
+                if(_partitionComputed && !_partition[outputArc.place].isDiagonal()){
                     isEligible = false;
                     break;
                 }
@@ -284,7 +284,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePartition(int32_t timeout){
         if(_isColored){
             auto partitionStart = std::chrono::high_resolution_clock::now();
-            Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
+            Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
             if(pBuilder.partitionNet(timeout)){
                 //pBuilder.printPartion();
                 _partition = pBuilder.getPartition();
@@ -526,12 +526,12 @@ namespace PetriEngine {
 
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
-            if(_partitionComputed && !_partition[arc.place].diagonal){
+            if(_partitionComputed && !_partition[arc.place].isDiagonal()){
                 for(auto outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){
                             Colored::intervalTuple_t varIntervalTuple;
-                            for(auto EqClass : _partition[arc.place]._equivalenceClasses){
+                            for(auto EqClass : _partition[arc.place].getEquivalenceClasses()){
                                 varIntervalTuple.addInterval(EqClass._colorIntervals.back().getSingleColorInterval());
                             }
                             varMap[outVar] = varIntervalTuple;
@@ -672,15 +672,15 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
         size_t tokenSize = 0;
 
-        if(!_partitionComputed || _partition[placeId].diagonal){
+        if(!_partitionComputed || _partition[placeId].isDiagonal()){
             tokenSize = place->marking[color];
         }else {
             const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
-            const size_t &tupleSize = _partition[placeId].diagonalTuplePositions.size();
-            const uint32_t &classId = _partition[placeId].colorEQClassMap[color]->_id;
-            const auto &diagonalTuplePos = _partition[placeId].diagonalTuplePositions;
+            const size_t &tupleSize = _partition[placeId].getDiagonalTuplePositions().size();
+            const uint32_t &classId = _partition[placeId].getMutColorEqClassMap()[color]->_id;
+            const auto &diagonalTuplePos = _partition[placeId].getDiagonalTuplePositions();
 
-            for(const auto &colorEqClassPair : _partition[placeId].colorEQClassMap){
+            for(const auto &colorEqClassPair : _partition[placeId].getColorEqClassMap()){
                 if(colorEqClassPair.second->_id == classId){
                     const std::vector<const Colored::Color*>& testColors = colorEqClassPair.first->getTupleColors();
                     bool match = true;
@@ -785,22 +785,22 @@ namespace PetriEngine {
                 continue;
             }
  
-            if(!_partitionComputed || _partition[arc.place].diagonal){
+            if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 newColor = color.first;
             } else {
                 tupleIds.clear();
                 color.first->getTupleId(&tupleIds);
 
-                _partition[arc.place].applyPartition(&tupleIds);
+                _partition[arc.place].applyPartition(tupleIds);
                 newColor = place.type->getColor(tupleIds);
             }
             
             shadowWeight += color.second;
             uint32_t id;
-            if(!_partitionComputed || _partition[arc.place].diagonal){
+            if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 id = newColor->getId();
             } else {
-                id = _partition[arc.place].colorEQClassMap[newColor]->_id + newColor->getId();
+                id = _partition[arc.place].getMutColorEqClassMap()[newColor]->_id + newColor->getId();
             }
             const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               

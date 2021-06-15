@@ -7,14 +7,14 @@ namespace PetriEngine {
 
         EquivalenceClass::EquivalenceClass() : _id(++idCounter){
         }
-        EquivalenceClass::EquivalenceClass(ColorType *colorType) 
+        EquivalenceClass::EquivalenceClass(const ColorType *colorType) 
         : _id(++idCounter), _colorType(colorType){
         }
-        EquivalenceClass::EquivalenceClass(ColorType *colorType, intervalTuple_t colorIntervals) 
+        EquivalenceClass::EquivalenceClass(const ColorType *colorType, intervalTuple_t colorIntervals) 
         : _id(++idCounter), _colorType(colorType), _colorIntervals(colorIntervals){
         }
 
-        EquivalenceClass EquivalenceClass::intersect(EquivalenceClass other){
+        EquivalenceClass EquivalenceClass::intersect(const EquivalenceClass &other) const{
             EquivalenceClass result = EquivalenceClass();
 
             if(_colorType != other._colorType){
@@ -34,7 +34,7 @@ namespace PetriEngine {
         }
 
 
-        EquivalenceClass EquivalenceClass::subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions){
+        EquivalenceClass EquivalenceClass::subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions) const{
             EquivalenceClass result = EquivalenceClass();
             if(_colorType != other._colorType){
                 return result;
@@ -75,7 +75,7 @@ namespace PetriEngine {
             return result;
         }
 
-        bool EquivalenceClass::containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions){
+        bool EquivalenceClass::containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions) const {
             if(ids.size() != _colorIntervals.front().size()){
                 return false;
             }
@@ -94,7 +94,7 @@ namespace PetriEngine {
             return false;
         }
 
-        size_t EquivalenceClass::size(){
+        size_t EquivalenceClass::size() const{
             size_t result = 0;
             for(auto interval : _colorIntervals._intervals){
                 size_t intervalSize = 1;

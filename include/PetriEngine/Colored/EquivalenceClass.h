@@ -1,5 +1,5 @@
-#ifndef PARTITION_H
-#define PARTITION_H
+#ifndef EQUIVALENCECLASS_H
+#define EQUIVALENCECLASS_H
 
 #include "Intervals.h"
 #include "Colors.h"
@@ -10,121 +10,38 @@ namespace PetriEngine {
         class EquivalenceClass {
             public:
                 EquivalenceClass();
-                EquivalenceClass(ColorType *colorType);
-                EquivalenceClass(ColorType *colorType, intervalTuple_t colorIntervals);
+                EquivalenceClass(const ColorType *colorType);
+                EquivalenceClass(const ColorType *colorType, const intervalTuple_t colorIntervals);
                 ~EquivalenceClass() {}
                 std::string toString(){
                     return _colorIntervals.toString();
                 }
 
-                bool isEmpty(){
+                bool isEmpty() const{
                     if(_colorIntervals.size() < 1 || _colorIntervals.front().size() < 1){
                         return true;
                     } 
                     return false;
                 }
 
-                bool containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions);
+                bool containsColor(const std::vector<uint32_t> &ids, const std::vector<bool> &diagonalPositions) const;
 
-                size_t size();
+                size_t size() const;
 
-                EquivalenceClass intersect(EquivalenceClass other);
+                EquivalenceClass intersect(const EquivalenceClass &other) const;
 
-                EquivalenceClass subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions);
+                EquivalenceClass subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions) const;
 
                 static uint32_t idCounter;
                 uint32_t _id;
-                ColorType *_colorType;
+                const ColorType *_colorType;
                 intervalTuple_t _colorIntervals;
 
             private:
 
             
         };
-
-        struct EquivalenceVec{
-            std::vector<EquivalenceClass> _equivalenceClasses;
-            std::unordered_map<const Colored::Color *, EquivalenceClass *> colorEQClassMap;
-            std::vector<bool> diagonalTuplePositions;
-            bool diagonal = false;
-
-            void applyPartition(Colored::ArcIntervals& arcInterval){
-                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(diagonalTuplePositions)){
-                    diagonal = true;
-                    return;
-                }
-                std::vector<Colored::intervalTuple_t> newTupleVec;
-                for(auto intervalTuple : arcInterval._intervalTupleVec){
-                    intervalTuple.combineNeighbours();
-                    intervalTuple_t newIntervalTuple;
-                    for(auto interval : intervalTuple._intervals){
-                        for(auto EQClass : _equivalenceClasses){
-                            for(auto EQinterval : EQClass._colorIntervals._intervals){
-                                auto overlap = interval.getOverlap(EQinterval, diagonalTuplePositions);
-                                if(overlap.isSound()){
-                                    auto singleInterval = EQinterval.getSingleColorInterval(); 
-                                    for(uint32_t i = 0; i < diagonalTuplePositions.size(); i++){
-                                        if(diagonalTuplePositions[i]){
-                                            singleInterval[i] = interval[i];
-                                        }
-                                    }
-                                    newIntervalTuple.addInterval(std::move(singleInterval));
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                   newTupleVec.push_back(std::move(newIntervalTuple));
-                }
-                arcInterval._intervalTupleVec = std::move(newTupleVec);               
-            }
-
-            void mergeEqClasses(){
-                std::set<uint32_t> indexesForRemoval;
-                for(uint32_t i = 0; i < _equivalenceClasses.size()-1; i++){
-                    for(uint32_t j = i+1; j < _equivalenceClasses.size(); j++){
-                        bool fullyContained = true;
-                        for(auto interval : _equivalenceClasses[j]._colorIntervals._intervals){
-                            if(!_equivalenceClasses[i]._colorIntervals.contains(interval, diagonalTuplePositions)){
-                                fullyContained = false;
-                                break;
-                            }
-                        }
-                        if(fullyContained){
-                            indexesForRemoval.insert(j);
-                        }
-                    } 
-                }
-                for(auto index = indexesForRemoval.rbegin(); index != indexesForRemoval.rend(); ++index){
-                    _equivalenceClasses.erase(_equivalenceClasses.begin() + *index);
-                }
-            }
-
-            void applyPartition(std::vector<uint32_t> *colorIds){
-                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(diagonalTuplePositions)){
-                    diagonal = true;
-                    return;
-                }
-
-                interval_t interval; 
-                for(auto colorId : *colorIds){
-                    interval.addRange(colorId, colorId);
-                }
-
-                for(auto EqClass : _equivalenceClasses){
-                    for(auto EqInterval : EqClass._colorIntervals._intervals){
-                        if(EqInterval.contains(interval, diagonalTuplePositions)){
-                            auto singleInterval = EqInterval.getSingleColorInterval(); 
-                            for(uint32_t i = 0; i < singleInterval.size(); i++){
-                                colorIds->operator[](i) = diagonalTuplePositions[i]? interval[i]._lower: singleInterval[i]._lower;
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
     }
 }
 
-#endif /* PARTITION_H */
+#endif /* EQUIVALENCECLASS_H */

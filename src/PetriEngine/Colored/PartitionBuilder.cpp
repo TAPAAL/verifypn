@@ -7,58 +7,51 @@
 namespace PetriEngine {
     namespace Colored {
 
-        PartitionBuilder::PartitionBuilder(std::vector<Transition> *transitions, std::vector<Place> *places, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap) 
+        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap) 
+        : _transitions(transitions), _places(places), _placePostTransitionMap(placePostTransitionMap), _placePreTransitionMap(placePreTransitionMap){
+            PartitionBuilder(transitions, places, placePostTransitionMap, placePreTransitionMap, nullptr);
+        }
+
+        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints) 
         : _transitions(transitions), _places(places), _placePostTransitionMap(placePostTransitionMap), _placePreTransitionMap(placePreTransitionMap) {
 
             //Instantiate partitions
-            for(uint32_t i = 0; i < _places->size(); i++){
-                const PetriEngine::Colored::Place& place = _places->operator[](i);
-                interval_t fullInterval = place.type->getFullInterval();
+            for(uint32_t i = 0; i < _places.size(); i++){
+                const PetriEngine::Colored::Place& place = _places[i];
                 EquivalenceClass fullClass = EquivalenceClass(place.type);
-                fullClass._colorIntervals.addInterval(fullInterval); 
-                _partition[i]._equivalenceClasses.push_back(fullClass);
+                if(placeColorFixpoints != nullptr){
+                    fullClass._colorIntervals = placeColorFixpoints->operator[](i).constraints;
+                } else {
+                    interval_t fullInterval = place.type->getFullInterval();
+                    fullClass._colorIntervals.addInterval(fullInterval);
+                }
+                
+                _partition[i].getMutEquivalenceClasses().push_back(fullClass);
                 for(uint32_t j = 0; j < place.type->productSize(); j++){
-                    _partition[i].diagonalTuplePositions.push_back(false);
+                    _partition[i].getMutDiagonalTuplePositions().push_back(false);
                 }
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
             }
         }
 
-        PartitionBuilder::PartitionBuilder(std::vector<Transition> *transitions, std::vector<Place> *places, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap, std::vector<Colored::ColorFixpoint> *placeColorFixpoints) 
-        : _transitions(transitions), _places(places), _placePostTransitionMap(placePostTransitionMap), _placePreTransitionMap(placePreTransitionMap) {
-
-            //Instantiate partitions
-            for(uint32_t i = 0; i < _places->size(); i++){
-                const PetriEngine::Colored::Place& place = _places->operator[](i);
-                EquivalenceClass fullClass = EquivalenceClass(place.type);
-                fullClass._colorIntervals = placeColorFixpoints->operator[](i).constraints;
-                _partition[i]._equivalenceClasses.push_back(fullClass);
-                for(uint32_t j = 0; j < place.type->productSize(); j++){
-                    _partition[i].diagonalTuplePositions.push_back(false);
-                }
-                _placeQueue.push_back(i);
-                _inQueue[i] = true;
-            }
-        }
-
-        void PartitionBuilder::printPartion() {
+        void PartitionBuilder::printPartion() const {
             for(auto equivalenceVec : _partition){
-                std::cout << "Partition for place " << _places->operator[](equivalenceVec.first).name << std::endl;
+                std::cout << "Partition for place " << _places[equivalenceVec.first].name << std::endl;
                 std::cout << "Diag variables: (";
-                for(auto daigPos : equivalenceVec.second.diagonalTuplePositions){
+                for(auto daigPos : equivalenceVec.second.getDiagonalTuplePositions()){
                     std::cout << daigPos << ",";
                 }
                 std::cout << ")" << std::endl;
-                for (auto equivalenceClass : equivalenceVec.second._equivalenceClasses){
+                for (auto equivalenceClass : equivalenceVec.second.getEquivalenceClasses()){
                     std::cout << equivalenceClass.toString() << std::endl;
                     
                 }
-                std::cout << "Diagonal " << equivalenceVec.second.diagonal << std::endl << std::endl;;
+                std::cout << "Diagonal " << equivalenceVec.second.isDiagonal() << std::endl << std::endl;;
             }
         }
         
-        bool PartitionBuilder::partitionNet(int32_t timeout){
+        bool PartitionBuilder::partitionNet(int32_t timeout) {
             const auto start = std::chrono::high_resolution_clock::now();
             handleLeafTransitions();            
             
@@ -70,18 +63,18 @@ namespace PetriEngine {
                 _inQueue[placeId] = false;
 
                 bool allPositionsDiagonal = true;
-                for(auto diag : _partition[placeId].diagonalTuplePositions){
+                for(auto diag : _partition[placeId].getDiagonalTuplePositions()){
                     if(!diag){
                         allPositionsDiagonal = false;
                         break;
                     }
                 }
 
-                if(allPositionsDiagonal || _partition[placeId]._equivalenceClasses.size() >= _partition[placeId]._equivalenceClasses.back()._colorType->size(_partition[placeId].diagonalTuplePositions)){
-                    _partition[placeId].diagonal = true;
+                if(allPositionsDiagonal || _partition[placeId].getEquivalenceClasses().size() >= _partition[placeId].getEquivalenceClasses().back()._colorType->size(_partition[placeId].getDiagonalTuplePositions())){
+                    _partition[placeId].setDiagonal(true);
                 }
 
-                for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
+                for(uint32_t transitionId : _placePreTransitionMap.find(placeId)->second){
                     handleTransition(transitionId, placeId);
                 }
                 end = std::chrono::high_resolution_clock::now();
@@ -89,19 +82,19 @@ namespace PetriEngine {
             return _placeQueue.empty();         
         }
 
-        void PartitionBuilder::assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition){
+        void PartitionBuilder::assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const{
             for(auto& eqVec : partition){
-                if(eqVec.second.diagonal){
+                if(eqVec.second.isDiagonal()){
                     continue;
                 }
-                ColorType *colorType = _places->operator[](eqVec.first).type;
+                ColorType *colorType = _places[eqVec.first].type;
                 for(uint32_t i = 0; i < colorType->size(); i++){ 
                     const Color *color = &colorType->operator[](i);
-                    for(auto& eqClass : eqVec.second._equivalenceClasses){   
+                    for(auto& eqClass : eqVec.second.getMutEquivalenceClasses()){   
                         std::vector<uint32_t> colorIds;
                         color->getTupleId(&colorIds);
-                        if(eqClass.containsColor(colorIds, eqVec.second.diagonalTuplePositions)){
-                            eqVec.second.colorEQClassMap[color] = &eqClass;
+                        if(eqClass.containsColor(colorIds, eqVec.second.getDiagonalTuplePositions())){
+                            eqVec.second.getMutColorEqClassMap()[color] = &eqClass;
                             break;
                         }
                     }                    
@@ -110,7 +103,7 @@ namespace PetriEngine {
         }
 
         void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
-            const PetriEngine::Colored::Transition &transition = _transitions->operator[](transitionId);
+            const PetriEngine::Colored::Transition &transition = _transitions[transitionId];
             Arc postArc;
             bool arcFound = false;
             for(auto& outArc : transition.output_arcs){
@@ -145,13 +138,13 @@ namespace PetriEngine {
                     }
                     if(actualSize > 1) {
                         diagonalVars.insert(varModMap.first);
-                        if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
-                            _partition[placeId].diagonal = true;
+                        if(_partition[placeId].getEquivalenceClasses().back()._colorType->productSize() == 1){
+                            _partition[placeId].setDiagonal(true);
                         } else {                            
                             for(auto pos : positions){
-                                if(!_partition[placeId].diagonalTuplePositions[pos]){
+                                if(!_partition[placeId].getDiagonalTuplePositions()[pos]){
                                     if(inputArc) addToQueue(placeId);
-                                    _partition[placeId].diagonalTuplePositions[pos] = true;
+                                    _partition[placeId].setDiagonalTuplePosition(pos,true);
                                 }
                             }
                         }
@@ -167,28 +160,28 @@ namespace PetriEngine {
                     for(auto varPosition : placeVariables.second){
                         if(varPosition.second == variable.second){
                             diagonalVars.insert(variable.second);
-                            if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                _partition[placeId].diagonal = true;
-                            } else if(!_partition[placeId].diagonalTuplePositions[variable.first]) {                                      
+                            if(_partition[placeId].getEquivalenceClasses().back()._colorType->productSize() == 1){
+                                _partition[placeId].setDiagonal(true);
+                            } else if(!_partition[placeId].getDiagonalTuplePositions()[variable.first]) {                                      
                                 addToQueue(placeId);
-                                _partition[placeId].diagonalTuplePositions[variable.first] = true;                            
+                                _partition[placeId].setDiagonalTuplePosition(variable.first,  true);                            
                             } 
 
-                            if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                _partition[placeVariables.first].diagonal = true;
+                            if(_partition[placeVariables.first].getEquivalenceClasses().back()._colorType->productSize() == 1){
+                                _partition[placeVariables.first].setDiagonal(true);
                                 addToQueue(placeVariables.first);
-                            } else if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]) {
+                            } else if(!_partition[placeVariables.first].getDiagonalTuplePositions()[varPosition.first]) {
                                 addToQueue(placeVariables.first);
-                                _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
+                                _partition[placeVariables.first].setDiagonalTuplePosition(varPosition.first, true);
                             }                                     
                             break;                                
                         }
                     }
-                    if(_partition[placeId].diagonal){
+                    if(_partition[placeId].isDiagonal()){
                         break;
                     }                            
                 }
-                if(_partition[placeId].diagonal){
+                if(_partition[placeId].isDiagonal()){
                     break;
                 }
             }
@@ -200,12 +193,12 @@ namespace PetriEngine {
             for(auto preVar : preVarPositionMap){
                 for(auto postVar : varPositionMap){
                     if(preVar.second == postVar.second){
-                        if(_partition[postPlaceId].diagonal || _partition[postPlaceId].diagonalTuplePositions[postVar.first]){
-                            if(_partition[prePlaceId]._equivalenceClasses.back()._colorType->productSize() == 1){
-                                _partition[prePlaceId].diagonal = true;
-                            } else if(!_partition[prePlaceId].diagonalTuplePositions[preVar.first]) {
+                        if(_partition[postPlaceId].isDiagonal() || _partition[postPlaceId].getDiagonalTuplePositions()[postVar.first]){
+                            if(_partition[prePlaceId].getEquivalenceClasses().back()._colorType->productSize() == 1){
+                                _partition[prePlaceId].setDiagonal(true);
+                            } else if(!_partition[prePlaceId].getDiagonalTuplePositions()[preVar.first]) {
                                 addToQueue(prePlaceId);
-                                _partition[prePlaceId].diagonalTuplePositions[preVar.first] = true;
+                                _partition[prePlaceId].setDiagonalTuplePosition(preVar.first, true);
                             }
                         }
                     }
@@ -216,12 +209,12 @@ namespace PetriEngine {
         void PartitionBuilder::checkVarInGuard(const PositionVariableMap &preVarPositionMap, const std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
             for(auto preVar : preVarPositionMap){
                 if(diagonalVars.count(preVar.second)){
-                    if(_partition[placeId]._equivalenceClasses.back()._colorType->productSize() == 1){
-                        _partition[placeId].diagonal = true;
+                    if(_partition[placeId].getEquivalenceClasses().back()._colorType->productSize() == 1){
+                        _partition[placeId].setDiagonal(true);
                         break;
-                    } else if(!_partition[placeId].diagonalTuplePositions[preVar.first]) {
+                    } else if(!_partition[placeId].getDiagonalTuplePositions()[preVar.first]) {
                         addToQueue(placeId);
-                        _partition[placeId].diagonalTuplePositions[preVar.first] = true;
+                        _partition[placeId].setDiagonalTuplePosition(preVar.first, true);
                     }                           
                 }
             }
@@ -231,7 +224,7 @@ namespace PetriEngine {
         //and mark the whole place as diagonal if it is the case
         bool PartitionBuilder::checkTupleDiagonal(uint32_t placeId){
             bool allPositionsDiagonal = true;
-            for(auto diag : _partition[placeId].diagonalTuplePositions){
+            for(auto diag : _partition[placeId].getDiagonalTuplePositions()){
                 if(!diag){
                     allPositionsDiagonal = false;
                     break;
@@ -239,7 +232,7 @@ namespace PetriEngine {
             }
 
             if(allPositionsDiagonal){
-                _partition[placeId].diagonal = true;
+                _partition[placeId].setDiagonal(true);
                 addToQueue(placeId);
                 return true;
             }
@@ -247,7 +240,7 @@ namespace PetriEngine {
         }
 
         bool PartitionBuilder::checkDiagonal(uint32_t placeId){
-            if(_partition[placeId].diagonal){
+            if(_partition[placeId].isDiagonal()){
                 addToQueue(placeId);
                 return true;
             }
@@ -261,10 +254,10 @@ namespace PetriEngine {
             EquivalenceVec newEqVec;
             for(auto& intervalTuple : outIntervals){
                 intervalTuple.simplify();
-                EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, std::move(intervalTuple));
-                newEqVec._equivalenceClasses.push_back(std::move(newEqClass));
+                EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place].getEquivalenceClasses().back()._colorType, std::move(intervalTuple));
+                newEqVec.getMutEquivalenceClasses().push_back(std::move(newEqClass));
             }                    
-            newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;                    
+            newEqVec.setDiagonalTuplePositions(_partition[inArc.place].getDiagonalTuplePositions());                    
             
             //If the prePlace has not been marked as diagonal, then split the current partitions based on the new intervals
             if(splitPartition(std::move(newEqVec), inArc.place)){
@@ -289,7 +282,7 @@ namespace PetriEngine {
             }           
 
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
-            const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId]._equivalenceClasses;
+            const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId].getEquivalenceClasses();
 
             //Partition each of the equivalence classes
             for(const auto& eqClass : placePartition){
@@ -317,11 +310,11 @@ namespace PetriEngine {
             std::unordered_map<uint32_t,PositionVariableMap> placeVariableMap;
             for(auto inArc : transition.input_arcs){
                 //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
-                if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
-                    _partition[inArc.place].diagonal = true;
+                if(_places[inArc.place].type->getName() == "Dot" || _places[inArc.place].type->getName() == "dot"){
+                    _partition[inArc.place].setDiagonal(true);
                 }
 
-                if(_partition[inArc.place].diagonal){
+                if(_partition[inArc.place].isDiagonal()){
                     continue;
                 }
                 VariableModifierMap preVarModifierMap;
@@ -343,8 +336,8 @@ namespace PetriEngine {
 
                 _partition[inArc.place].mergeEqClasses();
 
-                if(_partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(_partition[inArc.place].diagonalTuplePositions)){
-                    _partition[inArc.place].diagonal = true;
+                if(_partition[inArc.place].getEquivalenceClasses().size() >= _partition[inArc.place].getEquivalenceClasses().back()._colorType->size(_partition[inArc.place].getDiagonalTuplePositions())){
+                    _partition[inArc.place].setDiagonal(true);
                     continue;
                 }
 
@@ -372,24 +365,24 @@ namespace PetriEngine {
                 EquivalenceClass intersection = EquivalenceClass();
                 uint32_t ecPos1 = 0, ecPos2 = 0;
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
-                    auto ec1 = equivalenceVec._equivalenceClasses[ecPos1];
-                    auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
-                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.diagonalTuplePositions);
-                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions);                    
+                    auto ec1 = equivalenceVec.getEquivalenceClasses()[ecPos1];
+                    auto ec2 = _partition[placeId].getEquivalenceClasses()[ecPos2];
+                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.getDiagonalTuplePositions());
+                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].getDiagonalTuplePositions());                    
 
-                    equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
-                    _partition[placeId]._equivalenceClasses.erase(_partition[placeId]._equivalenceClasses.begin() + ecPos2);
+                    equivalenceVec.getMutEquivalenceClasses().erase(equivalenceVec.getEquivalenceClasses().begin() + ecPos1);
+                    _partition[placeId].getMutEquivalenceClasses().erase(_partition[placeId].getEquivalenceClasses().begin() + ecPos2);
 
                     if(!intersection.isEmpty()){
-                        _partition[placeId]._equivalenceClasses.push_back(intersection);
+                        _partition[placeId].getMutEquivalenceClasses().push_back(intersection);
                         intersection._colorIntervals._intervals.clear();
                     }
                     if(!leftSubtractEc.isEmpty()){
-                        _partition[placeId]._equivalenceClasses.push_back(leftSubtractEc);
+                        _partition[placeId].getMutEquivalenceClasses().push_back(leftSubtractEc);
                         split = true;
                     }
                     if(!rightSubtractEc.isEmpty()){
-                        equivalenceVec._equivalenceClasses.push_back(rightSubtractEc);
+                        equivalenceVec.getMutEquivalenceClasses().push_back(rightSubtractEc);
                     }                                     
                 }
             }
@@ -397,10 +390,10 @@ namespace PetriEngine {
         }
 
         bool PartitionBuilder::findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection){
-            for(uint32_t i = 0; i < equivalenceVec1._equivalenceClasses.size(); i++){
-                for(uint32_t j = 0; j < equivalenceVec2._equivalenceClasses.size(); j++){
-                    auto ec = equivalenceVec1._equivalenceClasses[i];
-                    auto ec2 = equivalenceVec2._equivalenceClasses[j];
+            for(uint32_t i = 0; i < equivalenceVec1.getEquivalenceClasses().size(); i++){
+                for(uint32_t j = 0; j < equivalenceVec2.getEquivalenceClasses().size(); j++){
+                    auto ec = equivalenceVec1.getEquivalenceClasses()[i];
+                    auto ec2 = equivalenceVec2.getEquivalenceClasses()[j];
                     
                     auto intersectingEc = ec.intersect(ec2);                    
                     if(!intersectingEc.isEmpty()){
@@ -435,8 +428,8 @@ namespace PetriEngine {
         }
 
         void PartitionBuilder::handleLeafTransitions(){
-            for(uint32_t i = 0; i < _transitions->size(); i++){
-                const Transition &transition = _transitions->operator[](i);
+            for(uint32_t i = 0; i < _transitions.size(); i++){
+                const Transition &transition = _transitions[i];
                 if(transition.output_arcs.empty() && !transition.input_arcs.empty()){
                     handleTransition(transition, transition.input_arcs.back().place, &transition.input_arcs.back());
                 }

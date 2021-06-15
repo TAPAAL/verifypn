@@ -7,5 +7,6 @@ BindingGenerator.cpp
 PartitionBuilder.cpp
 EquivalenceClass.cpp
 GuardRestrictor.cpp
-IntervalGenerator.cpp)
+IntervalGenerator.cpp
+EquivalenceVec.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

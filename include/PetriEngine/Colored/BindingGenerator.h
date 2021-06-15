@@ -79,10 +79,10 @@ namespace PetriEngine {
     private:
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
-        const std::vector<std::set<const Colored::Variable *>>& _symmetric_vars;
         std::vector<std::vector<std::vector<uint32_t>>> _symmetric_var_combinations;
         const ColorTypeMap& _colorTypes;
         const Colored::Transition *_transition;
+        const std::vector<std::set<const Colored::Variable *>>& _symmetric_vars;
         PetriEngine::Colored::ExpressionContext::BindingMap::iterator _bindingIterator;
         bool _isDone;
         bool _noValidBindings;

@@ -32,7 +32,7 @@
 
 #include "Colors.h"
 #include "Multiset.h"
-#include "EquivalenceClass.h"
+#include "EquivalenceVec.h"
 #include "ArcIntervals.h"
 #include "GuardRestrictor.h"
 #include "../errorcodes.h"
@@ -1058,12 +1058,12 @@ namespace PetriEngine {
             std::vector<std::pair<const Color*,uint32_t>> eval(const ExpressionContext& context) const {
                 std::vector<std::pair<const Color*,uint32_t>> colors;
                 assert(_sort != nullptr);
-                if(context.placePartition.diagonal || context.placePartition._equivalenceClasses.empty()){
+                if(context.placePartition.isDiagonal() || context.placePartition.getEquivalenceClasses().empty()){
                     for (size_t i = 0; i < _sort->size(); i++) {
                         colors.push_back(std::make_pair(&(*_sort)[i], 1));
                     }
                 } else {
-                    for (auto EqClass : context.placePartition._equivalenceClasses){
+                    for (auto EqClass : context.placePartition.getEquivalenceClasses()){
                         colors.push_back(std::make_pair(_sort->getColor(EqClass._colorIntervals.getLowerIds()),EqClass.size()));
                     }
                 }
