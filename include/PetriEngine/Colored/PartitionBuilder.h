@@ -1,10 +1,34 @@
 #include "ColoredNetStructures.h"
-#include "EquivalenceClass.h"
+#include "EquivalenceVec.h"
 #include "IntervalGenerator.h"
  
 namespace PetriEngine {
     namespace Colored {
         class PartitionBuilder {
+
+            
+            public:
+                PartitionBuilder(const std::vector<Transition> &transitions, 
+                                const std::vector<Place> &places, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap);
+
+                PartitionBuilder(const std::vector<Transition> &transitions, 
+                                const std::vector<Place> &places, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap,
+                                const std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
+                
+                ~PartitionBuilder() {}
+
+                //void initPartition();
+                bool partitionNet(int32_t timeout);
+                void printPartion() const;
+                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const;
+
+                std::unordered_map<uint32_t, EquivalenceVec> getPartition() const{
+                    return _partition;
+                }
 
             private:
                 const std::vector<Transition> &_transitions;
@@ -47,29 +71,6 @@ namespace PetriEngine {
 
                 uint32_t eqClassIdCounter = 0;
 
-            public:
-                PartitionBuilder(const std::vector<Transition> &transitions, 
-                                const std::vector<Place> &places, 
-                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
-                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap);
-
-                PartitionBuilder(const std::vector<Transition> &transitions, 
-                                const std::vector<Place> &places, 
-                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
-                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap,
-                                const std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
-                
-                ~PartitionBuilder() {}
-
-                //void initPartition();
-                bool partitionNet(int32_t timeout);
-                void refinePartition();
-                void printPartion() const;
-                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const;
-
-                std::unordered_map<uint32_t, EquivalenceVec> getPartition(){
-                    return _partition;
-                }
         };
     }
 }

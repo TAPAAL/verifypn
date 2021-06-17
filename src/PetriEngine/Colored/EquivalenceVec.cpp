@@ -34,10 +34,10 @@ namespace PetriEngine {
         }
 
         void EquivalenceVec::mergeEqClasses(){
-            for(uint32_t i = _equivalenceClasses.size(); i >= 1; i--){
-                for(uint32_t j = i-1; j >= 0; j--){
+            for(int32_t i = _equivalenceClasses.size()-1; i >= 1; i--){
+                for(int32_t j = i-1; j >= 0; j--){
                     bool fullyContained = true;
-                    for(auto interval : _equivalenceClasses[i]._colorIntervals._intervals){
+                    for(const auto &interval : _equivalenceClasses[i]._colorIntervals._intervals){
                         if(!_equivalenceClasses[j]._colorIntervals.contains(interval, _diagonalTuplePositions)){
                             fullyContained = false;
                             break;

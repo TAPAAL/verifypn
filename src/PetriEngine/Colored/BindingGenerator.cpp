@@ -257,10 +257,10 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    auto varInterval = _transition->variableMaps[_nextIndex].find(_binding.first)->second;                
+                    const auto &varInterval = _transition->variableMaps[_nextIndex].find(_binding.first)->second;                
                     std::vector<uint32_t> colorIds;
                     _binding.second->getTupleId(&colorIds);
-                    auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
+                    const auto &nextIntervalBinding = varInterval.isRangeEnd(colorIds);
 
                     if (nextIntervalBinding.size() == 0){                    
                         _binding.second = &_binding.second->operator++();

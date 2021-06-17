@@ -8,8 +8,7 @@ namespace PetriEngine {
     namespace Colored {
 
         PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap) 
-        : _transitions(transitions), _places(places), _placePostTransitionMap(placePostTransitionMap), _placePreTransitionMap(placePreTransitionMap){
-            PartitionBuilder(transitions, places, placePostTransitionMap, placePreTransitionMap, nullptr);
+        : PartitionBuilder(transitions, places, placePostTransitionMap, placePreTransitionMap, nullptr){
         }
 
         PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints) 
@@ -25,7 +24,6 @@ namespace PetriEngine {
                     interval_t fullInterval = place.type->getFullInterval();
                     fullClass._colorIntervals.addInterval(fullInterval);
                 }
-                
                 _partition[i].getMutEquivalenceClasses().push_back(fullClass);
                 for(uint32_t j = 0; j < place.type->productSize(); j++){
                     _partition[i].getMutDiagonalTuplePositions().push_back(false);
@@ -36,14 +34,14 @@ namespace PetriEngine {
         }
 
         void PartitionBuilder::printPartion() const {
-            for(auto equivalenceVec : _partition){
+            for(const auto &equivalenceVec : _partition){
                 std::cout << "Partition for place " << _places[equivalenceVec.first].name << std::endl;
                 std::cout << "Diag variables: (";
                 for(auto daigPos : equivalenceVec.second.getDiagonalTuplePositions()){
                     std::cout << daigPos << ",";
                 }
                 std::cout << ")" << std::endl;
-                for (auto equivalenceClass : equivalenceVec.second.getEquivalenceClasses()){
+                for (const auto &equivalenceClass : equivalenceVec.second.getEquivalenceClasses()){
                     std::cout << equivalenceClass.toString() << std::endl;
                     
                 }
@@ -54,7 +52,6 @@ namespace PetriEngine {
         bool PartitionBuilder::partitionNet(int32_t timeout) {
             const auto start = std::chrono::high_resolution_clock::now();
             handleLeafTransitions();            
-            
             auto end = std::chrono::high_resolution_clock::now();
             
             while(!_placeQueue.empty() && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - start).count() < timeout){
@@ -73,9 +70,10 @@ namespace PetriEngine {
                 if(allPositionsDiagonal || _partition[placeId].getEquivalenceClasses().size() >= _partition[placeId].getEquivalenceClasses().back()._colorType->size(_partition[placeId].getDiagonalTuplePositions())){
                     _partition[placeId].setDiagonal(true);
                 }
-
-                for(uint32_t transitionId : _placePreTransitionMap.find(placeId)->second){
-                    handleTransition(transitionId, placeId);
+                if(_placePreTransitionMap.find(placeId) != _placePreTransitionMap.end()){    
+                    for(uint32_t transitionId : _placePreTransitionMap.find(placeId)->second){
+                        handleTransition(transitionId, placeId);
+                    }
                 }
                 end = std::chrono::high_resolution_clock::now();
             }
@@ -280,9 +278,8 @@ namespace PetriEngine {
             if(transition.guard != nullptr){
                 transition.guard->getVariables(guardVars);
             }           
-
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
-            const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId].getEquivalenceClasses();
+            const std::vector<Colored::EquivalenceClass> &placePartition = _partition[postPlaceId].getEquivalenceClasses();
 
             //Partition each of the equivalence classes
             for(const auto& eqClass : placePartition){
@@ -297,7 +294,6 @@ namespace PetriEngine {
                         }                            
                     }
                 }
-
                 if(transition.guard != nullptr){
                     transition.guard->restrictVars(varMaps, diagonalVars);
                 }
@@ -321,13 +317,11 @@ namespace PetriEngine {
                 PositionVariableMap preVarPositionMap;
                 std::set<const PetriEngine::Colored::Variable *> preArcVars;
                 inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
-
                 checkVarOnInputArcs(placeVariableMap, preVarPositionMap, diagonalVars, inArc.place);
                 if(checkDiagonal(inArc.place)) continue;
 
                 markSharedVars(preVarPositionMap, varPositionMap, postPlaceId, inArc.place);
                 if(checkDiagonal(inArc.place)) continue;
-
                 checkVarOnArc(preVarModifierMap, diagonalVars, inArc.place, true);
                 if(checkDiagonal(inArc.place)) continue;
 
@@ -335,7 +329,6 @@ namespace PetriEngine {
                 if(checkDiagonal(inArc.place)) continue;
 
                 _partition[inArc.place].mergeEqClasses();
-
                 if(_partition[inArc.place].getEquivalenceClasses().size() >= _partition[inArc.place].getEquivalenceClasses().back()._colorType->size(_partition[inArc.place].getDiagonalTuplePositions())){
                     _partition[inArc.place].setDiagonal(true);
                     continue;
@@ -365,8 +358,8 @@ namespace PetriEngine {
                 EquivalenceClass intersection = EquivalenceClass();
                 uint32_t ecPos1 = 0, ecPos2 = 0;
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
-                    auto ec1 = equivalenceVec.getEquivalenceClasses()[ecPos1];
-                    auto ec2 = _partition[placeId].getEquivalenceClasses()[ecPos2];
+                    const auto &ec1 = equivalenceVec.getEquivalenceClasses()[ecPos1];
+                    const auto &ec2 = _partition[placeId].getEquivalenceClasses()[ecPos2];
                     auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.getDiagonalTuplePositions());
                     auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].getDiagonalTuplePositions());                    
 

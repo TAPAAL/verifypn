@@ -285,6 +285,7 @@ namespace PetriEngine {
         if(_isColored){
             auto partitionStart = std::chrono::high_resolution_clock::now();
             Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
+            
             if(pBuilder.partitionNet(timeout)){
                 //pBuilder.printPartion();
                 _partition = pBuilder.getPartition();
@@ -622,7 +623,9 @@ namespace PetriEngine {
             std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
-            findStablePlaces();
+            if(_fixpointDone){
+                findStablePlaces();
+            }            
             
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();
@@ -769,7 +772,10 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
         const PetriEngine::Colored::Place& place = _places[arc.place];
-        //If the place is stable, the arc does not need to be unfolded
+        //If the place is stable, the arc does not need to be unfolded.
+        //This exploits the fact that since the transition is being unfolded with this binding
+        //we know that this place contains the tokens to activate the transition for this binding
+        //because color fixpoint allowed the binding
         if(place.stable){
             return;
         } 
