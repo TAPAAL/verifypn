@@ -105,7 +105,7 @@ namespace PetriEngine {
 
         FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
         
-        FixpointBindingGenerator operator= (const FixpointBindingGenerator& b) {
+        FixpointBindingGenerator operator= (const FixpointBindingGenerator& b) const{
             return FixpointBindingGenerator(b);
         }
 

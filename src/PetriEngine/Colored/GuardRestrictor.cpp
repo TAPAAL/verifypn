@@ -46,12 +46,12 @@ namespace PetriEngine{
 
         intervalTuple_t GuardRestrictor::getIntervalOverlap(const std::vector<interval_t> &intervals1, const std::vector<interval_t> &intervals2) const{
             intervalTuple_t newIntervalTuple;
-            for(auto mainInterval : intervals1){
-                for(auto otherInterval : intervals2){
+            for(const auto &mainInterval : intervals1){
+                for(const auto &otherInterval : intervals2){
                     auto intervalOverlap = otherInterval.getOverlap(mainInterval);
 
                     if(intervalOverlap.isSound()){
-                        newIntervalTuple.addInterval(intervalOverlap);
+                        newIntervalTuple.addInterval(std::move(intervalOverlap));
                     }
                 }
             }
@@ -67,7 +67,7 @@ namespace PetriEngine{
                         std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index) const{
             while(idVec.size() < targetSize){
                 if(varPositions.count(index)){
-                    auto rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
+                    const auto &rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
                     int32_t rightVarMod = getVarModifier(mainVarModifierMap.find(varPositions.find(index)->second)->second.back(), index);
                     auto ids = rightTupleInterval.getUpperIds(-rightVarMod, varPositions.find(index)->second->colorType->getConstituentsSizes());
                     idVec.insert(idVec.end(), ids.begin(), ids.end());
@@ -191,8 +191,8 @@ namespace PetriEngine{
                 int32_t leftVarModifier = getVarModifier(varModifierMapL.find(var)->second.back(), index);
                 int32_t rightVarModifier = getVarModifier(varModifierMapR.find(varPositionsR.find(index)->second)->second.back(), index);
 
-                auto leftIds = leftTupleInterval.getLowerIds(-leftVarModifier, var->colorType->getConstituentsSizes());
-                auto rightIds = rightTupleInterval.getUpperIds(-rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
+                const auto &leftIds = leftTupleInterval.getLowerIds(-leftVarModifier, var->colorType->getConstituentsSizes());
+                const auto &rightIds = rightTupleInterval.getUpperIds(-rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
 
                 //comparing vars of same size
                 if(var->colorType->productSize() == varPositionsR.find(index)->second->colorType->productSize()){
@@ -267,7 +267,7 @@ namespace PetriEngine{
                     leftTupleInterval.applyModifier(leftVarModifier, var->colorType->getConstituentsSizes());
                     rightTupleInterval.applyModifier(rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
                 } else if(var->colorType->productSize() > varPositionsR.find(index)->second->colorType->productSize()){
-                    std::vector<Colored::interval_t> resizedLeftIntervals = leftTupleIntervalVal.shrinkIntervals(varPositionsR.find(index)->second->colorType->productSize());
+                    const std::vector<Colored::interval_t> &resizedLeftIntervals = leftTupleIntervalVal.shrinkIntervals(varPositionsR.find(index)->second->colorType->productSize());
                     auto intervalVec = rightTupleIntervalVal._intervals;
 
                     expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, 

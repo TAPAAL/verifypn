@@ -60,7 +60,7 @@ namespace PetriEngine {
 
         void IntervalGenerator::getArcVarIntervals(intervalTuple_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{
             for(auto& posModPair : modIndexMap){
-                auto intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
+                const auto &intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
 
                 if(varIntervals._intervals.empty()){
                     for(auto& interval : intervals){
@@ -102,8 +102,8 @@ namespace PetriEngine {
                 if(varMap.count(pair.first) == 0){
                     localVarMap[pair.first] = std::move(varIntervals);                                  
                 } else {                                    
-                    for(auto& varInterval : varIntervals._intervals){
-                        for(auto& interval : varMap.find(pair.first)->second._intervals){
+                    for(const auto& varInterval : varIntervals._intervals){
+                        for(const auto& interval : varMap.find(pair.first)->second._intervals){
                             auto overlapInterval = varInterval.getOverlap(interval);
 
                             if(overlapInterval.isSound()){
@@ -127,7 +127,7 @@ namespace PetriEngine {
             for(uint32_t i = 0; i < intervalTupleSize; i++){
                 VariableIntervalMap localVarMap;
                 bool validInterval = true;
-                auto &interval = arcIntervals._intervalTupleVec[tuplePos]._intervals[i];
+                const auto &interval = arcIntervals._intervalTupleVec[tuplePos]._intervals[i];
             
                 for(const auto &pair : arcIntervals._varIndexModMap){
                     intervalTuple_t varIntervals;
@@ -163,7 +163,7 @@ namespace PetriEngine {
                     } else {
                         std::vector<VariableIntervalMap> newVarMapVec;
                         
-                        for(auto& varMap : variableMaps){          
+                        for(const auto& varMap : variableMaps){          
                             for(uint32_t i = 0; i < intervalTupleSize; i++){
                                 VariableIntervalMap localVarMap;
                                 bool allVarsAssigned = true;
@@ -171,7 +171,7 @@ namespace PetriEngine {
                                 
                                 populateLocalMap(placeArcInterval.second, varMap, localVarMap, interval, allVarsAssigned, j);                       
                                 
-                                for(auto& varTuplePair : varMap){
+                                for(const auto& varTuplePair : varMap){
                                     if(localVarMap.count(varTuplePair.first) == 0){
                                         localVarMap[varTuplePair.first] = std::move(varTuplePair.second);
                                     }
