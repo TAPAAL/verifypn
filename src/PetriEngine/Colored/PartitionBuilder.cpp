@@ -24,9 +24,9 @@ namespace PetriEngine {
                     interval_t fullInterval = place.type->getFullInterval();
                     fullClass._colorIntervals.addInterval(fullInterval);
                 }
-                _partition[i].getMutEquivalenceClasses().push_back(fullClass);
+                _partition[i].push_back_Eqclass(fullClass);
                 for(uint32_t j = 0; j < place.type->productSize(); j++){
-                    _partition[i].getMutDiagonalTuplePositions().push_back(false);
+                    _partition[i].push_back_diagonalTuplePos(false);
                 }
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
@@ -88,14 +88,7 @@ namespace PetriEngine {
                 ColorType *colorType = _places[eqVec.first].type;
                 for(uint32_t i = 0; i < colorType->size(); i++){ 
                     const Color *color = &colorType->operator[](i);
-                    for(auto& eqClass : eqVec.second.getMutEquivalenceClasses()){   
-                        std::vector<uint32_t> colorIds;
-                        color->getTupleId(&colorIds);
-                        if(eqClass.containsColor(colorIds, eqVec.second.getDiagonalTuplePositions())){
-                            eqVec.second.getMutColorEqClassMap()[color] = &eqClass;
-                            break;
-                        }
-                    }                    
+                    eqVec.second.addColorToEqClassMap(color);                   
                 }               
             }
         }
@@ -104,7 +97,7 @@ namespace PetriEngine {
             const PetriEngine::Colored::Transition &transition = _transitions[transitionId];
             Arc postArc;
             bool arcFound = false;
-            for(auto& outArc : transition.output_arcs){
+            for(const auto& outArc : transition.output_arcs){
                 if(outArc.place == postPlaceId){
                     postArc = outArc;
                     arcFound = true;
@@ -122,11 +115,11 @@ namespace PetriEngine {
         //Check if a variable appears more than once on the output arc
         //If the place is does not have a product colortype mark the whole place as diagonal, otherwise only the positions
         void PartitionBuilder::checkVarOnArc(const VariableModifierMap &varModifierMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId, bool inputArc){
-            for(auto varModMap : varModifierMap){
+            for(const auto &varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
                     uint32_t actualSize = 0;
                     std::vector<uint32_t> positions;
-                    for(auto map : varModMap.second){
+                    for(const auto &map : varModMap.second){
                         if(!map.empty()){
                             for(auto position : map){
                                 positions.push_back(position.first);
@@ -152,10 +145,10 @@ namespace PetriEngine {
         }
         //Check if the variales on this preArc also appear on other preArcs for the transition
         //and mark them as diagonal if they do
-        void PartitionBuilder::checkVarOnInputArcs(std::unordered_map<uint32_t,PositionVariableMap> &placeVariableMap, const PositionVariableMap &preVarPositionMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
-            for(auto placeVariables : placeVariableMap){
-                for(auto variable : preVarPositionMap){
-                    for(auto varPosition : placeVariables.second){
+        void PartitionBuilder::checkVarOnInputArcs(const std::unordered_map<uint32_t,PositionVariableMap> &placeVariableMap, const PositionVariableMap &preVarPositionMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
+            for(const auto &placeVariables : placeVariableMap){
+                for(const auto &variable : preVarPositionMap){
+                    for(const auto &varPosition : placeVariables.second){
                         if(varPosition.second == variable.second){
                             diagonalVars.insert(variable.second);
                             if(_partition[placeId].getEquivalenceClasses().back()._colorType->productSize() == 1){
@@ -183,13 +176,12 @@ namespace PetriEngine {
                     break;
                 }
             }
-            placeVariableMap[placeId] = preVarPositionMap;
         }
         //Check if the preArc share variables with the postArc and mark diagonal if the 
         //variable positions are diagonal in the post place
         void PartitionBuilder::markSharedVars(const PositionVariableMap &preVarPositionMap, const PositionVariableMap &varPositionMap, uint32_t postPlaceId, uint32_t prePlaceId){                   
-            for(auto preVar : preVarPositionMap){
-                for(auto postVar : varPositionMap){
+            for(const auto &preVar : preVarPositionMap){
+                for(const auto &postVar : varPositionMap){
                     if(preVar.second == postVar.second){
                         if(_partition[postPlaceId].isDiagonal() || _partition[postPlaceId].getDiagonalTuplePositions()[postVar.first]){
                             if(_partition[prePlaceId].getEquivalenceClasses().back()._colorType->productSize() == 1){
@@ -205,7 +197,7 @@ namespace PetriEngine {
         }
         //Check if any of the variables on the preArc was part of a diagonal constraint in the gaurd
         void PartitionBuilder::checkVarInGuard(const PositionVariableMap &preVarPositionMap, const std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId){
-            for(auto preVar : preVarPositionMap){
+            for(const auto &preVar : preVarPositionMap){
                 if(diagonalVars.count(preVar.second)){
                     if(_partition[placeId].getEquivalenceClasses().back()._colorType->productSize() == 1){
                         _partition[placeId].setDiagonal(true);
@@ -245,7 +237,7 @@ namespace PetriEngine {
             return false;
         }
 
-        void PartitionBuilder::applyNewIntervals(const Arc &inArc, std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps){
+        void PartitionBuilder::applyNewIntervals(const Arc &inArc, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps){
             //Retrieve the intervals for the current place, 
             //based on the intervals from the postPlace, the postArc, preArc and guard
             auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
@@ -253,7 +245,7 @@ namespace PetriEngine {
             for(auto& intervalTuple : outIntervals){
                 intervalTuple.simplify();
                 EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place].getEquivalenceClasses().back()._colorType, std::move(intervalTuple));
-                newEqVec.getMutEquivalenceClasses().push_back(std::move(newEqClass));
+                newEqVec.push_back_Eqclass(std::move(newEqClass));
             }                    
             newEqVec.setDiagonalTuplePositions(_partition[inArc.place].getDiagonalTuplePositions());                    
             
@@ -268,7 +260,7 @@ namespace PetriEngine {
             VariableModifierMap varModifierMap;
             PositionVariableMap varPositionMap;
             std::set<const PetriEngine::Colored::Variable *> postArcVars;
-            std::set<const PetriEngine::Colored::Variable *>guardVars;
+            std::set<const PetriEngine::Colored::Variable *> guardVars;
             std::set<const Colored::Variable*> diagonalVars;
             
             postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
@@ -279,7 +271,7 @@ namespace PetriEngine {
                 transition.guard->getVariables(guardVars);
             }           
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
-            const std::vector<Colored::EquivalenceClass> &placePartition = _partition[postPlaceId].getEquivalenceClasses();
+            const auto &placePartition = _partition[postPlaceId].getEquivalenceClasses();
 
             //Partition each of the equivalence classes
             for(const auto& eqClass : placePartition){
@@ -302,9 +294,9 @@ namespace PetriEngine {
             }
         }
 
-        void PartitionBuilder::handleInArcs(const Transition &transition, std::set<const Colored::Variable*> &diagonalVars, const PositionVariableMap &varPositionMap, std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps, uint32_t postPlaceId){
+        void PartitionBuilder::handleInArcs(const Transition &transition, std::set<const Colored::Variable*> &diagonalVars, const PositionVariableMap &varPositionMap, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps, uint32_t postPlaceId){
             std::unordered_map<uint32_t,PositionVariableMap> placeVariableMap;
-            for(auto inArc : transition.input_arcs){
+            for(const auto &inArc : transition.input_arcs){
                 //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
                 if(_places[inArc.place].type->getName() == "Dot" || _places[inArc.place].type->getName() == "dot"){
                     _partition[inArc.place].setDiagonal(true);
@@ -318,6 +310,7 @@ namespace PetriEngine {
                 std::set<const PetriEngine::Colored::Variable *> preArcVars;
                 inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
                 checkVarOnInputArcs(placeVariableMap, preVarPositionMap, diagonalVars, inArc.place);
+                placeVariableMap[inArc.place] = preVarPositionMap;
                 if(checkDiagonal(inArc.place)) continue;
 
                 markSharedVars(preVarPositionMap, varPositionMap, postPlaceId, inArc.place);
@@ -360,33 +353,33 @@ namespace PetriEngine {
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
                     const auto &ec1 = equivalenceVec.getEquivalenceClasses()[ecPos1];
                     const auto &ec2 = _partition[placeId].getEquivalenceClasses()[ecPos2];
-                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.getDiagonalTuplePositions());
-                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].getDiagonalTuplePositions());                    
+                    const auto &rightSubtractEc = ec1.subtract(ec2, equivalenceVec.getDiagonalTuplePositions());
+                    const auto &leftSubtractEc = ec2.subtract(ec1, _partition[placeId].getDiagonalTuplePositions());                    
 
-                    equivalenceVec.getMutEquivalenceClasses().erase(equivalenceVec.getEquivalenceClasses().begin() + ecPos1);
-                    _partition[placeId].getMutEquivalenceClasses().erase(_partition[placeId].getEquivalenceClasses().begin() + ecPos2);
+                    equivalenceVec.erase_Eqclass(ecPos1);
+                    _partition[placeId].erase_Eqclass(ecPos2);
 
                     if(!intersection.isEmpty()){
-                        _partition[placeId].getMutEquivalenceClasses().push_back(intersection);
+                        _partition[placeId].push_back_Eqclass(intersection);
                         intersection._colorIntervals._intervals.clear();
                     }
                     if(!leftSubtractEc.isEmpty()){
-                        _partition[placeId].getMutEquivalenceClasses().push_back(leftSubtractEc);
+                        _partition[placeId].push_back_Eqclass(leftSubtractEc);
                         split = true;
                     }
                     if(!rightSubtractEc.isEmpty()){
-                        equivalenceVec.getMutEquivalenceClasses().push_back(rightSubtractEc);
+                        equivalenceVec.push_back_Eqclass(rightSubtractEc);
                     }                                     
                 }
             }
             return split;
         }
 
-        bool PartitionBuilder::findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection){
+        bool PartitionBuilder::findOverlap(const EquivalenceVec &equivalenceVec1, const EquivalenceVec &equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection) const{
             for(uint32_t i = 0; i < equivalenceVec1.getEquivalenceClasses().size(); i++){
                 for(uint32_t j = 0; j < equivalenceVec2.getEquivalenceClasses().size(); j++){
-                    auto ec = equivalenceVec1.getEquivalenceClasses()[i];
-                    auto ec2 = equivalenceVec2.getEquivalenceClasses()[j];
+                    const auto &ec = equivalenceVec1.getEquivalenceClasses()[i];
+                    const auto &ec2 = equivalenceVec2.getEquivalenceClasses()[j];
                     
                     auto intersectingEc = ec.intersect(ec2);                    
                     if(!intersectingEc.isEmpty()){
@@ -402,19 +395,20 @@ namespace PetriEngine {
 
         std::vector<VariableIntervalMap> 
         PartitionBuilder::prepareVariables(
-                    VariableModifierMap varModifierMap, 
+                    const VariableModifierMap &varModifierMap, 
                     const EquivalenceClass& eqClass , const Arc *arc, uint32_t placeId){
             std::vector<VariableIntervalMap> varMaps;
             VariableIntervalMap varMap;
             varMaps.push_back(varMap);
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
+            std::cout << "colorintervals " << eqClass._colorIntervals.size() << " intervals " << eqClass._colorIntervals._intervals.size()  << "\n" << eqClass._colorIntervals.toString() << std::endl;
             postPlaceFixpoint.constraints = eqClass._colorIntervals; 
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
             uint32_t index = 0;
 
             arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, &index, 0);
-            placeArcIntervals[placeId] = newArcInterval;
+            placeArcIntervals[placeId] = std::move(newArcInterval);
             intervalGenerator.getVarIntervals(varMaps, placeArcIntervals);
 
             return varMaps;                

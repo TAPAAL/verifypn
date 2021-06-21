@@ -405,7 +405,7 @@ namespace PetriEngine {
 
             std::string toString() const {
                 std::string out;
-                for (auto interval : _intervals){
+                for (const auto &interval : _intervals){
                     out += "[";
                     out += interval.toString();
                     out += "]\n";

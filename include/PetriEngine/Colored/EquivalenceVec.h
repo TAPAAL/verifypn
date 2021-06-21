@@ -26,17 +26,24 @@ namespace PetriEngine {
                     return _equivalenceClasses;
                 }
 
-                std::vector<EquivalenceClass> & getMutEquivalenceClasses() {
-                    return _equivalenceClasses;
-                }
 
                 const std::vector<bool> & getDiagonalTuplePositions() const{
                     return _diagonalTuplePositions;
                 }
 
-                std::vector<bool> & getMutDiagonalTuplePositions(){
-                    return _diagonalTuplePositions;
+                void push_back_Eqclass(const EquivalenceClass &Eqclass){
+                    _equivalenceClasses.push_back(Eqclass);
                 }
+
+                void erase_Eqclass(uint32_t position){
+                    _equivalenceClasses.erase(_equivalenceClasses.begin() + position);
+                }
+
+                void push_back_diagonalTuplePos(bool val){
+                    _diagonalTuplePositions.push_back(val);
+                }
+
+                void addColorToEqClassMap(const Color *color);
 
                 void setDiagonalTuplePosition(uint32_t position, bool value){
                     _diagonalTuplePositions[position] = value;
@@ -44,10 +51,6 @@ namespace PetriEngine {
 
                 void setDiagonalTuplePositions(const std::vector<bool> &diagonalPositions){
                     _diagonalTuplePositions = diagonalPositions;
-                }
-
-                std::unordered_map<const Colored::Color *, EquivalenceClass *> &getMutColorEqClassMap(){
-                    return _colorEQClassMap;
                 }
 
                 const std::unordered_map<const Colored::Color *, EquivalenceClass *> &getColorEqClassMap() const{

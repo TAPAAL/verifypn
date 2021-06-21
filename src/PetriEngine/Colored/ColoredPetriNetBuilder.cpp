@@ -680,7 +680,7 @@ namespace PetriEngine {
         }else {
             const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
             const size_t &tupleSize = _partition[placeId].getDiagonalTuplePositions().size();
-            const uint32_t &classId = _partition[placeId].getMutColorEqClassMap()[color]->_id;
+            const uint32_t &classId = _partition[placeId].getColorEqClassMap().find(color)->second->_id;
             const auto &diagonalTuplePos = _partition[placeId].getDiagonalTuplePositions();
 
             for(const auto &colorEqClassPair : _partition[placeId].getColorEqClassMap()){
@@ -806,7 +806,7 @@ namespace PetriEngine {
             if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 id = newColor->getId();
             } else {
-                id = _partition[arc.place].getMutColorEqClassMap()[newColor]->_id + newColor->getId();
+                id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->_id + newColor->getId();
             }
             const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               

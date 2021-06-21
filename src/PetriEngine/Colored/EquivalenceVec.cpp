@@ -50,6 +50,17 @@ namespace PetriEngine {
             }
         }
 
+        void EquivalenceVec::addColorToEqClassMap(const Color *color){
+            for(auto& eqClass : _equivalenceClasses){   
+                std::vector<uint32_t> colorIds;
+                color->getTupleId(&colorIds);
+                if(eqClass.containsColor(colorIds, _diagonalTuplePositions)){
+                    _colorEQClassMap[color] = &eqClass;
+                    break;
+                }
+            } 
+        }
+
         void EquivalenceVec::applyPartition(std::vector<uint32_t> &colorIds) const{
             if(_diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(_diagonalTuplePositions)){
                 return;
