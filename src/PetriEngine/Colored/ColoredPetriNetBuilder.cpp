@@ -780,7 +780,7 @@ namespace PetriEngine {
         } 
         
         const Colored::ExpressionContext &context {binding, _colors, _partition[arc.place]};
-        auto ms = arc.expr->eval(context);   
+        const auto &ms = arc.expr->eval(context);   
         int shadowWeight = 0;
 
         const Colored::Color *newColor;

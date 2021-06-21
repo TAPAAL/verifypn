@@ -140,11 +140,11 @@ namespace PetriEngine {
             }));
         }
 
-        Multiset::Iterator Multiset::begin() {
+        const Multiset::Iterator Multiset::begin() const {
             return Iterator(this, 0);
         }
 
-        Multiset::Iterator Multiset::end() {
+        const Multiset::Iterator Multiset::end() const{
             return Iterator(this, _set.size());
         }
 
@@ -163,13 +163,13 @@ namespace PetriEngine {
             return *this;
         }
 
-        std::pair<const Color *, uint32_t &> Multiset::Iterator::operator++(int) {
-            std::pair<const Color*, uint32_t&> old = **this;
+        std::pair<const Color *, const uint32_t &> Multiset::Iterator::operator++(int) {
+            std::pair<const Color*, const uint32_t&> old = **this;
             ++index;
             return old;
         }
 
-        std::pair<const Color *, uint32_t &> Multiset::Iterator::operator*() {
+        std::pair<const Color *, const uint32_t &> Multiset::Iterator::operator*() {
             auto& item = ms->_set[index];
             auto color = DotConstant::dotConstant(nullptr);
             if (ms->type != nullptr)

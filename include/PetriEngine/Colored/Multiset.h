@@ -26,18 +26,18 @@ namespace PetriEngine {
         private:
             class Iterator {
             private:
-                Multiset* ms;
+                const Multiset* ms;
                 size_t index;
 
             public:
-                Iterator(Multiset* ms, size_t index)
+                Iterator(const Multiset* ms, size_t index)
                         : ms(ms), index(index) {}
 
                 bool operator==(Iterator& other);
                 bool operator!=(Iterator& other);
                 Iterator& operator++();
-                std::pair<const Color*,uint32_t&> operator++(int);
-                std::pair<const Color*,uint32_t&> operator*();
+                std::pair<const Color*,const uint32_t&> operator++(int);
+                std::pair<const Color*, const uint32_t&> operator*();
             };
 
             typedef std::vector<std::pair<uint32_t,uint32_t>> Internal;
@@ -67,8 +67,8 @@ namespace PetriEngine {
 
             size_t size() const;
             
-            Iterator begin();
-            Iterator end();
+            const Iterator begin() const;
+            const Iterator end() const;
 
             std::string toString() const;
             
