@@ -594,13 +594,13 @@ namespace PetriEngine {
                     return;
                 }
 
-                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                for (int32_t i = _intervals.size()-1; i >= 0; i--) {
                     auto& interval = _intervals[i];
                     if(!interval.isSound()){
-                        rangesToRemove.insert(i);
+                        _intervals.erase(_intervals.begin() + i);
                         continue;
                     }   
-                    for(uint32_t j = i+1; j < _intervals.size(); j++){
+                    for(int32_t j = i-1; j >= 0; j--){
                         const auto& otherInterval = _intervals[j];
 
                         if(!otherInterval.isSound()){
@@ -621,16 +621,9 @@ namespace PetriEngine {
                             for(uint32_t l = 0; l < interval.size(); l++) {
                                 interval[l] |= otherInterval[l];
                             }
-                            rangesToRemove.insert(j);
+                            _intervals.erase(_intervals.begin() + j);
                         }  
                     }
-                }
-                
-                // well, ok. the right way to do this operation would be to do the
-                // removal inline with the previous loop.
-                // i.e. the previous loop would have to iterate backwards also.
-                for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
-                    _intervals.erase(_intervals.begin() + *i);
                 }
             }
 
