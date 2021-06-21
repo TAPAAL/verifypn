@@ -157,29 +157,28 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
 
-    FixpointBindingGenerator::FixpointBindingGenerator(const Colored::Transition* transition,
+    FixpointBindingGenerator::FixpointBindingGenerator(const Colored::Transition& transition,
         const ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars)
-    : _colorTypes(colorTypes), _transition(transition), _symmetric_vars(symmetric_vars)
+    : _expr(transition.guard), _colorTypes(colorTypes), _transition(transition), _symmetric_vars(symmetric_vars)
     {
         _isDone = false;
         _noValidBindings = false;
         _nextIndex = 0;
-        _expr = _transition->guard;        
 
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto arc : _transition->input_arcs) {
+        for (const auto &arc : _transition.input_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
-        for (auto arc : _transition->output_arcs) {
+        for (const auto &arc : _transition.output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
 
-        for(auto varSet : symmetric_vars){
+        for(const auto &varSet : symmetric_vars){
             std::vector<std::vector<uint32_t>> combinations;
             std::vector<uint32_t> temp;
             generateCombinations(varSet.begin().operator*()->colorType->size()-1, varSet.size(), combinations, temp);
@@ -188,11 +187,11 @@ namespace PetriEngine {
         
         
         for (auto var : variables) {
-            if(_transition->variableMaps.empty() || _transition->variableMaps[_nextIndex].find(var)->second._intervals.empty()){
+            if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex].find(var)->second._intervals.empty()){
                 _noValidBindings = true;
                 break;
             }
-            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex].find(var)->second.front().getLowerIds());
+            auto color = var->colorType->getColor(_transition.variableMaps[_nextIndex].find(var)->second.front().getLowerIds());
             _bindings[var] = color;
         }
         assignSymmetricVars();
@@ -228,7 +227,7 @@ namespace PetriEngine {
     }
 
 
-    bool FixpointBindingGenerator::eval() {
+    bool FixpointBindingGenerator::eval() const{
         if (_expr == nullptr)
             return true;
 
@@ -257,7 +256,7 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    const auto &varInterval = _transition->variableMaps[_nextIndex].find(_binding.first)->second;                
+                    const auto &varInterval = _transition.variableMaps[_nextIndex].find(_binding.first)->second;                
                     std::vector<uint32_t> colorIds;
                     _binding.second->getTupleId(&colorIds);
                     const auto &nextIntervalBinding = varInterval.isRangeEnd(colorIds);
@@ -290,7 +289,7 @@ namespace PetriEngine {
                     break;
                 }
                 for(auto& _binding : _bindings){
-                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex].find(_binding.first)->second.front().getLowerIds());
+                    _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex].find(_binding.first)->second.front().getLowerIds());
                 }
             }                 
             test = eval();
@@ -303,7 +302,7 @@ namespace PetriEngine {
             uint32_t options,
             uint32_t samples,
             std::vector<std::vector<uint32_t>> &result,
-            std::vector<uint32_t> &current) {
+            std::vector<uint32_t> &current) const {
         if (samples == 0) {
             result.push_back(current);
             return;
@@ -320,7 +319,7 @@ namespace PetriEngine {
     }
 
     bool FixpointBindingGenerator::isInitial() const{     
-        return _nextIndex >= _transition->variableMaps.size();
+        return _nextIndex >= _transition.variableMaps.size();
     }
 
     FixpointBindingGenerator::Iterator FixpointBindingGenerator::begin() {

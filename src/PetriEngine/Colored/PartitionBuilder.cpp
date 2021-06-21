@@ -271,10 +271,10 @@ namespace PetriEngine {
                 transition.guard->getVariables(guardVars);
             }           
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
-            const auto &placePartition = _partition[postPlaceId].getEquivalenceClasses();
+            const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId].getEquivalenceClasses();
 
             //Partition each of the equivalence classes
-            for(const auto& eqClass : placePartition){
+            for(const auto &eqClass : placePartition){
                 auto varMaps = prepareVariables(varModifierMap, eqClass, postArc, postPlaceId);
 
                 //If there are variables in the guard, that doesn't come from the postPlace
@@ -402,7 +402,6 @@ namespace PetriEngine {
             varMaps.push_back(varMap);
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
-            std::cout << "colorintervals " << eqClass._colorIntervals.size() << " intervals " << eqClass._colorIntervals._intervals.size()  << "\n" << eqClass._colorIntervals.toString() << std::endl;
             postPlaceFixpoint.constraints = eqClass._colorIntervals; 
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
             uint32_t index = 0;

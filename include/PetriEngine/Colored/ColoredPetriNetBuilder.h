@@ -112,7 +112,6 @@ namespace PetriEngine {
         }
 
         uint32_t getUnfoldedPlaceCount() const {
-            //return _nptplaces;
             return _ptBuilder.numberOfPlaces();
         }
 
@@ -141,7 +140,7 @@ namespace PetriEngine {
         void computePlaceColorFixpoint(uint32_t max_intervals, uint32_t max_intervals_reduced, int32_t timeout);
         void computePartition(int32_t timeout);
         void computeSymmetricVariables();
-        void printSymmetricVariables();
+        void printSymmetricVariables() const;
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
@@ -178,17 +177,17 @@ namespace PetriEngine {
         double _fixPointCreationTime;
 
         double _partitionTimer = 0;
-        double _placeTime = 0;
-        double _arcTime = 0;
 
         std::string arcToString(const Colored::Arc& arc) const ;
 
-        void printPlaceTable();
+        void printPlaceTable() const;
 
-        void checkSymmetricVarsInArcs(const Colored::Transition &transition, const Colored::Arc &inArc, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible );
-        void checkSymmetricVarsOutArcs(const Colored::Transition &transition, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible);
+        void checkSymmetricVarsInArcs(const Colored::Transition &transition, const Colored::Arc &inArc, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible ) const;
+        void checkSymmetricVarsOutArcs(const Colored::Transition &transition, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
+        void removeInvalidVarmaps(Colored::Transition& transition) const;
+        void addTransitionVars(Colored::Transition& transition) const;
 
-        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
+        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(const Colored::Transition &transition) const;
         
         void addArc(const std::string& place,
                 const std::string& transition,
@@ -197,7 +196,7 @@ namespace PetriEngine {
 
         void findStablePlaces();
 
-        void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
+        void getArcIntervals(const Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         
