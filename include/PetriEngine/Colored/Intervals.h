@@ -219,25 +219,40 @@ namespace PetriEngine {
             }
         };
 
-        struct closestIntervals {
+        struct interval_dist_t {
             uint32_t intervalId1;
             uint32_t intervalId2;
             uint32_t distance;
         };
 
-        struct intervalTuple_t {
+        class interval_vector_t {
+        private:
             std::vector<interval_t> _intervals;
-            double totalinputtime = 0;
+        public:            
 
-            ~intervalTuple_t() {
+            ~interval_vector_t() {
             }
 
-            intervalTuple_t() {
+            interval_vector_t() {
             }
 
-            intervalTuple_t(const std::vector<interval_t>& ranges) :  _intervals(ranges) {
+            interval_vector_t(const std::vector<interval_t>& ranges) :  _intervals(ranges) {
             };
 
+            std::vector<interval_t>::iterator begin() { return _intervals.begin(); }
+            std::vector<interval_t>::iterator end() { return _intervals.end(); }
+            std::vector<interval_t>::const_iterator begin() const { return _intervals.begin(); }
+            std::vector<interval_t>::const_iterator end() const { return _intervals.end(); }
+
+            
+            bool empty() const {
+                return _intervals.empty();
+            }
+
+            void clear() {
+                _intervals.clear();
+            }
+            
             const interval_t& front() const{
                 return _intervals[0];
             }
@@ -285,6 +300,10 @@ namespace PetriEngine {
             interval_t& operator[] (size_t index) {
                 assert(index < _intervals.size());
                 return _intervals[index];
+            }
+            
+            void append(const interval_vector_t& other) {
+                _intervals.insert(_intervals.end(), other._intervals.begin(), other._intervals.end());
             }
             
             interval_t isRangeEnd(const std::vector<uint32_t>& ids) const {
@@ -543,7 +562,7 @@ namespace PetriEngine {
                 }
                 
                 while (size() > k){ 
-                    closestIntervals closestInterval = getClosestIntervals();
+                    interval_dist_t closestInterval = getClosestIntervals();
                     auto& interval = _intervals[closestInterval.intervalId1]; 
                     const auto& otherInterval = _intervals[closestInterval.intervalId2]; 
 
@@ -556,8 +575,8 @@ namespace PetriEngine {
                 simplify();
             }
 
-            closestIntervals getClosestIntervals() const {
-                closestIntervals currentBest = {0,0, std::numeric_limits<uint32_t>::max()};
+            interval_dist_t getClosestIntervals() const {
+                interval_dist_t currentBest = {0,0, std::numeric_limits<uint32_t>::max()};
                     for (uint32_t i = 0; i < size()-1; i++) {
                         const auto& interval = _intervals[i];
                         for(uint32_t j = i+1; j < size(); j++){

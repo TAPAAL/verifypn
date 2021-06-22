@@ -65,14 +65,14 @@ namespace PetriEngine {
                             std::set<const Colored::Variable*> &diagonalVars, 
                             bool lessthan, bool strict) const;
 
-                intervalTuple_t shiftIntervals(const VariableIntervalMap& varMap, 
-                            const std::vector<const ColorType *> &colortypes, intervalTuple_t &intervals, 
+                interval_vector_t shiftIntervals(const VariableIntervalMap& varMap, 
+                            const std::vector<const ColorType *> &colortypes, interval_vector_t &intervals, 
                             int32_t modifier, uint32_t ctSizeBefore) const; 
 
             private:
                 int32_t getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) const;
                 interval_t getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const;
-                intervalTuple_t getIntervalOverlap(const std::vector<Colored::interval_t> &intervals1, const std::vector<Colored::interval_t> &intervals2) const;
+                interval_vector_t getIntervalOverlap(const Colored::interval_vector_t &intervals1, const Colored::interval_vector_t &intervals2) const;
 
                 void expandIdVec(const VariableIntervalMap &varMap,
                             const VariableModifierMap &mainVarModifierMap,
@@ -88,7 +88,7 @@ namespace PetriEngine {
                             const std::unordered_map<uint32_t, const Variable *> &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Variable *otherVar, 
-                            std::vector<interval_t> &intervalVec, size_t targetSize, uint32_t index) const;
+                            interval_vector_t &intervalVec, size_t targetSize, uint32_t index) const;
 
                 void restrictByConstant(std::vector<VariableIntervalMap>& variableMap,
                             const VariableModifierMap &mainVarModifierMap,

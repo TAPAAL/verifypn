@@ -187,7 +187,7 @@ namespace PetriEngine {
         
         
         for (auto* var : variables) {
-            if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex].find(var)->second._intervals.empty()){
+            if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex].find(var)->second.empty()){
                 _noValidBindings = true;
                 break;
             }

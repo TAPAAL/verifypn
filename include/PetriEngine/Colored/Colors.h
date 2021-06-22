@@ -362,7 +362,7 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            Colored::intervalTuple_t constraints;
+            Colored::interval_vector_t constraints;
             bool inQueue;
         };
 
@@ -374,7 +374,7 @@ namespace PetriEngine {
         typedef std::unordered_map<uint32_t, const Colored::Variable *> PositionVariableMap;
         //Map from variables to a vector of maps from variable positions to the modifiers applied to the variable in that position
         typedef std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> VariableModifierMap;
-        typedef std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> VariableIntervalMap;
+        typedef std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::interval_vector_t> VariableIntervalMap;
         typedef std::unordered_map<uint32_t, std::vector<const Color*>> PositionColorsMap;
     }
 }

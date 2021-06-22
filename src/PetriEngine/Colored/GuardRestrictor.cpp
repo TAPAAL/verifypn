@@ -44,8 +44,8 @@ namespace PetriEngine{
             return interval; 
         }
 
-        intervalTuple_t GuardRestrictor::getIntervalOverlap(const std::vector<interval_t> &intervals1, const std::vector<interval_t> &intervals2) const{
-            intervalTuple_t newIntervalTuple;
+        interval_vector_t GuardRestrictor::getIntervalOverlap(const interval_vector_t &intervals1, const interval_vector_t &intervals2) const{
+            interval_vector_t newIntervalTuple;
             for(const auto &mainInterval : intervals1){
                 for(const auto &otherInterval : intervals2){
                     auto intervalOverlap = otherInterval.getOverlap(mainInterval);
@@ -91,13 +91,13 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *otherVar, 
-                            std::vector<Colored::interval_t> &intervalVec, size_t targetSize, uint32_t index) const {
+                            Colored::interval_vector_t &intervalVec, size_t targetSize, uint32_t index) const {
             while(intervalVec.size() < targetSize){
                 if(varPositions.count(index)){
                     auto rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
                     int32_t rightVarMod = getVarModifier(mainVarModifierMap.find(varPositions.find(index)->second)->second.back(), index);
                     rightTupleInterval.applyModifier(-rightVarMod, varPositions.find(index)->second->colorType->getConstituentsSizes());
-                    intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
+                    intervalVec.append(rightTupleInterval);
                     index += varPositions.find(index)->second->colorType->productSize();
                 } else {
                     std::vector<uint32_t> colorIdVec;
@@ -154,12 +154,13 @@ namespace PetriEngine{
                 color->getTupleId(&idVec);
                 int32_t varModifier = getVarModifier(otherVarModifierMap.find(var)->second.back(), index);
 
-                std::vector<Colored::interval_t> intervals;
-                intervals.push_back(getIntervalFromIds(idVec, var->colorType->size(), varModifier));
+                
+                std::vector<Colored::interval_t> iv{getIntervalFromIds(idVec, var->colorType->size(), varModifier)};
+                Colored::interval_vector_t intervals(iv);
 
                 expandIntervalVec(varMap, mainVarModifierMap, otherVarModifierMap, varPositions, constantMap, var, intervals, tupleInterval.tupleSize(), index + idVec.size());
 
-                Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(tupleInterval._intervals, intervals);
+                auto newIntervalTupleL = getIntervalOverlap(tupleInterval, intervals);
                 tupleInterval = newIntervalTupleL;
             }
         }
@@ -260,7 +261,7 @@ namespace PetriEngine{
                 rightTupleIntervalVal.applyModifier(-rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
                 //comparing vars of same size
                 if(var->colorType->productSize() == varPositionsR.find(index)->second->colorType->productSize()){
-                    Colored::intervalTuple_t newIntervalTuple = getIntervalOverlap(leftTupleIntervalVal._intervals, rightTupleIntervalVal._intervals);
+                    Colored::interval_vector_t newIntervalTuple = getIntervalOverlap(leftTupleIntervalVal, rightTupleIntervalVal);
                 
                     leftTupleInterval = newIntervalTuple;
                     rightTupleInterval = newIntervalTuple;
@@ -268,14 +269,14 @@ namespace PetriEngine{
                     rightTupleInterval.applyModifier(rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
                 } else if(var->colorType->productSize() > varPositionsR.find(index)->second->colorType->productSize()){
                     const std::vector<Colored::interval_t> &resizedLeftIntervals = leftTupleIntervalVal.shrinkIntervals(varPositionsR.find(index)->second->colorType->productSize());
-                    auto intervalVec = rightTupleIntervalVal._intervals;
+                    auto intervalVec = rightTupleIntervalVal;
 
                     expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, 
                         var, intervalVec, leftTupleInterval.tupleSize(), 
                         index + varPositionsR.find(index)->second->colorType->productSize());
 
-                    Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal._intervals, resizedLeftIntervals);
-                    Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal._intervals, intervalVec);
+                    Colored::interval_vector_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal, resizedLeftIntervals);
+                    Colored::interval_vector_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal, intervalVec);
 
                     newIntervalTupleL.applyModifier(leftVarModifier, var->colorType->getConstituentsSizes());
                     newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
@@ -284,12 +285,12 @@ namespace PetriEngine{
                     rightTupleInterval = newIntervalTupleR;
                 } else {
                     std::vector<Colored::interval_t> resizedRightIntervals = rightTupleIntervalVal.shrinkIntervals(varPositionsL.find(index)->second->colorType->productSize());
-                    auto intervalVec = leftTupleIntervalVal._intervals;
+                    auto intervalVec = leftTupleIntervalVal;
 
                     expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR.find(index)->second, intervalVec, rightTupleInterval.tupleSize(), index + varPositionsL.find(index)->second->colorType->productSize());
 
-                    Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal._intervals, resizedRightIntervals);
-                    Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal._intervals, intervalVec);
+                    Colored::interval_vector_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal, resizedRightIntervals);
+                    Colored::interval_vector_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal, intervalVec);
 
                     newIntervalTupleL.applyModifier(leftVarModifier, var->colorType->getConstituentsSizes());
                     newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR.find(index)->second->colorType->getConstituentsSizes());
@@ -360,8 +361,8 @@ namespace PetriEngine{
             }                
         }
 
-        intervalTuple_t GuardRestrictor::shiftIntervals(const VariableIntervalMap& varMap, const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::intervalTuple_t &intervals, int32_t modifier, uint32_t ctSizeBefore) const {
-            Colored::intervalTuple_t newIntervals;
+        interval_vector_t GuardRestrictor::shiftIntervals(const VariableIntervalMap& varMap, const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::interval_vector_t &intervals, int32_t modifier, uint32_t ctSizeBefore) const {
+            Colored::interval_vector_t newIntervals;
             for(uint32_t i = 0;  i < intervals.size(); i++) {
                 Colored::interval_t newInterval;
                 std::vector<Colored::interval_t> tempIntervals;

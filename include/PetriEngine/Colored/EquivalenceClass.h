@@ -9,9 +9,9 @@ namespace PetriEngine {
     namespace Colored {
         class EquivalenceClass {
             public:
-                EquivalenceClass();
-                EquivalenceClass(const ColorType *colorType);
-                EquivalenceClass(const ColorType *colorType, intervalTuple_t&& colorIntervals);
+                EquivalenceClass(uint32_t id);
+                EquivalenceClass(uint32_t id, const ColorType *colorType);
+                EquivalenceClass(uint32_t id, const ColorType *colorType, interval_vector_t&& colorIntervals);
                 ~EquivalenceClass() {}
                 std::string toString() const{
                     return _colorIntervals.toString();
@@ -28,16 +28,20 @@ namespace PetriEngine {
 
                 size_t size() const;
 
-                EquivalenceClass intersect(const EquivalenceClass &other) const;
+                EquivalenceClass intersect(uint32_t id, const EquivalenceClass &other) const;
 
-                EquivalenceClass subtract(const EquivalenceClass &other, const std::vector<bool> &diagonalPositions) const;
-
-                static uint32_t idCounter;
+                EquivalenceClass subtract(uint32_t id, const EquivalenceClass &other, const std::vector<bool> &diagonalPositions) const;
+                
+                uint32_t id() const { return _id; }
+                const ColorType* type() const { return _colorType; }
+                const interval_vector_t& intervals() const { return _colorIntervals; }
+                void clear() { _colorIntervals.clear(); }
+                void setIntervalVector(const interval_vector_t& interval) { _colorIntervals = interval; }
+                void addInterval(interval_t&& interval) { _colorIntervals.addInterval(interval); }
+            private:
                 uint32_t _id;
                 const ColorType *_colorType;
-                intervalTuple_t _colorIntervals;
-
-            private:
+                interval_vector_t _colorIntervals;
 
             
         };

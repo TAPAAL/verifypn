@@ -67,9 +67,9 @@ namespace PetriEngine {
                             const VariableModifierMap &varModifierMap, 
                             const EquivalenceClass& eqClass , const Arc *postArc, uint32_t placeId);
 
-                bool findOverlap(const EquivalenceVec &equivalenceVec1,const EquivalenceVec &equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection) const;
+                bool findOverlap(const EquivalenceVec &equivalenceVec1,const EquivalenceVec &equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
 
-                uint32_t eqClassIdCounter = 0;
+                uint32_t _eq_id_counter = 0;
 
         };
     }

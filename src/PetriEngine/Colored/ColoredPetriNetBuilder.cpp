@@ -52,7 +52,7 @@ namespace PetriEngine {
                 _placeFixpointQueue.emplace_back(next);
             }
 
-            Colored::intervalTuple_t placeConstraints;
+            Colored::interval_vector_t placeConstraints;
             Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
             uint32_t colorCounter = 0;
             
@@ -305,7 +305,7 @@ namespace PetriEngine {
             const auto &placeColorFixpoint = _placeColorFixpoints[placeID];
             std::cout << "Place: " << place.name << " in queue: " << placeColorFixpoint.inQueue  << " with colortype " << place.type->getName() << std::endl;
 
-            for(const auto &fixpointPair : placeColorFixpoint.constraints._intervals) {
+            for(const auto &fixpointPair : placeColorFixpoint.constraints) {
                 std::cout << "[";
                 for(const auto &range : fixpointPair._ranges) {
                     std::cout << range._lower << "-" << range._upper << ", ";
@@ -388,7 +388,7 @@ namespace PetriEngine {
                 uint32_t index = 0;
                 arcInterval._intervalTupleVec.clear();
                 
-                Colored::intervalTuple_t intervalTuple;
+                Colored::interval_vector_t intervalTuple;
                 intervalTuple.addInterval(_places[inArc.place].type->getFullInterval());
                 const PetriEngine::Colored::ColorFixpoint &cfp {intervalTuple};
 
@@ -407,7 +407,7 @@ namespace PetriEngine {
             for(auto* var : variables){
                 for(auto& varmap : transition.variableMaps){
                     if(varmap.count(var) == 0){
-                        Colored::intervalTuple_t intervalTuple;
+                        Colored::interval_vector_t intervalTuple;
                         intervalTuple.addInterval(var->colorType->getFullInterval());
                         varmap[var] = intervalTuple;
                     }
@@ -444,7 +444,7 @@ namespace PetriEngine {
         for(auto* var : variables){
             for(auto& varmap : transition.variableMaps){
                 if(varmap.count(var) == 0){
-                    Colored::intervalTuple_t intervalTuple;
+                    Colored::interval_vector_t intervalTuple;
                     intervalTuple.addInterval(var->colorType->getFullInterval());
                     varmap[var] = std::move(intervalTuple);
                 }
@@ -517,7 +517,7 @@ namespace PetriEngine {
             for(auto* var : variables){
                 for(auto& varmap : transition.variableMaps){
                     if(varmap.count(var) == 0){
-                        Colored::intervalTuple_t intervalTuple;
+                        Colored::interval_vector_t intervalTuple;
                         intervalTuple.addInterval(var->colorType->getFullInterval());
                         varmap[var] = std::move(intervalTuple);
                     }
@@ -530,9 +530,9 @@ namespace PetriEngine {
                 for(auto* outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){
-                            Colored::intervalTuple_t varIntervalTuple;
+                            Colored::interval_vector_t varIntervalTuple;
                             for(const auto& EqClass : _partition[arc.place].getEquivalenceClasses()){
-                                varIntervalTuple.addInterval(EqClass._colorIntervals.back().getSingleColorInterval());
+                                varIntervalTuple.addInterval(EqClass.intervals().back().getSingleColorInterval());
                             }
                             varMap[outVar] = std::move(varIntervalTuple);
                         }                    
@@ -545,7 +545,7 @@ namespace PetriEngine {
 
             for(auto& intervalTuple : intervals){
                 intervalTuple.simplify();
-                for(auto& interval : intervalTuple._intervals){
+                for(auto& interval : intervalTuple){
                     placeFixpoint.constraints.addInterval(std::move(interval)); 
                 }                   
             }
@@ -679,11 +679,11 @@ namespace PetriEngine {
         }else {
             const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
             const size_t &tupleSize = _partition[placeId].getDiagonalTuplePositions().size();
-            const uint32_t &classId = _partition[placeId].getColorEqClassMap().find(color)->second->_id;
+            const uint32_t &classId = _partition[placeId].getColorEqClassMap().find(color)->second->id();
             const auto &diagonalTuplePos = _partition[placeId].getDiagonalTuplePositions();
 
             for(const auto &colorEqClassPair : _partition[placeId].getColorEqClassMap()){
-                if(colorEqClassPair.second->_id == classId){
+                if(colorEqClassPair.second->id() == classId){
                     const std::vector<const Colored::Color*>& testColors = colorEqClassPair.first->getTupleColors();
                     bool match = true;
                     for(uint32_t i = 0; i < tupleSize; i++){
@@ -805,7 +805,7 @@ namespace PetriEngine {
             if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 id = newColor->getId();
             } else {
-                id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->_id + newColor->getId();
+                id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->id() + newColor->getId();
             }
             const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               

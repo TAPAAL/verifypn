@@ -58,16 +58,16 @@ namespace PetriEngine {
             return varIntervals;
         }
 
-        void IntervalGenerator::getArcVarIntervals(intervalTuple_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{
+        void IntervalGenerator::getArcVarIntervals(interval_vector_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{
             for(auto& posModPair : modIndexMap){
                 const auto &intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
 
-                if(varIntervals._intervals.empty()){
+                if(varIntervals.empty()){
                     for(auto& interval : intervals){
                         varIntervals.addInterval(std::move(interval));
                     }
                 } else {
-                    intervalTuple_t newVarIntervals; 
+                    interval_vector_t newVarIntervals;
                     for(uint32_t i = 0; i < varIntervals.size(); i++){
                         auto varInterval = &varIntervals[i];
                         for(auto& interval : intervals){
@@ -88,7 +88,7 @@ namespace PetriEngine {
                             VariableIntervalMap &localVarMap,
                             const interval_t &interval, bool& allVarsAssigned,  uint32_t tuplePos) const{
             for(const auto& pair : arcIntervals._varIndexModMap){                     
-                intervalTuple_t varIntervals; 
+                interval_vector_t varIntervals;
                 std::vector<const ColorType*> varColorTypes;
                 pair.first->colorType->getColortypes(varColorTypes);
                 
@@ -102,8 +102,8 @@ namespace PetriEngine {
                 if(varMap.count(pair.first) == 0){
                     localVarMap[pair.first] = std::move(varIntervals);                                  
                 } else {                                    
-                    for(const auto& varInterval : varIntervals._intervals){
-                        for(const auto& interval : varMap.find(pair.first)->second._intervals){
+                    for(const auto& varInterval : varIntervals){
+                        for(const auto& interval : varMap.find(pair.first)->second){
                             auto overlapInterval = varInterval.getOverlap(interval);
 
                             if(overlapInterval.isSound()){
@@ -113,7 +113,7 @@ namespace PetriEngine {
                     }                                    
                 }
 
-                if(localVarMap[pair.first]._intervals.empty()){
+                if(localVarMap[pair.first].empty()){
                     allVarsAssigned = false;
                 }                                
             }         
@@ -127,10 +127,10 @@ namespace PetriEngine {
             for(uint32_t i = 0; i < intervalTupleSize; i++){
                 VariableIntervalMap localVarMap;
                 bool validInterval = true;
-                const auto &interval = arcIntervals._intervalTupleVec[tuplePos]._intervals[i];
+                const auto &interval = arcIntervals._intervalTupleVec[tuplePos][i];
             
                 for(const auto &pair : arcIntervals._varIndexModMap){
-                    intervalTuple_t varIntervals;
+                    interval_vector_t varIntervals;
                     std::vector<const ColorType*> varColorTypes;
                     pair.first->colorType->getColortypes(varColorTypes);
                     getArcVarIntervals(varIntervals, pair.second[tuplePos], interval, varColorTypes); 
@@ -167,7 +167,7 @@ namespace PetriEngine {
                             for(uint32_t i = 0; i < intervalTupleSize; i++){
                                 VariableIntervalMap localVarMap;
                                 bool allVarsAssigned = true;
-                                auto interval = placeArcInterval.second._intervalTupleVec[j]._intervals[i];
+                                auto interval = placeArcInterval.second._intervalTupleVec[j][i];
                                 
                                 populateLocalMap(placeArcInterval.second, varMap, localVarMap, interval, allVarsAssigned, j);                       
                                 
