@@ -215,7 +215,7 @@ namespace PetriEngine {
             }
             std::set<const Colored::Variable*> otherArcVars;
             otherInArc.expr->getVariables(otherArcVars);
-            for(auto var : inArcVars){
+            for(auto* var : inArcVars){
                 if(otherArcVars.find(var) != otherArcVars.end()){
                     isEligible = false;
                     break;
@@ -231,7 +231,7 @@ namespace PetriEngine {
             bool foundArc = true;
             std::set<const Colored::Variable*> otherArcVars;
             outputArc.expr->getVariables(otherArcVars);
-            for(auto var : inArcVars){
+            for(auto* var : inArcVars){
                 if(otherArcVars.find(var) == otherArcVars.end()){
                     foundArc = false;
                 } else{
@@ -269,7 +269,7 @@ namespace PetriEngine {
                 std::cout << "Transition " << transition.name << " has symmetric variables: " << std::endl;
                 for(const auto &set : symmetric_var_map.find(transitionId)->second){
                     std::string toPrint = "SET: ";
-                    for(auto variable : set){
+                    for(auto* variable : set){
                         toPrint += variable->name + ", ";
                     }
                     std::cout << toPrint << std::endl;
@@ -365,7 +365,7 @@ namespace PetriEngine {
     //Create Arc interval structures for the transition
     std::unordered_map<uint32_t, Colored::ArcIntervals> ColoredPetriNetBuilder::setupTransitionVars(const Colored::Transition &transition) const{
         std::unordered_map<uint32_t, Colored::ArcIntervals> res;
-        for(auto arc : transition.input_arcs){
+        for(auto& arc : transition.input_arcs){
             std::set<const Colored::Variable *> variables;
             Colored::PositionVariableMap varPositions;
             Colored::VariableModifierMap varModifiersMap;
@@ -392,7 +392,7 @@ namespace PetriEngine {
                 intervalTuple.addInterval(_places[inArc.place].type->getFullInterval());
                 const PetriEngine::Colored::ColorFixpoint &cfp {intervalTuple};
 
-                inArc.expr->getArcIntervals(arcInterval, cfp, &index, 0);
+                inArc.expr->getArcIntervals(arcInterval, cfp, index, 0);
 
                 _partition[inArc.place].applyPartition(arcInterval);
             }
@@ -404,8 +404,8 @@ namespace PetriEngine {
             if(transition.guard != nullptr){
                 transition.guard->getVariables(variables);
             }
-            for(auto var : variables){
-                for(auto &varmap : transition.variableMaps){
+            for(auto* var : variables){
+                for(auto& varmap : transition.variableMaps){
                     if(varmap.count(var) == 0){
                         Colored::intervalTuple_t intervalTuple;
                         intervalTuple.addInterval(var->colorType->getFullInterval());
@@ -427,7 +427,7 @@ namespace PetriEngine {
             uint32_t index = 0;
             arcInterval._intervalTupleVec.clear();
 
-            if(!arc.expr->getArcIntervals(arcInterval, curCFP, &index, 0)){
+            if(!arc.expr->getArcIntervals(arcInterval, curCFP, index, 0)){
                 transitionActivated = false;
                 return;
             }
@@ -441,8 +441,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::addTransitionVars(Colored::Transition& transition) const{
         std::set<const Colored::Variable *> variables;
         transition.guard->getVariables(variables);
-        for(auto var : variables){
-            for(auto &varmap : transition.variableMaps){
+        for(auto* var : variables){
+            for(auto& varmap : transition.variableMaps){
                 if(varmap.count(var) == 0){
                     Colored::intervalTuple_t intervalTuple;
                     intervalTuple.addInterval(var->colorType->getFullInterval());
@@ -514,7 +514,7 @@ namespace PetriEngine {
 
             //If there is a varaible which was not found on an input arc or in the guard, we give it
             //the full interval
-            for(auto var : variables){
+            for(auto* var : variables){
                 for(auto& varmap : transition.variableMaps){
                     if(varmap.count(var) == 0){
                         Colored::intervalTuple_t intervalTuple;
@@ -527,11 +527,11 @@ namespace PetriEngine {
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
             if(_partitionComputed && !_partition[arc.place].isDiagonal()){
-                for(auto outVar : variables){
+                for(auto* outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){
                             Colored::intervalTuple_t varIntervalTuple;
-                            for(auto EqClass : _partition[arc.place].getEquivalenceClasses()){
+                            for(const auto& EqClass : _partition[arc.place].getEquivalenceClasses()){
                                 varIntervalTuple.addInterval(EqClass._colorIntervals.back().getSingleColorInterval());
                             }
                             varMap[outVar] = std::move(varIntervalTuple);

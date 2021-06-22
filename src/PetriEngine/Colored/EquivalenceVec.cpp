@@ -8,12 +8,12 @@ namespace PetriEngine {
                 return;
             }
             std::vector<Colored::intervalTuple_t> newTupleVec;
-            for(auto intervalTuple : arcInterval._intervalTupleVec){
+            for(auto& intervalTuple : arcInterval._intervalTupleVec){
                 intervalTuple.combineNeighbours();
                 intervalTuple_t newIntervalTuple;
-                for(auto interval : intervalTuple._intervals){
-                    for(auto EQClass : _equivalenceClasses){
-                        for(auto EQinterval : EQClass._colorIntervals._intervals){
+                for(const auto& interval : intervalTuple._intervals){
+                    for(const auto& EQClass : _equivalenceClasses){
+                        for(const auto& EQinterval : EQClass._colorIntervals._intervals){
                             auto overlap = interval.getOverlap(EQinterval, _diagonalTuplePositions);
                             if(overlap.isSound()){
                                 auto singleInterval = EQinterval.getSingleColorInterval(); 
@@ -71,8 +71,8 @@ namespace PetriEngine {
                 interval.addRange(colorId, colorId);
             }
 
-            for(auto EqClass : _equivalenceClasses){
-                for(auto EqInterval : EqClass._colorIntervals._intervals){
+            for(const auto& EqClass : _equivalenceClasses){
+                for(const auto& EqInterval : EqClass._colorIntervals._intervals){
                     if(EqInterval.contains(interval, _diagonalTuplePositions)){
                         auto singleInterval = EqInterval.getSingleColorInterval(); 
                         for(uint32_t i = 0; i < singleInterval.size(); i++){

@@ -3,15 +3,15 @@
 namespace PetriEngine {
     namespace Colored {
 
-        uint32_t EquivalenceClass::idCounter = 0;
+        uint32_t EquivalenceClass::idCounter = 0; // TODO, refactor, this it not exactly kosher.
 
         EquivalenceClass::EquivalenceClass() : _id(++idCounter){
         }
         EquivalenceClass::EquivalenceClass(const ColorType *colorType) 
         : _id(++idCounter), _colorType(colorType){
         }
-        EquivalenceClass::EquivalenceClass(const ColorType *colorType, intervalTuple_t colorIntervals) 
-        : _id(++idCounter), _colorType(colorType), _colorIntervals(colorIntervals){
+        EquivalenceClass::EquivalenceClass(const ColorType *colorType, intervalTuple_t&& colorIntervals)
+        : _id(++idCounter), _colorType(colorType), _colorIntervals(std::move(colorIntervals)){
         }
 
         EquivalenceClass EquivalenceClass::intersect(const EquivalenceClass &other) const{
@@ -22,8 +22,8 @@ namespace PetriEngine {
             }
             result._colorType = _colorType;
 
-            for(auto interval : _colorIntervals._intervals){
-                for(auto otherInterval : other._colorIntervals._intervals){
+            for(const auto& interval : _colorIntervals._intervals){
+                for(const auto& otherInterval : other._colorIntervals._intervals){
                     auto overlappingInterval = interval.getOverlap(otherInterval);
                     if(overlappingInterval.isSound()){
                         result._colorIntervals.addInterval(overlappingInterval);
@@ -41,9 +41,9 @@ namespace PetriEngine {
             }
             result._colorType = _colorType;
             intervalTuple_t resIntervals;
-            for(auto interval : _colorIntervals._intervals){ 
+            for(const auto& interval : _colorIntervals._intervals){
                 intervalTuple_t intervalSubRes;                   
-                for(auto otherInterval : other._colorIntervals._intervals){
+                for(const auto& otherInterval : other._colorIntervals._intervals){
                     auto subtractedIntervals = interval.getSubtracted(otherInterval, diagonalPositions, _colorType->size());
                     
 
@@ -56,8 +56,8 @@ namespace PetriEngine {
                         intervalSubRes._intervals = subtractedIntervals;
                     } else {
                         intervalTuple_t newIntervals;
-                        for(auto newInterval : subtractedIntervals){
-                            for(auto interval : intervalSubRes._intervals){
+                        for(const auto& newInterval : subtractedIntervals){
+                            for(const auto& interval : intervalSubRes._intervals){
                                 auto intersection = interval.getOverlap(newInterval);
                                 if(intersection.isSound()){
                                     newIntervals.addInterval(intersection);
@@ -67,7 +67,7 @@ namespace PetriEngine {
                         intervalSubRes = std::move(newIntervals);                              
                     }
                 }
-                for(auto interval : intervalSubRes._intervals){
+                for(const auto& interval : intervalSubRes._intervals){
                     resIntervals.addInterval(interval);
                 }                
             }
@@ -79,7 +79,7 @@ namespace PetriEngine {
             if(ids.size() != _colorIntervals.front().size()){
                 return false;
             }
-            for(auto &interval : _colorIntervals._intervals){
+            for(const auto &interval : _colorIntervals._intervals){
                 bool contained = true;
                 for(uint32_t i = 0; i < ids.size(); i++){
                     if(!diagonalPositions[i] && !interval[i].contains(ids[i])){
@@ -96,9 +96,9 @@ namespace PetriEngine {
 
         size_t EquivalenceClass::size() const{
             size_t result = 0;
-            for(auto interval : _colorIntervals._intervals){
+            for(const auto& interval : _colorIntervals._intervals){
                 size_t intervalSize = 1;
-                for(auto range : interval._ranges){
+                for(const auto& range : interval._ranges){
                     intervalSize *= range.size();
                 }
                 result += intervalSize;

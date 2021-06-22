@@ -59,15 +59,15 @@ namespace PetriEngine {
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto arc : transition.input_arcs) {
+        for (const auto& arc : transition.input_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
-        for (auto arc : transition.output_arcs) {
+        for (const auto& arc : transition.output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
-        for (auto var : variables) {
+        for (const auto& var : variables) {
             _bindings[var] = &var->colorType->operator[](0);
         }
         
@@ -87,9 +87,9 @@ namespace PetriEngine {
     Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
-            for (auto& _binding : _bindings) {
-                _binding.second = &_binding.second->operator++();
-                if (_binding.second->getId() != 0) {
+            for (auto& binding : _bindings) {
+                binding.second = &binding.second->operator++();
+                if (binding.second->getId() != 0) {
                     break;
                 }
             }
@@ -186,7 +186,7 @@ namespace PetriEngine {
         }       
         
         
-        for (auto var : variables) {
+        for (auto* var : variables) {
             if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex].find(var)->second._intervals.empty()){
                 _noValidBindings = true;
                 break;
@@ -244,10 +244,10 @@ namespace PetriEngine {
             if(assignSymmetricVars()){
                 next = false;
             } else {
-                for (auto& _binding : _bindings) { 
+                for (auto& binding : _bindings) {
                     bool varSymmetric = false;
                     for(auto& set : _symmetric_vars){
-                        if(set.find(_binding.first) != set.end()){
+                        if(set.find(binding.first) != set.end()){
                             varSymmetric = true;
                             break;
                         }
@@ -256,20 +256,20 @@ namespace PetriEngine {
                         continue;
                     }
 
-                    const auto &varInterval = _transition.variableMaps[_nextIndex].find(_binding.first)->second;                
+                    const auto &varInterval = _transition.variableMaps[_nextIndex].find(binding.first)->second;                
                     std::vector<uint32_t> colorIds;
-                    _binding.second->getTupleId(&colorIds);
+                    binding.second->getTupleId(&colorIds);
                     const auto &nextIntervalBinding = varInterval.isRangeEnd(colorIds);
 
                     if (nextIntervalBinding.size() == 0){                    
-                        _binding.second = &_binding.second->operator++();
+                        binding.second = &binding.second->operator++();
                         _currentInnerId = 0;
                         _currentOuterId = 0;
                         assignSymmetricVars();
                         next = false;
                         break;                    
                     } else {
-                        _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                        binding.second = binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
                         _currentInnerId = 0;
                         _currentOuterId = 0;
                         assignSymmetricVars();
@@ -288,8 +288,8 @@ namespace PetriEngine {
                     _isDone = true;
                     break;
                 }
-                for(auto& _binding : _bindings){
-                    _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex].find(_binding.first)->second.front().getLowerIds());
+                for(auto& binding : _bindings){
+                    binding.second =  binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex].find(binding.first)->second.front().getLowerIds());
                 }
             }                 
             test = eval();

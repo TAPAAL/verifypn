@@ -280,7 +280,7 @@ namespace PetriEngine {
                 //If there are variables in the guard, that doesn't come from the postPlace
                 //we give them the full interval
                 for(auto& varMap : varMaps){
-                    for(auto var : guardVars){
+                    for(auto* var : guardVars){
                         if(varMap.count(var) == 0){
                             varMap[var].addInterval(var->colorType->getFullInterval());
                         }                            
@@ -406,7 +406,7 @@ namespace PetriEngine {
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
             uint32_t index = 0;
 
-            arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, &index, 0);
+            arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, index, 0);
             placeArcIntervals[placeId] = std::move(newArcInterval);
             intervalGenerator.getVarIntervals(varMaps, placeArcIntervals);
 

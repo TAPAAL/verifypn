@@ -113,7 +113,7 @@ namespace PetriEngine {
 
         void Color::getTupleId(std::vector<uint32_t> *idVector) const {
             if(this->isTuple()) {
-                for (auto color : _tuple) {
+                for (auto* color : _tuple) {
                     color->getTupleId(idVector);
                 }
             } else {
@@ -173,47 +173,47 @@ namespace PetriEngine {
         }
 
         const Color& ProductType::operator[](size_t index) {
-            if (cache.count(index) < 1) {
+            if (_cache.count(index) < 1) {
                 size_t mod = 1;
                 size_t div = 1;
 
                 std::vector<const Color*> colors;
-                for (auto & constituent : constituents) {
+                for (auto & constituent : _constituents) {
                     mod = constituent->size();
                     colors.push_back(&(*constituent)[(index / div) % mod]);
                     div *= mod;
                 }
 
-                cache.emplace(index, Color(this, index, colors));
+                _cache.emplace(index, Color(this, index, colors));
             }
 
-            return cache.at(index);
+            return _cache.at(index);
         }
 
         const Color* ProductType::getColor(const std::vector<const Color*>& colors) {
             size_t product = 1;
             size_t sum = 0;
 
-            if (constituents.size() != colors.size()) return nullptr;
+            if (_constituents.size() != colors.size()) return nullptr;
 
-            for (size_t i = 0; i < constituents.size(); ++i) {
-                if (!(*colors[i]->getColorType() == *constituents[i]))
+            for (size_t i = 0; i < _constituents.size(); ++i) {
+                if (!(*colors[i]->getColorType() == *_constituents[i]))
                     return nullptr;
 
                 sum += product * colors[i]->getId();
-                product *= constituents[i]->size();
+                product *= _constituents[i]->size();
             }
             return &operator[](sum);
         }
 
         const Color* ProductType::getColor(const std::vector<uint32_t> &ids) {
-            assert(ids.size() == constituents.size());
+            assert(ids.size() == _constituents.size());
             size_t product = 1;
             size_t sum = 0;
 
-            for (size_t i = 0; i < constituents.size(); ++i) {
+            for (size_t i = 0; i < _constituents.size(); ++i) {
                 sum += product * ids[i];
-                product *= constituents[i]->size();
+                product *= _constituents[i]->size();
             }
             return &operator[](sum);
         }
@@ -226,15 +226,15 @@ namespace PetriEngine {
             std::string str(index.substr(1, index.size() - 2));
             std::vector<std::string> parts = split(str, ',');
 
-            if (parts.size() != constituents.size()) {
+            if (parts.size() != _constituents.size()) {
                 return nullptr;
             }
 
             size_t sum = 0;
             size_t mult = 1;
             for (size_t i = 0; i < parts.size(); ++i) {
-                sum += mult * (*constituents[i])[parts[i]]->getId();
-                mult *= constituents[i]->size();
+                sum += mult * (*_constituents[i])[parts[i]]->getId();
+                mult *= _constituents[i]->size();
             }
 
             return &operator[](sum);

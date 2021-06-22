@@ -259,17 +259,17 @@ namespace PetriEngine {
 
         class ProductType : public ColorType {
         private:
-            std::vector<ColorType*> constituents;
-            std::unordered_map<size_t,Color> cache;
+            std::vector<ColorType*> _constituents;
+            std::unordered_map<size_t,Color> _cache;
 
         public:
             ProductType(const std::string& name = "Undefined") : ColorType(name) {}
             ~ProductType() {
-                cache.clear();
+                _cache.clear();
             }
 
             void addType(ColorType* type) {
-                constituents.push_back(type);
+                _constituents.push_back(type);
             }
 
             void addColor(const char* colorName) override {}
@@ -278,7 +278,7 @@ namespace PetriEngine {
 
             size_t size() const override {
                 size_t product = 1;
-                for (auto ct : constituents) {
+                for (auto* ct : _constituents) {
                     product *= ct->size();
                 }
                 return product;
@@ -286,9 +286,9 @@ namespace PetriEngine {
 
             size_t size(const std::vector<bool> &excludedFields) const override {
                 size_t product = 1;
-                for (uint32_t i = 0; i < constituents.size(); i++) {
+                for (uint32_t i = 0; i < _constituents.size(); i++) {
                     if(!excludedFields[i]){
-                        product *= constituents[i]->size();
+                        product *= _constituents[i]->size();
                     }                    
                 }
                 return product;
@@ -296,7 +296,7 @@ namespace PetriEngine {
 
             virtual size_t productSize() const{
                 size_t size = 0;
-                for (auto ct : constituents){
+                for (auto* ct : _constituents){
                     size += ct->productSize();
                 }
                 return size;
@@ -304,7 +304,7 @@ namespace PetriEngine {
 
             std::vector<size_t> getConstituentsSizes() const override{
                 std::vector<size_t> result;
-                for (auto ct : constituents) {
+                for (auto* ct : _constituents) {
                     result.push_back(ct->size());
                 }
                 return result;
@@ -312,23 +312,23 @@ namespace PetriEngine {
 
             Colored::interval_t getFullInterval() const override{
                 Colored::interval_t interval;
-                for(auto ct : constituents) {
+                for(auto ct : _constituents) {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
                 }                
                 return interval;
             }
 
             void getColortypes(std::vector<const ColorType *> &colorTypes) const override{
-                for(auto ct : constituents){
+                for(auto ct : _constituents){
                     ct->getColortypes(colorTypes);
                 }
             }
 
             bool containsTypes(const std::vector<const ColorType*>& types) const {
-                if (constituents.size() != types.size()) return false;
+                if (_constituents.size() != types.size()) return false;
 
-                for (size_t i = 0; i < constituents.size(); ++i) {
-                    if (!(*constituents[i] == *types[i])) {
+                for (size_t i = 0; i < _constituents.size(); ++i) {
+                    if (!(*_constituents[i] == *types[i])) {
                         return false;
                     }
                 }
@@ -337,7 +337,7 @@ namespace PetriEngine {
             }
 
             const ColorType* getNestedColorType(size_t index) {
-                return constituents[index];
+                return _constituents[index];
             }
 
             const Color* getColor(const std::vector<uint32_t> &ids) override;

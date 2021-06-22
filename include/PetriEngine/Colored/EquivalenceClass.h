@@ -11,7 +11,7 @@ namespace PetriEngine {
             public:
                 EquivalenceClass();
                 EquivalenceClass(const ColorType *colorType);
-                EquivalenceClass(const ColorType *colorType, const intervalTuple_t colorIntervals);
+                EquivalenceClass(const ColorType *colorType, intervalTuple_t&& colorIntervals);
                 ~EquivalenceClass() {}
                 std::string toString() const{
                     return _colorIntervals.toString();

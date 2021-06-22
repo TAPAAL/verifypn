@@ -49,7 +49,7 @@ namespace PetriEngine {
             }
 
             bool isSound() const {
-                for(auto range: _ranges) {
+                for(const auto& range: _ranges) {
                     if(!range.isSound()){
                         return false;
                     }
@@ -115,7 +115,7 @@ namespace PetriEngine {
 
             uint32_t getContainedColors() const {
                 uint32_t colors = 1;
-                for(auto range : _ranges) {
+                for(const auto& range : _ranges) {
                     colors *= 1+  range._upper - range._lower;
                 }          
                 return colors;
@@ -147,7 +147,7 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
-            interval_t getOverlap(const interval_t& other, const std::vector<bool> &diagonalPositions){
+            interval_t getOverlap(const interval_t& other, const std::vector<bool> &diagonalPositions) const {
                 interval_t overlapInterval;
                 if(size() != other.size()){
                     return overlapInterval;
@@ -165,7 +165,7 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
-            std::vector<interval_t> getSubtracted(const interval_t& other, const std::vector<bool> &diagonalPositions,  uint32_t ctSize){
+            std::vector<interval_t> getSubtracted(const interval_t& other, const std::vector<bool> &diagonalPositions,  uint32_t ctSize) const {
                 std::vector<interval_t> result;
                 
                 if(size() != other.size()){
@@ -205,14 +205,14 @@ namespace PetriEngine {
             }
 
             void print() const {
-                for(auto range : _ranges){
+                for(const auto& range : _ranges){
                     std::cout << " " << range._lower << "-" << range._upper << " ";
                 }
             }
 
             std::string toString() const {
                 std::ostringstream strs;
-                for(auto range : _ranges){
+                for(const auto& range : _ranges){
                     strs << " " << range._lower << "-" << range._upper << " ";
                 }
                 return strs.str();
@@ -256,7 +256,7 @@ namespace PetriEngine {
 
             uint32_t getContainedColors() const {
                 uint32_t colors = 0;
-                for (auto interval : _intervals) {
+                for (const auto& interval : _intervals) {
                     colors += interval.getContainedColors();              
                 }
                 return colors;
@@ -269,7 +269,7 @@ namespace PetriEngine {
             }
 
             bool hasValidIntervals() const {
-                for(auto interval : _intervals) {
+                for(const auto& interval : _intervals) {
                     if(interval.isSound()){
                         return true;
                     }
@@ -396,7 +396,7 @@ namespace PetriEngine {
             }
 
             void print() const {
-                for (auto interval : _intervals){
+                for (const auto& interval : _intervals){
                     std::cout << "[";
                     interval.print();
                     std::cout << "]" << std::endl;

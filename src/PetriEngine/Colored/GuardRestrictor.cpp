@@ -414,7 +414,7 @@ namespace PetriEngine{
                         }
                     }
                 }
-                for(auto tempInterval : tempIntervals){
+                for(const auto& tempInterval : tempIntervals){
                     newIntervals.addInterval(tempInterval);
                 }                   
             }
