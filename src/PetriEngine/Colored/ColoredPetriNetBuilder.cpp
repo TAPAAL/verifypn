@@ -69,13 +69,12 @@ namespace PetriEngine {
             if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
             } else {
-                uint32_t index = 0;
                 for (const auto& colorPair : tokens) {
                     Colored::interval_t tokenConstraints;
-                    colorPair.first->getColorConstraints(&tokenConstraints, &index);
+                    uint32_t index = 0;
+                    colorPair.first->getColorConstraints(tokenConstraints, index);
 
                     colorFixpoint.constraints.addInterval(tokenConstraints);
-                    index = 0;
                 }
             }
          
@@ -793,7 +792,7 @@ namespace PetriEngine {
                 newColor = color.first;
             } else {
                 tupleIds.clear();
-                color.first->getTupleId(&tupleIds);
+                color.first->getTupleId(tupleIds);
 
                 _partition[arc.place].applyPartition(tupleIds);
                 newColor = place.type->getColor(tupleIds);

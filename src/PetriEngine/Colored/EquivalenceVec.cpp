@@ -53,7 +53,7 @@ namespace PetriEngine {
         void EquivalenceVec::addColorToEqClassMap(const Color *color){
             for(auto& eqClass : _equivalenceClasses){   
                 std::vector<uint32_t> colorIds;
-                color->getTupleId(&colorIds);
+                color->getTupleId(colorIds);
                 if(eqClass.containsColor(colorIds, _diagonalTuplePositions)){
                     _colorEQClassMap[color] = &eqClass;
                     break;

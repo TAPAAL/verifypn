@@ -86,19 +86,19 @@ namespace PetriEngine {
             return toString(this);
         }
 
-        void Color::getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const {
+        void Color::getColorConstraints(Colored::interval_t& constraintsVector, uint32_t& index) const {
             if (this->isTuple()) {
                 for (const Color *color : _tuple) {
                     color->getColorConstraints(constraintsVector, index);
-                    (*index)++;
+                    index++;
                 }
             } else {
                 Reachability::range_t curRange;
-                if (*index >= constraintsVector->size()){
+                if (index >= constraintsVector.size()){
                     curRange &= _id;
-                    constraintsVector->addRange(curRange);
+                    constraintsVector.addRange(curRange);
                 } else {
-                    curRange = constraintsVector->operator[](*index);
+                    curRange = constraintsVector[index];
                     if (_id < curRange._lower){
                         curRange._lower = _id;
                     }
@@ -106,18 +106,18 @@ namespace PetriEngine {
                         curRange._upper = _id;
                     }
 
-                    constraintsVector->operator[](*index) = curRange;
+                    constraintsVector[index] = curRange;
                 }            
             }
         }
 
-        void Color::getTupleId(std::vector<uint32_t> *idVector) const {
+        void Color::getTupleId(std::vector<uint32_t>& idVector) const {
             if(this->isTuple()) {
                 for (auto* color : _tuple) {
                     color->getTupleId(idVector);
                 }
             } else {
-                idVector->push_back(_id);
+                idVector.push_back(_id);
             }
         }
         
@@ -197,7 +197,7 @@ namespace PetriEngine {
             if (_constituents.size() != colors.size()) return nullptr;
 
             for (size_t i = 0; i < _constituents.size(); ++i) {
-                if (!(*colors[i]->getColorType() == *_constituents[i]))
+                if (!(colors[i]->getColorType() == _constituents[i]))
                     return nullptr;
 
                 sum += product * colors[i]->getId();

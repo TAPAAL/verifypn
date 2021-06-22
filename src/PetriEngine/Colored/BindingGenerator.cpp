@@ -38,15 +38,9 @@ namespace PetriEngine {
         _generator->nextBinding();
         if (_generator->isInitial()) _generator = nullptr;
         return *this;
-    }
+    }   
 
-    const Colored::ExpressionContext::BindingMap NaiveBindingGenerator::Iterator::operator++(int) {
-        auto prev = _generator->currentBinding();
-        ++*this;
-        return prev;
-    }
-
-    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::Iterator::operator*() {
+    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::Iterator::operator*() const {
         return _generator->currentBinding();
     }
 
@@ -75,7 +69,7 @@ namespace PetriEngine {
             nextBinding();
     }
 
-    bool NaiveBindingGenerator::eval() {
+    bool NaiveBindingGenerator::eval() const {
         if (_expr == nullptr)
             return true;
         Colored::EquivalenceVec placePartition;
@@ -84,7 +78,7 @@ namespace PetriEngine {
         return _expr->eval(context);
     }
 
-    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::nextBinding() {
+    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
             for (auto& binding : _bindings) {
@@ -102,7 +96,7 @@ namespace PetriEngine {
         return _bindings;
     }
 
-    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::currentBinding() {
+    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::currentBinding() const {
         return _bindings;
     }
 
@@ -147,13 +141,7 @@ namespace PetriEngine {
         return *this;
     }
 
-    const Colored::ExpressionContext::BindingMap FixpointBindingGenerator::Iterator::operator++(int) {
-        auto prev = _generator->currentBinding();
-        ++*this;
-        return prev;
-    }
-
-    Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::Iterator::operator*() {
+    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::Iterator::operator*() const {
         return _generator->currentBinding();
     }
 
@@ -236,7 +224,7 @@ namespace PetriEngine {
         return _expr->eval(context);
     }
 
-    Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::nextBinding() {
+    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
             bool next = true;
@@ -258,7 +246,7 @@ namespace PetriEngine {
 
                     const auto &varInterval = _transition.variableMaps[_nextIndex].find(binding.first)->second;                
                     std::vector<uint32_t> colorIds;
-                    binding.second->getTupleId(&colorIds);
+                    binding.second->getTupleId(colorIds);
                     const auto &nextIntervalBinding = varInterval.isRangeEnd(colorIds);
 
                     if (nextIntervalBinding.size() == 0){                    
@@ -314,11 +302,11 @@ namespace PetriEngine {
         }
     }
 
-    Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::currentBinding() {
+    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::currentBinding() const {
         return _bindings;
     }
 
-    bool FixpointBindingGenerator::isInitial() const{     
+    bool FixpointBindingGenerator::isInitial() const {
         return _nextIndex >= _transition.variableMaps.size();
     }
 

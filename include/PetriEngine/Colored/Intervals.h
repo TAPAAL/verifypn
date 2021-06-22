@@ -577,38 +577,37 @@ namespace PetriEngine {
 
             interval_dist_t getClosestIntervals() const {
                 interval_dist_t currentBest = {0,0, std::numeric_limits<uint32_t>::max()};
-                    for (uint32_t i = 0; i < size()-1; i++) {
-                        const auto& interval = _intervals[i];
-                        for(uint32_t j = i+1; j < size(); j++){
-                            const auto& otherInterval = _intervals[j];
-                            uint32_t dist = 0;
-                            
-                            for(uint32_t k = 0; k < interval.size(); k++) {
-                                int32_t val1 = otherInterval[k]._lower - interval[k]._upper;
-                                int32_t val2 = interval[k]._lower - otherInterval[k]._upper;
-                                dist += std::max(0, std::max(val1, val2));
-                                if(dist >= currentBest.distance){
-                                    break;
-                                }
-                            }
-                            
-                            if(dist < currentBest.distance){
-                                currentBest.distance = dist;
-                                currentBest.intervalId1 = i;
-                                currentBest.intervalId2 = j;
+                for (uint32_t i = 0; i < size()-1; i++) {
+                    const auto& interval = _intervals[i];
+                    for(uint32_t j = i+1; j < size(); j++){
+                        const auto& otherInterval = _intervals[j];
+                        uint32_t dist = 0;
 
-                                //if the distance is 1 we cannot find any intervals that are closer so we stop searching
-                                if(currentBest.distance == 1){
-                                    return currentBest;
-                                }
-                            }                           
+                        for(uint32_t k = 0; k < interval.size(); k++) {
+                            int32_t val1 = otherInterval[k]._lower - interval[k]._upper;
+                            int32_t val2 = interval[k]._lower - otherInterval[k]._upper;
+                            dist += std::max(0, std::max(val1, val2));
+                            if(dist >= currentBest.distance){
+                                break;
+                            }
                         }
+
+                        if(dist < currentBest.distance){
+                            currentBest.distance = dist;
+                            currentBest.intervalId1 = i;
+                            currentBest.intervalId2 = j;
+
+                            //if the distance is 1 we cannot find any intervals that are closer so we stop searching
+                            if(currentBest.distance == 1){
+                                return currentBest;
+                            }
+                        }                           
                     }
+                }
                 return currentBest;
             }
 
             void simplify() {
-                std::set<uint32_t> rangesToRemove;
                 if(_intervals.empty()){
                     return;
                 }

@@ -74,7 +74,7 @@ namespace PetriEngine{
                     index += varPositions.find(index)->second->colorType->productSize();
                 } else {
                     auto oldSize = idVec.size();
-                    constantMap.find(index)->second->getTupleId(&idVec); 
+                    constantMap.find(index)->second->getTupleId(idVec); 
                     int32_t leftVarMod = getVarModifier(otherVarModifierMap.find(otherVar)->second.back(), index);
 
                     for(auto& id : idVec){
@@ -101,7 +101,7 @@ namespace PetriEngine{
                     index += varPositions.find(index)->second->colorType->productSize();
                 } else {
                     std::vector<uint32_t> colorIdVec;
-                    constantMap.find(index)->second->getTupleId(&colorIdVec);
+                    constantMap.find(index)->second->getTupleId(colorIdVec);
                     int32_t leftVarModifier = getVarModifier(otherVarModifierMap.find(otherVar)->second.back(), index);
 
                     for(auto id : colorIdVec){
@@ -128,7 +128,7 @@ namespace PetriEngine{
                 auto leftColor = constantMap.find(index)->second;
                 auto &rightTupleInterval = varMap.find(var)->second;
                 std::vector<uint32_t> idVec;
-                leftColor->getTupleId(&idVec);
+                leftColor->getTupleId(idVec);
 
                 expandIdVec(varMap, mainVarModifierMap, otherVarModifierMap, varPositions, constantMap, otherVar, idVec, rightTupleInterval.tupleSize(), index + idVec.size());
 
@@ -151,7 +151,7 @@ namespace PetriEngine{
                 auto color = constantMap.find(index)->second;
                 auto &tupleInterval = varMap.find(var)->second;
                 std::vector<uint32_t> idVec;
-                color->getTupleId(&idVec);
+                color->getTupleId(idVec);
                 int32_t varModifier = getVarModifier(otherVarModifierMap.find(var)->second.back(), index);
 
                 

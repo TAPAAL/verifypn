@@ -55,13 +55,13 @@ namespace PetriEngine {
                 return _tuple.size() > 1;
             }
 
-            void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
+            void getColorConstraints(Colored::interval_t& constraintsVector, uint32_t& index) const;
             
             const std::vector<const Color*>& getTupleColors() const {
                 return _tuple;
             }
 
-            void getTupleId(std::vector<uint32_t> *idVector) const;
+            void getTupleId(std::vector<uint32_t>& idVector) const;
 
             const std::string& getColorName() const {
                 if (this->isTuple()) {
@@ -125,54 +125,13 @@ namespace PetriEngine {
         };
         
         class ColorType {
-        public:
-            class iterator {
-            private:
-                ColorType& type;
-                size_t index;
-
-            public:
-                iterator(ColorType& type, size_t index) : type(type), index(index) {}
-
-                const Color& operator++() {
-                    return type[++index];
-                }
-
-                const Color& operator++(int) {
-                    return type[index++];
-                }
-
-                const Color& operator--() {
-                    return type[--index];
-                }
-                const Color& operator--(int) {
-                    return type[index--];
-                }
-
-                const Color& operator*() {
-                    return type[index];
-                }
-
-                const Color* operator->() {
-                    return &type[index];
-                }
-
-                bool operator==(iterator& other) {
-                    return type == other.type && index == other.index;
-                }
-
-                bool operator!=(iterator& other) {
-                    return !(type == other.type) || index != other.index;
-                }
-            };
-            
         private:
             std::vector<Color> _colors;
             uintptr_t _id;
             std::string _name;
             
         public:
-            ColorType(std::vector<ColorType*> elements);
+            
             ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
                 _id = (uintptr_t)this;
             }
@@ -236,24 +195,16 @@ namespace PetriEngine {
                 return &_colors[ids[0]];
             }
             
-            bool operator== (const ColorType& other) const {
-                return _id == other._id;
-            }
-
-            uintptr_t getId() const{
-                return _id;
-            }
-
             const std::string& getName() const {
                 return _name;
             }
             
-            iterator begin() {
-                return {*this, 0};
+            std::vector<Color>::iterator begin() {
+                return _colors.begin();
             }
 
-            iterator end() {
-                return {*this, size()};
+            std::vector<Color>::iterator end() {
+                return _colors.end();
             }
         };
 
@@ -328,7 +279,7 @@ namespace PetriEngine {
                 if (_constituents.size() != types.size()) return false;
 
                 for (size_t i = 0; i < _constituents.size(); ++i) {
-                    if (!(*_constituents[i] == *types[i])) {
+                    if (!(_constituents[i] == types[i])) {
                         return false;
                     }
                 }

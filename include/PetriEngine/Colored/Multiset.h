@@ -26,12 +26,12 @@ namespace PetriEngine {
         private:
             class Iterator {
             private:
-                const Multiset* ms;
-                size_t index;
+                const Multiset* _ms;
+                size_t _index;
 
             public:
                 Iterator(const Multiset* ms, size_t index)
-                        : ms(ms), index(index) {}
+                        : _ms(ms), _index(index) {}
 
                 bool operator==(Iterator& other);
                 bool operator!=(Iterator& other);
@@ -74,7 +74,7 @@ namespace PetriEngine {
             
         private:
             Internal _set;
-            ColorType* type;
+            ColorType* _type;
         };
     }
 }

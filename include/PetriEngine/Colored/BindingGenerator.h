@@ -39,22 +39,21 @@ namespace PetriEngine {
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
+            const Colored::ExpressionContext::BindingMap& operator*() const;
         };
     private:
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
         ColorTypeMap& _colorTypes;
         
-        bool eval();
+        bool eval() const;
         
     public:
         NaiveBindingGenerator(const Colored::Transition& transition,
                 ColorTypeMap& colorTypes);
 
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
+        const Colored::ExpressionContext::BindingMap& nextBinding();
+        const Colored::ExpressionContext::BindingMap& currentBinding() const;
         bool isInitial() const;
         Iterator begin();
         Iterator end();
@@ -74,7 +73,7 @@ namespace PetriEngine {
             bool operator!=(Iterator& other);
             Iterator& operator++();
             const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
+            const Colored::ExpressionContext::BindingMap& operator*() const;
         };
     private:
         const Colored::GuardExpression_ptr &_expr;
@@ -107,8 +106,8 @@ namespace PetriEngine {
         
         FixpointBindingGenerator& operator= (const FixpointBindingGenerator& b) = default;
 
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
+        const Colored::ExpressionContext::BindingMap& nextBinding();
+        const Colored::ExpressionContext::BindingMap& currentBinding() const;
         bool isInitial() const;
         Iterator begin();
         Iterator end();

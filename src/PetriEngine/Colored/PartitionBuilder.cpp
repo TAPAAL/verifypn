@@ -409,7 +409,7 @@ namespace PetriEngine {
 
             arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, index, 0);
             placeArcIntervals[placeId] = std::move(newArcInterval);
-            intervalGenerator.getVarIntervals(varMaps, placeArcIntervals);
+            _interval_generator.getVarIntervals(varMaps, placeArcIntervals);
 
             return varMaps;                
         }
