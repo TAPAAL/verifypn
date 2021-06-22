@@ -95,12 +95,10 @@ struct options_t {
     bool ltluseweak = true;
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
-    uint32_t weight1, weight2;
     APCompression ltl_compress_aps = APCompression::None;
-    LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;//AutomatonReach;
+    LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;
     BuchiOptimization buchiOptimization = BuchiOptimization::Low;
-    //LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
-    LTLHeuristicOptions ltlHeuristic = LTLHeuristicOptions{LTLHeuristic::Automaton};
+    const char* ltlHeuristic = nullptr;
 
     bool replay = false;
     std::string replay_file;

@@ -23,6 +23,7 @@
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
 #include "LTL/Stubborn/InterestingLTLStubbornSet.h"
+#include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
 
@@ -95,38 +96,15 @@ namespace LTL {
         if (options.strategy == Reachability::Strategy::RDFS) {
             return std::make_unique<RandomHeuristic>(options.seed());
         }
-        if (options.strategy != Reachability::Strategy::HEUR) {
+        if (options.strategy != Reachability::Strategy::HEUR && options.strategy != Reachability::Strategy::DEFAULT) {
             return nullptr;
         }
-        switch (options.ltlHeuristic.heuristic) {
-            case LTLHeuristic::Distance:
-                return std::make_unique<DistanceHeuristic>(net, negated_formula);
-            case LTLHeuristic::Automaton:
-                return std::make_unique<AutomatonHeuristic>(net, automaton);
-            case LTLHeuristic::WeightedAutomaton:
-                return std::make_unique<WeightedAutomatonHeuristic>(net, automaton);
-            case LTLHeuristic::FireCount:
-                return std::make_unique<FireCountHeuristic>(net);
-            case LTLHeuristic::LogFireCount:
-                return std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold);
-            case LTLHeuristic::SumComposed:
-                return std::make_unique<SumComposedHeuristic>(
-                        std::make_unique<AutomatonHeuristic>(net, automaton),
-                        std::make_unique<LogFireCountHeuristic>(net,
-                                                                         options.ltlHeuristic.fire_count_threshold));
-            case LTLHeuristic::SumComposedWeightAutLogFire:
-                return std::make_unique<SumComposedHeuristic>(
-                        std::make_unique<WeightedAutomatonHeuristic>(net, automaton),
-                        std::make_unique<LogFireCountHeuristic>(net,
-                                                                         options.ltlHeuristic.fire_count_threshold));
-            case LTLHeuristic::SumComposedCountLogFire:
-                return std::make_unique<SumComposedHeuristic>(std::make_unique<DistanceHeuristic>(net, negated_formula),
-                                                              std::make_unique<LogFireCountHeuristic>(net,
-                                                                                                               options.ltlHeuristic.fire_count_threshold));
-            default:
-                std::cerr << "Error unhandled heuristic type. This is a bug!" << std::endl;
-                exit(1);
+        auto heur = ParseHeuristic(net, automaton, negated_formula, options.ltlHeuristic);
+        if (heur == nullptr) {
+            std::cerr << "Invalid heuristic specification, terminating.\n";
+            exit(1);
         }
+        else return heur;
     }
 
     ReturnValue LTLMain(const PetriNet *net,
@@ -149,7 +127,7 @@ namespace LTL {
         bool is_visible_stub = options.stubbornreduction
                                && (options.ltl_por == LTLPartialOrder::Visible || options.ltl_por == LTLPartialOrder::VisibleReach)
                                && !net->has_inhibitor()
-                               && !negated_formula->containsNext();
+                                 && !negated_formula->containsNext();
         bool is_autreach_stub = options.stubbornreduction
                 && (options.ltl_por == LTLPartialOrder::AutomatonReach ||
                     options.ltl_por == LTLPartialOrder::VisibleReach)

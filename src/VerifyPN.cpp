@@ -380,15 +380,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.replay = true;
             options.replay_file = std::string(argv[++i]);
         }
-        else if (strcmp(argv[i], "--weight") == 0) {
-            //TODO this is a temporary option to set the weight of the weighted composed heuristic.
-            options.weight1 = atoi(argv[++i]);
-            options.weight2 = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "--log-fire-count-threshold") == 0) {
-            //TODO this is a temporary option to set the threshold of log-fire-count heuristic
-            options.ltlHeuristic.fire_count_threshold = atoi(argv[++i]);
-        }
+
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -464,40 +456,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             ++i;
         }
         else if (strcmp(argv[i], "--ltl-heur") == 0) {
+
             if (argc == i + 1) {
                 std::cerr << "Missing argument to --ltl-heur\n";
                 return ErrorCode;
             }
-            else if (strcmp(argv[i+1], "dist") == 0) {
-                options.ltlHeuristic.heuristic = LTLHeuristic::Distance;
-            }
-            else if (strcmp(argv[i+1], "aut") == 0) {
-                options.ltlHeuristic.heuristic = LTLHeuristic::Automaton;
-            }
-            else if (strcmp(argv[i+1], "weight-aut") == 0) {
-                options.ltlHeuristic.heuristic = LTLHeuristic::WeightedAutomaton;
-            }
-            else if (strcmp(argv[i+1], "fire-count") == 0) {
-                options.ltlHeuristic.heuristic = LTLHeuristic::FireCount;
-            }
-            else if (strcmp(argv[i+1], "log-fire-count") == 0) {
-                options.ltlHeuristic.heuristic = LTLHeuristic::LogFireCount;
-            }
-            else if (strcmp(argv[i+1], "sum-composed") == 0) {
-                //TODO This option is currently undocumented. It should either be removed or get a proper interface.
-                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposed;
-            }
-            else if (strcmp(argv[i+1], "sum-composed-weight") == 0) {
-                //TODO This option is very temporary and should not be merged to trunk
-                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposedWeightAutLogFire;
-            }
-            else if (strcmp(argv[i+1], "sum-composed-count") == 0) {
-                //TODO This option is very temporary and should not be merged to trunk
-                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposedCountLogFire;
-            }
             else {
-                std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-heur\n";
-                return ErrorCode;
+                options.ltlHeuristic = argv[i + 1];
             }
             ++i;
         }
@@ -550,15 +515,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                                    classic otherwise.\n"
                     "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
                     "                                       - none       disable stubborn reductions (equivalent to -p).\n"
-                    "  --ltl-heur <type>                    Select distance metric for LTL heuristic search\n"
-                    "                                       - dist           Same distance metric as reachability engine.\n"
-                    "                                       - aut            Same distance metric as reachability engine, but\n"
-                    "                                                        only applied to neighbouring Büchi states.\n"
-                    "                                       - weight-aut     Same as --ltl-heur aut, except the distance is weighted\n"
-                    "                                                        is weighed by distance to any accepting Büchi state.\n"
-                    "                                       - fire-count     Add penalty for number of times the transition was fired.\n"
-                    "                                       - log-fire-count Add logarithmic penalty for number of times the transition was fired\n"
-                    "                                                        after it has been fired 200 times.\n"
+                    "  --ltl-heur <spec>                    Select distance metric for LTL heuristic search\n"
+                    "                                       Use --ltl-heur-help to see specification grammar.\n"
+                    "                                       Defaults to 'aut'.\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -639,7 +598,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
-        } else if (options.modelfile == NULL) {
+        }
+        else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
+            printf("Heuristics for LTL model checking are specified using the following grammar:"
+                   "  heurexp : {'aut' | 'automaton'}\n"
+                   "          | {'dist' | 'distance'}\n"
+                   "          | {'fc' | 'firecount' | 'fire-count'} INT\n"
+                   "          | '(' heurexp ')'\n"
+                   "          | 'sum' heurexp heurexp\n"
+                   "          | 'sum' '(' heurexp ',' heurexp ')'\n"
+                   "Example strings:\n"
+                   "  - 'aut' - use the automaton heuristic for verification.\n"
+                   "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
+                   );
+        }
+        else if (options.modelfile == NULL) {
             options.modelfile = argv[i];
         } else if (options.queryfile == NULL) {
             options.queryfile = argv[i];
