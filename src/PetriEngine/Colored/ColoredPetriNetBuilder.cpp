@@ -619,7 +619,6 @@ namespace PetriEngine {
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
         if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
-            std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
             if(_fixpointDone){
