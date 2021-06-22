@@ -21,9 +21,6 @@
 #include "LTL/SuccessorGeneration/ProductSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/Spoolers.h"
 
-//#define REACH_STUB_DEBUG
-
-#define F_IN_FIX
 
 namespace LTL {
     template<typename S, typename Spooler>
@@ -44,13 +41,6 @@ namespace LTL {
             calc_safe_reach_states(buchi);
             _reach = std::make_unique<SafeAutStubbornSet>(*net, _progressing_formulae);
 
-#ifdef REACH_STUB_DEBUG
-            if (_reach_states.empty()) {
-                //exit(0);
-            } else {
-                std::cerr << "Size of _reach_states: " << _reach_states.size() << std::endl;
-            }
-#endif
         }
 
         void calc_safe_reach_states(const Structures::BuchiAutomaton &buchi) {
@@ -77,103 +67,13 @@ namespace LTL {
             }
         }
 
-        void calc_reach_states(const Structures::BuchiAutomaton &buchi) {
-            assert(_reach_states.empty());
-            std::vector<AtomicProposition> aps(buchi.ap_info.size());
-            std::transform(std::begin(buchi.ap_info), std::end(buchi.ap_info), std::begin(aps),
-                           [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-            for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
-#ifndef F_IN_FIX
-                if (buchi._buchi->state_is_accepting(state)) continue;
-#endif
-                bdd retarding = bddfalse;
-                bdd progressing = bddfalse;
-                for (auto &e : buchi._buchi->out(state)) {
-                    auto formula = spot::bdd_to_formula(e.cond, buchi.dict);
-                    if (e.dst == state) {
-                        retarding = e.cond;
-                    } else {
-                        // Remove the first disjunct  to enable disjunction of multiple progressing formulae.
-                        /*if (progressing != bddfalse || !buchi._buchi->state_is_accepting(e.dst)) {
-                            progressing = bddfalse;
-                            break;
-                        }*/
-                        progressing |= e.cond;
-                    }
-                }
-                if (progressing == bddfalse || (progressing | retarding) != bddtrue) continue;
-
-                _reach_states.insert(std::make_pair(state, BuchiEdge{progressing, toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps)}));
-            }
-
-            size_t prev_sz;
-            do {
-                prev_sz = _reach_states.size();
-                for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
-                    auto &state = it->first;
-                    bool has_erased = false;
-                    for (auto &e: buchi._buchi->out(state)) {
-                        if (e.dst != state) {
-                            auto suc = e.dst;
-                            if (_reach_states.find(suc) != _reach_states.end()) {
-                                continue; // successor is still potentially reachability state
-                            }
-                            // test self-loop of successor for universal satisfaction
-                            for (auto &suc_edge: buchi._buchi->out(suc)) {
-                                if (suc_edge.dst == suc && suc_edge.cond != bddtrue) {
-                                    it = _reach_states.erase(it);
-                                    has_erased = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (has_erased) break;
-/*                    if (e.dst == state && e.cond != bddtrue) {
-                        it = _reach_states.erase(it);
-                        has_erased = true;
-                        break;
-                    }*/
-                    }
-                    if (!has_erased) ++it;
-
-                }
-            } while (prev_sz != _reach_states.size());
-
-            for (auto it = _reach_states.begin(); it != _reach_states.end(); ++it) {
-                _progressing_formulae.push_back(it->second.cond);
-            }
-#ifdef F_IN_FIX
-            // Prune accepting states from reach states
-            for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
-                if (buchi._buchi->state_is_accepting(it->first)) {
-                    it = _reach_states.erase(it);
-                } else {
-                    ++it;
-                }
-            }
-#endif
-            std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
-       }
-
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
         {
             if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
-#ifdef REACH_STUB_DEBUG
-                if (!_reach_active) {
-                    std::cout << "Found reach stub state. Switching spooler." << std::endl;
-                    _reach_active = true;
-                }
-#endif
                 (dynamic_cast<PetriEngine::StubbornSet*>(_reach.get()))->setQuery(suc->second.cond.get());
                 set_spooler(_reach.get());
             }
             else {
-#ifdef REACH_STUB_DEBUG
-                if (_reach_active) {
-                    std::cout << "Leaving reach stub state. Switching to enabled spooler." << std::endl;
-                    _reach_active = false;
-                }
-#endif
                 set_spooler(_fallback_spooler.get());
             }
             ProductSuccessorGenerator<S>::prepare(state, sucinfo);
@@ -199,9 +99,7 @@ namespace LTL {
         std::unique_ptr<LTL::SuccessorSpooler> _reach;
         std::unordered_map<size_t, BuchiEdge> _reach_states;
         std::vector<PetriEngine::PQL::Condition_ptr> _progressing_formulae;
-#ifdef REACH_STUB_DEBUG
-        bool _reach_active = false;
-#endif
+
     };
 }
 

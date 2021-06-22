@@ -29,6 +29,7 @@ void heurerror(const PetriEngine::PetriNet *,
     LTL::Heuristic *heur;
 	std::string *string;
 	int token;
+	int intval;
 }
 
 %name-prefix "heur"
@@ -41,6 +42,7 @@ void heurerror(const PetriEngine::PetriNet *,
 
 
 %type <heur> heurexp;
+%type <intval> opt_int;
 
 %start heuristic
 
@@ -50,14 +52,21 @@ heuristic : heurexp { heuristic = std::unique_ptr<Heuristic>($1); }
           | error   { YYABORT; }
           ;
 
-heurexp : AUT                       { $$ = new WeightedAutomatonHeuristic(net, aut); }
+heurexp : AUT                       { $$ = new AutomatonHeuristic(net, aut); }
         | DIST                      { $$ = new DistanceHeuristic(net, cond); }
         | FIRECOUNT INT             { $$ = new LogFireCountHeuristic(net, atol($2->c_str())); delete $2; }
         | FIRECOUNT                 { $$ = new LogFireCountHeuristic(net, 5000); }
         | LPAREN heurexp RPAREN     { $$ = $2; }
-        | SUM heurexp heurexp                      { $$ = new SumComposedHeuristic(std::unique_ptr<Heuristic>($2),
-                                                                                   std::unique_ptr<Heuristic>($3)); }
-        | SUM LPAREN heurexp COMMA heurexp RPAREN  { $$ = new SumComposedHeuristic(std::unique_ptr<Heuristic>($3),
-                                                                                   std::unique_ptr<Heuristic>($5)); }
-        //| error   { yyerrok; }
+        | SUM opt_int[lweight] heurexp[left] opt_int[rweight] heurexp[right]
+            { $$ = new WeightedComposedHeuristic(std::unique_ptr<Heuristic>($left),
+                                                 std::unique_ptr<Heuristic>($right),
+                                                 $2, $4); }
+        | SUM LPAREN opt_int[lweight] heurexp[left] COMMA opt_int[rweight] heurexp[right] RPAREN
+            { $$ = new WeightedComposedHeuristic(std::unique_ptr<Heuristic>($left),
+                                                 std::unique_ptr<Heuristic>($right),
+                                                 $lweight, $rweight); }
        ;
+
+opt_int : INT { $$ = atol($1->c_str()); delete $1; }
+        | { $$ = 1; }
+        ;

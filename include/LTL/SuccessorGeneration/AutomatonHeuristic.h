@@ -39,6 +39,8 @@ namespace LTL {
         const PetriEngine::PetriNet *_net;
         const LTL::Structures::BuchiAutomaton &_aut;
         std::vector<GuardInfo> _state_guards;
+
+        std::vector<int> _bfs_dists;
     };
 }
 

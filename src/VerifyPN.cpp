@@ -456,7 +456,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             ++i;
         }
         else if (strcmp(argv[i], "--ltl-heur") == 0) {
-
             if (argc == i + 1) {
                 std::cerr << "Missing argument to --ltl-heur\n";
                 return ErrorCode;
@@ -605,8 +604,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                    "          | {'dist' | 'distance'}\n"
                    "          | {'fc' | 'firecount' | 'fire-count'} INT\n"
                    "          | '(' heurexp ')'\n"
-                   "          | 'sum' heurexp heurexp\n"
-                   "          | 'sum' '(' heurexp ',' heurexp ')'\n"
+                   "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
+                   "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
                    "Example strings:\n"
                    "  - 'aut' - use the automaton heuristic for verification.\n"
                    "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"

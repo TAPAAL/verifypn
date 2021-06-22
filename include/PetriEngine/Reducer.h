@@ -14,6 +14,7 @@
 #include "NetStructures.h"
 
 #include <vector>
+#include <optional>
 
 namespace PetriEngine {
 

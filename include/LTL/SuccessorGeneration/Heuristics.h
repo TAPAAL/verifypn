@@ -21,12 +21,9 @@
 #include "DistanceHeuristic.h"
 #include "RandomHeuristic.h"
 #include "AutomatonHeuristic.h"
-#include "WeightedAutomatonHeuristic.h"
 #include "ComposedHeuristic.h"
-#include "TieBreakComposedHeuristic.h"
 #include "WeightedComposedHeuristic.h"
 #include "FireCountHeuristic.h"
 #include "LogFireCountHeuristic.h"
-#include "SumComposedHeuristic.h"
 
 #endif //VERIFYPN_HEURISTICS_H

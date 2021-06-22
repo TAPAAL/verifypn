@@ -22,7 +22,6 @@
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
-#include "LTL/Stubborn/InterestingLTLStubbornSet.h"
 #include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
@@ -30,6 +29,7 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
+// Causes FORMULA <qname> STATS EXPLORED <nexplored> to be printed after verification. Remove if this causes a nuisance.
 #define DEBUG_EXPLORED_STATES
 
 namespace LTL {

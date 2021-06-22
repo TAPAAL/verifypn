@@ -43,22 +43,6 @@ enum class BuchiOptimization {
     High = 3
 };
 
-enum class LTLHeuristic {
-    Distance,
-    Automaton,
-    WeightedAutomaton,
-    FireCount,
-    LogFireCount,
-    SumComposed,
-    SumComposedWeightAutLogFire,
-    SumComposedCountLogFire
-};
-
-struct LTLHeuristicOptions {
-    LTLHeuristic heuristic;
-    uint32_t fire_count_threshold = 200;
-};
-
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
