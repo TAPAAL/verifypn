@@ -50,7 +50,7 @@ namespace PetriEngine {
             
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
-                    return DotConstant::dotConstant(nullptr);
+                    return DotConstant::dotConstant();
                 for (auto& elem : colorTypes) {
                     auto col = (*elem.second)[color];
                     if (col)
@@ -152,7 +152,7 @@ namespace PetriEngine {
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(const ExpressionContext& context) const override {
-                return DotConstant::dotConstant(nullptr);
+                return DotConstant::dotConstant();
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -166,7 +166,7 @@ namespace PetriEngine {
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_t interval;
                 Colored::interval_vector_t tupleInterval;
-                const Color *dotColor = DotConstant::dotConstant(nullptr);
+                const Color *dotColor = DotConstant::dotConstant();
                  
                 colortypes.emplace_back(dotColor->getColorType());
                 
@@ -176,11 +176,11 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                const Color *dotColor = DotConstant::dotConstant(nullptr);
+                const Color *dotColor = DotConstant::dotConstant();
                 constantMap[index] = dotColor;
             }
             ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                return DotConstant::dotConstant(nullptr)->getColorType();
+                return DotConstant::dotConstant()->getColorType();
             }
 
             std::string toString() const override {

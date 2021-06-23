@@ -67,7 +67,7 @@ namespace PetriEngine {
                 throw "You cannot add Multisets over different sets";
             }
             for (auto c : other._set) {
-                const Color* color = DotConstant::dotConstant(nullptr);
+                const Color* color = DotConstant::dotConstant();
                 if (_type != nullptr)
                     color = &((*_type)[c.first]);
                 (*this)[color] += c.second;
@@ -82,7 +82,7 @@ namespace PetriEngine {
                 throw "You cannot add Multisets over different sets";
             }
             for (auto c : _set) {
-                const Color* color = DotConstant::dotConstant(nullptr);
+                const Color* color = DotConstant::dotConstant();
                 if (_type != nullptr)
                     color = &((*_type)[c.first]);
                 (*this)[color] = std::min(c.second - other[color], c.second);
@@ -171,7 +171,7 @@ namespace PetriEngine {
 
         std::pair<const Color *, const uint32_t &> Multiset::Iterator::operator*() {
             auto& item = _ms->_set[_index];
-            auto color = DotConstant::dotConstant(nullptr);
+            auto color = DotConstant::dotConstant();
             if (_ms->_type != nullptr)
                 color = &(*_ms->_type)[item.first];
             return { color, item.second };

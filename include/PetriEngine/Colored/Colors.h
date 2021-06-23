@@ -73,6 +73,10 @@ namespace PetriEngine {
             ColorType* getColorType() const {
                 return _colorType;
             }
+
+            void setColorType(ColorType *ct) {
+                _colorType = ct;
+            }
             
             uint32_t getId() const {
                 return _id;
@@ -105,14 +109,17 @@ namespace PetriEngine {
          */
         class DotConstant : public Color {
         private:
-            DotConstant();
+            
             
         public:
-            static const Color* dotConstant(ColorType *ct) {
+        DotConstant();
+            static const Color* dotConstant() {
                 static DotConstant _instance;
-                if(ct != nullptr){
-                    _instance._colorType = ct;
-                }
+                return &_instance;
+            }
+
+            static Color* dot() {
+                static DotConstant _instance;
                 return &_instance;
             }
             
@@ -139,7 +146,10 @@ namespace PetriEngine {
             virtual void addColor(const char* colorName);
             virtual void addColor(std::vector<const Color*>& colors);
             virtual void addDot() {
-                _colors.push_back(*DotConstant::dotConstant(this));
+                auto dot = DotConstant::dot();
+                dot->setColorType(this);
+
+                _colors.push_back(*dot);
             }
             
             virtual size_t size() const {
