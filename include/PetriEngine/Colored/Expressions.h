@@ -934,68 +934,6 @@ namespace PetriEngine {
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
         
-        class NotExpression : public GuardExpression {
-        private:
-            GuardExpression_ptr _expr;
-            
-        public:
-            bool eval(const ExpressionContext& context) const override {
-                return !_expr->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _expr->isTuple();
-            }
-            
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _expr->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-            }
-
-            std::string toString() const override {
-                std::string res = "!" + _expr->toString();
-                return res;
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                _expr->restrictVars(variableMap, diagonalVars);
-
-                //Invert the variablemap
-                for(auto &varMap : variableMap){
-                    for(auto &varIntervalPair : varMap){
-                        auto fullInterval = varIntervalPair.first->colorType->getFullInterval();
-                        const std::vector<bool> diagonalPositions(fullInterval.size(), false);
-                        std::vector<PetriEngine::Colored::interval_t> subtractionRes;
-                        interval_vector_t invertedIntervalvec;
-                        
-                        for(const auto &interval : varIntervalPair.second){
-                            if(subtractionRes.empty()){
-                                subtractionRes = fullInterval.getSubtracted(interval, diagonalPositions);
-                            } else {
-                                std::vector<PetriEngine::Colored::interval_t> tempSubtractionRes;
-                                const auto& vecIntervals = fullInterval.getSubtracted(interval, diagonalPositions);
-                                for(const auto &curInterval : subtractionRes){
-                                    for(const auto& newInterval : vecIntervals){
-                                        const auto &overlappingInterval = curInterval.getOverlap(newInterval);
-                                        if(overlappingInterval.isSound()){
-                                            tempSubtractionRes.push_back(overlappingInterval);
-                                        }
-                                    }
-                                }
-                                subtractionRes = std::move(tempSubtractionRes);
-                            }
-                        }
-                        
-                        for(const auto &interval : subtractionRes){
-                            invertedIntervalvec.addInterval(interval);
-                        }
-                        varIntervalPair.second = std::move(invertedIntervalvec);
-                    }
-                }
-            }
-            
-            NotExpression(GuardExpression_ptr&& expr) : _expr(std::move(expr)) {}
-        };
-        
         class AndExpression : public GuardExpression {
         private:
             GuardExpression_ptr _left;

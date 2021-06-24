@@ -375,7 +375,7 @@ namespace PetriEngine{
             //Invert the variablemap
             for(auto &varMap : variableMap){
                 for(auto &varIntervalPair : varMap){
-                    auto fullInterval = varIntervalPair.first->colorType->getFullInterval();
+                    const auto &fullInterval = varIntervalPair.first->colorType->getFullInterval();
                     const std::vector<bool> diagonalPositions(fullInterval.size(), false);
                     std::vector<PetriEngine::Colored::interval_t> subtractionRes;
                     interval_vector_t invertedIntervalvec;
