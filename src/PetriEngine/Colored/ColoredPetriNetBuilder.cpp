@@ -733,7 +733,7 @@ namespace PetriEngine {
         } else {
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
-            for (const auto &b : gen) {              
+            for (const auto &b : gen) {    
                 const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 
@@ -775,7 +775,7 @@ namespace PetriEngine {
         //This exploits the fact that since the transition is being unfolded with this binding
         //we know that this place contains the tokens to activate the transition for this binding
         //because color fixpoint allowed the binding
-        if(place.stable){
+        if(_fixpointDone && place.stable){
             return;
         } 
         
