@@ -332,6 +332,7 @@ namespace PetriEngine {
                 _placeColorFixpoints[currentPlaceId].inQueue = false;
                 std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
 
+
                 for (uint32_t transitionId : connectedTransitions) {                
                     Colored::Transition& transition = _transitions[transitionId];
                     // Skip transitions that cannot add anything new,
@@ -433,8 +434,9 @@ namespace PetriEngine {
             
             if(_partitionComputed){
                 _partition[arc.place].applyPartition(arcInterval);
-            }                  
+            }                
         }
+        
     }
 
     void ColoredPetriNetBuilder::addTransitionVars(Colored::Transition& transition) const{
@@ -649,7 +651,7 @@ namespace PetriEngine {
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
     void ColoredPetriNetBuilder::handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
-        if(_ptplacenames.count(place.name) <= 0){
+        if(_ptplacenames.count(place.name) <= 0 && place.marking.size() > 0){
             const std::string &name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);

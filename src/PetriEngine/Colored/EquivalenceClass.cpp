@@ -43,7 +43,7 @@ namespace PetriEngine {
             for(const auto& interval : _colorIntervals){
                 interval_vector_t intervalSubRes;
                 for(const auto& otherInterval : other._colorIntervals){
-                    auto subtractedIntervals = interval.getSubtracted(otherInterval, diagonalPositions, _colorType->size());
+                    auto subtractedIntervals = interval.getSubtracted(otherInterval, diagonalPositions);
                     
 
                     if(subtractedIntervals.empty() || subtractedIntervals[0].size() == 0){

@@ -58,7 +58,7 @@ namespace PetriEngine {
             return varIntervals;
         }
 
-        void IntervalGenerator::getArcVarIntervals(interval_vector_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{
+        void IntervalGenerator::getArcVarIntervals(interval_vector_t& varIntervals, const std::unordered_map<uint32_t, int32_t> &modIndexMap, const interval_t &interval, const std::vector<const ColorType*> &varColorTypes) const{    
             for(auto& posModPair : modIndexMap){
                 const auto &intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
 
@@ -87,7 +87,7 @@ namespace PetriEngine {
                             const VariableIntervalMap &varMap,
                             VariableIntervalMap &localVarMap,
                             const interval_t &interval, bool& allVarsAssigned,  uint32_t tuplePos) const{
-            for(const auto& pair : arcIntervals._varIndexModMap){                     
+            for(const auto& pair : arcIntervals._varIndexModMap){                   
                 interval_vector_t varIntervals;
                 std::vector<const ColorType*> varColorTypes;
                 pair.first->colorType->getColortypes(varColorTypes);

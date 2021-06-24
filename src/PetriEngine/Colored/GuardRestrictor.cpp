@@ -361,6 +361,50 @@ namespace PetriEngine{
             }                
         }
 
+        void GuardRestrictor::restrictInEquality(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
+                            std::set<const Colored::Variable*> &diagonalVars) const {
+            
+            restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
+
+            //Invert the variablemap
+            for(auto &varMap : variableMap){
+                for(auto &varIntervalPair : varMap){
+                    auto fullInterval = varIntervalPair.first->colorType->getFullInterval();
+                    const std::vector<bool> diagonalPositions(fullInterval.size(), false);
+                    std::vector<PetriEngine::Colored::interval_t> subtractionRes;
+                    interval_vector_t invertedIntervalvec;
+                    
+                    for(const auto &interval : varIntervalPair.second){
+                        if(subtractionRes.empty()){
+                            subtractionRes = fullInterval.getSubtracted(interval, diagonalPositions);
+                        } else {
+                            std::vector<PetriEngine::Colored::interval_t> tempSubtractionRes;
+                            const auto& vecIntervals = fullInterval.getSubtracted(interval, diagonalPositions);
+                            for(const auto &curInterval : subtractionRes){
+                                for(const auto& newInterval : vecIntervals){
+                                    const auto &overlappingInterval = curInterval.getOverlap(newInterval);
+                                    if(overlappingInterval.isSound()){
+                                        tempSubtractionRes.push_back(overlappingInterval);
+                                    }
+                                }
+                            }
+                            subtractionRes = std::move(tempSubtractionRes);
+                        }
+                    }                        
+                    for(const auto &interval : subtractionRes){
+                        invertedIntervalvec.addInterval(interval);
+                    }
+                    varIntervalPair.second = std::move(invertedIntervalvec);
+                }
+            }
+        }
+
         interval_vector_t GuardRestrictor::shiftIntervals(const VariableIntervalMap& varMap, const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::interval_vector_t &intervals, int32_t modifier, uint32_t ctSizeBefore) const {
             Colored::interval_vector_t newIntervals;
             for(uint32_t i = 0;  i < intervals.size(); i++) {

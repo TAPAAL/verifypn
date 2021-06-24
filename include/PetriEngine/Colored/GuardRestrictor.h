@@ -55,6 +55,15 @@ namespace PetriEngine {
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars) const;
 
+                void restrictInEquality(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
+                            std::set<const Colored::Variable*> &diagonalVars) const;
+
                 void restrictVars(std::vector<VariableIntervalMap>& variableMap,
                             const VariableModifierMap &varModifierMapL,
                             const VariableModifierMap &varModifierMapR,

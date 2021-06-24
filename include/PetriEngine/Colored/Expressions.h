@@ -902,7 +902,27 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
+                VariableModifierMap varModifierMapL;
+                VariableModifierMap varModifierMapR;
+                PositionVariableMap varPositionsL;
+                PositionVariableMap varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<const Colored::Variable *> leftVars;
+                std::set<const Colored::Variable *> rightVars;
+                uint32_t index = 0;
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
+
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
                 
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictInEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
             }
 
             std::string toString() const override {
@@ -937,17 +957,39 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                std::set<const Colored::Variable *> variables;
-                _expr->getVariables(variables);
-                //TODO: invert the var intervals here instead of using the full intervals
+                _expr->restrictVars(variableMap, diagonalVars);
 
-                for(auto* var : variables){
-                    auto fullInterval = var->colorType->getFullInterval();
-                    Colored::interval_vector_t fullTuple;
-                    fullTuple.addInterval(fullInterval);
-                    for(auto& varMap : variableMap){
-                        varMap[var] = fullTuple;
-                    }                    
+                //Invert the variablemap
+                for(auto &varMap : variableMap){
+                    for(auto &varIntervalPair : varMap){
+                        auto fullInterval = varIntervalPair.first->colorType->getFullInterval();
+                        const std::vector<bool> diagonalPositions(fullInterval.size(), false);
+                        std::vector<PetriEngine::Colored::interval_t> subtractionRes;
+                        interval_vector_t invertedIntervalvec;
+                        
+                        for(const auto &interval : varIntervalPair.second){
+                            if(subtractionRes.empty()){
+                                subtractionRes = fullInterval.getSubtracted(interval, diagonalPositions);
+                            } else {
+                                std::vector<PetriEngine::Colored::interval_t> tempSubtractionRes;
+                                const auto& vecIntervals = fullInterval.getSubtracted(interval, diagonalPositions);
+                                for(const auto &curInterval : subtractionRes){
+                                    for(const auto& newInterval : vecIntervals){
+                                        const auto &overlappingInterval = curInterval.getOverlap(newInterval);
+                                        if(overlappingInterval.isSound()){
+                                            tempSubtractionRes.push_back(overlappingInterval);
+                                        }
+                                    }
+                                }
+                                subtractionRes = std::move(tempSubtractionRes);
+                            }
+                        }
+                        
+                        for(const auto &interval : subtractionRes){
+                            invertedIntervalvec.addInterval(interval);
+                        }
+                        varIntervalPair.second = std::move(invertedIntervalvec);
+                    }
                 }
             }
             
