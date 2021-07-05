@@ -149,10 +149,12 @@ namespace PetriEngine {
                 oss << ")";
             return oss.str();
         }
+
+        DotConstant DotConstant::_instance(nullptr);
         
-        
-        DotConstant::DotConstant() : Color(nullptr, 0, "dot")
+        DotConstant::DotConstant(ColorType *colorType) : Color(colorType, 0, "dot")
         {
+            _instance.setColorType(colorType);
         }
         
         

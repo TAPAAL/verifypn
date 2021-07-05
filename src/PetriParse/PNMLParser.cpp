@@ -187,6 +187,7 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
               new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
     
     if (strcmp(type->name(), "dot") == 0) {
+        Colored::DotConstant dot(ct);
         ct->addDot();
     } else if (strcmp(type->name(), "productsort") == 0) {
         bool missingType = false;

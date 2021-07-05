@@ -108,18 +108,11 @@ namespace PetriEngine {
          * https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
          */
         class DotConstant : public Color {
-        private:
-            
-            
+        private:            
+            static DotConstant _instance;
         public:
-        DotConstant();
+            DotConstant(ColorType *colorType);
             static const Color* dotConstant() {
-                static DotConstant _instance;
-                return &_instance;
-            }
-
-            static Color* dot() {
-                static DotConstant _instance;
                 return &_instance;
             }
             
@@ -146,10 +139,7 @@ namespace PetriEngine {
             virtual void addColor(const char* colorName);
             virtual void addColor(std::vector<const Color*>& colors);
             virtual void addDot() {
-                auto dot = DotConstant::dot();
-                dot->setColorType(this);
-
-                _colors.push_back(*dot);
+                _colors.push_back(*DotConstant::dotConstant());
             }
             
             virtual size_t size() const {
