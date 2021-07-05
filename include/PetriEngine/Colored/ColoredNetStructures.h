@@ -43,13 +43,13 @@ namespace PetriEngine {
             GuardExpression_ptr guard;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            std::vector<std::unordered_map<const Colored::Variable *, Colored::interval_vector_t>> variableMaps;
+            std::vector<std::unordered_map<const Variable *, interval_vector_t>> variableMaps;
             bool considered;
         };
         
         struct Place {
             std::string name;
-            ColorType* type;
+            const ColorType* type;
             Multiset marking;
             bool inhibitor;
             bool stable = true;

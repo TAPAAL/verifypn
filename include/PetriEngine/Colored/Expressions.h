@@ -42,15 +42,13 @@ namespace PetriEngine {
     
     namespace Colored {
         struct ExpressionContext {
-            typedef std::unordered_map<const Colored::Variable *, const PetriEngine::Colored::Color *> BindingMap;
+            
 
             const BindingMap& binding;
-            const std::unordered_map<std::string, ColorType*>& colorTypes;
+            const ColorTypeMap& colorTypes;
             const Colored::EquivalenceVec& placePartition;
             
             const Color* findColor(const std::string& color) const {
-                if (color.compare("dot") == 0)
-                    return DotConstant::dotConstant();
                 for (auto& elem : colorTypes) {
                     auto col = (*elem.second)[color];
                     if (col)
@@ -60,9 +58,9 @@ namespace PetriEngine {
                 exit(ErrorCode);
             }
 
-            ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
+            const ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
                 for (auto& elem : colorTypes) {
-                    auto* pt = dynamic_cast<ProductType*>(elem.second);
+                    auto* pt = dynamic_cast<const ProductType*>(elem.second);
 
                     if (pt && pt->containsTypes(types)) {
                         return pt;
@@ -141,7 +139,7 @@ namespace PetriEngine {
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
-            virtual ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const = 0;
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const = 0;
 
             virtual Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const {
                 return Colored::interval_vector_t();
@@ -152,7 +150,7 @@ namespace PetriEngine {
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(const ExpressionContext& context) const override {
-                return DotConstant::dotConstant();
+                return &(*ColorType::dotInstance()->begin());
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -166,7 +164,7 @@ namespace PetriEngine {
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_t interval;
                 Colored::interval_vector_t tupleInterval;
-                const Color *dotColor = DotConstant::dotConstant();
+                const Color *dotColor = &(*ColorType::dotInstance()->begin());
                  
                 colortypes.emplace_back(dotColor->getColorType());
                 
@@ -176,11 +174,12 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                const Color *dotColor = DotConstant::dotConstant();
+                const Color *dotColor = &(*ColorType::dotInstance()->begin());
                 constantMap[index] = dotColor;
             }
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                return DotConstant::dotConstant()->getColorType();
+            
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+                return ColorType::dotInstance();
             }
 
             std::string toString() const override {
@@ -192,7 +191,7 @@ namespace PetriEngine {
         
         class VariableExpression : public ColorExpression {
         private:
-            Variable* _variable;
+            const Variable* _variable;
             
         public:
             const Color* eval(const ExpressionContext& context) const override {
@@ -258,11 +257,11 @@ namespace PetriEngine {
                 return _variable->name;
             }
 
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return _variable->colorType;
             }
 
-            VariableExpression(Variable* variable)
+            VariableExpression(const Variable* variable)
                     : _variable(variable) {}
         };
         
@@ -317,7 +316,8 @@ namespace PetriEngine {
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 constantMap[index] = _userOperator;
             }
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+            
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override {
                 return _userOperator->getColorType();
             }
 
@@ -420,7 +420,7 @@ namespace PetriEngine {
                 return _color->toString() + "++";
             }
 
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return _color->getColorType(colorTypes);
             }
 
@@ -478,7 +478,7 @@ namespace PetriEngine {
                 return _color->toString() + "--";
             }
 
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return _color->getColorType(colorTypes);
             }
 
@@ -489,7 +489,7 @@ namespace PetriEngine {
         class TupleExpression : public ColorExpression {
         private:
             std::vector<ColorExpression_ptr> _colors;
-            ColorType* _colorType;
+            const ColorType* _colorType;
             
         public:
             const Color* eval(const ExpressionContext& context) const override {
@@ -499,7 +499,7 @@ namespace PetriEngine {
                     colors.push_back(color->eval(context));
                     types.push_back(colors.back()->getColorType());
                 }
-                ProductType* pt = context.findProductColorType(types);
+                const ProductType* pt = context.findProductColorType(types);
                 assert(pt != nullptr);
                 const Color* col = pt->getColor(colors);
                 assert(col != nullptr);
@@ -512,7 +512,6 @@ namespace PetriEngine {
 
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_vector_t intervals;
-                Colored::interval_vector_t intervalHolder;                
 
                 for(const auto& colorExp : _colors) {
                     Colored::interval_vector_t intervalHolder;
@@ -557,7 +556,7 @@ namespace PetriEngine {
                 }
             }
 
-            ColorType* getColorType(const std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 
                 std::vector<const ColorType*> types;
                 if(_colorType != nullptr){
@@ -569,7 +568,7 @@ namespace PetriEngine {
                 }
                 
                 for (auto elem : colorTypes) {
-                    auto* pt = dynamic_cast<ProductType*>(elem.second);
+                    auto* pt = dynamic_cast<const ProductType*>(elem.second);
                     if (pt && pt->containsTypes(types)) {
                         return pt;
                     }
@@ -595,7 +594,7 @@ namespace PetriEngine {
                 return res;
             }
 
-            void setColorType(ColorType* ct){
+            void setColorType(const ColorType* ct){
                 _colorType = ct;
             }
 
@@ -1031,7 +1030,7 @@ namespace PetriEngine {
         
         class AllExpression : public Expression {
         private:
-            ColorType* _sort;
+            const ColorType* _sort;
             
         public:
             virtual ~AllExpression() {};
@@ -1101,7 +1100,7 @@ namespace PetriEngine {
                 return _sort->getName() + ".all";
             }
 
-            AllExpression(ColorType* sort) : _sort(sort) 
+            AllExpression(const ColorType* sort) : _sort(sort) 
             {
                 assert(sort != nullptr);
             }

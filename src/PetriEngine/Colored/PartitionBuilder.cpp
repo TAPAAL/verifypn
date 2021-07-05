@@ -85,9 +85,9 @@ namespace PetriEngine {
                 if(eqVec.second.isDiagonal()){
                     continue;
                 }
-                ColorType *colorType = _places[eqVec.first].type;
+                const ColorType *colorType = _places[eqVec.first].type;
                 for(uint32_t i = 0; i < colorType->size(); i++){ 
-                    const Color *color = &colorType->operator[](i);
+                    const Color *color = &(*colorType)[i];
                     eqVec.second.addColorToEqClassMap(color);                   
                 }               
             }
@@ -298,7 +298,7 @@ namespace PetriEngine {
             std::unordered_map<uint32_t,PositionVariableMap> placeVariableMap;
             for(const auto &inArc : transition.input_arcs){
                 //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
-                if(_places[inArc.place].type->getName() == "Dot" || _places[inArc.place].type->getName() == "dot"){
+                if(_places[inArc.place].type == ColorType::dotInstance()){
                     _partition[inArc.place].setDiagonal(true);
                 }
 

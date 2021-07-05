@@ -27,7 +27,6 @@
 #include "Colored/Expressions.h"
 
 namespace PetriEngine {
-
     /** Abstract builder for petri nets */
     class AbstractPetriNetBuilder {
     protected:
@@ -41,7 +40,7 @@ namespace PetriEngine {
                 double y = 0) = 0;
         /** Add a new colored place with a unique name */
         virtual void addPlace(const std::string& name,
-                Colored::ColorType* type,
+                const Colored::ColorType* type,
                 Colored::Multiset&& tokens,
                 double x = 0,
                 double y = 0)
@@ -90,7 +89,7 @@ namespace PetriEngine {
         }
         /** Add color types with id */
         virtual void addColorType(const std::string& id,
-                Colored::ColorType* type)
+                const Colored::ColorType* type)
         {
             std::cerr << "Color types are not supported in standard P/T nets" << std::endl;
             exit(ErrorCode);

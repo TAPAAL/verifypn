@@ -40,7 +40,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addPlace(const std::string& name, Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
@@ -153,7 +153,7 @@ namespace PetriEngine {
         
     }
 
-    void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
+    void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
         _colors[id] = type;
     }
 
@@ -165,7 +165,6 @@ namespace PetriEngine {
         if(_isColored){
             for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
                 const Colored::Transition &transition = _transitions[transitionId];
-                std::set<const Colored::Variable*> transitionVars;
                 if(transition.guard){
                     continue;
                     //the variables cannot appear on the guard
@@ -769,7 +768,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
+    void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::BindingMap& binding, const std::string& tName) {
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded.
         //This exploits the fact that since the transition is being unfolded with this binding

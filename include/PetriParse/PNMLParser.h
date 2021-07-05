@@ -59,8 +59,8 @@ class PNMLParser {
     };
     typedef std::unordered_map<std::string, NodeName> NodeNameMap;
     
-    typedef std::unordered_map<std::string, PetriEngine::Colored::ColorType*> ColorTypeMap;
-    typedef std::unordered_map<std::string, PetriEngine::Colored::Variable*> VariableMap;
+    typedef std::unordered_map<std::string, const PetriEngine::Colored::ColorType*> ColorTypeMap;
+    typedef std::unordered_map<std::string, const PetriEngine::Colored::Variable*> VariableMap;
 
 public:
 
@@ -90,7 +90,7 @@ private:
     PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag);
     PetriEngine::Colored::ColorExpression_ptr parseColorExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
+    const PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ArcExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
     void collectColorsInTuple(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors);
     PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof);

@@ -47,7 +47,7 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0) override ;
         void addPlace(const std::string& name,
-                Colored::ColorType* type,
+                const Colored::ColorType* type,
                 Colored::Multiset&& tokens,
                 double x = 0,
                 double y = 0) override;
@@ -73,7 +73,7 @@ namespace PetriEngine {
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id,
-                Colored::ColorType* type) override;
+                const Colored::ColorType* type) override;
 
 
         void sort() override;
@@ -163,7 +163,7 @@ namespace PetriEngine {
         std::unordered_map<uint32_t, std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
 
         std::unordered_map<uint32_t, std::string> _sumPlacesNames;
-        ColorTypeMap _colors;
+        Colored::ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
@@ -206,7 +206,7 @@ namespace PetriEngine {
         void createPartionVarmaps();
         void unfoldInhibitorArc(const std::string &oldname, const std::string &newname);
 
-        void unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& name);
+        void unfoldArc(const Colored::Arc& arc, const Colored::BindingMap& binding, const std::string& name);
     };
     
     //Used for checking if a variable is inside either a succ or pred expression

@@ -40,12 +40,12 @@ namespace PetriEngine {
         return *this;
     }   
 
-    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::Iterator::operator*() const {
+    const Colored::BindingMap& NaiveBindingGenerator::Iterator::operator*() const {
         return _generator->currentBinding();
     }
 
     NaiveBindingGenerator::NaiveBindingGenerator(const Colored::Transition& transition,
-            ColorTypeMap& colorTypes)
+            Colored::ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
         _expr = transition.guard;
@@ -78,7 +78,7 @@ namespace PetriEngine {
         return _expr->eval(context);
     }
 
-    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::nextBinding() {
+    const Colored::BindingMap& NaiveBindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
             for (auto& binding : _bindings) {
@@ -96,7 +96,7 @@ namespace PetriEngine {
         return _bindings;
     }
 
-    const Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::currentBinding() const {
+    const Colored::BindingMap& NaiveBindingGenerator::currentBinding() const {
         return _bindings;
     }
 
@@ -141,12 +141,12 @@ namespace PetriEngine {
         return *this;
     }
 
-    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::Iterator::operator*() const {
+    const Colored::BindingMap& FixpointBindingGenerator::Iterator::operator*() const {
         return _generator->currentBinding();
     }
 
     FixpointBindingGenerator::FixpointBindingGenerator(const Colored::Transition& transition,
-        const ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars)
+        const Colored::ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars)
     : _expr(transition.guard), _colorTypes(colorTypes), _transition(transition), _symmetric_vars(symmetric_vars)
     {
         _isDone = false;
@@ -224,7 +224,7 @@ namespace PetriEngine {
         return _expr->eval(context);
     }
 
-    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::nextBinding() {
+    const Colored::BindingMap& FixpointBindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
             bool next = true;
@@ -302,7 +302,7 @@ namespace PetriEngine {
         }
     }
 
-    const Colored::ExpressionContext::BindingMap& FixpointBindingGenerator::currentBinding() const {
+    const Colored::BindingMap& FixpointBindingGenerator::currentBinding() const {
         return _bindings;
     }
 

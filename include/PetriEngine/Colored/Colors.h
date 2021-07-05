@@ -35,20 +35,25 @@
 namespace PetriEngine {
     namespace Colored {
         class ColorType;
+        class Variable;
+        class Color;
+        
+        typedef std::unordered_map<std::string, const ColorType*> ColorTypeMap;
+        typedef std::unordered_map<const Variable *, const Color *> BindingMap;
 
-        class Color {
+        class Color final {
         public:
             friend std::ostream& operator<< (std::ostream& stream, const Color& color);
             
         protected:
             const std::vector<const Color*> _tuple;
-            ColorType* _colorType;
+            const ColorType * const _colorType;
             std::string _colorName;
             uint32_t _id;
             
         public:
-            Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
-            Color(ColorType* colorType, uint32_t id, const char* color);
+            Color(const ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
+            Color(const ColorType* colorType, uint32_t id, const char* color);
             ~Color() {}
             
             bool isTuple() const {
@@ -70,12 +75,8 @@ namespace PetriEngine {
                 return _colorName;
             }
             
-            ColorType* getColorType() const {
+            const ColorType* getColorType() const {
                 return _colorType;
-            }
-
-            void setColorType(ColorType *ct) {
-                _colorType = ct;
             }
             
             uint32_t getId() const {
@@ -103,44 +104,20 @@ namespace PetriEngine {
             static std::string toString(const std::vector<const Color*>& colors);
         };
         
-        /*
-         *  Singleton pattern from: 
-         * https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
-         */
-        class DotConstant : public Color {
-        private:            
-            static DotConstant _instance;
-        public:
-            DotConstant(ColorType *colorType);
-            static const Color* dotConstant() {
-                return &_instance;
-            }
-            
-            DotConstant(DotConstant const&) = delete;
-            void operator=(DotConstant const&) = delete;
-
-            bool operator== (const DotConstant& other) {
-                return true;
-            }
-        };
-        
         class ColorType {
         private:
             std::vector<Color> _colors;
             uintptr_t _id;
-            std::string _name;
-            
+            std::string _name;            
         public:
             
             ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
                 _id = (uintptr_t)this;
             }
             
+            static const ColorType* dotInstance();
             virtual void addColor(const char* colorName);
             virtual void addColor(std::vector<const Color*>& colors);
-            virtual void addDot() {
-                _colors.push_back(*DotConstant::dotConstant());
-            }
             
             virtual size_t size() const {
                 return _colors.size();
@@ -171,26 +148,26 @@ namespace PetriEngine {
                 colorTypes.emplace_back(this);
             }
             
-            virtual const Color& operator[] (size_t index){
+            virtual const Color& operator[] (size_t index) const {
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (int index){
+            virtual const Color& operator[] (int index) const {
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (uint32_t index) {
+            virtual const Color& operator[] (uint32_t index) const {
                 assert(index < _colors.size());
                 return _colors[index];
             }
             
-            virtual const Color* operator[] (const char* index);
+            virtual const Color* operator[] (const char* index) const;
             
-            virtual const Color* operator[] (const std::string& index) {
+            virtual const Color* operator[] (const std::string& index) const {
                 return (*this)[index.c_str()];
             }
 
-            virtual const Color* getColor(const std::vector<uint32_t> &ids) {
+            virtual const Color* getColor(const std::vector<uint32_t> &ids) const {
                 assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
@@ -199,19 +176,19 @@ namespace PetriEngine {
                 return _name;
             }
             
-            std::vector<Color>::iterator begin() {
+            std::vector<Color>::const_iterator begin() const {
                 return _colors.begin();
             }
 
-            std::vector<Color>::iterator end() {
+            std::vector<Color>::const_iterator end() const {
                 return _colors.end();
             }
         };
-
+        
         class ProductType : public ColorType {
         private:
-            std::vector<ColorType*> _constituents;
-            std::unordered_map<size_t,Color> _cache;
+            std::vector<const ColorType*> _constituents;
+            mutable std::unordered_map<size_t,Color> _cache;
 
         public:
             ProductType(const std::string& name = "Undefined") : ColorType(name) {}
@@ -219,13 +196,12 @@ namespace PetriEngine {
                 _cache.clear();
             }
 
-            void addType(ColorType* type) {
+            void addType(const ColorType* type) {
                 _constituents.push_back(type);
             }
 
             void addColor(const char* colorName) override {}
             void addColor(std::vector<const Color*>& colors) override {}
-            void addDot() override {}
 
             size_t size() const override {
                 size_t product = 1;
@@ -287,29 +263,29 @@ namespace PetriEngine {
                 return true;
             }
 
-            const ColorType* getNestedColorType(size_t index) {
+            const ColorType* getNestedColorType(size_t index) const {
                 return _constituents[index];
             }
 
-            const Color* getColor(const std::vector<uint32_t> &ids) override;
+            const Color* getColor(const std::vector<uint32_t> &ids) const override;
 
-            const Color* getColor(const std::vector<const Color*>& colors);
+            const Color* getColor(const std::vector<const Color*>& colors) const;
 
-            const Color& operator[](size_t index) override;
-            const Color& operator[](int index) override {
+            const Color& operator[](size_t index) const override;
+            const Color& operator[](int index) const override {
                 return operator[]((size_t)index);
             }
-            const Color& operator[](uint32_t index) override {
+            const Color& operator[](uint32_t index) const override {
                 return operator[]((size_t)index);
             }
 
-            const Color* operator[](const char* index) override;
-            const Color* operator[](const std::string& index) override;
+            const Color* operator[](const char* index) const override;
+            const Color* operator[](const std::string& index) const override;
         };
         
         struct Variable {
             std::string name;
-            ColorType* colorType;
+            const ColorType* colorType;
         };
 
         struct ColorFixpoint {

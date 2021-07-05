@@ -182,44 +182,49 @@ bool isInitialBinding(std::vector<const PetriEngine::Colored::Color*>& binding) 
 
 void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto type = element->first_node();
-    auto ct = strcmp(type->name(), "productsort") == 0 ?
+    const PetriEngine::Colored::ColorType* fct = nullptr;
+    if (strcmp(type->name(), "dot") == 0) {
+        fct = Colored::ColorType::dotInstance();
+    } 
+    else
+    {
+         auto ct = strcmp(type->name(), "productsort") == 0 ?
               new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value())) :
               new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
-    
-    if (strcmp(type->name(), "dot") == 0) {
-        Colored::DotConstant dot(ct);
-        ct->addDot();
-    } else if (strcmp(type->name(), "productsort") == 0) {
-        bool missingType = false;
-        for (auto it = type->first_node(); it; it = it->next_sibling()) {
-            if (strcmp(it->name(), "usersort") == 0) {
-                auto ctName = it->first_attribute("declaration")->value();
-                if(!missingType && colorTypes.count(ctName)){
-                    ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[ctName]);
-                } else {
-                    missingType = true;
-                    missingCTs.push_back(std::make_pair(ctName, (PetriEngine::Colored::ProductType*)ct));
-                }                
+
+        if (strcmp(type->name(), "productsort") == 0) {
+            bool missingType = false;
+            for (auto it = type->first_node(); it; it = it->next_sibling()) {
+                if (strcmp(it->name(), "usersort") == 0) {
+                    auto ctName = it->first_attribute("declaration")->value();
+                    if(!missingType && colorTypes.count(ctName)){
+                        ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[ctName]);
+                    } else {
+                        missingType = true;
+                        missingCTs.push_back(std::make_pair(ctName, (PetriEngine::Colored::ProductType*)ct));
+                    }                
+                }
+            }
+        } else if (strcmp(type->name(), "finiteintrange") == 0) {	
+            uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());	
+            uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());	
+        
+            for (uint32_t i = start; i<=end;i++) {	
+                ct->addColor(std::to_string(i).c_str());	
+            }	
+        } else {
+            for (auto it = type->first_node(); it; it = it->next_sibling()) {
+                auto id = it->first_attribute("id");
+                assert(id != nullptr);
+                ct->addColor(id->value());
             }
         }
-    } else if (strcmp(type->name(), "finiteintrange") == 0) {	
-		uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());	
-		uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());	
-	
-		for (uint32_t i = start; i<=end;i++) {	
-			ct->addColor(std::to_string(i).c_str());	
-		}	
-	} else {
-        for (auto it = type->first_node(); it; it = it->next_sibling()) {
-            auto id = it->first_attribute("id");
-            assert(id != nullptr);
-            ct->addColor(id->value());
-        }
+        fct = ct;
     }
 
     std::string id = element->first_attribute("id")->value();
-    colorTypes[id] = ct;
-    builder->addColorType(id, ct);
+    colorTypes[id] = fct;
+    builder->addColorType(id, fct);
 }
 
 PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element) {
@@ -503,7 +508,7 @@ PetriEngine::Colored::AllExpression_ptr PNMLParser::parseAllExpression(rapidxml:
     return nullptr;
 }
 
-PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
+const PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
     if (element) {
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             if (strcmp(it->name(), "usersort") == 0) {
@@ -596,7 +601,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
-    PetriEngine::Colored::ColorType* type = nullptr;
+    const PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
          initialMarking = atoll(initial->value());
 

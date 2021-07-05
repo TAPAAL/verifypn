@@ -74,7 +74,7 @@ namespace PetriEngine {
             
         private:
             Internal _set;
-            ColorType* _type;
+            const ColorType* _type;
         };
     }
 }
