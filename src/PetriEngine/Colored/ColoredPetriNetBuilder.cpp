@@ -35,8 +35,8 @@ namespace PetriEngine {
         // cleaning up colors
         for(auto& e : _colors)
         {
-            if(e != Colored::ColorType::dotInstance())
-                delete e;
+            if(e.second != Colored::ColorType::dotInstance())
+                delete e.second;
         }
         _colors.clear();
     }
