@@ -107,12 +107,10 @@ namespace PetriEngine {
         class ColorType {
         private:
             std::vector<Color> _colors;
-            uintptr_t _id;
             std::string _name;            
         public:
             
             ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
-                _id = (uintptr_t)this;
             }
             
             static const ColorType* dotInstance();
