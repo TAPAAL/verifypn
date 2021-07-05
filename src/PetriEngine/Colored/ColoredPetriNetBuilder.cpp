@@ -32,6 +32,13 @@ namespace PetriEngine {
     }
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
+        // cleaning up colors
+        for(auto& e : _colors)
+        {
+            if(e != Colored::ColorType::dotInstance())
+                delete e;
+        }
+        _colors.clear();
     }
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, int tokens, double x, double y) {
