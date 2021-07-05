@@ -711,7 +711,7 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleD(uint32_t *placeInQuery, bool remove_consumers) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
         // This does not alter the trace.
         bool continueReductions = false;
@@ -741,6 +741,8 @@ namespace PetriEngine {
             _tflags[touter] = 1;
             Transition& tout = getTransition(touter);
             if (tout.skip) continue;
+
+
 
             // D2. No inhibitors
             if (tout.inhib) continue;
@@ -798,6 +800,27 @@ namespace PetriEngine {
 
                     if (ok == 2) break;
                     else if (ok == 1) continue;
+
+
+                    // If we are in CTL or LTL and the weights are not the same an additional requirement is needed.
+                    // In this case we cannot reduce if the pre or postset of the transition is in the query.
+                    if (!remove_consumers && mult != 1){
+                        bool has_place_in_query = false;
+                        for (const auto &arc : tout.pre) {
+                            if (placeInQuery[arc.place]) {
+                                has_place_in_query = true;
+                                break;
+                            }
+                        }
+                        if (has_place_in_query) break;
+                        for (const auto &arc : tout.post) {
+                            if (placeInQuery[arc.place]) {
+                                has_place_in_query = true;
+                                break;
+                            }
+                        }
+                        if (has_place_in_query) break;
+                    }
 
                     // D3. Presets must match
                     for (int i = trans1.pre.size() - 1; i >= 0; --i) {
@@ -1620,7 +1643,7 @@ namespace PetriEngine {
                 if(!next_safe)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                    while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleD(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             }
@@ -1642,7 +1665,7 @@ namespace PetriEngine {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             if(!remove_loops) 
                                 while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
@@ -1704,7 +1727,7 @@ namespace PetriEngine {
                             while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 3:
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                             break;              
                         case 4:
                             while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
