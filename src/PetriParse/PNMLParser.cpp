@@ -188,38 +188,43 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     } 
     else
     {
-         auto ct = strcmp(type->name(), "productsort") == 0 ?
-              new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value())) :
-              new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
-
         if (strcmp(type->name(), "productsort") == 0) {
+            auto ct = new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value()));
             bool missingType = false;
             for (auto it = type->first_node(); it; it = it->next_sibling()) {
                 if (strcmp(it->name(), "usersort") == 0) {
                     auto ctName = it->first_attribute("declaration")->value();
                     if(!missingType && colorTypes.count(ctName)){
-                        ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[ctName]);
+                        ct->addType(colorTypes[ctName]);
                     } else {
                         missingType = true;
-                        missingCTs.push_back(std::make_pair(ctName, (PetriEngine::Colored::ProductType*)ct));
+                        missingCTs.push_back(std::make_pair(ctName, ct));
                     }                
                 }
             }
-        } else if (strcmp(type->name(), "finiteintrange") == 0) {	
-            uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());	
-            uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());	
-        
-            for (uint32_t i = start; i<=end;i++) {	
-                ct->addColor(std::to_string(i).c_str());	
-            }	
-        } else {
-            for (auto it = type->first_node(); it; it = it->next_sibling()) {
-                auto id = it->first_attribute("id");
-                assert(id != nullptr);
-                ct->addColor(id->value());
+            fct = ct;
+        } 
+        else
+        {
+            auto ct = new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
+            if (strcmp(type->name(), "finiteintrange") == 0) {
+
+                uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
+                uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
+
+                for (uint32_t i = start; i<=end;i++) {
+                    ct->addColor(std::to_string(i).c_str());
+                }
+                fct = ct;
+            } else {
+                for (auto it = type->first_node(); it; it = it->next_sibling()) {
+                    auto id = it->first_attribute("id");
+                    assert(id != nullptr);
+                    ct->addColor(id->value());
+                }
             }
+            fct = ct;
         }
-        fct = ct;
     }
 
     std::string id = element->first_attribute("id")->value();
