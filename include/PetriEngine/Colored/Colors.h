@@ -117,8 +117,7 @@ namespace PetriEngine {
             
             static const ColorType* dotInstance();
             virtual void addColor(const char* colorName);
-            virtual void addColor(std::vector<const Color*>& colors);
-            
+
             virtual size_t size() const {
                 return _colors.size();
             }
@@ -201,7 +200,6 @@ namespace PetriEngine {
             }
 
             void addColor(const char* colorName) override {}
-            void addColor(std::vector<const Color*>& colors) override {}
 
             size_t size() const override {
                 size_t product = 1;

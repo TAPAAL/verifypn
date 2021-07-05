@@ -163,10 +163,6 @@ namespace PetriEngine {
             _colors.emplace_back(this, _colors.size(), colorName);
         }
         
-        void ColorType::addColor(std::vector<const Color*>& colors) {
-            _colors.emplace_back(this, (uint32_t)_colors.size(), colors);
-        }
-        
         const Color* ColorType::operator[] (const char* index) const {
             for (size_t i = 0; i < _colors.size(); i++) {
                 if (strcmp(operator[](i).toString().c_str(), index) == 0)
