@@ -1,0 +1,51 @@
+name: Build MacOS
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ marster ]
+  pull_request:
+    branches: [ marster ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: macos-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Install Packages
+        run: |
+          brew install flex bison #gcc-9 git cmake 
+        
+      - name: Build 
+        uses: lukka/run-cmake@v2.5
+        with:
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeAppendedArgs: >-
+            -DVERIFYPN_Static=ON 
+            -DVERIFYPN_MC_Simplification=OFF 
+            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison 
+            -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex
+          cmakeBuildType: Release
+          cmakeGenerator: UnixMakefiles
+          buildDirectory: '${{runner.workspace}}/build'
+        env:
+          CC: gcc-9
+          CXX: g++-9
+          
+      - name: Upload artifacts 
+        uses: actions/upload-artifact@v2
+        with:
+          name: verifydtapn-osx64
+          path: '${{runner.workspace}}/build/bin/verifypn-osx64'
