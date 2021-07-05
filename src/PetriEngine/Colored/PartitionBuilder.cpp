@@ -297,6 +297,7 @@ namespace PetriEngine {
         void PartitionBuilder::handleInArcs(const Transition &transition, std::set<const Colored::Variable*> &diagonalVars, const PositionVariableMap &varPositionMap, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps, uint32_t postPlaceId){
             std::unordered_map<uint32_t,PositionVariableMap> placeVariableMap;
             for(const auto &inArc : transition.input_arcs){
+                //Hack to avoid considering dot places
                 if(_places[inArc.place].type == ColorType::dotInstance()){
                     _partition[inArc.place].setDiagonal(true);
                 }
