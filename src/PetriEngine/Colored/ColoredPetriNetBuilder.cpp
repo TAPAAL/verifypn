@@ -712,7 +712,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
         const Colored::Transition &transition = _transitions[transitionId];
-        
+
         if(_fixpointDone || _partitionComputed){ 
             FixpointBindingGenerator gen(transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;

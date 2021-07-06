@@ -885,7 +885,6 @@ namespace PetriEngine {
                 if(leftVars.empty() && rightVars.empty()){
                     return;
                 }
-                
                 Colored::GuardRestrictor guardRestrictor;
                 guardRestrictor.restrictInEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
             }

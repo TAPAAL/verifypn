@@ -436,12 +436,14 @@ namespace PetriEngine{
                     invertIntervals(variableMap[varMapIndex][var1], variableMapCopy[varMapIndex].find(var1)->second, var1->colorType);
                 } else {
                     variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
+                    variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
                 }                            
             } else {
                 if(rightColorsAfter > 0){
                     //If one side has more colors but the other does not, we invert that side
                     invertIntervals(variableMap[varMapIndex][var2], variableMapCopy[varMapIndex].find(var2)->second, var2->colorType);
                 } else {
+                    variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
                     variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
                 }                            
             }
