@@ -99,6 +99,10 @@ namespace PetriEngine {
                         );
             }
 
+            bool intersects(const range_t& other) const {
+                return _lower <= other._upper  && other._lower <= _upper;
+            }
+            
             range_t& operator&=(const range_t& other) {
                 _lower = std::max(_lower, other._lower);
                 _upper = std::min(_upper, other._upper);

@@ -165,6 +165,24 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
+            interval_t& operator|=(const interval_t& other) {
+                assert(size() == other.size());
+                for(uint32_t l = 0; l < size(); ++l) {
+                    _ranges[l] |= other[l];
+                }
+                return *this;
+            }
+            
+            bool intersects(const interval_t& otherInterval) const {
+                assert(size() == otherInterval.size());
+                for(uint32_t k = 0; k < size(); k++) {     
+                    if(!_ranges[k].intersects(otherInterval[k])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
             std::vector<interval_t> getSubtracted(const interval_t& other, const std::vector<bool> &diagonalPositions) const {
                 std::vector<interval_t> result;
                 
@@ -607,39 +625,21 @@ namespace PetriEngine {
             }
 
             void simplify() {
-                if(_intervals.empty()){
-                    return;
+                bool redo = false;
+                while(!_intervals.empty() && !_intervals[0].isSound()){
+                    _intervals.erase(_intervals.begin());
                 }
-
-                for (int32_t i = _intervals.size()-1; i >= 0; --i) {
-                    auto& interval = _intervals[i];
-                    if(!interval.isSound()){
-                        _intervals.erase(_intervals.begin() + i);
-                        continue;
-                    }   
-                    for(int32_t j = i-1; j >= 0; --j){
+                for (int32_t i = 0; i < _intervals.size(); ++i) {                    
+                    for(int32_t j = _intervals.size()-1; j >= i+1; --j){
                         const auto& otherInterval = _intervals[j];
-
+                        auto& interval = _intervals[i];
                         if(!otherInterval.isSound()){
-                            continue;
-                        }   
-                        bool overlap = true;
-
-                        if(overlap){
-                            for(uint32_t k = 0; k < interval.size(); k++) {                            
-                                if(interval[k]._lower > otherInterval[k]._upper  || otherInterval[k]._lower > interval[k]._upper) {
-                                    overlap = false;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        if(overlap) {
-                            for(uint32_t l = 0; l < interval.size(); l++) {
-                                interval[l] |= otherInterval[l];
-                            }
                             _intervals.erase(_intervals.begin() + j);
-                            --i; // we just removed something before i, so all indexes change
+                        }
+                        else if(interval.intersects(otherInterval)) {
+                            interval |= otherInterval;
+                            _intervals.erase(_intervals.begin() + j);
+                            redo = true;
                         }
                     }
                 }
