@@ -369,40 +369,115 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars) const {
-            
+            auto variableMapCopy = variableMap;
             restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
 
-            //Invert the variablemap
-            for(auto &varMap : variableMap){
-                for(auto &varIntervalPair : varMap){
-                    const auto &fullInterval = varIntervalPair.first->colorType->getFullInterval();
-                    const std::vector<bool> diagonalPositions(fullInterval.size(), false);
-                    std::vector<PetriEngine::Colored::interval_t> subtractionRes;
-                    interval_vector_t invertedIntervalvec;
-                    
-                    for(const auto &interval : varIntervalPair.second){
-                        if(subtractionRes.empty()){
-                            subtractionRes = fullInterval.getSubtracted(interval, diagonalPositions);
-                        } else {
-                            std::vector<PetriEngine::Colored::interval_t> tempSubtractionRes;
-                            const auto& vecIntervals = fullInterval.getSubtracted(interval, diagonalPositions);
-                            for(const auto &curInterval : subtractionRes){
-                                for(const auto& newInterval : vecIntervals){
-                                    const auto &overlappingInterval = curInterval.getOverlap(newInterval);
-                                    if(overlappingInterval.isSound()){
-                                        tempSubtractionRes.push_back(overlappingInterval);
-                                    }
+            for(uint32_t i = 0; i < variableMap.size(); i++){
+                for(const auto &varPosL : varPositionsL){
+                    //Check if we are comparing varibles in this position
+                    if(varPositionsR.find(varPosL.first) != varPositionsR.end()){                       
+                        handleInequalityVars(variableMapCopy, variableMap, varPosL.second, varPositionsR.find(varPosL.first)->second, i);
+                    } else {
+                        handleInequalityConstants(variableMapCopy, variableMap, varPosL.second, i);
+                    }                   
+                }
+                for(const auto &varPosR : varPositionsR){
+                    if(varPositionsL.find(varPosR.first) == varPositionsL.end()){
+                        handleInequalityConstants(variableMapCopy, variableMap, varPosR.second, i); 
+                    }
+                }                
+            }
+        }
+
+        void GuardRestrictor::handleInequalityConstants(const std::vector<VariableIntervalMap> &variableMapCopy, 
+                                        std::vector<VariableIntervalMap> &variableMap, 
+                                        const Variable *var, uint32_t varMapIndex) const{
+            const uint32_t colorsBefore = variableMapCopy[varMapIndex].find(var)->second.getContainedColors();
+            const uint32_t colorsAfter = variableMap[varMapIndex][var].getContainedColors();
+            if(colorsBefore != 0 && colorsAfter == 0){
+                //If the variable did have colors before but none after, then they were not equal
+                //and the old colors are kept
+                variableMap[varMapIndex][var] = variableMapCopy[varMapIndex].find(var)->second;
+            }else if (colorsBefore > 1){
+                //If the variable had multiple colors and colors we invert the colors after applying equivalence
+                invertIntervals(variableMap[varMapIndex][var], variableMapCopy[varMapIndex].find(var)->second, var->colorType);
+            } else if(colorsBefore == 1){
+                //If there was only one color and we still have a color after, they were equal
+                //and the empty interval is set
+                variableMap[varMapIndex][var].clear();
+            }  
+        }
+
+        void GuardRestrictor::handleInequalityVars(const std::vector<VariableIntervalMap> &variableMapCopy, 
+                                        std::vector<VariableIntervalMap> &variableMap, 
+                                        const Variable *var1, const Variable *var2, uint32_t varMapIndex) const{
+            const uint32_t rightColorsBefore = variableMapCopy[varMapIndex].find(var2)->second.getContainedColors();
+            const uint32_t rightColorsAfter = variableMap[varMapIndex][var2].getContainedColors();
+            const uint32_t leftColorsBefore = variableMapCopy[varMapIndex].find(var1)->second.getContainedColors();
+            const uint32_t leftColorsAfter = variableMap[varMapIndex][var1].getContainedColors();
+            if((leftColorsBefore > 1 && rightColorsBefore > 1) || leftColorsBefore == 0 || rightColorsBefore == 0){
+                //If both variables have more than one color in their interval we cannot restrict the intervals
+                //and if either side did not have any colors the varmap is not valid.
+                return;
+            } else if (leftColorsBefore == 1 && rightColorsBefore == 1){
+                //if we are comparing single colors and there is an interval after equality 
+                //it means the colors were equal so no interval can be kept for inequality.
+                //Otherwise they were not equal and their intervals can be kept
+                if(!variableMap[varMapIndex][var1].empty()){
+                    variableMap[varMapIndex][var1].clear();
+                    variableMap[varMapIndex][var2].clear();
+                } else {
+                    variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
+                    variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
+                }
+            } else if (leftColorsBefore > 1){
+                if(leftColorsAfter > 0){
+                    //If one side has more colors but the other does not, we invert that side
+                    invertIntervals(variableMap[varMapIndex][var1], variableMapCopy[varMapIndex].find(var1)->second, var1->colorType);
+                } else {
+                    variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
+                }                            
+            } else {
+                if(rightColorsAfter > 0){
+                    //If one side has more colors but the other does not, we invert that side
+                    invertIntervals(variableMap[varMapIndex][var2], variableMapCopy[varMapIndex].find(var2)->second, var2->colorType);
+                } else {
+                    variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
+                }                            
+            }
+        }
+
+        //Retrieve the intervals remaining when the intervals created from restricting by equvalence 
+        //are removed from the original intervals
+        void GuardRestrictor::invertIntervals(interval_vector_t &intervals, const interval_vector_t &oldIntervals, const ColorType *colorType) const{
+            const std::vector<bool> diagonalPositions(colorType->size(), false);
+            interval_vector_t invertedIntervalvec;                    
+            
+            for(const auto &oldInterval : oldIntervals){
+                std::vector<PetriEngine::Colored::interval_t> subtractionRes;
+                for(const auto &interval : intervals){
+                    if(subtractionRes.empty()){
+                        subtractionRes = oldInterval.getSubtracted(interval, diagonalPositions);
+                    } else {
+                        std::vector<PetriEngine::Colored::interval_t> tempSubtractionRes;
+                        const auto& vecIntervals = oldInterval.getSubtracted(interval, diagonalPositions);
+                        for(const auto &curInterval : subtractionRes){
+                            for(const auto& newInterval : vecIntervals){
+                                const auto &overlappingInterval = curInterval.getOverlap(newInterval);
+                                if(overlappingInterval.isSound()){
+                                    tempSubtractionRes.push_back(overlappingInterval);
                                 }
                             }
-                            subtractionRes = std::move(tempSubtractionRes);
                         }
-                    }                        
-                    for(const auto &interval : subtractionRes){
-                        invertedIntervalvec.addInterval(interval);
+                        subtractionRes = std::move(tempSubtractionRes);
                     }
-                    varIntervalPair.second = std::move(invertedIntervalvec);
                 }
-            }
+                for(const auto &interval : subtractionRes){
+                    invertedIntervalvec.addInterval(interval);
+                }
+            }                                   
+            
+            intervals = std::move(invertedIntervalvec);
         }
 
         interval_vector_t GuardRestrictor::shiftIntervals(const VariableIntervalMap& varMap, const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::interval_vector_t &intervals, int32_t modifier, uint32_t ctSizeBefore) const {
