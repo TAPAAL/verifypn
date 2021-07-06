@@ -625,7 +625,6 @@ namespace PetriEngine {
             }
 
             void simplify() {
-                bool redo = false;
                 while(!_intervals.empty() && !_intervals[0].isSound()){
                     _intervals.erase(_intervals.begin());
                 }
@@ -639,7 +638,6 @@ namespace PetriEngine {
                         else if(interval.intersects(otherInterval)) {
                             interval |= otherInterval;
                             _intervals.erase(_intervals.begin() + j);
-                            redo = true;
                         }
                     }
                 }
