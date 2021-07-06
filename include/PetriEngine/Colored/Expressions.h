@@ -336,40 +336,6 @@ namespace PetriEngine {
                     : _userOperator(userOperator) {}
         };
         
-        class UserSortExpression : public Expression {
-        private:
-            ColorType* _userSort;
-            
-        public:
-            ColorType* eval(const ExpressionContext& context) const {
-                return _userSort;
-            }
-
-            std::string toString() const override {
-                return _userSort->getName();
-            }
-
-            UserSortExpression(ColorType* userSort)
-                    : _userSort(userSort) {}
-        };
-
-        typedef std::shared_ptr<UserSortExpression> UserSortExpression_ptr;
-        
-        class NumberConstantExpression : public Expression {
-        private:
-            uint32_t _number;
-            
-        public:
-            uint32_t eval(const ExpressionContext& context) const {
-                return _number;
-            }
-            
-            NumberConstantExpression(uint32_t number)
-                    : _number(number) {}
-        };
-
-        typedef std::shared_ptr<NumberConstantExpression> NumberConstantExpression_ptr;
-        
         class SuccessorExpression : public ColorExpression {
         private:
             ColorExpression_ptr _color;
@@ -489,7 +455,7 @@ namespace PetriEngine {
         class TupleExpression : public ColorExpression {
         private:
             std::vector<ColorExpression_ptr> _colors;
-            const ColorType* _colorType;
+            const ColorType* _colorType = nullptr;
             
         public:
             const Color* eval(const ExpressionContext& context) const override {
