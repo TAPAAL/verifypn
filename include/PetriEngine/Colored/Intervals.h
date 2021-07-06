@@ -611,13 +611,13 @@ namespace PetriEngine {
                     return;
                 }
 
-                for (int32_t i = _intervals.size()-1; i >= 0; i--) {
+                for (int32_t i = _intervals.size()-1; i >= 0; --i) {
                     auto& interval = _intervals[i];
                     if(!interval.isSound()){
                         _intervals.erase(_intervals.begin() + i);
                         continue;
                     }   
-                    for(int32_t j = i-1; j >= 0; j--){
+                    for(int32_t j = i-1; j >= 0; --j){
                         const auto& otherInterval = _intervals[j];
 
                         if(!otherInterval.isSound()){
@@ -639,7 +639,8 @@ namespace PetriEngine {
                                 interval[l] |= otherInterval[l];
                             }
                             _intervals.erase(_intervals.begin() + j);
-                        }  
+                            --i; // we just removed something before i, so all indexes change
+                        }
                     }
                 }
             }
