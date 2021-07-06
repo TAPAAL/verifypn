@@ -628,8 +628,8 @@ namespace PetriEngine {
                 while(!_intervals.empty() && !_intervals[0].isSound()){
                     _intervals.erase(_intervals.begin());
                 }
-                for (int32_t i = 0; i < _intervals.size(); ++i) {                    
-                    for(int32_t j = _intervals.size()-1; j >= i+1; --j){
+                for (size_t i = 0; i < _intervals.size(); ++i) {                    
+                    for(size_t j = _intervals.size()-1; j >= i+1; --j){
                         const auto& otherInterval = _intervals[j];
                         auto& interval = _intervals[i];
                         if(!otherInterval.isSound()){
