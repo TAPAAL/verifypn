@@ -112,6 +112,8 @@ namespace PetriEngine {
             
             ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
             }
+
+            virtual ~ColorType() = default;
             
             static const ColorType* dotInstance();
             virtual void addColor(const char* colorName);
