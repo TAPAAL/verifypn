@@ -460,7 +460,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
                     "                                       write -q 0 to disable query reduction\n"
                     "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
-                    "                                       write --interval-timeout 0 to disable max interval halving\n"
+                    "                                       write --interval-timeout 0 to disable interval limits\n"
                     "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
