@@ -56,8 +56,7 @@ namespace PetriEngine {
         uint32_t id = _placenames[name];
         
         while(initialMarking.size() <= id) initialMarking.emplace_back();
-        initialMarking[id] = tokens;
-        
+        initialMarking[id] = tokens;        
     }
 
     void PetriNetBuilder::addTransition(const std::string &name,

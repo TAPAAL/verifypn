@@ -1,59 +1,76 @@
 #include "ColoredNetStructures.h"
-#include "EquivalenceClass.h"
+#include "EquivalenceVec.h"
 #include "IntervalGenerator.h"
  
 namespace PetriEngine {
     namespace Colored {
         class PartitionBuilder {
-            public:
-                PartitionBuilder(std::vector<Transition> *transitions, 
-                                std::vector<Place> *places, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap);
 
-                PartitionBuilder(std::vector<Transition> *transitions, 
-                                std::vector<Place> *places, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
-                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap,
-                                std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
+            
+            public:
+                PartitionBuilder(const std::vector<Transition> &transitions, 
+                                const std::vector<Place> &places, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap);
+
+                PartitionBuilder(const std::vector<Transition> &transitions, 
+                                const std::vector<Place> &places, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePostTransitionMap, 
+                                const std::unordered_map<uint32_t,std::vector<uint32_t>> &placePreTransitionMap,
+                                const std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
                 
                 ~PartitionBuilder() {}
 
                 //void initPartition();
-                void partitionNet();
-                void refinePartition();
-                void printPartion();
-                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition);
+                bool partitionNet(int32_t timeout);
+                void printPartion() const;
+                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const;
 
-                std::unordered_map<uint32_t, EquivalenceVec> getPartition(){
+                std::unordered_map<uint32_t, EquivalenceVec> getPartition() const{
                     return _partition;
                 }
+
             private:
-                std::vector<Transition> *_transitions;
-                std::unordered_map<uint32_t,std::vector<uint32_t>> *_placePostTransitionMap;
-                std::unordered_map<uint32_t,std::vector<uint32_t>> *_placePreTransitionMap;
+                const std::vector<Transition> &_transitions;
+                const std::vector<Place> &_places;
+                const std::unordered_map<uint32_t,std::vector<uint32_t>> &_placePostTransitionMap;
+                const std::unordered_map<uint32_t,std::vector<uint32_t>> &_placePreTransitionMap;
                 std::unordered_map<uint32_t,bool> _inQueue;
-                std::vector<Place> *_places;
                 std::unordered_map<uint32_t, EquivalenceVec> _partition;
-                PetriEngine::IntervalGenerator intervalGenerator;
+                const PetriEngine::Colored::IntervalGenerator _interval_generator = IntervalGenerator();
                 std::vector<uint32_t> _placeQueue;
 
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 
                 void handleTransition(uint32_t transitionId, uint32_t postPlaceId);
-                void handleTransition(Transition *transitionId, uint32_t postPlaceId, Arc *postArc);
+                void handleTransition(const Transition &transitionId, const uint32_t postPlaceId, const Arc *postArc);
 
                 void handleLeafTransitions();
                 
                 void addToQueue(uint32_t placeId);
 
-                std::vector<std::unordered_map<const Variable *, intervalTuple_t>> prepareVariables(
-                            std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 
-                            EquivalenceClass *eqClass , Arc *postArc, uint32_t placeId);
+                bool checkTupleDiagonal(uint32_t placeId);
+                bool checkDiagonal(uint32_t placeId);
 
-                bool findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
+                void handleInArcs(const Transition &transition, std::set<const Colored::Variable*> &diagonalVars, const PositionVariableMap &varPositionMap, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps, uint32_t postPlaceId);
 
-                uint32_t eqClassIdCounter = 0;
+                void applyNewIntervals(const Arc &inArc, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps);
+
+                void checkVarOnArc(const VariableModifierMap &varModifierMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId, bool inputArc);
+
+                void checkVarOnInputArcs(const std::unordered_map<uint32_t,PositionVariableMap> &placeVariableMap, const PositionVariableMap &preVarPositionMap, std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId);
+
+                void markSharedVars(const PositionVariableMap &preVarPositionMap, const PositionVariableMap &varPositionMap, uint32_t postPlaceId, uint32_t prePlaceId);
+                void checkVarInGuard(const PositionVariableMap &preVarPositionMap, const std::set<const Colored::Variable*> &diagonalVars, uint32_t placeId);
+
+                std::vector<VariableIntervalMap> prepareVariables(
+                            const VariableModifierMap &varModifierMap, 
+                            const EquivalenceClass& eqClass , const Arc *postArc, uint32_t placeId);
+
+                bool findOverlap(const EquivalenceVec &equivalenceVec1,const EquivalenceVec &equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
+
+                uint32_t _eq_id_counter = 0;
+
         };
     }
 }

@@ -35,33 +35,38 @@
 namespace PetriEngine {
     namespace Colored {
         class ColorType;
+        class Variable;
+        class Color;
+        
+        typedef std::unordered_map<std::string, const ColorType*> ColorTypeMap;
+        typedef std::unordered_map<const Variable *, const Color *> BindingMap;
 
-        class Color {
+        class Color final {
         public:
             friend std::ostream& operator<< (std::ostream& stream, const Color& color);
             
         protected:
             const std::vector<const Color*> _tuple;
-            ColorType* _colorType;
+            const ColorType * const _colorType;
             std::string _colorName;
             uint32_t _id;
             
         public:
-            Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
-            Color(ColorType* colorType, uint32_t id, const char* color);
+            Color(const ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
+            Color(const ColorType* colorType, uint32_t id, const char* color);
             ~Color() {}
             
             bool isTuple() const {
                 return _tuple.size() > 1;
             }
 
-            void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
+            void getColorConstraints(Colored::interval_t& constraintsVector, uint32_t& index) const;
             
-            std::vector<const Color*> getTupleColors() const {
+            const std::vector<const Color*>& getTupleColors() const {
                 return _tuple;
             }
 
-            void getTupleId(std::vector<uint32_t> *idVector) const;
+            void getTupleId(std::vector<uint32_t>& idVector) const;
 
             const std::string& getColorName() const {
                 if (this->isTuple()) {
@@ -70,7 +75,7 @@ namespace PetriEngine {
                 return _colorName;
             }
             
-            ColorType* getColorType() const {
+            const ColorType* getColorType() const {
                 return _colorType;
             }
             
@@ -99,226 +104,156 @@ namespace PetriEngine {
             static std::string toString(const std::vector<const Color*>& colors);
         };
         
-        /*
-         *  Singleton pattern from: 
-         * https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
-         */
-        class DotConstant : public Color {
-        private:
-            DotConstant();
-            
-        public:
-            static const Color* dotConstant(ColorType *ct) {
-                static DotConstant _instance;
-                if(ct != nullptr){
-                    _instance._colorType = ct;
-                }
-                return &_instance;
-            }
-            
-            DotConstant(DotConstant const&) = delete;
-            void operator=(DotConstant const&) = delete;
-
-            bool operator== (const DotConstant& other) {
-                return true;
-            }
-        };
-        
         class ColorType {
-        public:
-            class iterator {
-            private:
-                ColorType& type;
-                size_t index;
-
-            public:
-                iterator(ColorType& type, size_t index) : type(type), index(index) {}
-
-                const Color& operator++() {
-                    return type[++index];
-                }
-
-                const Color& operator++(int) {
-                    return type[index++];
-                }
-
-                const Color& operator--() {
-                    return type[--index];
-                }
-                const Color& operator--(int) {
-                    return type[index--];
-                }
-
-                const Color& operator*() {
-                    return type[index];
-                }
-
-                const Color* operator->() {
-                    return &type[index];
-                }
-
-                bool operator==(iterator& other) {
-                    return type == other.type && index == other.index;
-                }
-
-                bool operator!=(iterator& other) {
-                    return !(type == other.type) || index != other.index;
-                }
-            };
-            
         private:
             std::vector<Color> _colors;
-            uintptr_t _id;
-            std::string _name;
-            
+            std::string _name;            
         public:
-            ColorType(std::vector<ColorType*> elements);
+            
             ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
-                _id = (uintptr_t)this;
             }
+
+            virtual ~ColorType() = default;
             
+            static const ColorType* dotInstance();
             virtual void addColor(const char* colorName);
-            virtual void addColor(std::vector<const Color*>& colors);
-            virtual void addDot() {
-                _colors.push_back(*DotConstant::dotConstant(this));
-            }
-            
+
             virtual size_t size() const {
                 return _colors.size();
             }
 
-            virtual size_t productSize() {
+            virtual size_t size(const std::vector<bool> &excludedFields) const {
+                return _colors.size();
+            }
+
+            virtual size_t productSize() const {
                 return 1;
             }
 
-            virtual std::vector<size_t> getConstituentsSizes(){
+            virtual std::vector<size_t> getConstituentsSizes() const{
                 std::vector<size_t> result;                
                 result.push_back(_colors.size());
                 
                 return result;
             }
 
-            virtual Colored::interval_t getFullInterval(){
+            virtual Colored::interval_t getFullInterval() const{
                 Colored::interval_t interval;
-                interval.addRange(Reachability::range_t(0, size()-1));
+                interval.addRange(0, size()-1);
                 return interval;
             }
 
-            virtual void getColortypes(std::vector<ColorType *> &colorTypes){
-                colorTypes.push_back(this);
-            }
-
-            virtual void printConstituents(){
-                std::cout << _name << std::endl;
+            virtual void getColortypes(std::vector<const ColorType *> &colorTypes) const{
+                colorTypes.emplace_back(this);
             }
             
-            virtual const Color& operator[] (size_t index) {
+            virtual const Color& operator[] (size_t index) const {
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (int index) {
+            virtual const Color& operator[] (int index) const {
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (uint32_t index) {
+            virtual const Color& operator[] (uint32_t index) const {
                 assert(index < _colors.size());
                 return _colors[index];
             }
             
-            virtual const Color* operator[] (const char* index);
+            virtual const Color* operator[] (const char* index) const;
             
-            virtual const Color* operator[] (const std::string& index) {
+            virtual const Color* operator[] (const std::string& index) const {
                 return (*this)[index.c_str()];
             }
 
-            virtual const Color* getColor(std::vector<uint32_t> ids){
+            virtual const Color* getColor(const std::vector<uint32_t> &ids) const {
                 assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
             
-            bool operator== (const ColorType& other) const {
-                return _id == other._id;
-            }
-
-            uintptr_t getId() {
-                return _id;
-            }
-
             const std::string& getName() const {
                 return _name;
             }
             
-            iterator begin() {
-                return {*this, 0};
+            std::vector<Color>::const_iterator begin() const {
+                return _colors.begin();
             }
 
-            iterator end() {
-                return {*this, size()};
+            std::vector<Color>::const_iterator end() const {
+                return _colors.end();
             }
         };
-
+        
         class ProductType : public ColorType {
         private:
-            std::vector<ColorType*> constituents;
-            std::unordered_map<size_t,Color> cache;
+            std::vector<const ColorType*> _constituents;
+            mutable std::unordered_map<size_t,Color> _cache;
 
         public:
             ProductType(const std::string& name = "Undefined") : ColorType(name) {}
             ~ProductType() {
-                cache.clear();
+                _cache.clear();
             }
 
-            void addType(ColorType* type) {
-                constituents.push_back(type);
+            void addType(const ColorType* type) {
+                _constituents.push_back(type);
             }
 
             void addColor(const char* colorName) override {}
-            void addColor(std::vector<const Color*>& colors) override {}
-            void addDot() override {}
 
             size_t size() const override {
                 size_t product = 1;
-                for (auto ct : constituents) {
+                for (auto* ct : _constituents) {
                     product *= ct->size();
                 }
                 return product;
             }
 
-            virtual size_t productSize() {
+            size_t size(const std::vector<bool> &excludedFields) const override {
+                size_t product = 1;
+                for (uint32_t i = 0; i < _constituents.size(); i++) {
+                    if(!excludedFields[i]){
+                        product *= _constituents[i]->size();
+                    }                    
+                }
+                return product;
+            }
+
+            virtual size_t productSize() const{
                 size_t size = 0;
-                for (auto ct : constituents){
+                for (auto* ct : _constituents){
                     size += ct->productSize();
                 }
                 return size;
             }
 
-            std::vector<size_t> getConstituentsSizes() override{
+            std::vector<size_t> getConstituentsSizes() const override{
                 std::vector<size_t> result;
-                for (auto ct : constituents) {
+                for (auto* ct : _constituents) {
                     result.push_back(ct->size());
                 }
                 return result;
             }
 
-            Colored::interval_t getFullInterval() override{
+            Colored::interval_t getFullInterval() const override{
                 Colored::interval_t interval;
-                for(auto ct : constituents) {
+                for(auto ct : _constituents) {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
                 }                
                 return interval;
             }
 
-            void getColortypes(std::vector<ColorType *> &colorTypes) override{
-                for(auto ct : constituents){
+            void getColortypes(std::vector<const ColorType *> &colorTypes) const override{
+                for(auto ct : _constituents){
                     ct->getColortypes(colorTypes);
                 }
             }
 
             bool containsTypes(const std::vector<const ColorType*>& types) const {
-                if (constituents.size() != types.size()) return false;
+                if (_constituents.size() != types.size()) return false;
 
-                for (size_t i = 0; i < constituents.size(); ++i) {
-                    if (!(*constituents[i] == *types[i])) {
+                for (size_t i = 0; i < _constituents.size(); ++i) {
+                    if (!(_constituents[i] == types[i])) {
                         return false;
                     }
                 }
@@ -326,72 +261,46 @@ namespace PetriEngine {
                 return true;
             }
 
-            void printConstituents() override{
-                for(auto ct : constituents){
-                   ct->printConstituents();
-                }
+            const ColorType* getNestedColorType(size_t index) const {
+                return _constituents[index];
             }
 
-            const ColorType* getNestedColorType(size_t index) {
-                return constituents[index];
-            }
+            const Color* getColor(const std::vector<uint32_t> &ids) const override;
 
-            const Color* getColor(std::vector<uint32_t> ids){
-                assert(ids.size() == constituents.size());
-                std::vector<const Color *> colors;
-                for(uint32_t i = 0; i < ids.size(); i++){
-                    colors.push_back(&constituents[i]->operator[](i));
-                }
-                return getColor(colors);
-            }
+            const Color* getColor(const std::vector<const Color*>& colors) const;
 
-            const Color* getColor(const std::vector<const Color*>& colors);
-
-            const Color& operator[](size_t index) override;
-            const Color& operator[](int index) override {
+            const Color& operator[](size_t index) const override;
+            const Color& operator[](int index) const override {
                 return operator[]((size_t)index);
             }
-            const Color& operator[](uint32_t index) override {
+            const Color& operator[](uint32_t index) const override {
                 return operator[]((size_t)index);
             }
 
-            const Color* operator[](const char* index) override;
-            const Color* operator[](const std::string& index) override;
+            const Color* operator[](const char* index) const override;
+            const Color* operator[](const std::string& index) const override;
         };
         
         struct Variable {
             std::string name;
-            ColorType* colorType;
+            const ColorType* colorType;
         };
 
         struct ColorFixpoint {
-            Colored::intervalTuple_t constraints;
+            Colored::interval_vector_t constraints;
             bool inQueue;
-
-            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
-                std::unordered_map<uint32_t, bool> contained;
-                for(auto interval : constraints._intervals) {
-                    for(uint32_t id : constPair.second){
-                        
-                        if(contained[id] != true){
-                            contained[id] = interval[id].contains(constPair.first->getId());
-                        }                        
-                    }
-                }
-
-                for(auto pair : contained){
-                    if (!pair.second){
-                        return false;
-                    }
-                }
-                return true;
-            }
         };
 
         struct ColorTypePartition {
             std::vector<const Color *> colors;
             std::string name;
         };
+
+        typedef std::unordered_map<uint32_t, const Colored::Variable *> PositionVariableMap;
+        //Map from variables to a vector of maps from variable positions to the modifiers applied to the variable in that position
+        typedef std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> VariableModifierMap;
+        typedef std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::interval_vector_t> VariableIntervalMap;
+        typedef std::unordered_map<uint32_t, std::vector<const Color*>> PositionColorsMap;
     }
 }
 

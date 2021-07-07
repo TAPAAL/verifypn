@@ -41,13 +41,14 @@ struct options_t {
     bool printstatistics = true;
     std::set<size_t> querynumbers;
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
-    int queryReductionTimeout = 30, intervalTimeout = 10, lpsolveTimeout = 10;
+    int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
     std::string output_stats;
+    bool doVerification = true;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
@@ -68,12 +69,15 @@ struct options_t {
 
     std::string query_out_file;
     std::string model_out_file;
+    std::string unfolded_out_file;
+    std::string unfold_query_out_file;
 
     
     //CPN Specific options
     bool cpnOverApprox = false;
     bool computeCFP = true;
     bool computePartition = true;
+    bool symmetricVariables = true;
     bool isCPN = false;
     uint32_t seed_offset = 0;
     int max_intervals = 250; //0 disabled

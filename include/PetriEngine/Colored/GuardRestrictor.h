@@ -33,90 +33,109 @@ namespace PetriEngine {
 
                 GuardRestrictor();
 
-                void restrictDiagonal(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
-                            std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR,
+                void restrictDiagonal(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
                             const Colored::Variable *var, 
-                            uint32_t index, bool lessthan, bool strict);
+                            uint32_t index, bool lessthan, bool strict) const;
 
                 
 
-                void restrictEquality(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
-                            std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR,
-                            std::set<const Colored::Variable*> &diagonalVars);
+                void restrictEquality(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
+                            std::set<const Colored::Variable*> &diagonalVars) const;
 
-                void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
-                            std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR,
+                void restrictInEquality(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
+                            std::set<const Colored::Variable*> &diagonalVars) const;
+
+                void restrictVars(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars, 
-                            bool lessthan, bool strict);
+                            bool lessthan, bool strict) const;
 
-                intervalTuple_t shiftIntervals(std::unordered_map<const Variable *, intervalTuple_t>& varMap, 
-                            std::vector<const ColorType *> *colortypes, intervalTuple_t *intervals, 
+                interval_vector_t shiftIntervals(const VariableIntervalMap& varMap, 
+                            const std::vector<const ColorType *> &colortypes, interval_vector_t &intervals, 
                             int32_t modifier, uint32_t ctSizeBefore) const; 
 
             private:
-                int32_t getVarModifier(std::unordered_map<uint32_t, int32_t> *modPairMap, uint32_t index);
-                interval_t getIntervalFromIds(std::vector<uint32_t> *idVec, uint32_t ctSize, int32_t modifier);
-                intervalTuple_t getIntervalOverlap(std::vector<Colored::interval_t> *intervals1, std::vector<Colored::interval_t> *intervals2);
+                int32_t getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) const;
+                interval_t getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const;
+                interval_vector_t getIntervalOverlap(const Colored::interval_vector_t &intervals1, const Colored::interval_vector_t &intervals2) const;
+                void invertIntervals(interval_vector_t &intervals, const interval_vector_t &oldIntervals, const ColorType *colorType) const;
 
-                void expandIdVec(std::unordered_map<const Variable *, intervalTuple_t> *varMap,
-                            std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *mainVarModifierMap,
-                            std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *otherVarModifierMap,
-                            std::unordered_map<uint32_t, const Variable *> *varPositions,
-                            std::unordered_map<uint32_t, const Color*> *constantMap,
+
+                void handleInequalityConstants(const std::vector<VariableIntervalMap> &variableMapCopy, 
+                                        std::vector<VariableIntervalMap> &variableMap, 
+                                        const Variable *var, uint32_t varMapIndex) const;
+
+                void handleInequalityVars(const std::vector<VariableIntervalMap> &variableMapCopy, 
+                                        std::vector<VariableIntervalMap> &variableMap, 
+                                        const Variable *var1, const Variable *var2, uint32_t varMapIndex) const;
+
+                void expandIdVec(const VariableIntervalMap &varMap,
+                            const VariableModifierMap &mainVarModifierMap,
+                            const VariableModifierMap &otherVarModifierMap,
+                            const std::unordered_map<uint32_t, const Variable *> &varPositions,
+                            const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Variable *otherVar, 
-                            std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index);
+                            std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index) const;
 
-                void expandIntervalVec(std::unordered_map<const Variable *, intervalTuple_t> varMap,
-                            std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *mainVarModifierMap,
-                            std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *otherVarModifierMap,
-                            std::unordered_map<uint32_t, const Variable *> *varPositions,
-                            std::unordered_map<uint32_t, const Color*> *constantMap,
+                void expandIntervalVec(const VariableIntervalMap &varMap,
+                            const VariableModifierMap &mainVarModifierMap,
+                            const VariableModifierMap &otherVarModifierMap,
+                            const std::unordered_map<uint32_t, const Variable *> &varPositions,
+                            const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Variable *otherVar, 
-                            std::vector<interval_t> &intervalVec, size_t targetSize, uint32_t index);
+                            interval_vector_t &intervalVec, size_t targetSize, uint32_t index) const;
 
-                void restrictByConstant(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *mainVarModifierMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *otherVarModifierMap,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositions,
-                            std::unordered_map<uint32_t, const Color*> *constantMap,
+                void restrictByConstant(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &mainVarModifierMap,
+                            const VariableModifierMap &otherVarModifierMap,
+                            const PositionVariableMap &varPositions,
+                            const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *var,
                             const Colored::Variable *otherVar, 
-                            uint32_t index, bool lessthan, bool strict);
+                            uint32_t index, bool lessthan, bool strict) const;
 
-                void restrictEqByConstant(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *mainVarModifierMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *otherVarModifierMap,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositions,
-                            std::unordered_map<uint32_t, const Color*> *constantMap,
+                void restrictEqByConstant(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &mainVarModifierMap,
+                            const VariableModifierMap &otherVarModifierMap,
+                            const PositionVariableMap &varPositions,
+                            const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *var,
-                            uint32_t index);
+                            uint32_t index) const;
 
-                void restrictEqDiagonal(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
-                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
-                            std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR,
+                void restrictEqDiagonal(std::vector<VariableIntervalMap>& variableMap,
+                            const VariableModifierMap &varModifierMapL,
+                            const VariableModifierMap &varModifierMapR,
+                            const PositionVariableMap &varPositionsL,
+                            const PositionVariableMap &varPositionsR,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapL,
+                            const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
                             const Colored::Variable *var, 
-                            uint32_t index);    
+                            uint32_t index) const;    
         };
     }
 }

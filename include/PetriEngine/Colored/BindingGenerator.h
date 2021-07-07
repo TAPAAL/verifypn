@@ -25,8 +25,6 @@
 
 namespace PetriEngine {
 
-    typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
-
     class NaiveBindingGenerator {
     public:
         class Iterator {
@@ -39,22 +37,21 @@ namespace PetriEngine {
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
+            const Colored::BindingMap& operator*() const;
         };
     private:
         Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
+        Colored::BindingMap _bindings;
+        Colored::ColorTypeMap& _colorTypes;
         
-        bool eval();
+        bool eval() const;
         
     public:
-        NaiveBindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes);
+        NaiveBindingGenerator(const Colored::Transition& transition,
+                Colored::ColorTypeMap& colorTypes);
 
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
+        const Colored::BindingMap& nextBinding();
+        const Colored::BindingMap& currentBinding() const;
         bool isInitial() const;
         Iterator begin();
         Iterator end();
@@ -73,32 +70,42 @@ namespace PetriEngine {
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
+            const Colored::BindingMap operator++(int);
+            const Colored::BindingMap& operator*() const;
         };
     private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
-        Colored::Transition &_transition;
+        const Colored::GuardExpression_ptr &_expr;
+        Colored::BindingMap _bindings;
+        std::vector<std::vector<std::vector<uint32_t>>> _symmetric_var_combinations;
+        const Colored::ColorTypeMap& _colorTypes;
+        const Colored::Transition &_transition;
+        const std::vector<std::set<const Colored::Variable *>>& _symmetric_vars;
+        Colored::BindingMap::iterator _bindingIterator;
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
+        uint32_t _currentOuterId = 0;
+        uint32_t _currentInnerId = 0;
+        uint32_t _symmetric_vars_set = 0;
         
-        bool eval();
+        bool eval() const;
+        bool assignSymmetricVars();
+        void generateCombinations(
+            uint32_t options,
+            uint32_t samples,
+            std::vector<std::vector<uint32_t>> &result,
+            std::vector<uint32_t> &current) const;
         
     public:
-        FixpointBindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes);
+        FixpointBindingGenerator(const Colored::Transition &transition,
+                const Colored::ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars);
 
         FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
         
-        FixpointBindingGenerator operator= (const FixpointBindingGenerator& b) {
-            return FixpointBindingGenerator(b);
-        }
+        FixpointBindingGenerator& operator= (const FixpointBindingGenerator& b) = default;
 
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
+        const Colored::BindingMap& nextBinding();
+        const Colored::BindingMap& currentBinding() const;
         bool isInitial() const;
         Iterator begin();
         Iterator end();
