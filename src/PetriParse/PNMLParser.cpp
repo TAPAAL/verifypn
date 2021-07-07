@@ -38,7 +38,6 @@ void PNMLParser::parse(std::ifstream& xml,
     id2name.clear();
     arcs.clear();
     transitions.clear();
-    inhibarcs.clear();
     colorTypes.clear();
 
     //Set the builder
@@ -57,12 +56,17 @@ void PNMLParser::parse(std::ifstream& xml,
         exit(ErrorCode);
     }
     
-    auto declarations = root->first_node("net")->first_node("declaration");
+    auto declarations = root->first_node("declaration");
+    if(declarations == nullptr){
+        declarations = root->first_node("net")->first_node("declaration");
+    }
+
     isColored = declarations != nullptr;
     if (isColored) {
         builder->enableColors();
         parseDeclarations(declarations);
     }
+
     parseElement(root);
 
     //Add all the transition
@@ -97,9 +101,9 @@ void PNMLParser::parse(std::ifstream& xml,
 
         if (source.isPlace && !target.isPlace) {
             if (!isColored) {
-                builder->addInputArc(source.id, target.id, false, arc.weight);
+                builder->addInputArc(source.id, target.id, arc.inhib, arc.weight);
             } else {
-                builder->addInputArc(source.id, target.id, arc.expr);
+                builder->addInputArc(source.id, target.id, arc.expr, arc.inhib, arc.weight);
             }
 
         } else if (!source.isPlace && target.isPlace) {
@@ -115,22 +119,6 @@ void PNMLParser::parse(std::ifstream& xml,
                     target.id.c_str());
         }
     }
-
-    for(Arc& inhibitor : inhibarcs)
-    {
-        NodeName source = id2name[inhibitor.source];
-        NodeName target = id2name[inhibitor.target];
-        if (source.isPlace && !target.isPlace) {
-            builder->addInputArc(source.id, target.id, true, inhibitor.weight);
-        }
-        else
-        {
-            fprintf(stderr,
-                    "XML Parsing error: Inhibitor from \"%s\" to \"%s\" is not valid!\n",
-                    source.id.c_str(),
-                    target.id.c_str());
-        }
-    }
     
     //Unset the builder
     this->builder = nullptr;
@@ -139,7 +127,6 @@ void PNMLParser::parse(std::ifstream& xml,
     id2name.clear();
     arcs.clear();
     transitions.clear();
-    inhibarcs.clear();
     colorTypes.clear();
     builder->sort();
 }
@@ -195,43 +182,54 @@ bool isInitialBinding(std::vector<const PetriEngine::Colored::Color*>& binding) 
 
 void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto type = element->first_node();
-    auto ct = strcmp(type->name(), "productsort") == 0 ?
-              new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value())) :
-              new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
-    
+    const PetriEngine::Colored::ColorType* fct = nullptr;
     if (strcmp(type->name(), "dot") == 0) {
-        ct->addDot();
-    } else if (strcmp(type->name(), "productsort") == 0) {
-        bool missingType = false;
-        for (auto it = type->first_node(); it; it = it->next_sibling()) {
-            if (strcmp(it->name(), "usersort") == 0) {
-                auto ctName = it->first_attribute("declaration")->value();
-                if(!missingType && colorTypes.count(ctName)){
-                    ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[ctName]);
-                } else {
-                    missingType = true;
-                    missingCTs.push_back(std::make_pair(ctName, (PetriEngine::Colored::ProductType*)ct));
-                }                
+        fct = Colored::ColorType::dotInstance();
+    } 
+    else
+    {
+        if (strcmp(type->name(), "productsort") == 0) {
+            auto ct = new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value()));
+            bool missingType = false;
+            for (auto it = type->first_node(); it; it = it->next_sibling()) {
+                if (strcmp(it->name(), "usersort") == 0) {
+                    auto ctName = it->first_attribute("declaration")->value();
+                    if(!missingType && colorTypes.count(ctName)){
+                        ct->addType(colorTypes[ctName]);
+                    } else {
+                        missingType = true;
+                        missingCTs.push_back(std::make_pair(ctName, ct));
+                    }                
+                }
             }
-        }
-    } else if (strcmp(type->name(), "finiteintrange") == 0) {	
-		uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());	
-		uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());	
-	
-		for (uint32_t i = start; i<=end;i++) {	
-			ct->addColor(std::to_string(i).c_str());	
-		}	
-	} else {
-        for (auto it = type->first_node(); it; it = it->next_sibling()) {
-            auto id = it->first_attribute("id");
-            assert(id != nullptr);
-            ct->addColor(id->value());
+            fct = ct;
+        } 
+        else
+        {
+            auto ct = new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
+            if (strcmp(type->name(), "finiteintrange") == 0) {
+
+                uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
+                uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
+
+                for (uint32_t i = start; i<=end;i++) {
+                    ct->addColor(std::to_string(i).c_str());
+                }
+                fct = ct;
+            } else {
+                for (auto it = type->first_node(); it; it = it->next_sibling()) {
+                    auto id = it->first_attribute("id");
+                    assert(id != nullptr);
+                    ct->addColor(id->value());
+                }
+            }
+            fct = ct;
         }
     }
 
     std::string id = element->first_attribute("id")->value();
-    colorTypes[id] = ct;
-    builder->addColorType(id, ct);
+    colorTypes[id] = fct;
+    builder->addColorType(id, fct);
 }
 
 PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element) {
@@ -272,27 +270,31 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
 }
 
 PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof){	
-	auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
-	for(uint32_t i = 2; i < collectedColors.size(); i++){	
-		initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
-	}	
-	std::vector<PetriEngine::Colored::NumberOfExpression_ptr> numberOfExpressions;	
-	for(auto set : initCartesianSet){	
-		std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
-		for (auto color : set) {	
-			colors.push_back(color);	
-		}	
-		std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));	
-		tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
-		std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
-		placeholderVector.push_back(tupleExpr);	
-		numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
-	}	
-	std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
-	for (auto expr : numberOfExpressions) {	
-		constituents.push_back(expr);	
-	}	
-	return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));	
+    std::vector<PetriEngine::Colored::ArcExpression_ptr> numberOfExpressions;	
+    if(collectedColors.size() < 2){
+        for(auto exp : collectedColors[0]){
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
+			colors.push_back(exp);
+            numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(colors),numberof));	
+        }
+    }else{
+         auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
+        for(uint32_t i = 2; i < collectedColors.size(); i++){	
+            initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
+        }	
+        for(auto set : initCartesianSet){	
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;	
+            for (auto color : set) {	
+                colors.push_back(color);	
+            }	
+            std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));	
+            tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
+            placeholderVector.push_back(tupleExpr);	
+            numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
+        }	
+    }
+	return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(numberOfExpressions));	
 }	
 	
 std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){	
@@ -511,7 +513,7 @@ PetriEngine::Colored::AllExpression_ptr PNMLParser::parseAllExpression(rapidxml:
     return nullptr;
 }
 
-PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
+const PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
     if (element) {
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             if (strcmp(it->name(), "usersort") == 0) {
@@ -537,6 +539,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapi
         number = 1;
         first = num;
     }
+
     auto allExpr = parseAllExpression(first);
     if (allExpr) {
         return std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(allExpr), number);
@@ -565,15 +568,15 @@ void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(),"inhibitorArc") == 0) {
             parseArc(it, true);
         } else if (strcmp(it->name(), "variable") == 0) {
-            std::cerr << "variable not supported" << std::endl;
+            std::cerr << "ERROR: variable not supported" << std::endl;
             exit(ErrorCode);
         } else if (strcmp(it->name(),"queries") == 0) {
             parseQueries(it);
         } else if (strcmp(it->name(), "k-bound") == 0) {
-            std::cerr << "k-bound should be given as command line option -k" << std::endl;
+            std::cerr << "ERROR: k-bound should be given as command line option -k" << std::endl;
             exit(ErrorCode);
         } else if (strcmp(it->name(),"query") == 0) {
-            std::cerr << "query tag not supported, please use PQL or XML-style queries instead" << std::endl;
+            std::cerr << "ERROR: query tag not supported, please use PQL or XML-style queries instead" << std::endl;
             exit(ErrorCode);            
         }
         else
@@ -603,7 +606,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
-    PetriEngine::Colored::ColorType* type = nullptr;
+    const PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
          initialMarking = atoll(initial->value());
 
@@ -619,8 +622,6 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;
             PetriEngine::Colored::EquivalenceVec placePartition;
 			PetriEngine::Colored::ExpressionContext context {binding, colorTypes, placePartition};
-            for(auto ct : colorTypes){
-            }
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);
@@ -668,22 +669,28 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     }
 
     bool first = true;
-    for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
-        std::string text;
-        parseValue(it, text);
-        weight = atoi(text.c_str());
-        if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
-        {
-            std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
-            exit(ErrorCode);
-        }
+    auto weightTag = element->first_attribute("weight");
+    if(weightTag != nullptr){
+        weight = atoi(weightTag->value());
         assert(weight > 0);
-        if(!first)
-        {
-            std::cerr << "ERROR: Multiple inscription tags in xml of a arc from " << source << " to " << target << "." << std::endl;
-            exit(ErrorCode);
+    } else {
+        for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
+            std::string text;
+            parseValue(it, text);
+            weight = atoi(text.c_str());
+            if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
+            {
+                std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
+                exit(ErrorCode);
+            }
+            assert(weight > 0);
+            if(!first)
+            {
+                std::cerr << "ERROR: Multiple inscription tags in xml of a arc from " << source << " to " << target << "." << std::endl;
+                exit(ErrorCode);
+            }
+            first = false;
         }
-        first = false;
     }
     
     PetriEngine::Colored::ArcExpression_ptr expr;
@@ -698,30 +705,20 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         first = false;
     }
     
-    if (isColored)
+    if (isColored && !inhibitor)
         assert(expr != nullptr);
     Arc arc;
     arc.source = source;
     arc.target = target;
     arc.weight = weight;
-    arc.expr = expr;
+    arc.inhib = inhibitor;
+    if(!inhibitor)
+        arc.expr = expr;
     assert(weight > 0);
-    
-    if (inhibitor && isColored) {
-        std::cerr << "inhibitor arcs are not supported in colored Petri nets" << std::endl;
-        exit(ErrorCode);
-    }
     
     if(weight != 0)
     {
-        if(inhibitor)
-        {
-            inhibarcs.push_back(arc);   
-        }
-        else
-        {
-            arcs.push_back(arc);
-        }
+        arcs.push_back(arc);
     }
     else
     {

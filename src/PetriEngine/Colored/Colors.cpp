@@ -45,59 +45,23 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 namespace PetriEngine {
     namespace Colored {
-        std::ostream& operator<<(std::ostream& stream, const Color& color) {
+        /*std::ostream& operator<<(std::ostream& stream, const Color& color) {
             stream << color.toString();
             return stream;
-        }
+        }*/
         
-        Color::Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
+        Color::Color(const ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
                 : _tuple(colors), _colorType(colorType), _colorName(""), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
         }
         
-        Color::Color(ColorType* colorType, uint32_t id, const char* color)
+        Color::Color(const ColorType* colorType, uint32_t id, const char* color)
                 : _tuple(), _colorType(colorType), _colorName(color), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
-        }
-        
-        
-        const Color* Color::operator[] (size_t index) const {
-            if (!this->isTuple()) {
-                throw "Cannot access tuple if not a tuple color";
-            }
-            return _tuple[index];
-        }
-        
-        bool Color::operator< (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id < other._id;
-        }
-        
-        bool Color::operator> (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id > other._id;
-        }
-        
-        bool Color::operator<= (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id <= other._id;
-        }
-        
-        bool Color::operator>= (const Color& other) const {
-            if (_colorType != other._colorType) {
-                throw "Cannot compare colors from different types";
-            }
-            return _id >= other._id;
         }
         
         const Color& Color::operator++ () const {
@@ -122,19 +86,19 @@ namespace PetriEngine {
             return toString(this);
         }
 
-        void Color::getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const {
+        void Color::getColorConstraints(Colored::interval_t& constraintsVector, uint32_t& index) const {
             if (this->isTuple()) {
                 for (const Color *color : _tuple) {
                     color->getColorConstraints(constraintsVector, index);
-                    (*index)++;
+                    index++;
                 }
             } else {
                 Reachability::range_t curRange;
-                if (*index >= constraintsVector->size()){
+                if (index >= constraintsVector.size()){
                     curRange &= _id;
-                    constraintsVector->addRange(curRange);
+                    constraintsVector.addRange(curRange);
                 } else {
-                    curRange = constraintsVector->operator[](*index);
+                    curRange = constraintsVector[index];
                     if (_id < curRange._lower){
                         curRange._lower = _id;
                     }
@@ -142,18 +106,18 @@ namespace PetriEngine {
                         curRange._upper = _id;
                     }
 
-                    constraintsVector->operator[](*index) = curRange;
+                    constraintsVector[index] = curRange;
                 }            
             }
         }
 
-        void Color::getTupleId(std::vector<uint32_t> *idVector) const {
+        void Color::getTupleId(std::vector<uint32_t>& idVector) const {
             if(this->isTuple()) {
-                for (auto color : _tuple) {
+                for (auto* color : _tuple) {
                     color->getTupleId(idVector);
                 }
             } else {
-                idVector->push_back(_id);
+                idVector.push_back(_id);
             }
         }
         
@@ -185,22 +149,21 @@ namespace PetriEngine {
                 oss << ")";
             return oss.str();
         }
-        
-        
-        DotConstant::DotConstant() : Color(nullptr, 0, "dot")
-        {
+
+        const ColorType* ColorType::dotInstance() {
+            static ColorType instance("dot");
+            if(instance.size() == 0)
+            {
+                instance.addColor("dot");
+            }
+            return &instance;
         }
-        
         
         void ColorType::addColor(const char* colorName) {
             _colors.emplace_back(this, _colors.size(), colorName);
         }
         
-        void ColorType::addColor(std::vector<const Color*>& colors) {
-            _colors.emplace_back(this, (uint32_t)_colors.size(), colors);
-        }
-        
-        const Color* ColorType::operator[] (const char* index) {
+        const Color* ColorType::operator[] (const char* index) const {
             for (size_t i = 0; i < _colors.size(); i++) {
                 if (strcmp(operator[](i).toString().c_str(), index) == 0)
                     return &operator[](i);
@@ -208,57 +171,69 @@ namespace PetriEngine {
             return nullptr;
         }
 
-        const Color& ProductType::operator[](size_t index) {
-            if (cache.count(index) < 1) {
+        const Color& ProductType::operator[](size_t index) const {
+            if (_cache.count(index) < 1) {
                 size_t mod = 1;
                 size_t div = 1;
 
                 std::vector<const Color*> colors;
-                for (auto & constituent : constituents) {
+                for (auto & constituent : _constituents) {
                     mod = constituent->size();
                     colors.push_back(&(*constituent)[(index / div) % mod]);
                     div *= mod;
                 }
 
-                cache.emplace(index, Color(this, index, colors));
+                _cache.emplace(index, Color(this, index, colors));
             }
 
-            return cache.at(index);
+            return _cache.at(index);
         }
 
-        const Color* ProductType::getColor(const std::vector<const Color*>& colors) {
+        const Color* ProductType::getColor(const std::vector<const Color*>& colors) const {
             size_t product = 1;
             size_t sum = 0;
 
-            if (constituents.size() != colors.size()) return nullptr;
+            if (_constituents.size() != colors.size()) return nullptr;
 
-            for (size_t i = 0; i < constituents.size(); ++i) {
-                if (!(*colors[i]->getColorType() == *constituents[i]))
+            for (size_t i = 0; i < _constituents.size(); ++i) {
+                if (!(colors[i]->getColorType() == _constituents[i]))
                     return nullptr;
 
                 sum += product * colors[i]->getId();
-                product *= constituents[i]->size();
+                product *= _constituents[i]->size();
             }
             return &operator[](sum);
         }
 
-        const Color* ProductType::operator[](const char* index) {
+        const Color* ProductType::getColor(const std::vector<uint32_t> &ids) const {
+            assert(ids.size() == _constituents.size());
+            size_t product = 1;
+            size_t sum = 0;
+
+            for (size_t i = 0; i < _constituents.size(); ++i) {
+                sum += product * ids[i];
+                product *= _constituents[i]->size();
+            }
+            return &operator[](sum);
+        }
+
+        const Color* ProductType::operator[](const char* index) const {
             return operator[](std::string(index));
         }
 
-        const Color* ProductType::operator[](const std::string& index) {
+        const Color* ProductType::operator[](const std::string& index) const {
             std::string str(index.substr(1, index.size() - 2));
             std::vector<std::string> parts = split(str, ',');
 
-            if (parts.size() != constituents.size()) {
+            if (parts.size() != _constituents.size()) {
                 return nullptr;
             }
 
             size_t sum = 0;
             size_t mult = 1;
             for (size_t i = 0; i < parts.size(); ++i) {
-                sum += mult * (*constituents[i])[parts[i]]->getId();
-                mult *= constituents[i]->size();
+                sum += mult * (*_constituents[i])[parts[i]]->getId();
+                mult *= _constituents[i]->size();
             }
 
             return &operator[](sum);

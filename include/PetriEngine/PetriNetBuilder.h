@@ -135,8 +135,8 @@ namespace PetriEngine {
         std::vector< std::tuple<double, double> > _placelocations;
         std::vector< std::tuple<double, double> > _transitionlocations;
         
-        std::vector<Transition> _transitions;
-        std::vector<Place> _places;
+        std::vector<PetriEngine::Transition> _transitions;
+        std::vector<PetriEngine::Place> _places;
         
         std::vector<MarkVal> initialMarking;
         Reducer reducer;

@@ -181,6 +181,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "--partition-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.partitionTimeout) != 1 || options.partitionTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -332,6 +341,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-unfolded-net") == 0)
+        {
+            options.unfolded_out_file = std::string(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--write-unfolded-queries") == 0)
+        {
+            options.unfold_query_out_file = std::string(argv[++i]);
+        }
         else if (strcmp(argv[i], "--write-buchi") == 0)
         {
             options.buchi_out_file = std::string(argv[++i]);
@@ -475,6 +492,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.computeCFP = false;
         } else if (strcmp(argv[i], "--disable-partitioning") == 0) {
             options.computePartition = false;
+        }else if (strcmp(argv[i], "--noverify") == 0) {
+            options.doVerification = false;
+        }else if (strcmp(argv[i], "--disable-symmetry-vars") == 0) {
+            options.symmetricVariables = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering CTL, LTL and reachability queries\n"
@@ -501,7 +522,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
                     "                                       write -q 0 to disable query reduction\n"
                     "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
-                    "                                       write --interval-timeout 0 to disable max interval halving\n"
+                    "                                       write --interval-timeout 0 to disable interval limits\n"
+                    "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
                     "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
@@ -536,15 +558,18 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                     "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
                     "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
+                    "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
                     "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
                     "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
                     "  --max-intervals <interval count>     The max amount of intervals kept when computing the color fixpoint\n"
-                    "                  <interval count>     Default is 255 and then after <interval-timeout> second(s) to 5\n"
+                    "                  <interval count>     Default is 250 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --write-unfolded-net <filename>      Outputs the model to the given file before structural reduction but after unfolding\n"
+                    "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
                     "                                       - 0 MCC XML format for Input and Output\n"
                     "                                       - 1 Input is binary, output is XML\n"
@@ -558,6 +583,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       For some queries this helps reduce the overhead of query\n"
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
+                    "  --noverify                           Disable verification e.g. for getting unfolded net\n"
                     "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
                     "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
@@ -685,14 +711,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return ErrorCode;
         }
         std::array ltlStrategies{DFS, RDFS, HEUR};
+
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
             if (std::find(std::begin(ltlStrategies), std::end(ltlStrategies), options.strategy) ==
                 std::end(ltlStrategies)) {
                 std::cerr << "Argument Error: Unsupported search strategy for LTL. Supported values are DFS, RDFS, and BestFS."
                           << std::endl;
+
                 return ErrorCode;
             }
+
         }
     }
 
@@ -854,8 +883,11 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
     //if (options.printstatistics) {
         if (!builder.isColored() && !builder.isUnfolded())
             return;
-        std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
-        std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
+        if(options.computeCFP){
+            std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
+            std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
+        }
+        
         std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
@@ -865,7 +897,10 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
-        std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
+        if(options.computePartition){
+            std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
+        }
+        
         
 
         if(!options.output_stats.empty()){
@@ -908,11 +943,11 @@ std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::
     return ss.str();
 }
 
-void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
     std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
     std::fstream out;
-
+    
     if(binary)
     {
         out.open(filename, std::ios::binary | std::ios::out);
@@ -958,6 +993,30 @@ void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<
     {
         out << "</property-set>\n";
     }
+    out.close();
+}
+
+void writeCompactQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+    std::string& filename, const ColoredPetriNetBuilder& cpnBuilder, const PetriNetBuilder& builder, const PetriNet* net)
+{
+    std::fstream out;
+    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
+
+    out.open(filename, std::ios::out);
+    out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+
+    for(uint32_t j = 0; j < queries.size(); j++) {
+        auto i = order[j];
+        if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
+
+            out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
+            queries[i]->toCompactXML(out,0, context);
+            out << "    </formula>\n  </property>\n";
+        
+    }
+
+    out << "</property-set>\n";
+    
     out.close();
 }
 
@@ -1062,6 +1121,41 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     return cond;
 }
 
+void outputNet(const PetriNetBuilder &builder, std::string out_file) {
+    PetriNetBuilder b2(builder);
+    auto unfoldedNet = std::unique_ptr<PetriNet>(b2.makePetriNet(false));
+    std::fstream file;
+    file.open(out_file, std::ios::out);
+    unfoldedNet->toXML(file);
+}
+
+void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
+        std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io){
+    std::vector<uint32_t> reorder(queries.size());
+    for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
+    std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
+
+        if(queries[a]->isReachability() != queries[b]->isReachability())
+            return queries[a]->isReachability() > queries[b]->isReachability();
+        if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
+            return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
+        if(queries[a]->containsNext() != queries[b]->containsNext())
+            return queries[a]->containsNext() < queries[b]->containsNext();
+        return queries[a]->formulaSize() < queries[b]->formulaSize();
+    });
+    writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
+}
+
+void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder &b2, const PetriNet *net, 
+        const PetriEngine::ColoredPetriNetBuilder& cpnBuilder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries, 
+        std::vector<std::string> &querynames, std::string filename){
+    //Don't know if this is needed
+    std::vector<uint32_t> reorder(queries.size());
+    for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
+
+    writeCompactQueries(queries, querynames, reorder, filename,cpnBuilder, b2, net);
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -1133,18 +1227,28 @@ int main(int argc, char* argv[]) {
         }
     }
 
+
     if(options.computePartition){
-        cpnBuilder.computePartition();
+        cpnBuilder.computePartition(options.partitionTimeout);
+    }
+    if(options.symmetricVariables){
+        cpnBuilder.computeSymmetricVariables();
+        //cpnBuilder.printSymmetricVariables();
     }
     if(options.computeCFP){
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
     }
+
 
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
+
+    if(options.unfolded_out_file.size() > 0) {
+        outputNet(builder, options.unfolded_out_file);
+    }
 
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
@@ -1153,12 +1257,17 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
+    if(options.unfold_query_out_file.size() > 0) {
+        outputCompactQueries(builder, b2, qnet.get(), cpnBuilder, queries, querynames, options.unfold_query_out_file);
+    }
+
+
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
     }
-
+    
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
@@ -1314,21 +1423,9 @@ int main(int argc, char* argv[]) {
         } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
     }
 
-    if(options.query_out_file.size() > 0)
-    {
-        std::vector<uint32_t> reorder(queries.size());
-        for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
+    if(options.query_out_file.size() > 0) {
+        outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
 
-            if(queries[a]->isReachability() != queries[b]->isReachability())
-                return queries[a]->isReachability() > queries[b]->isReachability();
-            if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-                return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-            if(queries[a]->containsNext() != queries[b]->containsNext())
-                return queries[a]->containsNext() < queries[b]->containsNext();
-            return queries[a]->formulaSize() < queries[b]->formulaSize();
-        });
-        writeQueries(queries, querynames, reorder, options.query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
     }
 
     qnet = nullptr;
@@ -1396,20 +1493,35 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
+    if (options.replay) {
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            std::cerr << "Fatal error assigning indexes" << std::endl;
+            exit(1);
+        }
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay{replay_file, net.get()};
+        for (int i = 0; i < results.size(); ++i) {
+            if (results[i] == ResultPrinter::LTL) {
+                replay.replay(net.get(), queries[i], options);
+            }
+        }
+        return SuccessCode;
+    }
 
+    if(options.doVerification){
 
     //----------------------- Verify CTL queries -----------------------//
-    std::vector<size_t> ctl_ids;
-    std::vector<size_t> ltl_ids;
-    for(size_t i = 0; i < queries.size(); ++i)
-    {
-        if(results[i] == ResultPrinter::CTL)
+        std::vector<size_t> ctl_ids;
+        std::vector<size_t> ltl_ids;
+        for(size_t i = 0; i < queries.size(); ++i)
         {
-            ctl_ids.push_back(i);
-        }
-        else if (results[i] == ResultPrinter::LTL) {
-            ltl_ids.push_back(i);
-        }
+            if(results[i] == ResultPrinter::CTL)
+            {
+                ctl_ids.push_back(i);
+            }
+            else if (results[i] == ResultPrinter::LTL) {
+                ltl_ids.push_back(i);
+            }
     }
 
     if (options.replay) {
@@ -1423,118 +1535,119 @@ int main(int argc, char* argv[]) {
             replay.replay(net.get(), queries[i], options);
         }
         return SuccessCode;
-    }
-
-    if (!ctl_ids.empty()) {
-        options.usedctl=true;
-        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
-
-        // Assign indexes
-        if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
-        {
-            std::cerr << "An error occurred while assigning indexes" << std::endl;
-            return ErrorCode;
-        }
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
-        v = CTLMain(net.get(),
-            options.ctlalgorithm,
-            options.strategy,
-            options.gamemode,
-            options.printstatistics,
-            true,
-            options.stubbornreduction,
-            querynames,
-            queries,
-            ctl_ids,
-            options);
-
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return v;
-        }
-        // go back to previous strategy if the program continues
-        options.strategy=reachabilityStrategy;
-    }
-    options.usedctl=false;
-
-    //----------------------- Verify LTL queries -----------------------//
-
-    if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
-        options.usedltl = true;
-        if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
-            std::cerr << "Error performing context analysis" << std::endl;
-            return v;
         }
 
-        for (auto qid : ltl_ids) {
-            LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+        if (!ctl_ids.empty()) {
+            options.usedctl=true;
+            PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
+            // Assign indexes
+            if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
+            {
+                std::cerr << "An error occurred while assigning indexes" << std::endl;
+                return ErrorCode;
+            }
+            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+            v = CTLMain(net.get(),
+                options.ctlalgorithm,
+                options.strategy,
+                options.gamemode,
+                options.printstatistics,
+                true,
+                options.stubbornreduction,
+                querynames,
+                queries,
+                ctl_ids,
+                options);
+
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return v;
+            }
+            // go back to previous strategy if the program continues
+            options.strategy=reachabilityStrategy;
         }
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return SuccessCode;
-        }
-    }
+        options.usedctl=false;
 
-    //----------------------- Siphon Trap ------------------------//
+        //----------------------- Verify LTL queries -----------------------//
 
-    if(options.siphontrapTimeout > 0){
-        for (uint32_t i = 0; i < results.size(); i ++) {
-            bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
+        if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
+            options.usedltl = true;
+            if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
+                std::cerr << "Error performing context analysis" << std::endl;
+                return v;
+            }
 
-            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
-                STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
-                stSolver.solve(options.siphontrapTimeout);
-                results[i] = stSolver.printResult();
-                if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
-                    std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
-                }
+            for (auto qid : ltl_ids) {
+                LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+
+            }
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
             }
         }
 
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return SuccessCode;
+        //----------------------- Siphon Trap ------------------------//
+
+        if(options.siphontrapTimeout > 0){
+            for (uint32_t i = 0; i < results.size(); i ++) {
+                bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
+
+                if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
+                    STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
+                    stSolver.solve(options.siphontrapTimeout);
+                    results[i] = stSolver.printResult();
+                    if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
+                        std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
+                    }
+                }
+            }
+
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
+            }
         }
-    }
-    options.siphontrapTimeout = 0;
+        options.siphontrapTimeout = 0;
 
-    //----------------------- Reachability -----------------------//
+        //----------------------- Reachability -----------------------//
 
-    //Analyse context again to reindex query
-    contextAnalysis(cpnBuilder, builder, net.get(), queries);
-
-    // Change default place-holder to default strategy
-    if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
-
-    if(options.tar && net->numberOfPlaces() > 0)
-    {
-        //Create reachability search strategy
-        TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
-
-        // Change default place-holder to default strategy
-        fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
-        options.strategy = PetriEngine::Reachability::DFS;
-
-        //Reachability search
-        strategy.reachable(queries, results,
-                options.printstatistics,
-                options.trace != TraceLevel::None);
-    }
-    else
-    {
-        ReachabilitySearch strategy(*net, printer, options.kbound);
+        //Analyse context again to reindex query
+        contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
 
-        //Reachability search
-        strategy.reachable(queries, results,
-                           options.strategy,
-                           options.stubbornreduction,
-                           options.statespaceexploration,
-                           options.printstatistics,
-                           options.trace != TraceLevel::None,
-                           options.seed());
+        if(options.tar && net->numberOfPlaces() > 0)
+        {
+            //Create reachability search strategy
+            TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
+
+            // Change default place-holder to default strategy
+            fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
+            options.strategy = PetriEngine::Reachability::DFS;
+
+            //Reachability search
+            strategy.reachable(queries, results,
+                    options.printstatistics,
+                    options.trace != TraceLevel::None);
+        }
+        else
+        {
+            ReachabilitySearch strategy(*net, printer, options.kbound);
+
+            // Change default place-holder to default strategy
+            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+
+            //Reachability search
+            strategy.reachable(queries, results,
+                            options.strategy,
+                            options.stubbornreduction,
+                            options.statespaceexploration,
+                            options.printstatistics,
+                            options.trace != TraceLevel::None,
+                            options.seed());
+        }
     }
+
 
     return SuccessCode;
 }
-
