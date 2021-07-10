@@ -292,7 +292,7 @@ namespace PetriEngine {
             Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
             
             if(pBuilder.partitionNet(timeout)){
-                //pBuilder.printPartion();
+                pBuilder.printPartion();
                 _partition = pBuilder.getPartition();
                 pBuilder.assignColorMap(_partition);
                 _partitionComputed = true;
