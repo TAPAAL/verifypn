@@ -292,7 +292,7 @@ namespace PetriEngine {
             Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
             
             if(pBuilder.partitionNet(timeout)){
-                //pBuilder.printPartion();
+                pBuilder.printPartion();
                 _partition = pBuilder.getPartition();
                 pBuilder.assignColorMap(_partition);
                 _partitionComputed = true;
@@ -789,17 +789,33 @@ namespace PetriEngine {
         const auto &ms = arc.expr->eval(context);   
         int shadowWeight = 0;
 
+        const Colored::Color *newColor;
         std::vector<uint32_t> tupleIds;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
+ 
+            if(!_partitionComputed || _partition[arc.place].isDiagonal()){
+                newColor = color.first;
+            } else {
+                tupleIds.clear();
+                color.first->getTupleId(tupleIds);
+
+                _partition[arc.place].applyPartition(tupleIds);
+                newColor = place.type->getColor(tupleIds);
+            }
             
             shadowWeight += color.second;
-
-            const std::string& pName = _ptplacenames[place.name][color.first->getId()];
+            uint32_t id;
+            if(!_partitionComputed || _partition[arc.place].isDiagonal()){
+                id = newColor->getId();
+            } else {
+                id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->id() + newColor->getId();
+            }
+            const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               
-                unfoldPlace(&place, color.first, arc.place, color.first->getId());               
+                unfoldPlace(&place, newColor, arc.place, id);               
             }
             
             if (arc.input) {
