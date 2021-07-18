@@ -271,7 +271,16 @@ namespace PetriEngine {
             
         public:
             const Color* eval(const ExpressionContext& context) const override {
-                return _userOperator;
+                if(context.placePartition.getEquivalenceClasses().empty()){
+                    return _userOperator;
+                } else {
+                    std::vector<uint32_t> tupleIds;
+                    _userOperator->getTupleId(tupleIds);
+
+                    context.placePartition.applyPartition(tupleIds);
+                    return _userOperator->getColorType()->getColor(tupleIds);
+                }
+                
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
