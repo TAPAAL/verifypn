@@ -156,6 +156,7 @@ namespace LTL {
     void TarjanModelChecker<S, G, SaveTrace, Spooler...>::update(idx_t to)
     {
         const auto from = dstack.top().pos;
+        assert(cstack[to].lowlink != std::numeric_limits<idx_t>::max() && cstack[from].lowlink != std::numeric_limits<idx_t>::max());
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have now found a loop into earlier seen component cstack[to].lowlink.
             // if this earlier component precedes an accepting state,
@@ -164,7 +165,7 @@ namespace LTL {
             // either way update the component ID of the state we came from.
             cstack[from].lowlink = cstack[to].lowlink;
             if constexpr (SaveTrace) {
-                loopstate = cstack[to].stateid;
+                loopstate = cstack[from].stateid;
                 looptrans = this->successorGenerator->fired();
                 cstack[from].lowsource = to;
 
@@ -191,6 +192,7 @@ namespace LTL {
         if constexpr (!SaveTrace) {
             return;
         } else {
+            assert(violation);
             State state = factory.newState();
             os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
@@ -203,7 +205,7 @@ namespace LTL {
                 p = dstack.top().pos;
                 auto stateid = cstack[p].stateid;
                 auto[parent, tid] = seen.getHistory(stateid);
-                seen.decode(state, stateid);
+                seen.decode(state, parent);
 
                 this->printTransition(tid, state, os) << '\n';
                 if (stateid == loopstate) this->printLoop(os);
@@ -212,11 +214,12 @@ namespace LTL {
                 dstack.pop();
             }
             // follow previously found back edges via lowsource until back in dstack.
-            assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
+            //assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
-                seen.decode(state, cstack[p].stateid);
+                //seen.decode(state, cstack[p].stateid);
+                seen.decode(state, parent);
                 this->printTransition(tid, state, os) << '\n';
                 assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p].lowsource;
