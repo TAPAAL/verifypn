@@ -51,7 +51,7 @@ namespace LTL {
             for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
                 if (buchi._buchi->state_is_accepting(state)) continue;
 
-                bdd retarding = bddfalse;
+    ltl            bdd retarding = bddfalse;
                 bdd progressing = bddfalse;
                 for (auto &e : buchi._buchi->out(state)) {
                     if (e.dst == state) {

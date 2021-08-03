@@ -22,6 +22,7 @@
 #include "LTL/Structures/ProductState.h"
 #include <cstdint>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace LTL::Structures {
 

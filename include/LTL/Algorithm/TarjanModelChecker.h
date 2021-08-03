@@ -25,6 +25,7 @@
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 
+#include <limits>
 #include <stack>
 #include <unordered_set>
 
@@ -36,8 +37,8 @@ namespace LTL {
      * which constitutes a counter-example.
      * For more details see
      * <p>
-     *   Jaco Geldenhuys & Antti Valmari,
-     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
+     *   Jaco Geldenhuys & Antti Valmari
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm
      *   https://doi.org/10.1016/j.tcs.2005.07.004
      * </p>
      * @tparam SaveTrace whether to save and print counter-examples when possible.

@@ -105,7 +105,7 @@ namespace LTL {
         printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
         {
             if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-                os << indent << "<deadlock buchi=\"" << state.getBuchiState() << "\"/>";
+                os << indent << "<deadlock/>";
                 return os;
             }
                 os << indent << "<transition id="

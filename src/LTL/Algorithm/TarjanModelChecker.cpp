@@ -47,6 +47,7 @@ namespace LTL {
                         seen.setHistory(stateid, this->successorGenerator->fired());
                     }
                 }
+
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
@@ -104,7 +105,7 @@ namespace LTL {
         dstack.push(DEntry{ctop});
         if (this->successorGenerator->isAccepting(state)) {
             astack.push(ctop);
-            if (this->successorGenerator->has_invariant_self_loop(state)){
+            if (this->successorGenerator->has_invariant_self_loop(state) && !SaveTrace){
                 //std::cerr << "Invariant self loop found. Violation is true" << std::endl;
                 violation = true;
                 invariant_loop = true;
@@ -218,7 +219,6 @@ namespace LTL {
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
-                //seen.decode(state, cstack[p].stateid);
                 seen.decode(state, parent);
                 this->printTransition(tid, state, os) << '\n';
                 assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
