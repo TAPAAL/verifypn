@@ -207,14 +207,14 @@ namespace LTL {
                 auto[parent, tid] = seen.getHistory(stateid);
                 seen.decode(state, parent);
 
-                this->printTransition(tid, state, os) << '\n';
                 if (stateid == loopstate) this->printLoop(os);
+                this->printTransition(tid, state, os) << '\n';
 
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
                 dstack.pop();
             }
             // follow previously found back edges via lowsource until back in dstack.
-            //assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
+            assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
