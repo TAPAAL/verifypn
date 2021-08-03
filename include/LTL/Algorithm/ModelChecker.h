@@ -109,10 +109,11 @@ namespace LTL {
                 return os;
             }
                 os << indent << "<transition id="
-                   << std::setw(maxTransName + 1 + 2) << std::left
-                   << std::quoted(net->transitionNames()[transition]) << " " << "buchi=\"" << state.getBuchiState();
+                   // field width stuff obsolete without büchi state printing.
+                   //<< std::setw(maxTransName + 2) << std::left
+                   << std::quoted(net->transitionNames()[transition]);
             if (traceLevel == TraceLevel::Full) {
-                os << "\">";
+                os << ">";
                 os << std::endl;
                 for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     for (size_t j = 0; j < state.marking()[i]; ++j) {
@@ -122,7 +123,7 @@ namespace LTL {
                 os << indent << "</transition>";
             }
             else {
-                os << "\"/>";
+                os << "/>";
             }
             return os;
         }
