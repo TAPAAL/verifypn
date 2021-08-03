@@ -23,7 +23,7 @@
 #include "PetriEngine/options.h"
 
 namespace LTL {
-    ReturnValue LTLMain(const PetriEngine::PetriNet *net,
+    bool LTLMain(const PetriEngine::PetriNet *net,
                         const PetriEngine::PQL::Condition_ptr &query,
                         const std::string &queryName,
                         options_t &options);

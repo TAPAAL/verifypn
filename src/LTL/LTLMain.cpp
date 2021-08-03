@@ -30,7 +30,7 @@ using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
 // Causes FORMULA <qname> STATS EXPLORED <nexplored> to be printed after verification. Remove if this causes a nuisance.
-#define DEBUG_EXPLORED_STATES
+// #define DEBUG_EXPLORED_STATES
 
 namespace LTL {
     struct Result {
@@ -107,7 +107,7 @@ namespace LTL {
         else return heur;
     }
 
-    ReturnValue LTLMain(const PetriNet *net,
+    bool LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
                         options_t &options)
@@ -309,6 +309,6 @@ namespace LTL {
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
-        return SuccessCode;
+        return result.satisfied ^ negate_answer;
     }
 }

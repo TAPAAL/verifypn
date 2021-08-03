@@ -1578,7 +1578,9 @@ int main(int argc, char* argv[]) {
             }
 
             for (auto qid : ltl_ids) {
-                LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+                auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+                std::cout << "\nQuery index " << qid << " was solved\n";
+                std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
             }
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
