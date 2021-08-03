@@ -66,7 +66,7 @@ namespace LTL {
                             states.decode(working, next);
                             while (!this->successorGenerator->isInitialState(working)) {
                                 auto[parent, transition] = states.getHistory(next);
-                                transitions.push(std::make_pair(next, transition));
+                                transitions.push(std::make_pair(parent, transition));
                                 next = parent;
                                 states.decode(working, next);
                             }
@@ -124,7 +124,7 @@ namespace LTL {
                         // follow trace until back at seed state.
                         do {
                             auto[state, transition] = states.getHistory2(next);
-                            nested_transitions.push(std::make_pair(next, transition));
+                            nested_transitions.push(std::make_pair(state, transition));
                             next = state;
                         } while (next != seedId);
                     }
@@ -192,3 +192,4 @@ namespace LTL {
     template
     class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 }
+#pragma clang diagnostic pop
