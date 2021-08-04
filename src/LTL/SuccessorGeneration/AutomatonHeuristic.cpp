@@ -28,7 +28,7 @@
  */
 class reach_distance : public spot::bfs_steps {
 public:
-    reach_distance(const spot::const_twa_graph_ptr &ptr) : spot::bfs_steps(ptr) {}
+    explicit reach_distance(const spot::const_twa_graph_ptr &ptr) : spot::bfs_steps(ptr) {}
 
 private:
     bool match(spot::twa_run::step &step, const spot::state *dest) override
@@ -67,7 +67,7 @@ namespace LTL {
             return 0;
         uint32_t min_dist = std::numeric_limits<uint32_t>::max();
         PetriEngine::PQL::DistanceContext context{_net, state.marking()};
-        for (const auto guard : guardInfo.progressing) {
+        for (const auto& guard : guardInfo.progressing) {
             uint32_t dist = _bfs_dists[guard.dest] * guard.condition->distance(context);
             if (dist < min_dist)
                 min_dist = dist;

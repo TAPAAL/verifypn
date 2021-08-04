@@ -40,7 +40,7 @@ namespace LTL {
         const LTL::Structures::BuchiAutomaton &_aut;
         std::vector<GuardInfo> _state_guards;
 
-        std::vector<int> _bfs_dists;
+        std::vector<uint32_t> _bfs_dists;
     };
 }
 
