@@ -136,7 +136,7 @@ namespace LTL {
                 && options.ltl_por == LTLPartialOrder::FullAutomaton
                 && !net->has_inhibitor();
 
-        bool is_stubborn = is_visible_stub || is_autreach_stub || is_buchi_stub;
+        bool is_stubborn = options.ltl_por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
 
         std::unique_ptr<SuccessorSpooler> spooler;
         std::unique_ptr<Heuristic> heuristic = make_heuristic(net, negated_formula, automaton, options);
@@ -198,10 +198,10 @@ namespace LTL {
 
                     assert(spooler);
                     gen.setSpooler(spooler.get());
+                    // if search strategy used, set heuristic, otherwise ignore it
+                    // (default is null which is checked elsewhere)
                     if (options.strategy != PetriEngine::Reachability::DFS) {
                         assert(heuristic != nullptr);
-                    }
-                    else {
                         gen.setHeuristic(heuristic.get());
                     }
 
