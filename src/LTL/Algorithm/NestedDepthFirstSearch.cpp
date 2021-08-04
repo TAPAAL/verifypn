@@ -192,4 +192,3 @@ namespace LTL {
     template
     class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 }
-#pragma clang diagnostic pop

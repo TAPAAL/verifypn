@@ -64,10 +64,10 @@ namespace LTL {
 
     private:
 
-        std::unique_ptr<bool[]> _place_checkpoint;
         PetriEngine::ReachabilityStubbornSet _retarding_stubborn_set;
         const std::vector<GuardInfo> _state_guards;
         const Structures::BuchiAutomaton &_aut;
+        std::unique_ptr<bool[]> _place_checkpoint;
         PetriEngine::SuccessorGenerator _gen;
         PetriEngine::Structures::State _markbuf;
         bool _has_enabled_stubborn = false;
