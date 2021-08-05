@@ -25,6 +25,7 @@
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 
+#include <limits>
 #include <stack>
 #include <unordered_set>
 
@@ -36,21 +37,20 @@ namespace LTL {
      * which constitutes a counter-example.
      * For more details see
      * <p>
-     *   Jaco Geldenhuys & Antti Valmari,
-     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
+     *   Jaco Geldenhuys & Antti Valmari
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm
      *   https://doi.org/10.1016/j.tcs.2005.07.004
      * </p>
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template<typename SuccessorGen, bool SaveTrace = false>
-    class TarjanModelChecker : public ModelChecker<SuccessorGen> {
+    template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, bool SaveTrace = false, typename... Spooler>
+    class TarjanModelChecker : public ModelChecker<ProductSucGen, SuccessorGen, Spooler...> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
-                           SuccessorGen &&successorGen,
-                           const TraceLevel level = TraceLevel::Full,
-                           const bool shortcircuitweak = true)
-                : ModelChecker<SuccessorGen>(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
+                           SuccessorGen *successorGen,
+                           std::unique_ptr<Spooler> &&...spooler)
+                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0)
         {
@@ -96,6 +96,7 @@ namespace LTL {
             idx_t lowlink;
             idx_t stateid;
             idx_t next = std::numeric_limits<idx_t>::max();
+            bool dstack = true;
 
             PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
@@ -113,6 +114,7 @@ namespace LTL {
 
         struct DEntry {
             idx_t pos; // position in cstack.
+
             typename SuccessorGen::sucinfo sucinfo;
 
             explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
@@ -143,18 +145,29 @@ namespace LTL {
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 
     };
+    extern template
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, false>;
 
     extern template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, false>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
 
     extern template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, false>;
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>;
+
+    extern template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>;
+
+    extern template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, EnabledSpooler>;
+
+    extern template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, EnabledSpooler>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

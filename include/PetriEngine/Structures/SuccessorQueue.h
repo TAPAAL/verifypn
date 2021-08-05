@@ -39,11 +39,11 @@ public:
 
     // construct from array of different type, using fn as transformation function.
     template <typename U, typename Fn>
-    SuccessorQueue(U *src, uint32_t nelem, Fn&& fn)
-            : _front(0), _size(nelem)
+    SuccessorQueue(std::vector<U> &src, Fn&& fn)
+            : _front(0), _size(src.size())
     {
-        _data = std::make_unique<T[]>(nelem);
-        std::transform(src, src + nelem, _data.get(), fn);
+        _data = std::make_unique<T[]>(src.size());
+        std::transform(std::begin(src), std::end(src), _data.get(), fn);
     }
 
     SuccessorQueue() noexcept :_front(0), _size(0), _data(nullptr) {}
@@ -60,7 +60,7 @@ public:
         ++_front;
     }
 
-    [[nodiscard]] T size() const
+    [[nodiscard]] size_t size() const
     {
         return _size - _front;
     }
@@ -74,6 +74,11 @@ public:
 
     [[nodiscard]] bool has_consumed() const { return _front > 0; }
 
+    T last_pop() const {
+        assert(has_consumed());
+        return _data[_front - 1];
+    }
+
     bool operator==(std::nullptr_t) { return _data == nullptr; }
     bool operator!=(std::nullptr_t) { return _data != nullptr; }
 
@@ -84,6 +89,7 @@ public:
      */
     void extend_to(T *src, uint32_t nelem)
     {
+        assert(nelem >= _size); // Cannot extend to fewer elements.
         auto newdata = std::make_unique<T[]>(nelem);
         if (_front != 0) {
             //Add previously fired transitions to start of array.
@@ -92,7 +98,6 @@ public:
         uint32_t sz = _front;
         // copy over extended successor list, excluding previously popped elements.
         for (uint32_t i = 0; i < nelem; ++i) {
-            // FIXME potential optimization target if poor performance is found.
             auto begin = _data.get(), end = _data.get() + _front;
             auto it = std::find(begin, end, src[i]);
 
@@ -105,6 +110,18 @@ public:
         _size = sz;
         assert(_size == nelem);
         _data.swap(newdata);
+    }
+
+    void append(T *src, uint32_t nelem) {
+        auto newdata = std::make_unique<T[]>(nelem + _size);
+        memcpy(newdata.get(), _data.get(), sizeof(T) * _size);
+        memcpy(newdata.get() + _size, src, sizeof(T) * nelem);
+        _size = nelem + _size;
+        _data.swap(newdata);
+    }
+
+    std::pair<T*, T*> all_successors() {
+        return std::make_pair(_data.get(), &_data[_size]);
     }
 
 private:

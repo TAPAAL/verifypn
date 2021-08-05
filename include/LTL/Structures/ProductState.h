@@ -41,7 +41,6 @@ namespace LTL::Structures {
             buchi_state_idx = nplaces;
         }
 
-        //TODO override equality operators to handle both marking and NBA state
         uint32_t getBuchiState() const {
             return marking()[buchi_state_idx];
         }

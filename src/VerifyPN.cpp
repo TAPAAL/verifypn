@@ -86,6 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/Replay.h"
 #include "LTL/LTLMain.h"
 
 #include <atomic>
@@ -323,7 +324,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
         else if (strcmp(argv[i], "--output-stats") == 0)
         {
-            options.output_stats = std::string(argv[++i]);            
+            options.output_stats = std::string(argv[++i]);
         }
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
@@ -372,6 +373,31 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--spot-optimization") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --spot-optimization\n";
+                return ErrorCode;
+            }
+            else if (strcmp(argv[i + 1], "1") == 0) {
+                options.buchiOptimization = BuchiOptimization::Low;
+            }
+            else if (strcmp(argv[i + 1], "2") == 0) {
+                options.buchiOptimization = BuchiOptimization::Medium;
+            }
+            else if (strcmp(argv[i + 1], "3") == 0) {
+                options.buchiOptimization = BuchiOptimization::High;
+            }
+            else {
+                std::cerr << "Invalid argument " << argv[i] << " to --spot-optimization\n";
+                return ErrorCode;
+            }
+            ++i;
+        }
+        else if (strcmp(argv[i], "--replay") == 0) {
+            options.replay = true;
+            options.replay_file = std::string(argv[++i]);
+        }
+
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -420,7 +446,43 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 }
                 i++;
             }
-        } else if (strcmp(argv[i], "-noweak") == 0) {
+        } else if (strcmp(argv[i], "--ltl-por") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --ltl-por\n";
+                return ErrorCode;
+            }
+            else if (strcmp(argv[i+1], "classic") == 0) {
+                options.ltl_por = LTLPartialOrder::Visible;
+            }
+            else if (strcmp(argv[i+1], "reach") == 0) {
+                options.ltl_por = LTLPartialOrder::AutomatonReach;
+            }
+            else if (strcmp(argv[i+1], "mix") == 0) {
+                options.ltl_por = LTLPartialOrder::VisibleReach;
+            }
+            else if (strcmp(argv[i+1], "automaton") == 0) {
+                options.ltl_por = LTLPartialOrder::FullAutomaton;
+            }
+            else if (strcmp(argv[i+1], "none") == 0) {
+                options.ltl_por = LTLPartialOrder::None;
+            }
+            else {
+                std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-por\n";
+                return ErrorCode;
+            }
+            ++i;
+        }
+        else if (strcmp(argv[i], "--ltl-heur") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --ltl-heur\n";
+                return ErrorCode;
+            }
+            else {
+                options.ltlHeuristic = argv[i + 1];
+            }
+            ++i;
+        }
+        else if (strcmp(argv[i], "-noweak") == 0) {
             options.ltluseweak = false;
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
@@ -464,6 +526,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
+                    "                                       - reach      apply reachability stubborn sets in Büchi states\n"
+                    "                                                    that represent reachability subproblems,\n"
+                    "                                       - classic    classic stubborn set method.\n"
+                    "                                                    Only applicable with formulae that do not \n"
+                    "                                                    contain the next-step operator.\n"
+                    "                                       - mix        mix of reach and classic - use reach when applicable,\n"
+                    "                                                    classic otherwise.\n"
+                    "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
+                    "                                       - none       disable stubborn reductions (equivalent to -p).\n"
+                    "  --ltl-heur <spec>                    Select distance metric for LTL heuristic search\n"
+                    "                                       Use --ltl-heur-help to see specification grammar.\n"
+                    "                                       Defaults to 'aut'.\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -509,6 +584,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
                     "  --noverify                           Disable verification e.g. for getting unfolded net\n"
+                    "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
+                    "                                       The trace is verified against the provided model and query.\n"
+                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -545,7 +623,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
-        } else if (options.modelfile == NULL) {
+        }
+        else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
+            printf("Heuristics for LTL model checking are specified using the following grammar:"
+                   "  heurexp : {'aut' | 'automaton'}\n"
+                   "          | {'dist' | 'distance'}\n"
+                   "          | {'fc' | 'firecount' | 'fire-count'} INT\n"
+                   "          | '(' heurexp ')'\n"
+                   "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
+                   "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
+                   "Example strings:\n"
+                   "  - 'aut' - use the automaton heuristic for verification.\n"
+                   "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
+                   );
+        }
+        else if (options.modelfile == NULL) {
             options.modelfile = argv[i];
         } else if (options.queryfile == NULL) {
             options.queryfile = argv[i];
@@ -618,31 +710,26 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
-        std::array tarjanStrategies { DFS, RDFS, HEUR };
-        std::array ndfsStrategies { DFS, RDFS };
+        std::array ltlStrategies{DFS, RDFS, HEUR};
+
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
+            if (std::find(std::begin(ltlStrategies), std::end(ltlStrategies), options.strategy) ==
+                std::end(ltlStrategies)) {
+                std::cerr << "Argument Error: Unsupported search strategy for LTL. Supported values are DFS, RDFS, and BestFS."
+                          << std::endl;
 
-            if (options.ltlalgorithm == LTL::Algorithm::Tarjan &&
-                std::find(std::begin(tarjanStrategies), std::end(tarjanStrategies), options.strategy) ==
-                std::end(tarjanStrategies)) {
-                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
                 return ErrorCode;
             }
-            if (options.ltlalgorithm == LTL::Algorithm::NDFS &&
-                    std::find(std::begin(ndfsStrategies), std::end(ndfsStrategies), options.strategy) ==
-                    std::end(ndfsStrategies)) {
-                std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
-                return ErrorCode;
-            }
-            if (options.trace != TraceLevel::None
-                && options.strategy == RDFS
-                && options.ltlalgorithm == LTL::Algorithm::NDFS) {
-                std::cerr << "Argument Error: Random search order NDFS does not support traces" << std::endl;
-                return ErrorCode;
-            }
+
         }
     }
+
+    if (options.replay && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace replay is only supported for LTL model checking." << std::endl;
+        return ErrorCode;
+    }
+
     return ContinueCode;
 }
 
@@ -943,7 +1030,8 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
             ctlStarQuery->visit(asCtl);
             ctlQueries.push_back(asCtl._ctl_query);
         } else {
-            ctlQueries.push_back(nullptr);
+            std::cerr << "Error: A query could not be translated from CTL* to CTL." << std::endl;
+            exit(1);
         }
 
     }
@@ -956,7 +1044,8 @@ std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlSt
         if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
-            ltlQueries.push_back(nullptr);
+            std::cerr << "Error: a query could not be translated from CTL* to LTL." << std::endl;
+            exit(1);
         }
     }
     return ltlQueries;
@@ -985,7 +1074,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond, options.ltl_compress_aps);
+        cond = LTL::simplify(cond, options);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
@@ -1011,7 +1100,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
+        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true), options);
     }, stats, evalContext, false, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
@@ -1150,8 +1239,7 @@ int main(int argc, char* argv[]) {
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
     }
 
-    
-    
+
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();
@@ -1337,6 +1425,7 @@ int main(int argc, char* argv[]) {
 
     if(options.query_out_file.size() > 0) {
         outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
+
     }
 
     qnet = nullptr;
@@ -1404,7 +1493,23 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
+    if (options.replay) {
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            std::cerr << "Fatal error assigning indexes" << std::endl;
+            exit(1);
+        }
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay{replay_file, net.get()};
+        for (int i = 0; i < results.size(); ++i) {
+            if (results[i] == ResultPrinter::LTL) {
+                replay.replay(net.get(), queries[i], options);
+            }
+        }
+        return SuccessCode;
+    }
+
     if(options.doVerification){
+
     //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
@@ -1417,6 +1522,19 @@ int main(int argc, char* argv[]) {
             else if (results[i] == ResultPrinter::LTL) {
                 ltl_ids.push_back(i);
             }
+    }
+
+    if (options.replay) {
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            std::cerr << "Fatal error assigning indexes" << std::endl;
+            exit(1);
+        }
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay{replay_file, net.get()};
+        for (int i : ltl_ids) {
+            replay.replay(net.get(), queries[i], options);
+        }
+        return SuccessCode;
         }
 
         if (!ctl_ids.empty()) {
@@ -1460,7 +1578,9 @@ int main(int argc, char* argv[]) {
             }
 
             for (auto qid : ltl_ids) {
-                LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+                auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+                std::cout << "\nQuery index " << qid << " was solved\n";
+                std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
             }
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
@@ -1533,4 +1653,3 @@ int main(int argc, char* argv[]) {
 
     return SuccessCode;
 }
-

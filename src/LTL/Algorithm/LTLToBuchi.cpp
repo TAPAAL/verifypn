@@ -17,14 +17,13 @@
 
 #include "LTL/LTLToBuchi.h"
 #include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
+#include "PetriEngine/options.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/bddprint.hh>
 #include <sstream>
 #include <spot/twaalgos/dot.hh>
-#include <PetriEngine/options.h>
-
 
 using namespace PetriEngine::PQL;
 
@@ -130,9 +129,10 @@ namespace LTL {
         (*condition)[0]->visit(*this);
     }
 
-    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, APCompression compress) {
+    std::pair<spot::formula, APInfo>
+    to_spot_formula (const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
         std::stringstream ss;
-        FormulaToSpotSyntax spotConverter{ss, compress};
+        FormulaToSpotSyntax spotConverter{ss, options.ltl_compress_aps};
         query->visit(spotConverter);
         std::string spotFormula = ss.str();
         if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
@@ -142,14 +142,26 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, APCompression compress) {
-        auto [formula, apinfo] = to_spot_formula(query, compress);
+    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
+        auto [formula, apinfo] = to_spot_formula(query, options);
         formula = spot::formula::Not(formula);
         spot::translator translator;
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
-        translator.set_level(spot::postprocessor::Low);
+        spot::postprocessor::optimization_level level;
+        switch(options.buchiOptimization) {
+            case BuchiOptimization::Low:
+                level = spot::postprocessor::Low;
+                break;
+            case BuchiOptimization::Medium:
+                level = spot::postprocessor::Medium;
+                break;
+            case BuchiOptimization::High:
+                level = spot::postprocessor::High;
+                break;
+        }
+        translator.set_level(level);
         spot::twa_graph_ptr automaton = translator.run(formula);
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
@@ -162,8 +174,8 @@ namespace LTL {
         return Structures::BuchiAutomaton{automaton, ap_map};
     }
 
-    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, APCompression compress) {
-        return BuchiSuccessorGenerator{makeBuchiAutomaton(query, compress)};
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, const options_t &options) {
+        return BuchiSuccessorGenerator{makeBuchiAutomaton(query, options)};
     }
 
 }

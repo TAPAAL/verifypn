@@ -19,5 +19,8 @@
 #define VERIFYPN_SPOOLERS_H
 
 #include "EnabledSpooler.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
+#include "LTL/Stubborn/SafeAutStubbornSet.h"
 
 #endif //VERIFYPN_SPOOLERS_H

@@ -31,7 +31,9 @@ namespace LTL {
             return g();
         }
 
-
+        std::ostream &output(std::ostream &os) {
+            return os << "RANDOM_HEUR";
+        }
     private:
         std::random_device rd;
         std::mt19937 g;

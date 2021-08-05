@@ -34,9 +34,9 @@ namespace LTL {
 
         }
 
-        virtual void generateAll()
+        virtual bool generateAll(const LTL::Structures::ProductState *parent)
         {
-
+            return false;
         }
         static constexpr uint32_t NoTransition = std::numeric_limits<uint32_t>::max();
     };

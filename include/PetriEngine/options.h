@@ -16,6 +16,7 @@ enum class TemporalLogic {
     CTL, LTL
 };
 
+//TODO can be moved to LTL/AlgorithmTypes.h?
 enum class TraceLevel {
     None,
     Transitions,
@@ -26,6 +27,20 @@ enum class APCompression {
     Choose,
     None,
     Full
+};
+
+enum class LTLPartialOrder {
+    None,
+    Visible,
+    AutomatonReach,
+    VisibleReach,
+    FullAutomaton
+};
+
+enum class BuchiOptimization {
+    Low = 1,
+    Medium = 2,
+    High = 3
 };
 
 struct options_t {
@@ -66,6 +81,13 @@ struct options_t {
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
     APCompression ltl_compress_aps = APCompression::None;
+    LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;
+    BuchiOptimization buchiOptimization = BuchiOptimization::Low;
+    const char* ltlHeuristic = "aut";
+
+    bool replay = false;
+    std::string replay_file;
+
 
     std::string query_out_file;
     std::string model_out_file;
@@ -82,7 +104,6 @@ struct options_t {
     uint32_t seed_offset = 0;
     int max_intervals = 250; //0 disabled
     int max_intervals_reduced = 5;
-    
     size_t seed() { return ++seed_offset; }
 
     void print() {

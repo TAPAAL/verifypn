@@ -20,17 +20,33 @@
 
 
 #include "PetriEngine/Stubborn/StubbornSet.h"
+#include "InterestingTransitionVisitor.h"
 
 namespace PetriEngine {
     class ReachabilityStubbornSet : public StubbornSet {
     public:
-        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries) {}
+        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries, bool closure = true)
+                : StubbornSet(net, queries), _closure(closure) {
+            setInterestingVisitor<InterestingTransitionVisitor>();
+        }
 
-        ReachabilityStubbornSet(const PetriNet &net)
-                : StubbornSet(net) {}
+        ReachabilityStubbornSet(const PetriNet &net, bool closure = true)
+                : StubbornSet(net) , _closure(closure) {
+            setInterestingVisitor<InterestingTransitionVisitor>();
+        }
 
         bool prepare(const Structures::State *state) override;
+
+        template <typename TVisitor>
+        void setInterestingVisitor()
+        {
+            _interesting = std::make_unique<TVisitor>(*this, _closure);
+        }
+
+    private:
+        std::unique_ptr<InterestingTransitionVisitor> _interesting;
+
+        bool _closure;
     };
 }
 

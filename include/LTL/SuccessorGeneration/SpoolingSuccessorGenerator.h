@@ -18,8 +18,10 @@
 #ifndef VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 #define VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Structures/ProductState.h"
 #include "PetriEngine/Structures/SuccessorQueue.h"
+#include "LTL/SuccessorGeneration/DistanceHeuristic.h"
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
 
@@ -50,14 +52,14 @@ namespace LTL {
             static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
         };
 
-        void setSpooler(std::unique_ptr<SuccessorSpooler> &&spooler)
+        void setSpooler(SuccessorSpooler *const spooler)
         {
-            _spooler.swap(spooler);
+            _spooler = spooler;
         }
 
-        void setHeuristic(std::unique_ptr<Heuristic> &&heuristic)
+        void setHeuristic(Heuristic *const heuristic)
         {
-            _heuristic.swap(heuristic);
+            _heuristic = heuristic;
         }
 
         [[nodiscard]] static sucinfo initial_suc_info()
@@ -96,6 +98,7 @@ namespace LTL {
 
                 } else {
                     // list of (transition, weight)
+                    _heuristic->prepare(*state);
                     std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
                     while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
                         assert(tid <= _net.numberOfTransitions());
@@ -106,20 +109,24 @@ namespace LTL {
                     // sort by least distance first.
                     std::sort(std::begin(weighted_tids), std::end(weighted_tids),
                               [](auto &l, auto &r) { return l.second < r.second; });
-                    sucinfo.successors = SuccessorQueue(weighted_tids.data(), weighted_tids.size(),
-                                                        [](auto &p) { return p.first; });
+                    sucinfo.successors = SuccessorQueue(weighted_tids, [](auto &p) { return p.first; });
                 }
             }
         }
-
         bool next(Structures::ProductState &state, sucinfo &sucinfo)
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
+#ifndef NDEBUG
+                //std::cerr << "Not Firing: " << (sucinfo.successors.has_consumed() ? "deadlock" : "done") << std::endl;
+#endif
                 _last = std::numeric_limits<uint32_t>::max();
                 return false;
             }
             _last = sucinfo.successors.front();
+#ifndef NDEBUG
+            //std::cerr << "Firing " << _net.transitionNames()[_last] << std::endl;
+#endif
             sucinfo.successors.pop();
             SuccessorGenerator::_fire(state, _last);
             return true;
@@ -127,18 +134,82 @@ namespace LTL {
 
         [[nodiscard]] uint32_t fired() const { return _last; }
 
-        void _fire(Structures::ProductState &parent, Structures::ProductState &write, uint32_t tid)
+        void generate_all(LTL::Structures::ProductState *parent, sucinfo &sucinfo)
         {
-            PetriEngine::SuccessorGenerator::_fire(write, tid);
-            write.setBuchiState(parent.getBuchiState());
+            assert(_spooler != nullptr);
+            assert(sucinfo.successors != nullptr);
+            if (!_spooler->generateAll(parent)) return;
+            assert(dynamic_cast<VisibleLTLStubbornSet*>(_spooler) != nullptr);
+
+            uint32_t tid;
+            if (!_heuristic) {
+                uint32_t nsuc = 0;
+                // generate list of transitions that generate a successor.
+                auto [first, last] = sucinfo.successors.all_successors();
+                for (; first < last; ++first) {
+                    tid = *first;
+                    // avoiding duplicates
+                    if (!static_cast<VisibleLTLStubbornSet*>(_spooler)->stubborn()[tid]) {
+                        _transbuf[nsuc++] = tid;
+                    }
+                }
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    _transbuf[nsuc++] = tid;
+                    assert(nsuc <= _net.numberOfTransitions());
+                }
+                sucinfo.successors.extend_to(_transbuf.get(), nsuc);
+
+            } else {
+                auto evaluate_heuristic = [&] (uint32_t tid) {
+                    SuccessorGenerator::_fire(_statebuf, tid);
+                    _statebuf.setBuchiState(sucinfo.buchi_state);
+                    return _heuristic->eval(_statebuf, tid);
+                };
+
+                // list of (transition, weight)
+                std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
+                // grab previous stubborn transitions
+                auto [first, last] = sucinfo.successors.all_successors();
+                for (; first < last; ++first) {
+                    tid = *first;
+                    if (!static_cast<VisibleLTLStubbornSet*>(_spooler)->stubborn()[tid]) {
+                        weighted_tids.emplace_back(tid, evaluate_heuristic(tid));
+                    }
+                }
+
+                // add new stubborn transitions
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    weighted_tids.emplace_back(tid, evaluate_heuristic(tid));
+                }
+                // sort by least distance first.
+                std::sort(std::begin(weighted_tids), std::end(weighted_tids),
+                          [](auto &l, auto &r) { return l.second < r.second; });
+                assert(weighted_tids.size() <= _net.numberOfTransitions());
+                std::transform(std::begin(weighted_tids), std::end(weighted_tids),
+                               _transbuf.get(),
+                               [](auto &p) { return p.first; });
+                sucinfo.successors.extend_to(_transbuf.get(), weighted_tids.size());
+            }
         }
 
+        void push() {
+            // No transitions have been fired yet. We must be in the initial marking.
+            if (!_heuristic || fired() == std::numeric_limits<uint32_t>::max()) return;
+            _heuristic->push(fired());
+        }
+
+        void pop(const sucinfo &sc) {
+            if (_heuristic && sc.successors.has_consumed())
+                _heuristic->pop(sc.successors.last_pop());
+        }
 
     private:
-        std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
-        std::unique_ptr<Heuristic> _heuristic = nullptr;
+        SuccessorSpooler *_spooler = nullptr;
+        Heuristic *_heuristic = nullptr;
 
-        uint32_t _last;
+        uint32_t _last = std::numeric_limits<uint32_t>::max();
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
         LTL::Structures::ProductState _statebuf;
     };

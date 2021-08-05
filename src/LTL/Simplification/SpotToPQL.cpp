@@ -143,15 +143,15 @@ namespace LTL {
         }
     }
 
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, APCompression compress) {
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, const options_t &options) {
         using namespace PetriEngine::PQL;
         if (auto e = std::dynamic_pointer_cast<ECondition>(formula); e != nullptr) {
-            return std::make_shared<ECondition>(simplify((*e)[0]));
+            return std::make_shared<ECondition>(simplify((*e)[0], options));
         } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
-            return std::make_shared<ACondition>(simplify((*a)[0]));
+            return std::make_shared<ACondition>(simplify((*a)[0], options));
         }
-        auto[f, apinfo] = LTL::to_spot_formula(formula, compress);
-        spot::tl_simplifier simplifier{1};
+        auto[f, apinfo] = LTL::to_spot_formula(formula, options);
+        spot::tl_simplifier simplifier{static_cast<int>(options.buchiOptimization)};
         f = simplifier.simplify(f);
         // spot simplifies using unsupported operators R, W, and M, which we now remove.
         f = spot::unabbreviate(f, "RWM");

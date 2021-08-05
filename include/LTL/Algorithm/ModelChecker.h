@@ -20,28 +20,34 @@
 
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/SuccessorGeneration/ProductSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 #include "LTL/Structures/BitProductStateSet.h"
+#include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 #include "PetriEngine/options.h"
+
 #include <iomanip>
 #include <algorithm>
 
 namespace LTL {
-    template<typename SuccessorGen>
+    template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, typename... Spooler>
     class ModelChecker {
     public:
         ModelChecker(const PetriEngine::PetriNet *net,
                      const PetriEngine::PQL::Condition_ptr &condition,
                      const Structures::BuchiAutomaton &buchi,
-                     SuccessorGen &&successorGen,
-                     const TraceLevel level = TraceLevel::Transitions,
-                     bool shortcircuitweak = true)
-                : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
+                     SuccessorGen *successorGen,
+                     std::unique_ptr<Spooler> &&...spooler)
+                : net(net), formula(condition)
         {
-            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, buchi,
-                                                                                           std::move(successorGen));
-            if (level != TraceLevel::None) {
+            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen, std::move(spooler)...);
+        }
+
+        void setOptions(const options_t &options) {
+            traceLevel = options.trace;
+            shortcircuitweak = options.ltluseweak;
+            if (traceLevel != TraceLevel::None) {
                 maxTransName = 0;
                 for (const auto &transname : net->transitionNames()) {
                     maxTransName = std::max(transname.size(), maxTransName);
@@ -75,14 +81,14 @@ namespace LTL {
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
-        std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> successorGenerator;
 
         const PetriEngine::PetriNet *net;
         PetriEngine::PQL::Condition_ptr formula;
         TraceLevel traceLevel;
 
         size_t _discovered = 0;
-        const bool shortcircuitweak;
+        bool shortcircuitweak;
         bool weakskip = false;
         bool is_weak = false;
         size_t maxTransName;
@@ -99,37 +105,29 @@ namespace LTL {
         printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
         {
             if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-                os << indent << "<deadlock buchi=\"" << state.getBuchiState() << "\"/>";
+                os << indent << "<deadlock/>";
                 return os;
             }
-            std::string tname = net->transitionNames()[transition];
+                os << indent << "<transition id="
+                   // field width stuff obsolete without büchi state printing.
+                   //<< std::setw(maxTransName + 2) << std::left
+                   << std::quoted(net->transitionNames()[transition]);
             if (traceLevel == TraceLevel::Full) {
-                os << indent << "<transition id=\"" << tname << "\">\n";
+                os << ">";
+                os << std::endl;
                 for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     for (size_t j = 0; j < state.marking()[i]; ++j) {
                         os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[i] << "\"/>\n";
                     }
                 }
-#ifndef NDEBUG
-                os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
-#endif
                 os << indent << "</transition>";
-            } else {
-                os << indent << "<transition id="
-                   << std::setw(maxTransName + 1 + 2) << std::left
-                   << std::quoted(tname) << " " << "buchisucc=\""
-                   << state.getBuchiState() << "\"/>";
+            }
+            else {
+                os << "/>";
             }
             return os;
         }
-
     };
-
-    extern template
-    class ModelChecker<LTL::ResumingSuccessorGenerator>;
-
-    extern template
-    class ModelChecker<LTL::SpoolingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H
