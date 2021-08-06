@@ -393,8 +393,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
             ++i;
         }
-        else if (strcmp(argv[i], "--replay") == 0) {
-            options.replay = true;
+        else if (strcmp(argv[i], "--ltlReplay") == 0) {
+            options.ltlReplay = true;
             options.replay_file = std::string(argv[++i]);
         }
 
@@ -584,7 +584,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
                     "  --noverify                           Disable verification e.g. for getting unfolded net\n"
-                    "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
+                    "  --ltlReplay <file>                      Replays an LTL trace output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
                     "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
                     "\n"
@@ -625,17 +625,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         }
         else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
-            printf("Heuristics for LTL model checking are specified using the following grammar:"
+            printf("Heuristics for LTL model checking are specified using the following grammar:\n"
                    "  heurexp : {'aut' | 'automaton'}\n"
                    "          | {'dist' | 'distance'}\n"
-                   "          | {'fc' | 'firecount' | 'fire-count'} INT\n"
+                   "          | {'fc' | 'firecount' | 'fire-count'} <threshold>?\n"
                    "          | '(' heurexp ')'\n"
                    "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
                    "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
                    "Example strings:\n"
-                   "  - 'aut' - use the automaton heuristic for verification.\n"
+                   "  - aut - use the automaton heuristic for verification.\n"
                    "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
+                   "Weight for sum and threshold for fire count are optional and integral.\n"
+                   "Sum weights default to 1 (thus plain sum), and default fire count threshold is 5000.\n"
                    );
+            return SuccessCode;
         }
         else if (options.modelfile == NULL) {
             options.modelfile = argv[i];
@@ -725,8 +728,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
     }
 
-    if (options.replay && options.logic != TemporalLogic::LTL) {
-        std::cerr << "Argument Error: Trace replay is only supported for LTL model checking." << std::endl;
+    if (options.ltlReplay && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace ltlReplay is only supported for LTL model checking." << std::endl;
         return ErrorCode;
     }
 
@@ -1493,7 +1496,7 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
-    if (options.replay) {
+    if (options.ltlReplay) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
@@ -1524,7 +1527,7 @@ int main(int argc, char* argv[]) {
             }
     }
 
-    if (options.replay) {
+    if (options.ltlReplay) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
