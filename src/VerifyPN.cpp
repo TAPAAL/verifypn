@@ -394,7 +394,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             ++i;
         }
         else if (strcmp(argv[i], "--trace-replay") == 0) {
-            options.ltlReplay = true;
+            options.replay_trace = true;
             options.replay_file = std::string(argv[++i]);
         }
 
@@ -586,7 +586,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  --noverify                           Disable verification e.g. for getting unfolded net\n"
                     "  --trace-replay <file>                Replays a trace as output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
-                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
+                    "                                       Mainly useful for debugging.\n"
+                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for Büchi automaton creation.\n"
+                    "                                       1: Low (default), 2: Medium, 3: High\n"
+                    "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -728,8 +731,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
     }
 
-    if (options.ltlReplay && options.logic != TemporalLogic::LTL) {
-        std::cerr << "Argument Error: Trace ltlReplay is only supported for LTL model checking." << std::endl;
+    if (options.replay_trace && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace replay_trace is only supported for LTL model checking." << std::endl;
         return ErrorCode;
     }
 
@@ -1496,7 +1499,7 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
-    if (options.ltlReplay) {
+    if (options.replay_trace) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
@@ -1527,7 +1530,7 @@ int main(int argc, char* argv[]) {
             }
     }
 
-    if (options.ltlReplay) {
+    if (options.replay_trace) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
