@@ -30,7 +30,7 @@
 namespace PetriEngine {
     class TraceReplay {
     public:
-        TraceReplay(std::istream &is, const PetriEngine::PetriNet *net);
+        TraceReplay(std::istream &is, const PetriEngine::PetriNet *net, const options_t &options);
 
         struct Token {
             std::string place;
@@ -46,7 +46,7 @@ namespace PetriEngine {
 
         void parse(std::istream &xml, const PetriEngine::PetriNet *net);
 
-        bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond, const options_t &options);
+        bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond);
 
         std::vector<Transition> trace;
     private:
@@ -62,6 +62,7 @@ namespace PetriEngine {
         std::unordered_map<std::string, int> transitions;
         std::unordered_map<std::string, int> places;
         bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator);
+        const options_t &options;
     };
 }
 

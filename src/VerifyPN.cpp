@@ -731,7 +731,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
     }
 
-    if (options.replay_trace && options.logic != TemporalLogic::LTL) {
+    if (false && options.replay_trace && options.logic != TemporalLogic::LTL) {
         std::cerr << "Argument Error: Trace replay_trace is only supported for LTL model checking." << std::endl;
         return ErrorCode;
     }
@@ -1505,18 +1505,17 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        PetriEngine::TraceReplay replay{replay_file, net.get()};
-        for (int i = 0; i < results.size(); ++i) {
-            if (results[i] == ResultPrinter::LTL) {
-                replay.replay(net.get(), queries[i], options);
-            }
+        PetriEngine::TraceReplay replay{replay_file, net.get(), options};
+        for (size_t i=0; i < queries.size(); ++i) {
+            if (results[i] == ResultPrinter::Unknown || results[i] == ResultPrinter::CTL || results[i] == ResultPrinter::LTL)
+                replay.replay(net.get(), queries[i]);
         }
         return SuccessCode;
     }
 
     if(options.doVerification){
 
-    //----------------------- Verify CTL queries -----------------------//
+        //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
         for(size_t i = 0; i < queries.size(); ++i)
@@ -1528,19 +1527,19 @@ int main(int argc, char* argv[]) {
             else if (results[i] == ResultPrinter::LTL) {
                 ltl_ids.push_back(i);
             }
-    }
+        }
 
-    if (options.replay_trace) {
-        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
-            std::cerr << "Fatal error assigning indexes" << std::endl;
-            exit(1);
-        }
-        std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        PetriEngine::TraceReplay replay{replay_file, net.get()};
-        for (int i : ltl_ids) {
-            replay.replay(net.get(), queries[i], options);
-        }
-        return SuccessCode;
+        if (options.replay_trace) {
+            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+                std::cerr << "Fatal error assigning indexes" << std::endl;
+                exit(1);
+            }
+            std::ifstream replay_file(options.replay_file, std::ifstream::in);
+            PetriEngine::TraceReplay replay{replay_file, net.get(), options};
+            for (int i : ltl_ids) {
+                replay.replay(net.get(), queries[i]);
+            }
+            return SuccessCode;
         }
 
         if (!ctl_ids.empty()) {

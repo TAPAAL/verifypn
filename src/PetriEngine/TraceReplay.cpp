@@ -30,7 +30,8 @@
 
 namespace PetriEngine {
 
-    TraceReplay::TraceReplay(std::istream &is, const PetriEngine::PetriNet *net) {
+    TraceReplay::TraceReplay(std::istream &is, const PetriEngine::PetriNet *net, const options_t &options)
+        :options(options) {
         parse(is, net);
     }
 
@@ -79,7 +80,7 @@ namespace PetriEngine {
                 exit(1);
             }
         }
-        if (loop_idx == std::numeric_limits<size_t>::max()) {
+        if (loop_idx == std::numeric_limits<size_t>::max() && options.logic == TemporalLogic::LTL) {
             std::cerr << "Error: Missing <loop/> statement in trace\n";
             exit(1);
         }
@@ -134,8 +135,7 @@ namespace PetriEngine {
         }
     }
 
-    bool TraceReplay::replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
-                             const options_t &options) {
+    bool TraceReplay::replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond) {
         //spot::print_dot(std::cerr, buchiGenerator.aut._buchi);
         PetriEngine::Structures::State state;
         state.setMarking(net->makeInitialMarking());
@@ -197,7 +197,7 @@ namespace PetriEngine {
             if (!transition.tokens.empty()) {
                 auto[finv, linv] = net->preset(transitions.at(transition.id));
                 for (; finv != linv; ++finv) {
-                    if (finv->inhibitor) {
+                     if (finv->inhibitor) {
 
                     } else {
                         auto it = transition.tokens.find(finv->place);
