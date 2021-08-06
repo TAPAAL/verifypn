@@ -1,33 +1,36 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_REPLAY_H
-#define VERIFYPN_REPLAY_H
+#ifndef VERIFYPN_TRACEREPLAY_H
+#define VERIFYPN_TRACEREPLAY_H
 
-#include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
+#include "PetriEngine/PetriNet.h"
+#include "PetriEngine/options.h"
+#include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/SuccessorGenerator.h"
 
 #include <iostream>
 #include <utility>
 #include <rapidxml.hpp>
 
-namespace LTL {
-    class Replay {
+namespace PetriEngine {
+    class TraceReplay {
     public:
-        Replay(std::istream &is, const PetriEngine::PetriNet *net);
+        TraceReplay(std::istream &is, const PetriEngine::PetriNet *net);
 
         struct Token {
             std::string place;
@@ -58,9 +61,8 @@ namespace LTL {
         size_t loop_idx = std::numeric_limits<size_t>::max();
         std::unordered_map<std::string, int> transitions;
         std::unordered_map<std::string, int> places;
-        bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator,
-                         BuchiSuccessorGenerator &buchiGenerator, size_t init_buchi);
+        bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator);
     };
 }
 
-#endif //VERIFYPN_REPLAY_H
+#endif //VERIFYPN_TRACEREPLAY_H

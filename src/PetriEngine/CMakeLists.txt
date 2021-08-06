@@ -15,6 +15,6 @@ Reducer.cpp
 ReducingSuccessorGenerator.cpp
 STSolver.cpp
 SuccessorGenerator.cpp
-)
+        TraceReplay.cpp ../../include/PetriEngine/TraceReplay.h)
 
 target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Stubborn Reachability PQL TAR)

@@ -116,16 +116,15 @@ namespace LTL {
                 os << ">";
                 os << std::endl;
                 auto [fpre, lpre] = net->preset(transition);
-                for(; fpre != lpre; ++fpre) {
+                for(; fpre < lpre; ++fpre) {
                     if (fpre->inhibitor) {
-                        assert(state[fpre->place] < fpre->tokens);
+                        assert(state.marking()[fpre->place] < fpre->tokens);
                         continue;
                     }
                     for (size_t i = 0; i < fpre->tokens; ++i) {
-                        assert(state[fpre->place] >= fpre->tokens);
+                        assert(state.marking()[fpre->place] >= fpre->tokens);
                         os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
                     }
-                    ++fpre;
                 }
                 /*for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     for (size_t j = 0; j < state.marking()[i]; ++j) {

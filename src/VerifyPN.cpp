@@ -86,7 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
-#include "LTL/Replay.h"
+#include "PetriEngine/TraceReplay.h"
 #include "LTL/LTLMain.h"
 
 #include <atomic>
@@ -393,7 +393,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
             ++i;
         }
-        else if (strcmp(argv[i], "--ltlReplay") == 0) {
+        else if (strcmp(argv[i], "--trace-replay") == 0) {
             options.ltlReplay = true;
             options.replay_file = std::string(argv[++i]);
         }
@@ -584,7 +584,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
                     "  --noverify                           Disable verification e.g. for getting unfolded net\n"
-                    "  --ltlReplay <file>                      Replays an LTL trace output by the --trace option.\n"
+                    "  --trace-replay <file>                Replays a trace as output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
                     "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
                     "\n"
@@ -1502,7 +1502,7 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay{replay_file, net.get()};
+        PetriEngine::TraceReplay replay{replay_file, net.get()};
         for (int i = 0; i < results.size(); ++i) {
             if (results[i] == ResultPrinter::LTL) {
                 replay.replay(net.get(), queries[i], options);
@@ -1533,7 +1533,7 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay{replay_file, net.get()};
+        PetriEngine::TraceReplay replay{replay_file, net.get()};
         for (int i : ltl_ids) {
             replay.replay(net.get(), queries[i], options);
         }
