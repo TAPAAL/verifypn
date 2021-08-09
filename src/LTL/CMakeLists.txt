@@ -7,7 +7,7 @@ add_subdirectory(Simplification)
 add_subdirectory(Stubborn)
 add_subdirectory(SuccessorGeneration)
 
-add_library(LTL ${HEADER_FILES} LTLMain.cpp Replay.cpp)
+add_library(LTL ${HEADER_FILES} LTLMain.cpp)
 
 if (VERIFYPN_Static OR APPLE)
     target_link_libraries(LTL PRIVATE LTL_algorithm LTLStubborn LTL_simplification LTLSuccessorGeneration spot bddx)

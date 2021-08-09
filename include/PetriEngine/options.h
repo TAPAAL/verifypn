@@ -85,7 +85,7 @@ struct options_t {
     BuchiOptimization buchiOptimization = BuchiOptimization::Low;
     const char* ltlHeuristic = "aut";
 
-    bool replay = false;
+    bool replay_trace = false;
     std::string replay_file;
 
 

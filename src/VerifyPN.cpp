@@ -86,7 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
-#include "LTL/Replay.h"
+#include "PetriEngine/TraceReplay.h"
 #include "LTL/LTLMain.h"
 
 #include <atomic>
@@ -393,8 +393,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
             ++i;
         }
-        else if (strcmp(argv[i], "--replay") == 0) {
-            options.replay = true;
+        else if (strcmp(argv[i], "--trace-replay") == 0) {
+            options.replay_trace = true;
             options.replay_file = std::string(argv[++i]);
         }
 
@@ -584,9 +584,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
                     "  --noverify                           Disable verification e.g. for getting unfolded net\n"
-                    "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
+                    "  --trace-replay <file>                Replays a trace as output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
-                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
+                    "                                       Mainly useful for debugging.\n"
+                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for Büchi automaton creation.\n"
+                    "                                       1: Low (default), 2: Medium, 3: High\n"
+                    "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -625,17 +628,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         }
         else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
-            printf("Heuristics for LTL model checking are specified using the following grammar:"
+            printf("Heuristics for LTL model checking are specified using the following grammar:\n"
                    "  heurexp : {'aut' | 'automaton'}\n"
                    "          | {'dist' | 'distance'}\n"
-                   "          | {'fc' | 'firecount' | 'fire-count'} INT\n"
+                   "          | {'fc' | 'firecount' | 'fire-count'} <threshold>?\n"
                    "          | '(' heurexp ')'\n"
                    "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
                    "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
                    "Example strings:\n"
-                   "  - 'aut' - use the automaton heuristic for verification.\n"
+                   "  - aut - use the automaton heuristic for verification.\n"
                    "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
+                   "Weight for sum and threshold for fire count are optional and integral.\n"
+                   "Sum weights default to 1 (thus plain sum), and default fire count threshold is 5000.\n"
                    );
+            return SuccessCode;
         }
         else if (options.modelfile == NULL) {
             options.modelfile = argv[i];
@@ -725,8 +731,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
     }
 
-    if (options.replay && options.logic != TemporalLogic::LTL) {
-        std::cerr << "Argument Error: Trace replay is only supported for LTL model checking." << std::endl;
+    if (false && options.replay_trace && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace replay_trace is only supported for LTL model checking." << std::endl;
         return ErrorCode;
     }
 
@@ -1493,24 +1499,23 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
-    if (options.replay) {
+    if (options.replay_trace) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
         }
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay{replay_file, net.get()};
-        for (int i = 0; i < results.size(); ++i) {
-            if (results[i] == ResultPrinter::LTL) {
-                replay.replay(net.get(), queries[i], options);
-            }
+        PetriEngine::TraceReplay replay{replay_file, net.get(), options};
+        for (size_t i=0; i < queries.size(); ++i) {
+            if (results[i] == ResultPrinter::Unknown || results[i] == ResultPrinter::CTL || results[i] == ResultPrinter::LTL)
+                replay.replay(net.get(), queries[i]);
         }
         return SuccessCode;
     }
 
     if(options.doVerification){
 
-    //----------------------- Verify CTL queries -----------------------//
+        //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
         for(size_t i = 0; i < queries.size(); ++i)
@@ -1522,19 +1527,19 @@ int main(int argc, char* argv[]) {
             else if (results[i] == ResultPrinter::LTL) {
                 ltl_ids.push_back(i);
             }
-    }
+        }
 
-    if (options.replay) {
-        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
-            std::cerr << "Fatal error assigning indexes" << std::endl;
-            exit(1);
-        }
-        std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay{replay_file, net.get()};
-        for (int i : ltl_ids) {
-            replay.replay(net.get(), queries[i], options);
-        }
-        return SuccessCode;
+        if (options.replay_trace) {
+            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+                std::cerr << "Fatal error assigning indexes" << std::endl;
+                exit(1);
+            }
+            std::ifstream replay_file(options.replay_file, std::ifstream::in);
+            PetriEngine::TraceReplay replay{replay_file, net.get(), options};
+            for (int i : ltl_ids) {
+                replay.replay(net.get(), queries[i]);
+            }
+            return SuccessCode;
         }
 
         if (!ctl_ids.empty()) {
