@@ -71,18 +71,18 @@ namespace LTL {
     }
 
     template<typename Checker>
-    Result _verify(Checker&& checker,
+    Result _verify(std::unique_ptr<Checker> checker,
                    const options_t &options)
     {
         Result result;
-        checker.setOptions(options);
-        result.satisfied = checker.isSatisfied();
-        result.is_weak = checker.isweak();
+        checker->setOptions(options);
+        result.satisfied = checker->isSatisfied();
+        result.is_weak = checker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
         result.explored_states = checker->get_explored();
 #endif
         if (options.printstatistics) {
-            checker.printStats(std::cout);
+            checker->printStats(std::cout);
         }
         return result;
     }
@@ -110,12 +110,11 @@ namespace LTL {
                         const std::string &queryName,
                         options_t &options)
     {
-        auto res = to_ltl(query);
-        Condition_ptr negated_formula = res.first;
-        bool negate_answer = res.second;
 
         // force AP compress off for Büchi prints
         options.ltl_compress_aps = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
+
+        auto [negated_formula, negate_answer] = to_ltl(query);
 
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, options);
         if (!options.buchi_out_file.empty()) {
@@ -148,14 +147,14 @@ namespace LTL {
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
                     result = _verify(
-                            NestedDepthFirstSearch<SpoolingSuccessorGenerator>(
+                            std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator>>(
                                     net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
                             options);
 
                 } else {
                     ResumingSuccessorGenerator gen{net};
                     result = _verify(
-                            NestedDepthFirstSearch<ResumingSuccessorGenerator>(
+                            std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator>>(
                                     net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
                             options);
                 }
@@ -186,7 +185,7 @@ namespace LTL {
 
                     if (options.trace != TraceLevel::None) {
                         if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -195,7 +194,7 @@ namespace LTL {
                                              options);
                         }
                         else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -204,7 +203,7 @@ namespace LTL {
                                              options);
                         }
                         else {
-                            result = _verify(TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -214,7 +213,7 @@ namespace LTL {
                     } else {
 
                         if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -222,7 +221,7 @@ namespace LTL {
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         } else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -231,7 +230,7 @@ namespace LTL {
                                              options);
                         }
                         else {
-                            result = _verify(TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
@@ -244,14 +243,14 @@ namespace LTL {
 
                     // no spooling needed, thus use resuming successor generation
                     if (options.trace != TraceLevel::None) {
-                        result = _verify(TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true>(
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true>>(
                                                  net,
                                                  negated_formula,
                                                  automaton,
                                                  &gen),
                                          options);
                     } else {
-                        result = _verify(TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>(
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>>(
                                                  net,
                                                  negated_formula,
                                                  automaton,
