@@ -174,7 +174,7 @@ namespace LTL {
                 this->printTransition(top._sucinfo.transition(), state, os) << std::endl;
                 (*stck).pop_back();
             }
-            if(stck == &todo)
+            if(stck == &todo && !nested_todo.empty())
                 this->printLoop(os);
         }
         os << std::endl << "</trace>" << std::endl;
