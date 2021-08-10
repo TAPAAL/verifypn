@@ -25,9 +25,6 @@
 #include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/ProductStateFactory.h"
 
-
-#include <ptrie/ptrie.h>
-
 namespace LTL {
 
     /**
