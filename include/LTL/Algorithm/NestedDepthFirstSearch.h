@@ -49,10 +49,10 @@ namespace LTL {
 class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, SucGen *gen)
+                               const Structures::BuchiAutomaton &buchi, SucGen *gen, int kbound)
                 : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen),
                   factory{net, this->successorGenerator->initial_buchi_state()},
-                  states(*net, 0, (int) net->numberOfPlaces() + 1) {}
+                  states(net, kbound) {}
 
         bool isSatisfied() override;
 
@@ -87,16 +87,16 @@ class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, Su
     };
 
     extern template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, LTL::Structures::BitProductStateSet<>>;
 
     extern template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<>>;
 
     extern template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, LTL::Structures::BitProductStateSet<>>;
 
     extern template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<>>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H

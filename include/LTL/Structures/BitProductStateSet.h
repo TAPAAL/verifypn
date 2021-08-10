@@ -94,8 +94,11 @@ namespace LTL::Structures {
         result_t add(const LTL::Structures::ProductState &state) override
         {
             ++_discovered;
-            const auto[_, markingId] = markings.add(state);
-            const stateid_t product_id = getProductId(markingId, state.getBuchiState());
+            const auto res = markings.add(state);
+            if (res.second == std::numeric_limits<size_t>::max()) {
+                return res;
+            }
+            const stateid_t product_id = getProductId(res.second, state.getBuchiState());
 
             const auto[iter, is_new] = states.insert(product_id);
             assert(iter != std::end(states));
