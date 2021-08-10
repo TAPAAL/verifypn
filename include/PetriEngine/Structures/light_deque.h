@@ -49,7 +49,7 @@ class light_deque
 
         void push_back(const T& element)
         {
-            _data[_back] = element;
+            new (&_data[_back]) T(element);
             ++_back;
             if(_back == _size)
             {
