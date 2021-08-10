@@ -31,11 +31,12 @@ class light_deque
             for(auto& e : *this)
                 e.~T();
             delete[] (uint8_t*)_data;
-            _front = other._front;
-            _back = other._back;
+            _front = 0;
+            _back = 0;
             _size = other.size();
             _data = (T*)new uint8_t[_size*sizeof(T)];
-            std::copy(other.begin(), other.end(), _data);
+            for(auto& e : other)
+                push_back(e);
             return *this;
         }
 
@@ -96,6 +97,7 @@ class light_deque
         
         void pop_front()
         {
+            _data[_front].~T();
             ++_front;
             if(_front >= _back)
             {
@@ -106,13 +108,18 @@ class light_deque
         void pop_back()
         {
             if(_back > _front)
+            {
                 --_back;
+                _data[_back].~T();
+            }
             if(_back == _front)
                 clear();
         }
         
         void clear()
         {
+            for(auto& e : *this)
+                e.~T();
             _front = _back = 0;
         }
         
@@ -135,8 +142,15 @@ class light_deque
         private:
         void expand() {
             T* ndata = (T*)new uint8_t[_size*2*sizeof(T)];
-            std::move(_data, _data + _size, ndata);
+            size_t n = 0;
+            for(auto& e : *this)
+            {
+                new (ndata + n) T(std::move(e));
+                ++n;
+            }
             _size *= 2;
+            _back = (_back - _front);
+            _front = 0;
             std::swap(_data, ndata);
             delete[] (uint8_t*)ndata;
         }
