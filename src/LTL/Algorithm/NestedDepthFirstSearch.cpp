@@ -116,9 +116,6 @@ namespace LTL {
                 }
                 if (working == state) {
                     _violation = true;
-                    if (_print_trace) {
-                        build_nested_trace(working, nested_todo);
-                    }
                     return;
                 }
                 auto [is_new, stateid] = mark(working, MARKER2);
@@ -127,22 +124,6 @@ namespace LTL {
                     nested_todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
-        }
-    }
-
-    template<typename S>
-    void NestedDepthFirstSearch<S>::build_nested_trace(State& working, light_deque<StackEntry>& todo)
-    {
-        auto[_, stateid] = _states.add(working);
-        _nested_transitions.push(std::make_pair(stateid, this->successorGenerator->fired()));
-
-        // follow trace until back at seed state.
-        while (!todo.empty())
-        {
-            auto &top = todo.back();
-            if(!top._sucinfo.has_prev_state()) break;
-            _nested_transitions.push(std::make_pair(top._sucinfo.state(), top._sucinfo.transition()));
-            todo.pop_back();
         }
     }
 

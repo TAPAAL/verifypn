@@ -86,7 +86,6 @@ namespace LTL {
         void ndfs(const State &state, light_deque<StackEntry>& nested_todo);
 
         void print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os = std::cout);
-        void build_nested_trace(State& working, light_deque<StackEntry>& todo);
     };
 
     extern template
