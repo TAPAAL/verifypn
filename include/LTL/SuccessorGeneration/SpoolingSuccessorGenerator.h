@@ -38,12 +38,21 @@ namespace LTL {
             SuccessorQueue<> successors;
             size_t buchi_state;
             size_t last_state;
+            size_t _transition;
 
             successor_info_t(size_t buchiState, size_t lastState) : buchi_state(buchiState), last_state(lastState) {}
 
-            [[nodiscard]] inline bool has_prev_state() const
+            [[nodiscard]] bool has_prev_state() const
             {
                 return last_state != NoLastState;
+            }
+            
+            size_t state() const {
+                return last_state;
+            }
+            
+            size_t transition() const {
+                return _transition;
             }
 
             [[nodiscard]] bool fresh() const { return buchi_state == NoBuchiState && last_state == NoLastState; }
@@ -124,6 +133,7 @@ namespace LTL {
                 return false;
             }
             _last = sucinfo.successors.front();
+            sucinfo._transition = _last;
 #ifndef NDEBUG
             //std::cerr << "Firing " << _net.transitionNames()[_last] << std::endl;
 #endif

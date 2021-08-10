@@ -22,7 +22,9 @@
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/Structures/Queue.h"
+#include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/ProductStateFactory.h"
+
 
 #include <ptrie/ptrie.h>
 
@@ -85,9 +87,10 @@ namespace LTL {
 
         void dfs();
 
-        void ndfs(State &state);
+        void ndfs(State &state, light_deque<StackEntry>& nested_todo);
 
-        void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
+        void print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os = std::cout);
+        void build_nested_trace(State& working, light_deque<StackEntry>& todo);
     };
 
     extern template

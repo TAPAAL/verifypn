@@ -36,7 +36,10 @@ namespace LTL {
         _markers[stateid] = (MARKER | r);
         const bool is_new = (r & MARKER) != 0;
         if(is_new)
+        {
             ++_mark_count[MARKER];
+            ++this->_discovered;
+        }
         return std::make_pair(is_new, stateid);
     }
 
@@ -45,12 +48,12 @@ namespace LTL {
     {
 
         light_deque<StackEntry> todo;
+        light_deque<StackEntry> nested_todo;
 
         State working = factory.newState();
         State curState = factory.newState();
 
         {
-
             std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
@@ -72,19 +75,10 @@ namespace LTL {
                 todo.pop_back();
                 if (this->successorGenerator->isAccepting(curState)) {
                     _seed = &curState;
-                    ndfs(curState);
+                    ndfs(curState, nested_todo);
                     if (_violation) {
-                        if (_print_trace) {
-                            /*std::stack<std::pair<size_t, size_t>> transitions;
-                            size_t next = top._id;
-                            _states.decode(working, next);
-                            while (!this->successorGenerator->isInitialState(working)) {
-                                auto[parent, transition] = _states.getHistory(next);
-                                transitions.push(std::make_pair(parent, transition));
-                                next = parent;
-                                _states.decode(working, next);
-                            }
-                            printTrace(transitions);*/
+                        if (_print_trace) {                            
+                            print_trace(todo, nested_todo);
                         }
                         return;
                     }
@@ -92,8 +86,7 @@ namespace LTL {
             } else {
                 auto [is_new, stateid] = mark(working, MARKER1);
                 top._sucinfo.last_state = stateid;
-                if (is_new) {
-                    ++this->_discovered;
+                if (is_new) {                    
                     todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
@@ -101,24 +94,23 @@ namespace LTL {
     }
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::ndfs(State &state)
-    {
-        std::stack<StackEntry> todo;
+    void NestedDepthFirstSearch<S>::ndfs(State &state, light_deque<StackEntry>& nested_todo)
+    {        
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        todo.push(StackEntry{_states.add(state).second, S::initial_suc_info()});
+        nested_todo.push_back(StackEntry{_states.add(state).second, S::initial_suc_info()});
 
-        while (!todo.empty()) {
-            auto &top = todo.top();
+        while (!nested_todo.empty()) {
+            auto &top = nested_todo.back();
             _states.decode(curState, top._id);
             this->successorGenerator->prepare(&curState, top._sucinfo);
             if (top._sucinfo.has_prev_state()) {
                 _states.decode(working, top._sucinfo.last_state);
             }
             if (!this->successorGenerator->next(working, top._sucinfo)) {
-                todo.pop();
+                nested_todo.pop_back();
             } else {
                 if (this->is_weak && !this->successorGenerator->isAccepting(working)) {
                     continue;
@@ -126,26 +118,32 @@ namespace LTL {
                 if (working == *_seed) {
                     _violation = true;
                     if (_print_trace) {
-                        /*auto[_, stateid] = _states.add(working);
-                        auto seedId = stateid;
-                        _states.setHistory2(stateid, this->successorGenerator->fired());
-                        size_t next = stateid;
-                        // follow trace until back at seed state.
-                        do {
-                            auto[state, transition] = _states.getHistory2(next);
-                            _nested_transitions.push(std::make_pair(state, transition));
-                            next = state;
-                        } while (next != seedId);*/
+                        build_nested_trace(working, nested_todo);
                     }
                     return;
                 }
                 auto [is_new, stateid] = mark(working, MARKER2);
                 top._sucinfo.last_state = stateid;
                 if (is_new) {
-                    this->_discovered++;
-                    todo.push(StackEntry{stateid, S::initial_suc_info()});
+                    nested_todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
+        }
+    }
+
+    template<typename S>
+    void NestedDepthFirstSearch<S>::build_nested_trace(State& working, light_deque<StackEntry>& todo)
+    {
+        auto[_, stateid] = _states.add(working);
+        _nested_transitions.push(std::make_pair(stateid, this->successorGenerator->fired()));
+
+        // follow trace until back at seed state.
+        while (!todo.empty())
+        {
+            auto &top = todo.back();
+            if(!top._sucinfo.has_prev_state()) break;
+            _nested_transitions.push(std::make_pair(top._sucinfo.state(), top._sucinfo.transition()));
+            todo.pop_back();
         }
     }
 
@@ -161,24 +159,24 @@ namespace LTL {
 
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
+    void NestedDepthFirstSearch<S>::print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os)
     {
         State state = factory.newState();
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
               "<trace>\n";
-        while (!transitions.empty()) {
-            auto[stateid, transition] = transitions.top();
-            _states.decode(state, stateid);
-            this->printTransition(transition, state, os) << std::endl;
-            transitions.pop();
-        }
-        this->printLoop(os);
-        while (!_nested_transitions.empty()) {
-            auto[stateid, transition] = _nested_transitions.top();
-            _states.decode(state, stateid);
 
-            this->printTransition(transition, state, os) << std::endl;
-            _nested_transitions.pop();
+        for(auto* stck : {&todo, &nested_todo})
+        {
+            while(!(*stck).empty())
+            {
+                auto& top = (*stck).back();
+                if(!top._sucinfo.has_prev_state()) break;
+                _states.decode(state, top._sucinfo.state());
+                this->printTransition(top._sucinfo.transition(), state, os) << std::endl;
+                (*stck).pop_back();
+            }
+            if(stck == &todo)
+                this->printLoop(os);
         }
         os << std::endl << "</trace>" << std::endl;
     }

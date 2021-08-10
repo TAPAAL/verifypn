@@ -62,6 +62,14 @@ namespace LTL {
                 return last_state != NoLastState;
             }
 
+            size_t state() const {
+                return last_state;
+            }
+            
+            size_t transition() const {
+                return tcounter - 1;
+            }
+            
             [[nodiscard]] bool fresh() const {
                 return pcounter == NoPCounter && tcounter == NoTCounter;
             }
