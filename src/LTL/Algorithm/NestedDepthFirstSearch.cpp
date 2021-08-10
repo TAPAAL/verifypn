@@ -18,19 +18,33 @@
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
-    template<typename S, typename W>
-    bool NestedDepthFirstSearch<S, W>::isSatisfied()
+    template<typename S>
+    bool NestedDepthFirstSearch<S>::isSatisfied()
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         dfs();
-        return !violation;
+        return !_violation;
     }
 
-    template<typename S, typename W>
-    void NestedDepthFirstSearch<S, W>::dfs()
+    template<typename S>
+    std::pair<bool,size_t> NestedDepthFirstSearch<S>::mark(State& state, const uint8_t MARKER)
     {
-        std::stack<size_t> call_stack;
-        std::stack<StackEntry> todo;
+        auto[_, stateid] = _states.add(state);
+        if(_markers.size() <= stateid)
+            _markers.resize(stateid + 1);
+        auto r = _markers[stateid];
+        _markers[stateid] = (MARKER | r);
+        const bool is_new = (r & MARKER) != 0;
+        if(is_new)
+            ++_mark_count[MARKER];
+        return std::make_pair(is_new, stateid);
+    }
+
+    template<typename S>
+    void NestedDepthFirstSearch<S>::dfs()
+    {
+
+        light_deque<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
@@ -39,156 +53,139 @@ namespace LTL {
 
             std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
-                auto res = states.add(state);
+                auto res = _states.add(state);
                 assert(res.first);
-                todo.push(StackEntry{res.second, S::initial_suc_info()});
+                todo.push_back(StackEntry{res.second, S::initial_suc_info()});
                 this->_discovered++;
             }
         }
 
         while (!todo.empty()) {
-            auto &top = todo.top();
-            states.decode(curState, top.id);
-            this->successorGenerator->prepare(&curState, top.sucinfo);
-            if (top.sucinfo.has_prev_state()) {
-                states.decode(working, top.sucinfo.last_state);
+            auto &top = todo.back();
+            _states.decode(curState, top._id);
+            this->successorGenerator->prepare(&curState, top._sucinfo);
+            if (top._sucinfo.has_prev_state()) {
+                _states.decode(working, top._sucinfo.last_state);
             }
-            if (!this->successorGenerator->next(working, top.sucinfo)) {
+            if (!this->successorGenerator->next(working, top._sucinfo)) {
                 // no successor
-                todo.pop();
+                todo.pop_back();
                 if (this->successorGenerator->isAccepting(curState)) {
-                    seed = &curState;
+                    _seed = &curState;
                     ndfs(curState);
-                    if (violation) {
-                        if constexpr (SaveTrace) {
-                            std::stack<std::pair<size_t, size_t>> transitions;
-                            size_t next = top.id;
-                            states.decode(working, next);
+                    if (_violation) {
+                        if (_print_trace) {
+                            /*std::stack<std::pair<size_t, size_t>> transitions;
+                            size_t next = top._id;
+                            _states.decode(working, next);
                             while (!this->successorGenerator->isInitialState(working)) {
-                                auto[parent, transition] = states.getHistory(next);
+                                auto[parent, transition] = _states.getHistory(next);
                                 transitions.push(std::make_pair(parent, transition));
                                 next = parent;
-                                states.decode(working, next);
+                                _states.decode(working, next);
                             }
-                            printTrace(transitions);
+                            printTrace(transitions);*/
                         }
                         return;
                     }
                 }
             } else {
-                auto[_, stateid] = states.add(working);
-                auto[it, is_new] = mark1.insert(stateid);
-                top.sucinfo.last_state = stateid;
+                auto [is_new, stateid] = mark(working, MARKER1);
+                top._sucinfo.last_state = stateid;
                 if (is_new) {
-                    if constexpr (SaveTrace) {
-                        states.setParent(top.id);
-                        states.setHistory(stateid, this->successorGenerator->fired());
-                    }
-                    this->_discovered++;
-                    todo.push(StackEntry{stateid, S::initial_suc_info()});
+                    ++this->_discovered;
+                    todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
         }
     }
 
-    template<typename S, typename W>
-    void NestedDepthFirstSearch<S, W>::ndfs(State &state)
+    template<typename S>
+    void NestedDepthFirstSearch<S>::ndfs(State &state)
     {
         std::stack<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        todo.push(StackEntry{states.add(state).second, S::initial_suc_info()});
+        todo.push(StackEntry{_states.add(state).second, S::initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.top();
-            states.decode(curState, top.id);
-            this->successorGenerator->prepare(&curState, top.sucinfo);
-            if (top.sucinfo.has_prev_state()) {
-                states.decode(working, top.sucinfo.last_state);
+            _states.decode(curState, top._id);
+            this->successorGenerator->prepare(&curState, top._sucinfo);
+            if (top._sucinfo.has_prev_state()) {
+                _states.decode(working, top._sucinfo.last_state);
             }
-            if (!this->successorGenerator->next(working, top.sucinfo)) {
+            if (!this->successorGenerator->next(working, top._sucinfo)) {
                 todo.pop();
             } else {
                 if (this->is_weak && !this->successorGenerator->isAccepting(working)) {
                     continue;
                 }
-                if (working == *seed) {
-                    violation = true;
-                    if constexpr (SaveTrace) {
-                        auto[_, stateid] = states.add(working);
+                if (working == *_seed) {
+                    _violation = true;
+                    if (_print_trace) {
+                        /*auto[_, stateid] = _states.add(working);
                         auto seedId = stateid;
-                        states.setHistory2(stateid, this->successorGenerator->fired());
+                        _states.setHistory2(stateid, this->successorGenerator->fired());
                         size_t next = stateid;
                         // follow trace until back at seed state.
                         do {
-                            auto[state, transition] = states.getHistory2(next);
-                            nested_transitions.push(std::make_pair(state, transition));
+                            auto[state, transition] = _states.getHistory2(next);
+                            _nested_transitions.push(std::make_pair(state, transition));
                             next = state;
-                        } while (next != seedId);
+                        } while (next != seedId);*/
                     }
                     return;
                 }
-                auto[_, stateid] = states.add(working);
-                auto[it, is_new] = mark2.insert(stateid);
-                top.sucinfo.last_state = stateid;
+                auto [is_new, stateid] = mark(working, MARKER2);
+                top._sucinfo.last_state = stateid;
                 if (is_new) {
-                    if constexpr (SaveTrace) {
-                        states.setParent(top.id);
-                        states.setHistory2(stateid, this->successorGenerator->fired());
-                    }
                     this->_discovered++;
                     todo.push(StackEntry{stateid, S::initial_suc_info()});
                 }
-
             }
         }
     }
 
-    template<typename S, typename W>
-    void NestedDepthFirstSearch<S, W>::printStats(std::ostream &os)
+    template<typename S>
+    void NestedDepthFirstSearch<S>::printStats(std::ostream &os)
     {
         std::cout << "STATS:\n"
-                  << "\tdiscovered states:          " << states.discovered() << std::endl
-                  << "\tmax tokens:                 " << states.maxTokens() << std::endl
-                  << "\texplored states:            " << mark1.size() << std::endl
-                  << "\texplored states (nested):   " << mark2.size() << std::endl;
+                  << "\tdiscovered states:          " << _states.discovered() << std::endl
+                  << "\tmax tokens:                 " << _states.maxTokens() << std::endl
+                  << "\texplored states:            " << _mark_count[MARKER1] << std::endl
+                  << "\texplored states (nested):   " << _mark_count[MARKER2] << std::endl;
     }
 
 
-    template<typename S, typename W>
-    void NestedDepthFirstSearch<S, W>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
+    template<typename S>
+    void NestedDepthFirstSearch<S>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
     {
         State state = factory.newState();
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
               "<trace>\n";
         while (!transitions.empty()) {
             auto[stateid, transition] = transitions.top();
-            states.decode(state, stateid);
+            _states.decode(state, stateid);
             this->printTransition(transition, state, os) << std::endl;
             transitions.pop();
         }
         this->printLoop(os);
-        while (!nested_transitions.empty()) {
-            auto[stateid, transition] = nested_transitions.top();
-            states.decode(state, stateid);
+        while (!_nested_transitions.empty()) {
+            auto[stateid, transition] = _nested_transitions.top();
+            _states.decode(state, stateid);
 
             this->printTransition(transition, state, os) << std::endl;
-            nested_transitions.pop();
+            _nested_transitions.pop();
         }
         os << std::endl << "</trace>" << std::endl;
     }
 
     template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator>;
 
     template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
-
-    template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>;
-
-    template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator>;
 }

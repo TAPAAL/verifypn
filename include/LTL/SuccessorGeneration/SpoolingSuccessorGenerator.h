@@ -34,12 +34,12 @@ namespace LTL {
             _statebuf.setMarking(new PetriEngine::MarkVal[net->numberOfPlaces() + 1], net->numberOfPlaces());
         }
 
-        struct sucinfo {
+        struct successor_info_t {
             SuccessorQueue<> successors;
             size_t buchi_state;
             size_t last_state;
 
-            sucinfo(size_t buchiState, size_t lastState) : buchi_state(buchiState), last_state(lastState) {}
+            successor_info_t(size_t buchiState, size_t lastState) : buchi_state(buchiState), last_state(lastState) {}
 
             [[nodiscard]] inline bool has_prev_state() const
             {
@@ -62,9 +62,9 @@ namespace LTL {
             _heuristic = heuristic;
         }
 
-        [[nodiscard]] static sucinfo initial_suc_info()
+        [[nodiscard]] static successor_info_t initial_suc_info()
         {
-            return sucinfo{sucinfo::NoBuchiState, sucinfo::NoLastState};
+            return successor_info_t{successor_info_t::NoBuchiState, successor_info_t::NoLastState};
         }
 
         bool prepare(const PetriEngine::Structures::State *state)
@@ -78,7 +78,7 @@ namespace LTL {
         }
 
 
-        void prepare(const Structures::ProductState *state, sucinfo &sucinfo)
+        void prepare(const Structures::ProductState *state, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
 
@@ -113,7 +113,7 @@ namespace LTL {
                 }
             }
         }
-        bool next(Structures::ProductState &state, sucinfo &sucinfo)
+        bool next(Structures::ProductState &state, successor_info_t &sucinfo)
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
@@ -134,7 +134,7 @@ namespace LTL {
 
         [[nodiscard]] uint32_t fired() const { return _last; }
 
-        void generate_all(LTL::Structures::ProductState *parent, sucinfo &sucinfo)
+        void generate_all(LTL::Structures::ProductState *parent, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
@@ -200,7 +200,7 @@ namespace LTL {
             _heuristic->push(fired());
         }
 
-        void pop(const sucinfo &sc) {
+        void pop(const successor_info_t &sc) {
             if (_heuristic && sc.successors.has_consumed())
                 _heuristic->pop(sc.successors.last_pop());
         }

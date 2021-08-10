@@ -23,7 +23,7 @@ class light_deque
         light_deque(size_t initial_size = 64)
         {
             if(initial_size == 0) initial_size = 1;
-            _data.reset(new T[initial_size]);
+            _data.reset((T*)new uint8_t[initial_size*sizeof(T)]); // TODO, revisit with cast and initialization
             _size = initial_size;
         }
 
@@ -31,7 +31,7 @@ class light_deque
             _front = other._front;
             _back = other._back;
             _size = other.size();
-            _data.reset(new T[_size]);
+            _data.reset((T*)new uint8_t[_size*sizeof(T)]);
             memcpy(_data.get(), other._data.get(), _size * sizeof(T));
             return *this;
         }
@@ -51,7 +51,7 @@ class light_deque
 
         void push_back(T&& element)
         {
-            _data.get()[_back] = element;
+            new (&_data.get()[_back]) T(std::move(element));
             ++_back;
             if(_back == _size) {
                 expand();
@@ -68,14 +68,24 @@ class light_deque
             return _back - _front;
         }
         
-        T front() const
+        const T& front() const
         {
             return _data.get()[_front];
         }
-        const T& front() {
+        
+        T& front() {
             return _data.get()[_front];
         }
 
+        const T& back() const
+        {
+            return _data.get()[_back - 1];
+        }
+        
+        T& back() {
+            return _data.get()[_back - 1];
+        }
+        
         void pop_front()
         {
             ++_front;
@@ -85,14 +95,22 @@ class light_deque
             }
         }
         
+        void pop_back()
+        {
+            if(_back > _front)
+                --_back;
+            if(_back == _front)
+                clear();
+        }
+        
         void clear()
         {
             _front = _back = 0;
         }
     private:
         void expand() {
-            std::unique_ptr<T[]> ndata(new T[_size*2]);
-            memcpy(ndata.get(), _data.get(), _size*sizeof(T));
+            std::unique_ptr<T[]> ndata((T*)new uint8_t[_size*2*sizeof(T)]);
+            std::move(_data.get(), _data.get() + _size, ndata.get());
             _size *= 2;
             _data.swap(ndata);
         }

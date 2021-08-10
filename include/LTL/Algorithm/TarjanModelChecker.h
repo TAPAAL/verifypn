@@ -115,7 +115,7 @@ namespace LTL {
         struct DEntry {
             idx_t pos; // position in cstack.
 
-            typename SuccessorGen::sucinfo sucinfo;
+            typename SuccessorGen::successor_info_t sucinfo;
 
             explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
         };

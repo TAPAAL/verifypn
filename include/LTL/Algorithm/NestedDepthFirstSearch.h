@@ -24,10 +24,10 @@
 #include "PetriEngine/Structures/Queue.h"
 #include "LTL/Structures/ProductStateFactory.h"
 
-#include <ptrie/ptrie_stable.h>
-#include <unordered_set>
+#include <ptrie/ptrie.h>
 
 namespace LTL {
+
     /**
      * Implement the nested DFS algorithm for LTL model checking. Roughly based on versions given in
      * <p>
@@ -45,58 +45,56 @@ namespace LTL {
      * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
      *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
      */
-    template<typename SucGen, typename W>
-class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
+    template<typename SucGen>
+    class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, SucGen *gen)
+                               const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace)
                 : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen),
                   factory{net, this->successorGenerator->initial_buchi_state()},
-                  states(*net, 0, (int) net->numberOfPlaces() + 1) {}
+                  _states(*net, 0, (int) net->numberOfPlaces() + 1), _print_trace(print_trace) {}
 
         bool isSatisfied() override;
 
         void printStats(std::ostream &os) override;
-
+        
     private:
         using State = LTL::Structures::ProductState;
+        std::pair<bool,size_t> mark(State& state, uint8_t);
 
+        
         Structures::ProductStateFactory factory;
-        W states; //StateSet
-        std::set<size_t> mark1;
-        std::set<size_t> mark2;
+        PetriEngine::Structures::StateSet _states;
+        
+        std::vector<uint8_t> _markers;
+        static constexpr uint8_t MARKER1 = 1;
+        static constexpr uint8_t MARKER2 = 2;
+        size_t _mark_count[3] = {0,0,0};
 
         struct StackEntry {
-            size_t id;
-            typename SucGen::sucinfo sucinfo;
+            size_t _id;
+            typename SucGen::successor_info_t _sucinfo;
         };
 
-        State *seed;
-        bool violation = false;
+        State *_seed;
+        bool _violation = false;
+        const bool _print_trace = false;
 
         //Used for printing the trace
-        std::stack<std::pair<size_t, size_t>> nested_transitions;
+        std::stack<std::pair<size_t, size_t>> _nested_transitions;
 
         void dfs();
 
         void ndfs(State &state);
 
         void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
-
-        static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
 
     extern template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator>;
 
     extern template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
-
-    extern template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>;
-
-    extern template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H

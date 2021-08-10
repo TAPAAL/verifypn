@@ -147,31 +147,17 @@ namespace LTL {
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
+                    result = _verify(
+                            NestedDepthFirstSearch<SpoolingSuccessorGenerator>(
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
+                            options);
 
-                    if (options.trace != TraceLevel::None) {
-                        result = _verify(
-                                NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>(
-                                        net, negated_formula, automaton, &gen),
-                                options);
-                    } else {
-                        result = _verify(
-                                NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>(
-                                        net, negated_formula, automaton, &gen),
-                                options);
-                    }
                 } else {
                     ResumingSuccessorGenerator gen{net};
-                    if (options.trace != TraceLevel::None) {
-                        result = _verify(
-                                NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>(
-                                        net, negated_formula, automaton, &gen),
-                                options);
-                    } else {
-                        result = _verify(
-                                NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>(
-                                        net, negated_formula, automaton, &gen),
-                                options);
-                    }
+                    result = _verify(
+                            NestedDepthFirstSearch<ResumingSuccessorGenerator>(
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
+                            options);
                 }
                 break;
 

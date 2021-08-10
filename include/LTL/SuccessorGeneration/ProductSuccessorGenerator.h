@@ -112,7 +112,7 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        virtual void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
+        virtual void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::successor_info_t &sucinfo)
         {
             _successor_generator->prepare(state, sucinfo);
             fresh_marking = sucinfo.fresh();
@@ -139,7 +139,7 @@ namespace LTL {
          * @return `true` if a successor was successfully generated, `false` otherwise.
          * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
          */
-        bool next(Structures::ProductState &state, typename SuccessorGen::sucinfo &sucinfo)
+        bool next(Structures::ProductState &state, typename SuccessorGen::successor_info_t &sucinfo)
         {
             if (fresh_marking) {
                 fresh_marking = false;
@@ -182,7 +182,7 @@ namespace LTL {
         size_t fired() const { return _successor_generator->fired(); }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
-        void generateAll(LTL::Structures::ProductState *parent, typename SuccessorGen::sucinfo &sucinfo)
+        void generateAll(LTL::Structures::ProductState *parent, typename SuccessorGen::successor_info_t &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 _successor_generator->generate_all(parent, sucinfo);
@@ -221,7 +221,7 @@ namespace LTL {
             }
         }
 
-        void pop(const typename SuccessorGen::sucinfo &sucinfo) {
+        void pop(const typename SuccessorGen::successor_info_t &sucinfo) {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 _successor_generator->pop(sucinfo);
             }

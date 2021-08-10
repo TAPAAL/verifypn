@@ -67,7 +67,7 @@ namespace LTL {
             }
         }
 
-        void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
+        void prepare(const LTL::Structures::ProductState *state, typename S::successor_info_t &sucinfo) override
         {
             if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
                 (dynamic_cast<PetriEngine::StubbornSet*>(_reach.get()))->setQuery(suc->second.cond.get());
