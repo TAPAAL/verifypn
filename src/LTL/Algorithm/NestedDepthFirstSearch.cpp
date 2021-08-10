@@ -34,7 +34,7 @@ namespace LTL {
             _markers.resize(stateid + 1);
         auto r = _markers[stateid];
         _markers[stateid] = (MARKER | r);
-        const bool is_new = (r & MARKER) != 0;
+        const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
             ++_mark_count[MARKER];
