@@ -51,59 +51,59 @@ namespace LTL {
                            SuccessorGen *successorGen,
                            std::unique_ptr<Spooler> &&...spooler)
                 : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
-                  factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0)
+                  _factory(net, this->successorGenerator->initial_buchi_state()),
+                  _seen(net, 0)
         {
             if (buchi._buchi->num_states() > 65535) {
                 std::cerr << "Fatal error: cannot handle Büchi automata larger than 2^16 states\n";
                 exit(1);
             }
-            chash.fill(std::numeric_limits<idx_t>::max());
+            _chash.fill(std::numeric_limits<idx_t>::max());
         }
 
         bool isSatisfied() override;
 
         void printStats(std::ostream &os) override
         {
-            this->_printStats(os, seen);
+            this->_printStats(os, _seen);
         }
 
     private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
         // 64 MB hash table
-        static constexpr idx_t HashSz = 16777216;
+        static constexpr idx_t _hash_sz = 16777216;
 
-        LTL::Structures::ProductStateFactory factory;
+        LTL::Structures::ProductStateFactory _factory;
 
         using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
-        static constexpr bool IsSpooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
+        static constexpr bool _is_spooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
 
-        StateSet seen;
-        std::unordered_set<idx_t> store;
+        StateSet _seen;
+        std::unordered_set<idx_t> _store;
 
         // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
         // corresponding to state. Collisions are resolved using linked list via CEntry::next.
-        std::array<idx_t, HashSz> chash;
-        static_assert(sizeof(chash) == (1U << 27U));
+        std::array<idx_t, _hash_sz> _chash;
+        static_assert(sizeof(_chash) == (1U << 27U));
 
         static inline idx_t hash(idx_t id)
         {
-            return id % HashSz;
+            return id % _hash_sz;
         }
 
         struct PlainCEntry {
-            idx_t lowlink;
-            idx_t stateid;
-            idx_t next = std::numeric_limits<idx_t>::max();
-            bool dstack = true;
+            idx_t _lowlink;
+            idx_t _stateid;
+            idx_t _next = std::numeric_limits<idx_t>::max();
+            bool _dstack = true;
 
-            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
         };
 
         struct TracableCEntry : PlainCEntry {
-            idx_t lowsource = std::numeric_limits<idx_t>::max();
-            idx_t sourcetrans;
+            idx_t _lowsource = std::numeric_limits<idx_t>::max();
+            idx_t _sourcetrans;
 
             TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
         };
@@ -113,24 +113,24 @@ namespace LTL {
                 PlainCEntry>;
 
         struct DEntry {
-            idx_t pos; // position in cstack.
+            idx_t _pos; // position in cstack.
 
-            typename SuccessorGen::successor_info_t sucinfo;
+            typename SuccessorGen::successor_info_t _sucinfo;
 
-            explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
+            explicit DEntry(idx_t pos) : _pos(pos), _sucinfo(SuccessorGen::initial_suc_info()) {}
         };
 
         // master list of state information.
-        std::vector<CEntry> cstack;
+        std::vector<CEntry> _cstack;
         // depth-first search stack, contains current search path.
-        std::stack<DEntry> dstack;
+        std::stack<DEntry> _dstack;
         // cstack positions of accepting states in current search path, for quick access.
-        std::stack<idx_t> astack;
+        std::stack<idx_t> _astack;
 
-        bool violation = false;
-        bool invariant_loop = true;
-        size_t loopstate = std::numeric_limits<size_t>::max();
-        size_t looptrans = std::numeric_limits<size_t>::max();
+        bool _violation = false;
+        bool _invariant_loop = true;
+        size_t _loop_state = std::numeric_limits<size_t>::max();
+        size_t _loop_trans = std::numeric_limits<size_t>::max();
 
         void push(State &state, size_t stateid);
 
