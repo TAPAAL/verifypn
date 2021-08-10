@@ -75,7 +75,6 @@ namespace LTL {
             typename SucGen::successor_info_t _sucinfo;
         };
 
-        State *_seed;
         bool _violation = false;
         const bool _print_trace = false;
 
@@ -84,7 +83,7 @@ namespace LTL {
 
         void dfs();
 
-        void ndfs(State &state, light_deque<StackEntry>& nested_todo);
+        void ndfs(const State &state, light_deque<StackEntry>& nested_todo);
 
         void print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os = std::cout);
         void build_nested_trace(State& working, light_deque<StackEntry>& todo);

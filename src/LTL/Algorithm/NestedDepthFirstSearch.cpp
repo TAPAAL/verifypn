@@ -74,7 +74,6 @@ namespace LTL {
                 // no successor
                 todo.pop_back();
                 if (this->successorGenerator->isAccepting(curState)) {
-                    _seed = &curState;
                     ndfs(curState, nested_todo);
                     if (_violation) {
                         if (_print_trace) {                            
@@ -94,7 +93,7 @@ namespace LTL {
     }
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::ndfs(State &state, light_deque<StackEntry>& nested_todo)
+    void NestedDepthFirstSearch<S>::ndfs(const State &state, light_deque<StackEntry>& nested_todo)
     {        
 
         State working = factory.newState();
@@ -115,7 +114,7 @@ namespace LTL {
                 if (this->is_weak && !this->successorGenerator->isAccepting(working)) {
                     continue;
                 }
-                if (working == *_seed) {
+                if (working == state) {
                     _violation = true;
                     if (_print_trace) {
                         build_nested_trace(working, nested_todo);
