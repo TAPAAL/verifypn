@@ -26,8 +26,15 @@ jobs:
       # Runs a single command using the runners shell
       - name: Install Packages
         run: |
-          sudo apt-get install build-essential cmake flex bison git make
+          sudo apt-get install build-essential cmake flex git make #bison
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
+
+          wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz
+          tar xvfz bison-3.7.6.tar.gz
+          cd bison-3.7.6
+          ./configure
+          make 
+          sudo make install
 
       - name: Build 
         uses: lukka/run-cmake@v2.5
