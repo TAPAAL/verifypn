@@ -50,6 +50,11 @@ namespace LTL {
             _bad = false;
         }
 
+        void set_buchi_edge(PetriEngine::PQL::Condition_ptr prog_cond, PetriEngine::PQL::Condition_ptr sink_cond) {
+            _prog_cond = prog_cond;
+            _sink_cond = sink_cond;
+        }
+
     protected:
         void addToStub(uint32_t t) override
         {
@@ -65,6 +70,8 @@ namespace LTL {
     private:
         std::unique_ptr<bool[]> _unsafe;
         bool _bad = false;
+        PetriEngine::PQL::Condition_ptr _prog_cond;
+        PetriEngine::PQL::Condition_ptr _sink_cond;
     };
 }
 

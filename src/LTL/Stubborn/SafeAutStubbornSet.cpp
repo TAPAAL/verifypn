@@ -37,10 +37,12 @@ namespace LTL {
 
         InterestingTransitionVisitor interesting{*this, false};
 
-        for (auto &q : _queries) {
-            q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            q->visit(interesting);
-        }
+        PQL::EvaluationContext ctx((*_parent).marking(), &_net);
+        _prog_cond->evalAndSet(ctx);
+        _sink_cond->evalAndSet(ctx);
+        _prog_cond->visit(interesting);
+        _sink_cond->visit(interesting);
+
         assert(!_bad);
 
         _unsafe.swap(_stubborn);
@@ -50,14 +52,13 @@ namespace LTL {
 
         assert(_unprocessed.empty());
 
-        for (auto &q : _queries) {
-            q->visit(interesting);
-            closure();
-            if (_bad) {
-                // abort
-                set_all_stubborn();
-                return true;
-            }
+        // sink condition is not interesting, just unsafe.
+        _prog_cond->visit(interesting);
+        closure();
+        if (_bad) {
+            // abort
+            set_all_stubborn();
+            return true;
         }
         return true;
     }

@@ -60,9 +60,11 @@ namespace LTL {
                     else {
                         progressing |= e.cond;
                     }
-                }
-                if ((retarding | progressing) == bddtrue) {
-                    _reach_states.insert(std::make_pair(state, BuchiEdge{progressing, toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps)}));
+                    _reach_states.insert(std::make_pair(
+                            state,
+                            BuchiEdge{progressing,
+                                      toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps),
+                                      toPQL(spot::bdd_to_formula(bdd_not(retarding | progressing), buchi.dict), aps)}));
                 }
             }
         }
@@ -70,7 +72,8 @@ namespace LTL {
         void prepare(const LTL::Structures::ProductState *state, typename S::successor_info_t &sucinfo) override
         {
             if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
-                (dynamic_cast<PetriEngine::StubbornSet*>(_reach.get()))->setQuery(suc->second.cond.get());
+                //_reach->setQuery(suc->second.prog_cond.get());
+                _reach->set_buchi_edge(suc->second.prog_cond, suc->second.pseudo_sink_cond);
                 set_spooler(_reach.get());
             }
             else {
@@ -92,11 +95,12 @@ namespace LTL {
 
         struct BuchiEdge{
             bdd bddCond;
-            PetriEngine::PQL::Condition_ptr cond;
+            PetriEngine::PQL::Condition_ptr prog_cond;
+            PetriEngine::PQL::Condition_ptr pseudo_sink_cond;
         };
 
         std::unique_ptr<Spooler> _fallback_spooler;
-        std::unique_ptr<LTL::SuccessorSpooler> _reach;
+        std::unique_ptr<LTL::SafeAutStubbornSet> _reach;
         std::unordered_map<size_t, BuchiEdge> _reach_states;
         std::vector<PetriEngine::PQL::Condition_ptr> _progressing_formulae;
 
