@@ -24,8 +24,8 @@ namespace LTL {
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states = this->successorGenerator->makeInitialState();
-        State working = _factory.newState();
-        State parent = _factory.newState();
+        State working = this->_factory.newState();
+        State parent = this->_factory.newState();
         for (auto &state : initial_states) {
             const auto res = _seen.add(state);
             if (res.first) {
@@ -127,7 +127,7 @@ namespace LTL {
                 popCStack();
             }
         } else if (this->is_weak) {
-            State state = _factory.newState();
+            State state = this->_factory.newState();
             _seen.decode(state, _cstack[p]._stateid);
             if (!this->successorGenerator->isAccepting(state)) {
                 popCStack();
@@ -194,7 +194,7 @@ namespace LTL {
             return;
         } else {
             assert(_violation);
-            State state = _factory.newState();
+            State state = this->_factory.newState();
             os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
             if (_cstack[dstack.top()._pos]._stateid == _loop_state) this->printLoop(os);

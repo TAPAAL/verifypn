@@ -89,12 +89,12 @@ namespace LTL {
             auto buf = new PetriEngine::MarkVal[_net->numberOfPlaces() + 1];
             std::copy(_net->initial(), _net->initial() + _net->numberOfPlaces(), buf);
             buf[_net->numberOfPlaces()] = initial_buchi_state();
-            LTL::Structures::ProductState state;
+            LTL::Structures::ProductState state{&buchi.aut};
             state.setMarking(buf, _net->numberOfPlaces());
             //state.setBuchiState(initial_buchi_state());
             buchi.prepare(state.getBuchiState());
             while (next_buchi_succ(state)) {
-                states.emplace_back();
+                states.emplace_back(&buchi.aut);
                 states.back().setMarking(new PetriEngine::MarkVal[_net->numberOfPlaces() + 1], _net->numberOfPlaces());
                 std::copy(state.marking(), state.marking() + _net->numberOfPlaces(), states.back().marking());
                 states.back().setBuchiState(state.getBuchiState());

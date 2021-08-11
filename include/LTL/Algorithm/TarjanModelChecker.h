@@ -51,7 +51,6 @@ namespace LTL {
                            SuccessorGen *successorGen,
                            std::unique_ptr<Spooler> &&...spooler)
                 : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
-                  _factory(net, this->successorGenerator->initial_buchi_state()),
                   _seen(net, 0)
         {
             if (buchi._buchi->num_states() > 65535) {
@@ -74,7 +73,6 @@ namespace LTL {
         // 64 MB hash table
         static constexpr idx_t _hash_sz = 16777216;
 
-        LTL::Structures::ProductStateFactory _factory;
 
         using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
         static constexpr bool _is_spooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;

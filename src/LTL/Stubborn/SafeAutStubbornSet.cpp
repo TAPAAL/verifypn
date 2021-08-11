@@ -52,10 +52,13 @@ namespace LTL {
 
         assert(_unprocessed.empty());
 
+
+
         // sink condition is not interesting, just unsafe.
         _prog_cond->visit(interesting);
+        //_sink_cond->visit(interesting);
         closure();
-        if (_bad) {
+        if (_bad || (state->is_accepting() && !_has_enabled_stubborn)) {
             // abort
             set_all_stubborn();
             return true;

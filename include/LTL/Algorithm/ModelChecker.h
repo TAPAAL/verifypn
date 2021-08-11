@@ -25,6 +25,7 @@
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
+#include "LTL/Structures/ProductStateFactory.h"
 #include "PetriEngine/options.h"
 
 #include <iomanip>
@@ -39,9 +40,12 @@ namespace LTL {
                      const Structures::BuchiAutomaton &buchi,
                      SuccessorGen *successorGen,
                      std::unique_ptr<Spooler> &&...spooler)
-                : net(net), formula(condition)
+                : net(net), formula(condition), successorGenerator(
+                std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
+                                                                          std::move(spooler)...)),
+                  _factory(net, buchi, this->successorGenerator->initial_buchi_state())
         {
-            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen, std::move(spooler)...);
+//            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen, std::move(spooler)...);
         }
 
         void setOptions(const options_t &options) {
@@ -85,7 +89,9 @@ namespace LTL {
 
         const PetriEngine::PetriNet *net;
         PetriEngine::PQL::Condition_ptr formula;
+        //const Structures::BuchiAutomaton *_aut;
         TraceLevel traceLevel;
+        LTL::Structures::ProductStateFactory _factory;
 
         size_t _discovered = 0;
         bool shortcircuitweak;

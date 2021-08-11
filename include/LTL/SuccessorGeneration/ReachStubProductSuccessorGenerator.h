@@ -60,18 +60,27 @@ namespace LTL {
                     else {
                         progressing |= e.cond;
                     }
-                    _reach_states.insert(std::make_pair(
-                            state,
-                            BuchiEdge{progressing,
-                                      toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps),
-                                      toPQL(spot::bdd_to_formula(bdd_not(retarding | progressing), buchi.dict), aps)}));
                 }
+                bdd sink_prop = bdd_not(retarding | progressing);
+                auto prog_cond = toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps);
+                auto ret_cond = toPQL(spot::bdd_to_formula(retarding, buchi.dict), aps);
+                auto sink_cond = sink_prop == bdd_false()
+                                 ? PetriEngine::PQL::BooleanCondition::FALSE_CONSTANT
+                                 : std::make_shared<PetriEngine::PQL::NotCondition>(
+                                std::make_shared<PetriEngine::PQL::OrCondition>(prog_cond, ret_cond)
+                        );
+                _reach_states.insert(std::make_pair(
+                        state,
+                        BuchiEdge{progressing | sink_prop,
+                                  prog_cond,
+                                  sink_cond}));
             }
         }
 
         void prepare(const LTL::Structures::ProductState *state, typename S::successor_info_t &sucinfo) override
         {
-            if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
+            auto suc = _reach_states.find(state->getBuchiState());
+            if (suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
                 //_reach->setQuery(suc->second.prog_cond.get());
                 _reach->set_buchi_edge(suc->second.prog_cond, suc->second.pseudo_sink_cond);
                 set_spooler(_reach.get());
