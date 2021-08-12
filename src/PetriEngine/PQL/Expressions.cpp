@@ -3554,7 +3554,17 @@ namespace PetriEngine {
 
         Condition_ptr ACondition::prepareForReachability(bool negated) const {
             auto g = std::dynamic_pointer_cast<GCondition>(_cond);
-            return g ? AGCondition((*g)[0]).prepareForReachability(negated) : nullptr;
+            if (g) {
+                return AGCondition((*g)[0]).prepareForReachability(negated);
+            }
+            else {
+                // ugly hacking for `A true`.
+                auto bcond = std::dynamic_pointer_cast<BooleanCondition>(_cond);
+                if (bcond) {
+                    return bcond;
+                }
+                else return nullptr;
+            }
         }
 
         Condition_ptr ECondition::prepareForReachability(bool negated) const {

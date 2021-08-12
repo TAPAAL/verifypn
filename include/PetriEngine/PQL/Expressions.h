@@ -489,6 +489,7 @@ namespace PetriEngine {
                 uint32_t retval = _cond->distance(context);
                 return retval;
             }
+
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
 
