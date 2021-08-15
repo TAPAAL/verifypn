@@ -146,7 +146,8 @@ namespace PetriEngine {
                     localVarMap[pair.first] = varIntervals;
                 }
 
-                if(validInterval){
+                //Only add valid intervals. Ensure one empty map is always added if there are intervals
+                if(validInterval && (!localVarMap.empty() || variableMaps.empty())){
                     variableMaps.push_back(std::move(localVarMap));
                 }                          
             }  
@@ -159,7 +160,7 @@ namespace PetriEngine {
                     //If we have not found intervals for any place yet, we fill the intervals from this place
                     //Else we restrict the intervals we already found to only keep those that can also be matched in this place
                     if(variableMaps.empty()){                    
-                        fillVarMaps(variableMaps, placeArcInterval.second, intervalTupleSize, j);                                            
+                        fillVarMaps(variableMaps, placeArcInterval.second, intervalTupleSize, j);   
                     } else {
                         std::vector<VariableIntervalMap> newVarMapVec;
                         
@@ -177,13 +178,13 @@ namespace PetriEngine {
                                     }
                                 }
 
-                                if(allVarsAssigned){
+                                if(allVarsAssigned && (!localVarMap.empty() || newVarMapVec.empty())){
                                     newVarMapVec.push_back(std::move(localVarMap));
                                 }
                                                             
                             }                                                                                    
-                        }               
-                        variableMaps = std::move(newVarMapVec);                    
+                        }
+                        variableMaps = std::move(newVarMapVec);                       
                     }
                     //If we did not find any intervals for an arc, then the transition cannot be activated
                     if(variableMaps.empty()){

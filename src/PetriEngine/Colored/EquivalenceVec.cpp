@@ -23,7 +23,7 @@ namespace PetriEngine {
                                     }
                                 }
                                 newIntervalTuple.addInterval(std::move(singleInterval));
-                                continue;
+                                break;
                             }
                         }
                     }
