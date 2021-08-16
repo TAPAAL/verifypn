@@ -814,6 +814,15 @@ namespace PetriEngine {
                 id = newColor->getId();
             } else {
                 id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->id();
+                uint32_t pos = 0;
+                //Add color ids of diagonal positions as we represent partitions with diagonal postitions 
+                //as a single equivalence class to save space, but they should not be partition together
+                for(bool diagonalPos : _partition[arc.place].getDiagonalTuplePositions()){
+                    if(diagonalPos) {
+                        id += tupleIds[pos];
+                    }
+                    pos++;
+                }
             }
             const std::string& pName = _ptplacenames[place.name][id];
 
