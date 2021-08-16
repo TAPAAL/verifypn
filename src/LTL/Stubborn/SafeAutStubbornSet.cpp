@@ -16,6 +16,7 @@
  */
 
 #include "LTL/Stubborn/SafeAutStubbornSet.h"
+#include "LTL/Stubborn/VisibleTransitionVisitor.h"
 
 namespace LTL {
     using namespace PetriEngine;
@@ -39,8 +40,10 @@ namespace LTL {
 
         PQL::EvaluationContext ctx((*_parent).marking(), &_net);
         _prog_cond->evalAndSet(ctx);
+        //_ret_cond->evalAndSet(ctx);
         _sink_cond->evalAndSet(ctx);
         _prog_cond->visit(interesting);
+        //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
         _sink_cond->visit(interesting);
 
         assert(!_bad);
@@ -58,10 +61,26 @@ namespace LTL {
         _prog_cond->visit(interesting);
         //_sink_cond->visit(interesting);
         closure();
-        if (_bad || (state->is_accepting() && !_has_enabled_stubborn)) {
+        if (_bad) {
             // abort
             set_all_stubborn();
             return true;
+        }
+        // accepting states need key transition. add first enabled by index.
+        if (state->is_accepting() && !_has_enabled_stubborn) {
+            addToStub(_ordering.front());
+            closure();
+/*            for (int i = 0; i < _net.numberOfPlaces(); ++i) {
+                if (_enabled[i]) {
+                    addToStub(i);
+                    closure();
+                    break;
+                }
+            }*/
+            if (_bad) {
+                set_all_stubborn();
+                return true;
+            }
         }
         return true;
     }

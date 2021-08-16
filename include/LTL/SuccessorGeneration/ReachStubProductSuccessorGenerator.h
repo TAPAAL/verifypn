@@ -72,6 +72,7 @@ namespace LTL {
                 _reach_states.insert(std::make_pair(
                         state,
                         BuchiEdge{progressing | sink_prop,
+                                  ret_cond,
                                   prog_cond,
                                   sink_cond}));
             }
@@ -82,7 +83,7 @@ namespace LTL {
             auto suc = _reach_states.find(state->getBuchiState());
             if (suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
                 //_reach->setQuery(suc->second.prog_cond.get());
-                _reach->set_buchi_edge(suc->second.prog_cond, suc->second.pseudo_sink_cond);
+                _reach->set_buchi_conds(suc->second.ret_cond, suc->second.prog_cond, suc->second.pseudo_sink_cond);
                 set_spooler(_reach.get());
             }
             else {
@@ -104,6 +105,7 @@ namespace LTL {
 
         struct BuchiEdge{
             bdd bddCond;
+            PetriEngine::PQL::Condition_ptr ret_cond;
             PetriEngine::PQL::Condition_ptr prog_cond;
             PetriEngine::PQL::Condition_ptr pseudo_sink_cond;
         };

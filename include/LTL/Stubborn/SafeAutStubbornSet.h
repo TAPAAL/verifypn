@@ -51,7 +51,10 @@ namespace LTL {
             _has_enabled_stubborn = false;
         }
 
-        void set_buchi_edge(PetriEngine::PQL::Condition_ptr prog_cond, PetriEngine::PQL::Condition_ptr sink_cond) {
+        void set_buchi_conds(PetriEngine::PQL::Condition_ptr ret_cond,
+                             PetriEngine::PQL::Condition_ptr prog_cond,
+                             PetriEngine::PQL::Condition_ptr sink_cond) {
+            _ret_cond = ret_cond;
             _prog_cond = prog_cond;
             _sink_cond = sink_cond;
         }
@@ -77,6 +80,7 @@ namespace LTL {
         std::unique_ptr<bool[]> _unsafe;
         bool _bad = false;
         bool _has_enabled_stubborn = false;
+        PetriEngine::PQL::Condition_ptr _ret_cond;
         PetriEngine::PQL::Condition_ptr _prog_cond;
         PetriEngine::PQL::Condition_ptr _sink_cond;
     };
