@@ -82,5 +82,31 @@ namespace PetriEngine {
                 }
             }
         }
+
+        //Add color ids of diagonal positions as we represent partitions with diagonal postitions 
+        //as a single equivalence class to save space, but they should not be partition together
+        const uint32_t EquivalenceVec::getUniqueIdForColor(const Colored::Color *color) const {
+            PetriEngine::Colored::EquivalenceClass *eqClass = _colorEQClassMap.find(color)->second;
+            
+            std::vector<uint32_t> colorTupleIds;
+            std::vector<uint32_t> newColorTupleIds;
+            bool hasDiagonalPositions;
+            color->getTupleId(colorTupleIds);
+            for(uint32_t i = 0; i < colorTupleIds.size(); i++){
+                if(_diagonalTuplePositions[i]){
+                    newColorTupleIds.push_back(colorTupleIds[i]);
+                } else {
+                    hasDiagonalPositions = true;
+                    newColorTupleIds.push_back(eqClass->intervals().back().getLowerIds()[i]);
+                }
+            }
+
+            if(hasDiagonalPositions){
+                return eqClass->id() + color->getColorType()->getColor(newColorTupleIds)->getId();
+            }
+
+            return eqClass->id();
+            
+        }
     }
 }
