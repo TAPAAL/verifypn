@@ -446,6 +446,9 @@ namespace PetriEngine {
                 }
             }
             if(conds.size() == 1) _compiled = conds[0];
+            else if (conds.empty()) {
+                _compiled = BooleanCondition::TRUE_CONSTANT;
+            }
             else _compiled = std::make_shared<AndCondition>(conds);
             _compiled->analyze(context);
         }
