@@ -62,17 +62,14 @@ namespace LTL {
     protected:
         void addToStub(uint32_t t) override
         {
-            //refinement of bad: can manually check whether firing t would violate some progressing formula.
+            // potential refinement of bad: can manually check whether firing t would violate some progressing formula.
             if (_enabled[t]) {
+                _has_enabled_stubborn = true;
                 if (_unsafe[t]) {
                     _bad = true;
                     return;
                 }
-                else {
-                    _has_enabled_stubborn = true;
-                }
             }
-            //TODO check safe-ness
             StubbornSet::addToStub(t);
         }
 

@@ -49,7 +49,7 @@ namespace LTL {
             std::transform(std::begin(buchi.ap_info), std::end(buchi.ap_info), std::begin(aps),
                            [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
             for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
-                if (buchi._buchi->state_is_accepting(state)) continue;
+                //if (buchi._buchi->state_is_accepting(state)) continue;
 
                 bdd retarding = bddfalse;
                 bdd progressing = bddfalse;
@@ -81,6 +81,9 @@ namespace LTL {
         void prepare(const LTL::Structures::ProductState *state, typename S::successor_info_t &sucinfo) override
         {
             auto suc = _reach_states.find(state->getBuchiState());
+            // assert valid since all states are reducible when considering
+            // the sink progressing formula and key transitions in accepting states.
+            assert(suc != std::end(_reach_states));
             if (suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
                 //_reach->setQuery(suc->second.prog_cond.get());
                 _reach->set_buchi_conds(suc->second.ret_cond, suc->second.prog_cond, suc->second.pseudo_sink_cond);

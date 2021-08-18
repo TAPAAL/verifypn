@@ -40,8 +40,8 @@ namespace LTL {
 
         PQL::EvaluationContext ctx((*_parent).marking(), &_net);
         _prog_cond->evalAndSet(ctx);
-        //_ret_cond->evalAndSet(ctx);
-        _sink_cond->evalAndSet(ctx);
+        _ret_cond->evalAndSet(ctx);
+        //_sink_cond->evalAndSet(ctx);
         _prog_cond->visit(interesting);
         //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
         _sink_cond->visit(interesting);
@@ -49,6 +49,7 @@ namespace LTL {
         assert(!_bad);
 
         _unsafe.swap(_stubborn);
+        _has_enabled_stubborn = false;
         //memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _unprocessed.clear();
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
