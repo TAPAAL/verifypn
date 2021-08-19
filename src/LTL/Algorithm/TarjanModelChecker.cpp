@@ -48,7 +48,7 @@ namespace LTL {
                     std::cerr << "looping\n";
                 }
                 else {
-                    std::cerr << "<transition id='" << this->net->transitionNames()[fired] << "'>" << std::endl ;
+                    //state.print(*this->net, std::cerr); std::cerr << ": <transition id='" << this->net->transitionNames()[fired] << "'>" << std::endl ;
                 }
 #endif
                 ++this->stats.explored;

@@ -94,7 +94,8 @@ namespace LTL {
             PetriEngine::SuccessorGenerator::prepare(state);
             if (sucinfo.successors == nullptr) {
                 uint32_t tid;
-                _spooler->prepare(state);
+                bool res = _spooler->prepare(state);
+                assert(!res || !_net.deadlocked(state->marking()));
                 if (!_heuristic || !_heuristic->has_heuristic(*state)) {
                     uint32_t nsuc = 0;
                     // generate list of transitions that generate a successor.
@@ -104,7 +105,7 @@ namespace LTL {
                         assert(nsuc <= _net.numberOfTransitions());
                     }
                     sucinfo.successors = SuccessorQueue(_transbuf.get(), nsuc);
-
+                    assert((res && !sucinfo.successors.empty()) || !res);
                 } else {
                     // list of (transition, weight)
                     _heuristic->prepare(*state);

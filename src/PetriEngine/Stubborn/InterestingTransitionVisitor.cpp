@@ -387,7 +387,12 @@ namespace PetriEngine {
 
     void InterestingLTLTransitionVisitor::_accept(const PQL::CompareConjunction *element)
     {
-        negate_if_satisfied<PQL::CompareConjunction>(element);
+        for (auto &c : *element) {
+            if (!_stubborn.seenPre(c._place))
+                _stubborn.presetOf(c._place, closure);
+            if (!_stubborn.seenPost(c._place))
+                _stubborn.postsetOf(c._place, closure);
+        }
     }
 
     template<typename Condition>

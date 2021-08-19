@@ -1325,9 +1325,9 @@ int main(int argc, char* argv[]) {
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
-                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     int preSize=queries[i]->formulaSize();
 
+                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0) continue;
                         SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,

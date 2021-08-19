@@ -48,8 +48,6 @@ namespace LTL {
             std::vector<AtomicProposition> aps(buchi.ap_info.size());
             std::transform(std::begin(buchi.ap_info), std::end(buchi.ap_info), std::begin(aps),
                            [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-            PetriEngine::PQL::negstat_t _;
-            PetriEngine::PQL::EvaluationContext ctx{nullptr, nullptr};
             for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
                 //if (buchi._buchi->state_is_accepting(state)) continue;
 
@@ -64,20 +62,13 @@ namespace LTL {
                     }
                 }
                 bdd sink_prop = bdd_not(retarding | progressing);
-                PetriEngine::PQL::Condition_ptr prog_cond;
-                PetriEngine::PQL::Condition_ptr sink_cond;
+                auto prog_cond = toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps);
                 auto ret_cond = toPQL(spot::bdd_to_formula(retarding, buchi.dict), aps);
-                if (progressing == bddfalse) {
-                    prog_cond = nullptr;
-                    sink_cond = std::make_shared<PetriEngine::PQL::NotCondition>(ret_cond);
-                }
-                else {
-                    prog_cond = toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps);
-                    sink_cond = sink_prop == bdd_false()
-                            ? PetriEngine::PQL::BooleanCondition::FALSE_CONSTANT
-                            : std::make_shared<PetriEngine::PQL::NotCondition>(
-                                    std::make_shared<PetriEngine::PQL::OrCondition>(prog_cond, ret_cond));
-                }
+                auto sink_cond = sink_prop == bdd_false()
+                                 ? PetriEngine::PQL::BooleanCondition::FALSE_CONSTANT
+                                 : std::make_shared<PetriEngine::PQL::NotCondition>(
+                                std::make_shared<PetriEngine::PQL::OrCondition>(prog_cond, ret_cond)
+                        );
                 _reach_states.insert(std::make_pair(
                         state,
                         BuchiEdge{progressing | sink_prop,
