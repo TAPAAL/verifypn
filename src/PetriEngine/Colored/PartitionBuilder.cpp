@@ -85,6 +85,7 @@ namespace PetriEngine {
                 if(eqVec.second.isDiagonal()){
                     continue;
                 }
+                
                 const ColorType *colorType = _places[eqVec.first].type;
                 for(uint32_t i = 0; i < colorType->size(); i++){ 
                     const Color *color = &(*colorType)[i];
