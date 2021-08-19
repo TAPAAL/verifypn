@@ -28,10 +28,10 @@ namespace LTL {
     public:
         SafeAutStubbornSet(const PetriEngine::PetriNet &net,
                            const std::vector<PetriEngine::PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries), _unsafe(std::make_unique<bool[]>(net.numberOfTransitions())) {}
+                : StubbornSet(net, queries), _unsafe(std::make_unique<bool[]>(net.numberOfTransitions())),
+                  _interesting(*this, false) {}
 
-        bool prepare(const PetriEngine::Structures::State *marking) override
-        {
+        bool prepare(const PetriEngine::Structures::State *marking) override {
             assert(false);
             std::cerr << "Error: SafeAutStubbornSet is implemented only for product states\n";
             exit(1);
@@ -60,8 +60,7 @@ namespace LTL {
         }
 
     protected:
-        void addToStub(uint32_t t) override
-        {
+        void addToStub(uint32_t t) override {
             // potential refinement of bad: can manually check whether firing t would violate some progressing formula.
             if (_enabled[t]) {
                 _has_enabled_stubborn = true;
@@ -80,6 +79,11 @@ namespace LTL {
         PetriEngine::PQL::Condition_ptr _ret_cond;
         PetriEngine::PQL::Condition_ptr _prog_cond;
         PetriEngine::PQL::Condition_ptr _sink_cond;
+        PetriEngine::InterestingTransitionVisitor _interesting;
+
+        void _calc_unsafe();
+
+        void _calc_stubborn(const LTL::Structures::ProductState *state);
     };
 }
 

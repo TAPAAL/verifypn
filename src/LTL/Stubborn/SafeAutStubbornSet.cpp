@@ -21,8 +21,7 @@
 namespace LTL {
     using namespace PetriEngine;
 
-    bool SafeAutStubbornSet::prepare(const LTL::Structures::ProductState *state)
-    {
+    bool SafeAutStubbornSet::prepare(const LTL::Structures::ProductState *state) {
         reset();
         _parent = state;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
@@ -36,53 +35,65 @@ namespace LTL {
             return true;
         }
 
-        InterestingTransitionVisitor interesting{*this, false};
+        assert(_prog_cond != nullptr || state->is_accepting());
+        _calc_unsafe();
 
-        PQL::EvaluationContext ctx((*_parent).marking(), &_net);
-        _prog_cond->evalAndSet(ctx);
-        _ret_cond->evalAndSet(ctx);
-        //_sink_cond->evalAndSet(ctx);
-        _prog_cond->visit(interesting);
-        //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
-        _sink_cond->visit(interesting);
 
         assert(!_bad);
 
         _unsafe.swap(_stubborn);
         _has_enabled_stubborn = false;
-        //memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _unprocessed.clear();
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
 
         assert(_unprocessed.empty());
 
+        _calc_stubborn(state);
 
+        return true;
+    }
 
-        // sink condition is not interesting, just unsafe.
-        _prog_cond->visit(interesting);
-        //_sink_cond->visit(interesting);
+    void SafeAutStubbornSet::_calc_unsafe() {
+        PQL::EvaluationContext ctx((*_parent).marking(), &_net);
+        if (_prog_cond != nullptr) {
+            _prog_cond->evalAndSet(ctx);
+            _prog_cond->visit(_interesting);
+        }
+        _sink_cond->evalAndSet(ctx);
+        //_ret_cond->evalAndSet(ctx);
+        //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
+        _sink_cond->visit(_interesting);
+    }
+
+    void SafeAutStubbornSet::_calc_stubborn(const LTL::Structures::ProductState *state) {
+        // in most cases, sink condition is not interesting, just unsafe.
+        if (_prog_cond) { _prog_cond->visit(_interesting); }
+        else {
+            _sink_cond->visit(_interesting);
+        }
         closure();
         if (_bad) {
             // abort
             set_all_stubborn();
-            return true;
+            return;
         }
         // accepting states need key transition. add first enabled by index.
         if (state->is_accepting() && !_has_enabled_stubborn) {
             addToStub(_ordering.front());
             closure();
-/*            for (int i = 0; i < _net.numberOfPlaces(); ++i) {
-                if (_enabled[i]) {
-                    addToStub(i);
-                    closure();
-                    break;
-                }
-            }*/
+            /*            for (int i = 0; i < _net.numberOfPlaces(); ++i) {
+                            if (_enabled[i]) {
+                                addToStub(i);
+                                closure();
+                                break;
+                            }
+                        }*/
             if (_bad) {
                 set_all_stubborn();
-                return true;
+                return;
             }
         }
-        return true;
     }
+
+
 }

@@ -36,9 +36,21 @@ namespace LTL {
                 // write next successor state to working.
                 if (!nexttrans(working, parent, dtop)) {
                     ++this->stats.expanded;
+#ifndef NDEBUG
+                    std::cerr << "backtrack\n";
+#endif
                     pop();
                     continue;
                 }
+                auto fired = this->successorGenerator->fired();
+#ifndef NDEBUG
+                if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
+                    std::cerr << "looping\n";
+                }
+                else {
+                    std::cerr << "<transition id='" << this->net->transitionNames()[fired] << "'>" << std::endl ;
+                }
+#endif
                 ++this->stats.explored;
                 const auto[isnew, stateid] = _seen.add(working);
 
