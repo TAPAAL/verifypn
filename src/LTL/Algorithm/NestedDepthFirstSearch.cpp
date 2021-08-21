@@ -40,9 +40,11 @@ namespace LTL {
             std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);
-                assert(res.first);
-                todo.push(StackEntry{res.second, S::initial_suc_info()});
-                this->_discovered++;
+                if (res.first) {
+                    assert(res.first);
+                    todo.push(StackEntry{res.second, S::initial_suc_info()});
+                    this->_discovered++;
+                }
             }
         }
 
@@ -77,6 +79,9 @@ namespace LTL {
                 }
             } else {
                 auto[_, stateid] = states.add(working);
+                if (stateid == std::numeric_limits<size_t>::max()) {
+                    continue;
+                }
                 auto[it, is_new] = mark1.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
@@ -131,6 +136,9 @@ namespace LTL {
                     return;
                 }
                 auto[_, stateid] = states.add(working);
+                if (stateid == std::numeric_limits<size_t>::max()) {
+                    continue;
+                }
                 auto[it, is_new] = mark2.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
@@ -151,7 +159,7 @@ namespace LTL {
     {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << states.discovered() << std::endl
-                  << "\tmax tokens:                 " << states.maxTokens() << std::endl
+                  << "\tmax tokens:                 " << states.max_tokens() << std::endl
                   << "\texplored states:            " << mark1.size() << std::endl
                   << "\texplored states (nested):   " << mark2.size() << std::endl;
     }
@@ -181,14 +189,15 @@ namespace LTL {
     }
 
     template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, LTL::Structures::BitProductStateSet<>>;
 
     template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<>>;
 
     template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, LTL::Structures::BitProductStateSet<>>;
 
     template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<>>;
+
 }
