@@ -1,0 +1,16 @@
+*.config
+*.creator
+*.files
+*.includes
+*.user
+nbproject/
+cmake-build-*
+.idea/
+src/PetriEngine/PQL/PQLQueryParser.parser.cpp
+src/PetriEngine/PQL/PQLQueryParser.parser.hpp
+src/PetriEngine/PQL/PQLQueryTokens.lexer.cpp
+src/LTL/SuccessorGeneration/HeuristicLexer.lexer.cpp
+src/LTL/SuccessorGeneration/HeuristicParser.parser.cpp
+src/LTL/SuccessorGeneration/HeuristicParser.parser.hpp
+build/
+
