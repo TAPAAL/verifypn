@@ -75,6 +75,7 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/CTLVisitor.h"
+#include <PetriEngine/PQL/XMLPrinter.h>
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -940,7 +941,8 @@ std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::
             continue;
         }
         ss << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        queries[i]->toXML(ss, 3);
+        XMLPrinter xml_printer(ss, 3);
+        queries[i]->visit(xml_printer);
         ss << "    </formula>\n  </property>\n";
     }
 
@@ -990,7 +992,8 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         else
         {
             out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            queries[i]->toXML(out, 3);
+            XMLPrinter xml_printer(out, 3);
+            queries[i]->visit(xml_printer);
             out << "    </formula>\n  </property>\n";
         }
     }
