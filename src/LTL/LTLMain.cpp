@@ -148,14 +148,14 @@ namespace LTL {
                     gen.setHeuristic(heuristic.get());
                     result = _verify(
                             std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator>>(
-                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound),
                             options);
 
                 } else {
                     ResumingSuccessorGenerator gen{net};
                     result = _verify(
                             std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator>>(
-                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None),
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound),
                             options);
                 }
                 break;
@@ -190,6 +190,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
+                                                     options.kbound,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         }
@@ -199,6 +200,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
+                                                     options.kbound,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
@@ -207,7 +209,8 @@ namespace LTL {
                                                      net,
                                                      negated_formula,
                                                      automaton,
-                                                     &gen),
+                                                     &gen,
+                                                     options.kbound),
                                              options);
                         }
                     } else {
@@ -218,6 +221,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
+                                                     options.kbound,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         } else if (is_autreach_stub && !is_visible_stub) {
@@ -226,6 +230,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
+                                                     options.kbound,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
@@ -234,7 +239,8 @@ namespace LTL {
                                                      net,
                                                      negated_formula,
                                                      automaton,
-                                                     &gen),
+                                                     &gen,
+                                                     options.kbound),
                                              options);
                         }
                     }
@@ -247,14 +253,16 @@ namespace LTL {
                                                  net,
                                                  negated_formula,
                                                  automaton,
-                                                 &gen),
+                                                 &gen,
+                                                 options.kbound),
                                          options);
                     } else {
                         result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>>(
                                                  net,
                                                  negated_formula,
                                                  automaton,
-                                                 &gen),
+                                                 &gen,
+                                                 options.kbound),
                                          options);
                     }
                 }

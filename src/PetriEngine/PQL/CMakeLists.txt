@@ -1,8 +1,5 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(FLEX 2.6.4 REQUIRED)
-find_package(BISON 3.0.5 REQUIRED)
-
 flex_target(pql_lexer "${CMAKE_CURRENT_SOURCE_DIR}/PQLQueryTokens.l"
                       "${CMAKE_CURRENT_SOURCE_DIR}/PQLQueryTokens.lexer.cpp")
 

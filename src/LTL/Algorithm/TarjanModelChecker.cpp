@@ -53,6 +53,9 @@ namespace LTL {
 #endif
                 ++this->stats.explored;
                 const auto[isnew, stateid] = _seen.add(working);
+                if (stateid == std::numeric_limits<idx_t>::max()) {
+                    continue;
+                }
 
                 if constexpr (SaveTrace) {
                     if (isnew) {

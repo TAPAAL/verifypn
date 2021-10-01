@@ -1,16 +1,16 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -64,7 +64,7 @@ namespace LTL::Structures {
     template<uint8_t nbits = 16>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
-        explicit BitProductStateSet(const PetriEngine::PetriNet *net, int kbound = 0, size_t nplaces = -1)
+        explicit BitProductStateSet(const PetriEngine::PetriNet *net, int kbound = 0)
                 : markings(*net, kbound, net->numberOfPlaces())
         {
         }
@@ -94,8 +94,11 @@ namespace LTL::Structures {
         result_t add(const LTL::Structures::ProductState &state) override
         {
             ++_discovered;
-            const auto[_, markingId] = markings.add(state);
-            const stateid_t product_id = getProductId(markingId, state.getBuchiState());
+            const auto res = markings.add(state);
+            if (res.second == std::numeric_limits<size_t>::max()) {
+                return res;
+            }
+            const stateid_t product_id = getProductId(res.second, state.getBuchiState());
 
             const auto[iter, is_new] = states.insert(product_id);
             assert(iter != std::end(states));

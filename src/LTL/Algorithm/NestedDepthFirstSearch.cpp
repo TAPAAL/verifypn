@@ -57,9 +57,10 @@ namespace LTL {
             std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
-                assert(res.first);
-                todo.push_back(StackEntry{res.second, S::initial_suc_info()});
-                this->_discovered++;
+                if (res.first) {
+                    todo.push_back(StackEntry{res.second, S::initial_suc_info()});
+                    ++this->_discovered;
+                }
             }
         }
 
@@ -76,7 +77,7 @@ namespace LTL {
                 if (this->successorGenerator->isAccepting(curState)) {
                     ndfs(curState, nested_todo);
                     if (_violation) {
-                        if (_print_trace) {                            
+                        if (_print_trace) {
                             print_trace(todo, nested_todo);
                         }
                         return;
@@ -84,9 +85,13 @@ namespace LTL {
                 }
             } else {
                 auto [is_new, stateid] = mark(working, MARKER1);
+                if (stateid == std::numeric_limits<size_t>::max()) {
+                    continue;
+                }
                 top._sucinfo.last_state = stateid;
-                if (is_new) {                    
+                if (is_new) {
                     todo.push_back(StackEntry{stateid, S::initial_suc_info()});
+                    ++this->_discovered;
                 }
             }
         }
@@ -94,7 +99,7 @@ namespace LTL {
 
     template<typename S>
     void NestedDepthFirstSearch<S>::ndfs(const State &state, light_deque<StackEntry>& nested_todo)
-    {        
+    {
 
         State working = this->_factory.newState();
         State curState = this->_factory.newState();
@@ -119,6 +124,8 @@ namespace LTL {
                     return;
                 }
                 auto [is_new, stateid] = mark(working, MARKER2);
+                if (stateid == std::numeric_limits<size_t>::max())
+                    continue;
                 top._sucinfo.last_state = stateid;
                 if (is_new) {
                     nested_todo.push_back(StackEntry{stateid, S::initial_suc_info()});

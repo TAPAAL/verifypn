@@ -519,17 +519,7 @@ namespace PetriEngine {
                 transitionHasVarOutArcs = true;
             }
 
-            //If there is a varaible which was not found on an input arc or in the guard, we give it
-            //the full interval
-            for(auto* var : variables){
-                for(auto& varmap : transition.variableMaps){
-                    if(varmap.count(var) == 0){
-                        Colored::interval_vector_t intervalTuple;
-                        intervalTuple.addInterval(var->colorType->getFullInterval());
-                        varmap[var] = std::move(intervalTuple);
-                    }
-                }
-            }
+            
 
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
@@ -544,6 +534,19 @@ namespace PetriEngine {
                             varMap[outVar] = std::move(varIntervalTuple);
                         }                    
                     }                
+                }
+            } else {
+                // Else if partitioning was not computed or diagonal
+                // and there is a varaible which was not found on an input arc or in the guard, 
+                // we give it the full interval
+                for(auto* var : variables){
+                    for(auto& varmap : transition.variableMaps){
+                        if(varmap.count(var) == 0){
+                            Colored::interval_vector_t intervalTuple;
+                            intervalTuple.addInterval(var->colorType->getFullInterval());
+                            varmap[var] = std::move(intervalTuple);
+                        }
+                    }
                 }
             }
 
@@ -712,7 +715,6 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
         const Colored::Transition &transition = _transitions[transitionId];
-
         if(_fixpointDone || _partitionComputed){ 
             FixpointBindingGenerator gen(transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
@@ -811,13 +813,14 @@ namespace PetriEngine {
             if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 id = newColor->getId();
             } else {
-                id = _partition[arc.place].getColorEqClassMap().find(newColor)->second->id() + newColor->getId();
+                id = _partition[arc.place].getUniqueIdForColor(newColor);                
             }
             const std::string& pName = _ptplacenames[place.name][id];
+
             if (pName.empty()) {                               
                 unfoldPlace(&place, newColor, arc.place, id);               
             }
-            
+
             if (arc.input) {
                 _ptBuilder.addInputArc(pName, tName, false, color.second);
             } else {

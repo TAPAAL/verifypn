@@ -49,9 +49,10 @@ namespace LTL {
         TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen *successorGen,
+                           int kbound,
                            std::unique_ptr<Spooler> &&...spooler)
                 : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
-                  _seen(net, 0)
+                  _seen(net, kbound)
         {
             if (buchi._buchi->num_states() > 65535) {
                 std::cerr << "Fatal error: cannot handle Büchi automata larger than 2^16 states\n";
@@ -141,8 +142,8 @@ namespace LTL {
         void popCStack();
 
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
-
     };
+
     extern template
     class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, true>;
 
