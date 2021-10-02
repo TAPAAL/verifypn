@@ -78,6 +78,7 @@ namespace LTL {
         {
             return (bool) aut._buchi->prop_weak();
         }
+
         size_t buchiStates() { return aut._buchi->num_states(); }
 
         Structures::BuchiAutomaton aut;

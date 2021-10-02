@@ -77,9 +77,17 @@ namespace LTL::Structures {
         }
 
         [[nodiscard]] bool is_accepting() const {
-            if (_aut)
-                return _aut->_buchi->state_is_accepting(marking()[buchi_state_idx]);
-            assert(false);
+            assert(_aut);
+            return _aut->_buchi->state_is_accepting(getBuchiState());
+        }
+
+        [[nodiscard]] bool is_weak() const {
+            // this could probably be cached somewhere for added speed.
+            const auto* s = _aut->_buchi->state_from_number(getBuchiState());
+            for (auto e : _aut->_buchi->succ(s))
+                if(e->dst() == s)
+                    if(e->cond() == bdd_true())
+                        return true;
             return false;
         }
 

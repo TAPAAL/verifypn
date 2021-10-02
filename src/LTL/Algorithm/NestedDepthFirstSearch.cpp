@@ -74,8 +74,11 @@ namespace LTL {
             if (!this->successorGenerator->next(working, top._sucinfo)) {
                 // no successor
                 todo.pop_back();
-                if (this->successorGenerator->isAccepting(curState)) {
-                    ndfs(curState, nested_todo);
+                if (curState.is_accepting()) {
+                    if(curState.is_weak())
+                        _violation = true;
+                    else
+                        ndfs(curState, nested_todo);
                     if (_violation) {
                         if (_print_trace) {
                             print_trace(todo, nested_todo);
@@ -156,11 +159,11 @@ namespace LTL {
         {
             while(!(*stck).empty())
             {
-                auto& top = (*stck).back();
+                auto& top = (*stck).front();
                 if(!top._sucinfo.has_prev_state()) break;
                 _states.decode(state, top._sucinfo.state());
                 this->printTransition(top._sucinfo.transition(), state, os) << std::endl;
-                (*stck).pop_back();
+                (*stck).pop_front();
             }
             if(stck == &todo && !nested_todo.empty())
                 this->printLoop(os);
