@@ -51,7 +51,7 @@ namespace LTL {
                            SuccessorGen *successorGen,
                            int kbound,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
+                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, nullptr, std::move(spooler)...),
                   _seen(net, kbound)
         {
             if (buchi._buchi->num_states() > 65535) {

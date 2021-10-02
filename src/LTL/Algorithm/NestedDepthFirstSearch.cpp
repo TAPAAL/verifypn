@@ -113,7 +113,7 @@ namespace LTL {
 
         State working = this->_factory.newState();
         State curState = this->_factory.newState();
-        this->successorGenerator->net().print(state.marking());
+
         nested_todo.push_back(StackEntry{_states.add(state).second, S::initial_suc_info()});
 
         while (!nested_todo.empty()) {
@@ -160,7 +160,8 @@ namespace LTL {
     {
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
               "<trace>\n";
-
+        if(this->_reducer)
+            this->_reducer->initFire(os);
         size_t loop_id = std::numeric_limits<size_t>::max();
         // last element of todo-stack always has a "garbage" transition, it is the
         // current working element OR first element of nested.

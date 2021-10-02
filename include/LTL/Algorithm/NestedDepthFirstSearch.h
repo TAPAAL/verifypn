@@ -48,8 +48,8 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace, int kbound)
-                : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen),
+                               const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace, int kbound, const PetriEngine::Reducer* reducer)
+                : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen, reducer),
                   _states(*net, kbound, (int) net->numberOfPlaces() + 1), _print_trace(print_trace) {}
 
         bool isSatisfied() override;

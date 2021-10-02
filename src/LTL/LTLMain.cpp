@@ -108,7 +108,7 @@ namespace LTL {
     bool LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        options_t &options)
+                        options_t &options, const Reducer* reducer)
     {
 
         // force AP compress off for Büchi prints
@@ -148,14 +148,14 @@ namespace LTL {
                     gen.setHeuristic(heuristic.get());
                     result = _verify(
                             std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator>>(
-                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound),
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound, reducer),
                             options);
 
                 } else {
                     ResumingSuccessorGenerator gen{net};
                     result = _verify(
                             std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator>>(
-                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound),
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound, reducer),
                             options);
                 }
                 break;
