@@ -62,9 +62,10 @@ namespace PetriEngine {
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
+            virtual std::string op() const = 0;
+
         protected:
             virtual int apply(int v1, int v2) const = 0;
-            virtual std::string op() const = 0;
             std::vector<Expr_ptr> _exprs;
             virtual int32_t preOp(const EvaluationContext& context) const;
         };
@@ -79,6 +80,7 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             void toBinary(std::ostream&) const override;
+            void visit(Visitor&) const override;
             int formulaSize() const override{
                 size_t sum = _ids.size();
                 for(auto& e : _exprs) sum += e->formulaSize();
@@ -87,6 +89,7 @@ namespace PetriEngine {
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
+
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
@@ -428,6 +431,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void toBinary(std::ostream& out) const override;
+            void visit(Visitor&) const override;
 
 
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
@@ -860,6 +864,7 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
 
             void toBinary(std::ostream& out) const override;
+            void visit(Visitor&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
@@ -1072,6 +1077,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void toBinary(std::ostream& out) const override;
+            void visit(Visitor&) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -1090,6 +1096,8 @@ namespace PetriEngine {
 
             [[nodiscard]] const Expr_ptr &getExpr2() const { return _expr2; }
 
+            virtual std::string op() const = 0;
+
         protected:
             uint32_t _distance(DistanceContext& c,
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
@@ -1098,7 +1106,6 @@ namespace PetriEngine {
             }
         private:
             virtual bool apply(int v1, int v2) const = 0;
-            virtual std::string op() const = 0;
             /** Operator when exported to TAPAAL */
             virtual std::string opTAPAAL() const = 0;
             /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
@@ -1409,6 +1416,9 @@ namespace PetriEngine {
             }
 
             const std::vector<place_t>& places() const { return _places; }
+
+            double getMax() const { return _max; }
+            double getOffset() const { return _offset; }
 
         private:
             std::vector<place_t> _places;

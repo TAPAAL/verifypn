@@ -976,6 +976,10 @@ namespace PetriEngine {
 
         /******************** Range Contexts ********************/
 
+        void SimpleQuantifierCondition::visit(Visitor& ctx) const {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void UntilCondition::visit(Visitor &ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1046,6 +1050,10 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void LogicalCondition::visit(Visitor& ctx) const {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void AndCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1058,6 +1066,10 @@ namespace PetriEngine {
 
         void NotCondition::visit(Visitor& ctx) const
         {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CompareCondition::visit(Visitor& ctx) const {
             ctx.accept<decltype(this)>(this);
         }
         
@@ -1173,6 +1185,10 @@ namespace PetriEngine {
 
         void UnfoldedIdentifierExpr::visit(Visitor& ctx) const
         {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CommutativeExpr::visit(Visitor& ctx) const {
             ctx.accept<decltype(this)>(this);
         }
 
@@ -4447,7 +4463,7 @@ namespace PetriEngine {
                 }
             }
         }
-        
+
         PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk) : CommutativeExpr(0), tk(tk)
         {
             init(std::move(exprs));
@@ -4472,6 +4488,8 @@ namespace PetriEngine {
             }
             return false;
         }
+
+
 
     } // PQL
 } // PetriEngine

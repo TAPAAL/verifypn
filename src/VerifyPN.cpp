@@ -91,6 +91,7 @@
 #include "LTL/LTLMain.h"
 
 #include <atomic>
+#include <PetriEngine/PQL/BinaryPrinter.h>
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -987,7 +988,8 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof(char));
-            queries[i]->toBinary(out);
+            BinaryPrinter binary_printer(out);
+            queries[i]->visit(binary_printer);
         }
         else
         {

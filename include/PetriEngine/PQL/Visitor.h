@@ -30,101 +30,119 @@ namespace PetriEngine {
 
         protected:
             virtual void _accept(const NotCondition* element) = 0;
-            virtual void _accept(const AndCondition* element) = 0;
-            virtual void _accept(const OrCondition* element) = 0;
-            virtual void _accept(const LessThanCondition* element) = 0;
-            virtual void _accept(const LessThanOrEqualCondition* element) = 0;
-            virtual void _accept(const EqualCondition* element) = 0;
-            virtual void _accept(const NotEqualCondition* element) = 0;
+
+            virtual void _accept(const AndCondition* element) {
+                element->LogicalCondition::visit(*this);
+            }
+
+            virtual void _accept(const OrCondition* element) {
+                element->LogicalCondition::visit(*this);
+            }
+
+            virtual void _accept(const LessThanCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
+
+            virtual void _accept(const LessThanOrEqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
+
+            virtual void _accept(const EqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
+
+            virtual void _accept(const NotEqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
 
             virtual void _accept(const DeadlockCondition* element) = 0;
             virtual void _accept(const CompareConjunction* element) = 0;
             virtual void _accept(const UnfoldedUpperBoundsCondition* element) = 0;
 
+            // Super classes, the default implementation of subclasses is to call these
+            virtual void _accept(const CommutativeExpr *element) {
+                assert(false);
+                std::cerr << "No accept for CommutativeExpr (may be called from subclass)" << std::endl;
+                exit(0);
+            }
+
+            virtual void _accept(const SimpleQuantifierCondition *element) {
+                assert(false);
+                std::cerr << "No accept for SimpleQuantifierCondition (may be called from subclass)" << std::endl;
+                exit(0);
+            }
+
+            virtual void _accept(const LogicalCondition *element) {
+                assert(false);
+                std::cerr << "No accept for LogicalCondition (may be called from subclass)" << std::endl;
+                exit(0);
+            }
+
+            virtual void _accept(const CompareCondition *element) {
+                assert(false);
+                std::cerr << "No accept for CompareCondition (may be called from subclass)" << std::endl;
+                exit(0);
+            }
+
+            virtual void _accept(const UntilCondition *element) {
+                assert(false);
+                std::cerr << "No accept for UntilCondition (may be called from subclass)" << std::endl;
+                exit(0);
+            }
+
+
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error
-            virtual void _accept(const EFCondition *) {
-                assert(false);
-                std::cerr << "No accept for EFCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const EFCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const EGCondition *) {
-                assert(false);
-                std::cerr << "No accept for EGCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const EGCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const AGCondition *) {
-                assert(false);
-                std::cerr << "No accept for AGCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const AGCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const AFCondition *) {
-                assert(false);
-                std::cerr << "No accept for AFCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const AFCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const EXCondition *) {
-                assert(false);
-                std::cerr << "No accept for EXCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const EXCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const AXCondition *) {
-                assert(false);
-                std::cerr << "No accept for AXCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const AXCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const EUCondition *) {
-                assert(false);
-                std::cerr << "No accept for EUCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const EUCondition *condition) {
+                condition->UntilCondition::visit(*this);
             };
 
-            virtual void _accept(const AUCondition *) {
-                assert(false);
-                std::cerr << "No accept for AUCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const AUCondition *condition) {
+                condition->UntilCondition::visit(*this);
             };
 
-            virtual void _accept(const ACondition *) {
-                assert(false);
-                std::cerr << "No accept for ACondition" << std::endl;
-                exit(0);
+            virtual void _accept(const ACondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const ECondition *) {
-                assert(false);
-                std::cerr << "No accept for ECondition" << std::endl;
-                exit(0);
+            virtual void _accept(const ECondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const GCondition *) {
-                assert(false);
-                std::cerr << "No accept for GCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const GCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const FCondition *) {
-                assert(false);
-                std::cerr << "No accept for FCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const FCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(const XCondition *) {
-                assert(false);
-                std::cerr << "No accept for XCondition" << std::endl;
-                exit(0);
-            };
-
-            virtual void _accept(const UntilCondition *) {
-                assert(false);
-                std::cerr << "No accept for UntilCondition" << std::endl;
-                exit(0);
+            virtual void _accept(const XCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
 
             // shallow elements, neither of these should exist in a compiled expression
@@ -181,9 +199,13 @@ namespace PetriEngine {
 
             virtual void _accept(const LiteralExpr *element) = 0;
 
-            virtual void _accept(const PlusExpr *element) = 0;
+            virtual void _accept(const PlusExpr *element) {
+                element->CommutativeExpr::visit(*this);
+            };
 
-            virtual void _accept(const MultiplyExpr *element) = 0;
+            virtual void _accept(const MultiplyExpr *element) {
+                element->CommutativeExpr::visit(*this);
+            };
 
             virtual void _accept(const MinusExpr *element) = 0;
 
