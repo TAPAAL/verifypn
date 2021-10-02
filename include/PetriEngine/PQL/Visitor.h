@@ -194,6 +194,12 @@ namespace PetriEngine {
                 exit(0);
             };
 
+            virtual void _accept(const ShallowCondition *element) {
+                assert(false);
+                std::cerr << "No accept for BooleanCondition" << std::endl;
+                exit(0);
+            }
+
             // Expression
             virtual void _accept(const UnfoldedIdentifierExpr *element) = 0;
 

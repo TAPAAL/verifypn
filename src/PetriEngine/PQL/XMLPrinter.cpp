@@ -388,15 +388,11 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const IdentifierExpr *element) {
-            if (token_count) {
-                outputLine("<place>" + element->name() + "</place>");
-            }
-            else
-            {
-                openXmlTag("tokens-count");
-                outputLine("<place>" + element->name() + "</place>");
-                closeXmlTag("tokens-count");
-            }
+            element->compiled()->visit(*this);
+        }
+
+        void XMLPrinter::_accept(const ShallowCondition *element) {
+            element->getCompiled()->visit(*this);
         }
     }
 }

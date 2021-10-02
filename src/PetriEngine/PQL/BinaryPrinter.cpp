@@ -116,8 +116,8 @@ namespace PetriEngine::PQL {
         std::string sop = condition->op();
         os.write(sop.data(), sop.size());
         os.write("\0", sizeof(char));
-        (*condition)[0]->toBinary(os);
-        (*condition)[1]->toBinary(os);
+        (*condition)[0]->visit(*this);
+        (*condition)[1]->visit(*this);
     }
 
     void BinaryPrinter::_accept(const DeadlockCondition *condition){
@@ -160,4 +160,14 @@ namespace PetriEngine::PQL {
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
         condition->getCond()->visit(*this);
     }
+
+    void BinaryPrinter::_accept(const IdentifierExpr *condition) {
+        condition->compiled()->visit(*this);
+    }
+
+    void BinaryPrinter::_accept(const ShallowCondition *condition) {
+        condition->getCompiled()->visit(*this);
+    }
+
+
 }

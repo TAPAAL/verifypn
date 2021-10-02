@@ -59,6 +59,11 @@ namespace PetriEngine::PQL {
         void _accept(const LogicalCondition *condition) override;
 
         void _accept(const CompareCondition *condition) override;
+
+        void _accept(const IdentifierExpr *condition) override;
+
+        void _accept(const ShallowCondition *condition) override;
+
     };
 }
 

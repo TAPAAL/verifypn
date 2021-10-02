@@ -96,6 +96,8 @@ namespace PetriEngine {
 
             void _accept(const BooleanCondition *element) override;
 
+            void _accept(const ShallowCondition *element) override;
+
             void _accept(const UnfoldedIdentifierExpr *element) override;
 
             void _accept(const LiteralExpr *element) override;
