@@ -81,16 +81,6 @@ namespace LTL::Structures {
             return _aut->_buchi->state_is_accepting(getBuchiState());
         }
 
-        [[nodiscard]] bool is_weak() const {
-            // this could probably be cached somewhere for added speed.
-            const auto* s = _aut->_buchi->state_from_number(getBuchiState());
-            for (auto e : _aut->_buchi->succ(s))
-                if(e->dst() == s)
-                    if(e->cond() == bdd_true())
-                        return true;
-            return false;
-        }
-
     private:
         template <typename T>
         friend class LTL::ProductSuccessorGenerator;

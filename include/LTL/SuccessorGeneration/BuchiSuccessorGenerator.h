@@ -92,7 +92,6 @@ namespace LTL {
             }
         };
 
-
         bool has_invariant_self_loop(size_t state) {
             if (self_loops[state] != InvariantSelfLoop::UNKNOWN)
                 return self_loops[state] == InvariantSelfLoop::TRUE;

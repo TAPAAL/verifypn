@@ -75,7 +75,7 @@ namespace LTL {
                 // no successor
                 todo.pop_back();
                 if (curState.is_accepting()) {
-                    if(curState.is_weak())
+                    if(this->successorGenerator->has_invariant_self_loop(curState))
                         _violation = true;
                     else
                         ndfs(curState, nested_todo);

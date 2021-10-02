@@ -120,8 +120,7 @@ namespace LTL {
         _dstack.push(DEntry{ctop});
         if (this->successorGenerator->isAccepting(state)) {
             _astack.push(ctop);
-            if (this->successorGenerator->has_invariant_self_loop(state) && !SaveTrace){
-                //std::cerr << "Invariant self loop found. Violation is true" << std::endl;
+            if (this->successorGenerator->has_invariant_self_loop(state)){
                 _violation = true;
                 _invariant_loop = true;
             }
