@@ -73,7 +73,6 @@ namespace LTL {
             }
             if (!this->successorGenerator->next(working, top._sucinfo)) {
                 // no successor
-                todo.pop_back();
                 if (curState.is_accepting()) {
                     if(this->successorGenerator->has_invariant_self_loop(curState))
                         _violation = true;
@@ -86,6 +85,7 @@ namespace LTL {
                         return;
                     }
                 }
+                todo.pop_back();
             } else {
                 auto [is_new, stateid] = mark(working, MARKER1);
                 if (stateid == std::numeric_limits<size_t>::max()) {
@@ -93,8 +93,15 @@ namespace LTL {
                 }
                 top._sucinfo.last_state = stateid;
                 if (is_new) {
-                    todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                     ++this->_discovered;
+                    if(this->successorGenerator->has_invariant_self_loop(curState))
+                    {
+                        _violation = true;
+                        if(_print_trace)
+                            print_trace(todo, nested_todo);
+                        return;
+                    }
+                    todo.push_back(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
         }
@@ -106,7 +113,7 @@ namespace LTL {
 
         State working = this->_factory.newState();
         State curState = this->_factory.newState();
-
+        this->successorGenerator->net().print(state.marking());
         nested_todo.push_back(StackEntry{_states.add(state).second, S::initial_suc_info()});
 
         while (!nested_todo.empty()) {
@@ -149,24 +156,37 @@ namespace LTL {
 
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os)
+    void NestedDepthFirstSearch<S>::print_trace(light_deque<StackEntry>& _todo, light_deque<StackEntry>& _nested_todo, std::ostream &os)
     {
-        State state = this->_factory.newState();
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
               "<trace>\n";
 
-        for(auto* stck : {&todo, &nested_todo})
+        size_t loop_id = std::numeric_limits<size_t>::max();
+        // last element of todo-stack always has a "garbage" transition, it is the
+        // current working element OR first element of nested.
+
+        if(!_todo.empty())
+            _todo.pop_back();
+        if(!_nested_todo.empty()) {
+            // here the last state is significant
+            // of the successor is the check that demonstrates the violation.
+            loop_id = _nested_todo.back()._id;
+            _nested_todo.pop_back();
+        }
+
+        for(auto* stck : {&_todo, &_nested_todo})
         {
             while(!(*stck).empty())
             {
                 auto& top = (*stck).front();
-                if(!top._sucinfo.has_prev_state()) break;
-                _states.decode(state, top._sucinfo.state());
-                this->printTransition(top._sucinfo.transition(), state, os) << std::endl;
+                if(top._id == loop_id)
+                {
+                    this->printLoop(os);
+                    loop_id = std::numeric_limits<size_t>::max();
+                }
+                this->printTransition(top._sucinfo.transition(), os) << std::endl;
                 (*stck).pop_front();
             }
-            if(stck == &todo && !nested_todo.empty())
-                this->printLoop(os);
         }
         os << std::endl << "</trace>" << std::endl;
     }

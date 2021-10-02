@@ -108,7 +108,7 @@ namespace LTL {
         }
 
         std::ostream &
-        printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
+        printTransition(size_t transition, std::ostream &os, const LTL::Structures::ProductState* state = nullptr)
         {
             if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
                 os << indent << "<deadlock/>";
@@ -124,11 +124,11 @@ namespace LTL {
                 auto [fpre, lpre] = net->preset(transition);
                 for(; fpre < lpre; ++fpre) {
                     if (fpre->inhibitor) {
-                        assert(state.marking()[fpre->place] < fpre->tokens);
+                        assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
                         continue;
                     }
                     for (size_t i = 0; i < fpre->tokens; ++i) {
-                        assert(state.marking()[fpre->place] >= fpre->tokens);
+                        assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
                         os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
                     }
                 }

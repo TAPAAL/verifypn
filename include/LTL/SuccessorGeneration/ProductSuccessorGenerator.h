@@ -48,6 +48,8 @@ namespace LTL {
 
         }
 
+        const PetriEngine::PetriNet& net() const { return *_net; }
+
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
         bool next(LTL::Structures::ProductState &state)

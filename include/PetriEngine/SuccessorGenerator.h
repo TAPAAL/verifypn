@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   SuccessorGenerator.h
  * Author: Peter G. Jensen
  *
@@ -38,6 +38,8 @@ public:
     const MarkVal* getParent() const {
         return _parent->marking();
     }
+
+    const PetriNet& net() const { return _net; }
 
     void reset();
 
