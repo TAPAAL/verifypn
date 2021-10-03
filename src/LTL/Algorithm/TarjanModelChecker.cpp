@@ -228,15 +228,17 @@ namespace LTL {
                 dstack.pop();
             }
             // follow previously found back edges via lowsource until back in dstack.
-            assert(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
-            p = _cstack[p]._lowsource;
-            while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
-                auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
-                this->printTransition(tid, os) << '\n';
-                assert(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
+            if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max())
+            {
                 p = _cstack[p]._lowsource;
+                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
+                    auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
+                    this->printTransition(tid, os) << '\n';
+                    assert(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
+                    p = _cstack[p]._lowsource;
+                }
+                this->printTransition(_loop_trans, os) << '\n';
             }
-            this->printTransition(_loop_trans, os) << '\n';
 
             os << "</trace>" << std::endl;
         }
