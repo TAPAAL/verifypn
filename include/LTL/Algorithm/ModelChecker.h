@@ -123,25 +123,25 @@ namespace LTL {
             os << indent << "<transition id="
                 // field width stuff obsolete without büchi state printing.
                 << std::quoted(net->transitionNames()[transition]);
-             os << ">";
-             os << std::endl;
-             auto [fpre, lpre] = net->preset(transition);
-             for(; fpre < lpre; ++fpre) {
-                 if (fpre->inhibitor) {
-                     assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
-                     continue;
-                 }
-                 for (size_t i = 0; i < fpre->tokens; ++i) {
-                     assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
-                     os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
-                 }
-             }
-             os << indent << "</transition>\n";
-             if(_reducer)
-             {
-                 _reducer->postFire(os, net->transitionNames()[transition]);
-             }
-            return os;
+            os << ">";
+            os << std::endl;
+            auto [fpre, lpre] = net->preset(transition);
+            for(; fpre < lpre; ++fpre) {
+                if (fpre->inhibitor) {
+                    assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
+                    continue;
+                }
+                for (size_t i = 0; i < fpre->tokens; ++i) {
+                    assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
+                    os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
+                }
+            }
+            os << indent << "</transition>\n";
+            if(_reducer)
+            {
+                _reducer->postFire(os, net->transitionNames()[transition]);
+            }
+           return os;
         }
     };
 }

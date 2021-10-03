@@ -180,7 +180,7 @@ namespace LTL {
             // either way update the component ID of the state we came from.
             _cstack[from]._lowlink = _cstack[to]._lowlink;
             if constexpr (SaveTrace) {
-                _loop_state = _cstack[from]._stateid;
+                _loop_state = _cstack[to]._stateid;
                 _loop_trans = this->successorGenerator->fired();
                 _cstack[from]._lowsource = to;
 
@@ -208,36 +208,46 @@ namespace LTL {
             return;
         } else {
             assert(_violation);
-            State state = this->_factory.newState();
             os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
-            if (_cstack[dstack.top()._pos]._stateid == _loop_state) this->printLoop(os);
-            _cstack[dstack.top()._pos]._lowlink = std::numeric_limits<idx_t>::max();
+            this->_reducer->initFire(os);
+            if (_cstack[dstack.top()._pos]._stateid == _loop_state)
+                this->printLoop(os);
             dstack.pop();
             unsigned long p;
+            bool had_deadlock = false;
             // print (reverted) dstack
             while (!dstack.empty()) {
                 p = dstack.top()._pos;
+                dstack.pop();
                 auto stateid = _cstack[p]._stateid;
                 auto[parent, tid] = _seen.getHistory(stateid);
-
-                if (stateid == _loop_state) this->printLoop(os);
                 this->printTransition(tid, os) << '\n';
-
-                _cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
-                dstack.pop();
+                if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+                {
+                    had_deadlock = true;
+                    break;
+                }
+                if(_cstack[p]._stateid == _loop_state)
+                    this->printLoop(os);
             }
             // follow previously found back edges via lowsource until back in dstack.
-            if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max())
+            if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
             {
                 p = _cstack[p]._lowsource;
-                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
+                while (_cstack[p]._lowsource != std::numeric_limits<idx_t>::max()) {
                     auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
                     this->printTransition(tid, os) << '\n';
+                    if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+                    {
+                        had_deadlock = true;
+                        break;
+                    }
                     assert(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
                     p = _cstack[p]._lowsource;
                 }
-                this->printTransition(_loop_trans, os) << '\n';
+                if(!had_deadlock)
+                    this->printTransition(_loop_trans, os) << '\n';
             }
 
             os << "</trace>" << std::endl;

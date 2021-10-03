@@ -190,7 +190,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         }
@@ -200,7 +200,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
@@ -210,7 +210,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound),
+                                                     options.kbound, reducer),
                                              options);
                         }
                     } else {
@@ -221,7 +221,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         } else if (is_autreach_stub && !is_visible_stub) {
@@ -230,7 +230,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
@@ -240,7 +240,7 @@ namespace LTL {
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound),
+                                                     options.kbound, reducer),
                                              options);
                         }
                     }
@@ -254,7 +254,7 @@ namespace LTL {
                                                  negated_formula,
                                                  automaton,
                                                  &gen,
-                                                 options.kbound),
+                                                 options.kbound, reducer),
                                          options);
                     } else {
                         result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>>(
@@ -262,7 +262,7 @@ namespace LTL {
                                                  negated_formula,
                                                  automaton,
                                                  &gen,
-                                                 options.kbound),
+                                                 options.kbound, reducer),
                                          options);
                     }
                 }

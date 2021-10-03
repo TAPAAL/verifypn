@@ -49,9 +49,9 @@ namespace LTL {
         TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen *successorGen,
-                           int kbound,
+                           int kbound, const PetriEngine::Reducer* reducer,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, nullptr, std::move(spooler)...),
+                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, reducer, std::move(spooler)...),
                   _seen(net, kbound)
         {
             if (buchi._buchi->num_states() > 65535) {
