@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   light_deque.h
  * Author: Peter G. Jensen <pgj@cs.aau.dk>
  *
@@ -45,6 +45,7 @@ class light_deque
             {
                 e.~T();
             }
+            delete[] (uint8_t*)_data;
             _data = nullptr;
         }
 
@@ -71,17 +72,17 @@ class light_deque
         {
             return _front == _back;
         }
-        
+
         size_t size() const
         {
             return _back - _front;
         }
-        
+
         const T& front() const
         {
             return _data[_front];
         }
-        
+
         T& front() {
             return _data[_front];
         }
@@ -90,11 +91,11 @@ class light_deque
         {
             return _data[_back - 1];
         }
-        
+
         T& back() {
             return _data[_back - 1];
         }
-        
+
         void pop_front()
         {
             _data[_front].~T();
@@ -104,7 +105,7 @@ class light_deque
                 _front = _back = 0;
             }
         }
-        
+
         void pop_back()
         {
             if(_back > _front)
@@ -115,18 +116,18 @@ class light_deque
             if(_back == _front)
                 clear();
         }
-        
+
         void clear()
         {
             for(auto& e : *this)
                 e.~T();
             _front = _back = 0;
         }
-        
+
         T* begin() {
             return &front();
         }
-        
+
         T* end() {
             return &_data[_back];
         }
@@ -134,11 +135,11 @@ class light_deque
         const T* begin() const {
             return &front();
         }
-        
+
         const T* end() const {
             return &_data[_back];
         }
-        
+
         private:
         void expand() {
             T* ndata = (T*)new uint8_t[_size*2*sizeof(T)];
