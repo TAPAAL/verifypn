@@ -94,7 +94,8 @@ namespace LTL {
                 top._sucinfo.last_state = stateid;
                 if (is_new) {
                     ++this->_discovered;
-                    if(this->successorGenerator->has_invariant_self_loop(curState))
+                    if(this->successorGenerator->isAccepting(curState) &&
+                       this->successorGenerator->has_invariant_self_loop(curState))
                     {
                         _violation = true;
                         if(_print_trace)
