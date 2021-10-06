@@ -113,7 +113,8 @@ namespace PetriEngine {
                 << "Applications of rule I: " << _ruleI << "\n"
                 << "Applications of rule J: " << _ruleJ << "\n"
                 << "Applications of rule K: " << _ruleK << "\n"
-                << "Applications of rule L: " << _ruleL << std::endl;
+                << "Applications of rule L: " << _ruleL << "\n"
+                << "Applications of rule M: " << _ruleM << std::endl;
         }
 
         void postFire(std::ostream&, const std::string& transition);
@@ -123,7 +124,7 @@ namespace PetriEngine {
     private:
         size_t _removedTransitions = 0;
         size_t _removedPlaces= 0;
-        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0;
+        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0;
         PetriNetBuilder* parent = nullptr;
         bool reconstructTrace = false;
         std::chrono::high_resolution_clock::time_point _timer;
@@ -142,6 +143,7 @@ namespace PetriEngine {
         bool ReducebyRuleJ(uint32_t* placeInQuery);
         bool ReducebyRuleK(uint32_t* placeInQuery, bool remove_consumers);
         bool ReducebyRuleL(uint32_t* placeInQuery);
+        bool ReducebyRuleM(uint32_t* placeInQuery);
 
         std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
         bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);

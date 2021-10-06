@@ -1674,6 +1674,102 @@ namespace PetriEngine {
         return continueReductions;
     }
 
+    bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
+        // Maximum Unmarked Syphon removal. Using an overestimation we find a siphon, a set of places,
+        // which will never have more than 0 tokens.
+        // Rule 10 from "Structural Reductions Revisited" by Yann Theiry-Mieg
+        bool continueReductions = false;
+
+        // The places of siphon S will be removed
+        std::unordered_set <uint32_t> S;
+        // Transitions in T can't fire because they consume from a place in S.
+        std::unordered_set <uint32_t> T;
+
+        // Now we find the fixed point of S and T iteratively
+        // Initially S contains all places with 0 tokens and T contains all transitions
+
+        for (uint32_t i=0; i < parent->_places.size(); ++i) {
+            if (!parent->_places[i].skip && parent->initialMarking[i] == 0) {
+                S.insert(i);
+            }
+        }
+        for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
+            if (!parent->_transitions[i].skip) {
+                T.insert(i);
+            }
+        }
+
+        bool out;
+        bool fixpoint;
+        uint32_t trans;
+        do{
+            fixpoint = true;
+
+            // Discard transitions from T if they have no producers in S
+            for (auto it = T.begin(); it != T.end(); ){
+                out = true;
+                for (Arc postarc : parent->_transitions[(*it)].post) {
+                    if (S.find(postarc.place) != S.end()) {
+                        out = false;
+                        break;
+                    }
+                }
+                if (out) {
+                    it = T.erase(it);
+                    fixpoint = false;
+                } else {
+                    ++it;
+                }
+            }
+
+            // Discard from T any transition that does not consume from S and discard its postset from S
+            for (auto it = T.begin(); it != T.end(); ){
+                out = true;
+                trans = (*it);
+                for (Arc prearc : parent->_transitions[trans].pre) {
+                    // If there is a non-inhibitor arc from some place in S, this transition can't be removed from T yet.
+                    if (!prearc.inhib && S.find(prearc.place) != S.end()){
+                        out = false;
+                        break;
+                    }
+                }
+                if (out) {
+                    it = T.erase(it);
+                    fixpoint = false;
+                    // Places pointed to by any transition outside T are immediately removed from S
+                    for (Arc postarc : parent->_transitions[trans].post) {
+                        S.erase(postarc.place);
+                    }
+                } else {
+                    ++it;
+                }
+            }
+            // Until fixpoint
+        } while(!fixpoint && !S.empty());
+
+        bool anythingSkipped = false;
+        // Remove S and any transition consuming from S
+        for (uint32_t place : S) {
+            for (uint32_t consumer : parent->_places[place].consumers) {
+                auto consumertrans = parent->_transitions[consumer];
+                // Avoid skipping already skipped transitions, and Inhibitor arcs don't count here
+                if (!consumertrans.skip && !getInArc(place, consumertrans)->inhib) {
+                    skipTransition(consumer);
+                    anythingSkipped = true;
+                }
+            }
+            if (placeInQuery[place] == 0) {
+                skipPlace(place);
+                anythingSkipped = true;
+            }
+        }
+        if (anythingSkipped) {
+            _ruleM++;
+            continueReductions = true;
+        }
+        return continueReductions;
+    }
+
     std::array tnames {
             "T-lb_balancing_receive_notification_10",
             "T-lb_balancing_receive_notification_2",
@@ -1729,6 +1825,7 @@ namespace PetriEngine {
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
+                        while(ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
@@ -1759,7 +1856,7 @@ namespace PetriEngine {
         }
         else
         {
-            const char* rnames = "ABCDEFGHIJKL";
+            const char* rnames = "ABCDEFGHIJKLM";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
@@ -1825,6 +1922,9 @@ namespace PetriEngine {
                             break;
                         case 11:
                             if (ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 12:
+                            if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
                             break;
                     }
 #ifndef NDEBUG
