@@ -370,8 +370,8 @@ namespace PetriEngine {
         for (uint32_t p = 0; p < numberofplaces; p++) {
             if(hasTimedout()) return false;            
             Place& place = parent->_places[p];
-            
-            if(place.skip) continue;    // already removed    
+
+            if(place.skip) continue;    // already removed
             // B5. dont mess up query
             if(placeInQuery[p] > 0)
                 continue;
@@ -1605,6 +1605,75 @@ namespace PetriEngine {
         return reduced;
     }
 
+    bool Reducer::ReducebyRuleL(uint32_t* placeInQuery) {
+        // When a transition t1 has the same effect as t2, but more pre conditions,
+        // which can happen due to read arc behavior, t1 can be discarded.
+        // Rule 2 from "Structural Reductions Revisited" by Yann Theiry-Mieg
+
+        bool continueReductions = false;
+        for (size_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1) {
+            for (size_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
+
+                if (t1 == t2) continue;
+
+                // We check if t1 can be removed
+
+                Transition& tran1 = getTransition(t1);
+                Transition& tran2 = getTransition(t2);
+
+                if (tran1.skip || tran2.skip) continue;
+                if (tran1.inhib || tran2.inhib) continue;
+
+                if (tran1.pre.size() < tran2.pre.size()) continue;
+                if (tran1.post.size() < tran2.post.size()) continue;
+
+                bool canT1BeRemoved = true;
+
+                for (size_t p = 0; p < parent->numberOfPlaces(); ++p) {
+
+                    Place& place = parent->_places[p];
+
+                    if (place.skip) continue;
+
+                    // Find weights of arcs
+                    size_t t1in_weight = 0;
+                    auto t1in = getInArc(p, tran1);
+                    if (t1in != tran1.pre.end()) t1in_weight = t1in->weight;
+
+                    size_t t2in_weight = 0;
+                    auto t2in = getInArc(p, tran2);
+                    if (t2in != tran2.pre.end()) t2in_weight = t2in->weight;
+
+                    size_t t1out_weight = 0;
+                    auto t1out = getOutArc(tran1, p);
+                    if (t1out != tran1.post.end()) t1out_weight = t1out->weight;
+
+                    size_t t2out_weight = 0;
+                    auto t2out = getOutArc(tran2, p);
+                    if (t2out != tran2.post.end()) t2out_weight = t2out->weight;
+
+                    if (
+                        (t1out_weight - t1in_weight) != (t2out_weight - t2in_weight) || // They must have the same effect
+                        t1in_weight < t2in_weight // t1 must have greater-or-equal pre-conditions
+                    ) {
+                        canT1BeRemoved = false;
+                        break;
+                    }
+                }
+
+                if (canT1BeRemoved) {
+                    // We can discard t1
+                    skipTransition(t1);
+                    _ruleL++;
+                    continueReductions = true;
+                    break;
+                }
+            }
+        }
+
+        return continueReductions;
+    }
+
     std::array tnames {
             "T-lb_balancing_receive_notification_10",
             "T-lb_balancing_receive_notification_2",
@@ -1663,6 +1732,7 @@ namespace PetriEngine {
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                         if(!next_safe)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -1689,7 +1759,7 @@ namespace PetriEngine {
         }
         else
         {
-            const char* rnames = "ABCDEFGHIJK";
+            const char* rnames = "ABCDEFGHIJKL";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
@@ -1752,6 +1822,9 @@ namespace PetriEngine {
                             break;
                         case 10:
                             if (ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers)) changed = true;
+                            break;
+                        case 11:
+                            if (ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                             break;
                     }
 #ifndef NDEBUG
