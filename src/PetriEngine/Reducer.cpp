@@ -1535,15 +1535,20 @@ namespace PetriEngine {
                 if (arc.inhib) {
                     for (auto pt : place.consumers) {
                         if (!tseen[pt]) {
+                            // Summary of block: pt is seen unless it forms a non-decreasing
+                            // loop on place, or is inhibited by place
                             Transition &trans = parent->_transitions[pt];
                             auto it = trans.post.begin();
                             for (; it != trans.post.end(); ++it)
                                 if (it->place >= arc.place) break;
+
                             if (it != trans.post.end() && it->place == arc.place) {
                                 auto it2 = trans.pre.begin();
+                                // Find the arc from place to trans we know to exist
                                 for (; it2 != trans.pre.end(); ++it2)
-                                    if (it2->place >= arc.place || it2->inhib) break;
-                                if (it->weight <= it2->weight) continue;
+                                    if (it2->place >= arc.place) break;
+                                // No need for a || it2->place != arc.place condition, as trans was taken from place.consumers in the first place, so it2->place == arc.place always holds here.
+                                if (it2->inhib || it->weight >= it2->weight) continue;
                             }
                             tseen[pt] = true;
                             wtrans.push_back(pt);
@@ -1552,6 +1557,7 @@ namespace PetriEngine {
                 } else {
                     for (auto pt : place.producers) {
                         if (!tseen[pt]) {
+                            // Summary of block: pt is seen unless it forms a non-increasing loop on place
                             Transition &trans = parent->_transitions[pt];
                             auto it = trans.pre.begin();
                             for (; it != trans.pre.end(); ++it)
@@ -1563,7 +1569,6 @@ namespace PetriEngine {
                                     if (it2->place >= arc.place) break;
                                 if (it->weight >= it2->weight) continue;
                             }
-
                             tseen[pt] = true;
                             wtrans.push_back(pt);
                         }
