@@ -43,6 +43,11 @@ enum class BuchiOptimization {
     High = 3
 };
 
+enum class LTLHeuristic {
+    Distance,
+    Automaton,
+    FireCount,
+};
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -83,7 +88,7 @@ struct options_t {
     APCompression ltl_compress_aps = APCompression::None;
     LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;
     BuchiOptimization buchiOptimization = BuchiOptimization::Low;
-    const char* ltlHeuristic = "aut";
+    LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
 
     bool replay_trace = false;
     std::string replay_file;

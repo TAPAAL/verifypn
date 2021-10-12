@@ -477,10 +477,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Missing argument to --ltl-heur\n";
                 return ErrorCode;
             }
-            else {
-                options.ltlHeuristic = argv[i + 1];
+            if (strcmp(argv[i + 1], "aut") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Automaton;
+            } else if (strcmp(argv[i + 1], "dist") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Distance;
+            } else if (strcmp(argv[i + 1], "fire-count") == 0) {
+                options.ltlHeuristic = LTLHeuristic::FireCount;
+            } else {
+                continue;
             }
-            ++i;
+
+           ++i;
         }
         else if (strcmp(argv[i], "-noweak") == 0) {
             options.ltluseweak = false;
@@ -536,9 +543,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                                    classic otherwise.\n"
                     "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
                     "                                       - none       disable stubborn reductions (equivalent to -p).\n"
-                    "  --ltl-heur <spec>                    Select distance metric for LTL heuristic search\n"
-                    "                                       Use --ltl-heur-help to see specification grammar.\n"
-                    "                                       Defaults to 'aut'.\n"
+                    "  --ltl-heur <type>                    Select search heuristic for best-first search in LTL engine\n"
+                    "                                       - dist           Same distance metric as reachability engine.\n"
+                    "                                       - aut            Same distance metric as reachability engine, but\n"
+                    "                                                        only applied to neighbouring Büchi states.\n"
+                    "                                       - fire-count     Prioritise transitions that were fired less often.\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -625,22 +634,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
-            return SuccessCode;
-        }
-        else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
-            printf("Heuristics for LTL model checking are specified using the following grammar:\n"
-                   "  heurexp : {'aut' | 'automaton'}\n"
-                   "          | {'dist' | 'distance'}\n"
-                   "          | {'fc' | 'firecount' | 'fire-count'} <threshold>?\n"
-                   "          | '(' heurexp ')'\n"
-                   "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
-                   "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
-                   "Example strings:\n"
-                   "  - aut - use the automaton heuristic for verification.\n"
-                   "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
-                   "Weight for sum and threshold for fire count are optional and integral.\n"
-                   "Sum weights default to 1 (thus plain sum), and default fire count threshold is 5000.\n"
-                   );
             return SuccessCode;
         }
         else if (options.modelfile == NULL) {
