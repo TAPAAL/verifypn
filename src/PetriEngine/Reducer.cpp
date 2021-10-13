@@ -181,7 +181,36 @@ namespace PetriEngine {
         pl.producers.clear();
         assert(consistent());
     }
-    
+
+    void Reducer::skipInArc(uint32_t p, uint32_t t)
+    {
+        Place& place = parent->_places[p];
+        Transition& trans = parent->_transitions[t];
+
+        eraseTransition(place.consumers, t);
+
+        Arc a;
+        a.place = p;
+        auto ait = std::lower_bound(trans.pre.begin(), trans.pre.end(), a);
+        assert(ait != trans.pre.end());
+        trans.pre.erase(ait);
+        assert(consistent());
+    }
+
+    void Reducer::skipOutArc(uint32_t t, uint32_t p)
+    {
+        Place& place = parent->_places[p];
+        Transition& trans = parent->_transitions[t];
+
+        eraseTransition(place.producers, t);
+
+        Arc a;
+        a.place = p;
+        auto ait = std::lower_bound(trans.post.begin(), trans.post.end(), a);
+        assert(ait != trans.post.end());
+        trans.post.erase(ait);
+        assert(consistent());
+    }
     
     bool Reducer::consistent()
     {
@@ -1775,6 +1804,111 @@ namespace PetriEngine {
         return continueReductions;
     }
 
+    bool Reducer::ReducebyRuleN(uint32_t* placeInQuery, bool applyF) {
+        // Redundant arc (and place) removal.
+        // If a place p never disables a transition, we can remove its arc to the
+        // transitions as long as the effect is maintained.
+
+        bool continueReductions = false;
+        const size_t numberofplaces = parent->numberOfPlaces();
+
+        for (uint32_t p = 0; p < numberofplaces; ++p)
+        {
+            if (hasTimedout()) return false;
+            Place& place = parent->_places[p];
+            if (place.skip) continue;
+
+            bool removePlace = !place.inhib && placeInQuery[p] == 0;
+
+            // Use tflags to mark transitions with negative effect
+            _tflags.resize(parent->_transitions.size(), 0);
+            std::fill(_tflags.begin(), _tflags.end(), 0);
+            uint32_t nonNegative = place.consumers.size();
+
+            uint32_t low = parent->initialMarking[p];
+
+            for (uint cons : place.consumers)
+            {
+                Transition& tran = getTransition(cons);
+
+                auto outArc = getOutArc(tran, p);
+                if (outArc != tran.post.end()) {
+
+                    uint32_t outArcWeight = outArc->weight;
+                    uint32_t inArcWeight = getInArc(p, tran)->weight;
+
+                    if (outArcWeight < inArcWeight)
+                    {
+                        nonNegative -= 1;
+                        _tflags[cons] = 1;
+                        removePlace = false;
+
+                        if (outArcWeight < low)
+                        {
+                            low = outArcWeight;
+                        }
+                    }
+                }
+                else
+                {
+                    low = 0;
+                    break;
+                }
+            }
+
+            // Consumer arcs exists, but none will have a weight lower than 0
+            if (!place.consumers.empty() && low == 0) continue;
+
+            for (uint cons : place.consumers)
+            {
+                if (_tflags[cons] == 1) continue;
+
+                Transition& tran = getTransition(cons);
+
+                auto outArc = getOutArc(tran, p);
+                auto inArc = getInArc(p, tran);
+
+                if (inArc->weight <= low)
+                {
+                    if (inArc->weight == outArc->weight)
+                    {
+                        skipOutArc(cons, p);
+                    }
+                    else
+                    {
+                        outArc->weight -= inArc->weight;
+                    }
+                    skipInArc(p, cons);
+
+                    nonNegative -= 1;
+                    continueReductions = true;
+                    _ruleN += 1;
+
+                    // TODO Reconstruct trace
+                }
+            }
+
+            if (applyF && removePlace && nonNegative == 0 && numberofplaces - _removedPlaces > 1)
+            {
+                if(reconstructTrace)
+                {
+                    for(auto t : place.consumers)
+                    {
+                        std::string tname = getTransitionName(t);
+                        const ArcIter arc = getInArc(p, getTransition(t));
+                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                    }
+                }
+                skipPlace(p);
+                continueReductions = true;
+                _ruleF++;
+            }
+
+        }
+        assert(consistent());
+        return continueReductions;
+    }
+
     std::array tnames {
             "T-lb_balancing_receive_notification_10",
             "T-lb_balancing_receive_notification_2",
@@ -1809,6 +1943,7 @@ namespace PetriEngine {
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
             std::cout << "Rule H disabled when a trace is requested." << std::endl;
+        bool applyF = std::count(reduction.begin(), reduction.end(), 5);
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
@@ -1821,7 +1956,7 @@ namespace PetriEngine {
                 }
             }
         }
-        else if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
+        else if (enablereduction == 1) { // in the aggressive reduction all six rules are used as long as they remove something
             bool changed = false;
             do
             {
@@ -1833,6 +1968,7 @@ namespace PetriEngine {
                         while(ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                         if(!next_safe)
@@ -1861,7 +1997,7 @@ namespace PetriEngine {
         }
         else
         {
-            const char* rnames = "ABCDEFGHIJKLM";
+            const char* rnames = "ABCDEFGHIJKLMN";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
@@ -1930,6 +2066,9 @@ namespace PetriEngine {
                             break;
                         case 12:
                             if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 13:
+                            if (ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
                             break;
                     }
 #ifndef NDEBUG

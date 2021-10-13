@@ -255,7 +255,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 for(auto& qn : q)
                 {
                     int32_t n;
-                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 12)
+                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 13)
                     {
                         std::cerr << "Error in reduction rule choice : " << qn << std::endl;
                         return ErrorCode;
