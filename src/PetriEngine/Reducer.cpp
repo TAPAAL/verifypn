@@ -1823,7 +1823,9 @@ namespace PetriEngine {
             // Use tflags to mark transitions with negative effect
             _tflags.resize(parent->_transitions.size(), 0);
             std::fill(_tflags.begin(), _tflags.end(), 0);
-            uint32_t nonNegative = place.consumers.size();
+
+            // Assume all consumers are disableable and non-negative until proven otherwise. Used to apply F.
+            uint32_t disableableNonNegative = place.consumers.size();
 
             uint32_t low = parent->initialMarking[p];
 
@@ -1839,7 +1841,7 @@ namespace PetriEngine {
 
                     if (outArcWeight < inArcWeight)
                     {
-                        nonNegative -= 1;
+                        disableableNonNegative -= 1;
                         _tflags[cons] = 1;
                         removePlace = false;
 
@@ -1880,7 +1882,7 @@ namespace PetriEngine {
                     }
                     skipInArc(p, cons);
 
-                    nonNegative -= 1;
+                    disableableNonNegative -= 1;
                     continueReductions = true;
                     _ruleN += 1;
 
@@ -1888,7 +1890,7 @@ namespace PetriEngine {
                 }
             }
 
-            if (applyF && removePlace && nonNegative == 0 && numberofplaces - _removedPlaces > 1)
+            if (applyF && removePlace && disableableNonNegative == 0 && numberofplaces - _removedPlaces > 1)
             {
                 if(reconstructTrace)
                 {
