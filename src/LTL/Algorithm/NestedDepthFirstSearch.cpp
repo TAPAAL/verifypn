@@ -30,8 +30,10 @@ namespace LTL {
     std::pair<bool,size_t> NestedDepthFirstSearch<S>::mark(State& state, const uint8_t MARKER)
     {
         auto[_, stateid] = _states.add(state);
-        if(_markers.size() <= stateid)
-            _markers.resize(stateid + 1);
+        if (stateid == std::numeric_limits<size_t>::max()) {
+            return std::make_pair(false, stateid);
+        }
+
         auto r = _markers[stateid];
         _markers[stateid] = (MARKER | r);
         const bool is_new = (r & MARKER) == 0;
@@ -150,7 +152,7 @@ namespace LTL {
     {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << _states.discovered() << std::endl
-                  << "\tmax tokens:                 " << _states.maxTokens() << std::endl
+                  << "\tmax tokens:                 " << _states.max_tokens() << std::endl
                   << "\texplored states:            " << _mark_count[MARKER1] << std::endl
                   << "\texplored states (nested):   " << _mark_count[MARKER2] << std::endl;
     }

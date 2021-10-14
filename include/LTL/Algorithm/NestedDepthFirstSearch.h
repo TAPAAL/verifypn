@@ -50,7 +50,7 @@ namespace LTL {
         NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
                                const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace, int kbound, const PetriEngine::Reducer* reducer)
                 : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen, reducer),
-                  _states(*net, kbound, (int) net->numberOfPlaces() + 1), _print_trace(print_trace) {}
+                  _states(net, kbound), _print_trace(print_trace) {}
 
         bool isSatisfied() override;
 
@@ -61,9 +61,10 @@ namespace LTL {
         std::pair<bool,size_t> mark(State& state, uint8_t);
 
 
-        PetriEngine::Structures::StateSet _states;
+        LTL::Structures::BitProductStateSet<> _states;
 
-        std::vector<uint8_t> _markers;
+        std::unordered_map<size_t, uint8_t> _markers;
+        //std::vector<uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
