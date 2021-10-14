@@ -1068,10 +1068,15 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  std::ostream &out = std::cout) {
     Condition_ptr cond;
     bool wasACond;
-    if (std::dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
-        wasACond = std::dynamic_pointer_cast<ACondition>(query) != nullptr;
+    if (std::dynamic_pointer_cast<ACondition>(query) != nullptr) {
+        wasACond = true;
         cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
-    } else {
+    }
+    else if (std::dynamic_pointer_cast<ECondition>(query) != nullptr) {
+        wasACond = false;
+        cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    }
+    else {
         wasACond = true;
         cond = query;
     }
