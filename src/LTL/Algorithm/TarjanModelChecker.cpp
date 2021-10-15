@@ -230,12 +230,13 @@ namespace LTL {
                 }
                 if(_cstack[p]._stateid == _loop_state)
                     this->printLoop(os);
+                _cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
             }
             // follow previously found back edges via lowsource until back in dstack.
             if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
             {
                 p = _cstack[p]._lowsource;
-                while (_cstack[p]._lowsource != std::numeric_limits<idx_t>::max()) {
+                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
                     auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
                     this->printTransition(tid, os) << '\n';
                     if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
