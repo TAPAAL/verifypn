@@ -397,6 +397,7 @@ namespace PetriEngine {
                 continue;
             auto prod = place.producers;
             Transition& in = getTransition(tIn);
+            bool added_tIn_extra = false;
             for(auto tOut : prod)
             {
                 Transition& out = getTransition(tOut);
@@ -484,7 +485,11 @@ namespace PetriEngine {
                     std::string tinname     = getTransitionName(tIn);
                     std::string pname       = getPlaceName(p);
                     Arc& a = *getInArc(p, in);
-                    _extraconsume[tinname].emplace_back(pname, a.weight);
+                    if(!added_tIn_extra)
+                    {
+                        added_tIn_extra = true;
+                        _extraconsume[tinname].emplace_back(pname, a.weight);
+                    }
                     for(size_t i = 0; i < multiplier; ++i)
                     {
                         _postfire[toutname].push_back(tinname);
