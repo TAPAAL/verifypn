@@ -116,14 +116,13 @@ namespace LTL {
                 os << indent << "<deadlock/>";
                 return os;
             }
-            if(_reducer)
-            {
-                _reducer->extraConsume(os, net->transitionNames()[transition]);
-            }
             os << indent << "<transition id="
                 // field width stuff obsolete without büchi state printing.
                 << std::quoted(net->transitionNames()[transition]);
             os << ">";
+            if(_reducer) {
+                _reducer->extraConsume(os, net->transitionNames()[transition]);
+            }
             os << std::endl;
             auto [fpre, lpre] = net->preset(transition);
             for(; fpre < lpre; ++fpre) {
