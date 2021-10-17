@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Reducer.h
  * Author: srba
  *
@@ -19,34 +19,34 @@
 namespace PetriEngine {
 
     using ArcIter = std::vector<Arc>::iterator;
-    
+
     class PetriNetBuilder;
-        
+
     class QueryPlaceAnalysisContext : public PQL::AnalysisContext {
         std::vector<uint32_t> _placeInQuery;
         bool _deadlock;
     public:
 
-        QueryPlaceAnalysisContext(const std::unordered_map<std::string, uint32_t>& pnames, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net) 
+        QueryPlaceAnalysisContext(const std::unordered_map<std::string, uint32_t>& pnames, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net)
         : PQL::AnalysisContext(pnames, tnames, net) {
             _placeInQuery.resize(_placeNames.size(), 0);
             _deadlock = false;
         };
-        
+
         virtual ~QueryPlaceAnalysisContext()
         {
         }
-        
+
         uint32_t*  getQueryPlaceCount(){
             return _placeInQuery.data();
         }
 
         bool hasDeadlock() { return _deadlock; }
-        
+
         virtual void setHasDeadlock() override {
             _deadlock = true;
         };
-        
+
         ResolutionResult resolve(const std::string& identifier, bool place) override {
             if(!place) return PQL::AnalysisContext::resolve(identifier, false);
             ResolutionResult result;
@@ -61,7 +61,7 @@ namespace PetriEngine {
                 _placeInQuery[i]++;
                 return result;
             }
-            
+
             return result;
         }
 
@@ -70,7 +70,7 @@ namespace PetriEngine {
    struct ExpandedArc
    {
        ExpandedArc(std::string place, size_t weight) : place(place), weight(weight) {}
-       
+
         friend std::ostream& operator<<(std::ostream& os, ExpandedArc const & ea) {
             for(size_t i = 0; i < ea.weight; ++i)
             {
@@ -78,18 +78,18 @@ namespace PetriEngine {
             }
             return os;
         }
-       
-        std::string place;        
+
+        std::string place;
         size_t weight;
    };
-    
+
     class Reducer {
     public:
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
         void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reductions);
-        
+
         size_t RemovedTransitions() const {
             return _removedTransitions;
         }
@@ -115,9 +115,9 @@ namespace PetriEngine {
                 << "Applications of rule K: " << _ruleK << std::endl;
         }
 
-        void postFire(std::ostream&, const std::string& transition);
-        void extraConsume(std::ostream&, const std::string& transition);
-        void initFire(std::ostream&);
+        void postFire(std::ostream&, const std::string& transition) const;
+        void extraConsume(std::ostream&, const std::string& transition) const;
+        void initFire(std::ostream&) const;
 
     private:
         size_t _removedTransitions = 0;
@@ -146,7 +146,7 @@ namespace PetriEngine {
 
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
-        
+
         PetriEngine::Transition& getTransition(uint32_t transition);
         ArcIter getOutArc(PetriEngine::Transition&, uint32_t place);
         ArcIter getInArc(uint32_t place, PetriEngine::Transition&);
@@ -154,14 +154,14 @@ namespace PetriEngine {
         void skipTransition(uint32_t);
         void skipPlace(uint32_t);
         std::string newTransName();
-        
+
         bool consistent();
         bool hasTimedout() const {
             auto end = std::chrono::high_resolution_clock::now();
             auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _timer);
             return (diff.count() >= _timeout);
         }
-        
+
         std::vector<std::string> _initfire;
         std::unordered_map<std::string, std::vector<std::string>> _postfire;
         std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
@@ -171,7 +171,7 @@ namespace PetriEngine {
         std::vector<uint32_t> _skipped_trans;
     };
 
-    
+
 
 
 }

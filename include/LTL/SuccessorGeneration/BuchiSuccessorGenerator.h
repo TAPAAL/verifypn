@@ -78,6 +78,7 @@ namespace LTL {
         {
             return (bool) aut._buchi->prop_weak();
         }
+
         size_t buchiStates() { return aut._buchi->num_states(); }
 
         Structures::BuchiAutomaton aut;
@@ -90,7 +91,6 @@ namespace LTL {
                 aut->_buchi->release_iter(iter);
             }
         };
-
 
         bool has_invariant_self_loop(size_t state) {
             if (self_loops[state] != InvariantSelfLoop::UNKNOWN)

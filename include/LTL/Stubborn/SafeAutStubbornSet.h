@@ -48,23 +48,40 @@ namespace LTL {
             StubbornSet::reset();
             memset(_unsafe.get(), false, sizeof(bool) * _net.numberOfTransitions());
             _bad = false;
+            _has_enabled_stubborn = false;
+        }
+
+        void set_buchi_conds(PetriEngine::PQL::Condition_ptr ret_cond,
+                             PetriEngine::PQL::Condition_ptr prog_cond,
+                             PetriEngine::PQL::Condition_ptr sink_cond) {
+            _ret_cond = ret_cond;
+            _prog_cond = prog_cond;
+            _sink_cond = sink_cond;
         }
 
     protected:
         void addToStub(uint32_t t) override
         {
-            //refinement of bad: can manually check whether firing t would violate some progressing formula.
-            if (_unsafe[t] && _enabled[t]) {
-                _bad = true;
-                return;
+            // potential refinement of bad: can manually check whether firing t would violate some progressing formula.
+            if (_enabled[t]) {
+                _has_enabled_stubborn = true;
+                if (_unsafe[t]) {
+                    _bad = true;
+                    return;
+                }
             }
-            //TODO check safe-ness
             StubbornSet::addToStub(t);
         }
 
     private:
         std::unique_ptr<bool[]> _unsafe;
         bool _bad = false;
+        bool _has_enabled_stubborn = false;
+        PetriEngine::PQL::Condition_ptr _ret_cond;
+        PetriEngine::PQL::Condition_ptr _prog_cond;
+        PetriEngine::PQL::Condition_ptr _sink_cond;
+
+        void _print_debug();
     };
 }
 

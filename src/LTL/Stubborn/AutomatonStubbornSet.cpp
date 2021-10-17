@@ -28,7 +28,7 @@ namespace LTL {
     public:
         NondeterministicConjunctionVisitor(AutomatonStubbornSet &stubbornSet) :
                 InterestingLTLTransitionVisitor(stubbornSet, false),
-                _stubborn(stubbornSet), _net(stubbornSet._net) {}
+                _net(stubbornSet._net), _stubborn(stubbornSet){}
 
     protected:
         static constexpr auto PresetBad = StubbornSet::PresetBad;
