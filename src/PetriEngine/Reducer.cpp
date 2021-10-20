@@ -1807,7 +1807,8 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleN(uint32_t* placeInQuery, bool applyF) {
         // Redundant arc (and place) removal.
         // If a place p never disables a transition, we can remove its arc to the
-        // transitions as long as the effect is maintained.
+        // transitions as long as the effect is maintained. Similarly, we can remove
+        // transitions that are always inhibited.
 
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
@@ -1818,7 +1819,7 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if (place.skip) continue;
 
-            bool removePlace = !place.inhib && placeInQuery[p] == 0;
+            bool removePlace = placeInQuery[p] == 0;
 
             // Use tflags to mark transitions with negative effect
             _tflags.resize(parent->_transitions.size(), 0);
@@ -1827,17 +1828,27 @@ namespace PetriEngine {
             // Assume all consumers are disableable and non-negative until proven otherwise. Used to apply F.
             uint32_t disableableNonNegative = place.consumers.size();
 
+            uint32_t inhibArcs = 0;
+
             uint32_t low = parent->initialMarking[p];
 
             for (uint cons : place.consumers)
             {
                 Transition& tran = getTransition(cons);
+                auto inArc = getInArc(p, tran);
+
+                if (inArc->inhib)
+                {
+                    inhibArcs++;
+                    continue;
+                }
 
                 auto outArc = getOutArc(tran, p);
+
                 if (outArc != tran.post.end()) {
 
                     uint32_t outArcWeight = outArc->weight;
-                    uint32_t inArcWeight = getInArc(p, tran)->weight;
+                    uint32_t inArcWeight = inArc->weight;
 
                     if (outArcWeight < inArcWeight)
                     {
@@ -1861,36 +1872,50 @@ namespace PetriEngine {
             // Consumer arcs exists, but none will have a weight lower than 0
             if (!place.consumers.empty() && low == 0) continue;
 
+            std::set<uint32_t> alwaysInhibited;
+
             for (uint cons : place.consumers)
             {
                 if (_tflags[cons] == 1) continue;
 
                 Transition& tran = getTransition(cons);
-
-                auto outArc = getOutArc(tran, p);
                 auto inArc = getInArc(p, tran);
 
                 if (inArc->weight <= low)
                 {
-                    if (inArc->weight == outArc->weight)
+                    if (inArc->inhib)
                     {
-                        skipOutArc(cons, p);
+                        alwaysInhibited.insert(cons);
                     }
                     else
                     {
-                        outArc->weight -= inArc->weight;
+                        auto outArc = getOutArc(tran, p);
+                        if (inArc->weight == outArc->weight)
+                        {
+                            skipOutArc(cons, p);
+                        }
+                        else
+                        {
+                            outArc->weight -= inArc->weight;
+                        }
+                        skipInArc(p, cons);
+
+                        disableableNonNegative -= 1;
+                        continueReductions = true;
+                        _ruleN += 1;
+
+                        // TODO Reconstruct trace
                     }
-                    skipInArc(p, cons);
-
-                    disableableNonNegative -= 1;
-                    continueReductions = true;
-                    _ruleN += 1;
-
-                    // TODO Reconstruct trace
                 }
             }
 
-            if (applyF && removePlace && disableableNonNegative == 0 && numberofplaces - _removedPlaces > 1)
+            inhibArcs -= alwaysInhibited.size();
+            _ruleN += alwaysInhibited.size();
+
+            for (auto inhibited : alwaysInhibited)
+                skipTransition(inhibited);
+
+            if (applyF && removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _removedPlaces > 1)
             {
                 if(reconstructTrace)
                 {
@@ -1904,6 +1929,10 @@ namespace PetriEngine {
                 skipPlace(p);
                 continueReductions = true;
                 _ruleF++;
+            }
+            else if (inhibArcs == 0)
+            {
+                place.inhib = false;
             }
 
         }
