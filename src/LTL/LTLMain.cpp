@@ -22,7 +22,7 @@
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
-#include "LTL/SuccessorGeneration/HeuristicParser.h"
+//#include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
 
