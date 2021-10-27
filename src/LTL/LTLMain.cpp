@@ -22,7 +22,7 @@
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
-#include "LTL/SuccessorGeneration/HeuristicParser.h"
+//#include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
 
@@ -97,12 +97,14 @@ namespace LTL {
         if (options.strategy != Reachability::Strategy::HEUR && options.strategy != Reachability::Strategy::DEFAULT) {
             return nullptr;
         }
-        auto heur = ParseHeuristic(net, automaton, negated_formula, options.ltlHeuristic);
-        if (heur == nullptr) {
-            std::cerr << "Invalid heuristic specification, terminating.\n";
-            exit(1);
+        switch(options.ltlHeuristic) {
+            case LTLHeuristic::Distance:
+                return std::make_unique<AutomatonHeuristic>(net, automaton);
+            case LTLHeuristic::Automaton:
+                return std::make_unique<DistanceHeuristic>(net, negated_formula);
+            case LTLHeuristic::FireCount:
+                return std::make_unique<LogFireCountHeuristic>(net, 5000);
         }
-        else return heur;
     }
 
     bool LTLMain(const PetriNet *net,
