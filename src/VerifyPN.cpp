@@ -75,6 +75,7 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/CTLVisitor.h"
+#include <PetriEngine/PQL/XMLPrinter.h>
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -90,6 +91,7 @@
 #include "LTL/LTLMain.h"
 
 #include <atomic>
+#include <PetriEngine/PQL/BinaryPrinter.h>
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -940,7 +942,8 @@ std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::
             continue;
         }
         ss << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        queries[i]->toXML(ss, 3);
+        XMLPrinter xml_printer(ss, 3);
+        queries[i]->visit(xml_printer);
         ss << "    </formula>\n  </property>\n";
     }
 
@@ -985,12 +988,14 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof(char));
-            queries[i]->toBinary(out);
+            BinaryPrinter binary_printer(out);
+            queries[i]->visit(binary_printer);
         }
         else
         {
             out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            queries[i]->toXML(out, 3);
+            XMLPrinter xml_printer(out, 3);
+            queries[i]->visit(xml_printer);
             out << "    </formula>\n  </property>\n";
         }
     }
@@ -1016,9 +1021,8 @@ void writeCompactQueries(const std::vector<std::shared_ptr<Condition>>& queries,
         if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
 
             out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            queries[i]->toCompactXML(out,0, context);
-            out << "    </formula>\n  </property>\n";
-
+            XMLPrinter xml_printer(out, 0);
+            queries[i]->visit(xml_printer);
     }
 
     out << "</property-set>\n";
