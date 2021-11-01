@@ -1784,7 +1784,8 @@ namespace PetriEngine {
         bool anythingSkipped = false;
         // Remove S and any transition consuming from S
         for (uint32_t place : S) {
-            for (uint32_t consumer : parent->_places[place].consumers) {
+            auto theplace = parent->_places[place];
+            for (uint32_t consumer : theplace.consumers) {
                 auto consumertrans = parent->_transitions[consumer];
                 // Avoid skipping already skipped transitions, and Inhibitor arcs don't count here
                 if (!consumertrans.skip && !getInArc(place, consumertrans)->inhib) {
@@ -1803,6 +1804,93 @@ namespace PetriEngine {
         }
         return continueReductions;
     }
+
+    // Alternate implementation for Rule M, pending performance comparison
+    /*bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
+        // Maximum Unmarked Syphon removal. Using an overestimation we find a siphon, a set of places,
+        // which will never have more than 0 tokens.
+        // Rule 10 from "Structural Reductions Revisited" by Yann Theiry-Mieg
+        bool continueReductions = false;
+
+        // _pflags used to track membership in S
+        _pflags.resize(parent->_places.size(), 0);
+        std::fill(_pflags.begin(), _pflags.end(), 0);
+        // the uint8_t of _tflags is not big enough for this.
+        std::vector<uint32_t> transitionSConsumerCount(parent->_transitions.size(), 0);
+
+        // Initially S contains all places with 0 tokens
+        for (uint32_t i=0; i < parent->_places.size(); ++i) {
+            if (!parent->_places[i].skip && parent->initialMarking[i] == 0) {
+                _pflags[i] = 1;
+            }
+        }
+
+        // Count up the number of elements of S each transition depends on
+        for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
+            Transition& trans = parent->_transitions[i];
+            if (trans.skip){
+                // Any value other than 0 will do
+                transitionSConsumerCount[i] = 42;
+            } else {
+                for (Arc a : trans.pre) {
+                    if (_pflags[a.place] == 1) {
+                        transitionSConsumerCount[i]++;
+                    }
+                }
+            }
+        }
+
+        // Stack for found transitions that don't depend on places in S
+        std::stack<uint32_t> recurStack;
+
+        for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
+            if (transitionSConsumerCount[i] == 0){
+                recurStack.push(i);
+
+                // Depth first search
+                while(!recurStack.empty()){
+                    Transition& trans = parent->_transitions[recurStack.top()];
+                    recurStack.pop();
+                    for (Arc a : trans.post){
+                        uint32_t place = a.place;
+                        if (_pflags[place] == 1){
+                            _pflags[place] = 0;
+                            for (uint32_t consumer : parent->_places[place].consumers){
+                                transitionSConsumerCount[consumer]--;
+                                if (transitionSConsumerCount[consumer] == 0){
+                                    recurStack.push(consumer);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bool anythingSkipped = false;
+        // Remove S and any transition consuming from S
+        for (uint32_t i=0; i < _pflags.size(); ++i) {
+            if (_pflags[i] == 1){
+                auto theplace = parent->_places[i];
+                for (uint32_t consumer : theplace.consumers) {
+                    auto consumertrans = parent->_transitions[consumer];
+                    // Avoid skipping already skipped transitions, and Inhibitor arcs don't count here
+                    if (!consumertrans.skip && !getInArc(i, consumertrans)->inhib) {
+                        skipTransition(consumer);
+                        anythingSkipped = true;
+                    }
+                }
+                if (placeInQuery[i] == 0) {
+                    skipPlace(i);
+                    anythingSkipped = true;
+                }
+            }
+        }
+        if (anythingSkipped) {
+            _ruleM++;
+            continueReductions = true;
+        }
+    }*/
 
     bool Reducer::ReducebyRuleN(uint32_t* placeInQuery, bool applyF) {
         // Redundant arc (and place) removal.
@@ -2132,7 +2220,6 @@ namespace PetriEngine {
 
             consistent();
         }
-
         return continueReductions;
     }
 
