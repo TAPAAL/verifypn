@@ -25,8 +25,10 @@ namespace PetriEngine {
 
     void Reducer::Print(QueryPlaceAnalysisContext& context) {
         std::cout   << "\nNET INFO:\n" 
-                    << "Number of places: " << parent->numberOfPlaces() << std::endl
-                    << "Number of transitions: " << parent->numberOfTransitions() 
+                    << "Number of places: " << parent->numberOfPlaces()
+                    << " (Originally " << parent->originalNumberOfPlaces() << ")" << std::endl
+                    << "Number of transitions: " << parent->numberOfTransitions()
+                    << " (Originally " << parent->originalNumberOfTransitions() << ")"
                     << std::endl << std::endl;
         for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
             std::cout << "Transition " << t << " :\n";
@@ -58,6 +60,27 @@ namespace PetriEngine {
             std::cout   << "Query count for place " << i 
                         << " is: " << context.getQueryPlaceCount()[i] << std::endl;
         }
+    }
+
+    uint32_t Reducer::numberOfUnskippedTransitions()
+    {
+        return parent->numberOfTransitions() - numberOfSkippedTransitions();
+    }
+
+    uint32_t Reducer::numberOfUnskippedPlaces()
+    {
+        return parent->numberOfPlaces() - numberOfSkippedPlaces();
+    }
+
+    int32_t Reducer::removedTransitions()
+    {
+        // Can be negative if transitions was added during reduction
+        return (int32_t)parent->_originalNumberOfTransitions - (int32_t)numberOfUnskippedTransitions();
+    }
+
+    int32_t Reducer::removedPlaces()
+    {
+        return (int32_t)parent->_originalNumberOfPlaces - (int32_t)numberOfUnskippedPlaces();
     }
     
     std::string Reducer::getTransitionName(uint32_t transition)
@@ -138,7 +161,6 @@ namespace PetriEngine {
     
     void Reducer::skipTransition(uint32_t t)
     {
-        ++_removedTransitions;
         Transition& trans = getTransition(t);
         assert(!trans.skip);
         for(auto p : trans.post)
@@ -152,13 +174,13 @@ namespace PetriEngine {
         trans.post.clear();
         trans.pre.clear();
         trans.skip = true;
+        _skippedTransitions.push_back(t);
         assert(consistent());
-        _skipped_trans.push_back(t);
     }
     
     void Reducer::skipPlace(uint32_t place)
     {
-        ++_removedPlaces;
+        ++_skippedPlaces;
         Place& pl = parent->_places[place];
         assert(!pl.skip);
         pl.skip = true;
@@ -215,11 +237,10 @@ namespace PetriEngine {
     bool Reducer::consistent()
     {
 #ifndef NDEBUG
-        size_t strans = 0;
         for(size_t i = 0; i < parent->numberOfTransitions(); ++i)
         {
             Transition& t = parent->_transitions[i];
-            if(t.skip) ++strans;
+            assert(!t.skip || std::find(_skippedTransitions.begin(), _skippedTransitions.end(), i) != _skippedTransitions.end());
             assert(std::is_sorted(t.pre.begin(), t.pre.end()));
             assert(std::is_sorted(t.post.end(), t.post.end()));
             assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
@@ -238,8 +259,6 @@ namespace PetriEngine {
                 assert(std::find(p.producers.begin(), p.producers.end(), i) != p.producers.end());
             }
         }
-        
-        assert(strans == _removedTransitions);
 
         size_t splaces = 0;
         for(size_t i = 0; i < parent->numberOfPlaces(); ++i)
@@ -268,7 +287,7 @@ namespace PetriEngine {
                 assert(a->place == i);
             }
         }
-        assert(splaces == _removedPlaces);
+        assert(splaces == _skippedPlaces);
 #endif
         return true;
     }
@@ -1037,7 +1056,7 @@ namespace PetriEngine {
             
             ++_ruleF;
             
-            if((numberofplaces - _removedPlaces) > 1)
+            if((numberofplaces - _skippedPlaces) > 1)
             {
                 if(reconstructTrace)
                 {
@@ -1343,149 +1362,7 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleJ(uint32_t* placeInQuery)
     {
-        bool continueReductions = false;
-        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
-        {
-            if(hasTimedout())
-                return continueReductions;
-
-            if(parent->_transitions[t].skip ||
-               parent->_transitions[t].inhib ||
-               parent->_transitions[t].pre.size() != 1)
-                continue;
-            auto p = parent->_transitions[t].pre[0].place;
-            if(placeInQuery[p] > 0)
-            {
-                continue; // can be relaxed
-            }
-            if(parent->initialMarking[p] > 0) 
-            {
-                continue; // can be relaxed
-            }
-            const Place& place = parent->_places[p];
-            if(place.skip) continue;
-            if(place.inhib) continue;
-            if(place.consumers.size() < 1) continue;
-            if(place.producers.size() < 1) continue;
-            
-            // check that prod and cons are not overlapping
-            const auto presize = place.producers.size(); // can be relaxed >= 2
-            const auto postsize = place.consumers.size(); // can be relaxed >= 2
-            bool ok = true;
-            for(size_t i = 0; i < postsize; ++i)
-            {   // this can be done smarter than a quadratic loop!
-                for(size_t j = 0; j < presize; ++j)
-                {
-                    ok &= place.consumers[i] != place.producers[j];                        
-                }
-            }
-            if(!ok) continue;
-            // check that post of consumer is not messing with query or inhib
-            // if either all pre or all post are query-free, we are ok.
-            bool inquery = false;
-            for(auto t : place.consumers)
-            {
-                Transition& trans = parent->_transitions[t];
-                if(trans.pre.size() == 1) // can be relaxed
-                {
-                    // check that weights match
-                    // can be relaxed
-                    ok &= trans.pre[0].weight == 1;
-                    ok &= !trans.pre[0].inhib;
-                }
-                else 
-                {
-                    ok = false;
-                    break;
-                }
-                for(auto& pp : trans.post)
-                {
-                    ok &= !parent->_places[pp.place].inhib;
-                    inquery |= placeInQuery[pp.place] > 0;
-                    ok &= pp.weight == 1; // can be relaxed
-                }
-                if(!ok) 
-                    break;
-            }
-            if(!ok) continue;
-            // check that pre of producing do not mess with query or inhib
-            for(auto& t : place.producers)
-            {
-                Transition& trans = parent->_transitions[t];
-                for(const auto& arc : trans.post)
-                {
-                    ok &= !inquery || placeInQuery[arc.place] == 0;
-                    ok &= !parent->_places[arc.place].inhib;
-                }
-            }
-            if(!ok) continue;
-            ++_ruleJ;
-            continueReductions = true;
-            // otherwise we can skip the place by merging up the two transitions
-            // constructing 4 new transitions, one for each combination.  
-            // In the binary case, we want to achieve the following four transitions
-            // post[n] = pre[n] + post[n]
-            // pre[0] = pre[0] + post[1]
-            // pre[1] = pre[1] + post[0]
-            
-            // start by copying out the post of each of the posts
-            Place pp = place;
-            skipPlace(p);
-            std::vector<std::vector<Arc>> posts;
-            std::vector<Transition> pres;
-            
-            for(auto t : pp.consumers)
-                posts.push_back(parent->_transitions[t].post);
-            
-            for(auto t : pp.producers)
-                pres.push_back(parent->_transitions[t]);
-            
-            // remove old transitions, we will create new ones
-            for(auto t : pp.consumers)
-                skipTransition(t);
-            
-            for(auto t : pp.producers)
-                skipTransition(t);      
-
-            // compute all permutations
-            for(auto& trans : pres)
-            {
-                for(auto& postset : posts)
-                {
-                    auto id = parent->_transitions.size();
-                    if(!_skipped_trans.empty())
-                        id = _skipped_trans.back();
-                    else
-                    {
-                        continue;
-                        parent->_transitions.emplace_back();
-                    }
-                    parent->_transitions[id] = trans;
-                    auto& target = parent->_transitions[id];
-                    for(auto& arc : postset)
-                        target.addPostArc(arc);
-
-                    // add to places
-                    if(_skipped_trans.empty())
-                        parent->_transitionnames[newTransName()] = id;
-                    
-                    for(auto& arc : target.pre)
-                        parent->_places[arc.place].addConsumer(id);
-                    for(auto& arc : target.post)
-                        parent->_places[arc.place].addProducer(id); 
-                    if(!_skipped_trans.empty())
-                    {
-                        --_removedTransitions; // recycling
-                        _skipped_trans.pop_back();
-                    }
-                    parent->_transitions[id].skip = false;
-                    parent->_transitions[id].inhib = false;
-                    consistent();
-                }
-            }
-            consistent();
-        }
-        return continueReductions;
+        return false;
     }
 
     bool Reducer::ReducebyRuleK(uint32_t *placeInQuery, bool remove_consumers) {
@@ -2003,7 +1880,7 @@ namespace PetriEngine {
             for (auto inhibited : alwaysInhibited)
                 skipTransition(inhibited);
 
-            if (applyF && removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _removedPlaces > 1)
+            if (applyF && removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _skippedPlaces > 1)
             {
                 if(reconstructTrace)
                 {
@@ -2148,11 +2025,10 @@ namespace PetriEngine {
                 {
                     // Create new transition with effect of firing the producer and a combination of consumers
                     auto id = parent->_transitions.size();
-                    if (!_skipped_trans.empty())
+                    if (!_skippedTransitions.empty())
                     {
-                        id = _skipped_trans.back();
-                        _skipped_trans.pop_back();
-                        _removedTransitions--;
+                        id = _skippedTransitions.back();
+                        _skippedTransitions.pop_back();
                     }
                     else
                     {
@@ -2337,8 +2213,8 @@ namespace PetriEngine {
                 {
 #ifndef NDEBUG
                     auto c = std::chrono::high_resolution_clock::now();
-                    auto op = _removedPlaces;
-                    auto ot = _removedTransitions;
+                    auto op = numberOfUnskippedPlaces();
+                    auto ot = numberOfUnskippedTransitions();
 #endif
                     switch(r)
                     {
@@ -2392,7 +2268,7 @@ namespace PetriEngine {
                     auto end = std::chrono::high_resolution_clock::now();
                     auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - c);
                     std::cout << "SPEND " << diff.count()  << " ON " << rnames[r] << std::endl;
-                    std::cout << "REM " << ((int)_removedPlaces-(int)op) << " " << ((int)_removedTransitions-(int)ot) << std::endl;
+                    std::cout << "REM " << ((int)op - (int)numberOfUnskippedPlaces()) << " " << ((int)ot - (int)numberOfUnskippedTransitions()) << std::endl;
 #endif
                     if(hasTimedout())
                         break;

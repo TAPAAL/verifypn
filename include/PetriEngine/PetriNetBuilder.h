@@ -62,12 +62,49 @@ namespace PetriEngine {
         {
             return _placenames.size();
         }
-        
+
         uint32_t numberOfTransitions() const
         {
             return _transitionnames.size();
         }
-        
+
+        uint32_t originalNumberOfPlaces() const
+        {
+            return _originalNumberOfPlaces;
+        }
+
+        uint32_t originalNumberOfTransitions() const
+        {
+            return _originalNumberOfTransitions;
+        }
+
+        int32_t removedTransitions()
+        {
+            // Can be negative if transitions were added during reduction
+            return reducer.removedTransitions();
+        }
+
+        int32_t removedPlaces()
+        {
+            return reducer.removedPlaces();
+        }
+
+        uint32_t numberOfUnskippedTransitions()
+        {
+            return reducer.numberOfUnskippedTransitions();
+        }
+
+        uint32_t numberOfUnskippedPlaces()
+        {
+            return reducer.numberOfUnskippedPlaces();
+        }
+
+        void freezeOriginalSize()
+        {
+            _originalNumberOfPlaces = numberOfUnskippedPlaces();
+            _originalNumberOfTransitions = numberOfUnskippedTransitions();
+        }
+
         const std::unordered_map<std::string, uint32_t>& getPlaceNames() const
         {
             return _placenames;
@@ -81,16 +118,6 @@ namespace PetriEngine {
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions);
-        
-        size_t RemovedTransitions() const
-        {
-            return reducer.RemovedTransitions();
-        }
-        
-        size_t RemovedPlaces() const
-        {
-            return reducer.RemovedPlaces();
-        }
 
         void printStats(std::ostream& out)
         {
@@ -137,7 +164,10 @@ namespace PetriEngine {
         
         std::vector<PetriEngine::Transition> _transitions;
         std::vector<PetriEngine::Place> _places;
-        
+
+        uint32_t _originalNumberOfPlaces;
+        uint32_t _originalNumberOfTransitions;
+
         std::vector<MarkVal> initialMarking;
         Reducer reducer;
     };

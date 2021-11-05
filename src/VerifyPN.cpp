@@ -871,11 +871,11 @@ void printStats(PetriNetBuilder& builder, options_t& options)
         if (options.enablereduction != 0) {
 
             std::cout << "Size of net before structural reductions: " <<
-                    builder.numberOfPlaces() << " places, " <<
-                    builder.numberOfTransitions() << " transitions" << std::endl;
+                    builder.originalNumberOfPlaces() << " places, " <<
+                    builder.originalNumberOfTransitions() << " transitions" << std::endl;
             std::cout << "Size of net after structural reductions: " <<
-                    builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
-                    builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
+                    builder.numberOfUnskippedPlaces() << " places, " <<
+                    builder.numberOfUnskippedTransitions() << " transitions" << std::endl;
             std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
                     " seconds" << std::endl;
 
@@ -1478,6 +1478,8 @@ int main(int argc, char* argv[]) {
     options.queryReductionTimeout = 0;
 
     //--------------------- Apply Net Reduction ---------------//
+
+    builder.freezeOriginalSize();
 
     if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
