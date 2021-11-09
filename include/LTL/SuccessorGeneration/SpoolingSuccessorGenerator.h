@@ -1,16 +1,16 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -34,16 +34,25 @@ namespace LTL {
             _statebuf.setMarking(new PetriEngine::MarkVal[net->numberOfPlaces() + 1], net->numberOfPlaces());
         }
 
-        struct sucinfo {
+        struct successor_info_t {
             SuccessorQueue<> successors;
             size_t buchi_state;
             size_t last_state;
+            size_t _transition;
 
-            sucinfo(size_t buchiState, size_t lastState) : buchi_state(buchiState), last_state(lastState) {}
+            successor_info_t(size_t buchiState, size_t lastState) : buchi_state(buchiState), last_state(lastState) {}
 
-            [[nodiscard]] inline bool has_prev_state() const
+            [[nodiscard]] bool has_prev_state() const
             {
                 return last_state != NoLastState;
+            }
+
+            size_t state() const {
+                return last_state;
+            }
+
+            size_t transition() const {
+                return _transition;
             }
 
             [[nodiscard]] bool fresh() const { return buchi_state == NoBuchiState && last_state == NoLastState; }
@@ -62,9 +71,9 @@ namespace LTL {
             _heuristic = heuristic;
         }
 
-        [[nodiscard]] static sucinfo initial_suc_info()
+        [[nodiscard]] static successor_info_t initial_suc_info()
         {
-            return sucinfo{sucinfo::NoBuchiState, sucinfo::NoLastState};
+            return successor_info_t{successor_info_t::NoBuchiState, successor_info_t::NoLastState};
         }
 
         bool prepare(const PetriEngine::Structures::State *state)
@@ -78,14 +87,15 @@ namespace LTL {
         }
 
 
-        void prepare(const Structures::ProductState *state, sucinfo &sucinfo)
+        void prepare(const Structures::ProductState *state, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
 
             PetriEngine::SuccessorGenerator::prepare(state);
             if (sucinfo.successors == nullptr) {
                 uint32_t tid;
-                _spooler->prepare(state);
+                bool res = _spooler->prepare(state);
+                //assert(!res/* || !_net.deadlocked(state->marking())*/);
                 if (!_heuristic || !_heuristic->has_heuristic(*state)) {
                     uint32_t nsuc = 0;
                     // generate list of transitions that generate a successor.
@@ -95,7 +105,7 @@ namespace LTL {
                         assert(nsuc <= _net.numberOfTransitions());
                     }
                     sucinfo.successors = SuccessorQueue(_transbuf.get(), nsuc);
-
+                    assert((res && !sucinfo.successors.empty()) || !res);
                 } else {
                     // list of (transition, weight)
                     _heuristic->prepare(*state);
@@ -113,7 +123,7 @@ namespace LTL {
                 }
             }
         }
-        bool next(Structures::ProductState &state, sucinfo &sucinfo)
+        bool next(Structures::ProductState &state, successor_info_t &sucinfo)
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
@@ -124,6 +134,7 @@ namespace LTL {
                 return false;
             }
             _last = sucinfo.successors.front();
+            sucinfo._transition = _last;
 #ifndef NDEBUG
             //std::cerr << "Firing " << _net.transitionNames()[_last] << std::endl;
 #endif
@@ -134,7 +145,7 @@ namespace LTL {
 
         [[nodiscard]] uint32_t fired() const { return _last; }
 
-        void generate_all(LTL::Structures::ProductState *parent, sucinfo &sucinfo)
+        void generate_all(LTL::Structures::ProductState *parent, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
@@ -200,7 +211,7 @@ namespace LTL {
             _heuristic->push(fired());
         }
 
-        void pop(const sucinfo &sc) {
+        void pop(const successor_info_t &sc) {
             if (_heuristic && sc.successors.has_consumed())
                 _heuristic->pop(sc.successors.last_pop());
         }

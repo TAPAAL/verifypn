@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   light_deque.h
  * Author: Peter G. Jensen <pgj@cs.aau.dk>
  *
@@ -18,30 +18,40 @@ class light_deque
         size_t _front = 0;
         size_t _back = 0;
         size_t _size = 0;
-        std::unique_ptr<T[]> _data;
+        T* _data = nullptr;
     public:
         light_deque(size_t initial_size = 64)
         {
             if(initial_size == 0) initial_size = 1;
-            _data.reset(new T[initial_size]);
+            _data = (T*)new uint8_t[initial_size*sizeof(T)]; // TODO, revisit with cast and initialization
             _size = initial_size;
         }
 
         light_deque<T> &operator=(const light_deque<T> &other) {
-            _front = other._front;
-            _back = other._back;
+            for(auto& e : *this)
+                e.~T();
+            delete[] (uint8_t*)_data;
+            _front = 0;
+            _back = 0;
             _size = other.size();
-            _data.reset(new T[_size]);
-            memcpy(_data.get(), other._data.get(), _size * sizeof(T));
+            _data = (T*)new uint8_t[_size*sizeof(T)];
+            for(auto& e : other)
+                push_back(e);
             return *this;
         }
 
-        light_deque(light_deque &&) noexcept = default;
-        light_deque &operator=(light_deque &&) noexcept = default;
+        ~light_deque() {
+            for(auto& e : *this)
+            {
+                e.~T();
+            }
+            delete[] (uint8_t*)_data;
+            _data = nullptr;
+        }
 
         void push_back(const T& element)
         {
-            _data.get()[_back] = element;
+            new (&_data[_back]) T(element);
             ++_back;
             if(_back == _size)
             {
@@ -51,7 +61,7 @@ class light_deque
 
         void push_back(T&& element)
         {
-            _data.get()[_back] = element;
+            new (&_data[_back]) T(std::move(element));
             ++_back;
             if(_back == _size) {
                 expand();
@@ -62,39 +72,88 @@ class light_deque
         {
             return _front == _back;
         }
-        
+
         size_t size() const
         {
             return _back - _front;
         }
-        
-        T front() const
+
+        const T& front() const
         {
-            return _data.get()[_front];
+            return _data[_front];
         }
-        const T& front() {
-            return _data.get()[_front];
+
+        T& front() {
+            return _data[_front];
+        }
+
+        const T& back() const
+        {
+            return _data[_back - 1];
+        }
+
+        T& back() {
+            return _data[_back - 1];
         }
 
         void pop_front()
         {
+            _data[_front].~T();
             ++_front;
             if(_front >= _back)
             {
                 _front = _back = 0;
             }
         }
-        
+
+        void pop_back()
+        {
+            if(_back > _front)
+            {
+                --_back;
+                _data[_back].~T();
+            }
+            if(_back == _front)
+                clear();
+        }
+
         void clear()
         {
+            for(auto& e : *this)
+                e.~T();
             _front = _back = 0;
         }
-    private:
+
+        T* begin() {
+            return &front();
+        }
+
+        T* end() {
+            return &_data[_back];
+        }
+
+        const T* begin() const {
+            return &front();
+        }
+
+        const T* end() const {
+            return &_data[_back];
+        }
+
+        private:
         void expand() {
-            std::unique_ptr<T[]> ndata(new T[_size*2]);
-            memcpy(ndata.get(), _data.get(), _size*sizeof(T));
+            T* ndata = (T*)new uint8_t[_size*2*sizeof(T)];
+            size_t n = 0;
+            for(auto& e : *this)
+            {
+                new (ndata + n) T(std::move(e));
+                ++n;
+            }
             _size *= 2;
-            _data.swap(ndata);
+            _back = (_back - _front);
+            _front = 0;
+            std::swap(_data, ndata);
+            delete[] (uint8_t*)ndata;
         }
 };
 

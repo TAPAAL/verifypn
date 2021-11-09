@@ -1,4 +1,4 @@
-/* TAPAAL untimed verification engine verifypn 
+/* TAPAAL untimed verification engine verifypn
  * Copyright (C) 2011-2021  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
@@ -24,7 +24,7 @@
  * LTL Extension
  *                          Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>
  *                          Simon Mejlby Virenfeldt <simon@simwir.dk>
- * 
+ *
  * Color Extension
  *                          Alexander Bilgram <alexander@bilgram.dk>
  *                          Peter Haar Taankvist <ptaankvist@gmail.com>
@@ -34,12 +34,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -54,10 +54,10 @@
 #include <utility>
 #include <functional>
 // #include <filesystem>
-// #include <bits/stdc++.h> 
-// #include <iostream> 
-// #include <sys/stat.h> 
-// #include <sys/types.h> 
+// #include <bits/stdc++.h>
+// #include <iostream>
+// #include <sys/stat.h>
+// #include <sys/types.h>
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
@@ -481,10 +481,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Missing argument to --ltl-heur\n";
                 return ErrorCode;
             }
-            else {
-                options.ltlHeuristic = argv[i + 1];
+            if (strcmp(argv[i + 1], "aut") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Automaton;
+            } else if (strcmp(argv[i + 1], "dist") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Distance;
+            } else if (strcmp(argv[i + 1], "fire-count") == 0) {
+                options.ltlHeuristic = LTLHeuristic::FireCount;
+            } else {
+                continue;
             }
-            ++i;
+
+           ++i;
         }
         else if (strcmp(argv[i], "-noweak") == 0) {
             options.ltluseweak = false;
@@ -540,9 +547,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                                    classic otherwise.\n"
                     "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
                     "                                       - none       disable stubborn reductions (equivalent to -p).\n"
-                    "  --ltl-heur <spec>                    Select distance metric for LTL heuristic search\n"
-                    "                                       Use --ltl-heur-help to see specification grammar.\n"
-                    "                                       Defaults to 'aut'.\n"
+                    "  --ltl-heur <type>                    Select search heuristic for best-first search in LTL engine\n"
+                    "                                       Defaults to aut"
+                    "                                       - dist           Formula-driven heuristic, guiding toward states that satisfy\n"
+                    "                                                        the atomic propositions mentioned in the LTL formula.\n"
+                    "                                       - aut            Automaton-driven heuristic. Guides search toward states\n"
+                    "                                                        that satisfy progressing formulae in the automaton.\n"
+                    "                                       - fire-count     Prioritises transitions that were fired less often.\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -631,22 +642,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         }
-        else if (strcmp(argv[i], "--ltl-heur-help") == 0) {
-            printf("Heuristics for LTL model checking are specified using the following grammar:\n"
-                   "  heurexp : {'aut' | 'automaton'}\n"
-                   "          | {'dist' | 'distance'}\n"
-                   "          | {'fc' | 'firecount' | 'fire-count'} <threshold>?\n"
-                   "          | '(' heurexp ')'\n"
-                   "          | 'sum' <weight>? heurexp <weight?> heurexp\n"
-                   "          | 'sum' '(' <weight>? heurexp ',' <weight>? heurexp ')'\n"
-                   "Example strings:\n"
-                   "  - aut - use the automaton heuristic for verification.\n"
-                   "  - sum dist fc 1000 - use the sum of distance heuristic and fire count heuristic with threshold 1000.\n"
-                   "Weight for sum and threshold for fire count are optional and integral.\n"
-                   "Sum weights default to 1 (thus plain sum), and default fire count threshold is 5000.\n"
-                   );
-            return SuccessCode;
-        }
         else if (options.modelfile == NULL) {
             options.modelfile = argv[i];
         } else if (options.queryfile == NULL) {
@@ -694,7 +689,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     //Create filename for unfolding statistics file
     if(!options.output_stats.empty()){
         filename = options.modelfile;
-        
+
         generated_filename += "model";
         generated_filename += options.modelfile;
         generated_filename += options.queryfile;
@@ -897,7 +892,7 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
             std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
             std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
         }
-        
+
         std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
@@ -910,8 +905,8 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
         if(options.computePartition){
             std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
         }
-        
-        
+
+
 
         if(!options.output_stats.empty()){
             std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
@@ -958,7 +953,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
     std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
     std::fstream out;
-    
+
     if(binary)
     {
         out.open(filename, std::ios::binary | std::ios::out);
@@ -1023,13 +1018,12 @@ void writeCompactQueries(const std::vector<std::shared_ptr<Condition>>& queries,
         if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
 
             out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            queries[i]->toCompactXML(out,0, context);
-            out << "    </formula>\n  </property>\n";
-        
+            XMLPrinter xml_printer(out, 0);
+            queries[i]->visit(xml_printer);
     }
 
     out << "</property-set>\n";
-    
+
     out.close();
 }
 
@@ -1075,10 +1069,15 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  std::ostream &out = std::cout) {
     Condition_ptr cond;
     bool wasACond;
-    if (std::dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
-        wasACond = std::dynamic_pointer_cast<ACondition>(query) != nullptr;
+    if (std::dynamic_pointer_cast<ACondition>(query) != nullptr) {
+        wasACond = true;
         cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
-    } else {
+    }
+    else if (std::dynamic_pointer_cast<ECondition>(query) != nullptr) {
+        wasACond = false;
+        cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    }
+    else {
         wasACond = true;
         cond = query;
     }
@@ -1161,8 +1160,8 @@ void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine
     writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
 }
 
-void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder &b2, const PetriNet *net, 
-        const PetriEngine::ColoredPetriNetBuilder& cpnBuilder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries, 
+void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder &b2, const PetriNet *net,
+        const PetriEngine::ColoredPetriNetBuilder& cpnBuilder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
         std::vector<std::string> &querynames, std::string filename){
     //Don't know if this is needed
     std::vector<uint32_t> reorder(queries.size());
@@ -1282,7 +1281,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
     }
-    
+
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
@@ -1334,9 +1333,9 @@ int main(int argc, char* argv[]) {
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
-                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     int preSize=queries[i]->formulaSize();
 
+                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0) continue;
                         SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
@@ -1594,7 +1593,7 @@ int main(int argc, char* argv[]) {
             }
 
             for (auto qid : ltl_ids) {
-                auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+                auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
                 std::cout << "\nQuery index " << qid << " was solved\n";
                 std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 

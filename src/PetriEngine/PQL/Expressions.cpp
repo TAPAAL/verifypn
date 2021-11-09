@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -130,6 +130,7 @@ namespace PetriEngine {
             return res;
         }
 
+
         Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr) {
             return makeLog<OrCondition,false>(cptr, true);
         }
@@ -144,12 +145,16 @@ namespace PetriEngine {
         }
 
         Condition_ptr makeAnd(const Condition_ptr& a, const Condition_ptr& b) {
+
             std::vector<Condition_ptr> cnds{a,b};
             return makeLog<AndCondition,true>(cnds, true);
         }
 
+        // CONSTANTS
+        Condition_ptr BooleanCondition::FALSE_CONSTANT = std::make_shared<BooleanCondition>(false);
+        Condition_ptr BooleanCondition::TRUE_CONSTANT = std::make_shared<BooleanCondition>(true);
+        Condition_ptr DeadlockCondition::DEADLOCK = std::make_shared<DeadlockCondition>();
 
-        
         Condition_ptr BooleanCondition::getShared(bool val)
         {
             if(val)
@@ -168,7 +173,7 @@ namespace PetriEngine {
             out << op() << " ";
             _cond->toTAPAALQuery(out,context);
         }
-        
+
         void UntilCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             out << op() << " (";
             _cond1->toTAPAALQuery(out, context);
@@ -176,7 +181,7 @@ namespace PetriEngine {
             _cond2->toTAPAALQuery(out,context);
             out << ")";
         }
-        
+
         void LogicalCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             out << "(";
             _conds[0]->toTAPAALQuery(out, context);
@@ -187,7 +192,7 @@ namespace PetriEngine {
             }
             out << ")";
         }
-        
+
         void CompareConjunction::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             out << "(";
             if(_negated) out << "!";
@@ -195,11 +200,11 @@ namespace PetriEngine {
             for(auto& c : _constraints)
             {
                 if(!first) out << " and ";
-                if(c._lower != 0) 
+                if(c._lower != 0)
                     out << "(" << c._lower << " <= " << context.netName << "." << c._name << ")";
-                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
+                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
                     out << " and ";
-                if(c._lower != 0) 
+                if(c._lower != 0)
                     out << "(" << c._upper << " >= " << context.netName << "." << c._name << ")";
                 first = false;
             }
@@ -260,7 +265,7 @@ namespace PetriEngine {
             }
             out << ")";
         }
-        
+
         /******************** opTAPAAL ********************/
 
         std::string EqualCondition::opTAPAAL() const {
@@ -395,16 +400,16 @@ namespace PetriEngine {
         void SimpleQuantifierCondition::analyze(AnalysisContext& context) {
             _cond->analyze(context);
         }
-        
+
         void UntilCondition::analyze(AnalysisContext& context) {
             _cond1->analyze(context);
             _cond2->analyze(context);
         }
-        
+
         void LogicalCondition::analyze(AnalysisContext& context) {
             for(auto& c : _conds) c->analyze(context);
         }
-        
+
         void UnfoldedFireableCondition::_analyze(AnalysisContext& context)
         {
             std::vector<Condition_ptr> conds;
@@ -415,7 +420,7 @@ namespace PetriEngine {
                         _name.length());
                 context.reportError(error);
                 return;
-            }            
+            }
 
             assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
             auto preset = context.net()->preset(result.offset);
@@ -452,9 +457,9 @@ namespace PetriEngine {
                     ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
                     coloredContext->reportError(error);
                     return;
-                } 
+                }
                 if(names.size() < 1){
-                    //If the transition points to empty vector we know that it has 
+                    //If the transition points to empty vector we know that it has
                     //no legal bindings and can never fire
                     _compiled = std::make_shared<BooleanCondition>(false);
                     _compiled->analyze(context);
@@ -487,7 +492,7 @@ namespace PetriEngine {
             _expr1->analyze(context);
             _expr2->analyze(context);
         }
-        
+
         void NotCondition::analyze(AnalysisContext& context) {
             _cond->analyze(context);
         }
@@ -629,7 +634,7 @@ namespace PetriEngine {
             }
             _compiled->analyze(context);
         }
-        
+
         void UnfoldedUpperBoundsCondition::analyze(AnalysisContext& c)
         {
             for(auto& p : _places)
@@ -823,7 +828,7 @@ namespace PetriEngine {
             setUpperBound(value(context.marking()));
             return _max <= _bound ? RTRUE : RUNKNOWN;
         }
-        
+
         /******************** Evaluation - save result ********************/
         Condition::Result SimpleQuantifierCondition::evalAndSet(const EvaluationContext& context) {
 	    return RUNKNOWN;
@@ -870,14 +875,14 @@ namespace PetriEngine {
             setSatisfied(res);
             return res;
         }
-        
+
         Condition::Result UntilCondition::evalAndSet(const EvaluationContext& context) {
             auto r2 = _cond2->evalAndSet(context);
             if(r2 != RFALSE) return r2;
             auto r1 = _cond1->evalAndSet(context);
             if(r1 == RFALSE) return RFALSE;
             return RUNKNOWN;
-        }        
+        }
 
         int Expr::evalAndSet(const EvaluationContext& context) {
             int r = evaluate(context);
@@ -929,7 +934,7 @@ namespace PetriEngine {
             setSatisfied(res);
             return res;
         }
-        
+
         Condition::Result CompareCondition::evalAndSet(const EvaluationContext& context) {
             int v1 = _expr1->evalAndSet(context);
             int v2 = _expr2->evalAndSet(context);
@@ -956,7 +961,7 @@ namespace PetriEngine {
             setSatisfied(context.net()->deadlocked(context.marking()));
             return isSatisfied() ? RTRUE : RFALSE;
         }
-        
+
         Condition::Result UnfoldedUpperBoundsCondition::evalAndSet(const EvaluationContext& context)
         {
             auto res = evaluate(context);
@@ -984,12 +989,12 @@ namespace PetriEngine {
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void EXCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void EFCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -998,7 +1003,7 @@ namespace PetriEngine {
         void AUCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
-        }        
+        }
 
         void AXCondition::visit(Visitor& ctx) const
         {
@@ -1008,7 +1013,7 @@ namespace PetriEngine {
         void AFCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
-        } 
+        }
 
         void AGCondition::visit(Visitor& ctx) const
         {
@@ -1077,22 +1082,22 @@ namespace PetriEngine {
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void LessThanOrEqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void LessThanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void BooleanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void DeadlockCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1145,7 +1150,7 @@ namespace PetriEngine {
             else
                 ctx.accept<decltype(this)>(this);
         }
-        
+
         void UnfoldedFireableCondition::visit(Visitor& ctx) const
         {
             if(_compiled)
@@ -1154,12 +1159,12 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
 
-               
+
         void UnfoldedUpperBoundsCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void LiteralExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1399,7 +1404,7 @@ namespace PetriEngine {
         int MultiplyExpr::apply(int v1, int v2) const {
             return v1 * v2;
         }
-        
+
         /******************** Apply (CompareCondition subclasses) ********************/
 
         bool EqualCondition::apply(int v1, int v2) const {
@@ -1431,7 +1436,7 @@ namespace PetriEngine {
         std::string MultiplyExpr::op() const {
             return "*";
         }
-        
+
         /******************** Op (QuantifierCondition subclasses) ********************/
 
         std::string ACondition::op() const {
@@ -1453,27 +1458,27 @@ namespace PetriEngine {
         std::string XCondition::op() const {
             return "X";
         }
-        
+
         std::string EXCondition::op() const {
             return "EX";
         }
-        
+
         std::string EGCondition::op() const {
             return "EG";
         }
-        
+
         std::string EFCondition::op() const {
             return "EF";
         }
-        
+
         std::string AXCondition::op() const {
             return "AX";
         }
-        
+
         std::string AGCondition::op() const {
             return "AG";
         }
-        
+
         std::string AFCondition::op() const {
             return "AF";
         }
@@ -1487,11 +1492,11 @@ namespace PetriEngine {
         std::string EUCondition::op() const {
             return "E";
         }
-        
+
         std::string AUCondition::op() const {
             return "A";
         }
-        
+
         /******************** Op (LogicalCondition subclasses) ********************/
 
         std::string AndCondition::op() const {
@@ -1520,7 +1525,7 @@ namespace PetriEngine {
             return "<=";
         }
 
-        /******************** free of places ********************/        
+        /******************** free of places ********************/
 
         bool NaryExpr::placeFree() const
         {
@@ -1529,18 +1534,18 @@ namespace PetriEngine {
                     return false;
             return true;
         }
-        
+
         bool CommutativeExpr::placeFree() const
         {
             if(_ids.size() > 0) return false;
             return NaryExpr::placeFree();
         }
-        
+
         bool MinusExpr::placeFree() const
         {
             return _expr->placeFree();
         }
-        
+
         /******************** Expr::type() implementation ********************/
 
         Expr::Types PlusExpr::type() const {
@@ -1616,17 +1621,17 @@ namespace PetriEngine {
             return 0;
         }
 
-        uint32_t UnfoldedUpperBoundsCondition::distance(DistanceContext& context) const 
+        uint32_t UnfoldedUpperBoundsCondition::distance(DistanceContext& context) const
         {
             size_t tmp = 0;
             for(auto& p : _places)
             {
                 tmp += context.marking()[p._place];
             }
-            
+
             return _max - tmp;
         }
-        
+
         uint32_t EFCondition::distance(DistanceContext& context) const {
             return _cond->distance(context);
         }
@@ -1642,14 +1647,14 @@ namespace PetriEngine {
         uint32_t EUCondition::distance(DistanceContext& context) const {
             return _cond2->distance(context);
         }
-        
+
         uint32_t AFCondition::distance(DistanceContext& context) const {
             context.negate();
             uint32_t retval = _cond->distance(context);
             context.negate();
             return retval;
         }
-        
+
         uint32_t AXCondition::distance(DistanceContext& context) const {
             context.negate();
             uint32_t retval = _cond->distance(context);
@@ -1671,7 +1676,7 @@ namespace PetriEngine {
             context.negate();
             return r1 + r2;
         }
-        
+
         uint32_t CompareConjunction::distance(DistanceContext& context) const {
             uint32_t d = 0;
             auto neg = context.negated() != _negated;
@@ -1697,7 +1702,7 @@ namespace PetriEngine {
                         else      d = std::min(d, d2);
                         first = false;
                     }
-                    
+
                     if(c._lower != 0)
                     {
                         auto d2 = delta<LessThanOrEqualCondition>(c._upper, pv, neg);
@@ -1745,500 +1750,23 @@ namespace PetriEngine {
             int d;
             unsigned int p;
         };
-       
+
         uint32_t LessThanOrEqualCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<LessThanOrEqualCondition>);
         }
-        
+
         uint32_t LessThanCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<LessThanCondition>);
         }
-       
+
         uint32_t NotEqualCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<NotEqualCondition>);
         }
-       
+
         uint32_t EqualCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<EqualCondition>);
         }
 
-        /******************** BIN output ********************/
-        
-
-        /******************** CTL Output ********************/
-
-        void LiteralExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            out << "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
-        }
-
-        void UnfoldedFireableCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
-            out << "<is-fireable><transition>" + _name << "</transition></is-fireable>\n";
-        }
-
-        void FireableCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            if(coloredContext != nullptr && coloredContext->isColored()) {
-                std::vector<std::string> names;
-                if (!coloredContext->resolveTransition(_name, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext->reportError(error);
-                    return;
-                } 
-                if(names.size() < 1){
-                    //If the transition points to empty vector we know that it has 
-                    //no legal bindings and can never fire
-                    out << "<false/>";
-                    return;
-                }
-                
-                out << "<is-fireable>";
-                for (auto& unfoldedName : names) {
-                    out << "<transition>" + unfoldedName << "</transition>";
-                }
-                out << "</is-fireable>";
-            }
-        }
-
-        void UnfoldedIdentifierExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            if (tokencount) {
-                out << "<place>" << _name << "</place>\n";
-            }
-            else
-            {
-                out << "<tokens-count>\n"; 
-                out << "<place>" << _name << "</place>\n";
-                out << "</tokens-count>\n";
-            }
-        }
-
-        void IdentifierExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            if(coloredContext != nullptr && coloredContext->isColored()) {
-                std::unordered_map<uint32_t, std::string> names;
-                if (!coloredContext->resolvePlace(_name, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext->reportError(error);
-                    return;
-                } 
-                
-                
-                out << "<tokens-count>\n";
-                for (auto& unfoldedName : names) {
-                    out << "<place>" << unfoldedName.second << "</place>\n";
-                }
-                out <<"</tokens-count>\n";
-            } else {
-                if (tokencount) {
-                out << "<place>" << _name << "</place>\n";
-                }
-                else
-                {
-                    out << "<tokens-count>\n"; 
-                    out << "<place>" << _name << "</place>\n";
-                    out << "</tokens-count>\n";
-                }
-            }
-        }
-
-        void PlusExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            if (tokencount) {
-                for(auto& e : _exprs) e->toCompactXML(out,tabs, context, tokencount);
-                return;
-            }
-            
-            if(tk) {
-                out << "<tokens-count>\n";
-                for(auto& e : _ids) out << "<place>" << e.second << "</place>\n";
-                for(auto& e : _exprs) e->toCompactXML(out,tabs, context, true);
-                out << "</tokens-count>\n";
-                return;
-            }
-            out << "<integer-sum>\n";
-            out << "<integer-constant>" + std::to_string(_constant) + "</integer-constant>\n";
-            for(auto& i : _ids)
-            {
-                out << "<tokens-count>\n"; 
-                out << "<place>" << i.second << "</place>\n";
-                out << "</tokens-count>\n";                
-            }
-            for(auto& e : _exprs) e->toCompactXML(out,tabs, context, tokencount);
-            out << "</integer-sum>\n";
-        }
-
-        void SubtractExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            out << "<integer-difference>\n";
-            for(auto& e : _exprs) e->toCompactXML(out,tabs, context);
-            out << "</integer-difference>\n";
-        }
-
-        void MultiplyExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            out << "<integer-product>\n";
-            for(auto& e : _exprs) e->toCompactXML(out,tabs, context);
-            out << "</integer-product>\n";
-        }
-
-        void MinusExpr::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context, bool tokencount) const{
-            out << "<integer-product>\n";
-            _expr->toCompactXML(out,tabs, context);
-            out << "<integer-difference>\n" ; out <<
-                    "<integer-constant>0</integer-constant>\n" ; out << 
-                    "<integer-constant>1</integer-constant>\n" ; out <<
-                    "</integer-difference>\n" ; out << "</integer-product>\n";
-        }
-
-        void EXCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{
-            out << "<exists-path>\n" ; out << "<next>\n";
-            _cond->toCompactXML(out,tabs, context);
-            out << "</next>\n" ; out << "</exists-path>\n";
-        }
-
-        void AXCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<all-paths>\n" ;out << "<next>\n";
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</next>\n" ; out << "</all-paths>\n";
-        }
-
-        void EFCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<exists-path>\n" ;out << "<finally>\n";
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</finally>\n" ; out << "</exists-path>\n";
-        }
-
-        void AFCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<all-paths>\n" ;out << "<finally>\n";
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</finally>\n" ; out << "</all-paths>\n";
-        }
-
-        void EGCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<exists-path>\n" ;out << "<globally>\n";
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</globally>\n" ; out << "</exists-path>\n";
-        }
-
-        void AGCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<all-paths>\n" ;out << "<globally>\n";
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</globally>\n" ; out << "</all-paths>\n";
-        }
-
-        void EUCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<exists-path>\n" ; out << "<until>\n" ; out << "<before>\n";
-            _cond1->toCompactXML(out,tabs+2, context);
-            out << "</before>\n" ; out << "<reach>\n";
-            _cond2->toCompactXML(out,tabs+2, context);
-            out << "</reach>\n" ; out << "</until>\n" ; out << "</exists-path>\n";
-        }
-
-        void AUCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<all-paths>\n" ; out << "<until>\n" ; out << "<before>\n";
-            _cond1->toCompactXML(out,tabs+2, context);
-            out << "</before>\n" ; out << "<reach>\n";
-            _cond2->toCompactXML(out,tabs+2, context);
-            out << "</reach>\n" ; out << "</until>\n" ; out << "</all-paths>\n";
-        }
-
-        void ACondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<all-paths>\n" ;
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</all-paths>\n";
-        }
-
-        void ECondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<exists-path>\n" ;
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</exists-path>\n";
-        }
-
-        void FCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<finally>\n" ;
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</finally>\n";
-        }
-
-        void GCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<globally>\n" ;
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</globally>\n";
-        }
-
-        void XCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<next>\n" ;
-            _cond->toCompactXML(out,tabs+2, context);
-            out << "</next>\n";
-        }
-
-        void UntilCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<until>\n" ; out << "<before>\n";
-            _cond1->toCompactXML(out,tabs+2, context);
-            out << "</before>\n" ; out << "<reach>\n";
-            _cond2->toCompactXML(out,tabs+2, context);
-            out << "</reach>\n"; out << "</until>\n" ;
-        }
-
-        void AndCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            if(_conds.size() == 0)
-            {
-                BooleanCondition::TRUE_CONSTANT->toCompactXML(out,tabs, context);
-                return;
-            }
-            if(_conds.size() == 1)
-            {
-                _conds[0]->toCompactXML(out,tabs, context);
-                return;
-            }
-            out << "<conjunction>\n";
-            _conds[0]->toCompactXML(out,tabs, context);
-            for(size_t i = 1; i < _conds.size(); ++i)
-            {
-                if(i + 1 == _conds.size())
-                {
-                    _conds[i]->toCompactXML(out,tabs, context);
-                }
-                else
-                {
-                    out << "<conjunction>\n";
-                    _conds[i]->toCompactXML(out,tabs, context);
-                }
-            }
-            for(size_t i = _conds.size() - 1; i > 1; --i)
-            {
-                out << "</conjunction>\n";                
-            }
-            out << "</conjunction>\n";      
-        }
-
-        void OrCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            if(_conds.size() == 0)
-            {
-                BooleanCondition::FALSE_CONSTANT->toCompactXML(out,tabs, context);
-                return;
-            }
-            if(_conds.size() == 1)
-            {
-                _conds[0]->toCompactXML(out,tabs, context);
-                return;
-            }
-            out << "<disjunction>\n";
-            _conds[0]->toCompactXML(out,tabs, context);
-            for(size_t i = 1; i < _conds.size(); ++i)
-            {
-                if(i + 1 == _conds.size())
-                {
-                    _conds[i]->toCompactXML(out,tabs, context);
-                }
-                else
-                {
-                    out << "<disjunction>\n";
-                    _conds[i]->toCompactXML(out,tabs, context);
-                }
-            }
-            for(size_t i = _conds.size() - 1; i > 1; --i)
-            {
-                out << "</disjunction>\n";                
-            }
-            out << "</disjunction>\n";      
-        }
-
-        void CompareConjunction::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            if(_negated) out << "<negation>";
-            if(_constraints.size() == 0) BooleanCondition::TRUE_CONSTANT->toCompactXML(out,tabs, context);
-            else
-            {
-                bool single = _constraints.size() == 1 && 
-                                (_constraints[0]._lower == 0 ||
-                                 _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
-                if(!single) 
-                    out << "<conjunction>\n";
-                for(auto& c : _constraints)
-                {
-                    if(c._lower != 0)
-                    {
-                        out << "<integer-ge>\n";
-                        out << "<tokens-count>\n";
-                        out << "<place>" << c._name << "</place>\n";
-                        out << "</tokens-count>\n";
-                        out << "<integer-constant>" << c._lower << "</integer-constant>\n";
-                        out << "</integer-ge>\n";  
-                    }
-                    if(c._upper != std::numeric_limits<uint32_t>::max())
-                    {
-                        out << "<integer-le>\n";
-                        out << "<tokens-count>\n";
-                        out << "<place>" << c._name << "</place>\n";
-                        out << "</tokens-count>\n";
-                        out << "<integer-constant>" << c._upper << "</integer-constant>\n";
-                        out << "</integer-le>\n";                      
-                    }
-                }
-                if(!single)
-                    out << "</conjunction>\n";
-            }
-            if(_negated) out << "</negation>";      
-        }
-
-        void EqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<integer-eq>\n";
-            _expr1->toCompactXML(out,tabs, context);
-            _expr2->toCompactXML(out,tabs, context);
-            out << "</integer-eq>\n";
-        }
-
-        void NotEqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<integer-ne>\n";
-            _expr1->toCompactXML(out,tabs, context);
-            _expr2->toCompactXML(out,tabs, context);
-            out << "</integer-ne>\n";
-        }
-
-        void LessThanCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<integer-lt>\n";
-            _expr1->toCompactXML(out,tabs, context);
-            _expr2->toCompactXML(out,tabs, context);
-            out << "</integer-lt>\n";
-        }
-
-        void LessThanOrEqualCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<integer-le>\n";
-            _expr1->toCompactXML(out,tabs, context);
-            _expr2->toCompactXML(out,tabs, context);
-            out << "</integer-le>\n";
-        }
-
-        void NotCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<negation>\n";
-            _cond->toCompactXML(out,tabs, context);
-            out << "</negation>\n";
-        }
-
-        void BooleanCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<" << 
-                    (value ? "true" : "false")
-                    << "/>\n"; 
-        }
-
-        void DeadlockCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<deadlock/>\n";
-        }
-
-        void UnfoldedUpperBoundsCondition::toCompactXML(std::ostream& out, uint32_t tabs, AnalysisContext& context) const{ 
-            out << "<place-bound>\n";
-            for(auto& p : _places)
-                out << "<place>" << p._name << "</place>\n";
-            out << "</place-bound>\n"; 
-        }
-        
-        /******************** Check if query is a reachability query ********************/
-        
-        bool EXCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-        
-        bool EGCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-        
-        bool EFCondition::isReachability(uint32_t depth) const {
-            return depth > 0 ? false : _cond->isReachability(depth + 1);
-        }
-        
-        bool AXCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-        
-        bool AGCondition::isReachability(uint32_t depth) const {
-            return depth > 0 ? false : _cond->isReachability(depth + 1);
-        }
-        
-        bool AFCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool ECondition::isReachability(uint32_t depth) const {
-            if (depth != 0) {
-                return false;
-            }
-
-            if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
-                // EF is a reachability formula so skip checking the F.
-                return (*cond)[0]->isReachability(depth + 1);
-            }
-            return _cond->isReachability(depth + 1);
-        }
-
-        bool ACondition::isReachability(uint32_t depth) const {
-            if (depth != 0) {
-                return false;
-            }
-            if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
-                return (*cond)[0]->isReachability(depth + 1);
-            }
-            return _cond->isReachability(depth + 1);
-        }
-        
-        bool UntilCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-        
-        bool LogicalCondition::isReachability(uint32_t depth) const {
-            if(depth == 0) return false;
-            bool reachability = true;
-            for(auto& c : _conds)
-            {
-                reachability = reachability && c->isReachability(depth + 1);
-                if(!reachability) break;
-            }
-            return reachability;
-        }
-        
-        bool CompareCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-        
-        bool NotCondition::isReachability(uint32_t depth) const {
-            return _cond->isReachability(depth);
-        }
-        
-        bool BooleanCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-        
-        bool DeadlockCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-        
-        bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-                
-        /******************** Prepare Reachability Queries ********************/
-        
-        Condition_ptr EXCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr EGCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr EFCondition::prepareForReachability(bool negated) const {
-            _cond->setInvariant(negated);
-            return _cond;
-        }
-        
-        Condition_ptr AXCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr AGCondition::prepareForReachability(bool negated) const {
-            Condition_ptr cond = std::make_shared<NotCondition>(_cond);
-            cond->setInvariant(!negated);
-            return cond;
-        }
-        
-        Condition_ptr AFCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
 
         Condition_ptr ACondition::prepareForReachability(bool negated) const {
             auto g = std::dynamic_pointer_cast<GCondition>(_cond);
@@ -2284,38 +1812,175 @@ namespace PetriEngine {
             return nullptr;
         }
         
-        Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
+
+        /******************** Check if query is a reachability query ********************/
+
+        bool EXCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
+        bool EGCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
+        bool EFCondition::isReachability(uint32_t depth) const {
+            return depth > 0 ? false : _cond->isReachability(depth + 1);
+        }
+
+        bool AXCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
+        bool AGCondition::isReachability(uint32_t depth) const {
+            return depth > 0 ? false : _cond->isReachability(depth + 1);
+        }
+
+        bool AFCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
+        bool ECondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+            else if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
+                // EF is a reachability formula so skip checking the F.
+                return (*cond)[0]->isReachability(depth + 1);
+            }
+            else return false;
+        }
+
+        bool ACondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+            else if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
+                return (*cond)[0]->isReachability(depth + 1);
+            }
+            else return false;
+        }
+
+        bool UntilCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
+        bool LogicalCondition::isReachability(uint32_t depth) const {
+            if(depth == 0) return false;
+            bool reachability = true;
+            for(auto& c : _conds)
+            {
+                reachability = reachability && c->isReachability(depth + 1);
+                if(!reachability) break;
+            }
+            return reachability;
+        }
+
+        bool CompareCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool NotCondition::isReachability(uint32_t depth) const {
+            return _cond->isReachability(depth);
+        }
+
+        bool BooleanCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool DeadlockCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        /******************** Prepare Reachability Queries ********************/
+
+        Condition_ptr EXCondition::prepareForReachability(bool negated) const {
             return nullptr;
         }
 
-        Condition_ptr UnfoldedUpperBoundsCondition::prepareForReachability(bool negated) const {
+        Condition_ptr EGCondition::prepareForReachability(bool negated) const {
             return nullptr;
         }
 
+        Condition_ptr EFCondition::prepareForReachability(bool negated) const {
+            _cond->setInvariant(negated);
+            return _cond;
+        }
+
+        Condition_ptr AXCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr AGCondition::prepareForReachability(bool negated) const {
+            Condition_ptr cond = std::make_shared<NotCondition>(_cond);
+            cond->setInvariant(!negated);
+            return cond;
+        }
+
+        Condition_ptr AFCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr ACondition::prepareForReachability(bool negated) const {
+            auto g = std::dynamic_pointer_cast<GCondition>(_cond);
+            return g ? AGCondition((*g)[0]).prepareForReachability(negated) : nullptr;
+        }
+
+        Condition_ptr ECondition::prepareForReachability(bool negated) const {
+            auto f = std::dynamic_pointer_cast<FCondition>(_cond);
+            return f ? EFCondition((*f)[0]).prepareForReachability(negated) : nullptr;
+        }
+
+        Condition_ptr UntilCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr LogicalCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr CompareConjunction::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr CompareCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr NotCondition::prepareForReachability(bool negated) const {
+            return _cond->prepareForReachability(!negated);
+        }
+
+        Condition_ptr BooleanCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
 
         /********************** CONSTRUCTORS *********************************/
 
         void postMerge(std::vector<Condition_ptr>& conds) {
             std::sort(std::begin(conds), std::end(conds),
                     [](auto& a, auto& b) {
-                        return a->isTemporal() < b->isTemporal(); 
+                        return a->isTemporal() < b->isTemporal();
                     });
-        } 
-        
+        }
+
         AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-        
+
         AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-       
+
         AndCondition::AndCondition(Condition_ptr left, Condition_ptr right) {
             tryMerge<AndCondition>(_conds, left);
             tryMerge<AndCondition>(_conds, right);
@@ -2323,21 +1988,21 @@ namespace PetriEngine {
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-       
+
         OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-       
+
         OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-       
+
         OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
             tryMerge<OrCondition>(_conds, left);
             tryMerge<OrCondition>(_conds, right);
@@ -2345,14 +2010,14 @@ namespace PetriEngine {
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
-        
+
 
         CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
         {
             _negated = negated;
             merge(conditions, negated);
         }
-        
+
         void CompareConjunction::merge(const CompareConjunction& other)
         {
             auto neg = _negated != other._negated;
@@ -2367,7 +2032,7 @@ namespace PetriEngine {
             {
                 if(neg)
                     c.invert();
-                                
+
                 if(c._upper == std::numeric_limits<uint32_t>::max() && c._lower == 0)
                 {
                     continue;
@@ -2378,7 +2043,7 @@ namespace PetriEngine {
                     assert(false);
                     exit(ErrorCode);
                 }
-                
+
                 il = std::lower_bound(_constraints.begin(), _constraints.end(), c);
                 if(il == _constraints.end() || il->_place != c._place)
                 {
@@ -2391,7 +2056,7 @@ namespace PetriEngine {
                 }
             }
         }
-        
+
         void CompareConjunction::merge(const std::vector<Condition_ptr>& conditions, bool negated)
         {
             for(auto& c : conditions)
@@ -2443,21 +2108,21 @@ namespace PetriEngine {
                 }
                 if(negated)
                     next.invert();
-                
+
                 auto lb = std::lower_bound(std::begin(_constraints), std::end(_constraints), next);
                 if(lb == std::end(_constraints) || lb->_place != next._place)
                 {
                     next._name = id->name();
                     _constraints.insert(lb, next);
-                }  
+                }
                 else
                 {
                     assert(id->name().compare(lb->_name) == 0);
                     lb->intersect(next);
                 }
-            }            
+            }
         }
-       
+
         void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
         {
             for (auto& e : exprs) {
@@ -2468,7 +2133,7 @@ namespace PetriEngine {
                 }
                 else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
-                } 
+                }
                 else if(auto c = std::dynamic_pointer_cast<CommutativeExpr>(e))
                 {
                     // we should move up plus/multiply here when possible;
@@ -2478,7 +2143,7 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        _exprs.emplace_back(std::move(e));                        
+                        _exprs.emplace_back(std::move(e));
                     }
                 } else {
                     _exprs.emplace_back(std::move(e));
@@ -2490,7 +2155,7 @@ namespace PetriEngine {
         {
             init(std::move(exprs));
         }
-        
+
         MultiplyExpr::MultiplyExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(1)
         {
             init(std::move(exprs));
