@@ -24,50 +24,62 @@ namespace LTL {
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states = this->successorGenerator->makeInitialState();
-        State working = factory.newState();
-        State parent = factory.newState();
+        State working = this->_factory.newState();
+        State parent = this->_factory.newState();
         for (auto &state : initial_states) {
-            const auto res = seen.add(state);
+            const auto res = _seen.add(state);
             if (res.first) {
                 push(state, res.second);
             }
-            while (!dstack.empty() && !violation) {
-                DEntry &dtop = dstack.top();
+            while (!_dstack.empty() && !_violation) {
+                DEntry &dtop = _dstack.top();
                 // write next successor state to working.
                 if (!nexttrans(working, parent, dtop)) {
                     ++this->stats.expanded;
+#ifndef NDEBUG
+                    std::cerr << "backtrack\n";
+#endif
                     pop();
                     continue;
                 }
+                auto fired = this->successorGenerator->fired();
+#ifndef NDEBUG
+                if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
+                    std::cerr << "looping\n";
+                }
+                else {
+                    //state.print(*this->net, std::cerr); std::cerr << ": <transition id='" << this->net->transitionNames()[fired] << "'>" << std::endl ;
+                }
+#endif
                 ++this->stats.explored;
-                const auto[isnew, stateid] = seen.add(working);
+                const auto[isnew, stateid] = _seen.add(working);
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
                 }
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.setHistory(stateid, this->successorGenerator->fired());
+                        _seen.setHistory(stateid, this->successorGenerator->fired());
                     }
                 }
 
-                dtop.sucinfo.last_state = stateid;
+                dtop._sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
-                auto suc_pos = chash[hash(stateid)];
-                auto marking = seen.getMarkingId(stateid);
-                while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
-                    if constexpr (IsSpooling) {
-                        if (cstack[suc_pos].dstack && seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
-                            this->successorGenerator->generateAll(&parent, dtop.sucinfo);
+                auto suc_pos = _chash[hash(stateid)];
+                auto marking = _seen.getMarkingId(stateid);
+                while (suc_pos != std::numeric_limits<idx_t>::max() && _cstack[suc_pos]._stateid != stateid) {
+                    if constexpr (_is_spooling) {
+                        if (_cstack[suc_pos]._dstack && _seen.getMarkingId(_cstack[suc_pos]._stateid) == marking) {
+                            this->successorGenerator->generateAll(&parent, dtop._sucinfo);
                         }
                     }
-                    suc_pos = cstack[suc_pos].next;
+                    suc_pos = _cstack[suc_pos]._next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
-                    if constexpr (IsSpooling) {
-                        if (cstack[suc_pos].dstack) {
-                            this->successorGenerator->generateAll(&parent, dtop.sucinfo);
+                    if constexpr (_is_spooling) {
+                        if (_cstack[suc_pos]._dstack) {
+                            this->successorGenerator->generateAll(&parent, dtop._sucinfo);
                         }
                     }
                     // we found the successor, i.e. there's a loop!
@@ -75,24 +87,24 @@ namespace LTL {
                     update(suc_pos);
                     continue;
                 }
-                if (store.find(stateid) == std::end(store)) {
+                if (_store.find(stateid) == std::end(_store)) {
                     push(working, stateid);
                 }
             }
             if constexpr (SaveTrace) {
                 // print counter-example if it exists.
-                if (violation) {
+                if (_violation) {
                     std::stack<DEntry> revstack;
-                    while (!dstack.empty()) {
-                        revstack.push(std::move(dstack.top()));
-                        dstack.pop();
+                    while (!_dstack.empty()) {
+                        revstack.push(std::move(_dstack.top()));
+                        _dstack.pop();
                     }
                     printTrace(std::move(revstack));
                     return false;
                 }
             }
         }
-        return !violation;
+        return !_violation;
     }
 
     /**
@@ -101,20 +113,19 @@ namespace LTL {
      */
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
     void TarjanModelChecker<S, G, SaveTrace, Spooler...>::push(State &state, size_t stateid) {
-        const auto ctop = static_cast<idx_t>(cstack.size());
+        const auto ctop = static_cast<idx_t>(_cstack.size());
         const auto h = hash(stateid);
-        cstack.emplace_back(ctop, stateid, chash[h]);
-        chash[h] = ctop;
-        dstack.push(DEntry{ctop});
+        _cstack.emplace_back(ctop, stateid, _chash[h]);
+        _chash[h] = ctop;
+        _dstack.push(DEntry{ctop});
         if (this->successorGenerator->isAccepting(state)) {
-            astack.push(ctop);
-            if (this->successorGenerator->has_invariant_self_loop(state) && !SaveTrace){
-                //std::cerr << "Invariant self loop found. Violation is true" << std::endl;
-                violation = true;
-                invariant_loop = true;
+            _astack.push(ctop);
+            if (this->successorGenerator->has_invariant_self_loop(state)){
+                _violation = true;
+                _invariant_loop = true;
             }
         }
-        if constexpr (IsSpooling) {
+        if constexpr (_is_spooling) {
             this->successorGenerator->push();
         }
     }
@@ -122,27 +133,27 @@ namespace LTL {
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
     void TarjanModelChecker<S, G, SaveTrace, Spooler...>::pop()
     {
-        const auto p = dstack.top().pos;
-        dstack.pop();
-        cstack[p].dstack = false;
-        if (cstack[p].lowlink == p) {
-            while (cstack.size() > p) {
+        const auto p = _dstack.top()._pos;
+        _dstack.pop();
+        _cstack[p]._dstack = false;
+        if (_cstack[p]._lowlink == p) {
+            while (_cstack.size() > p) {
                 popCStack();
             }
         } else if (this->is_weak) {
-            State state = factory.newState();
-            seen.decode(state, cstack[p].stateid);
+            State state = this->_factory.newState();
+            _seen.decode(state, _cstack[p]._stateid);
             if (!this->successorGenerator->isAccepting(state)) {
                 popCStack();
             }
         }
-        if (!astack.empty() && p == astack.top()) {
-            astack.pop();
+        if (!_astack.empty() && p == _astack.top()) {
+            _astack.pop();
         }
-        if (!dstack.empty()) {
+        if (!_dstack.empty()) {
             update(p);
-            if constexpr (IsSpooling) {
-                this->successorGenerator->pop(dstack.top().sucinfo);
+            if constexpr (_is_spooling) {
+                this->successorGenerator->pop(_dstack.top()._sucinfo);
             }
         }
     }
@@ -150,28 +161,28 @@ namespace LTL {
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
     void TarjanModelChecker<S, G, SaveTrace, Spooler...>::popCStack()
     {
-        auto h = hash(cstack.back().stateid);
-        store.insert(cstack.back().stateid);
-        chash[h] = cstack.back().next;
-        cstack.pop_back();
+        auto h = hash(_cstack.back()._stateid);
+        _store.insert(_cstack.back()._stateid);
+        _chash[h] = _cstack.back()._next;
+        _cstack.pop_back();
     }
 
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
     void TarjanModelChecker<S, G, SaveTrace, Spooler...>::update(idx_t to)
     {
-        const auto from = dstack.top().pos;
-        assert(cstack[to].lowlink != std::numeric_limits<idx_t>::max() && cstack[from].lowlink != std::numeric_limits<idx_t>::max());
-        if (cstack[to].lowlink <= cstack[from].lowlink) {
+        const auto from = _dstack.top()._pos;
+        assert(_cstack[to]._lowlink != std::numeric_limits<idx_t>::max() && _cstack[from]._lowlink != std::numeric_limits<idx_t>::max());
+        if (_cstack[to]._lowlink <= _cstack[from]._lowlink) {
             // we have now found a loop into earlier seen component cstack[to].lowlink.
             // if this earlier component precedes an accepting state,
             // the found loop is accepting and thus a violation.
-            violation = (!astack.empty() && to <= astack.top());
+            _violation = (!_astack.empty() && to <= _astack.top());
             // either way update the component ID of the state we came from.
-            cstack[from].lowlink = cstack[to].lowlink;
+            _cstack[from]._lowlink = _cstack[to]._lowlink;
             if constexpr (SaveTrace) {
-                loopstate = cstack[from].stateid;
-                looptrans = this->successorGenerator->fired();
-                cstack[from].lowsource = to;
+                _loop_state = _cstack[to]._stateid;
+                _loop_trans = this->successorGenerator->fired();
+                _cstack[from]._lowsource = to;
 
             }
         }
@@ -180,13 +191,13 @@ namespace LTL {
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
     bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
     {
-        seen.decode(parent, cstack[delem.pos].stateid);
-        this->successorGenerator->prepare(&parent, delem.sucinfo);
+        _seen.decode(parent, _cstack[delem._pos]._stateid);
+        this->successorGenerator->prepare(&parent, delem._sucinfo);
         // ensure that `state` buffer contains the correct state for Büchi successor generation.
-        if (delem.sucinfo.has_prev_state()) {
-            seen.decode(state, delem.sucinfo.last_state);
+        if (delem._sucinfo.has_prev_state()) {
+            _seen.decode(state, delem._sucinfo.last_state);
         }
-        auto res = this->successorGenerator->next(state, delem.sucinfo);
+        auto res = this->successorGenerator->next(state, delem._sucinfo);
         return res;
     }
 
@@ -196,39 +207,49 @@ namespace LTL {
         if constexpr (!SaveTrace) {
             return;
         } else {
-            assert(violation);
-            State state = factory.newState();
+            assert(_violation);
             os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
-            if (cstack[dstack.top().pos].stateid == loopstate) this->printLoop(os);
-            cstack[dstack.top().pos].lowlink = std::numeric_limits<idx_t>::max();
+            this->_reducer->initFire(os);
+            if (_cstack[dstack.top()._pos]._stateid == _loop_state)
+                this->printLoop(os);
             dstack.pop();
             unsigned long p;
+            bool had_deadlock = false;
             // print (reverted) dstack
             while (!dstack.empty()) {
-                p = dstack.top().pos;
-                auto stateid = cstack[p].stateid;
-                auto[parent, tid] = seen.getHistory(stateid);
-                seen.decode(state, parent);
-
-                if (stateid == loopstate) this->printLoop(os);
-                this->printTransition(tid, state, os) << '\n';
-
-                cstack[p].lowlink = std::numeric_limits<idx_t>::max();
+                p = dstack.top()._pos;
                 dstack.pop();
+                auto stateid = _cstack[p]._stateid;
+                auto[parent, tid] = _seen.getHistory(stateid);
+                this->printTransition(tid, os) << '\n';
+                if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+                {
+                    had_deadlock = true;
+                    break;
+                }
+                if(_cstack[p]._stateid == _loop_state)
+                    this->printLoop(os);
+                _cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
             }
             // follow previously found back edges via lowsource until back in dstack.
-            assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
-            p = cstack[p].lowsource;
-            while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
-                auto[parent, tid] = seen.getHistory(cstack[p].stateid);
-                seen.decode(state, parent);
-                this->printTransition(tid, state, os) << '\n';
-                assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
-                p = cstack[p].lowsource;
+            if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
+            {
+                p = _cstack[p]._lowsource;
+                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
+                    auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
+                    this->printTransition(tid, os) << '\n';
+                    if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+                    {
+                        had_deadlock = true;
+                        break;
+                    }
+                    assert(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
+                    p = _cstack[p]._lowsource;
+                }
+                if(!had_deadlock)
+                    this->printTransition(_loop_trans, os) << '\n';
             }
-            seen.decode(state, loopstate);
-            this->printTransition(looptrans, state, os) << '\n';
 
             os << "</trace>" << std::endl;
         }

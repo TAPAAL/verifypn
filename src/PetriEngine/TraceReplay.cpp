@@ -39,10 +39,10 @@ namespace PetriEngine {
         places.clear();
         transitions.clear();
         // preallocate reverse lookup for transition and place names. Assume this is always called with the same Petri net.
-        for (int i = 0; i < net->placeNames().size(); ++i) {
+        for (size_t i = 0; i < net->placeNames().size(); ++i) {
             places[net->placeNames()[i]] = i;
         }
-        for (int i = 0; i < net->transitionNames().size(); ++i) {
+        for (size_t i = 0; i < net->transitionNames().size(); ++i) {
             transitions[net->transitionNames()[i]] = i;
         }
         transitions[DEADLOCK_TRANS] = -1;
@@ -156,7 +156,7 @@ namespace PetriEngine {
         bool looping = false;
         state.setMarking(net->makeInitialMarking());
         loopstate.setMarking(net->makeInitialMarking());
-        for (int i = 0; i < trace.size(); ++i) {
+        for (size_t i = 0; i < trace.size(); ++i) {
             const Transition &transition = trace[i];
             // looping part should end up at the state _before_ the <loop/> tag,
             // hence copy state from previous iteration.
@@ -219,7 +219,7 @@ namespace PetriEngine {
 
         bool err = false;
         if (looping) {
-            for (int i = 0; i < net->numberOfPlaces(); ++i) {
+            for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                 if (state.marking()[i] != loopstate.marking()[i]) {
                     if (!err) {
                         std::cerr << "ERROR end state not equal to expected loop state.\n";

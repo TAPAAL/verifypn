@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   SuccessorGenerator.h
  * Author: Peter G. Jensen
  *
@@ -32,12 +32,14 @@ public:
     virtual bool next(Structures::State& write);
     uint32_t fired() const
     {
-        return _suc_tcounter -1;
+        return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : _suc_tcounter - 1;
     }
 
     const MarkVal* getParent() const {
         return _parent->marking();
     }
+
+    const PetriNet& net() const { return _net; }
 
     void reset();
 
@@ -63,8 +65,6 @@ public:
      * @param t, a transition to fire
      */
     void producePostset(Structures::State& write, uint32_t t);
-
-    size_t last_transition() const { return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : _suc_tcounter - 1; }
 
 protected:
     const PetriNet& _net;

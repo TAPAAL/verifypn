@@ -117,9 +117,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
-            /** Output the expression as it currently is to a file in XML */
-            virtual void toCompactXML(std::ostream&, uint32_t tabs, AnalysisContext& context, bool tokencount = false) const = 0;
-
             /** Count size of the entire formula in number of nodes */
             [[nodiscard]] virtual int formulaSize() const = 0;
             
@@ -228,9 +225,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
             [[nodiscard]] virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
             
-            /** Output the condition as it currently is to a file in XML */
-            virtual void toCompactXML(std::ostream&, uint32_t tabs, AnalysisContext& context) const = 0;
-
             /** Checks if the condition is trivially true */
             [[nodiscard]] bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */

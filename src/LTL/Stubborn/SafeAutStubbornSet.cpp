@@ -16,6 +16,7 @@
  */
 
 #include "LTL/Stubborn/SafeAutStubbornSet.h"
+#include "LTL/Stubborn/VisibleTransitionVisitor.h"
 
 namespace LTL {
     using namespace PetriEngine;
@@ -28,37 +29,84 @@ namespace LTL {
 
         constructEnabled();
         if (_ordering.empty()) {
+            _print_debug();
             return false;
         }
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
+            _print_debug();
             return true;
         }
 
+        InterestingLTLTransitionVisitor unsafe{*this, false};
         InterestingTransitionVisitor interesting{*this, false};
 
-        for (auto &q : _queries) {
-            q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            q->visit(interesting);
-        }
+        PQL::EvaluationContext ctx((*_parent).marking(), &_net);
+        _prog_cond->evalAndSet(ctx);
+        _sink_cond->evalAndSet(ctx);
+        _prog_cond->visit(unsafe);
+        _sink_cond->visit(unsafe);
+
+        //_ret_cond->evalAndSet(ctx);
+        //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
+
         assert(!_bad);
 
         _unsafe.swap(_stubborn);
+        _has_enabled_stubborn = false;
         //memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _unprocessed.clear();
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
 
         assert(_unprocessed.empty());
 
-        for (auto &q : _queries) {
-            q->visit(interesting);
+
+
+        // sink condition is not interesting, just unsafe.
+        _prog_cond->visit(interesting);
+        //_sink_cond->visit(interesting);
+        closure();
+        if (_bad) {
+            // abort
+            set_all_stubborn();
+            _print_debug();
+            return true;
+        }
+        // accepting states need key transition. add firs   t enabled by index.
+        if (state->is_accepting() && !_has_enabled_stubborn) {
+            //set_all_stubborn();
+            //_print_debug();
+            //return true;
+            addToStub(_ordering.front());
             closure();
+/*            for (int i = 0; i < _net.numberOfPlaces(); ++i) {
+                if (_enabled[i]) {
+                    addToStub(i);
+                    closure();
+                    break;
+                }
+            }*/
             if (_bad) {
-                // abort
                 set_all_stubborn();
-                return true;
             }
         }
+        _print_debug();
         return true;
+    }
+
+    void SafeAutStubbornSet::_print_debug() {
+#ifndef NDEBUG
+        float num_stubborn = 0;
+        float num_enabled = 0;
+        float num_enabled_stubborn = 0;
+        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_stubborn[i]) ++num_stubborn;
+            if (_enabled[i]) ++num_enabled;
+            if (_stubborn[i] && _enabled[i]) ++num_enabled_stubborn;
+        }
+        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " (" << num_enabled/_net.numberOfTransitions()*100.0 << "%),\t\t "
+        << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " (" << num_stubborn/_net.numberOfTransitions()*100.0 << "%),\t\t "
+        << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " (" << num_enabled_stubborn/num_enabled*100.0 << "%)" << std::endl;
+#endif
     }
 }

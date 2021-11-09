@@ -15,7 +15,7 @@ endif ()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
-set(VERIFYPN_VERSION 4.1.0)
+set(VERIFYPN_VERSION 4.2.0)
 add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
@@ -64,7 +64,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 find_package(FLEX 2.6.4 REQUIRED)
-find_package(BISON 3.7.0 REQUIRED)
+find_package(BISON 3.0.5 REQUIRED)
 
 if (VERIFYPN_GetDependencies)
     # setup for external imports

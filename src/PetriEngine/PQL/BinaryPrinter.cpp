@@ -77,7 +77,7 @@ namespace PetriEngine::PQL {
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
         (*condition)[0]->visit(*this);
-        (*condition)[0]->visit(*this);
+        (*condition)[1]->visit(*this);
     }
 
     void BinaryPrinter::_accept(const LogicalCondition *condition){
