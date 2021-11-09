@@ -201,9 +201,17 @@ namespace PetriEngine {
             }
 
             // Expression
-            virtual void _accept(const UnfoldedIdentifierExpr *element) = 0;
+            virtual void _accept(const UnfoldedIdentifierExpr *element) {
+                assert(false);
+                std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
+                exit(0);
+            };
 
-            virtual void _accept(const LiteralExpr *element) = 0;
+            virtual void _accept(const LiteralExpr *element) {
+                assert(false);
+                std::cerr << "No accept for LiteralExpr" << std::endl;
+                exit(0);
+            };
 
             virtual void _accept(const PlusExpr *element) {
                 element->CommutativeExpr::visit(*this);
@@ -213,9 +221,17 @@ namespace PetriEngine {
                 element->CommutativeExpr::visit(*this);
             };
 
-            virtual void _accept(const MinusExpr *element) = 0;
+            virtual void _accept(const MinusExpr *element) {
+                assert(false);
+                std::cerr << "No accept for MinusExpr" << std::endl;
+                exit(0);
+            };
 
-            virtual void _accept(const SubtractExpr *element) = 0;
+            virtual void _accept(const SubtractExpr *element) {
+                assert(false);
+                std::cerr << "No accept for SubtractExpr" << std::endl;
+                exit(0);
+            };
 
             // shallow expression, default to error
             virtual void _accept(const IdentifierExpr *element) {

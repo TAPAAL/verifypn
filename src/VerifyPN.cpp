@@ -91,7 +91,9 @@
 #include "LTL/LTLMain.h"
 
 #include <atomic>
-#include <PetriEngine/PQL/BinaryPrinter.h>
+#include <PetriEngine/PQL/BinaryPrinterTests.h>
+#include <PetriEngine/PQL/Simplifier.h>
+#include <PetriEngine/PQL/PushNegation.h>
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -988,7 +990,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof(char));
-            BinaryPrinter binary_printer(out);
+            BinaryPrinterTests binary_printer(out);
             queries[i]->visit(binary_printer);
         }
         else
@@ -1088,8 +1090,9 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         cond = LTL::simplify(cond, options);
     }
     negstat_t stats;
-    cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
-            ->pushNegation(stats, evalContext, false, false, true);
+
+    cond = pushNegation(initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true),
+                       stats, evalContext, false, false, true);
 
     if (options.printstatistics) {
         out << "RWSTATS PRE:";
@@ -1098,7 +1101,8 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     }
 
     try {
-        cond = (cond->simplify(simplificationContext)).formula->pushNegation(stats, evalContext, false, false, true);
+        auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
+        cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
     }
     catch (std::bad_alloc &ba) {
         std::cerr << "Query reduction failed." << std::endl;
@@ -1107,11 +1111,11 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         std::exit(ErrorCode);
     }
 
-    cond = Condition::initialMarkingRW([&]() {
+    cond = initialMarkingRW([&]() {
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true), options);
+        return LTL::simplify(pushNegation(cond, stats, evalContext, false, false, true), options);
     }, stats, evalContext, false, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
@@ -1211,7 +1215,7 @@ int main(int argc, char* argv[]) {
         negstat_t stats;
         EvaluationContext context(nullptr, nullptr);
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
-            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
+            queries[qid] = pushNegation(queries[qid], stats, context, false, false, false);
             if(options.printstatistics)
             {
                 std::cout << "\nQuery before expansion and reduction: ";
@@ -1229,7 +1233,7 @@ int main(int argc, char* argv[]) {
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             negstat_t stats;
             EvaluationContext context(nullptr, nullptr);
-            auto q = queries[qid]->pushNegation(stats, context, false, false, false);
+            auto q = pushNegation(queries[qid], stats, context, false, false, false);
             if (!q->isReachability() || q->isLoopSensitive() || stats.negated_fireability) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, negated fireability and UpperBounds, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
@@ -1341,8 +1345,9 @@ int main(int argc, char* argv[]) {
                                            context, simplificationContext, out);
                         continue;
                     }
-                    queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
-                                            ->pushNegation(stats, context, false, false, true);
+                    queries[i] = pushNegation(initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true),
+                                            stats, context, false, false, true);
+                    queries[i]->toString(std::cout);std::cout << std::endl;
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
                     if(options.queryReductionTimeout > 0 && options.printstatistics) {
@@ -1358,7 +1363,8 @@ int main(int argc, char* argv[]) {
                                 options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
-                            queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
+                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
+                            queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
                             wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                             if(options.printstatistics)
                             {

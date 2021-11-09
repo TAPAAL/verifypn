@@ -17,22 +17,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "PetriEngine/PQL/BinaryPrinter.h"
+#include "PetriEngine/PQL/BinaryPrinterTests.h"
 
 namespace PetriEngine::PQL {
-    void BinaryPrinter::_accept(const LiteralExpr *element){
+    void BinaryPrinterTests::_accept(const LiteralExpr *element){
         os.write("l", sizeof(char));
         int temp = element->value();
         os.write(reinterpret_cast<const char*>(&temp), sizeof(int));
     }
 
-    void BinaryPrinter::_accept(const UnfoldedIdentifierExpr *element){
+    void BinaryPrinterTests::_accept(const UnfoldedIdentifierExpr *element){
         os.write("i", sizeof(char));
         int temp = element->offset();
         os.write(reinterpret_cast<const char*>(&temp), sizeof(int));
     }
 
-    void BinaryPrinter::_accept(const MinusExpr *element){
+    void BinaryPrinterTests::_accept(const MinusExpr *element){
         auto e1 = std::make_shared<PQL::LiteralExpr>(0);
         std::vector<Expr_ptr> exprs;
         exprs.push_back(e1);
@@ -40,7 +40,7 @@ namespace PetriEngine::PQL {
         PQL::SubtractExpr(std::move(exprs)).visit(*this);
     }
 
-    void BinaryPrinter::_accept(const SubtractExpr *element){
+    void BinaryPrinterTests::_accept(const SubtractExpr *element){
         os.write("-", sizeof(char));
         uint32_t size = element->expressions().size();
         os.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
@@ -48,7 +48,7 @@ namespace PetriEngine::PQL {
             e->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const CommutativeExpr *element){
+    void BinaryPrinterTests::_accept(const CommutativeExpr *element){
         auto sop = element->op();
         os.write(&sop[0], sizeof(char));
         int32_t temp_constant = element->constant();
@@ -63,7 +63,7 @@ namespace PetriEngine::PQL {
             e->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const SimpleQuantifierCondition *condition){
+    void BinaryPrinterTests::_accept(const SimpleQuantifierCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -71,16 +71,16 @@ namespace PetriEngine::PQL {
         condition->getCond()->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const UntilCondition *condition){
+    void BinaryPrinterTests::_accept(const UntilCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
         (*condition)[0]->visit(*this);
-        (*condition)[0]->visit(*this);
+        (*condition)[1]->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const LogicalCondition *condition){
+    void BinaryPrinterTests::_accept(const LogicalCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -91,7 +91,7 @@ namespace PetriEngine::PQL {
             c->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const CompareConjunction *element){
+    void BinaryPrinterTests::_accept(const CompareConjunction *element){
         auto path = element->getPath();
         auto quant = Quantifier::COMPCONJ;
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -108,7 +108,7 @@ namespace PetriEngine::PQL {
         }
     }
 
-    void BinaryPrinter::_accept(const CompareCondition *condition){
+    void BinaryPrinterTests::_accept(const CompareCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -120,14 +120,14 @@ namespace PetriEngine::PQL {
         (*condition)[1]->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const DeadlockCondition *condition){
+    void BinaryPrinterTests::_accept(const DeadlockCondition *condition){
         auto path = condition->getPath();
         auto quant = Quantifier::DEADLOCK;
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
     }
 
-    void BinaryPrinter::_accept(const BooleanCondition *condition){
+    void BinaryPrinterTests::_accept(const BooleanCondition *condition){
         auto path = condition->getPath();
         auto quant = Quantifier::PN_BOOLEAN;
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -135,7 +135,7 @@ namespace PetriEngine::PQL {
         os.write(reinterpret_cast<const char*>(&condition->value), sizeof(bool));
     }
 
-    void BinaryPrinter::_accept(const UnfoldedUpperBoundsCondition *condition){
+    void BinaryPrinterTests::_accept(const UnfoldedUpperBoundsCondition *condition){
         auto path = condition->getPath();
         auto quant = Quantifier::UPPERBOUNDS;
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -153,7 +153,7 @@ namespace PetriEngine::PQL {
         }
     }
 
-    void BinaryPrinter::_accept(const NotCondition *condition){
+    void BinaryPrinterTests::_accept(const NotCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -161,11 +161,11 @@ namespace PetriEngine::PQL {
         condition->getCond()->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const IdentifierExpr *condition) {
+    void BinaryPrinterTests::_accept(const IdentifierExpr *condition) {
         condition->compiled()->visit(*this);
     }
 
-    void BinaryPrinter::_accept(const ShallowCondition *condition) {
+    void BinaryPrinterTests::_accept(const ShallowCondition *condition) {
         condition->getCompiled()->visit(*this);
     }
 

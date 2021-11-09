@@ -41,7 +41,7 @@ namespace PetriEngine {
     namespace PQL {
         class Visitor;
         class MutatingVisitor;
-        
+
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
@@ -218,16 +218,13 @@ namespace PetriEngine {
             virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
-            /** Query Simplification */
-            virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
             /** Check if query is a reachability query */
             [[nodiscard]] virtual bool isReachability(uint32_t depth = 0) const = 0;
 
             [[nodiscard]] virtual bool isLoopSensitive() const { return _loop_sensitive; };
             /** Prepare reachability queries */
             [[nodiscard]] virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            [[nodiscard]] virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
-            
+
             /** Output the condition as it currently is to a file in XML */
             virtual void toCompactXML(std::ostream&, uint32_t tabs, AnalysisContext& context) const = 0;
 
@@ -272,9 +269,7 @@ namespace PetriEngine {
             [[nodiscard]] virtual CTLType getQueryType() const = 0;
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
-            [[nodiscard]] static std::shared_ptr<Condition> 
-            initialMarkingRW(const std::function<std::shared_ptr<Condition> ()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
-            [[nodiscard]] virtual bool containsNext() const = 0;   
+            [[nodiscard]] virtual bool containsNext() const = 0;
             [[nodiscard]] virtual bool nestedDeadlock() const = 0;
             void toString(std::ostream& os = std::cout);
         protected:

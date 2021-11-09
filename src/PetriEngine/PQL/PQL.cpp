@@ -44,28 +44,6 @@ namespace PetriEngine {
         
         Condition::~Condition() = default;
 
-        Condition_ptr Condition::initialMarkingRW(const std::function<Condition_ptr()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw)
-        {
-            auto res = func();
-            if(!nested && initrw)
-            {
-                auto e = res->evaluate(context);
-                if(e != Condition::RUNKNOWN) 
-                {
-                    if(res->getQuantifier() == E && res->getPath() == F)
-                    {
-                        auto ef = static_cast<EFCondition*>(res.get());
-                        if(dynamic_cast<UnfoldedUpperBoundsCondition*>((*ef)[0].get()))
-                        {
-                            return res;
-                        }
-                    }
-                    return BooleanCondition::getShared(e);
-                }
-            }
-            return res;            
-        }
-
         void Condition::toString(std::ostream &os) {
             QueryPrinter printer{os};
             this->visit(printer);
