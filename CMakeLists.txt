@@ -20,9 +20,11 @@ add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
-option(VERIFYPN_Static "Link libraries statically" ON)
+option(VERIFYPN_Static "Link libraries statically" OFF)
 option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
+
+option(BUILD_TESTS "Build the boost unit tests" OFF)
 
 
 if (VERIFYPN_Static)
@@ -122,3 +124,8 @@ endif (VERIFYPN_GetDependencies)
 include_directories(include)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/)
+
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/boost_tests)
+endif()
