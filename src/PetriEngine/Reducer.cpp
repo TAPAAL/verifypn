@@ -1287,7 +1287,7 @@ namespace PetriEngine {
         for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
         {
             if(hasTimedout())
-                return continueReductions;
+                return false;
             _tflags.resize(parent->_transitions.size(), 0);
             std::fill(_tflags.begin(), _tflags.end(), 0);
             std::vector<uint32_t> stack;
@@ -1525,6 +1525,7 @@ namespace PetriEngine {
         for (size_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1) {
             for (size_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
 
+                if (hasTimedout()) return false;
                 if (t1 == t2) continue;
 
                 // We check if t1 can be removed
@@ -1542,6 +1543,7 @@ namespace PetriEngine {
 
                 for (size_t p = 0; p < parent->numberOfPlaces(); ++p) {
 
+                    if (hasTimedout()) return false;
                     Place& place = parent->_places[p];
 
                     if (place.skip) continue;
@@ -1590,6 +1592,7 @@ namespace PetriEngine {
         // which will never have more than 0 tokens.
         // Rule 10 from "Structural Reductions Revisited" by Yann Theiry-Mieg
         bool continueReductions = false;
+        if (hasTimedout()) return false;
 
         // The places of siphon S will be removed
         std::unordered_set <uint32_t> S;
@@ -1610,10 +1613,13 @@ namespace PetriEngine {
             }
         }
 
+
+
         bool out;
         bool fixpoint;
         uint32_t trans;
         do{
+            if (hasTimedout()) return false;
             fixpoint = true;
 
             // Discard transitions from T if they have no producers in S
@@ -1632,6 +1638,8 @@ namespace PetriEngine {
                     ++it;
                 }
             }
+
+            if (hasTimedout()) return false;
 
             // Discard from T any transition that does not consume from S and discard its postset from S
             for (auto it = T.begin(); it != T.end(); ){
@@ -1912,7 +1920,7 @@ namespace PetriEngine {
         for (uint32_t baseCon = 0; baseCon < parent->numberOfTransitions(); baseCon++)
         {
             if (hasTimedout())
-                return continueReductions;
+                return false;
 
             if (parent->_transitions[baseCon].skip ||
                     parent->_transitions[baseCon].inhib ||
@@ -1997,7 +2005,7 @@ namespace PetriEngine {
             for (auto prod_id : producers)
             {
                 if (hasTimedout())
-                    return continueReductions;
+                    return false;
 
                 Transition prod = parent->_transitions[prod_id];
                 auto prodArc = getOutArc(prod, p);
