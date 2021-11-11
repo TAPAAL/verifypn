@@ -91,7 +91,7 @@
 #include "LTL/LTLMain.h"
 
 #include <atomic>
-#include <PetriEngine/PQL/BinaryPrinterTests.h>
+#include <PetriEngine/PQL/BinaryPrinter.h>
 #include <PetriEngine/PQL/Simplifier.h>
 #include <PetriEngine/PQL/PushNegation.h>
 
@@ -985,7 +985,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof(char));
-            BinaryPrinterTests binary_printer(out);
+            BinaryPrinter binary_printer(out);
             queries[i]->visit(binary_printer);
         }
         else

@@ -1,8 +1,4 @@
-/* Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+/* Copyright (C) 2011  Rasmus Tollund <rtollu18@student.aau.dk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +17,9 @@
 #ifndef VERIFYPN_PUSHNEGATION_H
 #define VERIFYPN_PUSHNEGATION_H
 
-#include <stack>
 #include "MutatingVisitor.h"
+
+#include <stack>
 
 namespace PetriEngine::PQL {
 

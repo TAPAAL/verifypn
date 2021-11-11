@@ -22,6 +22,8 @@
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/PQL/MutatingVisitor.h"
+#include "PetriEngine/Stubborn/StubbornSet.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 #include <sstream>
 #include <assert.h>
@@ -31,8 +33,6 @@
 #include <set>
 #include <cmath>
 #include <numeric>
-#include <PetriEngine/Stubborn/StubbornSet.h>
-#include "PetriEngine/PQL/QueryPrinter.h"
 
 using namespace PetriEngine::Simplification;
 
@@ -1909,6 +1909,14 @@ namespace PetriEngine {
         }
 
         Condition_ptr BooleanCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
+            return nullptr;
+        }
+
+        Condition_ptr UnfoldedUpperBoundsCondition::prepareForReachability(bool negated) const {
             return nullptr;
         }
 

@@ -99,6 +99,7 @@ namespace LTL {
         }
         switch(options.ltlHeuristic) {
             case LTLHeuristic::Distance:
+            default:
                 return std::make_unique<AutomatonHeuristic>(net, automaton);
             case LTLHeuristic::Automaton:
                 return std::make_unique<DistanceHeuristic>(net, negated_formula);

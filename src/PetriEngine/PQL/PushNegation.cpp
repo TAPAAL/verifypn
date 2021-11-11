@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <PetriEngine/errorcodes.h>
+#include "PetriEngine/errorcodes.h"
 #include "PetriEngine/PQL/PushNegation.h"
 
 // Macro to ensure that returns are done correctly
@@ -617,11 +617,6 @@ namespace PetriEngine::PQL {
         }, stats, context, nested, negated, initrw);
         RETURN(cond)
     }
-
-    // CONSTANTS
-    Condition_ptr BooleanCondition::FALSE_CONSTANT = std::make_shared<BooleanCondition>(false);
-    Condition_ptr BooleanCondition::TRUE_CONSTANT = std::make_shared<BooleanCondition>(true);
-    Condition_ptr DeadlockCondition::DEADLOCK = std::make_shared<DeadlockCondition>();
 
     void PushNegationVisitor::_accept(DeadlockCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
