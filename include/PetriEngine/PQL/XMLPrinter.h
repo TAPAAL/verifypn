@@ -28,17 +28,19 @@ namespace PetriEngine {
         class XMLPrinter : public Visitor {
         public:
             XMLPrinter(std::ostream& os, uint32_t init_tabs = 0, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
-                os(os), tabs(init_tabs), tab_size(tab_size), single_tab(std::string(tab_size, ' ')), print_newlines(print_newlines), token_count(token_count) {}
+                os(os), token_count(token_count), tabs(init_tabs), tab_size(tab_size),
+                        print_newlines(print_newlines) {}
 
         protected:
             std::ostream& os;
             const bool token_count;
             uint32_t tabs;
             const uint32_t tab_size;
-            const std::string single_tab;
             const bool print_newlines;
+            static constexpr char single_tab = ' ';
 
-            std::ostream & generateTabs();
+            std::ostream& generateTabs();
+            std::ostream& XMLPrinter::newline();
 
             void openXmlTag(const std::string& tag);
             void closeXmlTag(const std::string &tag);

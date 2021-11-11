@@ -645,4 +645,24 @@ namespace PetriEngine::PQL {
             }
         }
     }
+
+    Condition_ptr PushNegationVisitor::subvisit(Condition* condition, bool _nested, bool _negated) {
+    {
+            bool old_nested = nested;
+            bool old_negated = negated;
+            nested = _nested;
+            negated = _negated;
+
+            condition->visit(*this);
+#ifndef NDEBUG
+            assert(has_returned); // Subvisit should return value
+            has_returned = false;
+#endif
+
+            nested = old_nested;
+            negated = old_negated;
+
+            return return_value;
+        }
+    }
 }

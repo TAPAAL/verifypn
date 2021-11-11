@@ -31,43 +31,25 @@ namespace PetriEngine::PQL {
     class PushNegationVisitor : public MutatingVisitor {
     public:
         PushNegationVisitor(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw)
-            : stats(stats), context(context), initrw(initrw), nested(nested), negated(negated) {}
+            : nested(nested), negated(negated), context(context), stats(stats), initrw(initrw) {}
 
         Condition_ptr return_value;
 
     protected:
         bool nested;
         bool negated;
-
-        // This method visits the condition, restores the current arguments and returns the value
-        // from the visit.
-        inline Condition_ptr subvisit(Condition_ptr condition, bool _nested, bool _negated)
-        { return subvisit(&*condition, _nested, _negated); }
-        inline Condition_ptr subvisit(Condition* condition, bool _nested, bool _negated) {
-            bool old_nested = nested;
-            bool old_negated = negated;
-            nested = _nested;
-            negated = _negated;
-
-            condition->visit(*this);
-#ifndef NDEBUG
-            assert(has_returned); // Subvisit should return value
-            has_returned = false;
-#endif
-
-            nested = old_nested;
-            negated = old_negated;
-
-            return return_value;
-        }
-
+        const EvaluationContext& context;
+        negstat_t& stats;
+        bool initrw;
 #ifndef NDEBUG
         bool has_returned = false;
 #endif
 
-        const EvaluationContext& context;
-        negstat_t& stats;
-        bool initrw;
+        // This method visits the condition, restores the current arguments and returns the value
+        // from the visit.
+        Condition_ptr subvisit(Condition_ptr condition, bool _nested, bool _negated)
+        { return subvisit(&*condition, _nested, _negated); }
+        Condition_ptr subvisit(Condition* condition, bool _nested, bool _negated);
 
         Condition_ptr pushAnd(const std::vector<Condition_ptr> &_conds, bool _nested, bool negate_children);
         Condition_ptr pushOr(const std::vector<Condition_ptr> &_conds, bool nested, bool negate_children);
