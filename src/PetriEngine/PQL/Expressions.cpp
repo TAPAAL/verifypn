@@ -1067,7 +1067,7 @@ namespace PetriEngine {
         void CompareCondition::visit(Visitor& ctx) const {
             ctx.accept<decltype(this)>(this);
         }
-        
+
         void EqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1766,52 +1766,6 @@ namespace PetriEngine {
         uint32_t EqualCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<EqualCondition>);
         }
-
-
-        Condition_ptr ACondition::prepareForReachability(bool negated) const {
-            auto g = std::dynamic_pointer_cast<GCondition>(_cond);
-            if (g) {
-                return AGCondition((*g)[0]).prepareForReachability(negated);
-            }
-            else {
-                // ugly hacking for `A true`.
-                auto bcond = std::dynamic_pointer_cast<BooleanCondition>(_cond);
-                if (bcond) {
-                    return bcond;
-                }
-                else return nullptr;
-            }
-        }
-
-        Condition_ptr ECondition::prepareForReachability(bool negated) const {
-            auto f = std::dynamic_pointer_cast<FCondition>(_cond);
-            return f ? EFCondition((*f)[0]).prepareForReachability(negated) : nullptr;
-        }
-
-        Condition_ptr UntilCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr LogicalCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-
-        Condition_ptr CompareConjunction::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr CompareCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
-        Condition_ptr NotCondition::prepareForReachability(bool negated) const {
-            return _cond->prepareForReachability(!negated);
-        }
-        
-        Condition_ptr BooleanCondition::prepareForReachability(bool negated) const {
-            return nullptr;
-        }
-        
 
         /******************** Check if query is a reachability query ********************/
 
