@@ -40,7 +40,7 @@ namespace PetriEngine {
             static constexpr char single_tab = ' ';
 
             std::ostream& generateTabs();
-            std::ostream& XMLPrinter::newline();
+            std::ostream& newline();
 
             void openXmlTag(const std::string& tag);
             void closeXmlTag(const std::string &tag);
