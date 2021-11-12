@@ -182,7 +182,6 @@ namespace PetriEngine {
         assert(consistent());
     }
 
-
     bool Reducer::consistent()
     {
 #ifndef NDEBUG
@@ -853,17 +852,35 @@ namespace PetriEngine {
             if(place.inhib) continue;
             if(place.producers.size() > place.consumers.size()) continue;
 
-            std::set<uint32_t> notenabled;
             bool ok = true;
+            // Check for producers without matching consumers first
+            for(uint prod : place.producers)
+            {
+                // Any producer without a matching consumer blocks this rule
+                Transition& t = getTransition(prod);
+                auto in = getInArc(p, t);
+                if(in == t.pre.end())
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if(!ok) continue;
+
+            std::set<uint32_t> notenabled;
+            // Out of the consumers, tally up those that are initially not enabled by place
+            // Ensure all the enabled transitions that feed back into place are non-increasing on place.
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 auto in = getInArc(p, t);
                 if(in->weight <= parent->initialMarking[p])
                 {
+                    // This branch happening even once means notenabled.size() != consumers.size()
                     auto out = getOutArc(t, p);
-                    if(out == t.post.end() || out->place != p || out->weight >= in->weight)
-                    {
+                    // Only increasing loops are not ok
+                    if (out != t.post.end() && out->weight > in->weight) {
                         ok = false;
                         break;
                     }
@@ -874,40 +891,24 @@ namespace PetriEngine {
                 }
             }
 
-            if(!ok || notenabled.size() == 0) continue;
-
-            for(uint prod : place.producers)
-            {
-                if(notenabled.count(prod) == 0)
-                {
-                    ok = false;
-                    break;
-                }
-                // check that producing arcs originate from transition also
-                // consuming. If so, we know it will never fire.
-                Transition& t = getTransition(prod);
-                ArcIter it = getInArc(p, t);
-                if(it == t.pre.end())
-                {
-                    ok = false;
-                    break;
-                }
-            }
-
-            if(!ok) continue;
-
-            _ruleE++;
-            continueReductions = true;
-
-            if(placeInQuery[p] == 0)
-                parent->initialMarking[p] = 0;
+            if(!ok || notenabled.empty()) continue;
 
             bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            for(uint cons : notenabled)
+            bool E_used;
+            for(uint cons : notenabled) {
+                Transition &t = getTransition(cons);
+                auto in = getInArc(p, t);
                 skipTransition(cons);
+                E_used = true;
+            }
 
-            if(skipplace)
+            if(skipplace) {
                 skipPlace(p);
+                E_used = true;
+            }
+
+            if (E_used) _ruleE++;
+            continueReductions = true;
 
         }
         assert(consistent());
