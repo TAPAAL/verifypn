@@ -894,22 +894,18 @@ namespace PetriEngine {
             if(!ok || notenabled.empty()) continue;
 
             bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            bool E_used;
+
             for(uint cons : notenabled) {
-                Transition &t = getTransition(cons);
-                auto in = getInArc(p, t);
                 skipTransition(cons);
-                E_used = true;
             }
 
             if(skipplace) {
                 skipPlace(p);
-                E_used = true;
             }
 
-            if (E_used) _ruleE++;
+            _ruleE++;
             continueReductions = true;
-
+            
         }
         assert(consistent());
         return continueReductions;
