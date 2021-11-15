@@ -43,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: verifydpn-osx64
-          path: '${{runner.workspace}}/build/bin/verifypn-osx64'
+          path: '${{runner.workspace}}/build/verifypn/bin/verifypn-osx64'
