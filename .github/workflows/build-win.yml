@@ -6,8 +6,13 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency: 
+  group: build-Win-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +20,7 @@ jobs:
       - name: Install Packages
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential cmake flex git make #bison
+          sudo apt-get install flex
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
 
           wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz

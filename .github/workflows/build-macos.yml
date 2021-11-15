@@ -7,15 +7,20 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency: 
+  group: build-MacOS-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Packages
         run: |
-          brew install flex bison #gcc-9 git cmake 
+          brew install flex bison
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
