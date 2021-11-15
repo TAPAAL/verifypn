@@ -5,17 +5,23 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    types: [synchronize, opened, reopened, ready_for_review]
   workflow_dispatch:
+
+concurrency: 
+  group: build-MacOS-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Packages
         run: |
-          brew install flex bison #gcc-9 git cmake 
+          brew install flex bison
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
@@ -36,5 +42,5 @@ jobs:
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
-          name: verifydtapn-osx64
-          path: '${{runner.workspace}}/build/bin/verifypn-osx64'
+          name: verifydpn-osx64
+          path: '${{runner.workspace}}/build/verifypn/bin/verifypn-osx64'
