@@ -224,27 +224,6 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
     }
  }
 
-ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
-{
-    //Load the model
-    std::ifstream mfile(options.modelfile, std::ifstream::in);
-    if (!mfile) {
-        fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", options.modelfile);
-        fprintf(stdout, "CANNOT_COMPUTE\n");
-        return ErrorCode;
-    }
-
-
-    //Parse and build the petri net
-    PNMLParser parser;
-    parser.parse(mfile, &builder);
-    options.isCPN = builder.isColored();
-
-    // Close the file
-    mfile.close();
-    return ContinueCode;
-}
-
 void printStats(PetriNetBuilder& builder, options_t& options)
 {
     if (options.printstatistics) {
@@ -560,16 +539,21 @@ int main(int argc, const char** argv) {
     options.print();
 
     ColoredPetriNetBuilder cpnBuilder;
-    if(parseModel(cpnBuilder, options) != ContinueCode)
-    {
+    try {
+        cpnBuilder.parse_model(options.modelfile);
+        options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
+    } catch (const base_error& err) {
+        std::cout << "CANNOT_COMPUTE" << std::endl;
         std::cerr << "Error parsing the model" << std::endl;
         return ErrorCode;
     }
+
     if(options.cpnOverApprox && !cpnBuilder.isColored())
     {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
         return UnknownCode;
     }
+    
     if (options.printstatistics) {
         std::cout << "Finished parsing model" << std::endl;
     }
