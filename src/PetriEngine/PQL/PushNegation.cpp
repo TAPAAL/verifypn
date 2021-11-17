@@ -153,7 +153,6 @@ namespace PetriEngine::PQL {
     void PushNegationVisitor::_accept(EFCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, false);
-            a->toString(std::cout);std::cout << std::endl;
 
             if (auto cond = dynamic_cast<NotCondition *>(a.get())) {
                 if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
