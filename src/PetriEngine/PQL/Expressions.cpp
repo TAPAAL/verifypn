@@ -1814,6 +1814,22 @@ namespace PetriEngine {
             else return false;
         }
 
+        bool GCondition::isReachability(uint32_t depth) const {
+            // This could potentially be a reachability formula if the parent is an A.
+            // This case is however already handled by ACondition.
+            return false;
+        }
+
+        bool FCondition::isReachability(uint32_t depth) const {
+            // This could potentially be a reachability formula if the parent is an A.
+            // This case is however already handled by ACondition.
+            return false;
+        }
+
+        bool XCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+
         bool UntilCondition::isReachability(uint32_t depth) const {
             return false;
         }
@@ -1846,6 +1862,41 @@ namespace PetriEngine {
         }
 
         bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool QuasiLivenessCondition::isReachability(uint32_t depth) const {
+            if(_compiled) return _compiled->isReachability(depth);
+            else return false;
+        }
+
+        bool LivenessCondition::isReachability(uint32_t depth) const {
+            if(_compiled) return _compiled->isReachability(depth);
+            else return false;
+        }
+
+        bool StableMarkingCondition::isReachability(uint32_t depth) const {
+            if(_compiled) return _compiled->isReachability(depth);
+            else return false;
+        }
+
+        bool KSafeCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool UpperBoundsCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool CompareConjunction::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool FireableCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+
+        bool UnfoldedFireableCondition::isReachability(uint32_t depth) const {
             return depth > 0;
         }
 

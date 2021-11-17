@@ -77,6 +77,8 @@ namespace PetriEngine::PQL {
 
         void _accept(CompareConjunction *element) override;
 
+        void _accept(UpperBoundsCondition *element) override;
+
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(EFCondition *condition) override;
@@ -114,6 +116,14 @@ namespace PetriEngine::PQL {
         void _accept(FireableCondition* element) override;
 
         void _accept(ShallowCondition *element);
+
+        void _accept(KSafeCondition* element) override;
+
+        void _accept(LivenessCondition* element) override;
+
+        void _accept(QuasiLivenessCondition* element) override;
+
+        void _accept(StableMarkingCondition* element) override;
     };
 }
 

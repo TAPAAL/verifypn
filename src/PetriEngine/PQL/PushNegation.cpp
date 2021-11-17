@@ -22,7 +22,7 @@
 
 // Macro to ensure that returns are done correctly
 #ifndef NDEBUG
-#define RETURN(x) {return_value = x; has_returned = true; return;}
+#define RETURN(x) { assert(x); return_value = x; has_returned = true; return;}
 #else
 #define RETURN(x) {return_value = x; return;}
 #endif
@@ -625,6 +625,14 @@ namespace PetriEngine::PQL {
         RETURN(cond)
     }
 
+    void PushNegationVisitor::_accept(UpperBoundsCondition* element) {
+        if (negated) {
+            std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
+            exit(ErrorCode);
+        }
+        RETURN(element->clone())
+    }
+
     void PushNegationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
         if (negated) {
             std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
@@ -643,6 +651,22 @@ namespace PetriEngine::PQL {
                 RETURN(element->clone());
             }
         }
+    }
+
+    void PushNegationVisitor::_accept(KSafeCondition* element) {
+        _accept(static_cast<ShallowCondition*>(element));
+    }
+
+    void PushNegationVisitor::_accept(LivenessCondition* element) {
+        _accept(static_cast<ShallowCondition*>(element));
+    }
+
+    void PushNegationVisitor::_accept(QuasiLivenessCondition* element) {
+        _accept(static_cast<ShallowCondition*>(element));
+    }
+
+    void PushNegationVisitor::_accept(StableMarkingCondition* element) {
+        _accept(static_cast<ShallowCondition*>(element));
     }
 
     Condition_ptr PushNegationVisitor::subvisit(Condition* condition, bool _nested, bool _negated) {

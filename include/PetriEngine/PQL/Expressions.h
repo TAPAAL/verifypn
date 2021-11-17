@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -290,9 +290,6 @@ namespace PetriEngine {
             { _compiled->toTAPAALQuery(out, context); }
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
-            bool isReachability(uint32_t depth) const override
-            { return _compiled->isReachability(depth); }
-
 
             Quantifier getQuantifier() const override
             { return _compiled->getQuantifier(); }
@@ -370,6 +367,7 @@ namespace PetriEngine {
         class SimpleQuantifierCondition : public QuantifierCondition {
         public:
             SimpleQuantifierCondition(const Condition_ptr cond) {
+                assert(cond);
                 _cond = cond;
                 _loop_sensitive = cond->isLoopSensitive();
             }
@@ -450,11 +448,7 @@ namespace PetriEngine {
 
           Result evaluate(const EvaluationContext &context) override;
 
-          bool isReachability(uint32_t depth) const override {
-              // This could potentially be a reachability formula if the parent is an A.
-              // This case is however already handled by ACondition.
-              return false;
-          }
+          bool isReachability(uint32_t depth) const override;
 
           Condition_ptr prepareForReachability(bool negated) const override {
               // TODO implement
@@ -491,11 +485,7 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-          bool isReachability(uint32_t depth) const override {
-              // This could potentially be a reachability formula if the parent is an E.
-              // This case is however already handled by ECondition.
-              return false;
-          }
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -518,9 +508,7 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            bool isReachability(uint32_t depth) const override {
-                return false;
-            }
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -720,6 +708,8 @@ namespace PetriEngine {
             std::string getName() const {
                 return _name;
             }
+
+            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
 
@@ -738,6 +728,8 @@ namespace PetriEngine {
             std::string getName() const {
                 return _name;
             }
+
+            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
@@ -912,7 +904,7 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
             void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const override { return depth > 0; };
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
@@ -1133,6 +1125,8 @@ namespace PetriEngine {
                 return _bound;
             }
 
+            bool isReachability(uint32_t depth) const override;
+
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1149,6 +1143,7 @@ namespace PetriEngine {
         {
         public:
             LivenessCondition() {}
+            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1160,6 +1155,7 @@ namespace PetriEngine {
         {
         public:
             QuasiLivenessCondition() {}
+            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1171,6 +1167,7 @@ namespace PetriEngine {
         {
         public:
             StableMarkingCondition() {}
+            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1186,14 +1183,18 @@ namespace PetriEngine {
             const std::vector<std::string> &getPlaces() const {
                 return _places;
             }
-        protected:
-            void _analyze(AnalysisContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+
             Condition_ptr clone() override
             {
                 return std::make_shared<UpperBoundsCondition>(_places);
             }
+
+            bool isReachability(uint32_t depth) const override;
+
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void visit(Visitor&) const override;
+            void visit(MutatingVisitor&) override;
         private:
             std::vector<std::string> _places;
         };

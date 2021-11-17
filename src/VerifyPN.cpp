@@ -1247,7 +1247,6 @@ int main(int argc, char* argv[]) {
     }
     if(options.symmetricVariables){
         cpnBuilder.computeSymmetricVariables();
-        //cpnBuilder.printSymmetricVariables();
     }
     if(options.computeCFP){
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
