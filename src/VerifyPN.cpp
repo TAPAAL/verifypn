@@ -1346,7 +1346,6 @@ int main(int argc, char* argv[]) {
                     }
                     queries[i] = pushNegation(initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true),
                                             stats, context, false, false, true);
-                    queries[i]->toString(std::cout);std::cout << std::endl;
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
                     if(options.queryReductionTimeout > 0 && options.printstatistics) {
