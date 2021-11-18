@@ -210,9 +210,7 @@ namespace PetriEngine {
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             virtual void visit(Visitor& visitor) const = 0;
             virtual void visit(MutatingVisitor& visitor) = 0;
-            
-            /** Export condition to TAPAAL query (add EF manually!) */
-            virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
+
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
