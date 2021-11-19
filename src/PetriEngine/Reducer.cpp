@@ -2108,6 +2108,163 @@ namespace PetriEngine {
         return continueReductions;
     }
 
+    bool Reducer::ReducebyRuleR(uint32_t* placeInQuery)
+    {
+        bool continueReductions = false;
+
+        for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++)
+        {
+            if (hasTimedout())
+                return false;
+
+            const Place& place = parent->_places[pid];
+
+            if (place.skip || place.inhib || placeInQuery[pid] > 0 || place.producers.empty() || place.consumers.empty())
+                continue;
+
+            // Check that prod and cons are disjoint
+            const auto presize = place.producers.size();
+            const auto postsize = place.consumers.size();
+            bool ok = true;
+            uint32_t i = 0, j = 0;
+            while (i < presize && j < postsize)
+            {
+                if (place.producers[i] < place.consumers[j])
+                    i++;
+                else if (place.consumers[j] < place.producers[i])
+                    j++;
+                else
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (!ok) continue;
+
+            // Now we analyze consumers further
+            uint32_t maxConW = 0;
+            for (auto con : place.consumers)
+            {
+                // Consumers may not be inhibited and only consume from pid.
+                const Transition& tran = parent->_transitions[con];
+                if (tran.inhib || tran.pre.size() != 1)
+                {
+                    ok = false;
+                    break;
+                }
+
+                // Post-set of consumers may not inhibit or appear in query.
+                for (const auto arc : tran.post)
+                {
+                    if (placeInQuery[arc.place] > 0 || parent->_places[arc.place].inhib)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok) break;
+
+                // Find greatest weight between pid and consumers
+                maxConW = std::max(maxConW, tran.pre[0].weight);
+            }
+
+            if (!ok) continue;
+
+            // Find producers for which we can fuse its firing with a consumer
+            bool removedAllProducers = true;
+            auto producers = place.producers;
+            for (auto prod_id : producers)
+            {
+                if (hasTimedout())
+                    return false;
+
+                Transition prod = parent->_transitions[prod_id];
+                auto prodArc = getOutArc(prod, pid);
+
+                if (prodArc->weight < maxConW)
+                {
+                    removedAllProducers = false;
+                    continue;
+                }
+
+
+                // Combine producer with the consumers
+                auto n = place.consumers.size();
+                auto consumers = place.consumers;
+                for (auto con_id : consumers)
+                {
+                    // Create new transition with effect of firing the producer and then the consumer
+                    auto id = parent->_transitions.size();
+                    if (!_skippedTransitions.empty())
+                    {
+                        id = _skippedTransitions.back();
+                        _skippedTransitions.pop_back();
+                    }
+                    else
+                    {
+                        parent->_transitions.emplace_back();
+                        parent->_transitionnames[newTransName()] = id;
+                        parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
+                    }
+                    Transition& newtran = parent->_transitions[id];
+                    newtran.skip = false;
+                    newtran.inhib = false;
+
+                    // Arcs from consumer
+                    Transition& cons = parent->_transitions[con_id];
+                    for (auto& arc : cons.post)
+                    {
+                        newtran.addPostArc(arc);
+                    }
+                    // Arcs from producer
+                    for (auto& arc : prod.pre)
+                    {
+                        newtran.addPreArc(arc);
+                    }
+                    for (auto& arc : prod.post)
+                    {
+                        if (arc.place == pid)
+                        {
+                            Arc leftoverArc = arc;
+                            leftoverArc.weight -= cons.pre[0].weight;
+                            if (leftoverArc.weight > 0) {
+                                newtran.addPostArc(leftoverArc);
+                                removedAllProducers = false;
+                            }
+                        }
+                        else
+                        {
+                            newtran.addPostArc(arc);
+                        }
+                    }
+
+                    for(auto& arc : newtran.pre)
+                        parent->_places[arc.place].addConsumer(id);
+                    for(auto& arc : newtran.post)
+                        parent->_places[arc.place].addProducer(id);
+                }
+
+                skipTransition(prod_id);
+                continueReductions = true;
+                _ruleR++;
+            }
+
+            if (removedAllProducers && parent->initialMarking[pid] == 0)
+            {
+                auto consumers = place.consumers;
+                for (auto cons_id : consumers)
+                    skipTransition(cons_id);
+
+                skipPlace(pid);
+            }
+
+            consistent();
+        }
+        return continueReductions;
+    }
+
     std::array tnames {
             "T-lb_balancing_receive_notification_10",
             "T-lb_balancing_receive_notification_2",
@@ -2182,9 +2339,12 @@ namespace PetriEngine {
                     if(!next_safe) 
                     { // then apply tokens moving rules
                         //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true; // For cleanup
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                    }    
+                    }
                 } while(changed && !hasTimedout());
                 if(!next_safe && !changed)
                 {
@@ -2196,12 +2356,12 @@ namespace PetriEngine {
         }
         else
         {
-            const char* rnames = "ABCDEFGHIJKLMNOPQ";
+            const char* rnames = "ABCDEFGHIJKLMNOPQR";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
+                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5 && reduction[i] != 16 && reduction[i] != 17)
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
@@ -2271,6 +2431,9 @@ namespace PetriEngine {
                             break;
                         case 16:
                             if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 17:
+                            if (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
                             break;
                     }
 #ifndef NDEBUG
