@@ -898,7 +898,7 @@ namespace PetriEngine {
             
             std::set<uint32_t> notenabled;
             bool ok = true;
-            for(uint cons : place.consumers)
+            for(uint32_t cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 auto in = getInArc(p, t);
@@ -919,7 +919,7 @@ namespace PetriEngine {
             
             if(!ok || notenabled.size() == 0) continue;
 
-            for(uint prod : place.producers)
+            for(uint32_t prod : place.producers)
             {
                 if(notenabled.count(prod) == 0)
                 {
@@ -946,7 +946,7 @@ namespace PetriEngine {
                 parent->initialMarking[p] = 0;
             
             bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            for(uint cons : notenabled)
+            for(uint32_t cons : notenabled)
                 skipTransition(cons);
 
             if(skipplace)
@@ -1030,7 +1030,7 @@ namespace PetriEngine {
             if(placeInQuery[p] != 0) continue; 
             
             bool ok = true;
-            for(uint cons : place.consumers)
+            for(uint32_t cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 auto w = getInArc(p, t)->weight;
@@ -1805,7 +1805,7 @@ namespace PetriEngine {
 
             uint32_t low = parent->initialMarking[p];
 
-            for (uint cons : place.consumers)
+            for (uint32_t cons : place.consumers)
             {
                 Transition& tran = getTransition(cons);
                 auto inArc = getInArc(p, tran);
@@ -1847,7 +1847,8 @@ namespace PetriEngine {
 
             std::set<uint32_t> alwaysInhibited;
 
-            for (uint cons : place.consumers)
+            std::vector<uint32_t> consumersProxy = place.consumers;
+            for (uint32_t cons : consumersProxy)
             {
                 if (_tflags[cons] == 1) continue;
 
