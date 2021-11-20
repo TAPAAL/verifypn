@@ -1,8 +1,4 @@
-/* Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>,
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+/* Copyright (C) 2011  Rasmus Tollund <rtollu18@student.aau.dk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "PetriEngine/PQL/BinaryPrinter.h"
 
 namespace PetriEngine::PQL {
@@ -168,6 +165,4 @@ namespace PetriEngine::PQL {
     void BinaryPrinter::_accept(const ShallowCondition *condition) {
         condition->getCompiled()->visit(*this);
     }
-
-
 }
