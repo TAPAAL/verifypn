@@ -7,7 +7,7 @@ endif()
 
 # Project Definition
 set(VERIFYPN_NAME "verifypn")
-set(VERIFYPN_VERSION 4.2.0)
+set(VERIFYPN_VERSION 4.2.1)
 project(${VERIFYPN_NAME} VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
 # C++ Definition
