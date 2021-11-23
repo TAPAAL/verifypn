@@ -61,9 +61,7 @@ namespace PetriEngine {
 
             // Super classes, the default implementation of subclasses is to call these
             virtual void _accept(const CommutativeExpr *element) {
-                assert(false);
-                std::cerr << "No accept for CommutativeExpr (may be called from subclass)" << std::endl;
-                exit(0);
+                element->NaryExpr::visit(*this);
             }
 
             virtual void _accept(const SimpleQuantifierCondition *element) {
@@ -227,11 +225,15 @@ namespace PetriEngine {
                 exit(0);
             };
 
-            virtual void _accept(const SubtractExpr *element) {
+            virtual void _accept(const NaryExpr *element) {
                 assert(false);
-                std::cerr << "No accept for SubtractExpr" << std::endl;
+                std::cerr << "No accept for LivenessCondition" << std::endl;
                 exit(0);
-            };
+            }
+
+            virtual void _accept(const SubtractExpr *element) {
+                element->NaryExpr::visit(*this);
+            }
 
             // shallow expression, default to error
             virtual void _accept(const IdentifierExpr *element) {
