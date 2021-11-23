@@ -115,8 +115,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
-            /** Count size of the entire formula in number of nodes */
-            [[nodiscard]] virtual int formulaSize() const = 0;
 
             [[nodiscard]] virtual bool placeFree() const = 0;
 
@@ -222,8 +220,6 @@ namespace PetriEngine {
             [[nodiscard]] bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
             [[nodiscard]] bool isTriviallyFalse();
-            /** Count size of the entire formula in number of nodes */
-            [[nodiscard]] virtual int formulaSize() const = 0;
 
             [[nodiscard]] bool isSatisfied() const
             {

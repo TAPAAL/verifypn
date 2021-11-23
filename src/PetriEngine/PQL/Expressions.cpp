@@ -1098,6 +1098,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void NaryExpr::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void PlusExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);

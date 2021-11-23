@@ -20,12 +20,14 @@
 
 #include "PetriParse/QueryParser.h"
 #include "PetriEngine/PQL/QueryPrinter.h"
+#include "PetriEngine/PQL/FormulaSize.h"
 #include "PetriEngine/options.h"
 
 #include <iostream>
 #include <string>
 
 #include <spot/tl/formula.hh>
+
 namespace LTL {
     struct AtomicProposition {
         PetriEngine::PQL::Condition_ptr expression;
@@ -125,7 +127,7 @@ namespace LTL {
                     const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
             std::stringstream ss;
             ss << "\"";
-            bool choice = compress == APCompression::Choose && element->formulaSize() > 250;
+            bool choice = compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
             if (compress == APCompression::Full || choice) {
                 // FIXME Very naive; this completely removes APs being in multiple places in the query,
                 // leading to some query not being answered as is. The net gain is large in the firebaility category,
