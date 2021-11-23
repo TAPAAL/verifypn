@@ -28,18 +28,25 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::openXmlTag(const std::string &tag) {
-            generateTabs() << "<" << tag << (print_newlines? ">\n": ">");
+            generateTabs() << "<" << tag;
+            newline();
             tabs++;
         }
 
         void XMLPrinter::closeXmlTag(const std::string &tag) {
             tabs--;
-            generateTabs() << "</" << tag << (print_newlines? ">\n": ">");
+            generateTabs() << "</" << tag;
+            newline();
         }
 
         void XMLPrinter::outputLine(const std::string &line) {
-            generateTabs() << line << (print_newlines? "\n": "");
+            generateTabs() << line;
+            newline();
+        }
 
+        std::ostream& XMLPrinter::newline() {
+            os << '\n';
+            return os;
         }
 
         void XMLPrinter::_accept(const NotCondition *element) {

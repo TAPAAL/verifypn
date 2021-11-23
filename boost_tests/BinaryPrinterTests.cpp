@@ -2,7 +2,7 @@
 #define BOOST_TEST_MODULE PQL tests
 #include <boost/test/included/unit_test.hpp>
 #include "PetriEngine/PQL/Expressions.h"
-#include "PetriEngine/PQL/BinaryPrinterTests.h"
+#include "PetriEngine/PQL/BinaryPrinter.h"
 
 BOOST_AUTO_TEST_SUITE(BinaryPrinterTests)
 
