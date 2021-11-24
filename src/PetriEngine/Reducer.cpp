@@ -1389,59 +1389,115 @@ namespace PetriEngine {
                     continue;
                 }
 
-                // Check that prod and cons are disjoint
+                // In arc checks
+                std::vector<Arc> pre_subset;
+                std::vector<Arc> pre_superset;
                 if (canT1BeRemoved) {
-                    auto pre_subset = tran2.pre;
-                    auto post_subset = tran2.post;
-                    auto pre_superset = tran1.pre;
-                    auto post_superset = tran1.post;
+                    pre_subset = tran2.pre;
+                    pre_superset = tran1.pre;
                 }
                 else if (canT2BeRemoved) {
-                    auto pre_subset = tran1.pre;
-                    auto post_subset = tran1.post;
-                    auto pre_superset = tran2.pre;
-                    auto post_superset = tran2.post;
+                    pre_subset = tran1.pre;
+                    pre_superset = tran2.pre;
+                }
 
-                    bool ok = true;
-                    uint32_t i = 0, j = 0;
-                    while (i < pre_subset.size() && j < pre_superset.size()) {
-                        if (pre_subset[i].skip) {
-                            i++;
-                            continue;
-                        }
-                        if (pre_superset[j].skip) {
-                            j++;
-                            continue;
-                        }
+                bool ok = true;
+                uint32_t i = 0, j = 0;
+                while (i < pre_subset.size() && j < pre_superset.size()) {
+                    if (pre_subset[i].skip) {
+                        i++;
+                        continue;
+                    }
+                    if (pre_superset[j].skip) {
+                        j++;
+                        continue;
+                    }
 
-                        if (pre_subset[i] < pre_superset[j]) {
+                    if (pre_subset[i] < pre_superset[j]) {
+                        ok = false;
+                        break;
+                    }
+                    // Same place, check conditions
+                    else if (pre_subset[i] == pre_superset[j]) {
+                        // In arc check
+                        // Find weights of in arcs
+                        auto sub_set_in_weight = pre_subset[i].weight;
+                        auto super_set_in_weight = pre_superset[j].weight;
+
+                        // Check the requirement to fire
+                        if (super_set_in_weight < sub_set_in_weight) {
+                            if (canT1BeRemoved) {
+                                canT1BeRemoved = false;
+                            }
+                            else if (canT2BeRemoved) {
+                                canT2BeRemoved = false;
+                            }
                             ok = false;
                             break;
                         }
-                        else if (pre_subset[i] == pre_superset[j]) {
-                            // Find weights of arcs
-                            auto sub_set_in_weight = pre_subset[i].weight;
-                            auto super_set_in_weight = pre_superset[j].weight;
-
-                            if (super_set_in_weight < sub_set_in_weight) {
-                                canT2BeRemoved = false;
-                            }
-
-                            if ((!canT2BeRemoved)) {
-                                ok = false;
-                                break;
-                            }
-                            //pre_subset[i] < pre_superset[j]
-                            i++;
-                            j++;
-                        }
-                        else {
-                            j++;
-                        }
+                        // If everything good, keep going
+                        i++;
+                        j++;
                     }
-                    if (!ok) {
-                        continue;
+                    else {
+                        j++;
                     }
+                }
+
+
+                // Go to next t2
+                if (!ok) {
+                    continue;
+                }
+
+
+                // Out arc checks
+                std::vector<Arc> post_subset;
+                std::vector<Arc> post_superset;
+                if (canT1BeRemoved) {
+                    post_subset = tran2.post;
+                    post_superset = tran1.post;
+                }
+                else if (canT2BeRemoved) {
+                    post_subset = tran1.post;
+                    post_superset = tran2.post;
+                }
+
+                for (int ii = 0; i <= post_superset.size(); ++i) {
+                    uint32_t place = post_superset[ii].place;
+                    uint32_t superset_out_weight = post_superset[ii].weight;
+
+                    getInArc(place, tran1);
+                    getOutArc(tran1, p);
+                    auto subset_out_weight = pre_subset[i].weight;
+                    auto superset_out_weight = pre_superset[j].weight;
+                    if ((superset_out_weight - supserset_in_weight) != (subset_out_weight - subset_in_weight)) {
+                        canT1BeRemoved = false;
+                        canT2BeRemoved = false;
+                        ok = false;
+                        break;
+                    }
+                }
+
+
+
+                // Go to next t2
+                if (!ok) {
+                    continue;
+                }
+
+
+                if (canT1BeRemoved) {
+                    // We can discard t1
+                    skipTransition(t1);
+                    _ruleL++;
+                    continueReductions = true;
+                    break;
+                } else if (canT2BeRemoved) {
+                    // We can discard t2
+                    skipTransition(t2);
+                    _ruleL++;
+                    continueReductions = true;
                 }
 
                 /*while (i < presize && j < postsize) {
@@ -1496,18 +1552,7 @@ namespace PetriEngine {
                     }
                 }*/
 
-                if (canT1BeRemoved) {
-                    // We can discard t1
-                    skipTransition(t1);
-                    _ruleL++;
-                    continueReductions = true;
-                    break;
-                } else if (canT2BeRemoved) {
-                    // We can discard t2
-                    skipTransition(t2);
-                    _ruleL++;
-                    continueReductions = true;
-                }
+
             }
         }
 
