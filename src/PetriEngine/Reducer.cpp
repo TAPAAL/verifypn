@@ -1377,17 +1377,84 @@ namespace PetriEngine {
                 Transition &tran1 = getTransition(t1);
                 Transition &tran2 = getTransition(t2);
 
-                if (tran1.skip || tran2.skip) continue;
-                if (tran1.inhib || tran2.inhib) continue;
+                if (tran1.skip || tran1.inhib) break;
+                if (tran2.skip || tran2.inhib) continue;
 
                 bool canT1BeRemoved = tran1.pre.size() >= tran2.pre.size() && tran1.post.size() >= tran2.post.size();
                 bool canT2BeRemoved = tran2.pre.size() >= tran1.pre.size() && tran2.post.size() >= tran1.post.size();
+
+                // check delmængde
 
                 if (!(canT1BeRemoved || canT2BeRemoved)) {
                     continue;
                 }
 
-                for (size_t p = 0; p < parent->numberOfPlaces(); ++p) {
+                // Check that prod and cons are disjoint
+                if (canT1BeRemoved) {
+                    auto pre_subset = tran2.pre;
+                    auto post_subset = tran2.post;
+                    auto pre_superset = tran1.pre;
+                    auto post_superset = tran1.post;
+                }
+                else if (canT2BeRemoved) {
+                    auto pre_subset = tran1.pre;
+                    auto post_subset = tran1.post;
+                    auto pre_superset = tran2.pre;
+                    auto post_superset = tran2.post;
+
+                    bool ok = true;
+                    uint32_t i = 0, j = 0;
+                    while (i < pre_subset.size() && j < pre_superset.size()) {
+                        if (pre_subset[i].skip) {
+                            i++;
+                            continue;
+                        }
+                        if (pre_superset[j].skip) {
+                            j++;
+                            continue;
+                        }
+
+                        if (pre_subset[i] < pre_superset[j]) {
+                            ok = false;
+                            break;
+                        }
+                        else if (pre_subset[i] == pre_superset[j]) {
+                            // Find weights of arcs
+                            auto sub_set_in_weight = pre_subset[i].weight;
+                            auto super_set_in_weight = pre_superset[j].weight;
+
+                            if (super_set_in_weight < sub_set_in_weight) {
+                                canT2BeRemoved = false;
+                            }
+
+                            if ((!canT2BeRemoved)) {
+                                ok = false;
+                                break;
+                            }
+                            //pre_subset[i] < pre_superset[j]
+                            i++;
+                            j++;
+                        }
+                        else {
+                            j++;
+                        }
+                    }
+                    if (!ok) {
+                        continue;
+                    }
+                }
+
+                /*while (i < presize && j < postsize) {
+                    if (place.producers[i] < place.consumers[j])
+                        i++;
+                    else if (place.consumers[j] < place.producers[i])
+                        j++;
+                    else {
+                        ok = false;
+                        break;
+                    }
+                }*/
+                /*for (size_t p = 0; p < parent->numberOfPlaces(); ++p) {
 
                     if (hasTimedout()) return false;
                     Place &place = parent->_places[p];
@@ -1427,7 +1494,7 @@ namespace PetriEngine {
                         canT2BeRemoved = false;
                         break;
                     }
-                }
+                }*/
 
                 if (canT1BeRemoved) {
                     // We can discard t1

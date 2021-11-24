@@ -1,0 +1,80 @@
+Property Sudoku-PT-AN02-ReachabilityFireability-00
+  "Automatically generated"
+  is:
+    E F ((! ((((("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) | (((((((("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) & (! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) | (! ((("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))))))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-01
+  "Automatically generated"
+  is:
+    A G ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-02
+  "Automatically generated"
+  is:
+    E F ! ((((! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) & (((("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))))) | (! ! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-03
+  "Automatically generated"
+  is:
+    A G ((! ((! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) & (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-04
+  "Automatically generated"
+  is:
+    A G ! ! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-05
+  "Automatically generated"
+  is:
+    A G ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-06
+  "Automatically generated"
+  is:
+    A G ((! ((! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) & (((("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) & (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))))) | (((((! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))) | (((! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?) | (! ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?))))))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-07
+  "Automatically generated"
+  is:
+    A G ("select_0_0_0", "select_0_0_1", "select_0_1_0", "select_0_1_1", "select_1_0_0", "select_1_0_1", "select_1_1_0", "select_1_1_1")?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-08
+  "Automatically generated"
+  is:
+    A G ((((((! "select_0_1_0"?) & ("select_0_0_1"?))) | ((("select_0_1_1"?) | ((("select_0_0_0"?) | ("select_0_0_0"?))))))) & ((((("select_1_0_0"?) & ((("select_0_0_1"?) & ("select_1_1_0"?))))) | ("select_1_0_1"?))))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-09
+  "Automatically generated"
+  is:
+    A G (((((((("select_1_1_0"?) | ("select_0_1_1"?))) | (! "select_1_0_1"?))) & ("select_1_0_1"?))) | (((! "select_0_1_0"?) | (! (("select_0_1_0"?) & ("select_1_0_0"?))))))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-10
+  "Automatically generated"
+  is:
+    A G (("select_1_0_0"?) & ((("select_0_0_0"?) | (! (("select_0_0_0"?) & ("select_0_0_0"?))))))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-11
+  "Automatically generated"
+  is:
+    E F ! "select_1_1_1"?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-12
+  "Automatically generated"
+  is:
+    A G "select_0_1_1"?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-13
+  "Automatically generated"
+  is:
+    A G ((((((! "select_1_0_1"?) | ("select_0_1_0"?))) | ("select_1_1_1"?))) & ("select_0_0_0"?))
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-14
+  "Automatically generated"
+  is:
+    E F ! "select_0_1_1"?
+  end.
+Property Sudoku-PT-AN02-ReachabilityFireability-15
+  "Automatically generated"
+  is:
+    E F ! "select_1_1_1"?
+  end.

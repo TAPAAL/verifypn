@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+	<!-- Written by GreatSPN Editor. -->
+	<net id="Sudoku-PT-AN02" type="http://www.pnml.org/version-2009/grammar/ptnet">
+		<name>
+			<text>Sudoku-PT-AN02</text>
+		</name>
+		<page id="page0">
+			<name>
+				<text>DefaultPage</text>
+			</name>
+			<!-- List of places -->
+			<place id="Rows_0_0">
+				<name>
+					<text>Rows_0_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Rows_0_1">
+				<name>
+					<text>Rows_0_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Rows_1_0">
+				<name>
+					<text>Rows_1_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Rows_1_1">
+				<name>
+					<text>Rows_1_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Board_0_0_0">
+				<name>
+					<text>Board_0_0_0</text>
+				</name>
+			</place>
+			<place id="Board_0_0_1">
+				<name>
+					<text>Board_0_0_1</text>
+				</name>
+			</place>
+			<place id="Board_0_1_0">
+				<name>
+					<text>Board_0_1_0</text>
+				</name>
+			</place>
+			<place id="Board_0_1_1">
+				<name>
+					<text>Board_0_1_1</text>
+				</name>
+			</place>
+			<place id="Board_1_0_0">
+				<name>
+					<text>Board_1_0_0</text>
+				</name>
+			</place>
+			<place id="Board_1_0_1">
+				<name>
+					<text>Board_1_0_1</text>
+				</name>
+			</place>
+			<place id="Board_1_1_0">
+				<name>
+					<text>Board_1_1_0</text>
+				</name>
+			</place>
+			<place id="Board_1_1_1">
+				<name>
+					<text>Board_1_1_1</text>
+				</name>
+			</place>
+			<place id="Cells_0_0">
+				<name>
+					<text>Cells_0_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Cells_0_1">
+				<name>
+					<text>Cells_0_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Cells_1_0">
+				<name>
+					<text>Cells_1_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Cells_1_1">
+				<name>
+					<text>Cells_1_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Columns_0_0">
+				<name>
+					<text>Columns_0_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Columns_0_1">
+				<name>
+					<text>Columns_0_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Columns_1_0">
+				<name>
+					<text>Columns_1_0</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="Columns_1_1">
+				<name>
+					<text>Columns_1_1</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<!-- List of transitions -->
+			<transition id="select_0_0_0">
+				<name>
+					<text>select_0_0_0</text>
+				</name>
+			</transition>
+			<transition id="select_0_0_1">
+				<name>
+					<text>select_0_0_1</text>
+				</name>
+			</transition>
+			<transition id="select_0_1_0">
+				<name>
+					<text>select_0_1_0</text>
+				</name>
+			</transition>
+			<transition id="select_0_1_1">
+				<name>
+					<text>select_0_1_1</text>
+				</name>
+			</transition>
+			<transition id="select_1_0_0">
+				<name>
+					<text>select_1_0_0</text>
+				</name>
+			</transition>
+			<transition id="select_1_0_1">
+				<name>
+					<text>select_1_0_1</text>
+				</name>
+			</transition>
+			<transition id="select_1_1_0">
+				<name>
+					<text>select_1_1_0</text>
+				</name>
+			</transition>
+			<transition id="select_1_1_1">
+				<name>
+					<text>select_1_1_1</text>
+				</name>
+			</transition>
+			<!-- List of arcs -->
+			<arc id="id1" source="select_0_0_0" target="Board_0_0_0">
+			</arc>
+			<arc id="id2" source="Columns_0_0" target="select_0_0_0">
+			</arc>
+			<arc id="id3" source="Rows_0_0" target="select_0_0_0">
+			</arc>
+			<arc id="id4" source="Cells_0_0" target="select_0_0_0">
+			</arc>
+			<arc id="id5" source="select_0_0_1" target="Board_0_1_0">
+			</arc>
+			<arc id="id6" source="Columns_1_0" target="select_0_0_1">
+			</arc>
+			<arc id="id7" source="Rows_0_0" target="select_0_0_1">
+			</arc>
+			<arc id="id8" source="Cells_0_1" target="select_0_0_1">
+			</arc>
+			<arc id="id9" source="select_0_1_0" target="Board_1_0_0">
+			</arc>
+			<arc id="id10" source="Columns_0_0" target="select_0_1_0">
+			</arc>
+			<arc id="id11" source="Rows_1_0" target="select_0_1_0">
+			</arc>
+			<arc id="id12" source="Cells_1_0" target="select_0_1_0">
+			</arc>
+			<arc id="id13" source="select_0_1_1" target="Board_1_1_0">
+			</arc>
+			<arc id="id14" source="Columns_1_0" target="select_0_1_1">
+			</arc>
+			<arc id="id15" source="Rows_1_0" target="select_0_1_1">
+			</arc>
+			<arc id="id16" source="Cells_1_1" target="select_0_1_1">
+			</arc>
+			<arc id="id17" source="select_1_0_0" target="Board_0_0_1">
+			</arc>
+			<arc id="id18" source="Columns_0_1" target="select_1_0_0">
+			</arc>
+			<arc id="id19" source="Rows_0_1" target="select_1_0_0">
+			</arc>
+			<arc id="id20" source="Cells_0_0" target="select_1_0_0">
+			</arc>
+			<arc id="id21" source="select_1_0_1" target="Board_0_1_1">
+			</arc>
+			<arc id="id22" source="Columns_1_1" target="select_1_0_1">
+			</arc>
+			<arc id="id23" source="Rows_0_1" target="select_1_0_1">
+			</arc>
+			<arc id="id24" source="Cells_0_1" target="select_1_0_1">
+			</arc>
+			<arc id="id25" source="select_1_1_0" target="Board_1_0_1">
+			</arc>
+			<arc id="id26" source="Columns_0_1" target="select_1_1_0">
+			</arc>
+			<arc id="id27" source="Rows_1_1" target="select_1_1_0">
+			</arc>
+			<arc id="id28" source="Cells_1_0" target="select_1_1_0">
+			</arc>
+			<arc id="id29" source="select_1_1_1" target="Board_1_1_1">
+			</arc>
+			<arc id="id30" source="Columns_1_1" target="select_1_1_1">
+			</arc>
+			<arc id="id31" source="Rows_1_1" target="select_1_1_1">
+			</arc>
+			<arc id="id32" source="Cells_1_1" target="select_1_1_1">
+			</arc>
+			<toolspecific tool="nupn" version="1.1">
+				<size places="20" transitions="8" arcs="32"/>
+				<structure units="13" root="u0" safe="true">
+					<unit id="u0">
+						<places/>
+						<subunits>u1 u2 u3 u4 u5 u6 u7 u8
+						 u9 u10 u11 u12</subunits>
+					</unit>
+					<unit id="u1">
+						<places>Rows_0_0 Board_0_0_0
+						 Board_0_1_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u2">
+						<places>Rows_0_1 Board_0_0_1
+						 Board_0_1_1</places>
+						<subunits/>
+					</unit>
+					<unit id="u3">
+						<places>Board_1_0_0 Board_1_0_1
+						 Cells_1_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u4">
+						<places>Board_1_1_0 Board_1_1_1
+						 Cells_1_1</places>
+						<subunits/>
+					</unit>
+					<unit id="u5">
+						<places>Rows_1_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u6">
+						<places>Rows_1_1</places>
+						<subunits/>
+					</unit>
+					<unit id="u7">
+						<places>Cells_0_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u8">
+						<places>Cells_0_1</places>
+						<subunits/>
+					</unit>
+					<unit id="u9">
+						<places>Columns_0_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u10">
+						<places>Columns_0_1</places>
+						<subunits/>
+					</unit>
+					<unit id="u11">
+						<places>Columns_1_0</places>
+						<subunits/>
+					</unit>
+					<unit id="u12">
+						<places>Columns_1_1</places>
+						<subunits/>
+					</unit>
+				</structure>
+			</toolspecific>
+		</page>
+	</net>
+</pnml>

@@ -1,0 +1,80 @@
+Property Sudoku-PT-AN02-UpperBounds-00
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-01
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-02
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-03
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-04
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-05
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-06
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-07
+  "Automatically generated"
+  is:
+    bound()
+  end.
+Property Sudoku-PT-AN02-UpperBounds-08
+  "Automatically generated"
+  is:
+    bound("Rows_0_1")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-09
+  "Automatically generated"
+  is:
+    bound("Cells_1_1")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-10
+  "Automatically generated"
+  is:
+    bound("Columns_0_0")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-11
+  "Automatically generated"
+  is:
+    bound("Board_0_1_1")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-12
+  "Automatically generated"
+  is:
+    bound("Board_0_1_0")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-13
+  "Automatically generated"
+  is:
+    bound("Rows_0_0")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-14
+  "Automatically generated"
+  is:
+    bound("Board_1_0_1")
+  end.
+Property Sudoku-PT-AN02-UpperBounds-15
+  "Automatically generated"
+  is:
+    bound("Board_1_1_0")
+  end.
