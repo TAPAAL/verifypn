@@ -1373,9 +1373,9 @@ namespace PetriEngine {
 
                 // We check if t1 or t2 can be removed
                 Transition &tran1 = getTransition(t1);
-                Transition &tran2 = getTransition(t2);
-
                 if (tran1.skip || tran1.inhib) break;
+
+                Transition &tran2 = getTransition(t2);
                 if (tran2.skip || tran2.inhib) continue;
 
                 bool canT1BeRemoved = tran1.pre.size() >= tran2.pre.size() && tran1.post.size() >= tran2.post.size();
@@ -1385,22 +1385,19 @@ namespace PetriEngine {
                     continue;
                 }
 
-                // In arc checks
+                // get in arcs
                 std::vector<Arc> pre_subset;
                 std::vector<Arc> pre_superset;
-                bool t1_is_superset;
                 if (canT1BeRemoved) {
                     pre_subset = tran2.pre;
                     pre_superset = tran1.pre;
-                    t1_is_superset = true;
                 } else if (canT2BeRemoved) {
                     pre_subset = tran1.pre;
                     pre_superset = tran2.pre;
-                    t1_is_superset = false;
                 }
 
-                bool ok = true;
 
+                bool ok = true;
                 uint32_t i = 0, j = 0;
                 while (i < pre_subset.size() && j < pre_superset.size()) {
                     // Make sure everything in pre_subset is in pre_superset
@@ -1454,7 +1451,6 @@ namespace PetriEngine {
                     subset_tran = tran1;
                     superset_tran = tran2;
                 }
-
                 // Iterate through all places in the post set of the largest
                 for (i = 0; i < superset_tran.post.size(); ++i) {
                     uint32_t place = superset_tran.post[i].place;
@@ -1471,7 +1467,7 @@ namespace PetriEngine {
 
                     size_t subset_out_weight = 0;
                     auto subset_out = getOutArc(subset_tran, place);
-                    if (subset_out != subset_tran.pre.end()) subset_out_weight = subset_out->weight;
+                    if (subset_out != subset_tran.post.end()) subset_out_weight = subset_out->weight;
 
                     if ((superset_out_weight - superset_in_weight) != (subset_out_weight - subset_in_weight)) {
                         canT1BeRemoved = false;
@@ -1498,60 +1494,6 @@ namespace PetriEngine {
                     _ruleL++;
                     continueReductions = true;
                 }
-
-                /*while (i < presize && j < postsize) {
-                    if (place.producers[i] < place.consumers[j])
-                        i++;
-                    else if (place.consumers[j] < place.producers[i])
-                        j++;
-                    else {
-                        ok = false;
-                        break;
-                    }
-                }*/
-                /*for (size_t p = 0; p < parent->numberOfPlaces(); ++p) {
-
-                    if (hasTimedout()) return false;
-                    Place &place = parent->_places[p];
-
-                    if (place.skip) continue;
-
-                    // Find weights of arcs
-                    size_t t1in_weight = 0;
-                    auto t1in = getInArc(p, tran1);
-                    if (t1in != tran1.pre.end()) t1in_weight = t1in->weight;
-
-                    size_t t2in_weight = 0;
-                    auto t2in = getInArc(p, tran2);
-                    if (t2in != tran2.pre.end()) t2in_weight = t2in->weight;
-
-                    if (t1in_weight < t2in_weight) {
-                        canT1BeRemoved = false;
-                    }
-                    if (t2in_weight < t1in_weight) {
-                        canT2BeRemoved = false;
-                    }
-
-                    if ((!canT1BeRemoved && !canT2BeRemoved)) {
-                        break;
-                    }
-
-                    size_t t1out_weight = 0;
-                    auto t1out = getOutArc(tran1, p);
-                    if (t1out != tran1.post.end()) t1out_weight = t1out->weight;
-
-                    size_t t2out_weight = 0;
-                    auto t2out = getOutArc(tran2, p);
-                    if (t2out != tran2.post.end()) t2out_weight = t2out->weight;
-
-                    if ((t1out_weight - t1in_weight) != (t2out_weight - t2in_weight)) {
-                        canT1BeRemoved = false;
-                        canT2BeRemoved = false;
-                        break;
-                    }
-                }*/
-
-
             }
         }
 
