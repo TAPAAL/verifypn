@@ -256,7 +256,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
             [[nodiscard]] virtual bool containsNext() const = 0;
-            [[nodiscard]] virtual bool nestedDeadlock() const = 0;
             void toString(std::ostream& os = std::cout);
         protected:
             //Value for checking if condition is trivially true or false.

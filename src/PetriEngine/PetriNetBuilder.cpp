@@ -27,6 +27,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reducer.h"
+#include <PetriEngine/PQL/PredicateCheckers.h>
 #include "PetriEngine/PQL/Expressions.h"
 
 
@@ -467,7 +468,7 @@ namespace PetriEngine {
                 remove_loops &= !queries[i]->isLoopSensitive();
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        
-                contains_next |= queries[i]->containsNext() || queries[i]->nestedDeadlock();                        
+                contains_next |= queries[i]->containsNext() || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
         }
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);

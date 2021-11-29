@@ -272,7 +272,6 @@ namespace PetriEngine {
             Path getPath() const override { return _compiled->getPath(); }
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
             bool containsNext() const override { return _compiled->containsNext(); }
-            bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
 
             void analyze(AnalysisContext& context) override
             {
@@ -316,7 +315,6 @@ namespace PetriEngine {
             const Condition_ptr& getCond() const { return _cond; };
             virtual bool isTemporal() const override { return _temporal;}
             bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
         private:
             Condition_ptr _cond;
             bool _temporal = false;
@@ -350,7 +348,6 @@ namespace PetriEngine {
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
             bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
             virtual std::string op() const = 0;
         private:
 
@@ -616,7 +613,6 @@ namespace PetriEngine {
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override { return Path::U; }
             bool containsNext() const override { return _cond1->containsNext() || _cond2->containsNext(); }
-            bool nestedDeadlock() const override { return _cond1->nestedDeadlock() || _cond2->nestedDeadlock(); }
 
             [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
             [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
@@ -729,7 +725,6 @@ namespace PetriEngine {
             size_t size() const { return _conds.size(); }
             bool containsNext() const override
             { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
-            bool nestedDeadlock() const override;
             virtual std::string op() const = 0;
 
         protected:
@@ -861,7 +856,6 @@ namespace PetriEngine {
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
             bool containsNext() const override { return false;}
-            bool nestedDeadlock() const override { return false; }
             const std::vector<cons_t>& constraints() const { return _constraints; }
             std::vector<cons_t>::const_iterator begin() const { return _constraints.begin(); }
             std::vector<cons_t>::const_iterator end() const { return _constraints.end(); }
@@ -893,7 +887,6 @@ namespace PetriEngine {
                 else return _expr2;
             }
             bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             bool isTrivial() const;
 
             [[nodiscard]] const Expr_ptr &getExpr1() const { return _expr1; }
@@ -1015,7 +1008,6 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             const bool value;
         };
 
@@ -1040,7 +1032,6 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
         };
 
         class KSafeCondition : public ShallowCondition
@@ -1172,7 +1163,6 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
 
             double bounds(bool add_offset = true) const {
                 return (add_offset ? _offset : 0 ) + _bound;

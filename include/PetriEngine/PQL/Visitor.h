@@ -312,42 +312,17 @@ namespace PetriEngine {
         protected:
             void _accept(const NotCondition *element) override
             {
-                (*element)[0]->visit(*this);
+                element->getCond()->visit(*this);
             }
 
-            void _accept(const AndCondition *element) override
+            void _accept(const LogicalCondition *element) override
             {
                 for (const auto &cond : *element) {
                     cond->visit(*this);
                 }
             }
 
-            void _accept(const OrCondition *element) override
-            {
-                for (const auto &cond : *element) {
-                    cond->visit(*this);
-                }
-            }
-
-            void _accept(const LessThanCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const LessThanOrEqualCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const EqualCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const NotEqualCondition *element) override
+            void _accept(const CompareCondition *element) override
             {
                 element->getExpr1()->visit(*this);
                 element->getExpr2()->visit(*this);
@@ -368,116 +343,17 @@ namespace PetriEngine {
                 // no-op
             }
 
-            void _accept(const EFCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EGCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AGCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AFCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EXCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AXCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EUCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
-            }
-
-            void _accept(const AUCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
-            }
-
-            void _accept(const ACondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const ECondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const GCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const FCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const XCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
+            void _accept(const SimpleQuantifierCondition *condition) override {
+                condition->getCond()->visit(*this);
             }
 
             void _accept(const UntilCondition *condition) override
             {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
+                condition->getCond1()->visit(*this);
+                condition->getCond2()->visit(*this);
             }
 
-            void _accept(const UnfoldedFireableCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const FireableCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const UpperBoundsCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const LivenessCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const KSafeCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const QuasiLivenessCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const StableMarkingCondition *element) override
+            void _accept(const ShallowCondition *element) override
             {
                 if (const auto &compiled = element->getCompiled())
                     compiled->visit(*this);
@@ -498,14 +374,7 @@ namespace PetriEngine {
                 // no-op
             }
 
-            void _accept(const PlusExpr *element) override
-            {
-                for (const auto &expr : element->expressions()) {
-                    expr->visit(*this);
-                }
-            }
-
-            void _accept(const MultiplyExpr *element) override
+            void _accept(const NaryExpr *element) override
             {
                 for (const auto &expr : element->expressions()) {
                     expr->visit(*this);
@@ -517,17 +386,22 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
             }
 
-            void _accept(const SubtractExpr *element) override
-            {
-                for (const auto &expr : element->expressions()) {
-                    expr->visit(*this);
-                }
-            }
-
             void _accept(const IdentifierExpr *element) override
             {
                 // no-op
             }
+        };
+
+        // Used to make visitors that check if some node fulfills a condition
+        class AnyVisitor : public BaseVisitor {
+        public:
+            [[nodiscard]] bool getReturnValue() const { return _return_value; }
+
+        protected:
+            void setConditionFound() { _return_value = true; }
+
+        private:
+            bool _return_value = false;
         };
     }
 }
