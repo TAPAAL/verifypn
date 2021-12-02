@@ -95,6 +95,7 @@
 #include <PetriEngine/PQL/BinaryPrinter.h>
 #include <PetriEngine/PQL/Simplifier.h>
 #include <PetriEngine/PQL/PushNegation.h>
+#include <PetriEngine/PQL/PrepareForReachability.h>
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -1476,7 +1477,7 @@ int main(int argc, char* argv[]) {
                 results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                 alldone = false;
             } else {
-                queries[i] = queries[i]->prepareForReachability();
+                queries[i] = prepareForReachability(queries[i]);
                 alldone = false;
             }
         }
