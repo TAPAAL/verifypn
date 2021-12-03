@@ -55,14 +55,10 @@ namespace PetriEngine {
             }
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
-            int formulaSize() const override{
-                size_t sum = 0;
-                for(auto& e : _exprs) sum += e->formulaSize();
-                return sum + 1;
-            }
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
             size_t operands() const { return _exprs.size(); }
+            void visit(Visitor&) const override;
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
@@ -84,11 +80,6 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
-            int formulaSize() const override{
-                size_t sum = _ids.size();
-                for(auto& e : _exprs) sum += e->formulaSize();
-                return sum + 1;
-            }
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
@@ -167,9 +158,6 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
 
             void visit(Visitor& visitor) const override;
-            int formulaSize() const override{
-                return _expr->formulaSize() + 1;
-            }
             bool placeFree() const override;
             const Expr_ptr& operator[](size_t i) const { return _expr; };
         private:
@@ -188,9 +176,6 @@ namespace PetriEngine {
             Expr::Types type() const override;
 
             void visit(Visitor& visitor) const override;
-            int formulaSize() const override{
-                return 1;
-            }
             int value() const {
                 return _value;
             };
@@ -214,10 +199,6 @@ namespace PetriEngine {
                 return Expr::IdentifierExpr;
             }
 
-            int formulaSize() const override {
-                if(_compiled) return _compiled->formulaSize();
-                return 1;
-            }
             virtual bool placeFree() const override {
                 if(_compiled) return _compiled->placeFree();
                 return false;
@@ -257,9 +238,6 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
-            int formulaSize() const override{
-                return 1;
-            }
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
@@ -286,8 +264,6 @@ namespace PetriEngine {
             { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
-            void toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const override
-            { _compiled->toTAPAALQuery(out, context); }
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
 
@@ -297,9 +273,6 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
             bool containsNext() const override { return _compiled->containsNext(); }
             bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
-            int formulaSize() const override{
-                return _compiled->formulaSize();
-            }
 
             void analyze(AnalysisContext& context) override
             {
@@ -326,9 +299,6 @@ namespace PetriEngine {
                 _temporal = _cond->isTemporal();
                 _loop_sensitive = _cond->isLoopSensitive();
             }
-            int formulaSize() const override{
-                return _cond->formulaSize() + 1;
-            }
 
 
             void analyze(AnalysisContext& context) override;
@@ -337,7 +307,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
@@ -371,15 +340,10 @@ namespace PetriEngine {
                 _cond = cond;
                 _loop_sensitive = cond->isLoopSensitive();
             }
-            int formulaSize() const override{
-                return _cond->formulaSize() + 1;
-            }
-
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void visit(Visitor&) const override;
 
 
@@ -387,8 +351,8 @@ namespace PetriEngine {
             const Condition_ptr& getCond() const { return _cond; }
             bool containsNext() const override { return _cond->containsNext(); }
             bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
-        private:
             virtual std::string op() const = 0;
+        private:
 
         protected:
             Condition_ptr _cond;
@@ -640,13 +604,9 @@ namespace PetriEngine {
                 _cond2 = cond2;
                 _loop_sensitive = _cond1->isLoopSensitive() || _cond2->isLoopSensitive();
             }
-            int formulaSize() const override{
-                return _cond1->formulaSize() + _cond2->formulaSize() + 1;
-            }
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
 
@@ -665,8 +625,8 @@ namespace PetriEngine {
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
-        private:
             virtual std::string op() const;
+        private:
 
         protected:
             Condition_ptr _cond1;
@@ -740,16 +700,9 @@ namespace PetriEngine {
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
-            int formulaSize() const override {
-                size_t i = 1;
-                for(auto& c : _conds) i += c->formulaSize();
-                return i;
-            }
-
             void analyze(AnalysisContext& context) override;
 
             void visit(Visitor&) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             const Condition_ptr& operator[](size_t i) const
@@ -777,12 +730,13 @@ namespace PetriEngine {
             bool containsNext() const override
             { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
             bool nestedDeadlock() const override;
+            virtual std::string op() const = 0;
 
         protected:
             LogicalCondition() {};
 
+            Retval simplifyAnd(SimplificationContext& context) const;
         private:
-            virtual std::string op() const = 0;
 
         protected:
             bool _temporal = false;
@@ -887,23 +841,8 @@ namespace PetriEngine {
             void merge(const CompareConjunction& other);
             void merge(const std::vector<Condition_ptr>&, bool negated);
 
-            int formulaSize() const override{
-                int sum = 0;
-                for(auto& c : _constraints)
-                {
-                    assert(c._place >= 0);
-                    if(c._lower == c._upper) ++sum;
-                    else {
-                        if(c._lower != 0) ++sum;
-                        if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
-                    }
-                }
-                if(sum == 1) return 2;
-                else return (sum*2) + 1;
-            }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
@@ -939,13 +878,9 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            int formulaSize() const override{
-                return _expr1->formulaSize() + _expr2->formulaSize() + 1;
-            }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void visit(Visitor&) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
@@ -967,6 +902,12 @@ namespace PetriEngine {
 
             virtual std::string op() const = 0;
 
+            /** Operator when exported to TAPAAL */
+            virtual std::string opTAPAAL() const = 0;
+
+            /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
+            virtual std::string sopTAPAAL() const = 0;
+
         protected:
             uint32_t _distance(DistanceContext& c,
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
@@ -975,10 +916,6 @@ namespace PetriEngine {
             }
         private:
             virtual bool apply(int v1, int v2) const = 0;
-            /** Operator when exported to TAPAAL */
-            virtual std::string opTAPAAL() const = 0;
-            /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
-            virtual std::string sopTAPAAL() const = 0;
 
         protected:
             Expr_ptr _expr1;
@@ -1010,7 +947,6 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             uint32_t distance(DistanceContext& context) const override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -1063,9 +999,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            int formulaSize() const override{
-                return 0;
-            }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
@@ -1074,7 +1007,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;
             static Condition_ptr FALSE_CONSTANT;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             static Condition_ptr getShared(bool val);
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
@@ -1094,16 +1026,12 @@ namespace PetriEngine {
             DeadlockCondition() {
                 _loop_sensitive = true;
             }
-            int formulaSize() const override{
-                return 1;
-            }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
 
@@ -1230,9 +1158,6 @@ namespace PetriEngine {
                     : _places(places), _max(max), _offset(offset) {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
-            int formulaSize() const override{
-                return _places.size();
-            }
             void analyze(AnalysisContext& context) override;
             size_t value(const MarkVal*);
             Result evaluate(const EvaluationContext& context) override;
@@ -1240,7 +1165,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
 

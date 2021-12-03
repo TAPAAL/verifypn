@@ -76,6 +76,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/CTLVisitor.h"
 #include <PetriEngine/PQL/XMLPrinter.h>
+#include "PetriEngine/PQL/FormulaSize.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -1155,7 +1156,7 @@ void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine
             return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
         if(queries[a]->containsNext() != queries[b]->containsNext())
             return queries[a]->containsNext() < queries[b]->containsNext();
-        return queries[a]->formulaSize() < queries[b]->formulaSize();
+        return formulaSize(queries[a]) < formulaSize(queries[b]);
     });
     writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
 }
@@ -1332,7 +1333,7 @@ int main(int argc, char* argv[]) {
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
-                    int preSize=queries[i]->formulaSize();
+                    int preSize= formulaSize(queries[i]);
 
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     if (options.logic == TemporalLogic::LTL) {
@@ -1408,7 +1409,7 @@ int main(int argc, char* argv[]) {
 
                     if(options.printstatistics)
                     {
-                        int postSize=queries[i]->formulaSize();
+                        int postSize=formulaSize(queries[i]);
                         double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
                         out << "Query size reduced from " << preSize << " to " << postSize << " nodes ( " << redPerc << " percent reduction).\n";
                     }

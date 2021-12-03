@@ -167,105 +167,6 @@ namespace PetriEngine {
             }
         }
 
-        /******************** To TAPAAL Query ********************/
-
-        void SimpleQuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << op() << " ";
-            _cond->toTAPAALQuery(out,context);
-        }
-
-        void UntilCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << op() << " (";
-            _cond1->toTAPAALQuery(out, context);
-            out << " U ";
-            _cond2->toTAPAALQuery(out,context);
-            out << ")";
-        }
-
-        void LogicalCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << "(";
-            _conds[0]->toTAPAALQuery(out, context);
-            for(size_t i = 1; i < _conds.size(); ++i)
-            {
-                out << " " << op() << " ";
-                _conds[i]->toTAPAALQuery(out, context);
-            }
-            out << ")";
-        }
-
-        void CompareConjunction::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << "(";
-            if(_negated) out << "!";
-            bool first = true;
-            for(auto& c : _constraints)
-            {
-                if(!first) out << " and ";
-                if(c._lower != 0)
-                    out << "(" << c._lower << " <= " << context.netName << "." << c._name << ")";
-                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
-                    out << " and ";
-                if(c._lower != 0)
-                    out << "(" << c._upper << " >= " << context.netName << "." << c._name << ")";
-                first = false;
-            }
-            out << ")";
-        }
-
-        void CompareCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            //If <id> <op> <literal>
-            QueryPrinter printer;
-            if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
-                out << " ( " << context.netName << ".";
-                _expr1->visit(printer);
-                out << " " << opTAPAAL() << " ";
-                _expr2->visit(printer);
-                out << " ) ";
-                //If <literal> <op> <id>
-            } else if (_expr2->type() == Expr::IdentifierExpr && _expr1->type() == Expr::LiteralExpr) {
-                out << " ( ";
-                _expr1->visit(printer);
-                out << " " << sopTAPAAL() << " " << context.netName << ".";
-                _expr2->visit(printer);
-                out << " ) ";
-            } else {
-                context.failed = true;
-                out << " false ";
-            }
-        }
-
-        void NotEqualCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << " !( ";
-            CompareCondition::toTAPAALQuery(out,context);
-            out << " ) ";
-        }
-
-        void NotCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << " !( ";
-            _cond->toTAPAALQuery(out,context);
-            out << " ) ";
-        }
-
-        void BooleanCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext&) const {
-            if (value)
-                out << "true";
-            else
-                out << "false";
-        }
-
-        void DeadlockCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext&) const {
-            out << "deadlock";
-        }
-
-        void UnfoldedUpperBoundsCondition::toTAPAALQuery(std::ostream& out, TAPAALConditionExportContext&) const {
-            out << "bounds (";
-            for(size_t i = 0; i < _places.size(); ++i)
-            {
-                if(i != 0) out << ", ";
-                out << _places[i]._name;
-            }
-            out << ")";
-        }
-
         /******************** opTAPAAL ********************/
 
         std::string EqualCondition::opTAPAAL() const {
@@ -1193,6 +1094,11 @@ namespace PetriEngine {
         }
 
         void SubtractExpr::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NaryExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
