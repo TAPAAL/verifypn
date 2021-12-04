@@ -213,8 +213,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual bool isReachability(uint32_t depth = 0) const = 0;
 
             [[nodiscard]] virtual bool isLoopSensitive() const { return _loop_sensitive; };
-            /** Prepare reachability queries */
-            [[nodiscard]] virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
 
             /** Checks if the condition is trivially true */
             [[nodiscard]] bool isTriviallyTrue();
