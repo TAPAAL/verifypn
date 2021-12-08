@@ -570,6 +570,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
+                    "                                       Using -n 1 prints just statistics on number of states/edges/etc.\n"
                     "  -h, --help                           Display this help message\n"
                     "  -v, --version                        Display version information\n"
                     "  -ctl <type>                          Verify CTL properties\n"
