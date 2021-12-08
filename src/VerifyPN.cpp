@@ -205,7 +205,22 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.statespaceexploration = true;
             options.computePartition = false;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
-            options.printstatistics = false;
+            if (argc > i + 1) {
+                if (strcmp("1", argv[i+1]) == 0) {
+                    options.printstatistics = StatisticsLevel::SearchOnly;
+                }
+                else if (strcmp("2", argv[i+1]) == 0) {
+                    options.printstatistics = StatisticsLevel::Full;
+                }
+                else {
+                    options.printstatistics = StatisticsLevel::None;
+                    continue;
+                }
+                ++i;
+            }
+            else {
+                options.printstatistics = StatisticsLevel::None;
+            }
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
             if (argc > i + 1) {
                 if (strcmp("1", argv[i+1]) == 0) {
@@ -650,7 +665,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
     }
     //Print parameters
-    if (options.printstatistics) {
+    if (options.printstatistics == StatisticsLevel::Full) {
         std::cout << std::endl << "Parameters: ";
         for (int i = 1; i < argc; i++) {
             std::cout << argv[i] << " ";
@@ -715,8 +730,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
         std::array ltlStrategies{DFS, RDFS, HEUR};
 
-        if (options.strategy != PetriEngine::Reachability::DEFAULT &&
-            options.strategy != PetriEngine::Reachability::OverApprox) {
+        if (options.strategy != ReachabilityStrategy::DEFAULT &&
+            options.strategy != ReachabilityStrategy::OverApprox) {
             if (std::find(std::begin(ltlStrategies), std::end(ltlStrategies), options.strategy) ==
                 std::end(ltlStrategies)) {
                 std::cerr << "Argument Error: Unsupported search strategy for LTL. Supported values are DFS, RDFS, and BestFS."
@@ -864,7 +879,7 @@ ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
 
 void printStats(PetriNetBuilder& builder, options_t& options)
 {
-    if (options.printstatistics) {
+    if (options.printstatistics == StatisticsLevel::Full) {
         if (options.enablereduction != 0) {
 
             std::cout << "Size of net before structural reductions: " <<
@@ -1090,7 +1105,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
 
-    if (options.printstatistics) {
+    if (options.printstatistics == StatisticsLevel::Full) {
         out << "RWSTATS PRE:";
         stats.print(out);
         out << std::endl;
@@ -1120,7 +1135,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     } else {
         cond = std::make_shared<ECondition>(cond);
     }
-    if (options.printstatistics) {
+    if (options.printstatistics == StatisticsLevel::Full) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
@@ -1186,7 +1201,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
         return UnknownCode;
     }
-    if (options.printstatistics) {
+    if (options.printstatistics == StatisticsLevel::Full) {
         std::cout << "Finished parsing model" << std::endl;
     }
 
@@ -1197,7 +1212,7 @@ int main(int argc, char* argv[]) {
             ? getCTLQueries(ctlStarQueries)
             : getLTLQueries(ctlStarQueries);
 
-    if(options.printstatistics && options.queryReductionTimeout > 0)
+    if(options.printstatistics == StatisticsLevel::Full && options.queryReductionTimeout > 0)
     {
         negstat_t stats;
         std::cout << "RWSTATS LEGEND:";
@@ -1211,7 +1226,7 @@ int main(int argc, char* argv[]) {
         EvaluationContext context(nullptr, nullptr);
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
-            if(options.printstatistics)
+            if(options.printstatistics == StatisticsLevel::Full)
             {
                 std::cout << "\nQuery before expansion and reduction: ";
                 queries[qid]->toString(std::cout);
@@ -1318,7 +1333,7 @@ int main(int argc, char* argv[]) {
                     negstat_t stats;
                     EvaluationContext context(qm0.get(), qnet.get());
 
-                    if(options.printstatistics && options.queryReductionTimeout > 0)
+                    if(options.printstatistics == StatisticsLevel::Full && options.queryReductionTimeout > 0)
                     {
                         out << "\nQuery before reduction: ";
                         queries[i]->toString(out);
@@ -1344,7 +1359,7 @@ int main(int argc, char* argv[]) {
                                             ->pushNegation(stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
-                    if(options.queryReductionTimeout > 0 && options.printstatistics) {
+                    if(options.queryReductionTimeout > 0 && options.printstatistics == StatisticsLevel::Full) {
                         out << "RWSTATS PRE:";
                         stats.print(out);
                         out << std::endl;
@@ -1359,7 +1374,7 @@ int main(int argc, char* argv[]) {
                             negstat_t stats;
                             queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
                             wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
-                            if(options.printstatistics)
+                            if(options.printstatistics == StatisticsLevel::Full)
                             {
                                 out << "RWSTATS POST:";
                                 stats.print(out);
@@ -1372,23 +1387,23 @@ int main(int argc, char* argv[]) {
                             std::exit(ErrorCode);
                         }
 
-                        if(options.printstatistics)
+                        if(options.printstatistics == StatisticsLevel::Full)
                         {
                             out << "\nQuery after reduction: ";
                             queries[i]->toString(out);
                             out << std::endl;
                         }
                         if(simplificationContext.timeout()){
-                            if(options.printstatistics)
+                            if(options.printstatistics == StatisticsLevel::Full)
                                 out << "Query reduction reached timeout.\n";
                             hadTo[i] = true;
                         } else {
-                            if(options.printstatistics)
+                            if(options.printstatistics == StatisticsLevel::Full)
                                 out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
                             --to_handle;
                         }
                     }
-                    else if(options.printstatistics)
+                    else if(options.printstatistics == StatisticsLevel::Full)
                     {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
@@ -1402,7 +1417,7 @@ int main(int argc, char* argv[]) {
                     }
 
 
-                    if(options.printstatistics)
+                    if(options.printstatistics == StatisticsLevel::Full)
                     {
                         int postSize=queries[i]->formulaSize();
                         double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
@@ -1446,25 +1461,25 @@ int main(int argc, char* argv[]) {
         {
             if(queries[i]->isTriviallyTrue()){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied).first;
-                if(results[i] == ResultPrinter::Ignore && options.printstatistics)
+                if(results[i] == ResultPrinter::Ignore && options.printstatistics != StatisticsLevel::None)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
-                else if (options.printstatistics) {
+                else if (options.printstatistics != StatisticsLevel::None) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (queries[i]->isTriviallyFalse()) {
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied).first;
-                if(results[i] == ResultPrinter::Ignore &&  options.printstatistics)
+                if(results[i] == ResultPrinter::Ignore && options.printstatistics != StatisticsLevel::None)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
-                else if (options.printstatistics) {
+                else if (options.printstatistics != StatisticsLevel::None) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (options.strategy == PetriEngine::Reachability::OverApprox){
+            } else if (options.strategy == ReachabilityStrategy::OverApprox){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
-                if (options.printstatistics) {
+                if (options.printstatistics != StatisticsLevel::None) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
             } else if (options.noreach || !queries[i]->isReachability()) {
@@ -1548,7 +1563,7 @@ int main(int argc, char* argv[]) {
 
         if (!ctl_ids.empty()) {
             options.usedctl=true;
-            PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
+            ReachabilityStrategy reachabilityStrategy = options.strategy;
 
             // Assign indexes
             if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
@@ -1556,7 +1571,7 @@ int main(int argc, char* argv[]) {
                 std::cerr << "An error occurred while assigning indexes" << std::endl;
                 return ErrorCode;
             }
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+            if(options.strategy == DEFAULT) options.strategy = ReachabilityStrategy::DFS;
             v = CTLMain(net.get(),
                 options.ctlalgorithm,
                 options.strategy,
@@ -1573,7 +1588,7 @@ int main(int argc, char* argv[]) {
                 return v;
             }
             // go back to previous strategy if the program continues
-            options.strategy=reachabilityStrategy;
+            options.strategy = reachabilityStrategy;
         }
         options.usedctl=false;
 
@@ -1607,7 +1622,7 @@ int main(int argc, char* argv[]) {
                     STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                     stSolver.solve(options.siphontrapTimeout);
                     results[i] = stSolver.printResult();
-                    if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
+                    if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics != StatisticsLevel::None) {
                         std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
                     }
                 }
@@ -1625,7 +1640,7 @@ int main(int argc, char* argv[]) {
         contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+        if(options.strategy == DEFAULT) options.strategy = ReachabilityStrategy::HEUR;
 
         if(options.tar && net->numberOfPlaces() > 0)
         {
@@ -1634,7 +1649,7 @@ int main(int argc, char* argv[]) {
 
             // Change default place-holder to default strategy
             fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
+            options.strategy = ReachabilityStrategy::DFS;
 
             //Reachability search
             strategy.reachable(queries, results,
@@ -1646,7 +1661,7 @@ int main(int argc, char* argv[]) {
             ReachabilitySearch strategy(*net, printer, options.kbound);
 
             // Change default place-holder to default strategy
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+            if(options.strategy == DEFAULT) options.strategy = ReachabilityStrategy::HEUR;
 
             //Reachability search
             strategy.reachable(queries, results,

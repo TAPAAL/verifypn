@@ -12,9 +12,9 @@
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
-                    PetriEngine::Reachability::Strategy strategytype,
+                    ReachabilityStrategy strategytype,
                     bool gamemode,
-                    bool printstatistics,
+                    StatisticsLevel printstatistics,
                     bool mccoutput,
                     bool partial_order,
                     const std::vector<std::string>& querynames,

@@ -28,7 +28,7 @@ protected:
     size_t last_parent = 0;
 };
 
-}   // end SearchStrategy
+}   // end ReachabilityStrategy
 
 #endif /* RDFSSEARCH_H */
 

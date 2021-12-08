@@ -11,7 +11,7 @@ class LocalFPA : public FixedPointAlgorithm
 
     // FixedPointAlgorithm interface
 public:
-    LocalFPA(PetriEngine::Reachability::Strategy type) : FixedPointAlgorithm(type)
+    LocalFPA(ReachabilityStrategy type) : FixedPointAlgorithm(type)
     {
     }
     virtual ~LocalFPA (){}

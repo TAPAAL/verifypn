@@ -447,9 +447,9 @@ namespace PetriEngine {
             std::cerr << "</trace>\n" << std::endl;
         }
         
-        void TARReachabilitySearch::reachable(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
-                                        std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace)
+        void TARReachabilitySearch::reachable(std::vector<std::shared_ptr<PQL::Condition> >& queries,
+                                              std::vector<ResultPrinter::Result>& results,
+                                              StatisticsLevel statisticsLevel, bool printtrace)
         {
             // inhibitors are not supported yet
             for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
@@ -472,7 +472,7 @@ namespace PetriEngine {
             // check initial marking
             if(checkQueries(queries, results, state, true))
             {
-                if(printstats) 
+                if(statisticsLevel != StatisticsLevel::None)
                     printStats();
                 return;
             }
@@ -506,7 +506,7 @@ namespace PetriEngine {
                 }
             }
 
-            if(printstats) 
+            if(statisticsLevel != StatisticsLevel::None)
                 printStats();
         }
 

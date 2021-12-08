@@ -81,7 +81,7 @@ namespace LTL {
 #ifdef DEBUG_EXPLORED_STATES
         result.explored_states = checker->get_explored();
 #endif
-        if (options.printstatistics) {
+        if (options.printstatistics != StatisticsLevel::None) {
             checker->printStats(std::cout);
         }
         return result;
@@ -91,10 +91,10 @@ namespace LTL {
                                               const Condition_ptr &negated_formula,
                                               const Structures::BuchiAutomaton& automaton,
                                               options_t &options) {
-        if (options.strategy == Reachability::Strategy::RDFS) {
+        if (options.strategy == ReachabilityStrategy::RDFS) {
             return std::make_unique<RandomHeuristic>(options.seed());
         }
-        if (options.strategy != Reachability::Strategy::HEUR && options.strategy != Reachability::Strategy::DEFAULT) {
+        if (options.strategy != ReachabilityStrategy::HEUR && options.strategy != ReachabilityStrategy::DEFAULT) {
             return nullptr;
         }
         switch(options.ltlHeuristic) {
@@ -143,7 +143,7 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.strategy != PetriEngine::Reachability::DFS) {
+                if (options.strategy != ReachabilityStrategy::DFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
                     gen.setSpooler(spooler.get());
@@ -163,7 +163,7 @@ namespace LTL {
                 break;
 
             case Algorithm::Tarjan:
-                if (options.strategy != PetriEngine::Reachability::DFS || is_stubborn) {
+                if (options.strategy != ReachabilityStrategy::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
@@ -180,7 +180,7 @@ namespace LTL {
                     gen.setSpooler(spooler.get());
                     // if search strategy used, set heuristic, otherwise ignore it
                     // (default is null which is checked elsewhere)
-                    if (options.strategy != PetriEngine::Reachability::DFS) {
+                    if (options.strategy != ReachabilityStrategy::DFS) {
                         assert(heuristic != nullptr);
                         gen.setHeuristic(heuristic.get());
                     }

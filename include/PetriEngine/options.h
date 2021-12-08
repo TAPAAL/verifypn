@@ -7,7 +7,7 @@
 #include <set>
 #include <sstream>
 
-#include "Reachability/ReachabilitySearch.h"
+//#include "Reachability/ReachabilitySearch.h"
 #include "../CTL/Algorithm/AlgorithmTypes.h"
 #include "../LTL/AlgorithmTypes.h"
 
@@ -48,6 +48,22 @@ enum class LTLHeuristic {
     Automaton,
     FireCount,
 };
+
+enum class StatisticsLevel {
+    None,
+    SearchOnly,
+    Full
+};
+
+enum ReachabilityStrategy {
+    BFS,
+    DFS,
+    HEUR,
+    RDFS,
+    OverApprox,
+    DEFAULT
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -58,9 +74,9 @@ struct options_t {
     int reductionTimeout = 60;
     bool stubbornreduction = true; 
     bool statespaceexploration = false;
-    bool printstatistics = true;
+    StatisticsLevel printstatistics = StatisticsLevel::Full;
     std::set<size_t> querynumbers;
-    PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
+    ReachabilityStrategy strategy = DEFAULT;
     int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
@@ -112,19 +128,19 @@ struct options_t {
     size_t seed() { return ++seed_offset; }
 
     void print() {
-        if (!printstatistics) {
+        if (printstatistics != StatisticsLevel::Full) {
             return;
         }
         
         std::stringstream optionsOut;
         
-        if (strategy == PetriEngine::Reachability::Strategy::BFS) {
+        if (strategy == ReachabilityStrategy::BFS) {
             optionsOut << "\nSearch=BFS";
-        } else if (strategy == PetriEngine::Reachability::Strategy::DFS) {
+        } else if (strategy == ReachabilityStrategy::DFS) {
             optionsOut << "\nSearch=DFS";
-        } else if (strategy == PetriEngine::Reachability::Strategy::HEUR) {
+        } else if (strategy == ReachabilityStrategy::HEUR) {
             optionsOut << "\nSearch=HEUR";
-        } else if (strategy == PetriEngine::Reachability::Strategy::RDFS){
+        } else if (strategy == ReachabilityStrategy::RDFS){
             optionsOut << "\nSearch=RDFS";
         } else {
             optionsOut << "\nSearch=OverApprox";

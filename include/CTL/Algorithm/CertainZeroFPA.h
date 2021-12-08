@@ -13,7 +13,7 @@ namespace Algorithm {
 class CertainZeroFPA : public FixedPointAlgorithm
 {
 public:
-    CertainZeroFPA(PetriEngine::Reachability::Strategy type) : FixedPointAlgorithm(type)
+    CertainZeroFPA(ReachabilityStrategy type) : FixedPointAlgorithm(type)
     {
     }
     virtual ~CertainZeroFPA()

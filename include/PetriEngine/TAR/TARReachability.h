@@ -25,7 +25,7 @@
 #include "AntiChain.h"
 
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
-
+#include "PetriEngine/options.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -47,9 +47,9 @@ namespace PetriEngine {
             }
             
             void reachable(
-                std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                std::vector<ResultPrinter::Result>& results,
-                bool printstats, bool printtrace);
+                    std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                    std::vector<ResultPrinter::Result>& results,
+                    StatisticsLevel statisticsLevel, bool printtrace);
         private:
 
             void printTrace(trace_t& stack);

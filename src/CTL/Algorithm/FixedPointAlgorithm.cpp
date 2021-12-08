@@ -5,7 +5,7 @@
 #include "CTL/SearchStrategy/HeuristicSearch.h"
 
 namespace Algorithm {
-    FixedPointAlgorithm::FixedPointAlgorithm(PetriEngine::Reachability::Strategy type) {
+    FixedPointAlgorithm::FixedPointAlgorithm(ReachabilityStrategy type) {
         using namespace PetriEngine::Reachability;
         using namespace SearchStrategy;
         switch(type)

@@ -79,14 +79,20 @@ namespace PetriEngine {
                         states, _satisfyingMarking, _initial.marking());
         }
         
-        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states)
+        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states, StatisticsLevel statisticsLevel)
         {
+            if (statisticsLevel == StatisticsLevel::None)
+                return;
+
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << states->discovered() << std::endl
                         << "\texplored states:   " << ss.exploredStates << std::endl
                         << "\texpanded states:   " << ss.expandedStates << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
-            
+
+            if (statisticsLevel != StatisticsLevel::Full)
+                return;
+
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 std::cout << "<" << _net.transitionNames()[i] << ":" 
@@ -122,14 +128,14 @@ namespace PetriEngine {
         
 
         bool ReachabilitySearch::reachable(
-                    std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                    std::vector<ResultPrinter::Result>& results,
-                    Strategy strategy,
-                    bool stubbornreduction,
-                    bool statespacesearch,
-                    bool printstats,
-                    bool keep_trace,
-                    size_t seed)
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                std::vector<ResultPrinter::Result>& results,
+                ReachabilityStrategy strategy,
+                bool stubbornreduction,
+                bool statespacesearch,
+                StatisticsLevel printstats,
+                bool keep_trace,
+                size_t seed)
         {
             bool usequeries = !statespacesearch;
 
