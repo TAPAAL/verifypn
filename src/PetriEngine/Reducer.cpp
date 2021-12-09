@@ -2242,9 +2242,12 @@ namespace PetriEngine {
 
             // Find producers for which we can fuse its firing with a consumer
             bool removedAllProducers = true;
-            auto producers = place.producers;
-            for (auto prod_id : producers)
+            auto prods_todo = place.producers;
+            while (!prods_todo.empty())
             {
+                auto prod_id = prods_todo.back();
+                prods_todo.pop_back();
+
                 if (hasTimedout())
                     return false;
 
@@ -2298,7 +2301,8 @@ namespace PetriEngine {
                             leftoverArc.weight -= cons.pre[0].weight;
                             if (leftoverArc.weight > 0) {
                                 newtran.addPostArc(leftoverArc);
-                                removedAllProducers = false;
+                                // The new transition is also a producer, so we will process it again
+                                prods_todo.push_back(id);
                             }
                         }
                         else
