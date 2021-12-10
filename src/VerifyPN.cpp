@@ -1517,6 +1517,13 @@ int main(int argc, char* argv[]) {
 
     if(options.doVerification){
 
+        auto verifStart = std::chrono::high_resolution_clock::now();
+        std::shared_ptr<void> defer (nullptr, [&verifStart](...){
+            auto verifEnd = std::chrono::high_resolution_clock::now();
+            auto diff = std::chrono::duration_cast<std::chrono::microseconds>(verifEnd - verifStart).count() / 1000000.0;
+            std::cout << std::setprecision(6) << "Spent " << diff << " on verification" << std::endl;
+        });
+
         //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
