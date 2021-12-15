@@ -1680,11 +1680,11 @@ namespace PetriEngine {
             }
         }
 
-        // The preset and positive postset of initially enabled transitions are not in the siphon
+        // Places affected by initially enabled transitions are not in the siphon
         for (auto it = T.begin(); it != T.end(); ){
             bool enabled = true;
             for (Arc prearc : parent->_transitions[(*it)].pre) {
-                if (prearc.weight > parent->initialMarking[prearc.place]) {
+                if (prearc.weight > parent->initialMarking[prearc.place] != prearc.inhib) {
                     enabled = false;
                     break;
                 }
@@ -1703,9 +1703,10 @@ namespace PetriEngine {
                         j++;
                     } else {
                         // There are both an in and an out arc to this place
-                        S.erase(tran.pre[i].place);
-                        if (tran.pre[i].weight < tran.post[j].weight)
+                        if (tran.pre[i].weight != tran.post[j].weight) {
+                            S.erase(tran.pre[i].place);
                             S.erase(tran.post[j].place);
+                        }
 
                         i++; j++;
                     }
