@@ -1656,22 +1656,21 @@ namespace PetriEngine {
     }
 
     bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
-        // Maximum Unmarked Syphon removal. Using an overestimation we find a siphon, a set of places,
-        // which will never have more than 0 tokens.
-        // Rule 10 from "Structural Reductions Revisited" by Yann Theiry-Mieg
+        // Dead siphon
         bool continueReductions = false;
         if (hasTimedout()) return false;
 
         // The places of siphon S will be removed
         std::unordered_set <uint32_t> S;
-        // Transitions in T can't fire because they consume from a place in S.
+        // Transitions in T can't fire because they consume from a place in S, but may add something to the
+        // siphon if they could - which means those places should not be in the siphon after all
         std::unordered_set <uint32_t> T;
 
         // Now we find the fixed point of S and T iteratively
-        // Initially S contains all places with 0 tokens and T contains all transitions
+        // Initially T contains all transitions and S contains all places with no enabled consumers
 
         for (uint32_t i=0; i < parent->_places.size(); ++i) {
-            if (!parent->_places[i].skip && parent->initialMarking[i] == 0) {
+            if (!parent->_places[i].skip) {
                 S.insert(i);
             }
         }
@@ -1681,7 +1680,48 @@ namespace PetriEngine {
             }
         }
 
+        // The preset and positive postset of initially enabled transitions are not in the siphon
+        for (auto it = T.begin(); it != T.end(); ){
+            bool enabled = true;
+            for (Arc prearc : parent->_transitions[(*it)].pre) {
+                if (prearc.weight > parent->initialMarking[prearc.place]) {
+                    enabled = false;
+                    break;
+                }
+            }
+            if (enabled) {
+                Transition& tran = getTransition(*it);
+                // pre and post arcs are sorted by their place ids which we will take advantage off
+                uint32_t i = 0, j = 0;
+                while (i < tran.pre.size() && j < tran.post.size())
+                {
+                    if (tran.pre[i].place < tran.post[j].place) {
+                        S.erase(tran.pre[i].place);
+                        i++;
+                    } else if (tran.pre[i].place > tran.post[j].place) {
+                        S.erase(tran.post[j].place);
+                        j++;
+                    } else {
+                        // There are both an in and an out arc to this place
+                        S.erase(tran.pre[i].place);
+                        if (tran.pre[i].weight < tran.post[j].weight)
+                            S.erase(tran.post[j].place);
 
+                        i++; j++;
+                    }
+                }
+                for ( ; i < tran.pre.size(); i++) {
+                    S.erase(tran.pre[i].place);
+                }
+                for ( ; j < tran.post.size(); j++) {
+                    S.erase(tran.post[j].place);
+                }
+
+                it = T.erase(it);
+            } else {
+                ++it;
+            }
+        }
 
         bool out;
         bool fixpoint;
