@@ -1696,23 +1696,29 @@ namespace PetriEngine {
                 while (i < tran.pre.size() && j < tran.post.size())
                 {
                     if (tran.pre[i].place < tran.post[j].place) {
-                        S.erase(tran.pre[i].place);
+                        if (!tran.pre[i].inhib)
+                            S.erase(tran.pre[i].place);
                         i++;
                     } else if (tran.pre[i].place > tran.post[j].place) {
                         S.erase(tran.post[j].place);
                         j++;
                     } else {
-                        // There are both an in and an out arc to this place
-                        if (tran.pre[i].weight != tran.post[j].weight) {
-                            S.erase(tran.pre[i].place);
+                        if (tran.pre[i].inhib) {
                             S.erase(tran.post[j].place);
+                        } else {
+                            // There are both an in and an out arc to this place. Is the effect non-zero?
+                            if (tran.pre[i].weight != tran.post[j].weight) {
+                                S.erase(tran.pre[i].place);
+                                S.erase(tran.post[j].place);
+                            }
                         }
 
                         i++; j++;
                     }
                 }
                 for ( ; i < tran.pre.size(); i++) {
-                    S.erase(tran.pre[i].place);
+                    if (!tran.pre[i].inhib)
+                        S.erase(tran.pre[i].place);
                 }
                 for ( ; j < tran.post.size(); j++) {
                     S.erase(tran.post[j].place);
@@ -1724,50 +1730,28 @@ namespace PetriEngine {
             }
         }
 
-        bool out;
         bool fixpoint;
-        uint32_t trans;
         do{
             if (hasTimedout()) return false;
             fixpoint = true;
 
-            // Discard transitions from T if they have no producers in S
-            for (auto it = T.begin(); it != T.end(); ){
-                out = true;
-                for (Arc postarc : parent->_transitions[(*it)].post) {
-                    if (S.find(postarc.place) != S.end()) {
-                        out = false;
-                        break;
-                    }
-                }
-                if (out) {
-                    it = T.erase(it);
-                    fixpoint = false;
-                } else {
-                    ++it;
-                }
-            }
-
-            if (hasTimedout()) return false;
-
             // Discard from T any transition that does not consume from S and discard its postset from S
             for (auto it = T.begin(); it != T.end(); ){
-                out = true;
-                trans = (*it);
-                for (Arc prearc : parent->_transitions[trans].pre) {
-                    // If there is a non-inhibitor arc from some place in S, this transition can't be removed from T yet.
+                bool rem = true;
+                for (Arc prearc : parent->_transitions[*it].pre) {
+                    // Does it consume from S?
                     if (!prearc.inhib && S.find(prearc.place) != S.end()){
-                        out = false;
+                        rem = false;
                         break;
                     }
                 }
-                if (out) {
-                    it = T.erase(it);
+                if (rem) {
                     fixpoint = false;
-                    // Places pointed to by any transition outside T are immediately removed from S
-                    for (Arc postarc : parent->_transitions[trans].post) {
+                    // Remove postset from S
+                    for (Arc postarc : parent->_transitions[*it].post) {
                         S.erase(postarc.place);
                     }
+                    it = T.erase(it);
                 } else {
                     ++it;
                 }
@@ -1775,24 +1759,17 @@ namespace PetriEngine {
             // Until fixpoint
         } while(!fixpoint && !S.empty());
 
-        bool anythingSkipped = false;
-        // Remove S and any transition consuming from S
-        for (uint32_t place : S) {
-            auto theplace = parent->_places[place];
-            for (uint32_t consumer : theplace.consumers) {
-                auto consumertrans = parent->_transitions[consumer];
-                // Avoid skipping already skipped transitions, and Inhibitor arcs don't count here
-                if (!consumertrans.skip && !getInArc(place, consumertrans)->inhib) {
-                    skipTransition(consumer);
-                    anythingSkipped = true;
+        if (!S.empty()) {
+            // Remove S and T
+            for (uint32_t p : S) {
+                if (placeInQuery[p] == 0) {
+                    skipPlace(p);
                 }
             }
-            if (placeInQuery[place] == 0) {
-                skipPlace(place);
-                anythingSkipped = true;
+            for (uint32_t t: T) {
+                skipTransition(t);
             }
-        }
-        if (anythingSkipped) {
+
             _ruleM++;
             continueReductions = true;
         }
