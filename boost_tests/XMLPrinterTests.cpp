@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <PetriEngine/PQL/XMLPrinter.h>
+#include <algorithm>
 
 #include "PetriEngine/PQL/Expressions.h"
 
