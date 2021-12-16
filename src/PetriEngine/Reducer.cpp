@@ -1656,124 +1656,116 @@ namespace PetriEngine {
     }
 
     bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
-        // Dead siphon
-        bool continueReductions = false;
+        // Dead places and transitions
         if (hasTimedout()) return false;
 
-        // The places of siphon S will be removed
-        std::unordered_set <uint32_t> S;
-        // Transitions in T can't fire because they consume from a place in S, but may add something to the
-        // siphon if they could - which means those places should not be in the siphon after all
-        std::unordered_set <uint32_t> T;
+        // Sets of places that do not increase or decrease their number of tokens
+        std::unordered_set <uint32_t> S_cant_inc;
+        std::unordered_set <uint32_t> S_cant_dec;
+        // Transitions that can't fire
+        std::unordered_set <uint32_t> F;
 
-        // Now we find the fixed point of S and T iteratively
-        // Initially T contains all transitions and S contains all places with no enabled consumers
+        // Initially S_cant_inc and S_cant_dec contains all places,
+        // and F contains all transitions
 
         for (uint32_t i=0; i < parent->_places.size(); ++i) {
             if (!parent->_places[i].skip) {
-                S.insert(i);
+                S_cant_inc.insert(i);
+                S_cant_dec.insert(i);
             }
         }
         for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
             if (!parent->_transitions[i].skip) {
-                T.insert(i);
+                F.insert(i);
             }
         }
 
-        // Places affected by initially enabled transitions are not in the siphon
-        for (auto it = T.begin(); it != T.end(); ){
-            bool enabled = true;
-            for (Arc prearc : parent->_transitions[(*it)].pre) {
-                if (prearc.weight > parent->initialMarking[prearc.place] != prearc.inhib) {
-                    enabled = false;
-                    break;
-                }
-            }
-            if (enabled) {
-                Transition& tran = getTransition(*it);
-                // pre and post arcs are sorted by their place ids which we will take advantage off
-                uint32_t i = 0, j = 0;
-                while (i < tran.pre.size() && j < tran.post.size())
-                {
-                    if (tran.pre[i].place < tran.post[j].place) {
-                        if (!tran.pre[i].inhib)
-                            S.erase(tran.pre[i].place);
-                        i++;
-                    } else if (tran.pre[i].place > tran.post[j].place) {
-                        S.erase(tran.post[j].place);
-                        j++;
-                    } else {
-                        if (tran.pre[i].inhib) {
-                            S.erase(tran.post[j].place);
-                        } else {
-                            // There are both an in and an out arc to this place. Is the effect non-zero?
-                            if (tran.pre[i].weight != tran.post[j].weight) {
-                                S.erase(tran.pre[i].place);
-                                S.erase(tran.post[j].place);
-                            }
-                        }
-
-                        i++; j++;
-                    }
-                }
-                for ( ; i < tran.pre.size(); i++) {
-                    if (!tran.pre[i].inhib)
-                        S.erase(tran.pre[i].place);
-                }
-                for ( ; j < tran.post.size(); j++) {
-                    S.erase(tran.post[j].place);
-                }
-
-                it = T.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        // Now we find the fixed point of S_cant_inc, S_cant_dec, and F iteratively
 
         bool fixpoint;
         do{
             if (hasTimedout()) return false;
             fixpoint = true;
 
-            // Discard from T any transition that does not consume from S and discard its postset from S
-            for (auto it = T.begin(); it != T.end(); ){
-                bool rem = true;
+            // Discard from F any transition that is initially enabled or could be later
+            // based on S_cant_inc and S_cant_dec.
+            // Also discard its negative preset and positive postset from respective S_cant_dec and S_cant_inc resp.
+            for (auto it = F.begin(); it != F.end(); ){
+                bool enabled = true;
                 for (Arc prearc : parent->_transitions[*it].pre) {
-                    // Does it consume from S?
-                    if (!prearc.inhib && S.find(prearc.place) != S.end()){
-                        rem = false;
+                    bool notInhibited = !prearc.inhib || (prearc.weight > parent->initialMarking[prearc.place] ||
+                                                          S_cant_dec.find(prearc.place) == S_cant_dec.end());
+                    bool enoughTokens = prearc.inhib || (prearc.weight <= parent->initialMarking[prearc.place] ||
+                                                        S_cant_inc.find(prearc.place) == S_cant_inc.end());
+                    if (!notInhibited || !enoughTokens) {
+                        enabled = false;
                         break;
                     }
                 }
-                if (rem) {
-                    fixpoint = false;
-                    // Remove postset from S
-                    for (Arc postarc : parent->_transitions[*it].post) {
-                        S.erase(postarc.place);
+                if (enabled) {
+                    Transition& tran = getTransition(*it);
+                    // Discard negative preset from S_cant_dec, and
+                    // discard positive postset from S_cant_inc
+                    uint32_t i = 0, j = 0;
+                    while (i < tran.pre.size() && j < tran.post.size())
+                    {
+                        if (tran.pre[i].place < tran.post[j].place) {
+                            if (!tran.pre[i].inhib)
+                                S_cant_dec.erase(tran.pre[i].place);
+                            i++;
+                        } else if (tran.pre[i].place > tran.post[j].place) {
+                            S_cant_inc.erase(tran.post[j].place);
+                            j++;
+                        } else {
+                            if (tran.pre[i].inhib) {
+                                S_cant_inc.erase(tran.post[j].place);
+                            } else {
+                                // There are both an in and an out arc to this place. Is the effect non-zero?
+                                if (tran.pre[i].weight > tran.post[j].weight) {
+                                    S_cant_dec.erase(tran.pre[i].place);
+                                } else if (tran.pre[i].weight < tran.post[j].weight) {
+                                    S_cant_inc.erase(tran.post[j].place);
+                                }
+                            }
+
+                            i++; j++;
+                        }
                     }
-                    it = T.erase(it);
+                    for ( ; i < tran.pre.size(); i++) {
+                        if (!tran.pre[i].inhib)
+                            S_cant_dec.erase(tran.pre[i].place);
+                    }
+                    for ( ; j < tran.post.size(); j++) {
+                        S_cant_inc.erase(tran.post[j].place);
+                    }
+
+                    it = F.erase(it);
+                    fixpoint = false;
                 } else {
                     ++it;
                 }
             }
+
             // Until fixpoint
-        } while(!fixpoint && !S.empty());
+        } while (!fixpoint);
 
-        if (!S.empty()) {
-            // Remove S and T
-            for (uint32_t p : S) {
-                if (placeInQuery[p] == 0) {
-                    skipPlace(p);
-                }
+        // Remove intersection of S_cant_dec and S_cant_inc as well as F, unless the place appear in query
+        bool anyRemoved = false;
+        for (uint32_t p : S_cant_dec) {
+            if (S_cant_inc.find(p) != S_cant_inc.end() && placeInQuery[p] == 0) {
+                skipPlace(p);
+                anyRemoved = true;
             }
-            for (uint32_t t: T) {
-                skipTransition(t);
-            }
-
-            _ruleM++;
-            continueReductions = true;
         }
-        return continueReductions;
+        for (uint32_t t : F) {
+            skipTransition(t);
+            anyRemoved = true;
+        }
+        if (anyRemoved) {
+            _ruleM++;
+            return true;
+        }
+        return false;
     }
 
     // Alternate implementation for Rule M, pending performance comparison
