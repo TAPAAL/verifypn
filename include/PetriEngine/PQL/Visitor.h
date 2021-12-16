@@ -143,47 +143,39 @@ namespace PetriEngine {
                 condition->SimpleQuantifierCondition::visit(*this);
             };
 
+            virtual void _accept(const ShallowCondition *element) {
+                assert(false);
+                std::cerr << "No accept for ShallowCondition" << std::endl;
+                exit(0);
+            }
+
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(const UnfoldedFireableCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UnfoldedFireableCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const FireableCondition *element) {
-                assert(false);
-                std::cerr << "No accept for FireableCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const UpperBoundsCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UpperBoundsCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const LivenessCondition *element) {
-                assert(false);
-                std::cerr << "No accept for LivenessCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const KSafeCondition *element) {
-                assert(false);
-                std::cerr << "No accept for KSafeCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const QuasiLivenessCondition *element) {
-                assert(false);
-                std::cerr << "No accept for QuasiLivenessCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const StableMarkingCondition *element) {
-                assert(false);
-                std::cerr << "No accept for StableMarkingCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const BooleanCondition *element) {
@@ -191,12 +183,6 @@ namespace PetriEngine {
                 std::cerr << "No accept for BooleanCondition" << std::endl;
                 exit(0);
             };
-
-            virtual void _accept(const ShallowCondition *element) {
-                assert(false);
-                std::cerr << "No accept for BooleanCondition" << std::endl;
-                exit(0);
-            }
 
             // Expression
             virtual void _accept(const UnfoldedIdentifierExpr *element) {
@@ -312,42 +298,17 @@ namespace PetriEngine {
         protected:
             void _accept(const NotCondition *element) override
             {
-                (*element)[0]->visit(*this);
+                element->getCond()->visit(*this);
             }
 
-            void _accept(const AndCondition *element) override
+            void _accept(const LogicalCondition *element) override
             {
                 for (const auto &cond : *element) {
                     cond->visit(*this);
                 }
             }
 
-            void _accept(const OrCondition *element) override
-            {
-                for (const auto &cond : *element) {
-                    cond->visit(*this);
-                }
-            }
-
-            void _accept(const LessThanCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const LessThanOrEqualCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const EqualCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const NotEqualCondition *element) override
+            void _accept(const CompareCondition *element) override
             {
                 element->getExpr1()->visit(*this);
                 element->getExpr2()->visit(*this);
@@ -368,116 +329,17 @@ namespace PetriEngine {
                 // no-op
             }
 
-            void _accept(const EFCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EGCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AGCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AFCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EXCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const AXCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const EUCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
-            }
-
-            void _accept(const AUCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
-            }
-
-            void _accept(const ACondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const ECondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const GCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const FCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
-            }
-
-            void _accept(const XCondition *condition) override
-            {
-                (*condition)[0]->visit(*this);
+            void _accept(const SimpleQuantifierCondition *condition) override {
+                condition->getCond()->visit(*this);
             }
 
             void _accept(const UntilCondition *condition) override
             {
-                (*condition)[0]->visit(*this);
-                (*condition)[1]->visit(*this);
+                condition->getCond1()->visit(*this);
+                condition->getCond2()->visit(*this);
             }
 
-            void _accept(const UnfoldedFireableCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const FireableCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const UpperBoundsCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const LivenessCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const KSafeCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const QuasiLivenessCondition *element) override
-            {
-                if (const auto &compiled = element->getCompiled())
-                    compiled->visit(*this);
-            }
-
-            void _accept(const StableMarkingCondition *element) override
+            void _accept(const ShallowCondition *element) override
             {
                 if (const auto &compiled = element->getCompiled())
                     compiled->visit(*this);
@@ -498,14 +360,7 @@ namespace PetriEngine {
                 // no-op
             }
 
-            void _accept(const PlusExpr *element) override
-            {
-                for (const auto &expr : element->expressions()) {
-                    expr->visit(*this);
-                }
-            }
-
-            void _accept(const MultiplyExpr *element) override
+            void _accept(const NaryExpr *element) override
             {
                 for (const auto &expr : element->expressions()) {
                     expr->visit(*this);
@@ -517,17 +372,22 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
             }
 
-            void _accept(const SubtractExpr *element) override
-            {
-                for (const auto &expr : element->expressions()) {
-                    expr->visit(*this);
-                }
-            }
-
             void _accept(const IdentifierExpr *element) override
             {
                 // no-op
             }
+        };
+
+        // Used to make visitors that check if any node in the tree fulfills a condition
+        class AnyVisitor : public BaseVisitor {
+        public:
+            [[nodiscard]] bool getReturnValue() const { return _condition_found; }
+
+        protected:
+            bool _condition_found = false;
+            void setConditionFound() { _condition_found = true; }
+
+        private:
         };
     }
 }

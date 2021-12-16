@@ -90,6 +90,7 @@
 #include "LTL/LTL.h"
 #include "PetriEngine/TraceReplay.h"
 #include "LTL/LTLMain.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 #include <atomic>
 #include <PetriEngine/PQL/BinaryPrinter.h>
@@ -1151,12 +1152,12 @@ void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine
     for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
     std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
 
-        if(queries[a]->isReachability() != queries[b]->isReachability())
-            return queries[a]->isReachability() > queries[b]->isReachability();
-        if(queries[a]->isLoopSensitive() != queries[b]->isLoopSensitive())
-            return queries[a]->isLoopSensitive() < queries[b]->isLoopSensitive();
-        if(queries[a]->containsNext() != queries[b]->containsNext())
-            return queries[a]->containsNext() < queries[b]->containsNext();
+        if(isReachability(queries[a]) != isReachability(queries[b]))
+            return isReachability(queries[a]) > isReachability(queries[b]);
+        if(isLoopSensitive(queries[a]) != isLoopSensitive(queries[b]))
+            return isLoopSensitive(queries[a]) < isLoopSensitive(queries[b]);
+        if(containsNext(queries[a]) != containsNext(queries[b]))
+            return containsNext(queries[a]) < containsNext(queries[b]);
         return formulaSize(queries[a]) < formulaSize(queries[b]);
     });
     writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
@@ -1235,7 +1236,7 @@ int main(int argc, char* argv[]) {
             negstat_t stats;
             EvaluationContext context(nullptr, nullptr);
             auto q = pushNegation(queries[qid], stats, context, false, false, false);
-            if (!q->isReachability() || q->isLoopSensitive() || stats.negated_fireability) {
+            if (!PetriEngine::PQL::isReachability(q) || PetriEngine::PQL::isLoopSensitive(q) || stats.negated_fireability) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, negated fireability and UpperBounds, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);
@@ -1473,7 +1474,7 @@ int main(int argc, char* argv[]) {
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
-            } else if (options.noreach || !queries[i]->isReachability()) {
+            } else if (options.noreach || !PetriEngine::PQL::isReachability(queries[i])) {
                 results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                 alldone = false;
             } else {

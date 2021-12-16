@@ -19,6 +19,7 @@
  */
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/PQL/PushNegation.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 // Macro to ensure that returns are done correctly
 #ifndef NDEBUG
@@ -161,7 +162,7 @@ namespace PetriEngine::PQL {
                 }
             }
 
-            if (!a->isTemporal()) {
+            if (!isTemporal(a)) {
                 auto res = std::make_shared<EFCondition>(a);
                 if (negated) return std::make_shared<NotCondition>(res);
                 return res;
@@ -184,7 +185,7 @@ namespace PetriEngine::PQL {
                 a = subvisit(std::make_shared<EFCondition>((*cond)[1]), nested, negated);
                 return a;
             } else if (auto cond = dynamic_cast<OrCondition *>(a.get())) {
-                if (!cond->isTemporal()) {
+                if (!isTemporal(cond)) {
                     Condition_ptr b = std::make_shared<EFCondition>(a);
                     if (negated) b = std::make_shared<NotCondition>(b);
                     return b;
@@ -391,7 +392,7 @@ namespace PetriEngine::PQL {
     void PushNegationVisitor::_accept(FCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, false);
-            if (!a->isTemporal()) {
+            if (!isTemporal(a)) {
                 auto res = std::make_shared<FCondition>(a);
                 if (negated) return std::make_shared<NotCondition>(res);
                 return res;
@@ -405,7 +406,7 @@ namespace PetriEngine::PQL {
                 ++stats[32];
                 return subvisit(std::make_shared<FCondition>((*cond)[1]), nested, negated);
             } else if (auto cond = dynamic_cast<OrCondition *>(a.get())) {
-                if (!cond->isTemporal()) {
+                if (!isTemporal(cond)) {
                     Condition_ptr b = std::make_shared<FCondition>(a);
                     if (negated) b = std::make_shared<NotCondition>(b);
                     return b;

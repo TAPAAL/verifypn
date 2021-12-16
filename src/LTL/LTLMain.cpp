@@ -22,6 +22,7 @@
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 //#include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
@@ -127,7 +128,7 @@ namespace LTL {
         bool is_visible_stub = options.stubbornreduction
                                && (options.ltl_por == LTLPartialOrder::Visible || options.ltl_por == LTLPartialOrder::VisibleReach)
                                && !net->has_inhibitor()
-                               && !negated_formula->containsNext();
+                               && !PetriEngine::PQL::containsNext(negated_formula);
         bool is_autreach_stub = options.stubbornreduction
                 && (options.ltl_por == LTLPartialOrder::AutomatonReach ||
                     options.ltl_por == LTLPartialOrder::VisibleReach)

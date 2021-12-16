@@ -23,7 +23,7 @@
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/PQL/MutatingVisitor.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
-#include "PetriEngine/PQL/QueryPrinter.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 #include <sstream>
 #include <assert.h>
@@ -1060,6 +1060,13 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
 
+        void ShallowCondition::visit(Visitor &ctx) const {
+            if (_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
 
         void UnfoldedUpperBoundsCondition::visit(Visitor& ctx) const
         {
@@ -1673,189 +1680,44 @@ namespace PetriEngine {
             return _distance(context, delta<EqualCondition>);
         }
 
-        /******************** Check if query is a reachability query ********************/
-
-        bool EXCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool EGCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool EFCondition::isReachability(uint32_t depth) const {
-            return depth > 0 ? false : _cond->isReachability(depth + 1);
-        }
-
-        bool AXCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool AGCondition::isReachability(uint32_t depth) const {
-            return depth > 0 ? false : _cond->isReachability(depth + 1);
-        }
-
-        bool AFCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool ECondition::isReachability(uint32_t depth) const {
-            if (depth != 0) {
-                return false;
-            }
-            else if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
-                // EF is a reachability formula so skip checking the F.
-                return (*cond)[0]->isReachability(depth + 1);
-            }
-            else return false;
-        }
-
-        bool ACondition::isReachability(uint32_t depth) const {
-            if (depth != 0) {
-                return false;
-            }
-            else if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
-                return (*cond)[0]->isReachability(depth + 1);
-            }
-            else return false;
-        }
-
-        bool GCondition::isReachability(uint32_t depth) const {
-            // This could potentially be a reachability formula if the parent is an A.
-            // This case is however already handled by ACondition.
-            return false;
-        }
-
-        bool FCondition::isReachability(uint32_t depth) const {
-            // This could potentially be a reachability formula if the parent is an A.
-            // This case is however already handled by ACondition.
-            return false;
-        }
-
-        bool XCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool UntilCondition::isReachability(uint32_t depth) const {
-            return false;
-        }
-
-        bool LogicalCondition::isReachability(uint32_t depth) const {
-            if(depth == 0) return false;
-            bool reachability = true;
-            for(auto& c : _conds)
-            {
-                reachability = reachability && c->isReachability(depth + 1);
-                if(!reachability) break;
-            }
-            return reachability;
-        }
-
-        bool CompareCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool NotCondition::isReachability(uint32_t depth) const {
-            return _cond->isReachability(depth);
-        }
-
-        bool BooleanCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool DeadlockCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool QuasiLivenessCondition::isReachability(uint32_t depth) const {
-            if(_compiled) return _compiled->isReachability(depth);
-            else return false;
-        }
-
-        bool LivenessCondition::isReachability(uint32_t depth) const {
-            if(_compiled) return _compiled->isReachability(depth);
-            else return false;
-        }
-
-        bool StableMarkingCondition::isReachability(uint32_t depth) const {
-            if(_compiled) return _compiled->isReachability(depth);
-            else return false;
-        }
-
-        bool KSafeCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool UpperBoundsCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool CompareConjunction::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool FireableCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
-        bool UnfoldedFireableCondition::isReachability(uint32_t depth) const {
-            return depth > 0;
-        }
-
         /********************** CONSTRUCTORS *********************************/
 
         void postMerge(std::vector<Condition_ptr>& conds) {
             std::sort(std::begin(conds), std::end(conds),
                     [](auto& a, auto& b) {
-                        return a->isTemporal() < b->isTemporal();
+                        return isTemporal(a) < isTemporal(b);
                     });
         }
 
         AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
         AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
         AndCondition::AndCondition(Condition_ptr left, Condition_ptr right) {
             tryMerge<AndCondition>(_conds, left);
             tryMerge<AndCondition>(_conds, right);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
         OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
         OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
         OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
             tryMerge<OrCondition>(_conds, left);
             tryMerge<OrCondition>(_conds, right);
-            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
-            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge(_conds);
         }
 
@@ -2008,24 +1870,6 @@ namespace PetriEngine {
         {
             init(std::move(exprs));
         }
-
-        bool LogicalCondition::nestedDeadlock() const {
-            for(auto& c : _conds)
-            {
-                if(c->getQuantifier() == PQL::DEADLOCK ||
-                   c->nestedDeadlock() ||
-                    (c->getQuantifier() == PQL::NEG &&
-                     (*static_cast<NotCondition*>(c.get()))[0]->getQuantifier() == PQL::DEADLOCK
-                        ))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-
-
     } // PQL
 } // PetriEngine
 
