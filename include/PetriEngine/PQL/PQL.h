@@ -48,7 +48,6 @@ namespace PetriEngine {
         class AnalysisContext;
         class EvaluationContext;
         class DistanceContext;
-        class TAPAALConditionExportContext;
         class SimplificationContext;
 
         /** Representation of a PQL error */
@@ -194,8 +193,6 @@ namespace PetriEngine {
         private:
             bool _inv = false;
             Result _eval = RUNKNOWN;
-        protected:
-            bool _loop_sensitive = false;
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -209,10 +206,6 @@ namespace PetriEngine {
 
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
-            /** Check if query is a reachability query */
-            [[nodiscard]] virtual bool isReachability(uint32_t depth = 0) const = 0;
-
-            [[nodiscard]] virtual bool isLoopSensitive() const { return _loop_sensitive; };
 
             /** Checks if the condition is trivially true */
             [[nodiscard]] bool isTriviallyTrue();
@@ -249,11 +242,9 @@ namespace PetriEngine {
                 return _inv;
             }
 
-            [[nodiscard]] virtual bool isTemporal() const { return false;}
             [[nodiscard]] virtual CTLType getQueryType() const = 0;
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
-            [[nodiscard]] virtual bool containsNext() const = 0;
             void toString(std::ostream& os = std::cout);
         protected:
             //Value for checking if condition is trivially true or false.

@@ -143,47 +143,39 @@ namespace PetriEngine {
                 condition->SimpleQuantifierCondition::visit(*this);
             };
 
+            virtual void _accept(const ShallowCondition *element) {
+                assert(false);
+                std::cerr << "No accept for ShallowCondition" << std::endl;
+                exit(0);
+            }
+
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(const UnfoldedFireableCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UnfoldedFireableCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const FireableCondition *element) {
-                assert(false);
-                std::cerr << "No accept for FireableCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const UpperBoundsCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UpperBoundsCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const LivenessCondition *element) {
-                assert(false);
-                std::cerr << "No accept for LivenessCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const KSafeCondition *element) {
-                assert(false);
-                std::cerr << "No accept for KSafeCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const QuasiLivenessCondition *element) {
-                assert(false);
-                std::cerr << "No accept for QuasiLivenessCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const StableMarkingCondition *element) {
-                assert(false);
-                std::cerr << "No accept for StableMarkingCondition" << std::endl;
-                exit(0);
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(const BooleanCondition *element) {
@@ -191,12 +183,6 @@ namespace PetriEngine {
                 std::cerr << "No accept for BooleanCondition" << std::endl;
                 exit(0);
             };
-
-            virtual void _accept(const ShallowCondition *element) {
-                assert(false);
-                std::cerr << "No accept for BooleanCondition" << std::endl;
-                exit(0);
-            }
 
             // Expression
             virtual void _accept(const UnfoldedIdentifierExpr *element) {
@@ -392,16 +378,16 @@ namespace PetriEngine {
             }
         };
 
-        // Used to make visitors that check if some node fulfills a condition
+        // Used to make visitors that check if any node in the tree fulfills a condition
         class AnyVisitor : public BaseVisitor {
         public:
-            [[nodiscard]] bool getReturnValue() const { return _return_value; }
+            [[nodiscard]] bool getReturnValue() const { return _condition_found; }
 
         protected:
-            void setConditionFound() { _return_value = true; }
+            bool _condition_found = false;
+            void setConditionFound() { _condition_found = true; }
 
         private:
-            bool _return_value = false;
         };
     }
 }

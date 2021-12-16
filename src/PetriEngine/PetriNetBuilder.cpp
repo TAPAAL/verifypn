@@ -465,10 +465,10 @@ namespace PetriEngine {
             {
                 queries[i]->analyze(placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
-                remove_loops &= !queries[i]->isLoopSensitive();
+                remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        
-                contains_next |= queries[i]->containsNext() || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
+                contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
         }
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
