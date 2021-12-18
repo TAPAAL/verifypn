@@ -144,6 +144,9 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const ShallowCondition *element) {
+                if (element->getCompiled())
+                    element->getCompiled()->visit(*this);
+
                 assert(false);
                 std::cerr << "No accept for ShallowCondition" << std::endl;
                 exit(0);
@@ -335,8 +338,8 @@ namespace PetriEngine {
 
             void _accept(const UntilCondition *condition) override
             {
-                condition->getCond1()->visit(*this);
-                condition->getCond2()->visit(*this);
+                (*condition)[0]->visit(*this);
+                (*condition)[1]->visit(*this);
             }
 
             void _accept(const ShallowCondition *element) override

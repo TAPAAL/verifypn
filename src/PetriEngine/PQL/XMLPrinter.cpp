@@ -45,7 +45,8 @@ namespace PetriEngine {
         }
 
         std::ostream& XMLPrinter::newline() {
-            os << '\n';
+            if (print_newlines)
+                os << '\n';
             return os;
         }
 
