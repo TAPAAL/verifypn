@@ -144,12 +144,13 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const ShallowCondition *element) {
-                if (element->getCompiled())
+                if (element->getCompiled()) {
                     element->getCompiled()->visit(*this);
-
-                assert(false);
-                std::cerr << "No accept for ShallowCondition" << std::endl;
-                exit(0);
+                } else {
+                    assert(false);
+                    std::cerr << "No accept for ShallowCondition" << std::endl;
+                    exit(0);
+                }
             }
 
             // shallow elements, neither of these should exist in a compiled expression
