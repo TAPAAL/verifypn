@@ -27,18 +27,17 @@ namespace PetriEngine {
     namespace PQL {
         class XMLPrinter : public Visitor {
         public:
-            XMLPrinter(std::ostream& os, uint32_t init_tabs = 0, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
-                os(os), token_count(token_count), tabs(init_tabs),
+            XMLPrinter(std::ostream& os, uint32_t init_tabs = 4, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
+                os(os), token_count(token_count), tabs(init_tabs), tab_size(tab_size),
                         print_newlines(print_newlines) {
-                single_tab = std::string(tab_size, ' ');
             }
 
         protected:
             std::ostream& os;
             const bool token_count;
             uint32_t tabs;
+            const uint32_t tab_size;
             const bool print_newlines;
-            std::string single_tab;
 
             std::ostream& generateTabs();
             std::ostream& newline();
@@ -114,6 +113,22 @@ namespace PetriEngine {
             void _accept(const SubtractExpr *element) override;
 
             void _accept(const IdentifierExpr *element) override;
+
+            class Tag {
+                XMLPrinter* _printer;
+                const char* _tag;
+            public:
+                Tag(XMLPrinter* printer, const char* tag)
+                : _printer(printer), _tag(tag)
+                {
+                    _printer->openXmlTag(_tag);
+                }
+
+                ~Tag()
+                {
+                    _printer->closeXmlTag(_tag);
+                }
+            };
 
         };
     }
