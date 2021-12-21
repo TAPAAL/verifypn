@@ -20,6 +20,18 @@
 #include "PetriEngine/PQL/XMLPrinter.h"
 namespace PetriEngine {
     namespace PQL {
+
+        void XMLPrinter::print(const Condition& c, const std::string& name)
+        {
+            XMLPrinter::Tag p(this, "property");
+            outputLine("<id>", name, "</id>");
+            outputLine("<description>Simplified</description>");
+            {
+                XMLPrinter::Tag f(this, "formula");
+                c.visit(*this);
+            }
+        }
+
         std::ostream& XMLPrinter::generateTabs() {
             for(uint32_t i = 0; i < tabs*tab_size; i++) {
                 os << ' ';
@@ -27,20 +39,15 @@ namespace PetriEngine {
             return os;
         }
 
-        void XMLPrinter::openXmlTag(const std::string &tag) {
+        void XMLPrinter::openXmlTag(const char* tag) {
             generateTabs() << "<" << tag << ">";
             newline();
             tabs++;
         }
 
-        void XMLPrinter::closeXmlTag(const std::string &tag) {
+        void XMLPrinter::closeXmlTag(const char* tag) {
             tabs--;
             generateTabs() << "</" << tag << ">";
-            newline();
-        }
-
-        void XMLPrinter::outputLine(const std::string &line) {
-            generateTabs() << line;
             newline();
         }
 
@@ -65,25 +72,11 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
                 return;
             }
-            openXmlTag("conjunction");
-            (*element)[0]->visit(*this);
-            for(size_t i = 1; i < element->size(); ++i)
             {
-                if(i + 1 == element->size())
-                {
-                    (*element)[i]->visit(*this);
-                }
-                else
-                {
-                    openXmlTag("conjunction");
-                    (*element)[i]->visit(*this);
-                }
+                Tag t(this, "conjunction");
+                for(auto& e : *element)
+                    e->visit(*this);
             }
-            for(size_t i = element->size() - 1; i > 1; --i)
-            {
-                closeXmlTag("conjunction");
-            }
-            closeXmlTag("conjunction");
         }
 
         void XMLPrinter::_accept(const OrCondition *element) {
@@ -97,25 +90,11 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
                 return;
             }
-            openXmlTag("disjunction");
-            (*element)[0]->visit(*this);
-            for(size_t i = 1; i < element->size(); ++i)
             {
-                if(i + 1 == element->size())
-                {
-                    (*element)[i]->visit(*this);
-                }
-                else
-                {
-                    openXmlTag("disjunction");
-                    (*element)[i]->visit(*this);
-                }
+                Tag d(this, "disjunction");
+                for(auto& e : *element)
+                    e->visit(*this);
             }
-            for(size_t i = element->size() - 1; i > 1; --i)
-            {
-                closeXmlTag("disjunction");
-            }
-            closeXmlTag("disjunction");
         }
 
         void XMLPrinter::_accept(const LessThanCondition *element) {
@@ -165,18 +144,18 @@ namespace PetriEngine {
                     {
                         openXmlTag("integer-ge");
                         openXmlTag("tokens-count");
-                        outputLine("<place>" + c._name + "</place>");
+                        outputLine("<place>", c._name, "</place>");
                         closeXmlTag("tokens-count");
-                        outputLine("<integer-constant>" + std::to_string(c._lower) + "</integer-constant>");
+                        outputLine("<integer-constant>", c._lower, "</integer-constant>");
                         closeXmlTag("integer-ge");
                     }
                     if(c._upper != std::numeric_limits<uint32_t>::max())
                     {
                         openXmlTag("integer-le");
                         openXmlTag("tokens-count");
-                        outputLine("<place>" + c._name + "</place>");
+                        outputLine("<place>", c._name, "</place>");
                         closeXmlTag("tokens-count");
-                        outputLine("<integer-constant>" + std::to_string(c._upper) + "</integer-constant>");
+                        outputLine("<integer-constant>", c._upper, "</integer-constant>");
                         closeXmlTag("integer-le");
                     }
                 }
@@ -191,7 +170,7 @@ namespace PetriEngine {
         void XMLPrinter::_accept(const UnfoldedUpperBoundsCondition *element) {
             Tag t(this, "place-bound");
             for(auto& p : element->places()) {
-                outputLine("<place>" + p._name + "</place>");
+                outputLine("<place>", p._name, "</place>");
             }
         }
 
@@ -313,26 +292,26 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const UnfoldedFireableCondition *element) {
-            outputLine("<is-fireable><transition>" + element->getName() + "</transition></is-fireable>");
+            outputLine("<is-fireable><transition>", element->getName(), "</transition></is-fireable>");
         }
 
         void XMLPrinter::_accept(const BooleanCondition *element) {
-            outputLine(element->value? "<true/>": "<false/>");
+            outputLine(element->value ? "<true/>": "<false/>");
         }
 
         void XMLPrinter::_accept(const UnfoldedIdentifierExpr *element) {
             if (token_count) {
-                outputLine("<place>" + element->name() + "</place>");
+                outputLine("<place>", element->name(), "</place>");
             }
             else
             {
                 Tag tc(this, "tokens-count");
-                outputLine("<place>" + element->name() + "</place>");
+                outputLine("<place>", element->name(), "</place>");
             }
         }
 
         void XMLPrinter::_accept(const LiteralExpr *element) {
-            outputLine("<integer-constant>" + std::to_string(element->value()) + "</integer-constant>");
+            outputLine("<integer-constant>", element->value(), "</integer-constant>");
         }
 
         void XMLPrinter::_accept(const PlusExpr *element) {
@@ -345,19 +324,18 @@ namespace PetriEngine {
             if(element->tk) {
                 Tag t(this, "tokens-count");
                 for(auto& e : element->places())
-                    outputLine("<place>" + e.second + "</place>");
+                    outputLine("<place>", e.second, "</place>");
                 for(auto& e : element->expressions())
                     e->visit(*this);
                 return;
             }
             {
                 Tag t(this, "integer-sum");
-                outputLine("<integer-constant>" + std::to_string(element->constant()) + "</integer-constant>");
+                outputLine("<integer-constant>", element->constant(), "</integer-constant>");
                 for(auto& i : element->places())
                 {
-                    openXmlTag("tokens-count");
-                    outputLine("<place>" + i.second + "</place>");
-                    closeXmlTag("tokens-count");
+                    Tag tc(this, "tokens-count");
+                    outputLine("<place>", i.second, "</place>");
                 }
                 for(auto& e : element->expressions())
                     e->visit(*this);

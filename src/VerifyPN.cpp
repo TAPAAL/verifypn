@@ -271,39 +271,8 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
     //}
 }
 
-std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
-    bool cont = false;
-    for(uint32_t i = 0; i < results.size(); i++) {
-        if (results[i] == ResultPrinter::CTL) {
-            cont = true;
-            break;
-        }
-    }
-
-    if (!cont) {
-        return "";
-    }
-
-    std::stringstream ss;
-    ss << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
-
-    for(uint32_t i = 0; i < queries.size(); i++) {
-        if (!(results[i] == ResultPrinter::CTL)) {
-            continue;
-        }
-        ss << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        XMLPrinter xml_printer(ss, 3);
-        queries[i]->visit(xml_printer);
-        ss << "    </formula>\n  </property>\n";
-    }
-
-    ss << "</property-set>\n";
-
-    return ss.str();
-}
-
 void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
+    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool compact = false)
 {
     std::fstream out;
 
@@ -343,10 +312,8 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
         }
         else
         {
-            out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            XMLPrinter xml_printer(out, 3);
-            queries[i]->visit(xml_printer);
-            out << "    </formula>\n  </property>\n";
+            XMLPrinter xml_printer(out, compact ? 0 : 3, compact ? 0 : 2, !compact);
+            xml_printer.print(*queries[i], querynames[i]);
         }
     }
 
@@ -354,29 +321,6 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::v
     {
         out << "</property-set>\n";
     }
-    out.close();
-}
-
-void writeCompactQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, const ColoredPetriNetBuilder& cpnBuilder, const PetriNetBuilder& builder, const PetriNet* net)
-{
-    std::fstream out;
-    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
-
-    out.open(filename, std::ios::out);
-    out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
-
-    for(uint32_t j = 0; j < queries.size(); j++) {
-        auto i = order[j];
-        if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
-
-            out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-            XMLPrinter xml_printer(out, 0);
-            queries[i]->visit(xml_printer);
-    }
-
-    out << "</property-set>\n";
-
     out.close();
 }
 
@@ -520,7 +464,7 @@ void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder 
     std::vector<uint32_t> reorder(queries.size());
     for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
 
-    writeCompactQueries(queries, querynames, reorder, filename,cpnBuilder, b2, net);
+    writeQueries(queries, querynames, reorder, filename, false, builder.getPlaceNames(), true);
 }
 
 

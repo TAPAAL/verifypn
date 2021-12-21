@@ -32,6 +32,8 @@ namespace PetriEngine {
                         print_newlines(print_newlines) {
             }
 
+            void print(const Condition& c, const std::string& name);
+
         protected:
             std::ostream& os;
             const bool token_count;
@@ -42,9 +44,14 @@ namespace PetriEngine {
             std::ostream& generateTabs();
             std::ostream& newline();
 
-            void openXmlTag(const std::string& tag);
-            void closeXmlTag(const std::string &tag);
-            void outputLine(const std::string &line);
+            template<typename ...Args>
+            void outputLine(Args ...args)
+            {
+                (generateTabs() << ... << args);
+                newline();
+            }
+            void openXmlTag(const char* tag);
+            void closeXmlTag(const char* tag);
 
             void _accept(const NotCondition *element) override;
 
@@ -118,6 +125,8 @@ namespace PetriEngine {
                 XMLPrinter* _printer;
                 const char* _tag;
             public:
+                Tag(XMLPrinter& printer, const char* tag)
+                : Tag(&printer, tag) {};
                 Tag(XMLPrinter* printer, const char* tag)
                 : _printer(printer), _tag(tag)
                 {
