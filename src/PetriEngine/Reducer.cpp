@@ -1656,106 +1656,116 @@ namespace PetriEngine {
     }
 
     bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
-        // Maximum Unmarked Syphon removal. Using an overestimation we find a siphon, a set of places,
-        // which will never have more than 0 tokens.
-        // Rule 10 from "Structural Reductions Revisited" by Yann Theiry-Mieg
-        bool continueReductions = false;
+        // Dead places and transitions
         if (hasTimedout()) return false;
 
-        // The places of siphon S will be removed
-        std::unordered_set <uint32_t> S;
-        // Transitions in T can't fire because they consume from a place in S.
-        std::unordered_set <uint32_t> T;
+        // Sets of places that do not increase or decrease their number of tokens
+        std::unordered_set <uint32_t> S_cant_inc;
+        std::unordered_set <uint32_t> S_cant_dec;
+        // Transitions that can't fire
+        std::unordered_set <uint32_t> F;
 
-        // Now we find the fixed point of S and T iteratively
-        // Initially S contains all places with 0 tokens and T contains all transitions
+        // Initially S_cant_inc and S_cant_dec contains all places,
+        // and F contains all transitions
 
         for (uint32_t i=0; i < parent->_places.size(); ++i) {
-            if (!parent->_places[i].skip && parent->initialMarking[i] == 0) {
-                S.insert(i);
+            if (!parent->_places[i].skip) {
+                S_cant_inc.insert(i);
+                S_cant_dec.insert(i);
             }
         }
         for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
             if (!parent->_transitions[i].skip) {
-                T.insert(i);
+                F.insert(i);
             }
         }
 
+        // Now we find the fixed point of S_cant_inc, S_cant_dec, and F iteratively
 
-
-        bool out;
         bool fixpoint;
-        uint32_t trans;
         do{
             if (hasTimedout()) return false;
             fixpoint = true;
 
-            // Discard transitions from T if they have no producers in S
-            for (auto it = T.begin(); it != T.end(); ){
-                out = true;
-                for (Arc postarc : parent->_transitions[(*it)].post) {
-                    if (S.find(postarc.place) != S.end()) {
-                        out = false;
+            // Discard from F any transition that is initially enabled or could be later
+            // based on S_cant_inc and S_cant_dec.
+            // Also discard its negative preset and positive postset from respective S_cant_dec and S_cant_inc resp.
+            for (auto it = F.begin(); it != F.end(); ){
+                bool enabled = true;
+                for (Arc prearc : parent->_transitions[*it].pre) {
+                    bool notInhibited = !prearc.inhib || (prearc.weight > parent->initialMarking[prearc.place] ||
+                                                          S_cant_dec.find(prearc.place) == S_cant_dec.end());
+                    bool enoughTokens = prearc.inhib || (prearc.weight <= parent->initialMarking[prearc.place] ||
+                                                        S_cant_inc.find(prearc.place) == S_cant_inc.end());
+                    if (!notInhibited || !enoughTokens) {
+                        enabled = false;
                         break;
                     }
                 }
-                if (out) {
-                    it = T.erase(it);
+                if (enabled) {
+                    Transition& tran = getTransition(*it);
+                    // Discard negative preset from S_cant_dec, and
+                    // discard positive postset from S_cant_inc
+                    uint32_t i = 0, j = 0;
+                    while (i < tran.pre.size() && j < tran.post.size())
+                    {
+                        if (tran.pre[i].place < tran.post[j].place) {
+                            if (!tran.pre[i].inhib)
+                                S_cant_dec.erase(tran.pre[i].place);
+                            i++;
+                        } else if (tran.pre[i].place > tran.post[j].place) {
+                            S_cant_inc.erase(tran.post[j].place);
+                            j++;
+                        } else {
+                            if (tran.pre[i].inhib) {
+                                S_cant_inc.erase(tran.post[j].place);
+                            } else {
+                                // There are both an in and an out arc to this place. Is the effect non-zero?
+                                if (tran.pre[i].weight > tran.post[j].weight) {
+                                    S_cant_dec.erase(tran.pre[i].place);
+                                } else if (tran.pre[i].weight < tran.post[j].weight) {
+                                    S_cant_inc.erase(tran.post[j].place);
+                                }
+                            }
+
+                            i++; j++;
+                        }
+                    }
+                    for ( ; i < tran.pre.size(); i++) {
+                        if (!tran.pre[i].inhib)
+                            S_cant_dec.erase(tran.pre[i].place);
+                    }
+                    for ( ; j < tran.post.size(); j++) {
+                        S_cant_inc.erase(tran.post[j].place);
+                    }
+
+                    it = F.erase(it);
                     fixpoint = false;
                 } else {
                     ++it;
                 }
             }
 
-            if (hasTimedout()) return false;
-
-            // Discard from T any transition that does not consume from S and discard its postset from S
-            for (auto it = T.begin(); it != T.end(); ){
-                out = true;
-                trans = (*it);
-                for (Arc prearc : parent->_transitions[trans].pre) {
-                    // If there is a non-inhibitor arc from some place in S, this transition can't be removed from T yet.
-                    if (!prearc.inhib && S.find(prearc.place) != S.end()){
-                        out = false;
-                        break;
-                    }
-                }
-                if (out) {
-                    it = T.erase(it);
-                    fixpoint = false;
-                    // Places pointed to by any transition outside T are immediately removed from S
-                    for (Arc postarc : parent->_transitions[trans].post) {
-                        S.erase(postarc.place);
-                    }
-                } else {
-                    ++it;
-                }
-            }
             // Until fixpoint
-        } while(!fixpoint && !S.empty());
+        } while (!fixpoint);
 
-        bool anythingSkipped = false;
-        // Remove S and any transition consuming from S
-        for (uint32_t place : S) {
-            auto theplace = parent->_places[place];
-            for (uint32_t consumer : theplace.consumers) {
-                auto consumertrans = parent->_transitions[consumer];
-                // Avoid skipping already skipped transitions, and Inhibitor arcs don't count here
-                if (!consumertrans.skip && !getInArc(place, consumertrans)->inhib) {
-                    skipTransition(consumer);
-                    anythingSkipped = true;
-                }
-            }
-            if (placeInQuery[place] == 0) {
-                skipPlace(place);
-                anythingSkipped = true;
+        // Remove intersection of S_cant_dec and S_cant_inc as well as F, unless the place appear in query
+        bool anyRemoved = false;
+        for (uint32_t p : S_cant_dec) {
+            if (S_cant_inc.find(p) != S_cant_inc.end() && placeInQuery[p] == 0) {
+                skipPlace(p);
+                anyRemoved = true;
             }
         }
-        if (anythingSkipped) {
+        for (uint32_t t : F) {
+            skipTransition(t);
+            anyRemoved = true;
+        }
+        if (anyRemoved) {
             _ruleM++;
-            continueReductions = true;
+            return true;
         }
-        return continueReductions;
+        return false;
     }
 
     // Alternate implementation for Rule M, pending performance comparison
