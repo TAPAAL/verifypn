@@ -555,7 +555,7 @@ int main(int argc, const char** argv) {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
         return UnknownCode;
     }
-    
+
     if (options.printstatistics) {
         std::cout << "Finished parsing model" << std::endl;
     }
@@ -636,15 +636,14 @@ int main(int argc, const char** argv) {
     std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(options.unfold_query_out_file.size() > 0) {
-        outputCompactQueries(builder, b2, qnet.get(), cpnBuilder, queries, querynames, options.unfold_query_out_file);
-    }
-
-
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
+    }
+
+    if(options.unfold_query_out_file.size() > 0) {
+        outputCompactQueries(builder, b2, qnet.get(), cpnBuilder, queries, querynames, options.unfold_query_out_file);
     }
 
     // simplification. We always want to do negation-push and initial marking check.
@@ -884,6 +883,11 @@ int main(int argc, const char** argv) {
             if (results[i] == ResultPrinter::Unknown || results[i] == ResultPrinter::CTL || results[i] == ResultPrinter::LTL)
                 replay.replay(net.get(), queries[i]);
         }
+        return SuccessCode;
+    }
+
+    if(options.strategy == OverApprox)
+    {
         return SuccessCode;
     }
 
