@@ -405,7 +405,7 @@ bool options_t::parse(int argc, const char** argv) {
                 "                                       - OverApprox   Linear Over Approx\n"
                 "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
                 "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
-                "  -x, --xml-query <query index>        Parse XML query file and verify query of a given index\n"
+                "  -x, --xml-queries <query index>      Parse XML query file and verify queries of a given comma-seperated list\n"
                 "  -r, --reduction <type>               Change structural net reduction:\n"
                 "                                       - 0  disabled\n"
                 "                                       - 1  aggressive reduction (default)\n"
