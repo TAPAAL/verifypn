@@ -315,9 +315,9 @@ bool options_t::parse(int argc, const char** argv) {
             }
         }
 #endif
-        else if (std::strcmp(argv[i], "-noreach") == 0) {
+        else if (std::strcmp(argv[i], "-noreach") == 0 || std::strcmp(argv[i], "--noreach") == 0) {
             noreach = true;
-        } else if (std::strcmp(argv[i], "-ctl") == 0) {
+        } else if (std::strcmp(argv[i], "-ctl") == 0 || std::strcmp(argv[i], "--ctl-algorithm") == 0) {
             logic = TemporalLogic::CTL;
             if (argc > i + 1) {
                 if (std::strcmp(argv[i + 1], "local") == 0) {
@@ -329,7 +329,7 @@ bool options_t::parse(int argc, const char** argv) {
                 }
                 i++;
             }
-        } else if (std::strcmp(argv[i], "-ltl") == 0) {
+        } else if (std::strcmp(argv[i], "-ltl") == 0 || std::strcmp(argv[i], "--ltl-algorithm") == 0) {
             logic = TemporalLogic::LTL;
             if (argc > i + 1) {
                 if (std::strcmp(argv[i + 1], "ndfs") == 0) {
@@ -375,7 +375,7 @@ bool options_t::parse(int argc, const char** argv) {
             }
 
             ++i;
-        } else if (std::strcmp(argv[i], "-noweak") == 0) {
+        } else if (std::strcmp(argv[i], "-noweak") == 0 || std::strcmp(argv[i], "--noweak") == 0) {
             ltluseweak = false;
         } else if (std::strcmp(argv[i], "-g") == 0 || std::strcmp(argv[i], "--game-mode") == 0) {
             gamemode = true;
@@ -418,7 +418,7 @@ bool options_t::parse(int argc, const char** argv) {
                 "                                       write --interval-timeout 0 to disable interval limits\n"
                 "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
                 "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
-                "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
                 "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
                 "                                       - reach      apply reachability stubborn sets in Büchi states\n"
                 "                                                    that represent reachability subproblems,\n"
@@ -441,26 +441,25 @@ bool options_t::parse(int argc, const char** argv) {
                 "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
                 "  -h, --help                           Display this help message\n"
                 "  -v, --version                        Display version information\n"
-                "  -ctl <type>                          Verify CTL properties\n"
+                "  -ctl, --ctl-algorithm [<type>]       Verify CTL properties\n"
                 "                                       - local     Liu and Smolka's on-the-fly algorithm\n"
                 "                                       - czero     local with certain zero extension (default)\n"
-                "  -ltl [<type>]                        Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                "  -ltl, --ltl-algorithm [<type>]       Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
                 "                                       - ndfs      Nested depth first search algorithm\n"
                 "                                       - tarjan    On-the-fly Tarjan's algorithm\n"
                 "                                       - none      Run preprocessing steps only.\n"
-                "  -noweak                              Disable optimizations for weak Büchi automata when doing \n"
+                "  --noweak                             Disable optimizations for weak Büchi automata when doing \n"
                 "                                       LTL model checking. Not recommended.\n"
-                "  -noreach                             Force use of CTL/LTL engine, even when queries are reachability.\n"
+                "  --noreach                            Force use of CTL/LTL engine, even when queries are reachability.\n"
                 "                                       Not recommended since the reachability engine is faster.\n"
                 "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                 "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
                 "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
                 "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
-                //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
-                "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
+                "  -z, --cores <number of cores>        Number of cores to use (currently only query simplification)\n"
 #endif
-                "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
+                "  -tar, --trace-abstraction            Enables Trace Abstraction Refinement for reachability properties\n"
                 "  --max-intervals <interval count>     The max amount of intervals kept when computing the color fixpoint\n"
                 "                  <interval count>     Default is 250 and then after <interval-timeout> second(s) to 5\n"
                 "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
