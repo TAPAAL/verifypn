@@ -33,7 +33,7 @@ namespace PetriEngine {
         }
 
         std::ostream& XMLPrinter::generateTabs() {
-            for(uint32_t i = 0; i < tabs*tab_size; i++) {
+            for(uint32_t i = 0; i < tabs*tab_size; ++i) {
                 os << ' ';
             }
             return os;
@@ -42,17 +42,18 @@ namespace PetriEngine {
         void XMLPrinter::openXmlTag(const char* tag) {
             generateTabs() << "<" << tag << ">";
             newline();
-            tabs++;
+            ++tabs;
         }
 
         void XMLPrinter::closeXmlTag(const char* tag) {
-            tabs--;
+            --tabs;
             generateTabs() << "</" << tag << ">";
             newline();
         }
 
         std::ostream& XMLPrinter::newline() {
-            os << '\n';
+            if(print_newlines)
+                os << '\n';
             return os;
         }
 
