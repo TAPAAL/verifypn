@@ -149,7 +149,7 @@ void printHelp() {
         "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
         "                                       - none       disable stubborn reductions (equivalent to -p).\n"
         "  --ltl-heur <type>                    Select search heuristic for best-first search in LTL engine\n"
-        "                                       Defaults to aut"
+        "                                       Defaults to aut\n"
         "                                       - dist           Formula-driven heuristic, guiding toward states that satisfy\n"
         "                                                        the atomic propositions mentioned in the LTL formula.\n"
         "                                       - aut            Automaton-driven heuristic. Guides search toward states\n"
