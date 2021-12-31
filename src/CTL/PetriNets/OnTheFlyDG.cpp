@@ -11,6 +11,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "CTL/SearchStrategy/SearchStrategy.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 using namespace PetriEngine::PQL;
 using namespace DependencyGraph;
@@ -105,7 +106,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             //Or both are temporal
             for(auto c : conds)
             {
-                assert(c->isTemporal());
+                assert(PetriEngine::PQL::isTemporal(c));
                 e->addTarget(createConfiguration(v->marking, v->getOwner(), c));
             }
             succs.push_back(e);
@@ -133,7 +134,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             //Or both temporal
             for(auto c : conds)
             {
-                assert(c->isTemporal());
+                assert(PetriEngine::PQL::isTemporal(c));
                 Edge *e = newEdge(*v, /*cond->distance(context)*/0);
                 e->addTarget(createConfiguration(v->marking, v->getOwner(), c));
                 succs.push_back(e);
@@ -485,7 +486,7 @@ void OnTheFlyDG::nextStates(Marking& t_marking, Condition* ptr,
     bool first = true;
     memcpy(working_marking.marking(), query_marking.marking(), n_places*sizeof(PetriEngine::MarkVal));    
     auto qf = static_cast<QuantifierCondition*>(ptr);
-    if(!_partial_order || ptr->getQuantifier() != E || ptr->getPath() != F || (*qf)[0]->isTemporal())
+    if(!_partial_order || ptr->getQuantifier() != E || ptr->getPath() != F || PetriEngine::PQL::isTemporal((*qf)[0]))
     {
         PetriEngine::SuccessorGenerator PNGen(*net);
         dowork<PetriEngine::SuccessorGenerator>(PNGen, first, pre, foreach);
