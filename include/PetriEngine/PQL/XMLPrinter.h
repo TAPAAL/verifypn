@@ -36,6 +36,7 @@ namespace PetriEngine {
             std::ostream& os;
             const bool token_count;
             uint32_t tabs;
+            uint32_t tab_size;
             const bool print_newlines;
 
             std::ostream& generateTabs();
