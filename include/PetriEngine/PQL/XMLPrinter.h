@@ -1,7 +1,4 @@
-/* Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>,
+/* Copyright (C) 2011  Peter Gjøl Jensen <root@petergjoel.dk>,
  *                     Rasmus Tollund <rtollu18@student.aau.dk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,6 +24,7 @@ namespace PetriEngine {
     namespace PQL {
         class XMLPrinter : public Visitor {
         public:
+
             XMLPrinter(std::ostream& os, uint32_t init_tabs = 4, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
                 os(os), token_count(token_count), tabs(init_tabs), tab_size(tab_size),
                         print_newlines(print_newlines) {
@@ -38,7 +36,6 @@ namespace PetriEngine {
             std::ostream& os;
             const bool token_count;
             uint32_t tabs;
-            const uint32_t tab_size;
             const bool print_newlines;
 
             std::ostream& generateTabs();

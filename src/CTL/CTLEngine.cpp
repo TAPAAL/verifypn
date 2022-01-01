@@ -18,6 +18,7 @@
 #include <vector>
 #include <PetriEngine/PQL/Expressions.h>
 #include "PetriEngine/PQL/PrepareForReachability.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 using namespace CTL;
 using namespace PetriEngine;
@@ -150,7 +151,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
     std::vector<Condition_ptr> queries;
     for(size_t i = 0; i < query->size(); ++i)
     {
-        if((*query)[i]->isReachability())
+        if(PetriEngine::PQL::isReachability((*query)[i]))
         {
             state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? -1 : 1;
             queries.emplace_back(prepareForReachability((*query)[i]));
@@ -240,7 +241,7 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
     {
         return solveLogicalCondition(q, false, net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(query->isReachability())
+    else if(PetriEngine::PQL::isReachability(query))
     {
         SimpleResultHandler handler;
         std::vector<Condition_ptr> queries{prepareForReachability(query)};

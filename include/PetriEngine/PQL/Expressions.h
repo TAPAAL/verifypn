@@ -269,8 +269,6 @@ namespace PetriEngine {
             { return _compiled->getQuantifier(); }
             Path getPath() const override { return _compiled->getPath(); }
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
-            bool containsNext() const override { return _compiled->containsNext(); }
-            bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
 
             void analyze(AnalysisContext& context) override
             {
@@ -283,6 +281,8 @@ namespace PetriEngine {
             }
             virtual Condition_ptr clone() = 0;
 
+            void visit(Visitor& visitor) const override;
+
         protected:
             virtual void _analyze(AnalysisContext& context) = 0;
             Condition_ptr _compiled = nullptr;
@@ -294,8 +294,6 @@ namespace PetriEngine {
 
             NotCondition(const Condition_ptr cond) {
                 _cond = cond;
-                _temporal = _cond->isTemporal();
-                _loop_sensitive = _cond->isLoopSensitive();
             }
 
 
@@ -305,18 +303,13 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             const Condition_ptr& getCond() const { return _cond; };
-            virtual bool isTemporal() const override { return _temporal;}
-            bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
         private:
             Condition_ptr _cond;
-            bool _temporal = false;
         };
 
 
@@ -325,7 +318,6 @@ namespace PetriEngine {
         class QuantifierCondition : public Condition
         {
         public:
-            bool isTemporal() const override { return true;}
             CTLType getQueryType() const override { return CTLType::PATHQEURY; }
             virtual const Condition_ptr& operator[] (size_t i) const = 0;
         };
@@ -335,7 +327,6 @@ namespace PetriEngine {
             SimpleQuantifierCondition(const Condition_ptr cond) {
                 assert(cond);
                 _cond = cond;
-                _loop_sensitive = cond->isLoopSensitive();
             }
 
             void analyze(AnalysisContext& context) override;
@@ -346,8 +337,6 @@ namespace PetriEngine {
 
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
-            bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
             virtual std::string op() const = 0;
         private:
 
@@ -362,17 +351,11 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) override;
 
 
-            bool isReachability(uint32_t depth) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            bool isLoopSensitive() const override {
-                // Other LTL Loop sensitivity depend on the outermost quantifier being an A,
-                // so if it is an E we disable loop sensitive reductions.
-                return true;
             }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -386,7 +369,6 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-            bool isReachability(uint32_t depth) const override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
@@ -407,7 +389,6 @@ namespace PetriEngine {
 
           Result evaluate(const EvaluationContext &context) override;
 
-          bool isReachability(uint32_t depth) const override;
 
           Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
 
@@ -422,8 +403,6 @@ namespace PetriEngine {
 
           Result evalAndSet(const EvaluationContext &context) override;
 
-          bool isLoopSensitive() const override { return true; }
-
           void visit(Visitor &) const override;
           void visit(MutatingVisitor &) override;
 
@@ -437,7 +416,6 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
@@ -445,7 +423,6 @@ namespace PetriEngine {
                 return _cond->distance(context);
             }
           Result evalAndSet(const EvaluationContext &context) override;
-            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -456,15 +433,12 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
-            bool containsNext() const override { return true; }
-            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -474,13 +448,10 @@ namespace PetriEngine {
         class EXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -491,14 +462,12 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -509,7 +478,6 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }
@@ -525,13 +493,10 @@ namespace PetriEngine {
         class AXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -541,7 +506,6 @@ namespace PetriEngine {
         class AGCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; }
@@ -557,7 +521,6 @@ namespace PetriEngine {
         class AFCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }
@@ -566,7 +529,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -576,20 +538,16 @@ namespace PetriEngine {
             UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
                 _cond1 = cond1;
                 _cond2 = cond2;
-                _loop_sensitive = _cond1->isLoopSensitive() || _cond2->isLoopSensitive();
             }
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
-            bool isReachability(uint32_t depth) const override;
 
             Result evalAndSet(const EvaluationContext& context) override;
 
             [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override { return Path::U; }
-            bool containsNext() const override { return _cond1->containsNext() || _cond2->containsNext(); }
-            bool nestedDeadlock() const override { return _cond1->nestedDeadlock() || _cond2->nestedDeadlock(); }
 
             [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
             [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
@@ -626,7 +584,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -642,7 +599,6 @@ namespace PetriEngine {
                 return _name;
             }
 
-            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
 
@@ -662,7 +618,6 @@ namespace PetriEngine {
                 return _name;
             }
 
-            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
@@ -676,7 +631,6 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
 
             void visit(Visitor&) const override;
-            bool isReachability(uint32_t depth) const override;
             const Condition_ptr& operator[](size_t i) const
             {
                 return _conds[i];
@@ -688,10 +642,6 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
 
-            bool isTemporal() const override
-            {
-                return _temporal;
-            }
             auto begin() { return _conds.begin(); }
             auto end() { return _conds.end(); }
             auto begin() const { return _conds.begin(); }
@@ -699,9 +649,6 @@ namespace PetriEngine {
             bool empty() const { return _conds.size() == 0; }
             bool singular() const { return _conds.size() == 1; }
             size_t size() const { return _conds.size(); }
-            bool containsNext() const override
-            { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
-            bool nestedDeadlock() const override;
             virtual std::string op() const = 0;
 
         protected:
@@ -711,7 +658,6 @@ namespace PetriEngine {
         private:
 
         protected:
-            bool _temporal = false;
             std::vector<Condition_ptr> _conds;
         };
 
@@ -815,7 +761,6 @@ namespace PetriEngine {
 
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
             Result evaluate(const EvaluationContext& context) override;
@@ -831,8 +776,6 @@ namespace PetriEngine {
                                     (_constraints[0]._lower == 0 ||
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
-            bool containsNext() const override { return false;}
-            bool nestedDeadlock() const override { return false; }
             const std::vector<cons_t>& constraints() const { return _constraints; }
             std::vector<cons_t>::const_iterator begin() const { return _constraints.begin(); }
             std::vector<cons_t>::const_iterator end() const { return _constraints.end(); }
@@ -853,7 +796,6 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
-            bool isReachability(uint32_t depth) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -862,8 +804,6 @@ namespace PetriEngine {
                 if(id == 0) return _expr1;
                 else return _expr2;
             }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             bool isTrivial() const;
 
             [[nodiscard]] const Expr_ptr &getExpr1() const { return _expr1; }
@@ -978,13 +918,10 @@ namespace PetriEngine {
             static Condition_ptr TRUE_CONSTANT;
             static Condition_ptr FALSE_CONSTANT;
             static Condition_ptr getShared(bool val);
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             const bool value;
         };
 
@@ -992,23 +929,18 @@ namespace PetriEngine {
         class DeadlockCondition : public Condition {
         public:
 
-            DeadlockCondition() {
-                _loop_sensitive = true;
-            }
+            DeadlockCondition() = default;
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
 
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::DEADLOCK; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
         };
 
         class KSafeCondition : public ShallowCondition
@@ -1021,7 +953,6 @@ namespace PetriEngine {
                 return _bound;
             }
 
-            bool isReachability(uint32_t depth) const override;
 
         protected:
             void _analyze(AnalysisContext& context) override;
@@ -1039,7 +970,6 @@ namespace PetriEngine {
         {
         public:
             LivenessCondition() {}
-            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1051,7 +981,6 @@ namespace PetriEngine {
         {
         public:
             QuasiLivenessCondition() {}
-            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1063,7 +992,6 @@ namespace PetriEngine {
         {
         public:
             StableMarkingCondition() {}
-            bool isReachability(uint32_t depth) const override;
         protected:
             void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
@@ -1085,7 +1013,6 @@ namespace PetriEngine {
                 return std::make_shared<UpperBoundsCondition>(_places);
             }
 
-            bool isReachability(uint32_t depth) const override;
 
         protected:
             void _analyze(AnalysisContext& context) override;
@@ -1133,13 +1060,10 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
 
             double bounds(bool add_offset = true) const {
                 return (add_offset ? _offset : 0 ) + _bound;
