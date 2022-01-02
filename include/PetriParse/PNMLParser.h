@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -58,7 +58,7 @@ class PNMLParser {
         bool isPlace;
     };
     typedef std::unordered_map<std::string, NodeName> NodeNameMap;
-    
+
     typedef std::unordered_map<std::string, const PetriEngine::Colored::ColorType*> ColorTypeMap;
     typedef std::unordered_map<std::string, const PetriEngine::Colored::Variable*> VariableMap;
 
@@ -67,11 +67,11 @@ public:
     struct Query {
         std::string name, text;
     };
-    
+
     PNMLParser() {
         builder = NULL;
     }
-    void parse(std::ifstream& xml,
+    void parse(std::istream& xml,
             PetriEngine::AbstractPetriNetBuilder* builder);
 
     std::vector<Query> getQueries() {
