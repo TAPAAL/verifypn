@@ -370,7 +370,7 @@ function verifyparallel {
 function LTL {
     unset STRATEGIES_PAR
     STRATEGIES_PAR[0]="-ltl tarjan --ltl-heur dist -q 0 -l 0 -d $SHORTRED"
-    STRATEGIES_PAR[1]="-ltl tarjan --ltl-heur firecount -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[1]="-ltl tarjan --ltl-heur fire-count -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[2]="-ltl tarjan --ltl-heur aut -s DFS -p -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
     unset STRATEGIES_SEQ
