@@ -1994,39 +1994,55 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleQ(uint32_t* placeInQuery)
     {
+        // Fire initially enabled transitions if they are the single consumer of their preset
+
         bool continueReductions = false;
 
-        for (uint32_t baseCon = 0; baseCon < parent->numberOfTransitions(); baseCon++)
+        for (uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
         {
-            if (hasTimedout())
-                return false;
+            Transition& tran = parent->_transitions[t];
 
-            if (parent->_transitions[baseCon].skip ||
-                    parent->_transitions[baseCon].inhib ||
-                    parent->_transitions[baseCon].pre.size() != 1)
-                continue;
+            if (tran.skip || tran.inhib || tran.pre.empty()) continue;
 
-            auto p = parent->_transitions[baseCon].pre[0].place;
-
-            if (placeInQuery[p] > 0 || parent->initialMarking[p] > 0)
-                continue;
-
-            const Place& place = parent->_places[p];
-
-            if (place.skip || place.inhib || place.producers.empty())
-                continue;
-
-            // Check that prod and cons are disjoint
-            const auto presize = place.producers.size();
-            const auto postsize = place.consumers.size();
+            // We take advantage of pre and post being sorted as well as the overloaded < operator to check:
+            // - Preset and postset must be disjoint
+            // - Preset and postset cannot inhibit or be in query
+            // - Preset can only have this transition in postset
+            // - How many times can we fire the transition
+            uint32_t k = 0;
             bool ok = true;
             uint32_t i = 0, j = 0;
-            while (i < presize && j < postsize)
+            while (i < tran.pre.size() || j < tran.post.size())
             {
-                if (place.producers[i] < place.consumers[j])
+                if (i < tran.pre.size() && (j == tran.post.size() || tran.pre[i] < tran.post[j]))
+                {
+                    auto prearc = tran.pre[i];
+                    uint32_t n = parent->initialMarking[prearc.place] / prearc.weight;
+                    if (n == 0 ||
+                        parent->_places[prearc.place].inhib ||
+                        placeInQuery[prearc.place] > 0 ||
+                        parent->_places[prearc.place].consumers.size() != 1)
+                    {
+                        ok = false;
+                        break;
+                    }
+                    else
+                    {
+                        if (k == 0) k = n;
+                        else k = std::min(k, n);
+                    }
                     i++;
-                else if (place.consumers[j] < place.producers[i])
+                }
+                else if (j < tran.post.size() && (i == tran.pre.size() || tran.post[j] < tran.pre[i]))
+                {
+                    auto postarc = tran.post[j];
+                    if (parent->_places[postarc.place].inhib || placeInQuery[postarc.place] > 0)
+                    {
+                        ok = false;
+                        break;
+                    }
                     j++;
+                }
                 else
                 {
                     ok = false;
@@ -2034,155 +2050,22 @@ namespace PetriEngine {
                 }
             }
 
-            if (!ok) continue;
+            if (!ok || k == 0) continue;
 
-            // Now we analyze consumers further
-            uint32_t w = 0;
-            for (auto con : place.consumers)
+            // Update initial marking
+            for (auto prearc : tran.pre)
             {
-                // Consumers may not be inhibited and only consume from p.
-                const Transition& tran = parent->_transitions[con];
-                if (tran.inhib || tran.pre.size() != 1)
-                {
-                    ok = false;
-                    break;
-                }
-
-                // Post-set of consumers may not inhibit or appear in query.
-                for (const auto arc : tran.post)
-                {
-                    if (placeInQuery[arc.place] > 0 || parent->_places[arc.place].inhib)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-
-                // All pre arc of all consumers weights must the same weight w
-                for (const auto arc : tran.pre)
-                {
-                    if (w == 0)
-                    {
-                        w = arc.weight;
-                    }
-                    else if (w != arc.weight)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-
-                if (!ok) break;
+                parent->initialMarking[prearc.place] -= prearc.weight * k;
+            }
+            for (auto postarc : tran.post)
+            {
+                parent->initialMarking[postarc.place] += postarc.weight * k;
             }
 
-            if (!ok) continue;
-
-            // Find producers for which we can fuse its firing with
-            // a combination of consumers
-            bool removedAll = true;
-            auto producers = place.producers;
-            for (auto prod_id : producers)
-            {
-                if (hasTimedout())
-                    return false;
-
-                Transition prod = parent->_transitions[prod_id];
-                auto prodArc = getOutArc(prod, p);
-
-                if (prodArc->weight % w != 0)
-                {
-                    removedAll = false;
-                    continue;
-                }
-
-                auto k = prodArc->weight / w;
-                auto n = place.consumers.size();
-
-                if (2 < k && 3 < n)
-                {
-                    // Too many combinations
-                    removedAll = false;
-                    continue;
-                }
-
-                // Enumerate the "n multichoose k" combinations of consumer firings
-                auto consumers = place.consumers;
-                std::vector<uint32_t> indices(k, 0);
-                while (true)
-                {
-                    // Create new transition with effect of firing the producer and a combination of consumers
-                    auto id = parent->_transitions.size();
-                    if (!_skippedTransitions.empty())
-                    {
-                        id = _skippedTransitions.back();
-                        _skippedTransitions.pop_back();
-                    }
-                    else
-                    {
-                        parent->_transitions.emplace_back();
-                        parent->_transitionnames[newTransName()] = id;
-                        parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
-                    }
-                    Transition& newtran = parent->_transitions[id];
-                    newtran.skip = false;
-                    newtran.inhib = false;
-
-                    // Arcs from producer
-                    for (auto& arc : prod.pre)
-                    {
-                        newtran.addPreArc(arc);
-                    }
-                    for (auto& arc : prod.post)
-                    {
-                        if (arc.place != p)
-                        {
-                            newtran.addPostArc(arc);
-                        }
-                    }
-                    // Arcs from consumers
-                    for (auto cons_index : indices)
-                    {
-                        Transition& cons = parent->_transitions[place.consumers[cons_index]];
-                        for (auto& arc : cons.post)
-                        {
-                            newtran.addPostArc(arc);
-                        }
-                    }
-
-                    for(auto& arc : newtran.pre)
-                        parent->_places[arc.place].addConsumer(id);
-                    for(auto& arc : newtran.post)
-                        parent->_places[arc.place].addProducer(id);
-
-                    // Update indices to the next combination
-                    // https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement
-                    int32_t mi = k - 1;
-                    for (; mi >= 0; mi--)
-                        if (indices[mi] != n - 1)
-                            break;
-                    if (mi < 0)
-                        break;
-                    uint32_t ml = indices[mi] + 1;
-                    for (uint32_t mj = mi; mj < k; mj++)
-                        indices[mj] = ml;
-                }
-
-                skipTransition(prod_id);
-                continueReductions = true;
-                _ruleQ++;
-            }
-
-            if (removedAll)
-            {
-                auto consumers = place.consumers;
-                for (auto cons_id : consumers)
-                    skipTransition(cons_id);
-
-                skipPlace(p);
-            }
-
-            consistent();
+            _ruleQ++;
+            continueReductions = true;
         }
+
         return continueReductions;
     }
 

@@ -2,16 +2,16 @@
 <property-set xmlns="http://tapaal.net/">
   
   <property>
-    <id>EF P4=1</id>
-    <description>EF P4=1</description>
+    <id>Query Comment/Name Here</id>
+    <description>Query Comment/Name Here</description>
     <formula>
       <exists-path>
         <finally>
           <integer-eq>
             <tokens-count>
-              <place>P4</place>
+              <place>P6</place>
             </tokens-count>
-            <integer-constant>1</integer-constant>
+            <integer-constant>2</integer-constant>
           </integer-eq>
         </finally>
       </exists-path>
