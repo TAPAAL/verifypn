@@ -138,16 +138,13 @@ void printHelp() {
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
-        "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
-        "                                       - reach      apply reachability stubborn sets in Büchi states\n"
-        "                                                    that represent reachability subproblems,\n"
-        "                                       - classic    classic stubborn set method.\n"
+        "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
+        "                                       - automaton  apply Büchi-guided stubborn set method.\n"
+        "                                       - classic    classic stubborn set method (Valmari, 1990).\n"
         "                                                    Only applicable with formulae that do not \n"
         "                                                    contain the next-step operator.\n"
-        "                                       - mix        mix of reach and classic - use reach when applicable,\n"
-        "                                                    classic otherwise.\n"
-        "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
-        "                                       - none       disable stubborn reductions (equivalent to -p).\n"
+        "                                       - liebke     apply POR method by Liebke (2020).\n"
+        "                                       - none       disable stubborn reductions for LTL model checking (equivalent to -p).\n"
         "  --ltl-heur <type>                    Select search heuristic for best-first search in LTL engine\n"
         "                                       Defaults to aut\n"
         "                                       - dist           Formula-driven heuristic, guiding toward states that satisfy\n"
@@ -462,12 +459,12 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Missing argument to --ltl-por");
             } else if (std::strcmp(argv[i + 1], "classic") == 0) {
                 ltl_por = LTLPartialOrder::Visible;
-            } else if (std::strcmp(argv[i + 1], "reach") == 0) {
-                ltl_por = LTLPartialOrder::AutomatonReach;
-            } else if (std::strcmp(argv[i + 1], "mix") == 0) {
-                ltl_por = LTLPartialOrder::VisibleReach;
             } else if (std::strcmp(argv[i + 1], "automaton") == 0) {
-                ltl_por = LTLPartialOrder::FullAutomaton;
+                ltl_por = LTLPartialOrder::Automaton;
+            } else if (std::strcmp(argv[i + 1], "mix") == 0) {
+                ltl_por = LTLPartialOrder::Automaton;
+            } else if (std::strcmp(argv[i + 1], "liebke") == 0) {
+                ltl_por = LTLPartialOrder::Liebke;
             } else if (std::strcmp(argv[i + 1], "none") == 0) {
                 ltl_por = LTLPartialOrder::None;
             } else {
