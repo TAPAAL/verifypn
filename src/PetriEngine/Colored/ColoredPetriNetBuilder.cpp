@@ -89,17 +89,17 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, int32_t player, double x, double y) {
         if (!_isColored) {
-            _ptBuilder.addTransition(name, x, y);
+            _ptBuilder.addTransition(name, player, x, y);
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(Colored::Transition {name, guard});
+            _transitions.emplace_back(Colored::Transition {name, guard, player});
             _transitionnames[name] = next;
         }
     }
@@ -127,8 +127,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            std::cout << "Transition '" << transition << "' not found. Adding it." << std::endl;
-            addTransition(transition,0.0,0.0);
+            std::cout << "ERROR: Transition '" << transition << "' not found. " << std::endl;
+            std::exit(ErrorCode);
         }
         if(_placenames.count(place) == 0)
         {
@@ -720,10 +720,10 @@ namespace PetriEngine {
             size_t i = 0;
             bool hasBindings = false;
             for (const auto &b : gen) {
-                const std::string &name = transition.name + "_" + std::to_string(i++);
+                const std::string name = transition.name + "_" + std::to_string(i++);
 
                 hasBindings = true;
-                _ptBuilder.addTransition(name, 0.0, 0.0);
+                _ptBuilder.addTransition(name, transition._player, 0.0, 0.0);
 
                 for (auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name);
@@ -742,8 +742,8 @@ namespace PetriEngine {
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
             for (const auto &b : gen) {
-                const std::string &name = transition.name + "_" + std::to_string(i++);
-                _ptBuilder.addTransition(name, 0.0, 0.0);
+                const std::string name = transition.name + "_" + std::to_string(i++);
+                _ptBuilder.addTransition(name, transition._player, 0.0, 0.0);
 
                 for (const auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name);
@@ -859,7 +859,7 @@ namespace PetriEngine {
             }
 
             for (auto& transition : _transitions) {
-                _ptBuilder.addTransition(transition.name, 0.0, 0.0);
+                _ptBuilder.addTransition(transition.name, transition._player, 0.0, 0.0);
                 for (const auto& arc : transition.input_arcs) {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,

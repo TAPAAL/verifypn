@@ -37,7 +37,7 @@ void PNMLParser::parse(std::istream& xml,
     //Clear any left overs
     id2name.clear();
     arcs.clear();
-    transitions.clear();
+    _transitions.clear();
     colorTypes.clear();
 
     //Set the builder
@@ -70,11 +70,11 @@ void PNMLParser::parse(std::istream& xml,
     parseElement(root);
 
     //Add all the transition
-    for (auto & transition : transitions)
+    for (auto & transition : _transitions)
         if (!isColored) {
-            builder->addTransition(transition.id, transition.x, transition.y);
+            builder->addTransition(transition.id, transition._player, transition.x, transition.y);
         } else {
-            builder->addTransition(transition.id, transition.expr, transition.x, transition.y);
+            builder->addTransition(transition.id, transition.expr, transition._player, transition.x, transition.y);
         }
 
     //Add all the arcs
@@ -126,7 +126,7 @@ void PNMLParser::parse(std::istream& xml,
     //Cleanup
     id2name.clear();
     arcs.clear();
-    transitions.clear();
+    _transitions.clear();
     colorTypes.clear();
     builder->sort();
 }
@@ -774,8 +774,15 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
             exit(ErrorCode);
         }
     }
+
+    auto pl_el = element->first_attribute("player");
+    if(pl_el != nullptr) {
+        t._player = atoi(pl_el->value());
+    }
+
+
     //Add transition to list
-    transitions.push_back(t);
+    _transitions.push_back(t);
     //Map id to name
     NodeName nn;
     nn.id = t.id;

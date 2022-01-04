@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   NetStructures.h
  * Author: Peter G. Jensen
  *
@@ -25,12 +25,12 @@ namespace PetriEngine {
         skip(false),
         inhib(false) {
         };
-        
+
         bool operator < (const Arc& other) const
         {
             return place < other.place;
         }
-        
+
         bool operator == (const Arc& other) const
         {
             return place == other.place && weight == other.weight && inhib == other.inhib;
@@ -40,9 +40,10 @@ namespace PetriEngine {
     struct Transition {
         std::vector<Arc> pre;
         std::vector<Arc> post;
+        int32_t _player = 0;
         bool skip = false;
         bool inhib = false;
-        
+
         void addPreArc(const Arc& arc)
         {
             auto lb = std::lower_bound(pre.begin(), pre.end(), arc);
@@ -52,7 +53,7 @@ namespace PetriEngine {
                 lb = pre.insert(lb, arc);
             assert(lb->weight > 0);
         }
-        
+
         void addPostArc(const Arc& arc)
         {
             auto lb = std::lower_bound(post.begin(), post.end(), arc);
@@ -61,7 +62,7 @@ namespace PetriEngine {
             else
                 lb = post.insert(lb, arc);
             assert(lb->weight > 0);
-            
+
         }
     };
 
@@ -70,7 +71,7 @@ namespace PetriEngine {
         std::vector<uint32_t> producers; // things producing
         bool skip = false;
         bool inhib = false;
-        
+
         // should be replaced using concepts in c++20
         void addConsumer(uint32_t id)
         {
@@ -78,7 +79,7 @@ namespace PetriEngine {
             if(lb == consumers.end() || *lb != id)
                 consumers.insert(lb, id);
         }
-        
+
         void addProducer(uint32_t id)
         {
             auto lb = std::lower_bound(producers.begin(), producers.end(), id);

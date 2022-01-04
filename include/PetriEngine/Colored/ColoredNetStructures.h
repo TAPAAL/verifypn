@@ -29,7 +29,7 @@
 
 namespace PetriEngine {
     namespace Colored {
-        
+
         struct Arc {
             uint32_t place;
             uint32_t transition;
@@ -37,16 +37,17 @@ namespace PetriEngine {
             bool input;
             uint32_t weight;
         };
-        
+
         struct Transition {
             std::string name;
             GuardExpression_ptr guard;
+            int32_t _player;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
             std::vector<std::unordered_map<const Variable *, interval_vector_t>> variableMaps;
             bool considered;
         };
-        
+
         struct Place {
             std::string name;
             const ColorType* type;

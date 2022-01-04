@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -38,20 +38,20 @@ namespace PetriEngine {
 
     class PetriNetBuilder;
     class SuccessorGenerator;
-    
+
     struct TransPtr {
         uint32_t inputs;
         uint32_t outputs;
     };
-    
+
     struct Invariant {
         uint32_t place;
         uint32_t tokens;
         bool inhibitor;
         int8_t direction;
         // we can pack things here, but might give slowdown
-    } /*__attribute__((packed))*/; 
-    
+    } /*__attribute__((packed))*/;
+
     /** Type used for holding markings values */
     typedef uint32_t MarkVal;
 
@@ -77,18 +77,18 @@ namespace PetriEngine {
         }
         int inArc(uint32_t place, uint32_t transition) const;
         int outArc(uint32_t transition, uint32_t place) const;
-        
+
 
         const std::vector<std::string>& transitionNames() const
         {
             return _transitionnames;
         }
-        
+
         const std::vector<std::string>& placeNames() const
         {
             return _placenames;
         }
-               
+
         void print(MarkVal const * const val) const
         {
             for(size_t i = 0; i < _nplaces; ++i)
@@ -99,11 +99,11 @@ namespace PetriEngine {
                 }
             }
         }
-        
+
         void sort();
-        
+
         void toXML(std::ostream& out);
-        
+
         const MarkVal* initial() const {
             return _initialMarking;
         }
@@ -116,7 +116,7 @@ namespace PetriEngine {
             return false;
         }
 
-    private:        
+    private:
 
         /** Number of x variables
          * @remarks We could also get this from the _places vector, but I don't see any
@@ -127,6 +127,7 @@ namespace PetriEngine {
         std::vector<TransPtr> _transitions;
         std::vector<Invariant> _invariants;
         std::vector<uint32_t> _placeToPtrs;
+        std::vector<bool> _controllable;
         MarkVal* _initialMarking;
 
         std::vector<std::string> _transitionnames;
