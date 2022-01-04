@@ -123,9 +123,13 @@ void outputNet(const PetriNetBuilder &builder, std::string out_file);
 void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
         std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io);
 
-void outputCompactQueries(const PetriNetBuilder &builder, const PetriNetBuilder &b2, const PetriNet *net,
-        const PetriEngine::ColoredPetriNetBuilder& cpnBuilder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-        std::vector<std::string> &querynames, std::string filename);
+void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
+    std::vector<std::string> &querynames, std::string filename);
+
+void simplify_queries(const MarkVal* marking,
+                      const PetriNet* net,
+                        std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                        options_t& options, std::ostream& outstream = std::cout);
 
 #endif /* VERIFYPN_H */
 
