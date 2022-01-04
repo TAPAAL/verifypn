@@ -20,7 +20,7 @@
 
 namespace PetriEngine{
     namespace Colored{
-        
+
         GuardRestrictor::GuardRestrictor(){}
 
         int32_t GuardRestrictor::getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) const{
@@ -36,12 +36,12 @@ namespace PetriEngine{
 
         interval_t GuardRestrictor::getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const{
             interval_t interval;
-            for(auto id : idVec){          
+            for(auto id : idVec){
                 int32_t val = ctSize + (id + modifier);
-                auto colorVal = val % ctSize;                  
+                auto colorVal = val % ctSize;
                 interval.addRange(colorVal,colorVal);
             }
-            return interval; 
+            return interval;
         }
 
         interval_vector_t GuardRestrictor::getIntervalOverlap(const interval_vector_t &intervals1, const interval_vector_t &intervals2) const{
@@ -63,7 +63,7 @@ namespace PetriEngine{
                         const VariableModifierMap &otherVarModifierMap,
                         const PositionVariableMap &varPositions,
                         const std::unordered_map<uint32_t, const Color*> &constantMap,
-                        const Variable *otherVar, 
+                        const Variable *otherVar,
                         std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index) const{
             while(idVec.size() < targetSize){
                 if(varPositions.count(index)){
@@ -74,12 +74,12 @@ namespace PetriEngine{
                     index += varPositions.find(index)->second->colorType->productSize();
                 } else {
                     auto oldSize = idVec.size();
-                    constantMap.find(index)->second->getTupleId(idVec); 
+                    constantMap.find(index)->second->getTupleId(idVec);
                     int32_t leftVarMod = getVarModifier(otherVarModifierMap.find(otherVar)->second.back(), index);
 
                     for(auto& id : idVec){
                         id = (otherVar->colorType->size()+(id + leftVarMod)) % otherVar->colorType->size();
-                    }                                   
+                    }
                     index+= idVec.size() - oldSize;
                 }
             }
@@ -90,7 +90,7 @@ namespace PetriEngine{
                             const VariableModifierMap &otherVarModifierMap,
                             const PositionVariableMap &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
-                            const Colored::Variable *otherVar, 
+                            const Colored::Variable *otherVar,
                             Colored::interval_vector_t &intervalVec, size_t targetSize, uint32_t index) const {
             while(intervalVec.size() < targetSize){
                 if(varPositions.count(index)){
@@ -107,10 +107,10 @@ namespace PetriEngine{
                     for(auto id : colorIdVec){
                         for(auto& interval : intervalVec){
                             int32_t val = otherVar->colorType->size() + (id + leftVarModifier);
-                            auto colorVal = val % otherVar->colorType->size(); 
+                            auto colorVal = val % otherVar->colorType->size();
                             interval.addRange(colorVal,colorVal);
                         }
-                    }                                    
+                    }
                     index+= colorIdVec.size();
                 }
             }
@@ -122,7 +122,7 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *var,
-                            const Colored::Variable *otherVar, 
+                            const Colored::Variable *otherVar,
                             uint32_t index, bool lessthan, bool strict) const{
             for(auto& varMap : variableMap){
                 auto leftColor = constantMap.find(index)->second;
@@ -137,7 +137,7 @@ namespace PetriEngine{
                 } else {
                     rightTupleInterval.constrainLower(idVec, strict);
                 }
-            }                 
+            }
         }
 
         void GuardRestrictor::restrictEqByConstant(std::vector<VariableIntervalMap>& variableMap,
@@ -154,7 +154,7 @@ namespace PetriEngine{
                 color->getTupleId(idVec);
                 int32_t varModifier = getVarModifier(otherVarModifierMap.find(var)->second.back(), index);
 
-                
+
                 std::vector<Colored::interval_t> iv{getIntervalFromIds(idVec, var->colorType->size(), varModifier)};
                 Colored::interval_vector_t intervals(iv);
 
@@ -173,7 +173,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
-                            const Colored::Variable *var, 
+                            const Colored::Variable *var,
                             uint32_t index, bool lessthan, bool strict) const{
 
             diagonalVars.insert(var);
@@ -206,7 +206,7 @@ namespace PetriEngine{
                     }
                 } else if(var->colorType->productSize() > varPositionsR.find(index)->second->colorType->productSize()){
                     std::vector<uint32_t> leftLowerVec(leftIds.begin(), leftIds.begin() + rightTupleInterval.tupleSize());
-                    
+
                     auto idVec = rightIds;
 
                     expandIdVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, var, idVec, leftTupleInterval.tupleSize(), index + varPositionsR.find(index)->second->colorType->productSize());
@@ -218,10 +218,10 @@ namespace PetriEngine{
                         leftTupleInterval.constrainLower(idVec, strict);
                         rightTupleInterval.constrainUpper(leftLowerVec, strict);
                     }
-                    
+
                 } else {
                     std::vector<uint32_t> rightUpperVec(rightIds.begin(), rightIds.begin() + leftTupleInterval.tupleSize());
-                    
+
                     auto idVec = leftIds;
                     expandIdVec(varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR.find(index)->second, idVec, rightTupleInterval.tupleSize(), index + varPositionsL.find(index)->second->colorType->productSize());
 
@@ -231,9 +231,9 @@ namespace PetriEngine{
                     } else {
                         leftTupleInterval.constrainLower(rightUpperVec, strict);
                         rightTupleInterval.constrainUpper(idVec, strict);
-                    }                            
+                    }
                 }
-            }               
+            }
         }
 
         void GuardRestrictor::restrictEqDiagonal(std::vector<VariableIntervalMap>& variableMap,
@@ -244,7 +244,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
-                            const Colored::Variable *var, 
+                            const Colored::Variable *var,
                             uint32_t index) const{
             diagonalVars.insert(var);
             diagonalVars.insert(varPositionsR.find(index)->second);
@@ -262,7 +262,7 @@ namespace PetriEngine{
                 //comparing vars of same size
                 if(var->colorType->productSize() == varPositionsR.find(index)->second->colorType->productSize()){
                     Colored::interval_vector_t newIntervalTuple = getIntervalOverlap(leftTupleIntervalVal, rightTupleIntervalVal);
-                
+
                     leftTupleInterval = newIntervalTuple;
                     rightTupleInterval = newIntervalTuple;
                     leftTupleInterval.applyModifier(leftVarModifier, var->colorType->getConstituentsSizes());
@@ -271,8 +271,8 @@ namespace PetriEngine{
                     const std::vector<Colored::interval_t> &resizedLeftIntervals = leftTupleIntervalVal.shrinkIntervals(varPositionsR.find(index)->second->colorType->productSize());
                     auto intervalVec = rightTupleIntervalVal;
 
-                    expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, 
-                        var, intervalVec, leftTupleInterval.tupleSize(), 
+                    expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR,
+                        var, intervalVec, leftTupleInterval.tupleSize(),
                         index + varPositionsR.find(index)->second->colorType->productSize());
 
                     Colored::interval_vector_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal, resizedLeftIntervals);
@@ -308,17 +308,17 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositionsR,
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
-                            std::set<const Colored::Variable*> &diagonalVars, 
+                            std::set<const Colored::Variable*> &diagonalVars,
                             bool lessthan, bool strict) const{
 
             for(const auto &varPositionPair : varPositionsL){
                 uint32_t index = varPositionPair.first;
                 if(varPositionsR.count(index)){
-                    restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, 
+                    restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR,
                                     constantMapL, constantMapR, diagonalVars, varPositionPair.second, index, lessthan, strict);
                 } else {
-                    restrictByConstant(variableMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, 
-                                    varPositionPair.second, varPositionPair.second, index, lessthan, strict);                        
+                    restrictByConstant(variableMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR,
+                                    varPositionPair.second, varPositionPair.second, index, lessthan, strict);
                 }
             }
 
@@ -326,10 +326,10 @@ namespace PetriEngine{
                 uint32_t index = varPositionPair.first;
 
                 if(constantMapL.count(index)){
-                    restrictByConstant(variableMap,varModifierMapL, varModifierMapR, varPositionsL, constantMapL, 
-                                    varPositionPair.second, varPositionsR.find(index)->second,index, lessthan, strict);                       
+                    restrictByConstant(variableMap,varModifierMapL, varModifierMapR, varPositionsL, constantMapL,
+                                    varPositionPair.second, varPositionsR.find(index)->second,index, lessthan, strict);
                 }
-            }            
+            }
         }
 
         void GuardRestrictor::restrictEquality(std::vector<VariableIntervalMap>& variableMap,
@@ -343,7 +343,7 @@ namespace PetriEngine{
             for(const auto& varPositionPair : varPositionsL){
                 uint32_t index = varPositionPair.first;
                 if(varPositionsR.count(index)){
-                    restrictEqDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, 
+                    restrictEqDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR,
                                 constantMapL, constantMapR, diagonalVars, varPositionPair.second, index);
                 } else {
                     restrictEqByConstant(variableMap, varModifierMapR, varModifierMapL, varPositionsR,
@@ -355,10 +355,10 @@ namespace PetriEngine{
                 uint32_t index = varPositionPair.first;
 
                 if(constantMapL.count(index)){
-                    restrictEqByConstant(variableMap, varModifierMapL, varModifierMapR, varPositionsL, 
+                    restrictEqByConstant(variableMap, varModifierMapL, varModifierMapR, varPositionsL,
                                 constantMapL, varPositionPair.second, index);
                 }
-            }                
+            }
         }
 
         void GuardRestrictor::restrictInEquality(std::vector<VariableIntervalMap>& variableMap,
@@ -375,22 +375,22 @@ namespace PetriEngine{
             for(uint32_t i = 0; i < variableMap.size(); i++){
                 for(const auto &varPosL : varPositionsL){
                     //Check if we are comparing varibles in this position
-                    if(varPositionsR.find(varPosL.first) != varPositionsR.end()){                       
+                    if(varPositionsR.find(varPosL.first) != varPositionsR.end()){
                         handleInequalityVars(variableMapCopy, variableMap, varPosL.second, varPositionsR.find(varPosL.first)->second, i);
                     } else {
                         handleInequalityConstants(variableMapCopy, variableMap, varPosL.second, i);
-                    }                   
+                    }
                 }
                 for(const auto &varPosR : varPositionsR){
                     if(varPositionsL.find(varPosR.first) == varPositionsL.end()){
-                        handleInequalityConstants(variableMapCopy, variableMap, varPosR.second, i); 
+                        handleInequalityConstants(variableMapCopy, variableMap, varPosR.second, i);
                     }
-                }                
+                }
             }
         }
 
-        void GuardRestrictor::handleInequalityConstants(const std::vector<VariableIntervalMap> &variableMapCopy, 
-                                        std::vector<VariableIntervalMap> &variableMap, 
+        void GuardRestrictor::handleInequalityConstants(const std::vector<VariableIntervalMap> &variableMapCopy,
+                                        std::vector<VariableIntervalMap> &variableMap,
                                         const Variable *var, uint32_t varMapIndex) const{
             const uint32_t colorsBefore = variableMapCopy[varMapIndex].find(var)->second.getContainedColors();
             const uint32_t colorsAfter = variableMap[varMapIndex][var].getContainedColors();
@@ -405,11 +405,11 @@ namespace PetriEngine{
                 //If there was only one color and we still have a color after, they were equal
                 //and the empty interval is set
                 variableMap[varMapIndex][var].clear();
-            }  
+            }
         }
 
-        void GuardRestrictor::handleInequalityVars(const std::vector<VariableIntervalMap> &variableMapCopy, 
-                                        std::vector<VariableIntervalMap> &variableMap, 
+        void GuardRestrictor::handleInequalityVars(const std::vector<VariableIntervalMap> &variableMapCopy,
+                                        std::vector<VariableIntervalMap> &variableMap,
                                         const Variable *var1, const Variable *var2, uint32_t varMapIndex) const{
             const uint32_t rightColorsBefore = variableMapCopy[varMapIndex].find(var2)->second.getContainedColors();
             const uint32_t rightColorsAfter = variableMap[varMapIndex][var2].getContainedColors();
@@ -420,7 +420,7 @@ namespace PetriEngine{
                 //and if either side did not have any colors the varmap is not valid.
                 return;
             } else if (leftColorsBefore == 1 && rightColorsBefore == 1){
-                //if we are comparing single colors and there is an interval after equality 
+                //if we are comparing single colors and there is an interval after equality
                 //it means the colors were equal so no interval can be kept for inequality.
                 //Otherwise they were not equal and their intervals can be kept
                 if(!variableMap[varMapIndex][var1].empty()){
@@ -437,7 +437,7 @@ namespace PetriEngine{
                 } else {
                     variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
                     variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
-                }                            
+                }
             } else {
                 if(rightColorsAfter > 0){
                     //If one side has more colors but the other does not, we invert that side
@@ -445,16 +445,16 @@ namespace PetriEngine{
                 } else {
                     variableMap[varMapIndex][var1] = variableMapCopy[varMapIndex].find(var1)->second;
                     variableMap[varMapIndex][var2] = variableMapCopy[varMapIndex].find(var2)->second;
-                }                            
+                }
             }
         }
 
-        //Retrieve the intervals remaining when the intervals created from restricting by equvalence 
+        //Retrieve the intervals remaining when the intervals created from restricting by equvalence
         //are removed from the original intervals
         void GuardRestrictor::invertIntervals(interval_vector_t &intervals, const interval_vector_t &oldIntervals, const ColorType *colorType) const{
             const std::vector<bool> diagonalPositions(colorType->size(), false);
-            interval_vector_t invertedIntervalvec;                    
-            
+            interval_vector_t invertedIntervalvec;
+
             for(const auto &oldInterval : oldIntervals){
                 std::vector<PetriEngine::Colored::interval_t> subtractionRes;
                 for(const auto &interval : intervals){
@@ -477,8 +477,8 @@ namespace PetriEngine{
                 for(const auto &interval : subtractionRes){
                     invertedIntervalvec.addInterval(interval);
                 }
-            }                                   
-            
+            }
+
             intervals = std::move(invertedIntervalvec);
         }
 
@@ -491,7 +491,7 @@ namespace PetriEngine{
                 for(uint32_t j = 0; j < interval._ranges.size(); j++) {
                     auto& range = interval.operator[](j);
                     size_t ctSize = colortypes[j+ ctSizeBefore]->size();
-                    
+
                     auto shiftedInterval = newIntervals.shiftInterval(range._lower, range._upper, ctSize, modifier);
                     range._lower = shiftedInterval.first;
                     range._upper = shiftedInterval.second;
@@ -502,12 +502,12 @@ namespace PetriEngine{
                             newInterval.addRange(0, ctSize-1);
                             tempIntervals.push_back(newInterval);
                         } else {
-                            for (auto& tempInterval : tempIntervals){ 
+                            for (auto& tempInterval : tempIntervals){
                                 tempInterval.addRange(0, ctSize-1);
                             }
                         }
                     } else if(range._upper < range._lower ){
-                        
+
                         if(tempIntervals.empty()){
                             auto intervalCopy = newInterval;
                             newInterval.addRange(range._lower, ctSize-1);
@@ -524,13 +524,13 @@ namespace PetriEngine{
                                 newTempIntervals.push_back(tempInterval);
                             }
                             tempIntervals = newTempIntervals;
-                        }                            
+                        }
                     } else {
                         if(tempIntervals.empty()){
                             newInterval.addRange(range);
                             tempIntervals.push_back(newInterval);
                         } else {
-                            for (auto& tempInterval : tempIntervals){ 
+                            for (auto& tempInterval : tempIntervals){
                                 tempInterval.addRange(range);
                             }
                         }
@@ -538,9 +538,9 @@ namespace PetriEngine{
                 }
                 for(const auto& tempInterval : tempIntervals){
                     newIntervals.addInterval(tempInterval);
-                }                   
+                }
             }
             return newIntervals;
-        }       
+        }
     }
-} 
+}
