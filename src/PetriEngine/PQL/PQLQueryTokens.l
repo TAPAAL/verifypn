@@ -45,7 +45,7 @@ letter        [a-zA-Z_]
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}
 (\"(\\.|[^"])*\") {SAVE_QUOTED_TOKEN; return ID;}
-"&&"						{return TOKEN(AND);}
+"&"|"&"?					{return TOKEN(AND);}
 "|""|"?						{return TOKEN(OR);}
 "!"							{return TOKEN(NOT);}
 "=="						{return TOKEN(EQUAL);}
