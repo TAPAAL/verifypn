@@ -70,7 +70,11 @@ namespace PetriEngine{
                     const auto &rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
                     int32_t rightVarMod = getVarModifier(mainVarModifierMap.find(varPositions.find(index)->second)->second.back(), index);
                     auto ids = rightTupleInterval.getUpperIds(-rightVarMod, varPositions.find(index)->second->colorType->getConstituentsSizes());
-                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                    // idVec.insert(idVec.end(), ids.begin(), ids.end()); // for some reason, this causes the linker to throw up
+                    // we thus do the following, equivalent instead.
+                    idVec.reserve(idVec.size() + ids.size());
+                    for(auto e : ids)
+                        idVec.emplace_back(e);
                     index += varPositions.find(index)->second->colorType->productSize();
                 } else {
                     auto oldSize = idVec.size();
