@@ -344,6 +344,18 @@ namespace PetriEngine {
             Condition_ptr _cond;
         };
 
+        // technically quantifies over strategies
+        class ControlCondition : public SimpleQuantifierCondition
+        {
+            using SimpleQuantifierCondition::SimpleQuantifierCondition;
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Path getPath() const override             { return Path::pError; }
+            Result evaluate(const EvaluationContext& context) override;
+            uint32_t distance(DistanceContext& context) const override;
+            void visit(Visitor&) const override;
+            void visit(MutatingVisitor&) override;
+        };
+
         class ECondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;

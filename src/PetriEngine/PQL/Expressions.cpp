@@ -593,7 +593,7 @@ namespace PetriEngine {
         }
 
         Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) {
-	    return RUNKNOWN;
+            return RUNKNOWN;
         }
 
         Condition::Result EGCondition::evaluate(const EvaluationContext& context) {
@@ -876,6 +876,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void ControlCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void UntilCondition::visit(Visitor &ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1121,6 +1126,11 @@ namespace PetriEngine {
         }
 
         /******************** Mutating visitor **********************************/
+
+        void ControlCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
 
         void UntilCondition::visit(MutatingVisitor &ctx)
         {
@@ -1486,8 +1496,6 @@ namespace PetriEngine {
         }
 
         /******************** Distance Condition ********************/
-
-
         template<>
         uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
             if (!negated)
@@ -1515,6 +1523,13 @@ namespace PetriEngine {
                 return v1 <= v2 ? 0 : v1 - v2;
             else
                 return v1 > v2 ? 0 : v2 - v1 + 1;
+        }
+
+        uint32_t ControlCondition::distance(DistanceContext& context) const {
+            std::cerr << "ERROR: Computing distance on a control-expression" << std::endl;
+            assert(false);
+            exit(ErrorCode);
+            return -1;
         }
 
         uint32_t NotCondition::distance(DistanceContext& context) const {
