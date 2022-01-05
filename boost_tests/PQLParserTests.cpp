@@ -45,25 +45,28 @@ BOOST_AUTO_TEST_CASE(E_deadlock) {
 
         auto actual = ParseQuery(query, _);
 
-        std::shared_ptr<ECondition> andCondition;
-        BOOST_REQUIRE(andCondition = std::dynamic_pointer_cast<ECondition>(actual));
+        std::shared_ptr<ECondition> eCondition;
+        BOOST_REQUIRE(eCondition = std::dynamic_pointer_cast<ECondition>(actual));
 
         std::shared_ptr<DeadlockCondition> deadlockCondition;
-        BOOST_ASSERT(deadlockCondition = std::dynamic_pointer_cast<DeadlockCondition>((*andCondition)[0]));
+        BOOST_ASSERT(deadlockCondition = std::dynamic_pointer_cast<DeadlockCondition>((*eCondition)[0]));
 }
 
-BOOST_AUTO_TEST_CASE(E_deadlock) {
-    std::string query = R"(E deadlock)";
+BOOST_AUTO_TEST_CASE(E_F_deadlock) {
+    std::string query = R"(E F deadlock)";
     std::vector<std::string> _;
     //auto expected = std::make_shared<AndCondition>(std::make_shared<FireableCondition>("t1"), std::make_shared<FireableCondition>("t2"));
 
     auto actual = ParseQuery(query, _);
 
-    std::shared_ptr<ECondition> andCondition;
-    BOOST_REQUIRE(andCondition = std::dynamic_pointer_cast<ECondition>(actual));
+    std::shared_ptr<ECondition> eCondition;
+    BOOST_REQUIRE(eCondition = std::dynamic_pointer_cast<ECondition>(actual));
+
+    std::shared_ptr<FCondition> fCondition;
+    BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*eCondition)[0]));
 
     std::shared_ptr<DeadlockCondition> deadlockCondition;
-    BOOST_ASSERT(deadlockCondition = std::dynamic_pointer_cast<DeadlockCondition>((*andCondition)[0]));
+    BOOST_ASSERT(deadlockCondition = std::dynamic_pointer_cast<DeadlockCondition>((*fCondition)[0]));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
