@@ -2,7 +2,7 @@ set (BOOST_USE_STATIC_LIBS OFF)
 find_package (Boost COMPONENTS unit_test_framework REQUIRED)
 
 
-add_executable (Boost_Tests_run BinaryPrinterTests.cpp XMLPrinterTests.cpp)
+add_executable (Boost_Tests_run BinaryPrinterTests.cpp XMLPrinterTests.cpp PQLParserTests.cpp)
 
 target_link_libraries(Boost_Tests_run PRIVATE CTL LTL PetriEngine PetriParse)
 

@@ -36,11 +36,17 @@ letter        [a-zA-Z_]
 "OR"            {return TOKEN(OR);}
 "not"           {return TOKEN(NOT);}
 "NOT"           {return TOKEN(NOT);}
+"A"						{return TOKEN(A);}
+"E"						{return TOKEN(E);}
+"X"						{return TOKEN(X);}
+"F"						{return TOKEN(F);}
+"G"						{return TOKEN(G);}
+"U"						{return TOKEN(U);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}
 (\"(\\.|[^"])*\") {SAVE_QUOTED_TOKEN; return ID;}
 "&&"						{return TOKEN(AND);}
-"||"						{return TOKEN(OR);}
+"|""|"?						{return TOKEN(OR);}
 "!"							{return TOKEN(NOT);}
 "=="						{return TOKEN(EQUAL);}
 "!="						{return TOKEN(NEQUAL);}
@@ -54,7 +60,13 @@ letter        [a-zA-Z_]
 "-"							{return TOKEN(MINUS);}
 "*"							{return TOKEN(MULTIPLY);}
 "="							{return TOKEN(EQUAL);}
+"?"                         {return TOKEN(QUESTIONMARK);}
+"NOT" {return TOKEN(NOT);}
+"is-fireable" {return TOKEN(FIREABLE);}
+"tokens-count" {return TOKEN(TOKENCOUNT); }
+"," {return TOKEN(COMMA); }
 .							{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
+
 
 %%
 namespace PetriEngine{ namespace PQL {
