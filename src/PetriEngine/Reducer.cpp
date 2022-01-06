@@ -2020,7 +2020,7 @@ namespace PetriEngine {
             if (tran.skip || tran.inhib || tran.pre.empty()) continue;
 
             // We take advantage of pre and post being sorted as well as the overloaded < operator to check:
-            // - Preset and postset must be disjoint
+            // - Preset and postset must be disjoint (to avoid infinite use)
             // - Preset and postset cannot inhibit or be in query
             // - Preset can only have this transition in postset
             // - How many times can we fire the transition
@@ -2031,7 +2031,7 @@ namespace PetriEngine {
             {
                 if (i < tran.pre.size() && (j == tran.post.size() || tran.pre[i] < tran.post[j]))
                 {
-                    auto prearc = tran.pre[i];
+                    const Arc& prearc = tran.pre[i];
                     uint32_t n = parent->initialMarking[prearc.place] / prearc.weight;
                     if (n == 0 ||
                         parent->_places[prearc.place].inhib ||
@@ -2050,7 +2050,7 @@ namespace PetriEngine {
                 }
                 else if (j < tran.post.size() && (i == tran.pre.size() || tran.post[j] < tran.pre[i]))
                 {
-                    auto postarc = tran.post[j];
+                    const Arc& postarc = tran.post[j];
                     if (parent->_places[postarc.place].inhib || placeInQuery[postarc.place] > 0)
                     {
                         ok = false;
@@ -2068,11 +2068,11 @@ namespace PetriEngine {
             if (!ok || k == 0) continue;
 
             // Update initial marking
-            for (auto prearc : tran.pre)
+            for (const Arc& prearc : tran.pre)
             {
                 parent->initialMarking[prearc.place] -= prearc.weight * k;
             }
-            for (auto postarc : tran.post)
+            for (const Arc& postarc : tran.post)
             {
                 parent->initialMarking[postarc.place] += postarc.weight * k;
             }
