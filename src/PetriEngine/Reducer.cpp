@@ -463,7 +463,6 @@ namespace PetriEngine {
 
                 auto inArc = getInArc(p, in);
                 auto outArc = getOutArc(out, p);
-
                 // B3. Output is a multiple of input and nonzero.
                 if(outArc->weight < inArc->weight) 
                     continue;            
@@ -895,6 +894,7 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(!useP && place.inhib) continue;
+            // If more producers, we are guaranteed that one producer have a positive effect on the place, and as such E1 precondition is false
             if(place.producers.size() > place.consumers.size()) continue;
 
             bool ok = true;
@@ -903,7 +903,7 @@ namespace PetriEngine {
             {
                 // Any producer without a matching consumer blocks this rule
                 Transition& t = getTransition(prod);
-                auto in = getInArc(p, t);
+                const auto& in = getInArc(p, t);
                 if(in == t.pre.end() || in->inhib)
                 {
                     ok = false;
@@ -919,13 +919,13 @@ namespace PetriEngine {
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
-                auto in = getInArc(p, t);
+                const auto& in = getInArc(p, t);
                 if(in->weight <= parent->initialMarking[p])
                 {
                     // This branch happening even once means notenabled.size() != consumers.size()
                     // We already threw out all cases where in->inhib && out != t.post.end()
                     if (!in->inhib) {
-                        auto out = getOutArc(t, p);
+                        const auto& out = getOutArc(t, p);
                         // Only increasing loops are not ok
                         if (out != t.post.end() && out->weight > in->weight) {
                             ok = false;
@@ -945,7 +945,7 @@ namespace PetriEngine {
             bool E_used, P_used = false;
             for(uint cons : notenabled) {
                 Transition &t = getTransition(cons);
-                auto in = getInArc(p, t);
+                const auto& in = getInArc(p, t);
                 if (in->inhib) {
                     skipInArc(p, cons);
                     P_used = true;
