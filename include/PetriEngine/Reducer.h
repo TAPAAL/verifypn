@@ -88,7 +88,7 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reductions);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
 
         size_t numberOfSkippedTransitions() const {
             return _skippedTransitions.size();
@@ -121,6 +121,8 @@ namespace PetriEngine {
                 << "Applications of rule L: " << _ruleL << "\n"
                 << "Applications of rule M: " << _ruleM << "\n"
                 << "Applications of rule N: " << _ruleN << "\n"
+                << "Applications of rule O: " << _ruleO << "\n"
+                << "Applications of rule P: " << _ruleP << "\n"
                 << "Applications of rule Q: " << _ruleQ << "\n"
                 << "Applications of rule R: " << _ruleR << std::endl;
         }
@@ -132,7 +134,8 @@ namespace PetriEngine {
     private:
         size_t _skippedPlaces= 0;
         std::vector<uint32_t> _skippedTransitions;
-        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0, _ruleN = 0, _ruleQ = 0, _ruleR = 0;
+        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0, _ruleN = 0, _ruleO = 0, _ruleP = 0, _ruleQ = 0, _ruleR = 0;
+
         PetriNetBuilder* parent = nullptr;
         bool reconstructTrace = false;
         std::chrono::high_resolution_clock::time_point _timer;
@@ -143,7 +146,7 @@ namespace PetriEngine {
         bool ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks, bool remove_consumers);
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
-        bool ReducebyRuleE(uint32_t* placeInQuery);
+        bool ReducebyRuleE(uint32_t* placeInQuery, bool useP);
         bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
         bool ReducebyRuleF(uint32_t* placeInQuery);
         bool ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
@@ -154,7 +157,7 @@ namespace PetriEngine {
         bool ReducebyRuleM(uint32_t* placeInQuery);
         bool ReducebyRuleN(uint32_t* placeInQuery, bool applyF);
         bool ReducebyRuleQ(uint32_t* placeInQuery);
-        bool ReducebyRuleR(uint32_t* placeInQuery);
+        bool ReducebyRuleR(uint32_t* placeInQuery, uint8_t rmode);
 
         std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
 
@@ -175,9 +178,12 @@ namespace PetriEngine {
         bool consistent();
 
         bool hasTimedout() const {
+            return genericTimeout(_timer, _timeout);
+        }
+        bool genericTimeout(std::chrono::high_resolution_clock::time_point timer, int timeout) const {
             auto end = std::chrono::high_resolution_clock::now();
-            auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _timer);
-            return (diff.count() >= _timeout);
+            auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - timer);
+            return (diff.count() >= timeout);
         }
         std::vector<std::string> _initfire;
         std::unordered_map<std::string, std::vector<std::string>> _postfire;

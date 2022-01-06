@@ -244,18 +244,18 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%d", &options.enablereduction) != 1 || options.enablereduction < 0 || options.enablereduction > 3) {
+            if (sscanf(argv[++i], "%d", &options.enablereduction) != 1 || options.enablereduction < 0 || options.enablereduction > 4) {
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-            if(options.enablereduction == 3)
+            if(options.enablereduction == 3 || options.enablereduction == 4)
             {
                 options.reductions.clear();
                 std::vector<std::string> q = explode(argv[++i]);
                 for(auto& qn : q)
                 {
                     int32_t n;
-                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 17)
+                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 20)
                     {
                         std::cerr << "Error in reduction rule choice : " << qn << std::endl;
                         return ErrorCode;
@@ -263,6 +263,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     else
                     {
                         options.reductions.push_back(n);
+                    }
+                }
+
+                if(options.enablereduction == 4) {
+                    options.secondaryreductions.clear();
+                    std::vector<std::string> q2 = explode(argv[++i]);
+                    for (auto& qn: q2) {
+                        int32_t n;
+                        if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 20) {
+                            std::cerr << "Error in secondary reduction rule choice : " << qn << std::endl;
+                            return ErrorCode;
+                        } else {
+                            options.secondaryreductions.push_back(n);
+                        }
                     }
                 }
             }
@@ -1484,7 +1498,7 @@ int main(int argc, char* argv[]) {
     if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr, options.reductionTimeout, options.reductions);
+        builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr, options.reductionTimeout, options.reductions, options.secondaryreductions);
         printer.setReducer(builder.getReducer());
     }
 

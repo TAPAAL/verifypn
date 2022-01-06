@@ -117,7 +117,7 @@ namespace PetriEngine {
 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions);
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
 
         void printStats(std::ostream& out)
         {
