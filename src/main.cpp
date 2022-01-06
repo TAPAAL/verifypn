@@ -211,7 +211,10 @@ int main(int argc, const char** argv) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
             } else if (options.noreach || !PetriEngine::PQL::isReachability(queries[i])) {
-                results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
+                if(std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
+                    results[i] = ResultPrinter::Synthesis;
+                else
+                    results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                 alldone = false;
             } else {
                 queries[i] = prepareForReachability(queries[i]);

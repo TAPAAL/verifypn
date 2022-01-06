@@ -463,6 +463,11 @@ namespace PetriEngine {
         bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
+            if(results[i] == Reachability::ResultPrinter::Synthesis)
+            {
+                std::cerr << "Reductions disable due to 'control' predicate in query." << std::endl;
+                return; // we disable mode reductions if there is a synthesis query present.
+            }
             if(results[i] == Reachability::ResultPrinter::Unknown ||
                results[i] == Reachability::ResultPrinter::CTL ||
                results[i] == Reachability::ResultPrinter::LTL)
@@ -473,11 +478,6 @@ namespace PetriEngine {
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.
                 contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
-            }
-            if(std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
-            {
-                std::cerr << "Reductions disable due to 'control' predicate in query." << std::endl;
-                return; // we disable mode reductions if there is a synthesis query present.
             }
         }
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
