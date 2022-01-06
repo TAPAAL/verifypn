@@ -2145,7 +2145,7 @@ namespace PetriEngine {
                 }
 
                 // Post-set of consumers may not inhibit or appear in query.
-                for (const auto arc : tran.post)
+                for (const Arc& arc : tran.post)
                 {
                     if (placeInQuery[arc.place] > 0 || parent->_places[arc.place].inhib)
                     {
@@ -2187,10 +2187,8 @@ namespace PetriEngine {
                     continue;
                 }
 
-
                 // Combine producer with the consumers
-                auto consumers = place.consumers;
-                for (auto con_id : consumers)
+                for (auto con_id : place.consumers)
                 {
                     // Create new transition with effect of firing the producer and then the consumer
                     auto id = parent->_transitions.size();
@@ -2211,20 +2209,20 @@ namespace PetriEngine {
 
                     // Arcs from consumer
                     Transition& cons = parent->_transitions[con_id];
-                    for (auto& arc : cons.post)
+                    for (const auto& arc : cons.post)
                     {
                         newtran.addPostArc(arc);
                     }
                     // Arcs from producer
-                    for (auto& arc : prod.pre)
+                    for (const auto& arc : prod.pre)
                     {
                         newtran.addPreArc(arc);
                     }
-                    for (auto& arc : prod.post)
+                    for (const auto& arc : prod.post)
                     {
                         if (arc.place == pid)
                         {
-                            Arc leftoverArc = arc;
+                            Arc leftoverArc = arc; // Copy!
                             leftoverArc.weight -= cons.pre[0].weight;
                             if (leftoverArc.weight > 0) {
                                 newtran.addPostArc(leftoverArc);
@@ -2238,9 +2236,9 @@ namespace PetriEngine {
                         }
                     }
 
-                    for(auto& arc : newtran.pre)
+                    for(const auto& arc : newtran.pre)
                         parent->_places[arc.place].addConsumer(id);
-                    for(auto& arc : newtran.post)
+                    for(const auto& arc : newtran.post)
                         parent->_places[arc.place].addProducer(id);
                 }
 
