@@ -13,7 +13,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
 
 %name-prefix "pqlq"
-%expect 17
+%expect 1
 
 /* Possible data representation */
 %union {
@@ -41,7 +41,8 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 /* Nonterminal type definition */
 %type <expr> expr term factor
-%type <cond> state_formula path_formula path_formula_not_state path_formula_not_state_lower compare
+%type <cond> path_formula path_formula_or path_formula_and path_formula_quantifier path_formula_until path_formula_paren
+%type <cond> state_formula state_formula_and state_formula_quantifier atomic_formula compare
 %type <ids> id_list
 
 /* Operator precedence, more possibly coming */
@@ -52,41 +53,56 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %%
 
 query	: state_formula	            { query = Condition_ptr($1); }
-        | path_formula_not_state    { query = Condition_ptr($1); } /* This one is not actually allowed in CTL* */
+        | path_formula_or           { query = Condition_ptr($1); } /* This one is not actually allowed in CTL* */
 		| error						{ yyerrok; }
 		;
 
-state_formula : state_formula AND state_formula	    { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
-              | state_formula OR state_formula		{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
-              | NOT state_formula				    { $$ = new NotCondition(Condition_ptr($2)); }
-              | LPAREN state_formula RPAREN		    { $$ = $2; }
-              | TRUE				            	{ $$ = new BooleanCondition(true);}
-              | FALSE			            		{ $$ = new BooleanCondition(false);}
-              | A path_formula        { $$ = new ACondition(Condition_ptr($2)); }
-              | E path_formula        { $$ = new ECondition(Condition_ptr($2)); }
-              | compare				            { $$ = $1; }
-              | DEADLOCK		            	    { $$ = new DeadlockCondition();}
+state_formula : state_formula OR state_formula_and		{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
+              | state_formula_and                       { $$ = $1; }
               ;
 
+state_formula_and : state_formula_and AND state_formula_quantifier	    { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
+                  | state_formula_quantifier            { $$ = $1; }
+                  ;
+
+state_formula_quantifier : A path_formula_quantifier        { $$ = new ACondition(Condition_ptr($2)); }
+                         | E path_formula_quantifier        { $$ = new ECondition(Condition_ptr($2)); }
+                         | NOT state_formula_quantifier	    { $$ = new NotCondition(Condition_ptr($2)); }
+                         | LPAREN state_formula RPAREN		{ $$ = $2; }
+                         | atomic_formula                   { $$ = $1; }
+                         ;
+
+atomic_formula : TRUE				            	{ $$ = new BooleanCondition(true);}
+               | FALSE			            	    { $$ = new BooleanCondition(false);}
+               | DEADLOCK		            	    { $$ = new DeadlockCondition();}
+               | compare				            { $$ = $1; }
+               ;
 
 path_formula : state_formula                    { $$ = $1; }
-             | path_formula_not_state           { $$ = $1; }
-
-
-path_formula_not_state :
-               path_formula AND path_formula	{ $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
-             | path_formula OR path_formula    { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
-             | X path_formula                    { $$ = new XCondition(Condition_ptr($2)); }
-             | F path_formula                    { $$ = new FCondition(Condition_ptr($2)); }
-             | G path_formula                    { $$ = new GCondition(Condition_ptr($2)); }
-             | LPAREN path_formula U path_formula RPAREN      { $$ = new UntilCondition(Condition_ptr($2), Condition_ptr($4)); }
-             | path_formula_not_state_lower    { $$ = $1; }
+             | path_formula_or                  { $$ = $1; }
              ;
 
-path_formula_not_state_lower :
-               NOT path_formula_not_state_lower		{ $$ = new NotCondition(Condition_ptr($2)); }
-             | LPAREN path_formula RPAREN       { $$ = $2; }
-             ;
+path_formula_or : path_formula_or OR path_formula_and    { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
+                | path_formula_and                       { $$ = $1; }
+                ;
+
+path_formula_and : path_formula_and AND path_formula_quantifier	{ $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
+                 | path_formula_quantifier          { $$ = $1; }
+                 ;
+
+path_formula_quantifier : X path_formula_quantifier                    { $$ = new XCondition(Condition_ptr($2)); }
+                        | F path_formula_quantifier                    { $$ = new FCondition(Condition_ptr($2)); }
+                        | G path_formula_quantifier                    { $$ = new GCondition(Condition_ptr($2)); }
+                        | NOT path_formula_quantifier		{ $$ = new NotCondition(Condition_ptr($2)); }
+                        | path_formula_until                { $$ = $1; }
+                        ;
+
+path_formula_until : path_formula_paren U path_formula_paren      { $$ = new UntilCondition(Condition_ptr($1), Condition_ptr($3)); }
+                   | path_formula_paren                           { $$ = $1; }
+                   ;
+
+path_formula_paren : LPAREN path_formula RPAREN           { $$ = $2; }
+                   ;
 
 compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		| expr NEQUAL expr			{ $$ = new NotEqualCondition(Expr_ptr($1), Expr_ptr($3)); }

@@ -63,7 +63,7 @@ letter        [a-zA-Z_]
 "?"                         {return TOKEN(QUESTIONMARK);}
 "NOT" {return TOKEN(NOT);}
 "is-fireable" {return TOKEN(FIREABLE);}
-"tokens-count" {return TOKEN(TOKENCOUNT); }
+"tokens-count"|"#tokens" {return TOKEN(TOKENCOUNT); }
 "," {return TOKEN(COMMA); }
 .							{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
 
