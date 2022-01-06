@@ -1654,107 +1654,131 @@ namespace PetriEngine {
         // Dead places and transitions
         if (hasTimedout()) return false;
 
-        // Sets of places that do not increase or decrease their number of tokens
-        std::unordered_set <uint32_t> S_cant_inc;
-        std::unordered_set <uint32_t> S_cant_dec;
-        // Transitions that can't fire
-        std::unordered_set <uint32_t> F;
+        // Use pflags and bits to keep track of places that can increase or decrease their number of tokens
+        const uint8_t CAN_INC = 0x01;
+        const uint8_t CAN_DEC = 0x10;
+        _pflags.resize(parent->_places.size(), 0);
+        std::fill(_pflags.begin(), _pflags.end(), 0);
 
-        // Initially S_cant_inc and S_cant_dec contains all places,
-        // and F contains all transitions
+        // Use tflags to mark processed fireable transitions
+        _tflags.resize(parent->_transitions.size(), 0);
+        std::fill(_tflags.begin(), _tflags.end(), 0);
 
-        for (uint32_t i=0; i < parent->_places.size(); ++i) {
-            if (!parent->_places[i].skip) {
-                S_cant_inc.insert(i);
-                S_cant_dec.insert(i);
-            }
-        }
-        for (uint32_t i=0; i < parent->_transitions.size(); ++i) {
-            if (!parent->_transitions[i].skip) {
-                F.insert(i);
-            }
-        }
+        // Queue of potentially fireable transitions to process
+        std::queue<uint32_t> queue;
 
-        // Now we find the fixed point of S_cant_inc, S_cant_dec, and F iteratively
-
-        bool fixpoint;
-        do{
-            if (hasTimedout()) return false;
-            fixpoint = true;
-
-            // Discard from F any transition that is initially enabled or could be later
-            // based on S_cant_inc and S_cant_dec.
-            // Also discard its negative preset and positive postset from respective S_cant_dec and S_cant_inc resp.
-            for (auto it = F.begin(); it != F.end(); ){
-                bool enabled = true;
-                for (Arc prearc : parent->_transitions[*it].pre) {
-                    bool notInhibited = !prearc.inhib || (prearc.weight > parent->initialMarking[prearc.place] ||
-                                                          S_cant_dec.find(prearc.place) == S_cant_dec.end());
-                    bool enoughTokens = prearc.inhib || (prearc.weight <= parent->initialMarking[prearc.place] ||
-                                                        S_cant_inc.find(prearc.place) == S_cant_inc.end());
-                    if (!notInhibited || !enoughTokens) {
-                        enabled = false;
-                        break;
-                    }
+        auto processIncPlace = [&](uint32_t p) {
+            if ((_pflags[p] & CAN_INC) == 0) {
+                _pflags[p] |= CAN_INC;
+                Place place = parent->_places[p];
+                for (uint32_t t : place.consumers) {
+                    queue.push(t);
                 }
-                if (enabled) {
-                    Transition& tran = getTransition(*it);
-                    // Discard negative preset from S_cant_dec, and
-                    // discard positive postset from S_cant_inc
-                    uint32_t i = 0, j = 0;
-                    while (i < tran.pre.size() && j < tran.post.size())
-                    {
-                        if (tran.pre[i].place < tran.post[j].place) {
-                            if (!tran.pre[i].inhib)
-                                S_cant_dec.erase(tran.pre[i].place);
-                            i++;
-                        } else if (tran.pre[i].place > tran.post[j].place) {
-                            S_cant_inc.erase(tran.post[j].place);
-                            j++;
-                        } else {
-                            if (tran.pre[i].inhib) {
-                                S_cant_inc.erase(tran.post[j].place);
-                            } else {
-                                // There are both an in and an out arc to this place. Is the effect non-zero?
-                                if (tran.pre[i].weight > tran.post[j].weight) {
-                                    S_cant_dec.erase(tran.pre[i].place);
-                                } else if (tran.pre[i].weight < tran.post[j].weight) {
-                                    S_cant_inc.erase(tran.post[j].place);
-                                }
-                            }
+            }
+        };
 
-                            i++; j++;
+        auto processDecPlace = [&](uint32_t p) {
+            if ((_pflags[p] & CAN_DEC) == 0) {
+                _pflags[p] |= CAN_DEC;
+                Place place = parent->_places[p];
+                for (uint32_t t : place.consumers) {
+                    queue.push(t);
+                }
+            }
+        };
+
+        auto processEnabled = [&](uint32_t t) {
+            _tflags[t] = 1;
+            Transition& tran = parent->_transitions[t];
+            // Find and process negative preset and positive postset
+            uint32_t i = 0, j = 0;
+            while (i < tran.pre.size() && j < tran.post.size())
+            {
+                if (tran.pre[i].place < tran.post[j].place) {
+                    if (!tran.pre[i].inhib)
+                        processDecPlace(tran.pre[i].place);
+                    i++;
+                } else if (tran.pre[i].place > tran.post[j].place) {
+                    processIncPlace(tran.post[j].place);
+                    j++;
+                } else {
+                    if (tran.pre[i].inhib) {
+                        processIncPlace(tran.post[j].place);
+                    } else {
+                        // There are both an in and an out arc to this place. Is the effect non-zero?
+                        if (tran.pre[i].weight > tran.post[j].weight) {
+                            processDecPlace(tran.pre[i].place);
+                        } else if (tran.pre[i].weight < tran.post[j].weight) {
+                            processIncPlace(tran.post[j].place);
                         }
                     }
-                    for ( ; i < tran.pre.size(); i++) {
-                        if (!tran.pre[i].inhib)
-                            S_cant_dec.erase(tran.pre[i].place);
-                    }
-                    for ( ; j < tran.post.size(); j++) {
-                        S_cant_inc.erase(tran.post[j].place);
-                    }
 
-                    it = F.erase(it);
-                    fixpoint = false;
-                } else {
-                    ++it;
+                    i++; j++;
                 }
             }
+            for ( ; i < tran.pre.size(); i++) {
+                if (!tran.pre[i].inhib)
+                    processDecPlace(tran.pre[i].place);
+            }
+            for ( ; j < tran.post.size(); j++) {
+                processIncPlace(tran.post[j].place);
+            }
+        };
 
-            // Until fixpoint
-        } while (!fixpoint);
+        // Process initially enabled transitions
+        for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
+            Transition& tran = parent->_transitions[t];
+            if (tran.skip)
+                continue;
+            bool enabled = true;
+            for (Arc& prearc : tran.pre) {
+                if (prearc.inhib != (prearc.weight > parent->initialMarking[prearc.place])) {
+                    enabled = false;
+                    break;
+                }
+            }
+            if (enabled) {
+                processEnabled(t);
+            }
+        }
 
-        // Remove intersection of S_cant_dec and S_cant_inc as well as F, unless the place appear in query
+        // Now we find the fixed point of S_cant_inc, S_cant_dec, and _tflags iteratively
+
+        while (!queue.empty()) {
+            if (hasTimedout()) return false;
+
+            uint32_t t = queue.back();
+            queue.pop();
+            if (_tflags[t] == 1) continue;
+
+            // Is t enabled?
+            bool enabled = true;
+            for (Arc prearc : parent->_transitions[t].pre) {
+                bool notInhibited = !prearc.inhib || prearc.weight > parent->initialMarking[prearc.place] || (_pflags[prearc.place] & CAN_DEC) > 0;
+                bool enoughTokens = prearc.inhib || prearc.weight <= parent->initialMarking[prearc.place] || (_pflags[prearc.place] & CAN_INC) > 0;
+                if (!notInhibited || !enoughTokens) {
+                    enabled = false;
+                    break;
+                }
+            }
+            if (enabled) {
+                processEnabled(t);
+            }
+        }
+
+        // Remove places that cannot increase nor decrease as well as unfireable transitions
         bool anyRemoved = false;
-        for (uint32_t p : S_cant_dec) {
-            if (S_cant_inc.find(p) != S_cant_inc.end() && placeInQuery[p] == 0) {
+        for (uint32_t p = 0; p < parent->_places.size(); ++p) {
+            if (!parent->_places[p].skip && placeInQuery[p] == 0 && _pflags[p] == 0) {
                 skipPlace(p);
                 anyRemoved = true;
             }
         }
-        for (uint32_t t : F) {
-            skipTransition(t);
-            anyRemoved = true;
+        for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
+            if (!parent->_transitions[t].skip && _tflags[t] == 0) {
+                skipTransition(t);
+                anyRemoved = true;
+            }
         }
         if (anyRemoved) {
             _ruleM++;
