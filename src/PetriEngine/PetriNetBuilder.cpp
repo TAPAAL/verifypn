@@ -465,7 +465,8 @@ namespace PetriEngine {
         {
             if(results[i] == Reachability::ResultPrinter::Synthesis)
             {
-                std::cerr << "Reductions disable due to 'control' predicate in query." << std::endl;
+                std::cerr << "ERROR: Reductions not supported due to 'control' predicate in query." << std::endl;
+                std::exit(-1);
                 return; // we disable mode reductions if there is a synthesis query present.
             }
             if(results[i] == Reachability::ResultPrinter::Unknown ||
