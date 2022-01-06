@@ -7,11 +7,13 @@
 #include <string>
 
 struct CTLResult {
-    CTLResult(const PetriEngine::PQL::Condition_ptr& qry){
-        query = qry;
-    }
+    CTLResult(const PetriEngine::PQL::Condition* qry)
+    : query(qry) {};
 
-    PetriEngine::PQL::Condition_ptr query;
+    CTLResult(const PetriEngine::PQL::Condition_ptr& qry)
+    : query(qry.get()) {}
+
+    const PetriEngine::PQL::Condition* query;
     bool result;
 
     double duration = 0;

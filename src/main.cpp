@@ -46,6 +46,7 @@
 
 
 #include "VerifyPN.h"
+#include "Synthesis/ReachabilitySynthesis.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -355,8 +356,20 @@ int main(int argc, const char** argv) {
 
         for(auto i : synth_ids)
         {
-            std::cerr << "Synthesis engine not yet implemented!" << std::endl;
-            std::exit(-1);
+            Synthesis::ReachabilitySynthesis strategy(printer, *net, options.kbound);
+
+            std::ostream* strategy_out = nullptr;
+            if(options.strategy_output == "_")
+                strategy_out = &std::cout;
+            else if(options.strategy_output.size() > 0)
+                strategy_out = new std::ofstream(options.strategy_output);
+
+            results[i] = strategy.synthesize(*queries[i], options.strategy, options.stubbornreduction, false, false, strategy_out);
+
+            if(strategy_out != nullptr && strategy_out != &std::cout)
+            {
+                delete strategy_out;
+            }
         }
 
         //----------------------- Siphon Trap ------------------------//
@@ -387,7 +400,7 @@ int main(int argc, const char** argv) {
         contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+        if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
         if(options.tar && net->numberOfPlaces() > 0)
         {

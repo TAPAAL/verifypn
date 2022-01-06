@@ -20,19 +20,18 @@ std::vector<std::string> explode(std::string const & s) {
     return result;
 }
 
-using namespace PetriEngine::Reachability;
 void options_t::print(std::ostream& optionsOut) {
     if (!printstatistics) {
         return;
     }
 
-    if (strategy == PetriEngine::Reachability::Strategy::BFS) {
+    if (strategy == Strategy::BFS) {
         optionsOut << "\nSearch=BFS";
-    } else if (strategy == PetriEngine::Reachability::Strategy::DFS) {
+    } else if (strategy == Strategy::DFS) {
         optionsOut << "\nSearch=DFS";
-    } else if (strategy == PetriEngine::Reachability::Strategy::HEUR) {
+    } else if (strategy == Strategy::HEUR) {
         optionsOut << "\nSearch=HEUR";
-    } else if (strategy == PetriEngine::Reachability::Strategy::RDFS) {
+    } else if (strategy == Strategy::RDFS) {
         optionsOut << "\nSearch=RDFS";
     } else {
         optionsOut << "\nSearch=OverApprox";
@@ -205,6 +204,8 @@ void printHelp() {
         "  --spot-optimization <1,2,3>          The optimization level passed to Spot for Büchi automaton creation.\n"
         "                                       1: Low (default), 2: Medium, 3: High\n"
         "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
+        "  --strategy-output <file>             Outputs the synthesized strategy (if a such exist) to <filename>\n"
+        "                                           Use '-' (dash) for outputting to standard output.\n"
         "\n"
         "Return Values:\n"
         "  0   Successful, query satisfiable\n"
@@ -237,15 +238,15 @@ bool options_t::parse(int argc, const char** argv) {
             }
             auto* s = argv[++i];
             if (std::strcmp(s, "BestFS") == 0)
-                strategy = HEUR;
+                strategy = Strategy::HEUR;
             else if (std::strcmp(s, "BFS") == 0)
-                strategy = BFS;
+                strategy = Strategy::BFS;
             else if (std::strcmp(s, "DFS") == 0)
-                strategy = DFS;
+                strategy = Strategy::DFS;
             else if (std::strcmp(s, "RDFS") == 0)
-                strategy = RDFS;
+                strategy = Strategy::RDFS;
             else if (std::strcmp(s, "OverApprox") == 0)
-                strategy = OverApprox;
+                strategy = Strategy::OverApprox;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
             }
@@ -503,7 +504,14 @@ bool options_t::parse(int argc, const char** argv) {
             doVerification = false;
         } else if (std::strcmp(argv[i], "--disable-symmetry-vars") == 0) {
             symmetricVariables = false;
-        } else if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
+        } else if (std::strcmp(argv[i], "--strategy-output") == 0) {
+            if (argc == i + 1) {
+                throw base_error("Missing argument to --strategy-output");
+            }
+            ++i;
+            strategy_output = argv[i];
+        }
+        else if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
             printHelp();
             return true;
         } else if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--version") == 0) {
@@ -540,7 +548,7 @@ bool options_t::parse(int argc, const char** argv) {
             throw base_error("Argument Error: Unrecognized option ", std::quoted(modelfile));
         }
     }
-    
+
     if (statespaceexploration) {
         // for state-space exploration some options are mandatory
         enablereduction = 0;
@@ -576,11 +584,11 @@ bool options_t::parse(int argc, const char** argv) {
         if (siphonDepth != 0) {
             throw base_error("Argument Error: --siphon-depth is not compatible with LTL model checking.");
         }
-        if(strategy != DFS &&
-           strategy != RDFS &&
-           strategy != HEUR &&
-           strategy != DEFAULT &&
-           strategy != OverApprox)
+        if(strategy != Strategy::DFS &&
+           strategy != Strategy::RDFS &&
+           strategy != Strategy::HEUR &&
+           strategy != Strategy::DEFAULT &&
+           strategy != Strategy::OverApprox)
         {
             throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, and BestFS.");
         }

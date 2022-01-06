@@ -3,7 +3,7 @@
 
 #include "../PetriEngine/errorcodes.h"
 #include "../PetriEngine/PetriNet.h"
-#include "../PetriEngine/Reachability/ReachabilitySearch.h"
+#include "../PetriEngine/options.h"
 
 #include "Algorithm/AlgorithmTypes.h"
 #include "../PetriEngine/PQL/PQL.h"
@@ -12,7 +12,7 @@
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
-                    PetriEngine::Reachability::Strategy strategytype,
+                    Strategy strategytype,
                     bool gamemode,
                     bool printstatistics,
                     bool mccoutput,

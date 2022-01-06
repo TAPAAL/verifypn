@@ -7,6 +7,7 @@ add_subdirectory(Stubborn)
 add_subdirectory(Reachability)
 add_subdirectory(PQL)
 add_subdirectory(TAR)
+add_subdirectory(Synthesis)
 
 add_library(PetriEngine ${HEADER_FILES}
     PetriNet.cpp
@@ -18,4 +19,4 @@ add_library(PetriEngine ${HEADER_FILES}
     TraceReplay.cpp
     options.cpp)
 
-target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Stubborn Reachability PQL TAR)
+target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Stubborn Reachability PQL TAR Synthesis)
