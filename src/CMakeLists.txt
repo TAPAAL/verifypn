@@ -17,6 +17,10 @@ if (VERIFYPN_MC_Simplification)
 endif(VERIFYPN_MC_Simplification)
 
 if (APPLE OR NOT VERIFYPN_Static)
-    target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE -static-libgcc -static-libstdc++)
+    target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC -static-libgcc -static-libstdc++)
+elseif (NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
+
+
 
