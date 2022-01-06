@@ -474,6 +474,11 @@ namespace PetriEngine {
                 // this has similar problems as nested next.
                 contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
+            if(std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
+            {
+                std::cerr << "Reductions disable due to 'control' predicate in query." << std::endl;
+                return; // we disable mode reductions if there is a synthesis query present.
+            }
         }
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
     }
