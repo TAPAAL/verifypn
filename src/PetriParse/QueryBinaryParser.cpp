@@ -98,10 +98,10 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
         else if(q == Quantifier::COMPCONJ)
         {
             bool neg;
-            binary.read(reinterpret_cast<char*>(&neg), sizeof(bool));   
+            binary.read(reinterpret_cast<char*>(&neg), sizeof(bool));
             std::vector<CompareConjunction::cons_t> cons;
             uint32_t size;
-            binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));            
+            binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));
             for(uint32_t i = 0; i < size; ++i)
             {
                 cons.emplace_back();
@@ -145,9 +145,9 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
         {
             uint32_t size;
             double max, offset;
-            binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));            
-            binary.read(reinterpret_cast<char*>(&max), sizeof(double));            
-            binary.read(reinterpret_cast<char*>(&offset), sizeof(double));   
+            binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));
+            binary.read(reinterpret_cast<char*>(&max), sizeof(double));
+            binary.read(reinterpret_cast<char*>(&offset), sizeof(double));
             std::vector<UnfoldedUpperBoundsCondition::place_t> places;
             for(size_t i = 0; i < size; ++i)
             {
@@ -224,6 +224,10 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
             else
                 return std::make_shared<EUCondition>(cond1, cond2);
         }
+        else if(p == Path::PControl)
+        {
+            return std::make_shared<ControlCondition>(cond1);
+        }
         else
         {
             assert(false);
@@ -252,7 +256,7 @@ Expr_ptr QueryBinaryParser::parseExpr(std::ifstream& bin, const std::vector<std:
     else if(t == '-')
     {
         uint32_t size;
-        bin.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));  
+        bin.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));
         std::vector<Expr_ptr> exprs;
         for(uint32_t i = 0; i < size; ++i)
         {
@@ -270,9 +274,9 @@ Expr_ptr QueryBinaryParser::parseExpr(std::ifstream& bin, const std::vector<std:
         int32_t constant;
         uint32_t idsize;
         uint32_t exprssize;
-        bin.read(reinterpret_cast<char*>(&constant), sizeof(int32_t));  
-        bin.read(reinterpret_cast<char*>(&idsize), sizeof(uint32_t));  
-        bin.read(reinterpret_cast<char*>(&exprssize), sizeof(uint32_t));  
+        bin.read(reinterpret_cast<char*>(&constant), sizeof(int32_t));
+        bin.read(reinterpret_cast<char*>(&idsize), sizeof(uint32_t));
+        bin.read(reinterpret_cast<char*>(&exprssize), sizeof(uint32_t));
         std::vector<uint32_t> ids(idsize);
         bin.read(reinterpret_cast<char*>(ids.data()), sizeof(uint32_t)*idsize);
         std::vector<Expr_ptr> exprs;
@@ -294,7 +298,7 @@ Expr_ptr QueryBinaryParser::parseExpr(std::ifstream& bin, const std::vector<std:
             return std::make_shared<MultiplyExpr>(std::move(exprs));
         else
             return std::make_shared<PlusExpr>(std::move(exprs));
-        
+
     }
     else
     {

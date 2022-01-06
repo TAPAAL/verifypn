@@ -607,6 +607,10 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
+        Condition::Result ControlCondition::evaluate(const EvaluationContext& context) {
+            return RUNKNOWN;
+        }
+
         Condition::Result EFCondition::evaluate(const EvaluationContext& context) {
             if(_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;

@@ -165,7 +165,7 @@ void PNMLParser::parsePartitions(rapidxml::xml_node<>* element){
             auto id = it->first_attribute("id")->value();
             std::vector<const PetriEngine::Colored::Color *> colors;
             for(auto partitionElement = it->first_node(); partitionElement; partitionElement = partitionElement->next_sibling()){
-                colors.push_back(partitionCT->operator[](partitionElement->first_attribute("declaration")->value()));
+                colors.emplace_back(partitionCT->operator[](partitionElement->first_attribute("declaration")->value()));
             }
             partitions.push_back({colors, id});
         }
@@ -272,7 +272,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
 PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof){
     std::vector<PetriEngine::Colored::ArcExpression_ptr> numberOfExpressions;
     if(collectedColors.size() < 2){
-        for(auto exp : collectedColors[0]){
+        for(const auto& exp : collectedColors[0]){
             std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
 			colors.push_back(exp);
             numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(colors),numberof));
@@ -282,9 +282,9 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTu
         for(uint32_t i = 2; i < collectedColors.size(); i++){
             initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);
         }
-        for(auto set : initCartesianSet){
+        for(const auto& set : initCartesianSet){
             std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
-            for (auto color : set) {
+            for (const auto& color : set) {
                 colors.push_back(color);
             }
             std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
@@ -299,20 +299,17 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTu
 
 std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){
 	std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> returnSet;
-	for(auto expr : rightSet){
-		for(auto expr2 : leftSet){
-			std::vector<PetriEngine::Colored::ColorExpression_ptr> toAdd;
-			toAdd.push_back(expr);
-			toAdd.push_back(expr2);
-			returnSet.push_back(toAdd);
+	for(const auto& expr : rightSet){
+		for(const auto& expr2 : leftSet){
+			returnSet.emplace_back(std::vector<PetriEngine::Colored::ColorExpression_ptr>{expr,expr2});
 		}
 	}
 	return returnSet;
 }
 std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){
 	std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> returnSet;
-	for(auto set : rightSet){
-		for(auto expr2 : leftSet){
+	for(const auto& set : rightSet){
+		for(const auto& expr2 : leftSet){
             auto setCopy = set;
 			setCopy.push_back(expr2);
 			returnSet.push_back(std::move(setCopy));
@@ -332,8 +329,8 @@ void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector
 		std::unordered_map<uint32_t, std::vector<const PetriEngine::Colored::Color *>> constantMap;
 		uint32_t index = 0;
 		expr->getConstants(constantMap, index);
-		for(auto positionColors : constantMap){
-			for(auto color : positionColors.second){
+		for(const auto& positionColors : constantMap){
+			for(const auto& color : positionColors.second){
 				expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(color));
 			}
 		}

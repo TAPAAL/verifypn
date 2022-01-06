@@ -30,6 +30,10 @@ namespace PetriEngine::PQL {
         return visitor.getReturnValue();
     }
 
+    void PrepareForReachabilityVisitor::_accept(const ControlCondition *condition) {
+        RETURN(nullptr)
+    }
+
     void PrepareForReachabilityVisitor::_accept(const EXCondition *condition) {
         RETURN(nullptr)
     }

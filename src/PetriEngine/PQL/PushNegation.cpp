@@ -94,6 +94,11 @@ namespace PetriEngine::PQL {
         return _expr1->placeFree() && _expr2->placeFree();
     }
 
+    void PushNegationVisitor::_accept(ControlCondition *element) {
+        auto res = subvisit((*element)[0], false, negated);
+        return_value = std::make_shared<ControlCondition>(res);
+    }
+
     void PushNegationVisitor::_accept(EGCondition *element) {
         ++stats[0];
         auto af_cond = AFCondition(std::make_shared<NotCondition>(element->getCond()));

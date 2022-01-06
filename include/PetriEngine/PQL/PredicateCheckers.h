@@ -55,6 +55,8 @@ namespace PetriEngine::PQL {
     private:
         bool _is_nested = false;
 
+        void _accept(const ControlCondition *element) override;
+
         void _accept(const EFCondition *element) override;
 
         void _accept(const SimpleQuantifierCondition *element) override;

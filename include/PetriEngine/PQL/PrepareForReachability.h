@@ -48,6 +48,8 @@ namespace PetriEngine::PQL {
             return _return_value;
         }
 
+        void _accept(const ControlCondition *condition) override;
+
         void _accept(const EGCondition *condition) override;
 
         void _accept(const EXCondition *condition) override;

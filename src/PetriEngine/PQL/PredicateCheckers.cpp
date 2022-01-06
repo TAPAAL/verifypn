@@ -71,6 +71,10 @@ namespace PetriEngine::PQL {
         return visitor.getReturnValue();
     }
 
+    void IsReachabilityVisitor::_accept(const ControlCondition *element) {
+        // Do nothing
+    }
+
     void IsReachabilityVisitor::_accept(const SimpleQuantifierCondition *element) {
         // Do nothing, some simple quantifiers have their own accept
     }
