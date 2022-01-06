@@ -273,6 +273,7 @@ int main(int argc, const char** argv) {
         //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
+        std::vector<size_t> synth_ids;
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == ResultPrinter::CTL)
@@ -281,6 +282,10 @@ int main(int argc, const char** argv) {
             }
             else if (results[i] == ResultPrinter::LTL) {
                 ltl_ids.push_back(i);
+            }
+            else if (results[i] == ResultPrinter::Synthesis)
+            {
+                synth_ids.push_back(i);
             }
         }
 
@@ -298,7 +303,7 @@ int main(int argc, const char** argv) {
         }
 
         if (!ctl_ids.empty()) {
-            options.usedctl=true;
+            options.usedctl = true;
             PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
             // Assign indexes
@@ -324,9 +329,8 @@ int main(int argc, const char** argv) {
                 return v;
             }
             // go back to previous strategy if the program continues
-            options.strategy=reachabilityStrategy;
+            options.strategy = reachabilityStrategy;
         }
-        options.usedctl=false;
 
         //----------------------- Verify LTL queries -----------------------//
 
@@ -347,6 +351,12 @@ int main(int argc, const char** argv) {
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
                 return SuccessCode;
             }
+        }
+
+        for(auto i : synth_ids)
+        {
+            std::cerr << "Synthesis engine not yet implemented!" << std::endl;
+            std::exit(-1);
         }
 
         //----------------------- Siphon Trap ------------------------//
