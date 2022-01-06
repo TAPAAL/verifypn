@@ -1537,132 +1537,113 @@ namespace PetriEngine {
 
         bool continueReductions = false;
         for (size_t t1 = 0; t1 < parent->numberOfTransitions() - 1; ++t1) {
-            for (size_t t2 = t1 + 1; t2 < parent->numberOfTransitions(); ++t2) {
-                if (hasTimedout()) return false;
+            Transition &tran1 = getTransition(t1);
+            if (tran1.skip) break;
+            for (const auto & t1i : tran1.pre){
+                Place &p = parent->_places[t1i.place];
+                for (uint32_t t2 : p.consumers){
+                    if (hasTimedout()) return false;
 
-                // We check if t1 or t2 can be removed
-                Transition &tran1 = getTransition(t1);
-                if (tran1.skip || tran1.inhib) break;
+                    if (t2 == t1) continue;
 
-                Transition &tran2 = getTransition(t2);
-                if (tran2.skip || tran2.inhib) continue;
+                    Transition &tran2 = getTransition(t2);
+                    if (tran2.skip) continue;
 
-                bool canT1BeRemoved = tran1.pre.size() >= tran2.pre.size() && tran1.post.size() >= tran2.post.size();
-                bool canT2BeRemoved = tran2.pre.size() >= tran1.pre.size() && tran2.post.size() >= tran1.post.size();
+                    // We try to remove t1 despite it being the outer loop,
+                    // because p.consumers will be invalidated anyway regardless of which one we remove.
+                    bool canT1BeRemoved = tran1.pre.size() >= tran2.pre.size() && tran1.post.size() >= tran2.post.size();
 
-                if (!(canT1BeRemoved || canT2BeRemoved)) {
-                    continue;
-                }
-
-                // get in arcs
-                std::vector<Arc> pre_subset;
-                std::vector<Arc> pre_superset;
-                if (canT1BeRemoved) {
-                    pre_subset = tran2.pre;
-                    pre_superset = tran1.pre;
-                } else if (canT2BeRemoved) {
-                    pre_subset = tran1.pre;
-                    pre_superset = tran2.pre;
-                }
-
-
-                bool ok = true;
-                uint32_t i = 0, j = 0;
-                while (i < pre_subset.size() && j < pre_superset.size()) {
-                    // Make sure everything in pre_subset is in pre_superset
-                    if (pre_subset[i] < pre_superset[j]) {
-                        ok = false;
-                        break;
+                    if (!(canT1BeRemoved)) {
+                        continue;
                     }
-                        // Same place, check conditions
-                    else if (pre_subset[i] == pre_superset[j]) {
-                        // In arc check
 
-                        // Check the requirement to fire
-                        if (pre_superset[j].weight < pre_subset[i].weight) {
-                            if (canT1BeRemoved && canT2BeRemoved) {
-                                // Must have been equally long, and then we assume t1 could be removed. Turns out
-                                // thats not the case. Maybe the other way around?
-                                canT1BeRemoved = false;
-                                std::swap(pre_superset, pre_subset);
-                                i = 0;
-                                j = 0;
-                                continue;
+                    // get arcs
+                    const std::vector<Arc> & pre_subset = tran2.pre;
+                    const std::vector<Arc> & pre_superset = tran1.pre;
+                    const std::vector<Arc> & post_subset = tran2.post;
+                    const std::vector<Arc> & post_superset = tran1.post;
 
-                            } else if (canT1BeRemoved) {
-                                canT1BeRemoved = false;
-                            } else if (canT2BeRemoved) {
-                                canT2BeRemoved = false;
+                    bool ok = true;
+                    uint32_t i = 0, j = 0, k = 0, l = 0;
+                    bool i_done = i >= pre_subset.size(), j_done = j >= pre_superset.size(), k_done = k >= post_subset.size(), l_done = l >= post_superset.size();
+                    // Taking advantage of the pre- and post-sets being ordered by place_id
+                    while (!i_done || !j_done || !k_done || !l_done) {
+                        if (hasTimedout()) return false;
+                        // The lowest place_id from a set that is not done yet
+                        auto place = std::min({i_done ? std::numeric_limits<uint32_t>::max() : pre_subset[i].place,
+                                               j_done ? std::numeric_limits<uint32_t>::max() : pre_superset[j].place,
+                                               k_done ? std::numeric_limits<uint32_t>::max() : post_subset[k].place,
+                                               l_done ? std::numeric_limits<uint32_t>::max() : post_superset[l].place});
+
+                        // Precondition stuff
+                        if (!i_done && place == pre_subset[i].place) {
+
+                            // Make sure everything in pre_subset is in pre_superset
+                            if (j_done || pre_superset[j].place != place) {
+                                ok = false;
+                                break;
                             }
+                                // Same place, check preconditions
+                            else if (pre_subset[i].place == pre_superset[j].place) {
+                                // Inhibitor check
+                                if (pre_subset[i].inhib != pre_superset[j].inhib){
+                                    ok = false;
+                                    break;
+                                }
+
+                                // Check the requirement to fire. For non-inhibitors i <= j should hold, for inhibitors it is i >= j
+                                if ((!pre_subset[i].inhib && pre_superset[j].weight < pre_subset[i].weight) || (pre_subset[i].inhib && pre_superset[j].weight > pre_subset[i].weight)) {
+                                    ok = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Effect stuff
+                        size_t subset_in_weight = 0;
+                        if (!i_done && place == pre_subset[i].place){
+                            if (!pre_subset[i].inhib) subset_in_weight = pre_subset[i].weight;
+                            i++;
+                            i_done = i >= pre_subset.size();
+                        }
+                        size_t superset_in_weight = 0;
+                        if (!j_done && place == pre_superset[j].place){
+                            if (!pre_superset[i].inhib) superset_in_weight = pre_superset[j].weight;
+                            j++;
+                            j_done = j >= pre_superset.size();
+                        }
+                        size_t subset_out_weight = 0;
+                        if (!k_done && place == post_subset[k].place){
+                            if (!post_subset[i].inhib) subset_out_weight = post_subset[k].weight;
+                            k++;
+                            k_done = k >= post_subset.size();
+                        }
+                        size_t superset_out_weight = 0;
+                        if (!l_done && place == post_superset[l].place){
+                            if (!post_superset[i].inhib) superset_out_weight = post_superset[l].weight;
+                            l++;
+                            l_done = l >= post_superset.size();
+                        }
+
+                        if ((superset_out_weight - superset_in_weight) != (subset_out_weight - subset_in_weight)) {
                             ok = false;
                             break;
                         }
-                        // If everything good, keep going
-                        i++;
-                        j++;
+                    }
+
+                    // Go to next t2
+                    if (!ok) {
                         continue;
                     }
-                    j++;
-                }
 
-                // Go to next t2
-                if (!ok || i != pre_subset.size()) {
-                    continue;
-                }
-
-                // Out arc checks
-                Transition subset_tran;
-                Transition superset_tran;
-                if (canT1BeRemoved) {
-                    subset_tran = tran2;
-                    superset_tran = tran1;
-                } else if (canT2BeRemoved) {
-                    subset_tran = tran1;
-                    superset_tran = tran2;
-                }
-                // Iterate through all places in the post set of the largest
-                for (i = 0; i < superset_tran.post.size(); ++i) {
-                    uint32_t place = superset_tran.post[i].place;
-
-                    uint32_t superset_out_weight = superset_tran.post[i].weight;
-
-                    size_t superset_in_weight = 0;
-                    auto superset_in = getInArc(place, superset_tran);
-                    if (superset_in != superset_tran.pre.end()) superset_in_weight = superset_in->weight;
-
-                    size_t subset_in_weight = 0;
-                    auto subset_in = getInArc(place, subset_tran);
-                    if (subset_in != subset_tran.pre.end()) subset_in_weight = subset_in->weight;
-
-                    size_t subset_out_weight = 0;
-                    auto subset_out = getOutArc(subset_tran, place);
-                    if (subset_out != subset_tran.post.end()) subset_out_weight = subset_out->weight;
-
-                    if ((superset_out_weight - superset_in_weight) != (subset_out_weight - subset_in_weight)) {
-                        canT1BeRemoved = false;
-                        canT2BeRemoved = false;
-                        ok = false;
-                        break;
-                    }
-                }
-
-                // Go to next t2
-                if (!ok) {
-                    continue;
-                }
-
-                if (canT1BeRemoved) {
                     // We can discard t1
                     skipTransition(t1);
                     _ruleL++;
                     continueReductions = true;
                     break;
-                } else if (canT2BeRemoved) {
-                    // We can discard t2
-                    skipTransition(t2);
-                    _ruleL++;
-                    continueReductions = true;
                 }
+                // If t1 was reduced away, we need to break out further.
+                if (tran1.skip) break;
             }
         }
 
