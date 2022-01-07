@@ -40,7 +40,7 @@ QueryXMLParser::QueryXMLParser() = default;
 
 QueryXMLParser::~QueryXMLParser() = default;
 
-bool QueryXMLParser::parse(std::ifstream& xml, const std::set<size_t>& parse_only) {
+bool QueryXMLParser::parse(std::istream& xml, const std::set<size_t>& parse_only) {
     //Parse the xml
     rapidxml::xml_document<> doc;
     std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());

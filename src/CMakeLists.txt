@@ -6,7 +6,7 @@ add_subdirectory(PetriParse)
 add_subdirectory(PetriEngine)
 
 add_library(verifypn VerifyPN.cpp)
-target_link_libraries(verifypn PRIVATE CTL LTL PetriEngine PetriParse)
+target_link_libraries(verifypn PUBLIC CTL LTL PetriEngine PetriParse)
 add_dependencies(verifypn glpk-ext spot-ext)
 
 add_executable(verifypn-${ARCH_TYPE} main.cpp)

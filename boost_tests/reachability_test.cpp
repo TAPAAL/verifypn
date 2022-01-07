@@ -21,14 +21,95 @@
 #include <fstream>
 #include <sstream>
 
+#include "utils.h"
+
+using namespace PetriEngine;
+using namespace PetriEngine::Colored;
 
 BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-std::ifstream loadFile(const char* file) {
-    std::stringstream ss;
-    ss << getenv("TEST_FILES") << file;
-    std::cerr << "Loading '" << ss.str() << "'" << std::endl;
-    return std::ifstream(ss.str());
+BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityCardinality) {
+
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    std::vector<Reachability::ResultPrinter::Result> expected{
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied};
+
+    auto [pn, conditions, qstrings] = load_pn("models/Angiogenesis-PT-01/model.pnml",
+        "models/Angiogenesis-PT-01/ReachabilityCardinality.xml", qnums);
+
+    ResultHandler handler;
+
+    for (auto i : qnums) {
+        for (auto search :{Strategy::BFS, Strategy::DFS, Strategy::HEUR, Strategy::RDFS}) {
+            for (bool stub :{true, false}) {
+                for (bool trace :{true, false}) {
+                    auto c2 = prepareForReachability(conditions[i]);
+                    ReachabilitySearch strategy(*pn, handler, 0);
+                    std::vector<Condition_ptr> vec{c2};
+                    std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                    strategy.reachable(vec, results, search, stub, false, false, trace, 0);
+                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability) {
+
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    std::vector<Reachability::ResultPrinter::Result> expected{
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::NotSatisfied,
+        ResultPrinter::Satisfied,
+        ResultPrinter::NotSatisfied};
+
+    auto [pn, conditions, qstrings] = load_pn("models/Angiogenesis-PT-01/model.pnml",
+        "models/Angiogenesis-PT-01/ReachabilityFireability.xml", qnums);
+
+    ResultHandler handler;
+
+    for (auto i : qnums) {
+        for (auto search :{Strategy::BFS, Strategy::DFS, Strategy::HEUR, Strategy::RDFS}) {
+            for (bool stub :{true, false}) {
+                for (bool trace :{true, false}) {
+                    auto c2 = prepareForReachability(conditions[i]);
+                    ReachabilitySearch strategy(*pn, handler, 0);
+                    std::vector<Condition_ptr> vec{c2};
+                    std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                    strategy.reachable(vec, results, search, stub, false, false, trace, 0);
+                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                }
+            }
+        }
+    }
 }

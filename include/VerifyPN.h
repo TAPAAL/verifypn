@@ -131,5 +131,8 @@ void simplify_queries(const MarkVal* marking,
                         std::vector<PetriEngine::PQL::Condition_ptr>& queries,
                         options_t& options, std::ostream& outstream = std::cout);
 
+std::vector<Condition_ptr>
+parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary = false);
+
 #endif /* VERIFYPN_H */
 

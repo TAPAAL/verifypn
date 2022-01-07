@@ -19,7 +19,7 @@
 #include "PetriParse/QueryBinaryParser.h"
 #include "PetriEngine/PQL/Expressions.h"
 
-bool QueryBinaryParser::parse(std::ifstream& bin, const std::set<size_t>& parse_only) {
+bool QueryBinaryParser::parse(std::istream& bin, const std::set<size_t>& parse_only) {
     //Parse the xml
     uint32_t numq;
     bin.read(reinterpret_cast<char*>(&numq), sizeof(uint32_t));
@@ -52,7 +52,7 @@ bool QueryBinaryParser::parse(std::ifstream& bin, const std::set<size_t>& parse_
     return parsingOK;
 }
 
-Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::vector<std::string>& names)
+Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vector<std::string>& names)
 {
     Path p;
     binary.read(reinterpret_cast<char*>(&p), sizeof(Path));
@@ -238,7 +238,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
     return nullptr;
 }
 
-Expr_ptr QueryBinaryParser::parseExpr(std::ifstream& bin, const std::vector<std::string>& names) {
+Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<std::string>& names) {
     char t;
     bin.read(&t, sizeof(char));
     if(t == 'l')
