@@ -1672,7 +1672,8 @@ namespace PetriEngine {
                 _pflags[p] |= CAN_INC;
                 Place place = parent->_places[p];
                 for (uint32_t t : place.consumers) {
-                    queue.push(t);
+                    if (_tflags[t] == 0)
+                        queue.push(t);
                 }
             }
         };
@@ -1682,7 +1683,8 @@ namespace PetriEngine {
                 _pflags[p] |= CAN_DEC;
                 Place place = parent->_places[p];
                 for (uint32_t t : place.consumers) {
-                    queue.push(t);
+                    if (_tflags[t] == 0)
+                        queue.push(t);
                 }
             }
         };
@@ -1747,7 +1749,7 @@ namespace PetriEngine {
         while (!queue.empty()) {
             if (hasTimedout()) return false;
 
-            uint32_t t = queue.back();
+            uint32_t t = queue.front();
             queue.pop();
             if (_tflags[t] == 1) continue;
 
