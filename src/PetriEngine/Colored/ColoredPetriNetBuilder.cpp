@@ -744,7 +744,7 @@ namespace PetriEngine {
             size_t i = 0;
             for (const auto &b : gen) {
                 const std::string &name = transition.name + "_" + std::to_string(i++);
-                _ptBuilder.addTransition(name, transition._x, offset);
+                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
                 offset += 15;
 
                 for (const auto& arc : transition.input_arcs) {
