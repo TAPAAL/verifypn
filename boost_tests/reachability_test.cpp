@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityCardinality) {
         Reachability::ResultPrinter::NotSatisfied,
         Reachability::ResultPrinter::NotSatisfied};
 
-    auto [pn, conditions, qstrings] = load_pn("models/Angiogenesis-PT-01/model.pnml",
-        "models/Angiogenesis-PT-01/ReachabilityCardinality.xml", qnums);
+    auto [pn, conditions, qstrings] = load_pn("/models/Angiogenesis-PT-01/model.pnml",
+        "/models/Angiogenesis-PT-01/ReachabilityCardinality.xml", qnums);
 
     ResultHandler handler;
 
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability) {
         ResultPrinter::Satisfied,
         ResultPrinter::NotSatisfied};
 
-    auto [pn, conditions, qstrings] = load_pn("models/Angiogenesis-PT-01/model.pnml",
-        "models/Angiogenesis-PT-01/ReachabilityFireability.xml", qnums);
+    auto [pn, conditions, qstrings] = load_pn("/models/Angiogenesis-PT-01/model.pnml",
+        "/models/Angiogenesis-PT-01/ReachabilityFireability.xml", qnums);
 
     ResultHandler handler;
 
