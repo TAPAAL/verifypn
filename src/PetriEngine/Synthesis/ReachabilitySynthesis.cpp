@@ -28,6 +28,7 @@
 #include "utils/Stopwatch.h"
 #include "CTL/CTLResult.h"
 #include "PetriEngine/SuccessorGenerator.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 #include <vector>
 
@@ -38,13 +39,11 @@ namespace PetriEngine {
     namespace Synthesis {
 
         ReachabilitySynthesis::ReachabilitySynthesis(Reachability::ResultPrinter& printer, PetriNet& net, size_t kbound)
-        : printer(printer), _net(net), _kbound(kbound) {
+        : printer(printer), _kbound(kbound), _net(net) {
         }
 
         ReachabilitySynthesis::~ReachabilitySynthesis() {
         }
-
-#define TRYSYNTH(X,S,Q,P)    run<SuccessorGenerator,X>(Q, P, strategy_out);
 
         ResultPrinter::Result ReachabilitySynthesis::synthesize(
             PQL::Condition& query,
@@ -55,31 +54,36 @@ namespace PetriEngine {
             std::ostream* strategy_out) {
             using namespace Structures;
             CTLResult result(&query);
-            if (auto* q = dynamic_cast<PQL::ControlCondition*>(&query)) {
+
+            auto ctrl = dynamic_cast<PQL::ControlCondition*> (&query);
+            if(ctrl == nullptr)
+                throw base_error("ERROR: Missing topmost control-condition for synthesis");
+            auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*>((*ctrl)[0].get());
+            const bool is_safety = dynamic_cast<PQL::AGCondition*>(quant) != nullptr;
+            if(!is_safety && dynamic_cast<PQL::AFCondition*>(quant))
+                throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
+            auto predicate = (*quant)[0].get();
+            if (PQL::isTemporal(predicate))
+                throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
 
-                switch (strategy) {
-                    case Strategy::HEUR:
-                        std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
-                        /*TRYSYNTH(HeuristicQueue, use_stubborn, result, permissive)
-                        break;*/
-                    case Strategy::DFS:
-                        run(result, permissive, strategy_out);
-                        break;
-                    case Strategy::BFS:
-                        run(result, permissive, strategy_out);
-                        break;
-                    case Strategy::RDFS:
-                        run(result, permissive, strategy_out);
-                        break;
-                    default:
-                        std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
-                        std::exit(ErrorCode);
-                }
-            } else {
-                std::cerr << "ERROR: Unsupported query type:\n\t";
-                query.toString(std::cerr);
-                std::cerr << std::endl;
+            switch (strategy) {
+                case Strategy::HEUR:
+                    std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
+                    /*TRYSYNTH(HeuristicQueue, use_stubborn, result, permissive)
+                    break;*/
+                case Strategy::DFS:
+                    run(predicate, is_safety, result, permissive, strategy_out);
+                    break;
+                case Strategy::BFS:
+                    run(predicate, is_safety, result, permissive, strategy_out);
+                    break;
+                case Strategy::RDFS:
+                    run(predicate, is_safety, result, permissive, strategy_out);
+                    break;
+                default:
+                    std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
+                    std::exit(ErrorCode);
             }
 
             //printer.printResult(result);
@@ -220,7 +224,7 @@ namespace PetriEngine {
         // validating the solution of the DEP graph (reachability-query is assumed)
 
         void ReachabilitySynthesis::validate(PQL::Condition* query, Structures::AnnotatedStateSet<SynthConfig>& stateset, bool is_safety) {
-            MarkVal* working = new MarkVal[_net.numberOfPlaces()];
+            Structures::State working(new MarkVal[_net.numberOfPlaces()]);
             size_t old = markings.size();
             for (size_t id = 0; id < old; ++id) {
                 std::cerr << "VALIDATION " << id << std::endl;
@@ -233,17 +237,18 @@ namespace PetriEngine {
                 PQL::EvaluationContext ctx(markings[id], &_net);
                 auto res = query->evaluate(ctx);
                 if (conf._state != SynthConfig::WINNING)
-                    assert((res != RTRUE) == is_safety);
+                    assert((res != PQL::Condition::RTRUE) == is_safety);
                 else if (res != is_safety) {
                     assert(conf._state == SynthConfig::WINNING);
                     continue;
                 }
-                SuccessorGenerator generator(_net, true, false);
-                generator.prepare(markings[id]);
+                SuccessorGenerator generator(_net);
+                Structures::State s(markings[id]);
+                generator.prepare(&s);
                 bool ok = false;
                 std::vector<size_t> env_maybe;
                 std::vector<size_t> env_win;
-                while (generator.next(working, PetriNet::ENV)) {
+                while (generator.next_env(working)) {
                     auto res = stateset.add(working);
                     if (!res.first) {
                         auto& c = stateset.get_data(res.second);
@@ -260,6 +265,7 @@ namespace PetriEngine {
                         }
                     }
                 }
+                s.release();
                 if (!ok) {
                     if (env_maybe.size() > 0) {
                         assert(conf._state != SynthConfig::WINNING);
@@ -270,7 +276,7 @@ namespace PetriEngine {
                     }
                     std::vector<size_t> not_win;
                     bool some = false;
-                    while (generator.next(working, PetriNet::CTRL)) {
+                    while (generator.next_ctrl(working)) {
                         some = true;
                         auto res = stateset.add(working);
                         if (!res.first) {
@@ -300,7 +306,6 @@ namespace PetriEngine {
                     }
                 }
             }
-            delete[] working;
         }
 #endif
 
@@ -308,15 +313,15 @@ namespace PetriEngine {
             Structures::AnnotatedStateSet<SynthConfig>& stateset, SynthConfig& meta, const bool is_safety) {
             std::stack<size_t> missing;
 
-            auto parent = _net.makeInitialMarking();
-            auto working = _net.makeInitialMarking();
+            Structures::State parent(_net.makeInitialMarking());
+            Structures::State working(_net.makeInitialMarking());
             {
-                auto res = stateset.add(working.get());
+                auto res = stateset.add(working);
                 missing.emplace(res.second);
             }
             if (&out == &std::cout) out << "\n##BEGIN STRATEGY##\n";
             out << "{\n";
-            SuccessorGenerator generator(_net, true, is_safety);
+            SuccessorGenerator generator(_net);
             bool first_marking = true;
             while (!missing.empty()) {
                 auto nxt = missing.top();
@@ -324,10 +329,10 @@ namespace PetriEngine {
                 auto& meta = stateset.get_data(nxt);
                 if ((meta._state & SynthConfig::WINNING) ||
                     (is_safety && (meta._state & (SynthConfig::UNKNOWN | SynthConfig::LOSING)) == 0)) {
-                    stateset.decode(parent.get(), nxt);
-                    generator.prepare(parent.get());
-                    while (generator.next(working.get(), PetriNet::ENV)) {
-                        auto res = stateset.add(working.get());
+                    stateset.decode(parent, nxt);
+                    generator.prepare(parent);
+                    while (generator.next_env(working)) {
+                        auto res = stateset.add(working);
                         auto& state = stateset.get_data(res.second)._state;
                         if ((state & SynthConfig::PRINTED) == 0) {
                             missing.emplace(res.second);
@@ -339,10 +344,14 @@ namespace PetriEngine {
                     std::vector<uint32_t> winning;
                     std::set<size_t> winning_succs;
                     bool seen_win = false;
+#ifndef NDEBUG
                     bool some = false;
-                    while (generator.next(working.get(), PetriNet::CTRL)) {
+#endif
+                    while (generator.next_ctrl(working)) {
+#ifndef NDEBUG
                         some = true;
-                        auto res = stateset.add(working.get());
+#endif
+                        auto res = stateset.add(working);
                         auto state = stateset.get_data(res.second)._state;
                         if ((state & SynthConfig::LOSING)) continue;
                         if (!is_safety && (state & SynthConfig::WINNING) == 0) continue;
@@ -391,27 +400,13 @@ namespace PetriEngine {
                 out << "##END STRATEGY##\n";
         }
 
-        void ReachabilitySynthesis::run(/*PetriEngine::ResultPrinter::DGResult& result,*/ bool permissive, std::ostream* strategy_out) {
+        void ReachabilitySynthesis::run(PQL::Condition* query, bool is_safety, CTLResult& result, bool permissive, std::ostream* strategy_out) {
             // permissive == maximal in this case; there is a subtle difference
             // in wether you terminate the search at losing states (permissive)
             // or you saturate over the entire graph (maximal)
             // the later includes potential
             // safety/reachability given "wrong choices" on both sides
-            auto query = const_cast<PetriEngine::PQL::Condition*> (result.query);
-            const bool is_safety = query->isInvariant();
-            if (query == nullptr) {
-                std::cerr << "Body of quantifier is null" << std::endl;
-                std::exit(ErrorCode);
-            }
-            if (query->isTemporal()) {
-                std::cerr << "Body of quantifier is temporal" << std::endl;
-                std::exit(ErrorCode);
-            }
-            /*if(is_safety)
-            {
-                std::cerr << "Safety synthesis is untested and unsupported" << std::endl;
-                std::exit(ErrorCode);
-            }*/
+
             stopwatch timer;
             timer.start();
             Structures::State working(_net.makeInitialMarking());
@@ -425,8 +420,8 @@ namespace PetriEngine {
             auto& meta = get_config(stateset, working, query, is_safety, cid);
             meta._waiting = 1;
 
-            std::make_unique<Structures::DFSQueue> queue;
-            SuccessorGenerator generator(_net, true, is_safety);
+            Structures::DFSQueue queue(0);
+            SuccessorGenerator generator(_net);
 
             std::stack<SynthConfig*> back;
             queue.push(cid, nullptr, nullptr);
@@ -444,9 +439,9 @@ restart:
                     result.processedEdges += dependers_to_waiting(next, back, is_safety);
                 }
 
-                bool any = queue.pop(nid);
-                if (!any)
+                if(queue.empty())
                     break;
+                nid = queue.pop();
                 auto& cconf = stateset.get_data(nid);
                 if (cconf.determined()) {
                     if (permissive && !cconf._dependers.empty())
@@ -477,11 +472,11 @@ restart:
                 assert(cconf._waiting == 1);
                 cconf._state = SynthConfig::PROCESSED;
                 assert(cconf._marking == nid);
-                stateset.decode(parent.get(), nid);
-                generator.prepare(parent.get());
+                stateset.decode(parent, nid);
+                generator.prepare(parent);
                 // first try all environment choices (if one is losing, everything is lost)
                 bool some_env = false;
-                while (generator.next(working.get(), PetriEngine::PetriNet::ENV)) {
+                while (generator.next_env(working)) {
                     some_env = true;
                     auto& child = get_config(stateset, working, query, is_safety, cid);
                     //std::cerr << "ENV[" << cconf._marking << "] --> [" << child._marking << "]" << std::endl;
@@ -506,7 +501,7 @@ restart:
                 bool some_winning = false;
                 //tsd::cerr << "CTRL " << std::endl;
                 if (!cconf.determined()) {
-                    while (generator.next(working.get(), PetriNet::CTRL)) {
+                    while (generator.next_ctrl(working)) {
                         some = true;
                         auto& child = get_config(stateset, working, query, is_safety, cid);
                         //std::cerr << "CTRL[" << cconf._marking << "] --> [" << child._marking << "]" << std::endl;
@@ -597,23 +592,7 @@ restart:
                     result.numberOfEdges += cconf._ctrl_children + cconf._env_children;
                 }
             }
-#ifndef NDEBUG
-            /*permissive = true;
-            for(size_t i = 0; i < stateset.size(); ++i)
-            {
-                auto& c = stateset.get_data(i);
-                if(c.determined())
-                {
-                    if(c._waiting == 0)
-                    {
-                        back.push(&c);
-                        c._waiting = 1;
-                    }
-                }
-            }
-            if(back.size() > 0)
-                goto restart;*/
-#endif
+
             assert(!permissive || queue.empty());
             //result.numberOfConfigurations = stateset.size();
             //result.numberOfMarkings = stateset.size();

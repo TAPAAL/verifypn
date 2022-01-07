@@ -46,7 +46,7 @@
 
 
 #include "VerifyPN.h"
-#include "Synthesis/ReachabilitySynthesis.h"
+#include "PetriEngine/Synthesis/ReachabilitySynthesis.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -206,7 +206,7 @@ int main(int argc, const char** argv) {
                 else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (options.strategy == PetriEngine::Reachability::OverApprox){
+            } else if (options.strategy == Strategy::OverApprox){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
@@ -264,7 +264,7 @@ int main(int argc, const char** argv) {
         return SuccessCode;
     }
 
-    if(options.strategy == OverApprox)
+    if(options.strategy == Strategy::OverApprox)
     {
         return SuccessCode;
     }
@@ -305,7 +305,7 @@ int main(int argc, const char** argv) {
 
         if (!ctl_ids.empty()) {
             options.usedctl = true;
-            PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
+            auto reachabilityStrategy = options.strategy;
 
             // Assign indexes
             if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
@@ -313,7 +313,7 @@ int main(int argc, const char** argv) {
                 std::cerr << "An error occurred while assigning indexes" << std::endl;
                 return ErrorCode;
             }
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+            if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),
                         options.ctlalgorithm,
                         options.strategy,
@@ -409,7 +409,7 @@ int main(int argc, const char** argv) {
 
             // Change default place-holder to default strategy
             fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
+            options.strategy = Strategy::DFS;
 
             //Reachability search
             strategy.reachable(queries, results,
@@ -421,7 +421,7 @@ int main(int argc, const char** argv) {
             ReachabilitySearch strategy(*net, printer, options.kbound);
 
             // Change default place-holder to default strategy
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+            if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
             //Reachability search
             strategy.reachable(queries, results,

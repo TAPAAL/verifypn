@@ -103,6 +103,8 @@ namespace PetriEngine {
                 return !(rhs == *this);
             }
 
+            MarkVal operator[](size_t i) { return _marking[i]; }
+
         private:
             MarkVal* _marking;
         };

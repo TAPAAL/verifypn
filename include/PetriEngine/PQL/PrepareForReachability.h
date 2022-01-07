@@ -25,7 +25,8 @@
 
 namespace PetriEngine::PQL {
 
-    Condition_ptr prepareForReachability(Condition_ptr condition);
+    Condition_ptr prepareForReachability(const Condition* condition);
+    Condition_ptr prepareForReachability(const Condition_ptr& condition);
 
     class PrepareForReachabilityVisitor : public Visitor {
 

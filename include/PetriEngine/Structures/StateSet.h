@@ -48,9 +48,15 @@ namespace PetriEngine {
                 _sp.release();
             }
 
+            virtual std::pair<bool, size_t> add(const State* state) { return add(*state); };
+
             virtual std::pair<bool, size_t> add(const State& state) = 0;
 
+            virtual void decode(State* state, size_t id) { decode(*state, id); }
+
             virtual void decode(State& state, size_t id) = 0;
+
+            virtual std::pair<bool, size_t> lookup(State* state) { return lookup(*state); };
 
             virtual std::pair<bool, size_t> lookup(State &state) = 0;
 
@@ -256,6 +262,11 @@ namespace PetriEngine {
 
             T& get_data(size_t markingid){
                 return _trie.get_data(markingid);
+            }
+
+            virtual std::pair<bool, size_t> lookup(State& state) override
+            {
+                return _lookup(state, _trie);
             }
 
             virtual void setHistory(size_t id, size_t transition) override {}

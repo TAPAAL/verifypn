@@ -76,7 +76,7 @@ namespace PetriEngine {
             void validate(PetriEngine::PQL::Condition*, PetriEngine::Structures::AnnotatedStateSet<SynthConfig>&, bool is_safety);
 #endif
 
-            void run(CTLResult& result, bool permissive, std::ostream* strategy_out);
+            void run(PQL::Condition* query, bool is_safety, CTLResult& result, bool permissive, std::ostream* strategy_out);
 
             SynthConfig& get_config(Structures::AnnotatedStateSet<SynthConfig>& stateset, Structures::State& marking, PQL::Condition* prop, bool is_safety, size_t& cid);
 

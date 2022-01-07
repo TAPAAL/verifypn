@@ -76,7 +76,18 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
     }
 }
 
+bool singleSolve(Condition* query, PetriNet* net,
+                 CTLAlgorithmType algorithmtype,
+                 Strategy strategytype, bool partial_order, CTLResult& result);
+
 bool singleSolve(const Condition_ptr& query, PetriNet* net,
+                 CTLAlgorithmType algorithmtype,
+                 Strategy strategytype, bool partial_order, CTLResult& result)
+{
+    return singleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
+}
+
+bool singleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
@@ -224,19 +235,30 @@ public:
     }
 };
 
+bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
+
 bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
                     Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
-    if(auto q = dynamic_cast<NotCondition*>(query.get()))
+    return recursiveSolve(query.get(), net, algorithmtype, strategytype, partial_order, result, options);
+}
+
+bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+{
+    if(auto q = dynamic_cast<NotCondition*>(query))
     {
         return ! recursiveSolve((*q)[0], net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(auto q = dynamic_cast<AndCondition*>(query.get()))
+    else if(auto q = dynamic_cast<AndCondition*>(query))
     {
         return solveLogicalCondition(q, true, net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(auto q = dynamic_cast<OrCondition*>(query.get()))
+    else if(auto q = dynamic_cast<OrCondition*>(query))
     {
         return solveLogicalCondition(q, false, net, algorithmtype, strategytype, partial_order, result, options);
     }
