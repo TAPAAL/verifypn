@@ -43,12 +43,9 @@ namespace PetriEngine {
     namespace Synthesis {
 
         class ReachabilitySynthesis {
-        private:
-            Reachability::ResultPrinter& printer;
-
         public:
 
-            ReachabilitySynthesis(Reachability::ResultPrinter& printer, PetriNet& net, size_t kbound = 0);
+            ReachabilitySynthesis(PetriNet& net, size_t kbound = 0);
 
             ~ReachabilitySynthesis();
 
@@ -56,7 +53,6 @@ namespace PetriEngine {
                     PQL::Condition& query,
                     Strategy strategy,
                     bool use_stubborn = false,
-                    bool keep_strategies = false,
                     bool permissive = false,
                     std::ostream* strategy_out = nullptr);
         private:

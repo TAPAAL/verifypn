@@ -19,10 +19,15 @@ add_test(NAME Boost_Tests_run COMMAND Boost_Tests_run)
 
 
 add_executable (reachability reachability_test.cpp)
+add_executable (games game_test.cpp)
 
 target_link_libraries(reachability PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
+target_link_libraries(games        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 
 add_test(NAME reachability COMMAND reachability)
+add_test(NAME games COMMAND games)
 
 set_tests_properties(reachability PROPERTIES
+    ENVIRONMENT TEST_FILES=${CMAKE_CURRENT_SOURCE_DIR})
+set_tests_properties(games PROPERTIES
     ENVIRONMENT TEST_FILES=${CMAKE_CURRENT_SOURCE_DIR})

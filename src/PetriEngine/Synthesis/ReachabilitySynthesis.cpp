@@ -38,18 +38,43 @@ namespace PetriEngine {
 
     namespace Synthesis {
 
-        ReachabilitySynthesis::ReachabilitySynthesis(Reachability::ResultPrinter& printer, PetriNet& net, size_t kbound)
-        : printer(printer), _kbound(kbound), _net(net) {
+        ReachabilitySynthesis::ReachabilitySynthesis(PetriNet& net, size_t kbound)
+        : _kbound(kbound), _net(net) {
         }
 
         ReachabilitySynthesis::~ReachabilitySynthesis() {
+        }
+
+        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition)
+        {
+
+            if(auto a = dynamic_cast<PQL::ACondition*>(condition))
+            {
+                if(auto p = dynamic_cast<PQL::FCondition*>((*a)[0].get()))
+                {
+                    return {false, (*p)[0].get()};
+                }
+                else if (auto p = dynamic_cast<PQL::GCondition*>((*a)[0].get()))
+                {
+                    return {true, (*p)[0].get()};
+                }
+            }
+            else if(auto a = dynamic_cast<PQL::AGCondition*>(condition))
+            {
+                return {true, (*a)[0].get()};
+            }
+            else if(auto a = dynamic_cast<PQL::AFCondition*>(condition))
+            {
+                return {false, (*a)[0].get()};
+            }
+            throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
+
         }
 
         ResultPrinter::Result ReachabilitySynthesis::synthesize(
             PQL::Condition& query,
             Strategy strategy,
             bool use_stubborn,
-            bool keep_strategies,
             bool permissive,
             std::ostream* strategy_out) {
             using namespace Structures;
@@ -59,10 +84,7 @@ namespace PetriEngine {
             if(ctrl == nullptr)
                 throw base_error("ERROR: Missing topmost control-condition for synthesis");
             auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*>((*ctrl)[0].get());
-            const bool is_safety = dynamic_cast<PQL::AGCondition*>(quant) != nullptr;
-            if(!is_safety && dynamic_cast<PQL::AFCondition*>(quant))
-                throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
-            auto predicate = (*quant)[0].get();
+            auto [is_safety, predicate] = get_predicate(quant);
             if (PQL::isTemporal(predicate))
                 throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
@@ -429,9 +451,7 @@ namespace PetriEngine {
             // these could be preallocated; at most one successor pr transition
             std::vector<std::pair<size_t, SynthConfig*>> env_buffer;
             std::vector<std::pair<size_t, SynthConfig*>> ctrl_buffer;
-#ifndef NDEBUG
-restart:
-#endif
+
             while (!meta.determined() || permissive) {
                 while (!back.empty()) {
                     SynthConfig* next = back.top();
@@ -602,12 +622,6 @@ restart:
             if (!is_safety) res = meta._state == SynthConfig::WINNING;
             else res = meta._state != meta.LOSING;
             result.result = (res != is_safety) ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
-#ifndef NDEBUG
-            {
-                // can only check complete solution to dep graph.
-                validate(query, stateset, is_safety);
-            }
-#endif
 
             if (strategy_out != nullptr && res) {
                 print_strategy(*strategy_out, stateset, meta, is_safety);

@@ -25,7 +25,6 @@ using namespace PetriEngine::Colored;
 std::ifstream loadFile(const char* file) {
     std::stringstream ss;
     ss << getenv("TEST_FILES") << file;
-    std::cerr << "Loading '" << ss.str() << "'" << std::endl;
     return std::ifstream(ss.str());
 }
 

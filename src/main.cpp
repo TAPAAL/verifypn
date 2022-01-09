@@ -356,7 +356,7 @@ int main(int argc, const char** argv) {
 
         for(auto i : synth_ids)
         {
-            Synthesis::ReachabilitySynthesis strategy(printer, *net, options.kbound);
+            Synthesis::ReachabilitySynthesis strategy(*net, options.kbound);
 
             std::ostream* strategy_out = nullptr;
             if(options.strategy_output == "_")
@@ -364,7 +364,7 @@ int main(int argc, const char** argv) {
             else if(options.strategy_output.size() > 0)
                 strategy_out = new std::ofstream(options.strategy_output);
 
-            results[i] = strategy.synthesize(*queries[i], options.strategy, options.stubbornreduction, false, false, strategy_out);
+            results[i] = strategy.synthesize(*queries[i], options.strategy, options.stubbornreduction, false, strategy_out);
 
             if(strategy_out != nullptr && strategy_out != &std::cout)
             {
