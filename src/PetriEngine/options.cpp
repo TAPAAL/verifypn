@@ -139,7 +139,7 @@ void printHelp() {
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
         "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
-        "                                       - automaton  apply Büchi-guided stubborn set method.\n"
+        "                                       - automaton  apply Büchi-guided stubborn set method (Jensen et al., 2021).\n"
         "                                       - classic    classic stubborn set method (Valmari, 1990).\n"
         "                                                    Only applicable with formulae that do not \n"
         "                                                    contain the next-step operator.\n"

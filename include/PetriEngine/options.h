@@ -44,7 +44,6 @@ enum class LTLPartialOrder {
     None,
     Visible,
     Automaton,
-    //VisibleAutomaton,
     Liebke
 };
 
