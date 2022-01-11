@@ -46,7 +46,7 @@
 
 
 #include "VerifyPN.h"
-#include "PetriEngine/Synthesis/ReachabilitySynthesis.h"
+#include "PetriEngine/Synthesis/SimpleSynthesis.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -356,20 +356,22 @@ int main(int argc, const char** argv) {
 
         for(auto i : synth_ids)
         {
-            Synthesis::ReachabilitySynthesis strategy(*net, options.kbound);
+            Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
 
             std::ostream* strategy_out = nullptr;
+
+            results[i] = strategy.synthesize(options.strategy, options.stubbornreduction, false);
+
             if(options.strategy_output == "_")
                 strategy_out = &std::cout;
             else if(options.strategy_output.size() > 0)
                 strategy_out = new std::ofstream(options.strategy_output);
 
-            results[i] = strategy.synthesize(*queries[i], options.strategy, options.stubbornreduction, false, strategy_out);
+            if(strategy_out != nullptr)
+                strategy.print_strategy(*strategy_out);
 
             if(strategy_out != nullptr && strategy_out != &std::cout)
-            {
                 delete strategy_out;
-            }
         }
 
         //----------------------- Siphon Trap ------------------------//

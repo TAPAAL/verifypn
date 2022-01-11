@@ -75,6 +75,11 @@ namespace PetriEngine {
 
             void release() { _marking = nullptr; }
 
+            void copy(const MarkVal* other, size_t n)
+            {
+                std::copy(other, other + n, _marking);
+            }
+
             void swap(State& other)
             {
                 std::swap(_marking, other._marking);

@@ -22,7 +22,7 @@
  * Created on April 8, 2019, 2:19 PM
  */
 
-#include "PetriEngine/Synthesis/ReachabilitySynthesis.h"
+#include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "PetriEngine/Synthesis/SynthConfig.h"
 #include "PetriEngine/options.h"
 #include "utils/Stopwatch.h"
@@ -38,11 +38,13 @@ namespace PetriEngine {
 
     namespace Synthesis {
 
-        ReachabilitySynthesis::ReachabilitySynthesis(PetriNet& net, size_t kbound)
-        : _kbound(kbound), _net(net) {
+        SimpleSynthesis::SimpleSynthesis(PetriNet& net, PQL::Condition& query, size_t kbound)
+        : _kbound(kbound), _net(net), _working(net.makeInitialMarking()), _parent(_net.makeInitialMarking()),
+            _stateset(_net, 0), _query(query), _result(&query) {
+
         }
 
-        ReachabilitySynthesis::~ReachabilitySynthesis() {
+        SimpleSynthesis::~SimpleSynthesis() {
         }
 
         std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition)
@@ -71,48 +73,28 @@ namespace PetriEngine {
 
         }
 
-        ResultPrinter::Result ReachabilitySynthesis::synthesize(
-            PQL::Condition& query,
+        ResultPrinter::Result SimpleSynthesis::synthesize(
             Strategy strategy,
             bool use_stubborn,
-            bool permissive,
-            std::ostream* strategy_out) {
+            bool permissive) {
             using namespace Structures;
-            CTLResult result(&query);
 
-            auto ctrl = dynamic_cast<PQL::ControlCondition*> (&query);
+
+            auto ctrl = dynamic_cast<PQL::ControlCondition*> (&_query);
             if(ctrl == nullptr)
                 throw base_error("ERROR: Missing topmost control-condition for synthesis");
             auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*>((*ctrl)[0].get());
-            auto [is_safety, predicate] = get_predicate(quant);
+            auto [_is_safety, predicate] = get_predicate(quant);
             if (PQL::isTemporal(predicate))
                 throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
-
-            switch (strategy) {
-                case Strategy::HEUR:
-                    std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
-                    /*TRYSYNTH(HeuristicQueue, use_stubborn, result, permissive)
-                    break;*/
-                case Strategy::DFS:
-                    run(predicate, is_safety, result, permissive, strategy_out);
-                    break;
-                case Strategy::BFS:
-                    run(predicate, is_safety, result, permissive, strategy_out);
-                    break;
-                case Strategy::RDFS:
-                    run(predicate, is_safety, result, permissive, strategy_out);
-                    break;
-                default:
-                    std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
-                    std::exit(ErrorCode);
-            }
+            run(predicate, strategy, permissive);
 
             //printer.printResult(result);
-            return result.result ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
+            return _result.result ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
         }
 
-        size_t ReachabilitySynthesis::dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back, bool safety) {
+        void SimpleSynthesis::dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back) {
             size_t processed = 0;
             //std::cerr << "BACK[" << next->_marking << "]" << std::endl;
             //std::cerr << "Win ? " << SynthConfig::state_to_str(next->_state) << std::endl;
@@ -172,10 +154,10 @@ namespace PetriEngine {
                 }
             }
             next->_dependers.clear();
-            return processed;
+            _result.processedEdges += processed;
         }
 
-        bool ReachabilitySynthesis::check_bound(const MarkVal* marking) {
+        bool SimpleSynthesis::check_bound(const MarkVal* marking) {
             if (_kbound > 0) {
                 size_t sum = 0;
                 for (size_t p = 0; p < _net.numberOfPlaces(); ++p)
@@ -186,7 +168,7 @@ namespace PetriEngine {
             return true;
         }
 
-        bool ReachabilitySynthesis::eval(PQL::Condition* cond, const MarkVal* marking) {
+        bool SimpleSynthesis::eval(PQL::Condition* cond, const MarkVal* marking) {
             PQL::EvaluationContext ctx(marking, &_net);
             return cond->evaluate(ctx) == PQL::Condition::RTRUE;
             // TODO, we can use the stability in the fixpoint computation to prun the Dep-graph
@@ -196,21 +178,22 @@ namespace PetriEngine {
         std::vector<MarkVal*> markings;
 #endif
 
-        SynthConfig& ReachabilitySynthesis::get_config(Structures::AnnotatedStateSet<SynthConfig>& stateset, Structures::State& state, PQL::Condition* prop, bool is_safety, size_t& cid) {
+        SynthConfig& SimpleSynthesis::get_config(Structures::State& state, PQL::Condition* prop, size_t& cid) {
             // TODO, we don't actually have to store winning markings here (what is fastest, checking query or looking up marking?/memory)!
-            auto res = stateset.add(state);
+            auto res = _stateset.add(state);
             cid = res.second;
-            SynthConfig& meta = stateset.get_data(res.second);
+            SynthConfig& meta = _stateset.get_data(res.second);
             {
 #ifndef NDEBUG
                 Structures::State tmp(new MarkVal[_net.numberOfPlaces()]);
-                stateset.decode(tmp, res.second);
+                _stateset.decode(tmp, res.second);
                 std::memcmp(tmp.marking(), state.marking(), sizeof (MarkVal) * _net.numberOfPlaces());
 #endif
             }
 
             if (res.first) {
-
+                ++_result.numberOfConfigurations;
+                ++_result.numberOfMarkings;
 #ifndef NDEBUG
                 markings.push_back(new MarkVal[_net.numberOfPlaces()]);
                 memcpy(markings.back(), state.marking(), sizeof (MarkVal) * _net.numberOfPlaces());
@@ -220,7 +203,7 @@ namespace PetriEngine {
                     meta._state = SynthConfig::LOSING;
                 } else {
                     auto res = eval(prop, state.marking());
-                    if (is_safety) {
+                    if (_is_safety) {
                         if (res == true) // flipped by reductions, so negate result here!
                             meta._state = SynthConfig::LOSING;
                     } else {
@@ -236,7 +219,7 @@ namespace PetriEngine {
 
 #ifndef NDEBUG
 
-        void ReachabilitySynthesis::print_id(size_t id) {
+        void SimpleSynthesis::print_id(size_t id) {
             std::cerr << "[" << id << "] : ";
             Structures::State s(markings[id]);
             s.print(_net, std::cerr);
@@ -246,7 +229,7 @@ namespace PetriEngine {
 
         // validating the solution of the DEP graph (reachability-query is assumed)
 
-        void ReachabilitySynthesis::validate(PQL::Condition* query, Structures::AnnotatedStateSet<SynthConfig>& stateset, bool is_safety) {
+        void SimpleSynthesis::validate(PQL::Condition* query, Structures::AnnotatedStateSet<SynthConfig>& stateset, bool is_safety) {
             Structures::State working(new MarkVal[_net.numberOfPlaces()]);
             size_t old = markings.size();
             for (size_t id = 0; id < old; ++id) {
@@ -332,14 +315,13 @@ namespace PetriEngine {
         }
 #endif
 
-        void ReachabilitySynthesis::print_strategy(std::ostream& out,
-            Structures::AnnotatedStateSet<SynthConfig>& stateset, SynthConfig& meta, const bool is_safety) {
+        void SimpleSynthesis::print_strategy(std::ostream& out) {
             std::stack<size_t> missing;
 
             Structures::State parent(_net.makeInitialMarking());
             Structures::State working(_net.makeInitialMarking());
             {
-                auto res = stateset.add(working);
+                auto res = _stateset.add(working);
                 missing.emplace(res.second);
             }
             if (&out == &std::cout) out << "\n##BEGIN STRATEGY##\n";
@@ -349,14 +331,14 @@ namespace PetriEngine {
             while (!missing.empty()) {
                 auto nxt = missing.top();
                 missing.pop();
-                auto& meta = stateset.get_data(nxt);
+                auto& meta = _stateset.get_data(nxt);
                 if ((meta._state & SynthConfig::WINNING) ||
-                    (is_safety && (meta._state & (SynthConfig::UNKNOWN | SynthConfig::LOSING)) == 0)) {
-                    stateset.decode(parent, nxt);
+                    (_is_safety && (meta._state & (SynthConfig::UNKNOWN | SynthConfig::LOSING)) == 0)) {
+                    _stateset.decode(parent, nxt);
                     generator.prepare(parent);
                     while (generator.next_env(working)) {
-                        auto res = stateset.add(working);
-                        auto& state = stateset.get_data(res.second)._state;
+                        auto res = _stateset.add(working);
+                        auto& state = _stateset.get_data(res.second)._state;
                         if ((state & SynthConfig::PRINTED) == 0) {
                             missing.emplace(res.second);
                             state = state | SynthConfig::PRINTED;
@@ -374,10 +356,10 @@ namespace PetriEngine {
 #ifndef NDEBUG
                         some = true;
 #endif
-                        auto res = stateset.add(working);
-                        auto state = stateset.get_data(res.second)._state;
+                        auto res = _stateset.add(working);
+                        auto state = _stateset.get_data(res.second)._state;
                         if ((state & SynthConfig::LOSING)) continue;
-                        if (!is_safety && (state & SynthConfig::WINNING) == 0) continue;
+                        if (!_is_safety && (state & SynthConfig::WINNING) == 0) continue;
                         if ((state & SynthConfig::WINNING) && !seen_win) {
                             seen_win = true;
                             winning.clear();
@@ -388,7 +370,7 @@ namespace PetriEngine {
                     }
                     assert((winning_succs.size() > 0) == some);
                     for (auto w : winning_succs) {
-                        auto& state = stateset.get_data(w)._state;
+                        auto& state = _stateset.get_data(w)._state;
                         if ((state & SynthConfig::PRINTED) == 0) {
                             missing.emplace(w);
                             state = state | SynthConfig::PRINTED;
@@ -423,7 +405,24 @@ namespace PetriEngine {
                 out << "##END STRATEGY##\n";
         }
 
-        void ReachabilitySynthesis::run(PQL::Condition* query, bool is_safety, CTLResult& result, bool permissive, std::ostream* strategy_out) {
+        std::unique_ptr<Structures::Queue> make_queue(Strategy strategy)
+        {
+            switch (strategy) {
+                case Strategy::HEUR:
+                    std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
+                case Strategy::DFS:
+                    return std::make_unique<Structures::DFSQueue>(0);
+                case Strategy::BFS:
+                    return std::make_unique<Structures::BFSQueue>(0);
+                case Strategy::RDFS:
+                    return std::make_unique<Structures::RDFSQueue>(0);
+                default:
+                    std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
+                    std::exit(ErrorCode);
+            }
+        }
+
+        void SimpleSynthesis::run(PQL::Condition* query, Strategy strategy, bool permissive) {
             // permissive == maximal in this case; there is a subtle difference
             // in wether you terminate the search at losing states (permissive)
             // or you saturate over the entire graph (maximal)
@@ -432,22 +431,19 @@ namespace PetriEngine {
 
             stopwatch timer;
             timer.start();
-            Structures::State working(_net.makeInitialMarking());
-            Structures::State parent(_net.makeInitialMarking());
-
-            Structures::AnnotatedStateSet<SynthConfig> stateset(_net, 0);
 
             size_t cid;
             size_t nid;
+            _working.copy(_net.initial(), _net.numberOfPlaces());
 
-            auto& meta = get_config(stateset, working, query, is_safety, cid);
+            auto& meta = get_config(_working, query, cid);
             meta._waiting = 1;
 
-            Structures::DFSQueue queue(0);
+            auto queue = make_queue(strategy);
             SuccessorGenerator generator(_net);
 
             std::stack<SynthConfig*> back;
-            queue.push(cid, nullptr, nullptr);
+            queue->push(cid, nullptr, nullptr);
 
             // these could be preallocated; at most one successor pr transition
             std::vector<std::pair<size_t, SynthConfig*>> env_buffer;
@@ -457,13 +453,13 @@ namespace PetriEngine {
                 while (!back.empty()) {
                     SynthConfig* next = back.top();
                     back.pop();
-                    result.processedEdges += dependers_to_waiting(next, back, is_safety);
+                    dependers_to_waiting(next, back);
                 }
 
-                if(queue.empty())
+                if(queue->empty())
                     break;
-                nid = queue.pop();
-                auto& cconf = stateset.get_data(nid);
+                nid = queue->pop();
+                auto& cconf = _stateset.get_data(nid);
                 if (cconf.determined()) {
                     if (permissive && !cconf._dependers.empty())
                         back.push(&cconf);
@@ -486,20 +482,20 @@ namespace PetriEngine {
                 }
 
                 //std::cerr << "PROCESSING [" << cconf._marking << "]" << std::endl;
-                ++result.exploredConfigurations;
+                ++_result.exploredConfigurations;
                 env_buffer.clear();
                 ctrl_buffer.clear();
 
                 assert(cconf._waiting == 1);
                 cconf._state = SynthConfig::PROCESSED;
                 assert(cconf._marking == nid);
-                stateset.decode(parent, nid);
-                generator.prepare(parent);
+                _stateset.decode(_parent, nid);
+                generator.prepare(_parent);
                 // first try all environment choices (if one is losing, everything is lost)
                 bool some_env = false;
                 // std::cerr << "ENV" << std::endl;
-                while (generator.next_env(working)) {
-                    auto& child = get_config(stateset, working, query, is_safety, cid);
+                while (generator.next_env(_working)) {
+                    auto& child = get_config(_working, query, cid);
                     //std::cerr << "[" << cconf._marking << "] ";
                     //_net.print(parent.marking());
                     // std::cerr << "[" << child._marking << "] ";
@@ -513,7 +509,7 @@ namespace PetriEngine {
                     } else if (child._state == SynthConfig::WINNING)
                         continue; // would never choose
                     if (&child == &cconf) {
-                        if (is_safety) continue; // would make ctrl win
+                        if (_is_safety) continue; // would make ctrl win
                         else {
                             cconf._state = SynthConfig::LOSING; // env wins surely
                             break;
@@ -528,8 +524,8 @@ namespace PetriEngine {
                 //std::cerr << "CTRL " << std::endl;
                 if (!cconf.determined()) {
                     generator.reset();
-                    while (generator.next_ctrl(working)) {
-                        auto& child = get_config(stateset, working, query, is_safety, cid);
+                    while (generator.next_ctrl(_working)) {
+                        auto& child = get_config(_working, query, cid);
                         //std::cerr << "[" << cconf._marking << "] ";
                         //_net.print(parent.marking());
                         //std::cerr << "[" << child._marking << "] ";
@@ -539,7 +535,7 @@ namespace PetriEngine {
                         //std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
 
                         if (&child == &cconf) {
-                            if (is_safety) { // maybe a win if safety ( no need to explore more)
+                            if (_is_safety) { // maybe a win if safety ( no need to explore more)
                                 cconf._state = SynthConfig::MAYBE;
                                 if (!permissive) {
                                     ctrl_buffer.clear();
@@ -578,7 +574,7 @@ namespace PetriEngine {
                     } else if (!some && !some_env) {
                         // deadlock, bad if reachability, good if safety
                         assert(cconf._state != SynthConfig::WINNING);
-                        if (is_safety) {
+                        if (_is_safety) {
                             cconf._state = SynthConfig::WINNING;
                         } else {
                             cconf._state = SynthConfig::LOSING;
@@ -606,7 +602,7 @@ namespace PetriEngine {
                     //std::cerr << "[" << nid << "]" << std::endl;
                     for (auto& c : ctrl_buffer) {
                         if (c.second->_waiting == 0) {
-                            queue.push(c.first, nullptr, nullptr);
+                            queue->push(c.first, nullptr, nullptr);
                             c.second->_waiting = 1;
                         }
                         c.second->_dependers.emplace_front(true, &cconf);
@@ -614,29 +610,23 @@ namespace PetriEngine {
                     // then env.
                     for (auto& c : env_buffer) {
                         if (c.second->_waiting == 0) {
-                            queue.push(c.first, nullptr, nullptr);
+                            queue->push(c.first, nullptr, nullptr);
                             c.second->_waiting = 1;
                         }
                         c.second->_dependers.emplace_front(false, &cconf);
                     }
                     cconf._ctrl_children = ctrl_buffer.size();
                     cconf._env_children = env_buffer.size();
-                    result.numberOfEdges += cconf._ctrl_children + cconf._env_children;
+                    _result.numberOfEdges += cconf._ctrl_children + cconf._env_children;
                 }
             }
 
-            assert(!permissive || queue.empty());
-            //result.numberOfConfigurations = stateset.size();
-            //result.numberOfMarkings = stateset.size();
+            assert(!permissive || queue->empty());
             timer.stop();
-            result.duration = timer.duration();
+            _result.duration = timer.duration();
 
-            if (!is_safety) result.result = meta._state == SynthConfig::WINNING;
-            else result.result = meta._state != meta.LOSING;
-
-            if (strategy_out != nullptr && result.result) {
-                print_strategy(*strategy_out, stateset, meta, is_safety);
-            }
+            if (!_is_safety) _result.result = meta._state == SynthConfig::WINNING;
+            else _result.result = meta._state != meta.LOSING;
         }
     }
 }

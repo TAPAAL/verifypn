@@ -42,19 +42,21 @@
 namespace PetriEngine {
     namespace Synthesis {
 
-        class ReachabilitySynthesis {
+        class SimpleSynthesis {
         public:
 
-            ReachabilitySynthesis(PetriNet& net, size_t kbound = 0);
+            SimpleSynthesis(PetriNet& net, PQL::Condition& query, size_t kbound = 0);
 
-            ~ReachabilitySynthesis();
+            ~SimpleSynthesis();
 
             Reachability::ResultPrinter::Result synthesize(
-                    PQL::Condition& query,
                     Strategy strategy,
-                    bool use_stubborn = false,
-                    bool permissive = false,
-                    std::ostream* strategy_out = nullptr);
+                    bool use_stubborn,
+                    bool permissive);
+
+            void print_strategy(std::ostream& strategy_out);
+            const CTLResult& result() { return _result; }
+
         private:
 
 
@@ -62,22 +64,26 @@ namespace PetriEngine {
 
             bool check_bound(const PetriEngine::MarkVal* marking);
 
-            size_t dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back, bool safety);
-
-            void print_strategy(std::ostream& strategy_out,
-                    PetriEngine::Structures::AnnotatedStateSet<SynthConfig>& stateset, SynthConfig& meta, bool is_safety);
+            void dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back);
 
 #ifndef NDEBUG
             void print_id(size_t);
             void validate(PetriEngine::PQL::Condition*, PetriEngine::Structures::AnnotatedStateSet<SynthConfig>&, bool is_safety);
 #endif
 
-            void run(PQL::Condition* query, bool is_safety, CTLResult& result, bool permissive, std::ostream* strategy_out);
+            void run(PQL::Condition* predicate, Strategy strategy, bool permissive);
 
-            SynthConfig& get_config(Structures::AnnotatedStateSet<SynthConfig>& stateset, Structures::State& marking, PQL::Condition* prop, bool is_safety, size_t& cid);
+            SynthConfig& get_config(Structures::State& marking, PQL::Condition* prop, size_t& cid);
 
             size_t _kbound;
             PetriNet& _net;
+            Structures::State _working;
+            Structures::State _parent;
+            Structures::AnnotatedStateSet<SynthConfig> _stateset;
+            bool _is_safety = false;
+            PQL::Condition& _query;
+            CTLResult _result;
+
         };
     }
 }

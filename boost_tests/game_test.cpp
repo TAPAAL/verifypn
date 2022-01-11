@@ -22,7 +22,7 @@
 #include <sstream>
 
 #include "utils.h"
-#include "PetriEngine/Synthesis/ReachabilitySynthesis.h"
+#include "PetriEngine/Synthesis/SimpleSynthesis.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Synthesis;
@@ -39,16 +39,16 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
     auto [pn, conditions, qstrings] = load_pn(model.c_str(),
         query.c_str(), qnums);
 
-    for (auto search : {Strategy::BFS, Strategy::DFS, Strategy::RDFS}) {
-        Synthesis::ReachabilitySynthesis strategy(*pn, 0);
+    for (auto search : {Strategy::DFS, Strategy::BFS, Strategy::RDFS}) {
         for(auto permissive : {false, true})
         {
             for(auto stubborn : {false, true})
             {
+                Synthesis::SimpleSynthesis strategy(*pn, *conditions[0], 0);
                 std::cerr << "Running " << fn << " query " << quid << " " << " permissive: " << std::boolalpha << permissive << " stubborn: " <<  stubborn << " search: " << (int)search << std::endl;
                 conditions[0]->toString(std::cerr);
                 std::cerr << std::endl;
-                auto r = strategy.synthesize(*conditions[0], search, stubborn, permissive, nullptr);
+                auto r = strategy.synthesize(search, stubborn, permissive);
                 BOOST_REQUIRE_EQUAL(expected, r);
             }
         }
