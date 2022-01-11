@@ -45,8 +45,7 @@ namespace PetriEngine {
                 const PQL::Condition* query) override;
             virtual bool empty() const override;
         private:
-            size_t _cnt;
-            size_t _nstates;
+            std::queue<size_t> _queue;
         };
 
         class DFSQueue : public Queue {

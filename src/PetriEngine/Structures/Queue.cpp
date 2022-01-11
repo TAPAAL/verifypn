@@ -29,15 +29,15 @@ namespace PetriEngine {
         }
 
 
-        BFSQueue::BFSQueue(size_t) : Queue(), _cnt(0), _nstates(0) {}
+        BFSQueue::BFSQueue(size_t) : Queue() {}
         BFSQueue::~BFSQueue(){}
 
         size_t BFSQueue::pop()
         {
-            if(_cnt < _nstates)
+            if(!_queue.empty())
             {
-                auto r = _cnt;
-                ++_cnt;
+                auto r = _queue.front();
+                _queue.pop();
                 return r;
             }
             else
@@ -49,12 +49,11 @@ namespace PetriEngine {
         void BFSQueue::push(size_t id, PQL::DistanceContext*,
             const PQL::Condition* query)
         {
-            ++_nstates;
-            // nothing
+            _queue.push(id);
         }
 
         bool BFSQueue::empty() const {
-            return _cnt >= _nstates;
+            return _queue.empty();
         }
 
         DFSQueue::DFSQueue(size_t) : Queue() {}

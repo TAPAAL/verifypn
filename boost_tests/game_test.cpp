@@ -39,7 +39,7 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
     auto [pn, conditions, qstrings] = load_pn(model.c_str(),
         query.c_str(), qnums);
 
-    for (auto search : {Strategy::DFS, Strategy::BFS, Strategy::RDFS}) {
+    for (auto search : {Strategy::BFS, Strategy::DFS, Strategy::RDFS}) {
         for(auto permissive : {false, true})
         {
             for(auto stubborn : {false, true})
@@ -54,6 +54,7 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
         }
     }
 }
+
 
 BOOST_AUTO_TEST_CASE(Algorithm1Counterexample) {
     std::cerr << "Q1" << std::endl;

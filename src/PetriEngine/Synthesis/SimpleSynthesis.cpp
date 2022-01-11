@@ -97,7 +97,7 @@ namespace PetriEngine {
         void SimpleSynthesis::dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back) {
             size_t processed = 0;
             //std::cerr << "BACK[" << next->_marking << "]" << std::endl;
-            //std::cerr << "Win ? " << SynthConfig::state_to_str(next->_state) << std::endl;
+            // std::cerr << "Win ? " << SynthConfig::state_to_str(next->_state) << std::endl;
             for (auto& dep : next->_dependers) {
                 ++processed;
 
@@ -228,7 +228,8 @@ namespace PetriEngine {
 
 
         // validating the solution of the DEP graph (reachability-query is assumed)
-
+        // TODO rewrite the validation code to work for both AF and AG.
+        // technically this should probably be done w. the CTL engine
         void SimpleSynthesis::validate(PQL::Condition* query, Structures::AnnotatedStateSet<SynthConfig>& stateset, bool is_safety) {
             Structures::State working(new MarkVal[_net.numberOfPlaces()]);
             size_t old = markings.size();
@@ -493,15 +494,17 @@ namespace PetriEngine {
                 generator.prepare(_parent);
                 // first try all environment choices (if one is losing, everything is lost)
                 bool some_env = false;
-                // std::cerr << "ENV" << std::endl;
+                //std::cerr << "ENV" << std::endl;
                 while (generator.next_env(_working)) {
                     auto& child = get_config(_working, query, cid);
-                    //std::cerr << "[" << cconf._marking << "] ";
-                    //_net.print(parent.marking());
-                    // std::cerr << "[" << child._marking << "] ";
-                    //_net.print(working.marking());
+                    /*
+                    std::cerr << "[" << cconf._marking << "] ";
+                    _net.print(_parent.marking());
+                     std::cerr << "[" << child._marking << "] ";
+                    _net.print(_working.marking());
+                    std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                    */
                     some_env = true;
-                    // std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                     if (child._state == SynthConfig::LOSING) {
                         // Environment can force a lose
                         cconf._state = SynthConfig::LOSING;
@@ -526,14 +529,15 @@ namespace PetriEngine {
                     generator.reset();
                     while (generator.next_ctrl(_working)) {
                         auto& child = get_config(_working, query, cid);
-                        //std::cerr << "[" << cconf._marking << "] ";
-                        //_net.print(parent.marking());
-                        //std::cerr << "[" << child._marking << "] ";
-                        //_net.print(working.marking());
+                        /*
+                        std::cerr << "[" << cconf._marking << "] ";
+                        _net.print(_parent.marking());
+                        std::cerr << "[" << child._marking << "] ";
+                        _net.print(_working.marking());
+                        std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                         */
+
                         some = true;
-
-                        //std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
-
                         if (&child == &cconf) {
                             if (_is_safety) { // maybe a win if safety ( no need to explore more)
                                 cconf._state = SynthConfig::MAYBE;
