@@ -40,33 +40,24 @@ namespace PetriEngine {
 
         SimpleSynthesis::SimpleSynthesis(PetriNet& net, PQL::Condition& query, size_t kbound)
         : _kbound(kbound), _net(net), _working(net.makeInitialMarking()), _parent(_net.makeInitialMarking()),
-            _stateset(_net, 0), _query(query), _result(&query) {
+        _stateset(_net, 0), _query(query), _result(&query) {
 
         }
 
         SimpleSynthesis::~SimpleSynthesis() {
         }
 
-        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition)
-        {
+        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition) {
 
-            if(auto a = dynamic_cast<PQL::ACondition*>(condition))
-            {
-                if(auto p = dynamic_cast<PQL::FCondition*>((*a)[0].get()))
-                {
+            if (auto a = dynamic_cast<PQL::ACondition*> (condition)) {
+                if (auto p = dynamic_cast<PQL::FCondition*> ((*a)[0].get())) {
                     return {false, (*p)[0].get()};
-                }
-                else if (auto p = dynamic_cast<PQL::GCondition*>((*a)[0].get()))
-                {
+                } else if (auto p = dynamic_cast<PQL::GCondition*> ((*a)[0].get())) {
                     return {true, (*p)[0].get()};
                 }
-            }
-            else if(auto a = dynamic_cast<PQL::AGCondition*>(condition))
-            {
+            } else if (auto a = dynamic_cast<PQL::AGCondition*> (condition)) {
                 return {true, (*a)[0].get()};
-            }
-            else if(auto a = dynamic_cast<PQL::AFCondition*>(condition))
-            {
+            } else if (auto a = dynamic_cast<PQL::AFCondition*> (condition)) {
                 return {false, (*a)[0].get()};
             }
             throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
@@ -81,14 +72,14 @@ namespace PetriEngine {
 
 
             auto ctrl = dynamic_cast<PQL::ControlCondition*> (&_query);
-            if(ctrl == nullptr)
+            if (ctrl == nullptr)
                 throw base_error("ERROR: Missing topmost control-condition for synthesis");
-            auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*>((*ctrl)[0].get());
-            auto [_is_safety, predicate] = get_predicate(quant);
-            if (PQL::isTemporal(predicate))
+            auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*> ((*ctrl)[0].get());
+            std::tie(_is_safety, _predicate) = get_predicate(quant);
+            if (PQL::isTemporal(_predicate))
                 throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
-            run(predicate, strategy, permissive);
+            run(strategy, permissive);
 
             //printer.printResult(result);
             return _result.result ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
@@ -230,6 +221,7 @@ namespace PetriEngine {
         // validating the solution of the DEP graph (reachability-query is assumed)
         // TODO rewrite the validation code to work for both AF and AG.
         // technically this should probably be done w. the CTL engine
+
         void SimpleSynthesis::validate(PQL::Condition* query, Structures::AnnotatedStateSet<SynthConfig>& stateset, bool is_safety) {
             Structures::State working(new MarkVal[_net.numberOfPlaces()]);
             size_t old = markings.size();
@@ -406,8 +398,7 @@ namespace PetriEngine {
                 out << "##END STRATEGY##\n";
         }
 
-        std::unique_ptr<Structures::Queue> make_queue(Strategy strategy)
-        {
+        std::unique_ptr<Structures::Queue> make_queue(Strategy strategy) {
             switch (strategy) {
                 case Strategy::HEUR:
                     std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
@@ -423,7 +414,93 @@ namespace PetriEngine {
             }
         }
 
-        void SimpleSynthesis::run(PQL::Condition* query, Strategy strategy, bool permissive) {
+        std::tuple<bool, bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_ctrl_successors(SuccessorGenerator& generator,
+            SynthConfig& cconf, const bool permissive, const bool env_empty) {
+            //std::cerr << "CTRL " << std::endl;
+            successors_t ctrl_buffer;
+            size_t cid;
+            bool some = false;
+            bool some_winning = false;
+            while (generator.next_ctrl(_working)) {
+                auto& child = get_config(_working, _predicate, cid);
+                /*
+                std::cerr << "[" << cconf._marking << "] ";
+                _net.print(_parent.marking());
+                std::cerr << "[" << child._marking << "] ";
+                _net.print(_working.marking());
+                std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                 */
+
+                some = true;
+                if (&child == &cconf) {
+                    if (_is_safety) { // maybe a win if safety ( no need to explore more)
+                        cconf._state = SynthConfig::MAYBE;
+                        if (!permissive) {
+                            ctrl_buffer.clear();
+                            if (env_empty) {
+                                assert(cconf._state != SynthConfig::LOSING);
+                                cconf._state = SynthConfig::WINNING;
+                            }
+                            break;
+                        }
+                    } else { // would never choose
+                        continue;
+                    }
+                } else if (child._state == SynthConfig::LOSING) {
+                    continue; // would never choose
+                } else if (child._state == SynthConfig::WINNING) {
+                    some_winning = true;
+                    // no need to search further! We are winning if env. cannot force us away
+                    cconf._state = SynthConfig::MAYBE;
+                    if (!permissive) {
+                        ctrl_buffer.clear();
+                        if (env_empty) {
+                            assert(cconf._state != SynthConfig::LOSING);
+                            cconf._state = SynthConfig::WINNING;
+                        }
+                        break;
+                    }
+                }
+                ctrl_buffer.emplace_back(cid, &child);
+            }
+            return {some, some_winning, std::move(ctrl_buffer)};
+
+        }
+
+        std::pair<bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf) {
+            //std::cerr << "ENV " << std::endl;
+            bool some_env = false;
+            successors_t env_buffer;
+            size_t cid;
+            while (generator.next_env(_working)) {
+                auto& child = get_config(_working, _predicate, cid);
+                /*
+                std::cerr << "[" << cconf._marking << "] ";
+                _net.print(_parent.marking());
+                 std::cerr << "[" << child._marking << "] ";
+                _net.print(_working.marking());
+                std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                 */
+                some_env = true;
+                if (child._state == SynthConfig::LOSING) {
+                    // Environment can force a lose
+                    cconf._state = SynthConfig::LOSING;
+                    break;
+                } else if (child._state == SynthConfig::WINNING)
+                    continue; // would never choose
+                if (&child == &cconf) {
+                    if (_is_safety) continue; // would make ctrl win
+                    else {
+                        cconf._state = SynthConfig::LOSING; // env wins surely
+                        break;
+                    }
+                }
+                env_buffer.emplace_back(cid, &child);
+            }
+            return {some_env, std::move(env_buffer)};
+        }
+
+        void SimpleSynthesis::run( Strategy strategy, bool permissive) {
             // permissive == maximal in this case; there is a subtle difference
             // in wether you terminate the search at losing states (permissive)
             // or you saturate over the entire graph (maximal)
@@ -437,7 +514,7 @@ namespace PetriEngine {
             size_t nid;
             _working.copy(_net.initial(), _net.numberOfPlaces());
 
-            auto& meta = get_config(_working, query, cid);
+            auto& meta = get_config(_working, _predicate, cid);
             meta._waiting = 1;
 
             auto queue = make_queue(strategy);
@@ -446,10 +523,6 @@ namespace PetriEngine {
             std::stack<SynthConfig*> back;
             queue->push(cid, nullptr, nullptr);
 
-            // these could be preallocated; at most one successor pr transition
-            std::vector<std::pair<size_t, SynthConfig*>> env_buffer;
-            std::vector<std::pair<size_t, SynthConfig*>> ctrl_buffer;
-
             while (!meta.determined() || permissive) {
                 while (!back.empty()) {
                     SynthConfig* next = back.top();
@@ -457,7 +530,7 @@ namespace PetriEngine {
                     dependers_to_waiting(next, back);
                 }
 
-                if(queue->empty())
+                if (queue->empty())
                     break;
                 nid = queue->pop();
                 auto& cconf = _stateset.get_data(nid);
@@ -484,8 +557,6 @@ namespace PetriEngine {
 
                 //std::cerr << "PROCESSING [" << cconf._marking << "]" << std::endl;
                 ++_result.exploredConfigurations;
-                env_buffer.clear();
-                ctrl_buffer.clear();
 
                 assert(cconf._waiting == 1);
                 cconf._state = SynthConfig::PROCESSED;
@@ -493,83 +564,18 @@ namespace PetriEngine {
                 _stateset.decode(_parent, nid);
                 generator.prepare(_parent);
                 // first try all environment choices (if one is losing, everything is lost)
-                bool some_env = false;
                 //std::cerr << "ENV" << std::endl;
-                while (generator.next_env(_working)) {
-                    auto& child = get_config(_working, query, cid);
-                    /*
-                    std::cerr << "[" << cconf._marking << "] ";
-                    _net.print(_parent.marking());
-                     std::cerr << "[" << child._marking << "] ";
-                    _net.print(_working.marking());
-                    std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
-                    */
-                    some_env = true;
-                    if (child._state == SynthConfig::LOSING) {
-                        // Environment can force a lose
-                        cconf._state = SynthConfig::LOSING;
-                        break;
-                    } else if (child._state == SynthConfig::WINNING)
-                        continue; // would never choose
-                    if (&child == &cconf) {
-                        if (_is_safety) continue; // would make ctrl win
-                        else {
-                            cconf._state = SynthConfig::LOSING; // env wins surely
-                            break;
-                        }
-                    }
-                    env_buffer.emplace_back(cid, &child);
-                }
+                auto [some_env, env_buffer] = get_env_successors(generator, cconf);
 
                 // if determined, no need to add more, just backprop (later)
                 bool some = false;
                 bool some_winning = false;
-                //std::cerr << "CTRL " << std::endl;
+                successors_t ctrl_buffer;
                 if (!cconf.determined()) {
                     generator.reset();
-                    while (generator.next_ctrl(_working)) {
-                        auto& child = get_config(_working, query, cid);
-                        /*
-                        std::cerr << "[" << cconf._marking << "] ";
-                        _net.print(_parent.marking());
-                        std::cerr << "[" << child._marking << "] ";
-                        _net.print(_working.marking());
-                        std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
-                         */
-
-                        some = true;
-                        if (&child == &cconf) {
-                            if (_is_safety) { // maybe a win if safety ( no need to explore more)
-                                cconf._state = SynthConfig::MAYBE;
-                                if (!permissive) {
-                                    ctrl_buffer.clear();
-                                    if (env_buffer.empty()) {
-                                        assert(cconf._state != SynthConfig::LOSING);
-                                        cconf._state = SynthConfig::WINNING;
-                                    }
-                                    break;
-                                }
-                            } else { // would never choose
-                                continue;
-                            }
-                        } else if (child._state == SynthConfig::LOSING) {
-                            continue; // would never choose
-                        } else if (child._state == SynthConfig::WINNING) {
-                            some_winning = true;
-                            // no need to search further! We are winning if env. cannot force us away
-                            cconf._state = SynthConfig::MAYBE;
-                            if (!permissive) {
-                                ctrl_buffer.clear();
-                                if (env_buffer.empty()) {
-                                    assert(cconf._state != SynthConfig::LOSING);
-                                    cconf._state = SynthConfig::WINNING;
-                                }
-                                break;
-                            }
-                        }
-                        ctrl_buffer.emplace_back(cid, &child);
-                    }
+                    std::tie(some, some_winning, ctrl_buffer) = get_ctrl_successors(generator, cconf, permissive, env_buffer.empty());
                 }
+
                 if (!cconf.determined()) {
                     if (some && !some_winning && ctrl_buffer.empty()) // we had a choice but all of them were bad. Env. can force us.
                     {

@@ -58,7 +58,7 @@ namespace PetriEngine {
             const CTLResult& result() { return _result; }
 
         private:
-
+            using successors_t = std::vector<std::pair<size_t, SynthConfig*>>;
 
             bool eval(PetriEngine::PQL::Condition* cond, const PetriEngine::MarkVal* marking);
 
@@ -71,9 +71,11 @@ namespace PetriEngine {
             void validate(PetriEngine::PQL::Condition*, PetriEngine::Structures::AnnotatedStateSet<SynthConfig>&, bool is_safety);
 #endif
 
-            void run(PQL::Condition* predicate, Strategy strategy, bool permissive);
+            void run(Strategy strategy, bool permissive);
 
             SynthConfig& get_config(Structures::State& marking, PQL::Condition* prop, size_t& cid);
+            std::pair<bool, successors_t> get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf);
+            std::tuple<bool, bool, successors_t> get_ctrl_successors(SuccessorGenerator& generator, SynthConfig& cconf, const bool permissive, const bool env_empty);
 
             size_t _kbound;
             PetriNet& _net;
@@ -82,6 +84,7 @@ namespace PetriEngine {
             Structures::AnnotatedStateSet<SynthConfig> _stateset;
             bool _is_safety = false;
             PQL::Condition& _query;
+            PQL::Condition* _predicate = nullptr;
             CTLResult _result;
 
         };
