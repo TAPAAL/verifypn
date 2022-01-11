@@ -374,7 +374,7 @@ function LTL {
     STRATEGIES_PAR[2]="-ltl tarjan --ltl-heur aut -s DFS -p -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
     unset STRATEGIES_SEQ
-    STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED -s BestFS --ltl-por mix --ltl-heur aut"
+    STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED -s BestFS --ltl-por automaton --ltl-heur aut"
     unset STRATEGIES_RAND
     STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -p -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -p -q 0 -l 0 -d $SHORTRED"
