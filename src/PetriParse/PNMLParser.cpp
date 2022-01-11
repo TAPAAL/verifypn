@@ -772,8 +772,14 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
         }
     }
 
-    auto pl_el = element->first_attribute("player");
-    if(pl_el != nullptr) {
+
+    if(auto pl_el = element->first_node("player")) {
+        std::string out;
+        parseValue(pl_el, out);
+        t._player = atoi(out.c_str());
+    }
+    else if(auto pl_el = element->first_attribute("player"))
+    {
         t._player = atoi(pl_el->value());
     }
 

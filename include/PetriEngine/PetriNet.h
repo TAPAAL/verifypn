@@ -95,9 +95,10 @@ namespace PetriEngine {
             {
                 if(val[i] != 0)
                 {
-                    std::cout << _placenames[i] << "(" << i << ")" << " -> " << val[i] << std::endl;
+                    std::cout << _placenames[i] << "(" << i << ")" << " -> " << val[i] << ", ";
                 }
             }
+            std::cout << std::endl;
         }
 
         void sort();

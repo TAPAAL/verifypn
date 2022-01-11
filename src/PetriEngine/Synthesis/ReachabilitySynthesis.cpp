@@ -115,6 +115,7 @@ namespace PetriEngine {
         size_t ReachabilitySynthesis::dependers_to_waiting(SynthConfig* next, std::stack<SynthConfig*>& back, bool safety) {
             size_t processed = 0;
             //std::cerr << "BACK[" << next->_marking << "]" << std::endl;
+            //std::cerr << "Win ? " << SynthConfig::state_to_str(next->_state) << std::endl;
             for (auto& dep : next->_dependers) {
                 ++processed;
 
@@ -496,10 +497,15 @@ namespace PetriEngine {
                 generator.prepare(parent);
                 // first try all environment choices (if one is losing, everything is lost)
                 bool some_env = false;
+                // std::cerr << "ENV" << std::endl;
                 while (generator.next_env(working)) {
-                    some_env = true;
                     auto& child = get_config(stateset, working, query, is_safety, cid);
-                    //std::cerr << "ENV[" << cconf._marking << "] --> [" << child._marking << "]" << std::endl;
+                    //std::cerr << "[" << cconf._marking << "] ";
+                    //_net.print(parent.marking());
+                    // std::cerr << "[" << child._marking << "] ";
+                    //_net.print(working.marking());
+                    some_env = true;
+                    // std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                     if (child._state == SynthConfig::LOSING) {
                         // Environment can force a lose
                         cconf._state = SynthConfig::LOSING;
@@ -519,12 +525,18 @@ namespace PetriEngine {
                 // if determined, no need to add more, just backprop (later)
                 bool some = false;
                 bool some_winning = false;
-                //tsd::cerr << "CTRL " << std::endl;
+                //std::cerr << "CTRL " << std::endl;
                 if (!cconf.determined()) {
+                    generator.reset();
                     while (generator.next_ctrl(working)) {
-                        some = true;
                         auto& child = get_config(stateset, working, query, is_safety, cid);
-                        //std::cerr << "CTRL[" << cconf._marking << "] --> [" << child._marking << "]" << std::endl;
+                        //std::cerr << "[" << cconf._marking << "] ";
+                        //_net.print(parent.marking());
+                        //std::cerr << "[" << child._marking << "] ";
+                        //_net.print(working.marking());
+                        some = true;
+
+                        //std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
 
                         if (&child == &cconf) {
                             if (is_safety) { // maybe a win if safety ( no need to explore more)
@@ -618,12 +630,11 @@ namespace PetriEngine {
             //result.numberOfMarkings = stateset.size();
             timer.stop();
             result.duration = timer.duration();
-            bool res;
-            if (!is_safety) res = meta._state == SynthConfig::WINNING;
-            else res = meta._state != meta.LOSING;
-            result.result = (res != is_safety) ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
 
-            if (strategy_out != nullptr && res) {
+            if (!is_safety) result.result = meta._state == SynthConfig::WINNING;
+            else result.result = meta._state != meta.LOSING;
+
+            if (strategy_out != nullptr && result.result) {
                 print_strategy(*strategy_out, stateset, meta, is_safety);
             }
         }

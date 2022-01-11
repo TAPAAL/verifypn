@@ -44,6 +44,26 @@ namespace PetriEngine {
             static constexpr uint8_t WINNING = 32; // ctrl surely wins
             static constexpr uint8_t PRINTED = 64; // has been printed
 
+            static constexpr const char* state_to_str(uint8_t i)
+            {
+                switch(i) {
+                    case UNKNOWN:
+                        return "UNKNOWN";
+                    case PROCESSED:
+                        return "PROCESSED";
+                    case MAYBE:
+                        return "MAYBE";
+                    case LOSING:
+                        return "LOSING";
+                    case WINNING:
+                        return "WINNING";
+                    case PRINTED:
+                        return "PRINTED";
+                    default:
+                        return "UNSPECIFIED";
+                }
+            }
+
             uint8_t _state = UNKNOWN; // this should be at most one byte
             uint8_t _waiting = 0; // We only need on waiting once (0 = new, 1= processed/waiting, 2=back-queue)
 
