@@ -500,6 +500,46 @@ namespace PetriEngine {
             return {some_env, std::move(env_buffer)};
         }
 
+        void SimpleSynthesis::fix_assignment(SynthConfig& cconf, const bool some_ctrl, const bool some_winning, const bool ctrl_empty,
+            const bool some_env, const bool env_empty) {
+            if (!cconf.determined()) {
+                if (some_ctrl && !some_winning && ctrl_empty) // we had a choice but all of them were bad. Env. can force us.
+                {
+                    assert(cconf._state != SynthConfig::WINNING);
+                    cconf._state = SynthConfig::LOSING;
+                } else if (!some_ctrl && !some_env) {
+                    // deadlock, bad if reachability, good if safety
+                    assert(cconf._state != SynthConfig::WINNING);
+                    if (_is_safety) {
+                        cconf._state = SynthConfig::WINNING;
+                    } else {
+                        cconf._state = SynthConfig::LOSING;
+                    }
+                } else if (env_empty && some_winning) {
+                    // reachability: env had not bad choice and ctrl had winning
+                    assert(cconf._state != SynthConfig::LOSING);
+                    cconf._state = SynthConfig::WINNING;
+                } else if (!some_ctrl && some_env && env_empty) {
+                    // env is forced to be good.
+                    cconf._state = SynthConfig::WINNING;
+                } else if (!some_ctrl && !env_empty) {
+                    cconf._state = SynthConfig::MAYBE;
+                }
+            }
+        }
+
+        void SimpleSynthesis::to_queue(Structures::Queue& queue, successors_t& successors, bool is_ctrl, SynthConfig& cconf) {
+            //std::cerr << "[" << nid << "]" << std::endl;
+            for (auto& c : successors) {
+                if (c.second->_waiting == 0) {
+                    queue.push(c.first, nullptr, nullptr);
+                    c.second->_waiting = 1;
+                }
+                c.second->_dependers.emplace_front(is_ctrl, &cconf);
+            }
+        }
+
+
         void SimpleSynthesis::run( Strategy strategy, bool permissive) {
             // permissive == maximal in this case; there is a subtle difference
             // in wether you terminate the search at losing states (permissive)
@@ -568,38 +608,16 @@ namespace PetriEngine {
                 auto [some_env, env_buffer] = get_env_successors(generator, cconf);
 
                 // if determined, no need to add more, just backprop (later)
-                bool some = false;
+                bool some_ctrl = false;
                 bool some_winning = false;
                 successors_t ctrl_buffer;
                 if (!cconf.determined()) {
                     generator.reset();
-                    std::tie(some, some_winning, ctrl_buffer) = get_ctrl_successors(generator, cconf, permissive, env_buffer.empty());
+                    std::tie(some_ctrl, some_winning, ctrl_buffer) = get_ctrl_successors(generator, cconf, permissive, env_buffer.empty());
                 }
 
-                if (!cconf.determined()) {
-                    if (some && !some_winning && ctrl_buffer.empty()) // we had a choice but all of them were bad. Env. can force us.
-                    {
-                        assert(cconf._state != SynthConfig::WINNING);
-                        cconf._state = SynthConfig::LOSING;
-                    } else if (!some && !some_env) {
-                        // deadlock, bad if reachability, good if safety
-                        assert(cconf._state != SynthConfig::WINNING);
-                        if (_is_safety) {
-                            cconf._state = SynthConfig::WINNING;
-                        } else {
-                            cconf._state = SynthConfig::LOSING;
-                        }
-                    } else if (env_buffer.empty() && some_winning) {
-                        // reachability: env had not bad choice and ctrl had winning
-                        assert(cconf._state != SynthConfig::LOSING);
-                        cconf._state = SynthConfig::WINNING;
-                    } else if (!some && some_env && env_buffer.empty()) {
-                        // env is forced to be good.
-                        cconf._state = SynthConfig::WINNING;
-                    } else if (!some && !env_buffer.empty()) {
-                        cconf._state = SynthConfig::MAYBE;
-                    }
-                }
+                fix_assignment(cconf, some_ctrl, some_winning, ctrl_buffer.empty(),
+                                      some_env, env_buffer.empty());
                 // if determined, no need to add to queue, just backprop
                 //std::cerr << "FINISHED " << cconf._marking << " STATE " << (int)cconf._state << std::endl;
                 if (cconf.determined()) {
@@ -607,24 +625,10 @@ namespace PetriEngine {
                     back.push(&cconf);
                 }
                 if (!cconf.determined() || permissive) {
-
                     // we want to explore the ctrl last (assuming DFS). (TODO: check if a queue-split would be good?)
-                    //std::cerr << "[" << nid << "]" << std::endl;
-                    for (auto& c : ctrl_buffer) {
-                        if (c.second->_waiting == 0) {
-                            queue->push(c.first, nullptr, nullptr);
-                            c.second->_waiting = 1;
-                        }
-                        c.second->_dependers.emplace_front(true, &cconf);
-                    }
-                    // then env.
-                    for (auto& c : env_buffer) {
-                        if (c.second->_waiting == 0) {
-                            queue->push(c.first, nullptr, nullptr);
-                            c.second->_waiting = 1;
-                        }
-                        c.second->_dependers.emplace_front(false, &cconf);
-                    }
+                    to_queue(*queue, ctrl_buffer, true, cconf);
+                    to_queue(*queue, env_buffer, false, cconf);
+
                     cconf._ctrl_children = ctrl_buffer.size();
                     cconf._env_children = env_buffer.size();
                     _result.numberOfEdges += cconf._ctrl_children + cconf._env_children;

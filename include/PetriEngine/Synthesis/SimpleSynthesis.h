@@ -76,6 +76,9 @@ namespace PetriEngine {
             SynthConfig& get_config(Structures::State& marking, PQL::Condition* prop, size_t& cid);
             std::pair<bool, successors_t> get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf);
             std::tuple<bool, bool, successors_t> get_ctrl_successors(SuccessorGenerator& generator, SynthConfig& cconf, const bool permissive, const bool env_empty);
+            void fix_assignment(SynthConfig& cconf, const bool some_ctrl, const bool some_winning, const bool ctrl_empty,
+            const bool some_env, const bool env_empty);
+            void to_queue(Structures::Queue& q, successors_t& successors, bool is_ctrl, SynthConfig& cconf);
 
             size_t _kbound;
             PetriNet& _net;
