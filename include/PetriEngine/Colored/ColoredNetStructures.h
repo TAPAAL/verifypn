@@ -42,6 +42,7 @@ namespace PetriEngine {
             std::string name;
             GuardExpression_ptr guard;
             int32_t _player;
+            double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
             std::vector<std::unordered_map<const Variable *, interval_vector_t>> variableMaps;
@@ -52,6 +53,7 @@ namespace PetriEngine {
             std::string name;
             const ColorType* type;
             Multiset marking;
+            double _x = 0, _y = 0;
             bool inhibitor;
             bool stable = true;
         };
