@@ -22,7 +22,7 @@
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/Structures/Queue.h"
-#include "PetriEngine/Structures/light_deque.h"
+#include "utils/structures/light_deque.h"
 #include "LTL/Structures/ProductStateFactory.h"
 
 namespace LTL {

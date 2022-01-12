@@ -62,10 +62,10 @@ ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder&
             for (size_t i = 0; i < context.errors().size(); i++) {
                 ss << "Query Context Analysis Error: " << context.errors()[i].toString() << "\n";
             }
-            throw base_error("ERROR: " << ss.str());
+            throw base_error("ERROR: ", ss.str());
         }
     }
-    return ContinueCode;
+    return ReturnValue::ContinueCode;
 }
 
 std::vector<Condition_ptr>
@@ -335,7 +335,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
     }    catch (std::bad_alloc &ba) {
-        throw base_Error("Query reduction failed.\nException information: ", ba.what());
+        throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
     }
 
     cond = initialMarkingRW([&]() {

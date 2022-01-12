@@ -35,6 +35,12 @@ enum class ReturnValue {
     ContinueCode = 4
 };
 
+template <typename E>
+constexpr auto to_underlying(E e) noexcept
+{
+    return static_cast<std::underlying_type_t<E>>(e);
+}
+
 // TODO: Shared this with other projects
 struct base_error : public std::exception {
     std::string _message;

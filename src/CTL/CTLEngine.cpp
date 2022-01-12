@@ -39,7 +39,7 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
         default:
             throw base_error("ERROR: Unknown or unsupported algorithm");
     }
-    return ContinueCode;
+    return ReturnValue::ContinueCode;
 }
 
 bool singleSolve(Condition* query, PetriNet* net,
@@ -60,9 +60,9 @@ bool singleSolve(Condition* query, PetriNet* net,
     OnTheFlyDG graph(net, partial_order);
     graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
-    if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
+    if(getAlgorithm(alg, algorithmtype,  strategytype) == ReturnValue::ErrorCode)
     {
-        throw base_error("ERROR"); 
+        throw base_error("ERROR");
     }
 
     stopwatch timer;
@@ -302,6 +302,6 @@ ReturnValue CTLMain(PetriNet* net,
         }
         result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }
-    return SuccessCode;
+    return ReturnValue::SuccessCode;
 }
 
