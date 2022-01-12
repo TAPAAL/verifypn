@@ -317,9 +317,7 @@ int main(int argc, const char** argv) {
             auto v = CTLMain(net.get(),
                         options.ctlalgorithm,
                         options.strategy,
-                        options.gamemode,
                         options.printstatistics,
-                        true,
                         options.stubbornreduction,
                         querynames,
                         queries,
@@ -362,6 +360,8 @@ int main(int argc, const char** argv) {
 
             results[i] = strategy.synthesize(options.strategy, options.stubbornreduction, false);
 
+            strategy.result().print(querynames[i], options.printstatistics, i, options, std::cout);
+
             if(options.strategy_output == "_")
                 strategy_out = &std::cout;
             else if(options.strategy_output.size() > 0)
@@ -372,6 +372,9 @@ int main(int argc, const char** argv) {
 
             if(strategy_out != nullptr && strategy_out != &std::cout)
                 delete strategy_out;
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
+            }
         }
 
         //----------------------- Siphon Trap ------------------------//

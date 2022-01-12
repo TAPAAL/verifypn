@@ -43,39 +43,6 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
     return ContinueCode;
 }
 
-void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats, size_t index, options_t& options){
-    const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STATE_COMPRESSION SAT_SMT ";
-
-    if(!only_stats)
-    {
-        cout << endl;
-        cout << "FORMULA "
-             << qname
-             << " " << (result.result ? "TRUE" : "FALSE") << " "
-             << techniques
-             << (options.isCPN ? "UNFOLDING_TO_PT " : "")
-             << (options.stubbornreduction ? "STUBBORN_SETS " : "")
-             << (options.ctlalgorithm == CTL::CZero ? "CTL_CZERO " : "")
-             << (options.ctlalgorithm == CTL::Local ? "CTL_LOCAL " : "")
-                << endl << endl;
-        std::cout << "Query index " << index << " was solved" << std::endl;
-        cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
-
-        cout << endl;
-    }
-    if(statisticslevel){
-        cout << "STATS:" << endl;
-        cout << "	Time (seconds)    : " << setprecision(4) << result.duration / 1000 << endl;
-        cout << "	Configurations    : " << result.numberOfConfigurations << endl;
-        cout << "	Markings          : " << result.numberOfMarkings << endl;
-        cout << "	Edges             : " << result.numberOfEdges << endl;
-        cout << "	Processed Edges   : " << result.processedEdges << endl;
-        cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
-        cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
-        std::cout << endl;
-    }
-}
-
 bool singleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result);
@@ -296,9 +263,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
 ReturnValue CTLMain(PetriNet* net,
                     CTLAlgorithmType algorithmtype,
                     Strategy strategytype,
-                    bool gamemode,
                     bool printstatistics,
-                    bool mccoutput,
                     bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
@@ -337,7 +302,7 @@ ReturnValue CTLMain(PetriNet* net,
         {
             result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
-        printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum, options);
+        result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }
     return SuccessCode;
 }

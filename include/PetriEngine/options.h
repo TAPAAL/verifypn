@@ -81,7 +81,6 @@ struct options_t {
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
     //CTL Specific options
-    bool gamemode = false;
     bool usedctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;

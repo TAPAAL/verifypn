@@ -492,8 +492,6 @@ bool options_t::parse(int argc, const char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "-noweak") == 0 || std::strcmp(argv[i], "--noweak") == 0) {
             ltluseweak = false;
-        } else if (std::strcmp(argv[i], "-g") == 0 || std::strcmp(argv[i], "--game-mode") == 0) {
-            gamemode = true;
         } else if (std::strcmp(argv[i], "-c") == 0 || std::strcmp(argv[i], "--cpn-overapproximation") == 0) {
             cpnOverApprox = true;
         } else if (std::strcmp(argv[i], "--disable-cfp") == 0) {
