@@ -32,6 +32,8 @@ namespace PetriEngine::PQL {
 
         void _accept(const UnfoldedUpperBoundsCondition *element) override;
 
+        void _accept(const ControlCondition *condition) override;
+
         void _accept(const EFCondition *condition) override;
 
         void _accept(const EGCondition *condition) override;
@@ -124,6 +126,8 @@ namespace PetriEngine::PQL {
 
         void _accept(const UnfoldedUpperBoundsCondition *element) override;
 
+        void _accept(const ControlCondition* condition) override;
+
         void _accept(const EFCondition *condition) override;
 
         void _accept(const EGCondition *condition) override;
@@ -187,10 +191,10 @@ namespace PetriEngine::PQL {
 
         template<typename T>
         void _acceptNary(const T *element);
-    
+
         template<typename T>
         Expr_ptr copy_narry_expr(const T* el);
-        
+
         template<typename T>
         std::shared_ptr<T> copy_compare_condition(const T *element);
     };
