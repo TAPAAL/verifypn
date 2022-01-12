@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PetriNet.h"
 #include "PetriEngine/Structures/State.h"
-#include "PetriEngine/Structures/light_deque.h"
+#include "utils/structures/light_deque.h"
 #include "PetriEngine/PQL/PQL.h"
 
 #include <memory>

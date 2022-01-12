@@ -27,6 +27,14 @@
 
 #include <sstream>
 
+enum class ReturnValue {
+    SuccessCode = 0,
+    FailedCode = 1,
+    UnknownCode = 2,
+    ErrorCode = 3,
+    ContinueCode = 4
+};
+
 // TODO: Shared this with other projects
 struct base_error : public std::exception {
     std::string _message;

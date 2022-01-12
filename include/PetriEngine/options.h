@@ -9,8 +9,8 @@
 #include <vector>
 #include <iostream>
 
-#include "../CTL/Algorithm/AlgorithmTypes.h"
-#include "../LTL/AlgorithmTypes.h"
+#include "CTL/Algorithm/AlgorithmTypes.h"
+#include "LTL/AlgorithmTypes.h"
 
 enum class Strategy {
     BFS,

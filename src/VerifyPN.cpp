@@ -58,10 +58,11 @@ ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder&
 
         //Print errors if any
         if (context.errors().size() > 0) {
+            std::stringstream ss;
             for (size_t i = 0; i < context.errors().size(); i++) {
-                fprintf(stderr, "Query Context Analysis Error: %s\n", context.errors()[i].toString().c_str());
+                ss << "Query Context Analysis Error: " << context.errors()[i].toString() << "\n";
             }
-            return ErrorCode;
+            throw base_error("ERROR: " << ss.str());
         }
     }
     return ContinueCode;
@@ -334,10 +335,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
     }    catch (std::bad_alloc &ba) {
-        std::cerr << "Query reduction failed." << std::endl;
-        std::cerr << "Exception information: " << ba.what() << std::endl;
-
-        std::exit(ErrorCode);
+        throw base_Error("Query reduction failed.\nException information: ", ba.what());
     }
 
     cond = initialMarkingRW([&]() {
@@ -484,10 +482,7 @@ void simplify_queries(  const MarkVal* marking,
                                 out << std::endl;
                             }
                         } catch (std::bad_alloc& ba) {
-                            std::cerr << "Query reduction failed." << std::endl;
-                            std::cerr << "Exception information: " << ba.what() << std::endl;
-
-                            std::exit(ErrorCode);
+                            throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
                         }
 
                         if (options.printstatistics) {

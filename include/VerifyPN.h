@@ -75,10 +75,10 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/CTLVisitor.h"
-#include <PetriEngine/PQL/XMLPrinter.h>
+#include "PetriEngine/PQL/XMLPrinter.h"
 #include "PetriEngine/PQL/FormulaSize.h"
 #include "PetriEngine/options.h"
-#include "PetriEngine/errorcodes.h"
+#include "utils/errors.h"
 #include "PetriEngine/STSolver.h"
 #include "PetriEngine/Simplification/Member.h"
 #include "PetriEngine/Simplification/LinearPrograms.h"

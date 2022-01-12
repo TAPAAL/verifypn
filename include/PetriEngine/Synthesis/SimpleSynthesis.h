@@ -27,7 +27,7 @@
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "utils/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "CTL/CTLResult.h"
 
 

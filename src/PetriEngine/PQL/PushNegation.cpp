@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "PetriEngine/errorcodes.h"
+#include "utils/errors.h"
 #include "PetriEngine/PQL/PushNegation.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 
@@ -633,16 +633,14 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(UpperBoundsCondition* element) {
         if (negated) {
-            std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
-            exit(ErrorCode);
+            throw base_error("ERROR: UPPER BOUNDS CANNOT BE NEGATED!");
         }
         RETURN(element->clone())
     }
 
     void PushNegationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
         if (negated) {
-            std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
-            exit(ErrorCode);
+            throw base_error("ERROR: UPPER BOUNDS CANNOT BE NEGATED!");
         }
         RETURN(std::make_shared<UnfoldedUpperBoundsCondition>(element->places(), element->getMax(), element->getOffset()));
     }

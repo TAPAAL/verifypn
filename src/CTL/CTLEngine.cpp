@@ -6,7 +6,7 @@
 #include "CTL/Algorithm/CertainZeroFPA.h"
 #include "CTL/Algorithm/LocalFPA.h"
 
-#include "utils/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include "PetriEngine/TAR/TARReachability.h"
@@ -37,8 +37,7 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
             algorithm = std::make_shared<Algorithm::CertainZeroFPA>(search);
             break;
         default:
-            cerr << "Error: Unknown or unsupported algorithm" << endl;
-            return ErrorCode;
+            throw base_error("ERROR: Unknown or unsupported algorithm");
     }
     return ContinueCode;
 }
@@ -63,8 +62,7 @@ bool singleSolve(Condition* query, PetriNet* net,
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
     if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
     {
-        assert(false);
-        throw std::exception();
+        throw base_error("ERROR"); 
     }
 
     stopwatch timer;

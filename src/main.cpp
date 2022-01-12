@@ -73,9 +73,7 @@ int main(int argc, const char** argv) {
         cpnBuilder.parse_model(options.modelfile);
         options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
     } catch (const base_error& err) {
-        std::cout << "CANNOT_COMPUTE" << std::endl;
-        std::cerr << "Error parsing the model" << std::endl;
-        return ErrorCode;
+        throw base_error("ERROR: CANNOT_COMPUTE\nError parsing the model\n", err.what());
     }
 
     if(options.cpnOverApprox && !cpnBuilder.isColored())
@@ -168,8 +166,7 @@ int main(int argc, const char** argv) {
 
         if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
         {
-            std::cerr << "Could not analyze the queries" << std::endl;
-            return ErrorCode;
+            throw base_error("ERROR: Could not analyze the queries");
         }
 
         if(options.unfold_query_out_file.size() > 0) {
@@ -310,8 +307,7 @@ int main(int argc, const char** argv) {
             // Assign indexes
             if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
             {
-                std::cerr << "An error occurred while assigning indexes" << std::endl;
-                return ErrorCode;
+                throw base_error("ERROR: An error occurred while assigning indexes");
             }
             if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),

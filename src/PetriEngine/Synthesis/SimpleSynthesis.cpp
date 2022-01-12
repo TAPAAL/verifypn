@@ -25,7 +25,7 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "PetriEngine/Synthesis/SynthConfig.h"
 #include "PetriEngine/options.h"
-#include "utils/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "CTL/CTLResult.h"
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
@@ -409,8 +409,7 @@ namespace PetriEngine {
                 case Strategy::RDFS:
                     return std::make_unique<Structures::RDFSQueue>(0);
                 default:
-                    std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
-                    std::exit(ErrorCode);
+                    throw base_error("ERROR: Unsupported Search Strategy for Synthesis");
             }
         }
 
