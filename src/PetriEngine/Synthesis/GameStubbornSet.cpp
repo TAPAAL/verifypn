@@ -35,12 +35,9 @@ namespace PetriEngine {
         {
             while(!_env_acts.empty())
             {
-                if(_stubborn[_env_acts.back()])
-                {
-                    auto r = _env_acts.back();
-                    _env_acts.pop_back();
-                    return r;
-                }
+                auto r = _env_acts.back();
+                _env_acts.pop_back();
+                if(_stubborn[r]) return r;
             }
             return std::numeric_limits<uint32_t>::max();
         }
@@ -49,12 +46,9 @@ namespace PetriEngine {
         {
             while(!_ctrl_acts.empty())
             {
-                if(_stubborn[_ctrl_acts.back()])
-                {
-                    auto r = _ctrl_acts.back();
-                    _ctrl_acts.pop_back();
-                    return r;
-                }
+                auto r = _ctrl_acts.back();
+                _ctrl_acts.pop_back();
+                if(_stubborn[r]) return r;
             }
             return std::numeric_limits<uint32_t>::max();
         }
@@ -126,7 +120,7 @@ namespace PetriEngine {
                     _ctrl_acts.push_back(t);
                 else
                     _env_acts.push_back(t);
-                return _env_acts.empty() || _ctrl_acts.empty();
+                return true;
             });
 
             if(_nenabled <= 1)
