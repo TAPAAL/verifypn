@@ -42,6 +42,8 @@
 namespace PetriEngine {
     namespace Synthesis {
 
+        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition);
+
         class SimpleSynthesis {
         public:
 
@@ -71,7 +73,7 @@ namespace PetriEngine {
             void validate(PetriEngine::PQL::Condition*, PetriEngine::Structures::AnnotatedStateSet<SynthConfig>&, bool is_safety);
 #endif
 
-            void run(Strategy strategy, bool permissive);
+            void run(bool use_stubborn, Strategy strategy, bool permissive);
 
             SynthConfig& get_config(Structures::State& marking, PQL::Condition* prop, size_t& cid);
             std::pair<bool, successors_t> get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf);

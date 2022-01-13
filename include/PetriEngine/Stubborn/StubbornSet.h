@@ -55,6 +55,11 @@ namespace PetriEngine {
             _queries.push_back(query.get());
         }
 
+        StubbornSet(const PetriEngine::PetriNet &net, PQL::Condition* &query)
+                : StubbornSet(net) {
+            _queries.push_back(query);
+        }
+
         virtual bool prepare(const Structures::State *marking) = 0;
 
         virtual uint32_t next();
