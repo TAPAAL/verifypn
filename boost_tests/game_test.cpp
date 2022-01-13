@@ -42,7 +42,7 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
     for (auto search : {Strategy::BFS, Strategy::DFS, Strategy::RDFS}) {
         for(auto permissive : {false, true})
         {
-            for(auto stubborn : {true, false})
+            for(auto stubborn : {false, true})
             {
                 Synthesis::SimpleSynthesis strategy(*pn, *conditions[0], 0);
                 std::cerr << "Running " << fn << " query " << quid << " " << " permissive: " << std::boolalpha << permissive << " stubborn: " <<  stubborn << " search: " << (int)search << std::endl;
@@ -98,4 +98,8 @@ BOOST_AUTO_TEST_CASE(SafeTest) {
 
 BOOST_AUTO_TEST_CASE(UnsafeTest) {
     test_single_game("unsafe test", Reachability::ResultPrinter::Satisfied);
+}
+
+BOOST_AUTO_TEST_CASE(AGPorFail) {
+    test_single_game("AG_por_fail", Reachability::ResultPrinter::NotSatisfied);
 }
