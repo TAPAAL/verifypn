@@ -145,7 +145,7 @@ namespace PetriEngine {
         virtual void addToStub(uint32_t t);
 
         template <typename T = std::nullptr_t>
-        void closure(T callback = nullptr) {
+        void closure(T&& callback = nullptr) {
             while (!_unprocessed.empty()) {
                 if constexpr (!std::is_null_pointer_v<T>) {
                     if (!callback()) return;
@@ -160,7 +160,7 @@ namespace PetriEngine {
                         if (invariants()[finv].direction < 0) {
                             auto place = invariants()[finv].place;
                             for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++)
-                                addToStub(_transitions.get()[t].index);
+                                addToStub(_arcs.get()[t].index);
                         }
                     }
                     if (_netContainsInhibitorArcs) {
@@ -207,7 +207,7 @@ namespace PetriEngine {
         size_t _nenabled;
         std::unique_ptr<uint8_t[]> _places_seen;
         std::unique_ptr<place_t[]> _places;
-        std::unique_ptr<trans_t[]> _transitions;
+        std::unique_ptr<trans_t[]> _arcs;
         light_deque<uint32_t> _unprocessed, _ordering;
         std::unique_ptr<uint32_t[]> _dependency;
         bool _netContainsInhibitorArcs, _done;
@@ -215,7 +215,31 @@ namespace PetriEngine {
 
         std::vector<PQL::Condition *> _queries;
 
-        void constructEnabled();
+        template <typename T = std::nullptr_t>
+        void constructEnabled(T&& callback = nullptr){
+            _ordering.clear();
+            memset(_enabled.get(), 0, _net.numberOfTransitions());
+            memset(_stubborn.get(), 0, _net.numberOfTransitions());
+            for (uint32_t p = 0; p < _net.numberOfPlaces(); ++p) {
+                // orphans are currently under "place 0" as a special case
+                if (p == 0 || _parent->marking()[p] > 0) {
+                    uint32_t t = placeToPtrs()[p];
+                    uint32_t last = placeToPtrs()[p + 1];
+
+                    for (; t != last; ++t) {
+                        if (!checkPreset(t)) {
+                            continue;
+                        }
+                        if constexpr (!std::is_null_pointer_v<T>)
+                            if(!callback(t))
+                                return;
+                        _enabled[t] = true;
+                        _ordering.push_back(t);
+                        ++_nenabled;
+                    }
+                }
+            }
+        }
 
         void constructPrePost();
 

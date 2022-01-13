@@ -55,28 +55,28 @@ namespace PetriEngine {
     }
 
     bool StubbornSet::seenPre(uint32_t place) const {
-        return (_places_seen.get()[place] & PresetSeen) != 0;
+        return (_places_seen[place] & PresetSeen) != 0;
     }
 
     bool StubbornSet::seenPost(uint32_t place) const {
-        return (_places_seen.get()[place] & PostsetSeen) != 0;
+        return (_places_seen[place] & PostsetSeen) != 0;
     }
 
     void StubbornSet::presetOf(uint32_t place, bool make_closure) {
-        if ((_places_seen.get()[place] & PresetSeen) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | PresetSeen;
-        for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
-            auto &tr = _transitions.get()[t];
+        if ((_places_seen[place] & PresetSeen) != 0) return;
+        _places_seen[place] = _places_seen[place] | PresetSeen;
+        for (uint32_t t = _places[place].pre; t < _places[place].post; t++) {
+            auto &tr = _arcs[t];
             addToStub(tr.index);
         }
         if (make_closure) closure();
     }
 
     void StubbornSet::postsetOf(uint32_t place, bool make_closure) {
-        if ((_places_seen.get()[place] & PostsetSeen) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | PostsetSeen;
-        for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            auto tr = _transitions.get()[t];
+        if ((_places_seen[place] & PostsetSeen) != 0) return;
+        _places_seen[place] = _places_seen[place] | PostsetSeen;
+        for (uint32_t t = _places[place].post; t < _places[place + 1].pre; t++) {
+            auto tr = _arcs[t];
             if (tr.direction < 0)
                 addToStub(tr.index);
         }
@@ -84,8 +84,8 @@ namespace PetriEngine {
     }
 
     void StubbornSet::inhibitorPostsetOf(uint32_t place) {
-        if ((_places_seen.get()[place] & InhibPostsetSeen) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | InhibPostsetSeen;
+        if ((_places_seen[place] & InhibPostsetSeen) != 0) return;
+        _places_seen[place] = _places_seen[place] | InhibPostsetSeen;
         for (uint32_t &newstub : _inhibpost[place])
             addToStub(newstub);
     }
@@ -99,28 +99,6 @@ namespace PetriEngine {
                 presetOf(invariants()[finv].place, make_closure);
             } else {
                 postsetOf(invariants()[finv].place, make_closure);
-            }
-        }
-    }
-
-    void StubbornSet::constructEnabled() {
-        _ordering.clear();
-        memset(_enabled.get(), 0, _net.numberOfTransitions());
-        memset(_stubborn.get(), 0, _net.numberOfTransitions());
-        for (uint32_t p = 0; p < _net.numberOfPlaces(); ++p) {
-            // orphans are currently under "place 0" as a special case
-            if (p == 0 || _parent->marking()[p] > 0) {
-                uint32_t t = placeToPtrs()[p];
-                uint32_t last = placeToPtrs()[p + 1];
-
-                for (; t != last; ++t) {
-                    if (!checkPreset(t)) {
-                        continue;
-                    }
-                    _enabled[t] = true;
-                    _ordering.push_back(t);
-                    ++_nenabled;
-                }
             }
         }
     }
@@ -169,7 +147,7 @@ namespace PetriEngine {
         for (const auto& p : tmp_places) {
             ntrans += p.first.size() + p.second.size();
         }
-        _transitions = std::make_unique<trans_t[]>(ntrans);
+        _arcs = std::make_unique<trans_t[]>(ntrans);
 
         _places = std::make_unique<place_t[]>(_net._nplaces + 1);
         uint32_t offset = 0;
@@ -182,22 +160,22 @@ namespace PetriEngine {
             std::sort(pre.begin(), pre.end());
             std::sort(post.begin(), post.end());
 
-            _places.get()[p].pre = offset;
+            _places[p].pre = offset;
             offset += pre.size();
-            _places.get()[p].post = offset;
+            _places[p].post = offset;
             offset += post.size();
             for (size_t tn = 0; tn < pre.size(); ++tn) {
-                _transitions.get()[tn + _places.get()[p].pre] = pre[tn];
+                _arcs[tn + _places[p].pre] = pre[tn];
             }
 
             for (size_t tn = 0; tn < post.size(); ++tn) {
-                _transitions.get()[tn + _places.get()[p].post] = post[tn];
+                _arcs[tn + _places[p].post] = post[tn];
             }
 
         }
         assert(offset == ntrans);
-        _places.get()[p].pre = offset;
-        _places.get()[p].post = offset;
+        _places[p].pre = offset;
+        _places[p].post = offset;
     }
 
     void StubbornSet::constructDependency() {
@@ -210,7 +188,7 @@ namespace PetriEngine {
             for (; finv < linv; finv++) {
                 const Invariant &inv = _net._invariants[finv];
                 uint32_t p = inv.place;
-                uint32_t ntrans = (_places.get()[p + 1].pre - _places.get()[p].post);
+                uint32_t ntrans = (_places[p + 1].pre - _places[p].post);
 
                 for (uint32_t tIndex = 0; tIndex < ntrans; tIndex++) {
                     ++_dependency[t];
@@ -246,8 +224,9 @@ namespace PetriEngine {
     }
 
     void StubbornSet::reset() {
-        memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
-        memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
+        std::fill(_enabled.get(), _enabled.get() + _net.numberOfTransitions(), false);
+        std::fill(_stubborn.get(), _stubborn.get() + _net.numberOfTransitions(), false);
+        std::fill(_places_seen.get(), _places_seen.get() + _net.numberOfPlaces(), 0);
         _ordering.clear();
         _nenabled = 0;
         //_tid = 0;

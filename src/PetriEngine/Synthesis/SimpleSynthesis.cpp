@@ -28,7 +28,7 @@
 #include "PetriEngine/options.h"
 #include "utils/stopwatch.h"
 #include "CTL/CTLResult.h"
-#include "PetriEngine/SuccessorGenerator.h"
+#include "PetriEngine/Synthesis/GameSuccessorGenerator.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
 
@@ -242,7 +242,7 @@ namespace PetriEngine {
                     assert(conf._state == SynthConfig::WINNING);
                     continue;
                 }
-                SuccessorGenerator generator(_net);
+                GameSuccessorGenerator generator(_net);
                 Structures::State s(markings[id]);
                 generator.prepare(&s);
                 bool ok = false;
@@ -320,7 +320,7 @@ namespace PetriEngine {
             }
             if (&out == &std::cout) out << "\n##BEGIN STRATEGY##\n";
             out << "{\n";
-            SuccessorGenerator generator(_net);
+            GameSuccessorGenerator generator(_net);
             bool first_marking = true;
             while (!missing.empty()) {
                 auto nxt = missing.top();
@@ -414,7 +414,7 @@ namespace PetriEngine {
             }
         }
 
-        std::tuple<bool, bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_ctrl_successors(SuccessorGenerator& generator,
+        std::tuple<bool, bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_ctrl_successors(GameSuccessorGenerator& generator,
             SynthConfig& cconf, const bool permissive, const bool env_empty) {
             //std::cerr << "CTRL " << std::endl;
             successors_t ctrl_buffer;
@@ -467,7 +467,7 @@ namespace PetriEngine {
 
         }
 
-        std::pair<bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf) {
+        std::pair<bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_env_successors(GameSuccessorGenerator& generator, SynthConfig& cconf) {
             //std::cerr << "ENV " << std::endl;
             bool some_env = false;
             successors_t env_buffer;
@@ -539,12 +539,12 @@ namespace PetriEngine {
             }
         }
 
-        std::unique_ptr<SuccessorGenerator> make_generator(const PetriNet& net, PQL::Condition* predicate, bool is_safe, bool partial_order)
+        std::unique_ptr<GameSuccessorGenerator> make_generator(const PetriNet& net, PQL::Condition* predicate, bool is_safe, bool partial_order)
         {
             if(partial_order)
                 return std::make_unique<GamePORSuccessorGenerator>(net, predicate, is_safe);
             else
-                return std::make_unique<SuccessorGenerator>(net);
+                return std::make_unique<GameSuccessorGenerator>(net);
         }
 
         void SimpleSynthesis::run(bool use_stubborn, Strategy strategy, bool permissive) {
@@ -620,7 +620,6 @@ namespace PetriEngine {
                 bool some_winning = false;
                 successors_t ctrl_buffer;
                 if (!cconf.determined()) {
-                    generator->reset();
                     std::tie(some_ctrl, some_winning, ctrl_buffer) = get_ctrl_successors(*generator, cconf, permissive, env_buffer.empty());
                 }
 

@@ -35,16 +35,6 @@ public:
         return _next(write, [](size_t){ return true; });
     }
 
-    virtual bool next_ctrl(Structures::State& write)
-    {
-        return _next(write, [this](size_t t){ return _net._controllable[t]; });
-    }
-
-    virtual bool next_env(Structures::State& write)
-    {
-        return _next(write, [this](size_t t){ return !_net._controllable[t]; });
-    }
-
     uint32_t fired() const
     {
         return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : _suc_tcounter - 1;
@@ -89,7 +79,7 @@ protected:
     void _fire(Structures::State &write, uint32_t tid);
 
     template<typename T>
-    bool _next(Structures::State& write, T predicate) {
+    bool _next(Structures::State& write, T&& predicate) {
         for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
             // orphans are currently under "place 0" as a special case
             if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {

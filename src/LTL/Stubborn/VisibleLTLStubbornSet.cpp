@@ -27,7 +27,6 @@ namespace LTL {
         reset();
         _parent = marking;
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
-        memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
         if (_ordering.empty()) return false;
         if (_ordering.size() == 1) {

@@ -20,9 +20,25 @@ namespace PetriEngine {
     namespace Synthesis {
         class GameStubbornSet : public StubbornSet {
         public:
-            using StubbornSet::StubbornSet;
+            GameStubbornSet(const PetriNet& net, PQL::Condition* predicate, bool is_safety);
 
             virtual bool prepare(const Structures::State *marking) override;
+
+            bool has_ctrl() const { return _ctrl_cnt > 0; }
+            bool has_env() const { return _env_cnt > 0; }
+            virtual void reset();
+        protected:
+            virtual void addToStub(uint32_t t);
+        private:
+            void computeSafe();
+            size_t _env_cnt = 0;
+            size_t _ctrl_cnt = 0;
+            bool _is_safety;
+            bool _added_unsafe;
+            std::vector<uint32_t> _reach_actions;
+            std::vector<uint32_t> _avoid_actions;
+            std::vector<bool> _safe_actions;
+            std::vector<bool> _safe_places;
         };
     }
 }
