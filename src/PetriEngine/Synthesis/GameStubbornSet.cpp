@@ -54,7 +54,7 @@ namespace PetriEngine {
         }
 
         void GameStubbornSet::skip() {
-            std::fill(_stubborn.get(), _stubborn.get() + _net.numberOfPlaces(), true);
+            set_all_stubborn();
         }
 
         void GameStubbornSet::computeSafe() {
@@ -126,7 +126,7 @@ namespace PetriEngine {
             if(_nenabled <= 1)
             {
                 if(_nenabled == 1)
-                    _stubborn[_ordering.back()];
+                    _stubborn[_ordering.front()] = true;
                 return true;
             }
 
@@ -150,7 +150,9 @@ namespace PetriEngine {
                 // acceptance
                 for (auto t : _reach_actions)
                     addToStub(t);
-                return false;
+                // just skip everything for now
+                skip();
+                return true;
             } else {
                 for (auto t : _avoid_actions)
                     addToStub(t);

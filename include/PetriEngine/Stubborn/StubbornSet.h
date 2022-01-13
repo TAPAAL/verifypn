@@ -248,7 +248,7 @@ namespace PetriEngine {
         void checkForInhibitor();
 
         void set_all_stubborn() {
-            memset(_stubborn.get(), true, _net.numberOfTransitions());
+            std::fill(_stubborn.get(), _stubborn.get() + _net.numberOfTransitions(), true);
             _done = true;
         }
     };
