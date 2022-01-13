@@ -31,6 +31,38 @@ namespace PetriEngine {
             }
         }
 
+        uint32_t GameStubbornSet::next_env()
+        {
+            while(!_env_acts.empty())
+            {
+                if(_stubborn[_env_acts.back()])
+                {
+                    auto r = _env_acts.back();
+                    _env_acts.pop_back();
+                    return r;
+                }
+            }
+            return std::numeric_limits<uint32_t>::max();
+        }
+
+        uint32_t GameStubbornSet::next_ctrl()
+        {
+            while(!_ctrl_acts.empty())
+            {
+                if(_stubborn[_ctrl_acts.back()])
+                {
+                    auto r = _ctrl_acts.back();
+                    _ctrl_acts.pop_back();
+                    return r;
+                }
+            }
+            return std::numeric_limits<uint32_t>::max();
+        }
+
+        void GameStubbornSet::skip() {
+            std::fill(_stubborn.get(), _stubborn.get() + _net.numberOfPlaces(), true);
+        }
+
         void GameStubbornSet::computeSafe() {
             _safe_actions.resize(_net.numberOfTransitions(), true);
             _safe_places.resize(_net.numberOfPlaces(), true);
@@ -81,8 +113,8 @@ namespace PetriEngine {
 
         void GameStubbornSet::reset() {
             StubbornSet::reset();
-            _ctrl_cnt = 0;
-            _env_cnt = 0;
+            _ctrl_acts.clear();
+            _env_acts.clear();
             _added_unsafe = false;
         }
 
@@ -91,14 +123,18 @@ namespace PetriEngine {
             _parent = marking;
             StubbornSet::constructEnabled([this](uint32_t t) {
                 if (_net.controllable(t))
-                    ++_env_cnt;
+                    _ctrl_acts.push_back(t);
                 else
-                    ++_ctrl_cnt;
-                return _env_cnt == 0 || _ctrl_cnt == 0;
+                    _env_acts.push_back(t);
+                return _env_acts.empty() || _ctrl_acts.empty();
             });
 
             if(_nenabled <= 1)
-                return false;
+            {
+                if(_nenabled == 1)
+                    _stubborn[_ordering.back()];
+                return true;
+            }
 
             PQL::EvaluationContext context(_parent->marking(), &_net);
             InterestingTransitionVisitor visitor(*this, false);
@@ -108,13 +144,12 @@ namespace PetriEngine {
                 q->visit(visitor);
             }
 
-            if(_added_unsafe)
-                return false;
-            closure([this]{ return !_added_unsafe;});
-            if(_added_unsafe)
-                return false;
+            if(_added_unsafe) { skip(); return true; }
 
-            const bool reach_player = _is_safety ? _env_cnt > 0 : _ctrl_cnt > 0;
+            closure([this]{ return !_added_unsafe;});
+            if(_added_unsafe) { skip(); return true; }
+
+            const bool reach_player = _is_safety ? _ctrl_acts.empty() : _env_acts.empty();
 
             if (!reach_player) {
                 // TODO; approximate forward reach to avoid accidential
@@ -127,8 +162,7 @@ namespace PetriEngine {
                     addToStub(t);
             }
             closure([this]{ return !_added_unsafe;});
-            if(_added_unsafe)
-                return false;
+            if(_added_unsafe) { skip(); return true; }
 
             return true;
         }

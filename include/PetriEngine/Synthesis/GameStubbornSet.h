@@ -18,21 +18,23 @@
 
 namespace PetriEngine {
     namespace Synthesis {
-        class GameStubbornSet : public StubbornSet {
+        class GameStubbornSet : protected StubbornSet {
         public:
             GameStubbornSet(const PetriNet& net, PQL::Condition* predicate, bool is_safety);
 
             virtual bool prepare(const Structures::State *marking) override;
-
-            bool has_ctrl() const { return _ctrl_cnt > 0; }
-            bool has_env() const { return _env_cnt > 0; }
+            uint32_t next_env();
+            uint32_t next_ctrl();
+            bool has_ctrl() const { return !_ctrl_acts.empty(); }
+            bool has_env() const { return !_env_acts.empty(); }
             virtual void reset();
         protected:
             virtual void addToStub(uint32_t t);
         private:
+            void skip();
             void computeSafe();
-            size_t _env_cnt = 0;
-            size_t _ctrl_cnt = 0;
+            light_deque<uint32_t> _ctrl_acts;
+            light_deque<uint32_t> _env_acts;
             bool _is_safety;
             bool _added_unsafe;
             std::vector<uint32_t> _reach_actions;

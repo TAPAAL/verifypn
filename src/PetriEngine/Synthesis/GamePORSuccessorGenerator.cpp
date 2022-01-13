@@ -17,15 +17,16 @@ namespace PetriEngine {
 
         bool GamePORSuccessorGenerator::prepare(const Structures::State* state) {
             GameSuccessorGenerator::prepare(state);
-            _skip = !_stubborn.prepare(state);
-            if(_skip)
-                return true;
-            assert(_stubborn.has_ctrl() xor _stubborn.has_env());
+#ifndef NDEBUG
+            auto r =
+#endif
+            _stubborn.prepare(state);
+            assert(r);
             return true;
         }
 
-        bool GamePORSuccessorGenerator::_nxt(Structures::State& write) {
-            _last_fired = _stubborn.next();
+        bool GamePORSuccessorGenerator::_nxt(Structures::State& write, bool ctrl) {
+            _last_fired = ctrl ? _stubborn.next_ctrl() : _stubborn.next_env();
             if(_last_fired != std::numeric_limits<uint32_t>::max())
             {
                 GamePORSuccessorGenerator::_fire(write, _last_fired);
@@ -35,24 +36,11 @@ namespace PetriEngine {
         }
 
         bool GamePORSuccessorGenerator::next_ctrl(Structures::State& write) {
-
-            if(_skip || !_stubborn.has_ctrl())
-            {
-                auto r = GameSuccessorGenerator::next_ctrl(write);
-                _last_fired = GameSuccessorGenerator::fired();
-                return r;
-            }
-            return _nxt(write);
+            return _nxt(write, true);
         }
 
         bool GamePORSuccessorGenerator::next_env(Structures::State& write) {
-            if(_skip || !_stubborn.has_env())
-            {
-                auto r = GameSuccessorGenerator::next_env(write);
-                _last_fired = GameSuccessorGenerator::fired();
-                return r;
-            }
-            return _nxt(write);
+            return _nxt(write, false);
         }
 
     }

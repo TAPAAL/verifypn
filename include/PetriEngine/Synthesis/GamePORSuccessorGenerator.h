@@ -22,12 +22,11 @@ namespace Synthesis {
         virtual uint32_t fired() const { return _last_fired; }
     private:
 
-        bool _nxt(Structures::State& write);
+        bool _nxt(Structures::State& write, bool ctrl);
 
         GameStubbornSet _stubborn;
         PQL::Condition* _predicate = nullptr;
         const bool _is_safety = false;
-        bool _skip = false;
         uint32_t _last_fired;
     };
 }
