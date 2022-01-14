@@ -39,7 +39,12 @@ namespace PetriEngine {
                 if (_enabled[t] && !_safe_actions[t])
                     _added_unsafe = true;
                 else
+                {
+                    if(_env_acts.empty() == _net.controllable(t) &&
+                        !_future_enabled[t])
+                        return;
                     StubbornSet::addToStub(t);
+                }
             }
         }
 
@@ -146,9 +151,8 @@ namespace PetriEngine {
 
             // bootstrap
             for (auto t : (ctrl ? _ctrl_acts : _env_acts)) {
-                if (_enabled[t]) {
-                    color_transition(t);
-                }
+                assert(_enabled[t]);
+                color_transition(t);
             }
 
             // saturate
@@ -214,6 +218,12 @@ namespace PetriEngine {
                     _env_acts.push_back(t);
                 return true;
             });
+            if(!_ctrl_acts.empty() &&
+               !_env_acts.empty())
+            {
+                skip();
+                return true;
+            }
 
             if (_nenabled <= 1) {
                 if (_nenabled == 1)
@@ -221,6 +231,7 @@ namespace PetriEngine {
                 return true;
             }
 
+            const auto touches_query = approximateFuture(!_ctrl_acts.empty());
             PQL::EvaluationContext context(_parent->marking(), &_net);
             InterestingTransitionVisitor visitor(*this, false);
             assert(_queries.size() == 1);
@@ -249,7 +260,6 @@ namespace PetriEngine {
             if (!reach_player) {
                 // TODO; approximate forward reach to avoid accidential
                 // acceptance
-                auto touches_query = approximateFuture(!_ctrl_acts.empty());
                 if(touches_query)
                 {
                     skip();
