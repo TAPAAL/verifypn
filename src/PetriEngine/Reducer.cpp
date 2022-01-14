@@ -2096,13 +2096,13 @@ namespace PetriEngine {
     {
         // rmode has 4 options:
         // 0 for normal operation
-        // 1 for a 5 second local time limit
-        // 2 for a 2x original transitions space limit
+        // 1 for a 2 second local time limit
+        // 2 for a 1.25x original transitions space limit
         // 3 for only applying once after all other rules have run to exhaustion, and then applying the other rules again.
 
         std::chrono::high_resolution_clock::time_point localTimer = std::chrono::high_resolution_clock::now();
-        int localTimeout = 5;
-        uint32_t spaceLimit = 2 * parent->originalNumberOfTransitions();
+        int localTimeout = 2;
+        uint32_t spaceLimit = (uint32_t)(1.25 * (double)parent->originalNumberOfTransitions());
         bool continueReductions = false;
 
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++)
@@ -2322,12 +2322,12 @@ namespace PetriEngine {
             do
             {
                 if(remove_loops && !next_safe)
-                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
-                        while(ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleE(context.getQueryPlaceCount(), useP)) changed = true;
+                        if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
+                        //while(ReducebyRuleE(context.getQueryPlaceCount(), useP)) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
@@ -2336,7 +2336,7 @@ namespace PetriEngine {
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             if(!remove_loops) 
-                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                                if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
@@ -2344,11 +2344,11 @@ namespace PetriEngine {
                     if(!next_safe) 
                     { // then apply tokens moving rules
                         //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
                         while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true; // For cleanup
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                        if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
                     }
                 } while(changed && !hasTimedout());
                 if(!next_safe && !changed)
@@ -2362,18 +2362,18 @@ namespace PetriEngine {
         else
         {
             const char* rnames = "ABCDEFGHIJKLMNOPQR";
-            for(int i = reduction.size() - 1; i >= 0; --i)
+            for(uint32_t i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5 && reduction[i] != 16 && !(reduction[i] >= 17 && reduction[i] <= 20))
+                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
 			            continue;
                     }
                 }
-                if(!remove_loops && reduction[i] == 5)
+                if(!remove_loops && (reduction[i] == 5 || reduction[i] == 12))
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
@@ -2444,13 +2444,13 @@ namespace PetriEngine {
                                 if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 17:
-                                if (ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
+                                while (ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
                                 break;
                             case 18:
-                                if (ReducebyRuleR(context.getQueryPlaceCount(), 1)) changed = true;
+                                while (ReducebyRuleR(context.getQueryPlaceCount(), 1)) changed = true;
                                 break;
                             case 19:
-                                if (ReducebyRuleR(context.getQueryPlaceCount(), 2)) changed = true;
+                                while (ReducebyRuleR(context.getQueryPlaceCount(), 2)) changed = true;
                                 break;
                             case 20:
                                 if (!changed && rLastAvailable){
