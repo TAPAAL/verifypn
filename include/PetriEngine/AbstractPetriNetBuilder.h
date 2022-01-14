@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -31,8 +31,11 @@ namespace PetriEngine {
     class AbstractPetriNetBuilder {
     protected:
         bool _isColored = false;
-        
+
     public:
+        void parse_model(const std::string&& model);
+        void parse_model(std::istream& model);
+
         /** Add a new place with a unique name */
         virtual void addPlace(const std::string& name,
                 int tokens,
@@ -69,7 +72,7 @@ namespace PetriEngine {
         /** Add colored input arc with given arc expression */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
-                const Colored::ArcExpression_ptr& expr, 
+                const Colored::ArcExpression_ptr& expr,
                 bool inhibitor, int weight)
         {
             std::cerr << "Colored input arcs are not supported in standard P/T nets" << std::endl;
@@ -94,7 +97,7 @@ namespace PetriEngine {
             std::cerr << "Color types are not supported in standard P/T nets" << std::endl;
             exit(ErrorCode);
         }
-        
+
         virtual void enableColors() {
             _isColored = true;
         }
@@ -104,7 +107,7 @@ namespace PetriEngine {
         }
 
         virtual void sort() = 0;
-        
+
         virtual ~AbstractPetriNetBuilder() {
         }
     };

@@ -1,7 +1,4 @@
-/* Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>,
+/* Copyright (C) 2011  Peter Gjøl Jensen <root@petergjoel.dk>,
  *                     Rasmus Tollund <rtollu18@student.aau.dk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,22 +24,32 @@ namespace PetriEngine {
     namespace PQL {
         class XMLPrinter : public Visitor {
         public:
-            XMLPrinter(std::ostream& os, uint32_t init_tabs = 0, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
-                os(os), tabs(init_tabs), tab_size(tab_size), single_tab(std::string(tab_size, ' ')), print_newlines(print_newlines), token_count(token_count) {}
+
+            XMLPrinter(std::ostream& os, uint32_t init_tabs = 4, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
+                os(os), token_count(token_count), tabs(init_tabs), tab_size(tab_size),
+                        print_newlines(print_newlines) {
+            }
+
+            void print(const Condition& c, const std::string& name);
 
         protected:
             std::ostream& os;
             const bool token_count;
             uint32_t tabs;
-            const uint32_t tab_size;
-            const std::string single_tab;
+            uint32_t tab_size;
             const bool print_newlines;
 
-            std::ostream & generateTabs();
+            std::ostream& generateTabs();
+            std::ostream& newline();
 
-            void openXmlTag(const std::string& tag);
-            void closeXmlTag(const std::string &tag);
-            void outputLine(const std::string &line);
+            template<typename ...Args>
+            void outputLine(Args ...args)
+            {
+                (generateTabs() << ... << args);
+                newline();
+            }
+            void openXmlTag(const char* tag);
+            void closeXmlTag(const char* tag);
 
             void _accept(const NotCondition *element) override;
 
@@ -111,6 +118,24 @@ namespace PetriEngine {
             void _accept(const SubtractExpr *element) override;
 
             void _accept(const IdentifierExpr *element) override;
+
+            class Tag {
+                XMLPrinter* _printer;
+                const char* _tag;
+            public:
+                Tag(XMLPrinter& printer, const char* tag)
+                : Tag(&printer, tag) {};
+                Tag(XMLPrinter* printer, const char* tag)
+                : _printer(printer), _tag(tag)
+                {
+                    _printer->openXmlTag(_tag);
+                }
+
+                ~Tag()
+                {
+                    _printer->closeXmlTag(_tag);
+                }
+            };
 
         };
     }

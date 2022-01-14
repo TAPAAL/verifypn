@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,18 +29,17 @@
 #include "../SuccessorGenerator.h"
 #include "../ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
+
 #include "PetriEngine/options.h"
 
 #include <memory>
 #include <vector>
-#include <PetriEngine/Stubborn/ReachabilityStubbornSet.h>
+
 
 
 namespace PetriEngine {
     namespace Reachability {
 
-
-        
         /** Implements reachability check in a BFS manner using a hash table */
         class ReachabilitySearch {
         public:
@@ -48,7 +47,7 @@ namespace PetriEngine {
             ReachabilitySearch(PetriNet& net, AbstractHandler& callback, int kbound = 0, bool early = false)
             : _net(net), _kbound(kbound), _callback(callback) {
             }
-            
+
             ~ReachabilitySearch()
             {
             }
@@ -71,7 +70,7 @@ namespace PetriEngine {
                 size_t heurquery = 0;
                 bool usequeries;
             };
-            
+
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
@@ -84,7 +83,7 @@ namespace PetriEngine {
                                     std::vector<ResultPrinter::Result>&,
                                     Structures::State&, searchstate_t&, Structures::StateSetInterface*);
             std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, Structures::StateSetInterface *states);
-            
+
             PetriNet& _net;
             int _kbound;
             size_t _satisfyingMarking = 0;
@@ -123,17 +122,17 @@ namespace PetriEngine {
             _initial.setMarking(_net.makeInitialMarking());
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
-            
+
             W states(_net, _kbound);    // stateset
             Q queue(&states, seed);           // working queue
             G generator = _makeSucGen<G>(_net, queries); // successor generator
             auto r = states.add(state);
             // this can fail due to reductions; we push tokens around and violate K
-            if(r.first){ 
+            if(r.first){
                 // add initial to states, check queries on initial state
                 _satisfyingMarking = r.second;
                 // check initial marking
-                if(ss.usequeries) 
+                if(ss.usequeries)
                 {
                     if(checkQueries(queries, results, working, ss, &states))
                     {
@@ -179,7 +178,7 @@ namespace PetriEngine {
                 {
                     results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states).first;
                 }
-            }            
+            }
 
             if(statisticsLevel != StatisticsLevel::None) printStats(ss, &states, statisticsLevel);
             return false;

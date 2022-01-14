@@ -2,17 +2,17 @@
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -26,8 +26,6 @@
 #include <memory>
 
 #include "../PetriNet.h"
-//#include "../Structures/State.h"
-//#include "../ReducingSuccessorGenerator.h"
 #include "../Simplification/LPCache.h"
 
 namespace PetriEngine {
@@ -41,16 +39,15 @@ namespace PetriEngine {
     namespace PQL {
         class Visitor;
         class MutatingVisitor;
-        
+
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
-        
-        
+
+
         class AnalysisContext;
         class EvaluationContext;
         class DistanceContext;
-        class TAPAALConditionExportContext;
         class SimplificationContext;
 
         /** Representation of a PQL error */
@@ -117,21 +114,19 @@ namespace PetriEngine {
             [[nodiscard]] virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
-            /** Count size of the entire formula in number of nodes */
-            [[nodiscard]] virtual int formulaSize() const = 0;
-            
+
             [[nodiscard]] virtual bool placeFree() const = 0;
-            
+
             void setEval(int eval) {
                 _eval = eval;
             }
-            
+
             [[nodiscard]] int getEval() const {
                 return _eval;
             }
         };
 /******************* NEGATION PUSH STATS  *******************/
-        
+
         struct negstat_t
         {
             static constexpr std::array _rulename {
@@ -190,7 +185,7 @@ namespace PetriEngine {
             int& operator[](size_t i) { return _used[i]; }
             bool negated_fireability = false;
         };
-        
+
         /** Base condition */
         class Condition : public std::enable_shared_from_this<Condition> {
         public:
@@ -198,8 +193,6 @@ namespace PetriEngine {
         private:
             bool _inv = false;
             Result _eval = RUNKNOWN;
-        protected:
-            bool _loop_sensitive = false;            
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -210,38 +203,25 @@ namespace PetriEngine {
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             virtual void visit(Visitor& visitor) const = 0;
             virtual void visit(MutatingVisitor& visitor) = 0;
-            
-            /** Export condition to TAPAAL query (add EF manually!) */
-            virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
+
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
-            /** Query Simplification */
-            virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
-            /** Check if query is a reachability query */
-            [[nodiscard]] virtual bool isReachability(uint32_t depth = 0) const = 0;
 
-            [[nodiscard]] virtual bool isLoopSensitive() const { return _loop_sensitive; };
-            /** Prepare reachability queries */
-            [[nodiscard]] virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            [[nodiscard]] virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
-            
             /** Checks if the condition is trivially true */
             [[nodiscard]] bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
             [[nodiscard]] bool isTriviallyFalse();
-            /** Count size of the entire formula in number of nodes */
-            [[nodiscard]] virtual int formulaSize() const = 0;
 
             [[nodiscard]] bool isSatisfied() const
             {
                 return _eval == RTRUE;
             }
-            
+
             void setSatisfied(bool isSatisfied)
             {
                 _eval = isSatisfied ? RTRUE : RFALSE;
             }
-            
+
             void setSatisfied(Result isSatisfied)
             {
                 _eval = isSatisfied;
@@ -251,25 +231,20 @@ namespace PetriEngine {
             {
                 return _eval;
             }
-            
+
             void setInvariant(bool isInvariant)
             {
                 _inv = isInvariant;
             }
-           
+
             bool isInvariant()
             {
                 return _inv;
             }
-            
-            [[nodiscard]] virtual bool isTemporal() const { return false;}
+
             [[nodiscard]] virtual CTLType getQueryType() const = 0;
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
-            [[nodiscard]] static std::shared_ptr<Condition> 
-            initialMarkingRW(const std::function<std::shared_ptr<Condition> ()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
-            [[nodiscard]] virtual bool containsNext() const = 0;   
-            [[nodiscard]] virtual bool nestedDeadlock() const = 0;
             void toString(std::ostream& os = std::cout);
         protected:
             //Value for checking if condition is trivially true or false.

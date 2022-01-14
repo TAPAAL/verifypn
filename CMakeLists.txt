@@ -1,73 +1,80 @@
-cmake_minimum_required(VERSION 3.9)
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0069 NEW)
+cmake_minimum_required(VERSION 3.16)
 
+## Default to release builds, must be set before project
+if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+endif()
+
+# Project Definition
+set(VERIFYPN_NAME "verifypn")
+set(VERIFYPN_VERSION 4.2.1)
+project(${VERIFYPN_NAME} VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
+
+# C++ Definition
 set(CMAKE_CXX_STANDARD 17)
-if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE Release)
-endif (NOT CMAKE_BUILD_TYPE)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Default Values
+## Build Flags
+option(VERIFYPN_Static "Link libraries statically" ON)
+option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external CACHE PATH "Install location for external dependencies")
+option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
+option(VERIFYPN_TEST "Build unit tests" OFF)
+set(VERIFYPN_TARGETDIR "${CMAKE_BINARY_DIR}/${VERIFYPN_NAME}" CACHE PATH "Traget directory for build files")
+set(VERIFYPN_OSX_DEPLOYMENT_TARGET 10.8 CACHE STRING "Specify the minimum version of the target platform for MacOS on which the target binaries are to be deployed ") 
+
+# Configure Project
+
+## Configure Static
+if (VERIFYPN_Static)
+    if (VERIFYPN_MC_Simplification)
+        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking")
+    endif (VERIFYPN_MC_Simplification)
+
+    set(BUILD_SHARED_LIBS OFF)
+    if (NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+    else () 
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    endif()
+endif (VERIFYPN_Static)
+
+## Configure Traget Platform 
+if (UNIX AND NOT APPLE)
+    set(ARCH_TYPE "linux64")
+elseif (APPLE)
+    set(ARCH_TYPE "osx64")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET ${VERIFYPN_OSX_DEPLOYMENT_TARGET})
+else ()
+    set(ARCH_TYPE "win64")
+endif ()
+
+## Enabled INTERPROCEDURAL_OPTIMIZATION for non-macos
 if (CMAKE_BUILD_TYPE MATCHES Release)
     if (NOT APPLE)
     	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif ()
 endif ()
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-
-set(VERIFYPN_VERSION 4.2.0)
-add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
-
-project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
-
-option(VERIFYPN_Static "Link libraries statically" ON)
-option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
-option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
-
-
-if (VERIFYPN_Static)
-    set(BUILD_SHARED_LIBS OFF)
-    if (VERIFYPN_MC_Simplification)
-        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking" )
-    endif(VERIFYPN_MC_Simplification)
-    if (NOT APPLE)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    endif(NOT APPLE)
-endif (VERIFYPN_Static)
-
-if (VERIFYPN_MC_Simplification)
-    add_compile_definitions(VERIFYPN_MC_Simplification)
-endif(VERIFYPN_MC_Simplification)
-
-if (UNIX AND NOT APPLE)
-    set(ARCH_TYPE "linux64")
-elseif(APPLE)
-    set(ARCH_TYPE "osx64")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.8)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 ")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 ")
-else()
-    set(ARCH_TYPE "win64")
-endif ()
-
+## CXX Flags
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -Wall -pedantic-errors -O3 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer ")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
-if (VERIFYPN_Static AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -static")
-endif()
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer ")
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+## Target File location
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/bin)
+
+# Required Packages and Tools
 
 find_package(FLEX 2.6.4 REQUIRED)
 find_package(BISON 3.0.5 REQUIRED)
 
 if (VERIFYPN_GetDependencies)
-    # setup for external imports
     include(ExternalProject)
-    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+    # Install location should be ${EXTERNAL_INSTALL_LOCATION}
 
     ExternalProject_add(ptrie-ext
         GIT_REPOSITORY https://github.com/petergjoel/ptrie
@@ -115,10 +122,21 @@ if (VERIFYPN_GetDependencies)
 
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib64)
-
-    # we can now include external libraries
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 endif (VERIFYPN_GetDependencies)
-include_directories(include)
 
+# Set Macros
+if (VERIFYPN_MC_Simplification)
+    add_compile_definitions(VERIFYPN_MC_Simplification)
+endif(VERIFYPN_MC_Simplification)
+add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
+
+# Source
+include_directories(include)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/)
+
+# Testing
+if (VERIFYPN_TEST)
+    enable_testing()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/boost_tests)
+endif()

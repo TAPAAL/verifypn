@@ -178,7 +178,6 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const FireableCondition *element) {
             os << "is-fireable(" << element->getName() << ")";
-
         }
 
         void QueryPrinter::_accept(const UpperBoundsCondition *element) {

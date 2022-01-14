@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -36,7 +36,11 @@ using namespace PetriEngine::Simplification;
 namespace PetriEngine {
     namespace PQL {
 
-        std::string generateTabs(uint32_t tabs);
+        Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr);
+        Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b);
+        Condition_ptr makeAnd(const std::vector<Condition_ptr>& cptr);
+        Condition_ptr makeAnd(const Condition_ptr& a, const Condition_ptr& b);
+
         class CompareCondition;
         class NotCondition;
         /******************** EXPRESSIONS ********************/
@@ -51,14 +55,10 @@ namespace PetriEngine {
             }
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
-            int formulaSize() const override{
-                size_t sum = 0;
-                for(auto& e : _exprs) sum += e->formulaSize();
-                return sum + 1;
-            }
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
             size_t operands() const { return _exprs.size(); }
+            void visit(Visitor&) const override;
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
@@ -80,11 +80,6 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
-            int formulaSize() const override{
-                size_t sum = _ids.size();
-                for(auto& e : _exprs) sum += e->formulaSize();
-                return sum + 1;
-            }
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
@@ -163,9 +158,6 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
 
             void visit(Visitor& visitor) const override;
-            int formulaSize() const override{
-                return _expr->formulaSize() + 1;
-            }
             bool placeFree() const override;
             const Expr_ptr& operator[](size_t i) const { return _expr; };
         private:
@@ -184,9 +176,6 @@ namespace PetriEngine {
             Expr::Types type() const override;
 
             void visit(Visitor& visitor) const override;
-            int formulaSize() const override{
-                return 1;
-            }
             int value() const {
                 return _value;
             };
@@ -210,10 +199,6 @@ namespace PetriEngine {
                 return Expr::IdentifierExpr;
             }
 
-            int formulaSize() const override {
-                if(_compiled) return _compiled->formulaSize();
-                return 1;
-            }
             virtual bool placeFree() const override {
                 if(_compiled) return _compiled->placeFree();
                 return false;
@@ -253,9 +238,6 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
-            int formulaSize() const override{
-                return 1;
-            }
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
@@ -282,37 +264,11 @@ namespace PetriEngine {
             { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
-            void toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const override
-            { _compiled->toTAPAALQuery(out, context); }
-            Retval simplify(SimplificationContext& context) const override
-            { return _compiled->simplify(context); }
-            Condition_ptr prepareForReachability(bool negated) const override
-            { return _compiled->prepareForReachability(negated); }
-            bool isReachability(uint32_t depth) const override
-            { return _compiled->isReachability(depth); }
-
 
             Quantifier getQuantifier() const override
             { return _compiled->getQuantifier(); }
             Path getPath() const override { return _compiled->getPath(); }
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
-            bool containsNext() const override { return _compiled->containsNext(); }
-            bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
-            int formulaSize() const override{
-                return _compiled->formulaSize();
-            }
-
-            virtual Condition_ptr pushNegation(negstat_t& neg, const EvaluationContext& context, bool nested, bool negated, bool initrw) override
-            {
-                if(_compiled)
-                    return _compiled->pushNegation(neg, context, nested, negated, initrw);
-                else {
-                    if(negated)
-                        return std::static_pointer_cast<Condition>(std::make_shared<NotCondition>(clone()));
-                    else
-                        return clone();
-                }
-            }
 
             void analyze(AnalysisContext& context) override
             {
@@ -323,10 +279,12 @@ namespace PetriEngine {
             const Condition_ptr &getCompiled() const {
                 return _compiled;
             }
+            virtual Condition_ptr clone() = 0;
+
+            void visit(Visitor& visitor) const override;
 
         protected:
             virtual void _analyze(AnalysisContext& context) = 0;
-            virtual Condition_ptr clone() = 0;
             Condition_ptr _compiled = nullptr;
         };
 
@@ -336,11 +294,6 @@ namespace PetriEngine {
 
             NotCondition(const Condition_ptr cond) {
                 _cond = cond;
-                _temporal = _cond->isTemporal();
-                _loop_sensitive = _cond->isLoopSensitive();
-            }
-            int formulaSize() const override{
-                return _cond->formulaSize() + 1;
             }
 
 
@@ -350,23 +303,13 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             const Condition_ptr& getCond() const { return _cond; };
-            virtual bool isTemporal() const override { return _temporal;}
-            bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
         private:
             Condition_ptr _cond;
-            bool _temporal = false;
         };
 
 
@@ -375,7 +318,6 @@ namespace PetriEngine {
         class QuantifierCondition : public Condition
         {
         public:
-            bool isTemporal() const override { return true;}
             CTLType getQueryType() const override { return CTLType::PATHQEURY; }
             virtual const Condition_ptr& operator[] (size_t i) const = 0;
         };
@@ -383,27 +325,20 @@ namespace PetriEngine {
         class SimpleQuantifierCondition : public QuantifierCondition {
         public:
             SimpleQuantifierCondition(const Condition_ptr cond) {
+                assert(cond);
                 _cond = cond;
-                _loop_sensitive = cond->isLoopSensitive();
             }
-            int formulaSize() const override{
-                return _cond->formulaSize() + 1;
-            }
-
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void visit(Visitor&) const override;
 
 
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
-            bool containsNext() const override { return _cond->containsNext(); }
-            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
-        private:
             virtual std::string op() const = 0;
+        private:
 
         protected:
             Condition_ptr _cond;
@@ -415,21 +350,12 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-            Retval simplify(SimplificationContext& context) const override;
 
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            bool isLoopSensitive() const override {
-                // Other LTL Loop sensitivity depend on the outermost quantifier being an A,
-                // so if it is an E we disable loop sensitive reductions.
-                return true;
             }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -443,10 +369,6 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
@@ -467,24 +389,6 @@ namespace PetriEngine {
 
           Result evaluate(const EvaluationContext &context) override;
 
-          bool isReachability(uint32_t depth) const override {
-              // This could potentially be a reachability formula if the parent is an A.
-              // This case is however already handled by ACondition.
-              return false;
-          }
-
-          Condition_ptr prepareForReachability(bool negated) const override {
-              // TODO implement
-              assert(false);
-              std::cerr << "TODO implement" << std::endl;
-              exit(0);
-          }
-
-          Condition_ptr
-          pushNegation(negstat_t &, const EvaluationContext &context, bool nested, bool negated, bool initrw) override;
-
-          Retval simplify(SimplificationContext &context) const override;
-
 
           Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
 
@@ -499,8 +403,6 @@ namespace PetriEngine {
 
           Result evalAndSet(const EvaluationContext &context) override;
 
-          bool isLoopSensitive() const override { return true; }
-
           void visit(Visitor &) const override;
           void visit(MutatingVisitor &) override;
 
@@ -514,24 +416,13 @@ namespace PetriEngine {
 
             Result evaluate(const EvaluationContext& context) override;
 
-            Retval simplify(SimplificationContext& context) const override;
-          bool isReachability(uint32_t depth) const override {
-              // This could potentially be a reachability formula if the parent is an E.
-              // This case is however already handled by ECondition.
-              return false;
-          }
-            Condition_ptr prepareForReachability(bool negated) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
           Result evalAndSet(const EvaluationContext &context) override;
-            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -542,22 +433,12 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            bool isReachability(uint32_t depth) const override {
-                return false;
-            }
-            Condition_ptr prepareForReachability(bool negated) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            Retval simplify(SimplificationContext& context) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
-            bool containsNext() const override { return true; }
-            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -567,15 +448,10 @@ namespace PetriEngine {
         class EXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -586,16 +462,12 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
- 	    Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -606,10 +478,7 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
- 	    Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
@@ -624,15 +493,10 @@ namespace PetriEngine {
         class AXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -642,10 +506,7 @@ namespace PetriEngine {
         class AGCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
@@ -660,10 +521,7 @@ namespace PetriEngine {
         class AFCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
@@ -671,7 +529,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -681,37 +538,26 @@ namespace PetriEngine {
             UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
                 _cond1 = cond1;
                 _cond2 = cond2;
-                _loop_sensitive = _cond1->isLoopSensitive() || _cond2->isLoopSensitive();
-            }
-            int formulaSize() const override{
-                return _cond1->formulaSize() + _cond2->formulaSize() + 1;
             }
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
 
             Result evalAndSet(const EvaluationContext& context) override;
 
             [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override { return Path::U; }
-            bool containsNext() const override { return _cond1->containsNext() || _cond2->containsNext(); }
-            bool nestedDeadlock() const override { return _cond1->nestedDeadlock() || _cond2->nestedDeadlock(); }
 
             [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
             [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
 
-            Retval simplify(SimplificationContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
-        private:
             virtual std::string op() const;
+        private:
 
         protected:
             Condition_ptr _cond1;
@@ -722,12 +568,10 @@ namespace PetriEngine {
         class EUCondition : public UntilCondition {
         public:
             using UntilCondition::UntilCondition;
-            Retval simplify(SimplificationContext& context) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
 
         private:
             std::string op() const override;
@@ -736,13 +580,10 @@ namespace PetriEngine {
         class AUCondition : public UntilCondition {
         public:
             using UntilCondition::UntilCondition;
-            Retval simplify(SimplificationContext& context) const override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -752,12 +593,12 @@ namespace PetriEngine {
         class UnfoldedFireableCondition : public ShallowCondition {
         public:
             UnfoldedFireableCondition(const std::string& tname) : ShallowCondition(), _name(tname) {};
-            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             std::string getName() const {
                 return _name;
             }
+
         protected:
             void _analyze(AnalysisContext& context) override;
 
@@ -771,12 +612,12 @@ namespace PetriEngine {
         class FireableCondition : public ShallowCondition {
         public:
             FireableCondition(const std::string& tname) : _name(tname) {};
-            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             std::string getName() const {
                 return _name;
             }
+
         protected:
             void _analyze(AnalysisContext& context) override;
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
@@ -787,18 +628,9 @@ namespace PetriEngine {
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
-            int formulaSize() const override {
-                size_t i = 1;
-                for(auto& c : _conds) i += c->formulaSize();
-                return i;
-            }
-
             void analyze(AnalysisContext& context) override;
 
             void visit(Visitor&) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
             const Condition_ptr& operator[](size_t i) const
             {
                 return _conds[i];
@@ -806,13 +638,10 @@ namespace PetriEngine {
             size_t operands() const {
                 return _conds.size();
             }
+            const std::vector<Condition_ptr>& getOperands() const { return _conds; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
 
-            bool isTemporal() const override
-            {
-                return _temporal;
-            }
             auto begin() { return _conds.begin(); }
             auto end() { return _conds.end(); }
             auto begin() const { return _conds.begin(); }
@@ -820,20 +649,15 @@ namespace PetriEngine {
             bool empty() const { return _conds.size() == 0; }
             bool singular() const { return _conds.size() == 1; }
             size_t size() const { return _conds.size(); }
-            bool containsNext() const override
-            { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
-            bool nestedDeadlock() const override;
-
-        protected:
-            LogicalCondition() {};
-            Retval simplifyOr(SimplificationContext& context) const;
-            Retval simplifyAnd(SimplificationContext& context) const;
-
-        private:
             virtual std::string op() const = 0;
 
         protected:
-            bool _temporal = false;
+            LogicalCondition() {};
+
+            Retval simplifyAnd(SimplificationContext& context) const;
+        private:
+
+        protected:
             std::vector<Condition_ptr> _conds;
         };
 
@@ -847,13 +671,11 @@ namespace PetriEngine {
 
             AndCondition(Condition_ptr left, Condition_ptr right);
 
-            Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
@@ -870,14 +692,12 @@ namespace PetriEngine {
 
             OrCondition(Condition_ptr left, Condition_ptr right);
 
-            Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
 
             Quantifier getQuantifier() const override { return Quantifier::OR; }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
@@ -939,35 +759,16 @@ namespace PetriEngine {
             void merge(const CompareConjunction& other);
             void merge(const std::vector<Condition_ptr>&, bool negated);
 
-            int formulaSize() const override{
-                int sum = 0;
-                for(auto& c : _constraints)
-                {
-                    assert(c._place >= 0);
-                    if(c._lower == c._upper) ++sum;
-                    else {
-                        if(c._lower != 0) ++sum;
-                        if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
-                    }
-                }
-                if(sum == 1) return 2;
-                else return (sum*2) + 1;
-            }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const override { return depth > 0; };
-            Condition_ptr prepareForReachability(bool negated) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
-            Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor &visitor) override;
 
             Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             bool isNegated() const { return _negated; }
             bool singular() const
             {
@@ -975,8 +776,6 @@ namespace PetriEngine {
                                     (_constraints[0]._lower == 0 ||
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
-            bool containsNext() const override { return false;}
-            bool nestedDeadlock() const override { return false; }
             const std::vector<cons_t>& constraints() const { return _constraints; }
             std::vector<cons_t>::const_iterator begin() const { return _constraints.begin(); }
             std::vector<cons_t>::const_iterator end() const { return _constraints.end(); }
@@ -993,16 +792,10 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            int formulaSize() const override{
-                return _expr1->formulaSize() + _expr2->formulaSize() + 1;
-            }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void visit(Visitor&) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -1011,8 +804,6 @@ namespace PetriEngine {
                 if(id == 0) return _expr1;
                 else return _expr2;
             }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             bool isTrivial() const;
 
             [[nodiscard]] const Expr_ptr &getExpr1() const { return _expr1; }
@@ -1020,6 +811,12 @@ namespace PetriEngine {
             [[nodiscard]] const Expr_ptr &getExpr2() const { return _expr2; }
 
             virtual std::string op() const = 0;
+
+            /** Operator when exported to TAPAAL */
+            virtual std::string opTAPAAL() const = 0;
+
+            /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
+            virtual std::string sopTAPAAL() const = 0;
 
         protected:
             uint32_t _distance(DistanceContext& c,
@@ -1029,10 +826,6 @@ namespace PetriEngine {
             }
         private:
             virtual bool apply(int v1, int v2) const = 0;
-            /** Operator when exported to TAPAAL */
-            virtual std::string opTAPAAL() const = 0;
-            /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
-            virtual std::string sopTAPAAL() const = 0;
 
         protected:
             Expr_ptr _expr1;
@@ -1048,10 +841,8 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
 
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -1066,12 +857,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            Retval simplify(SimplificationContext& context) const override;
-
-
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -1086,10 +872,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
-
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -1104,10 +887,8 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
 
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -1128,9 +909,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            int formulaSize() const override{
-                return 0;
-            }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
@@ -1139,18 +917,11 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;
             static Condition_ptr FALSE_CONSTANT;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             static Condition_ptr getShared(bool val);
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
             const bool value;
         };
 
@@ -1158,30 +929,18 @@ namespace PetriEngine {
         class DeadlockCondition : public Condition {
         public:
 
-            DeadlockCondition() {
-                _loop_sensitive = true;
-            }
-            int formulaSize() const override{
-                return 1;
-            }
+            DeadlockCondition() = default;
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
 
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::DEADLOCK; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
         };
 
         class KSafeCondition : public ShallowCondition
@@ -1193,6 +952,7 @@ namespace PetriEngine {
             const Expr_ptr &getBound() const {
                 return _bound;
             }
+
 
         protected:
             void _analyze(AnalysisContext& context) override;
@@ -1247,14 +1007,17 @@ namespace PetriEngine {
             const std::vector<std::string> &getPlaces() const {
                 return _places;
             }
-        protected:
-            void _analyze(AnalysisContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+
             Condition_ptr clone() override
             {
                 return std::make_shared<UpperBoundsCondition>(_places);
             }
+
+
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void visit(Visitor&) const override;
+            void visit(MutatingVisitor&) override;
         private:
             std::vector<std::string> _places;
         };
@@ -1290,9 +1053,6 @@ namespace PetriEngine {
                     : _places(places), _max(max), _offset(offset) {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
-            int formulaSize() const override{
-                return _places.size();
-            }
             void analyze(AnalysisContext& context) override;
             size_t value(const MarkVal*);
             Result evaluate(const EvaluationContext& context) override;
@@ -1300,17 +1060,10 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
 
             Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
 
             double bounds(bool add_offset = true) const {
                 return (add_offset ? _offset : 0 ) + _bound;

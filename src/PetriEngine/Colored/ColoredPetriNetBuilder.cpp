@@ -25,7 +25,7 @@ namespace PetriEngine {
     ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
     }
 
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) 
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig)
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
        _places(orig._places), _transitions(orig._transitions)
     {
@@ -51,7 +51,7 @@ namespace PetriEngine {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(Colored::Place {name, type, tokens});
+            _places.emplace_back(Colored::Place {name, type, tokens, x, y});
             _placenames[name] = next;
 
             //set up place color fix points and initialize queue
@@ -62,7 +62,7 @@ namespace PetriEngine {
             Colored::interval_vector_t placeConstraints;
             Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
             uint32_t colorCounter = 0;
-            
+
             if(tokens.size() == type->size()) {
                 for(const auto& colorPair : tokens){
                     if(colorPair.second > 0){
@@ -71,7 +71,7 @@ namespace PetriEngine {
                         break;
                     }
                 }
-            }            
+            }
 
             if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
@@ -84,8 +84,8 @@ namespace PetriEngine {
                     colorFixpoint.constraints.addInterval(tokenConstraints);
                 }
             }
-         
-            _placeColorFixpoints.push_back(colorFixpoint);    
+
+            _placeColorFixpoints.push_back(colorFixpoint);
         }
     }
 
@@ -99,7 +99,7 @@ namespace PetriEngine {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(Colored::Transition {name, guard});
+            _transitions.emplace_back(Colored::Transition {name, guard, x, y});
             _transitionnames[name] = next;
         }
     }
@@ -127,13 +127,13 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            std::cout << "Transition '" << transition << "' not found. Adding it." << std::endl;
-            addTransition(transition,0.0,0.0);
+            std::cout << "ERROR: Transition '" << transition << "' not found." << std::endl;
+            std::exit(-1);
         }
         if(_placenames.count(place) == 0)
         {
-            std::cout << "Place '" << place << "' not found. Adding it." << std::endl;
-            addPlace(place,0,0,0);
+            std::cout << "ERROR: Place '" << place << "' not found. " << std::endl;
+            std::exit(-1);
         }
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
@@ -157,7 +157,7 @@ namespace PetriEngine {
         } else {
             input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
         }
-        
+
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
@@ -176,7 +176,7 @@ namespace PetriEngine {
                     continue;
                     //the variables cannot appear on the guard
                 }
-                
+
                 for(const auto &inArc : transition.input_arcs){
                     std::set<const Colored::Variable*> inArcVars;
                     std::vector<uint32_t> numbers;
@@ -185,8 +185,8 @@ namespace PetriEngine {
                     if(_partitionComputed && !_partition[inArc.place].isDiagonal()){
                         continue;
                     }
-                    
-                    //the expressions is eligible if it is an addexpression that contains only 
+
+                    //the expressions is eligible if it is an addexpression that contains only
                     //numberOfExpressions with the same number
                     bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
 
@@ -198,10 +198,10 @@ namespace PetriEngine {
                         }
                         //The variables may appear only on one input arc and one output arc
                         checkSymmetricVarsInArcs(transition, inArc, inArcVars, isEligible);
-                        
-                        
+
+
                         //All the variables have to appear on exactly one output arc and nowhere else
-                        checkSymmetricVarsOutArcs(transition, inArcVars, isEligible);                    
+                        checkSymmetricVarsOutArcs(transition, inArcVars, isEligible);
                     }else{
                         isEligible = false;
                     }
@@ -241,7 +241,7 @@ namespace PetriEngine {
                     foundArc = false;
                 } else{
                     foundSomeVars = true;
-                } 
+                }
             }
             if(foundArc){
                 //Application of symmetric variables for partitioned places is currently unhandled
@@ -257,7 +257,7 @@ namespace PetriEngine {
             if(foundSomeVars){
                 isEligible = false;
                 break;
-            }  
+            }
         }
 
         if(numArcs != 1){
@@ -290,16 +290,16 @@ namespace PetriEngine {
         if(_isColored){
             auto partitionStart = std::chrono::high_resolution_clock::now();
             Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
-            
+
             if(pBuilder.partitionNet(timeout)){
                 //pBuilder.printPartion();
                 _partition = pBuilder.getPartition();
                 pBuilder.assignColorMap(_partition);
                 _partitionComputed = true;
-            }         
+            }
             auto partitionEnd = std::chrono::high_resolution_clock::now();
             _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
-        }        
+        }
     }
 
     //----------------------- Color fixpoint -----------------------//
@@ -315,47 +315,47 @@ namespace PetriEngine {
                 for(const auto &range : fixpointPair._ranges) {
                     std::cout << range._lower << "-" << range._upper << ", ";
                 }
-                std::cout << "]"<< std::endl;                    
+                std::cout << "]"<< std::endl;
             }
             std::cout << std::endl;
         }
     }
- 
+
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout) {
         if(_isColored){
             //Start timers for timing color fixpoint creation and max interval reduction steps
             auto start = std::chrono::high_resolution_clock::now();
             auto end = std::chrono::high_resolution_clock::now();
-            auto reduceTimer = std::chrono::high_resolution_clock::now();        
+            auto reduceTimer = std::chrono::high_resolution_clock::now();
             while(!_placeFixpointQueue.empty()){
                 //Reduce max interval once timeout passes
                 if(maxIntervals > maxIntervalsReduced && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
-                    maxIntervals = maxIntervalsReduced; 
+                    maxIntervals = maxIntervalsReduced;
                 }
-                
+
                 uint32_t currentPlaceId = _placeFixpointQueue.back();
                 _placeFixpointQueue.pop_back();
                 _placeColorFixpoints[currentPlaceId].inQueue = false;
                 std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
 
 
-                for (uint32_t transitionId : connectedTransitions) {                
+                for (uint32_t transitionId : connectedTransitions) {
                     Colored::Transition& transition = _transitions[transitionId];
                     // Skip transitions that cannot add anything new,
-                    // such as transitions with only constants on their arcs that have been processed once 
+                    // such as transitions with only constants on their arcs that have been processed once
                     if (transition.considered) continue;
                     bool transitionActivated = true;
                     transition.variableMaps.clear();
 
                     if(!_arcIntervals.count(transitionId)){
                         _arcIntervals[transitionId] = setupTransitionVars(transition);
-                    }           
+                    }
                     processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, maxIntervals);
-            
+
                     //If there were colors which activated the transitions, compute the intervals produced
                     if (transitionActivated) {
                         processOutputArcs(transition);
-                    }          
+                    }
                 }
                 end = std::chrono::high_resolution_clock::now();
             }
@@ -365,7 +365,7 @@ namespace PetriEngine {
 
             //printPlaceTable();
             _placeColorFixpoints.clear();
-        }        
+        }
     }
 
     //Create Arc interval structures for the transition
@@ -378,7 +378,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables, varPositions, varModifiersMap, false);
 
             Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varModifiersMap);
-            res[arc.place] = newArcInterval;               
+            res[arc.place] = newArcInterval;
         }
         return res;
     }
@@ -393,7 +393,7 @@ namespace PetriEngine {
                 Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][inArc.place];
                 uint32_t index = 0;
                 arcInterval._intervalTupleVec.clear();
-                
+
                 Colored::interval_vector_t intervalTuple;
                 intervalTuple.addInterval(_places[inArc.place].type->getFullInterval());
                 const PetriEngine::Colored::ColorFixpoint &cfp {intervalTuple};
@@ -402,7 +402,7 @@ namespace PetriEngine {
 
                 _partition[inArc.place].applyPartition(arcInterval);
             }
-            
+
             intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId]);
             for(const auto &outArc : transition.output_arcs){
                 outArc.expr->getVariables(variables);
@@ -428,7 +428,7 @@ namespace PetriEngine {
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
             curCFP.constraints.restrict(max_intervals);
             _maxIntervals = std::max(_maxIntervals, (uint32_t) curCFP.constraints.size());
-           
+
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
             uint32_t index = 0;
             arcInterval._intervalTupleVec.clear();
@@ -437,12 +437,12 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             }
-            
+
             if(_partitionComputed){
                 _partition[arc.place].applyPartition(arcInterval);
-            }                
+            }
         }
-        
+
     }
 
     void ColoredPetriNetBuilder::addTransitionVars(Colored::Transition& transition) const{
@@ -462,7 +462,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::removeInvalidVarmaps(Colored::Transition& transition) const{
         std::vector<Colored::VariableIntervalMap> newVarmaps;
         for(auto& varMap : transition.variableMaps){
-            bool validVarMap = true;      
+            bool validVarMap = true;
             for(auto& varPair : varMap){
                 if(!varPair.second.hasValidIntervals()){
                     validVarMap = false;
@@ -470,25 +470,25 @@ namespace PetriEngine {
                 } else {
                     varPair.second.simplify();
                 }
-            } 
+            }
             if(validVarMap){
                 newVarmaps.push_back(std::move(varMap));
-            }                   
+            }
         }
         transition.variableMaps = std::move(newVarmaps);
     }
 
     //Retreive interval colors from the input arcs restricted by the transition guard
-    void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {     
-        getArcIntervals(transition, transitionActivated, max_intervals, transitionId);  
-        
+    void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {
+        getArcIntervals(transition, transitionActivated, max_intervals, transitionId);
+
         if(!transitionActivated){
             return;
         }
-        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
+        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){
             if(transition.guard != nullptr) {
                 addTransitionVars(transition);
-                transition.guard->restrictVars(transition.variableMaps);              
+                transition.guard->restrictVars(transition.variableMaps);
                 removeInvalidVarmaps(transition);
 
                 if(transition.variableMaps.empty()){
@@ -500,7 +500,7 @@ namespace PetriEngine {
         } else {
             //Retrieving variable intervals failed
             transitionActivated = false;
-        }                                            
+        }
     }
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
@@ -511,17 +511,17 @@ namespace PetriEngine {
             //lower bounds should grow when more colors are added and as we cannot remove colors this
             //can be checked by summing the differences
             uint32_t colorsBefore = placeFixpoint.constraints.getContainedColors();
-                
+
             std::set<const Colored::Variable *> variables;
-            arc.expr->getVariables(variables);           
+            arc.expr->getVariables(variables);
 
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
             }
 
-            
 
-            //Apply partitioning to unbound outgoing variables such that 
+
+            //Apply partitioning to unbound outgoing variables such that
             // bindings are only created for colors used in the rest of the net
             if(_partitionComputed && !_partition[arc.place].isDiagonal()){
                 for(auto* outVar : variables){
@@ -532,12 +532,12 @@ namespace PetriEngine {
                                 varIntervalTuple.addInterval(EqClass.intervals().back().getSingleColorInterval());
                             }
                             varMap[outVar] = std::move(varIntervalTuple);
-                        }                    
-                    }                
+                        }
+                    }
                 }
             } else {
                 // Else if partitioning was not computed or diagonal
-                // and there is a varaible which was not found on an input arc or in the guard, 
+                // and there is a varaible which was not found on an input arc or in the guard,
                 // we give it the full interval
                 for(auto* var : variables){
                     for(auto& varmap : transition.variableMaps){
@@ -551,13 +551,13 @@ namespace PetriEngine {
             }
 
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
-            
+
 
             for(auto& intervalTuple : intervals){
                 intervalTuple.simplify();
                 for(auto& interval : intervalTuple){
-                    placeFixpoint.constraints.addInterval(std::move(interval)); 
-                }                   
+                    placeFixpoint.constraints.addInterval(std::move(interval));
+                }
             }
             placeFixpoint.constraints.simplify();
 
@@ -568,21 +568,21 @@ namespace PetriEngine {
                     _placeFixpointQueue.push_back(arc.place);
                     placeFixpoint.inQueue = true;
                 }
-            }                   
+            }
         }
-        //If there are no variables among the out arcs of a transition 
+        //If there are no variables among the out arcs of a transition
         // and it has been activated, there is no reason to cosider it again
         if(!transitionHasVarOutArcs) {
             transition.considered = true;
         }
     }
 
-    //Find places for which the marking cannot change as all input arcs are matched 
+    //Find places for which the marking cannot change as all input arcs are matched
     //by an output arc with an equivalent arc expression and vice versa
     void ColoredPetriNetBuilder::findStablePlaces(){
         for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
-            if(_placePostTransitionMap.count(placeId) != 0 && 
-                !_placePostTransitionMap[placeId].empty() && 
+            if(_placePostTransitionMap.count(placeId) != 0 &&
+                !_placePostTransitionMap[placeId].empty() &&
                 _placePostTransitionMap[placeId].size() == _placePreTransitionMap[placeId].size()){
 
                 for(auto transitionId : _placePostTransitionMap[placeId]){
@@ -609,7 +609,7 @@ namespace PetriEngine {
                         if(arc.place == placeId){
                             if(arc.expr->toString() == inArc->expr->toString()){
                                 mirroredArcs = true;
-                            } 
+                            }
                             break;
                         }
                     }
@@ -633,12 +633,12 @@ namespace PetriEngine {
 
             if(_fixpointDone){
                 findStablePlaces();
-            }            
-            
+            }
+
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();
             }
-            
+
             for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
                 unfoldTransition(transitionId);
             }
@@ -647,7 +647,7 @@ namespace PetriEngine {
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
-            
+
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
@@ -662,30 +662,29 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
         if(_ptplacenames.count(place.name) <= 0 && place.marking.size() > 0){
             const std::string &name = place.name + "_orphan";
-            _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
+            _ptBuilder.addPlace(name, place.marking.size(), place._x, place._y);
             _ptplacenames[place.name][0] = std::move(name);
         } else {
             uint32_t usedTokens = 0;
-            
+
             for(const auto &unfoldedPlace : _ptplacenames[place.name]){
                 auto unfoldedMarking = _ptBuilder.initMarking();
                 usedTokens += unfoldedMarking[unfoldedPlaceMap.find(unfoldedPlace.second)->second];
             }
-            
+
             if(place.marking.size() > usedTokens){
                 const std::string &name = place.name + "_orphan";
-                _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
+                _ptBuilder.addPlace(name, place.marking.size() - usedTokens, place._x, place._y);
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);
             }
-        }     
+        }
     }
-    
-    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
-        size_t tokenSize = 0;
 
+    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {
+        size_t tokenSize = 0;
         if(!_partitionComputed || _partition[placeId].isDiagonal()){
             tokenSize = place->marking[color];
-        }else {
+        } else {
             const std::vector<const Colored::Color*>& tupleColors = color->getTupleColors();
             const size_t &tupleSize = _partition[placeId].getDiagonalTuplePositions().size();
             const uint32_t &classId = _partition[placeId].getColorEqClassMap().find(color)->second->id();
@@ -704,47 +703,50 @@ namespace PetriEngine {
                     if(match){
                         tokenSize += place->marking[colorEqClassPair.first];
                     }
-                }                    
+                }
             }
-        } 
+        }
         const std::string &name = place->name + "_" + std::to_string(color->getId());
 
-        _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
+        _ptBuilder.addPlace(name, tokenSize, place->_x, place->_y + (15 * color->getId()));
         _ptplacenames[place->name][id] = std::move(name);
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(uint32_t transitionId) {
+        double offset = 0;
         const Colored::Transition &transition = _transitions[transitionId];
-        if(_fixpointDone || _partitionComputed){ 
+        if(_fixpointDone || _partitionComputed){
             FixpointBindingGenerator gen(transition, _colors, symmetric_var_map[transitionId]);
             size_t i = 0;
             bool hasBindings = false;
-            for (const auto &b : gen) {  
+            for (const auto &b : gen) {
                 const std::string &name = transition.name + "_" + std::to_string(i++);
-              
-                hasBindings = true;            
-                _ptBuilder.addTransition(name, 0.0, 0.0);
-                
+
+                hasBindings = true;
+                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                offset += 15;
+
                 for (auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name);
                 }
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }
-                
+
                 _pttransitionnames[transition.name].push_back(std::move(name));
-                unfoldInhibitorArc(transition.name, name);                
-            }                            
+                unfoldInhibitorArc(transition.name, name);
+            }
             if(!hasBindings){
                 _pttransitionnames[transition.name] = std::vector<std::string>();
-            }           
+            }
         } else {
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
-            for (const auto &b : gen) {    
+            for (const auto &b : gen) {
                 const std::string &name = transition.name + "_" + std::to_string(i++);
-                _ptBuilder.addTransition(name, 0.0, 0.0);
-                
+                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                offset += 15;
+
                 for (const auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name);
                 }
@@ -764,9 +766,9 @@ namespace PetriEngine {
                 const std::string& placeName = _sumPlacesNames[inhibArc.place];
 
                 if(placeName.empty()){
-                    const PetriEngine::Colored::Place& place = _places[inhibArc.place]; 
+                    const PetriEngine::Colored::Place& place = _places[inhibArc.place];
                     const std::string &sumPlaceName = place.name + "Sum";
-                    _ptBuilder.addPlace(sumPlaceName, place.marking.size(),0.0,0.0);
+                    _ptBuilder.addPlace(sumPlaceName, place.marking.size(),place._x + 30, place._y - 30);
                     if(_ptplacenames.count(place.name) <= 0){
                         _ptplacenames[place.name][0] = sumPlaceName;
                     }
@@ -785,10 +787,10 @@ namespace PetriEngine {
         //because color fixpoint allowed the binding
         if(_fixpointDone && place.stable){
             return;
-        } 
-        
+        }
+
         const Colored::ExpressionContext &context {binding, _colors, _partition[arc.place]};
-        const auto &ms = arc.expr->eval(context);   
+        const auto &ms = arc.expr->eval(context);
         int shadowWeight = 0;
 
         const Colored::Color *newColor;
@@ -797,7 +799,7 @@ namespace PetriEngine {
             if (color.second == 0) {
                 continue;
             }
- 
+
             if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 newColor = color.first;
             } else {
@@ -807,18 +809,18 @@ namespace PetriEngine {
                 _partition[arc.place].applyPartition(tupleIds);
                 newColor = place.type->getColor(tupleIds);
             }
-            
+
             shadowWeight += color.second;
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].isDiagonal()){
                 id = newColor->getId();
             } else {
-                id = _partition[arc.place].getUniqueIdForColor(newColor);                
+                id = _partition[arc.place].getUniqueIdForColor(newColor);
             }
             const std::string& pName = _ptplacenames[place.name][id];
 
-            if (pName.empty()) {                               
-                unfoldPlace(&place, newColor, arc.place, id);               
+            if (pName.empty()) {
+                unfoldPlace(&place, newColor, arc.place, id);
             }
 
             if (arc.input) {
@@ -833,10 +835,10 @@ namespace PetriEngine {
             const std::string &sumPlaceName = _sumPlacesNames[arc.place];
             if(sumPlaceName.empty()){
                 const std::string &newSumPlaceName = place.name + "Sum";
-                _ptBuilder.addPlace(newSumPlaceName, place.marking.size(),0.0,0.0);
+                _ptBuilder.addPlace(newSumPlaceName, place.marking.size(),place._x + 30, place._y - 30);
                 _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
             }
-            
+
 
             if(shadowWeight > 0) {
                 if (!arc.input) {
@@ -846,7 +848,7 @@ namespace PetriEngine {
                 }
                 ++_nptarcs;
             }
-        }       
+        }
     }
 
     //----------------------- Strip Colors -----------------------//
@@ -855,11 +857,11 @@ namespace PetriEngine {
         if (_unfolded) assert(false);
         if (_isColored && !_stripped) {
             for (auto& place : _places) {
-                _ptBuilder.addPlace(place.name, place.marking.size(), 0.0, 0.0);
+                _ptBuilder.addPlace(place.name, place.marking.size(), place._x, place._y);
             }
 
             for (auto& transition : _transitions) {
-                _ptBuilder.addTransition(transition.name, 0.0, 0.0);
+                _ptBuilder.addTransition(transition.name, transition._x, transition._y);
                 for (const auto& arc : transition.input_arcs) {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
@@ -900,5 +902,5 @@ namespace PetriEngine {
                "(" + _places[arc.place].name + ", " + _transitions[arc.transition].name + ")";
     }
 }
-    
- 
+
+

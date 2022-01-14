@@ -6,8 +6,9 @@
 #include <limits>
 #include <set>
 #include <sstream>
+#include <vector>
+#include <iostream>
 
-//#include "Reachability/ReachabilitySearch.h"
 #include "../CTL/Algorithm/AlgorithmTypes.h"
 #include "../LTL/AlgorithmTypes.h"
 
@@ -67,12 +68,12 @@ enum ReachabilityStrategy {
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
-    char* modelfile = nullptr;
-    char* queryfile = nullptr;
+    const char* modelfile = nullptr;
+    const char* queryfile = nullptr;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving, 3 ... selection
     std::vector<uint32_t> reductions{8,2,3,4,5,7,9,6,0,1};
     int reductionTimeout = 60;
-    bool stubbornreduction = true; 
+    bool stubbornreduction = true;
     bool statespaceexploration = false;
     StatisticsLevel printstatistics = StatisticsLevel::Full;
     std::set<size_t> querynumbers;
@@ -83,7 +84,6 @@ struct options_t {
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
-    std::string output_stats;
     bool doVerification = true;
 
     TemporalLogic logic = TemporalLogic::CTL;
@@ -115,7 +115,7 @@ struct options_t {
     std::string unfolded_out_file;
     std::string unfold_query_out_file;
 
-    
+
     //CPN Specific options
     bool cpnOverApprox = false;
     bool computeCFP = true;
@@ -125,99 +125,9 @@ struct options_t {
     uint32_t seed_offset = 0;
     int max_intervals = 250; //0 disabled
     int max_intervals_reduced = 5;
+
     size_t seed() { return ++seed_offset; }
-
-    void print() {
-        if (printstatistics != StatisticsLevel::Full) {
-            return;
-        }
-        
-        std::stringstream optionsOut;
-        
-        if (strategy == ReachabilityStrategy::BFS) {
-            optionsOut << "\nSearch=BFS";
-        } else if (strategy == ReachabilityStrategy::DFS) {
-            optionsOut << "\nSearch=DFS";
-        } else if (strategy == ReachabilityStrategy::HEUR) {
-            optionsOut << "\nSearch=HEUR";
-        } else if (strategy == ReachabilityStrategy::RDFS){
-            optionsOut << "\nSearch=RDFS";
-        } else {
-            optionsOut << "\nSearch=OverApprox";
-        }
-        
-        if (trace != TraceLevel::None) {
-            optionsOut << ",Trace=ENABLED";
-        } else {
-            optionsOut << ",Trace=DISABLED";
-        }
-        
-        if (kbound > 0) {
-            optionsOut << ",Token_Bound=" << kbound;
-        }
-        
-        if (statespaceexploration) {
-            optionsOut << ",State_Space_Exploration=ENABLED";
-        } else {
-            optionsOut << ",State_Space_Exploration=DISABLED";
-        }
-        
-        if (enablereduction == 0) {
-            optionsOut << ",Structural_Reduction=DISABLED";
-        } else if (enablereduction == 1) {
-            optionsOut << ",Structural_Reduction=AGGRESSIVE";
-        } else {
-            optionsOut << ",Structural_Reduction=KBOUND_PRESERVING";
-        }
-        
-        optionsOut << ",Struct_Red_Timout=" << reductionTimeout;
-        
-        if (stubbornreduction) {
-            optionsOut << ",Stubborn_Reduction=ENABLED";
-        } else {
-            optionsOut << ",Stubborn_Reduction=DISABLED";
-        }
-        
-        if (queryReductionTimeout > 0) {
-            optionsOut << ",Query_Simplication=ENABLED,QSTimeout=" << queryReductionTimeout;
-        } else {
-            optionsOut << ",Query_Simplication=DISABLED";
-        }
-        
-        if (siphontrapTimeout > 0) {
-            optionsOut << ",Siphon_Trap=ENABLED,SPTimeout=" << siphontrapTimeout;
-        } else {
-            optionsOut << ",Siphon_Trap=DISABLED";
-        }
-        
-        optionsOut << ",LPSolve_Timeout=" << lpsolveTimeout;
-        
-
-        if (usedctl) {
-            if (ctlalgorithm == CTL::CZero) {
-                optionsOut << ",CTLAlgorithm=CZERO";
-            } else {
-                optionsOut << ",CTLAlgorithm=LOCAL";
-            }
-        }
-        else if (usedltl) {
-            switch (ltlalgorithm) {
-                case LTL::Algorithm::NDFS:
-                    optionsOut << ",LTLAlgorithm=NDFS";
-                    break;
-                case LTL::Algorithm::Tarjan:
-                    optionsOut << ",LTLAlgorithm=Tarjan";
-                    break;
-                case LTL::Algorithm::None:
-                    optionsOut << ",LTLAlgorithm=None";
-                    break;
-            }
-        }
-
-        optionsOut << "\n";
-        
-        std::cout << optionsOut.str();
-    }
+    void print(std::ostream& out = std::cout);
+    bool parse(int argc, const char** argv);
 };
-
 #endif
