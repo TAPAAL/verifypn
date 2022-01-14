@@ -31,8 +31,8 @@ namespace LTL {
                 _net(stubbornSet._net), _stubborn(stubbornSet){}
 
     protected:
-        static constexpr auto PresetBad = StubbornSet::PresetBad;
-        static constexpr auto PostsetBad = StubbornSet::PostsetBad;
+        static constexpr auto PresetBad = 8;
+        static constexpr auto PostsetBad = 16;
 
         void _accept(const PQL::CompareConjunction *element) override
         {

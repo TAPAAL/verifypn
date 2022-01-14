@@ -26,8 +26,8 @@
 #include "PetriEngine/TAR/TARReachability.h"
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/TAR/Solver.h"
-#include "PetriEngine/TAR/ContainsVisitor.h"
-#include "PetriEngine/TAR/PlaceUseVisitor.h"
+#include "PetriEngine/PQL/ContainsVisitor.h"
+#include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "utils/stopwatch.h"
 
 

@@ -112,8 +112,6 @@ namespace PetriEngine {
         static constexpr auto PresetSeen = 1;
         static constexpr auto PostsetSeen = 2;
         static constexpr auto InhibPostsetSeen = 4;
-        static constexpr auto PresetBad = 8;
-        static constexpr auto PostsetBad = 16;
     protected:
         const Structures::State *_parent;
 

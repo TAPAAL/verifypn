@@ -382,6 +382,8 @@ namespace PetriEngine {
 
             void _accept(const IdentifierExpr *element) override
             {
+                if(const auto& compiled = element->compiled())
+                    compiled->visit(*this);
                 // no-op
             }
         };

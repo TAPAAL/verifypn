@@ -15,6 +15,7 @@
 #define GAMESTUBBORNSET_H
 
 #include "../Stubborn/StubbornSet.h"
+#include "PetriEngine/PQL/PlaceUseVisitor.h"
 
 namespace PetriEngine {
     namespace Synthesis {
@@ -33,6 +34,7 @@ namespace PetriEngine {
         private:
             void skip();
             void computeSafe();
+            bool approximateFuture(const bool ctrl);
             light_deque<uint32_t> _ctrl_acts;
             light_deque<uint32_t> _env_acts;
             bool _is_safety;
@@ -41,6 +43,12 @@ namespace PetriEngine {
             std::vector<uint32_t> _avoid_actions;
             std::vector<bool> _safe_actions;
             std::vector<bool> _safe_places;
+            std::vector<bool> _inhibiting_place;
+            std::vector<bool> _future_enabled;
+            PQL::PlaceUseVisitor _in_query;
+            bool _added_enabled = false;
+            static constexpr uint8_t DECR = 32;
+            static constexpr uint8_t INCR = 64;
         };
     }
 }
