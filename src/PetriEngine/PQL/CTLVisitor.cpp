@@ -392,7 +392,7 @@ namespace PetriEngine::PQL {
                 _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
                 break;
             }
-            case Path::pError:
+            default:
                 assert(false);
                 _ctl_query = nullptr;
                 break;

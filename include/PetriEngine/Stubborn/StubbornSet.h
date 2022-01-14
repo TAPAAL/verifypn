@@ -140,6 +140,15 @@ namespace PetriEngine {
 
         bool checkPreset(uint32_t t);
 
+        uint32_t dependency(uint32_t place, bool inhibitor) const {
+            uint32_t post_size = _places[place+1].pre - _places[place].post;
+            uint32_t pre_size = _places[place].post - _places[place].pre;
+            if(!inhibitor)
+                return pre_size;
+            else
+                return post_size;
+        }
+
         virtual void addToStub(uint32_t t);
 
         template <typename T = std::nullptr_t>
@@ -150,41 +159,57 @@ namespace PetriEngine {
                 }
                 uint32_t tr = _unprocessed.front();
                 _unprocessed.pop_front();
-                const TransPtr &ptr = transitions()[tr];
-                uint32_t finv = ptr.inputs;
-                uint32_t linv = ptr.outputs;
+                auto [finv, linv] = _net.preset(tr);
                 if (_enabled[tr]) {
-                    for (; finv < linv; finv++) {
-                        if (invariants()[finv].direction < 0) {
-                            auto place = invariants()[finv].place;
+                    for (; finv < linv; ++finv) {
+                        if (finv->direction < 0) {
+                            auto place = finv->place;
                             for (uint32_t t = _places[place].post; t < _places[place + 1].pre; t++)
                                 addToStub(_arcs[t].index);
                         }
                     }
                     if (_netContainsInhibitorArcs) {
-                        uint32_t next_finv = transitions()[tr + 1].inputs;
-                        for (; linv < next_finv; linv++) {
-                            if (invariants()[linv].direction > 0)
-                                inhibitorPostsetOf(invariants()[linv].place);
+                        auto [linv, ninv] = _net.postset(tr);
+                        for (; linv < ninv; ++linv) {
+                            if (linv->direction > 0)
+                                inhibitorPostsetOf(linv->place);
                         }
                     }
                 } else {
                     bool ok = false;
                     bool inhib = false;
                     uint32_t cand = std::numeric_limits<uint32_t>::max();
+                    uint32_t deps = std::numeric_limits<uint32_t>::max();
 
                     // Lets try to see if we havent already added sufficient pre/post
                     // for this transition.
                     for (; finv < linv; ++finv) {
-                        const Invariant &inv = invariants()[finv];
-                        if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
+                        if ((*_parent).marking()[finv->place] < finv->tokens && !finv->inhibitor) {
                             inhib = false;
-                            ok = (_places_seen[inv.place] & PresetSeen) != 0;
-                            cand = inv.place;
-                        } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
+                            ok = (_places_seen[finv->place] & PresetSeen) != 0;
+                            if(ok)
+                                cand = finv->place;
+                            if(!ok)
+                            {
+                                if(deps >= dependency(finv->place, false))
+                                {
+                                    cand = finv->place;
+                                    deps = dependency(finv->place, false);
+                                }
+                            }
+                        } else if ((*_parent)[finv->place] >= finv->tokens && finv->inhibitor) {
                             inhib = true;
-                            ok = (_places_seen[inv.place] & PostsetSeen) != 0;
-                            cand = inv.place;
+                            ok = (_places_seen[finv->place] & PostsetSeen) != 0;
+                            if(ok)
+                                cand = finv->place;
+                            if(!ok)
+                            {
+                                if(deps >= dependency(finv->place, true))
+                                {
+                                    cand = finv->place;
+                                    deps = dependency(finv->place, true);
+                                }
+                            }
                         }
                         if (ok) break;
 
