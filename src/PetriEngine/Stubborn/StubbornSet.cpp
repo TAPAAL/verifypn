@@ -182,18 +182,15 @@ namespace PetriEngine {
         memset(_dependency.get(), 0, sizeof(uint32_t) * _net._ntransitions);
 
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
-            uint32_t finv = _net._transitions[t].inputs;
-            uint32_t linv = _net._transitions[t].outputs;
+            auto [finv, linv] = _net.preset(t);
 
-            for (; finv < linv; finv++) {
-                const Invariant &inv = _net._invariants[finv];
-                uint32_t p = inv.place;
+            size_t dep = 0;
+            for (; finv < linv; ++finv) {
+                uint32_t p = finv->place;
                 uint32_t ntrans = (_places[p + 1].pre - _places[p].post);
-
-                for (uint32_t tIndex = 0; tIndex < ntrans; tIndex++) {
-                    ++_dependency[t];
-                }
+                dep += ntrans;
             }
+            _dependency[t] = dep;
         }
     }
 

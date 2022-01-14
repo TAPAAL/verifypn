@@ -157,8 +157,8 @@ namespace PetriEngine {
                     for (; finv < linv; finv++) {
                         if (invariants()[finv].direction < 0) {
                             auto place = invariants()[finv].place;
-                            for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++)
-                                addToStub(_arcs.get()[t].index);
+                            for (uint32_t t = _places[place].post; t < _places[place + 1].pre; t++)
+                                addToStub(_arcs[t].index);
                         }
                     }
                     if (_netContainsInhibitorArcs) {
@@ -179,11 +179,11 @@ namespace PetriEngine {
                         const Invariant &inv = invariants()[finv];
                         if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
                             inhib = false;
-                            ok = (_places_seen.get()[inv.place] & 1) != 0;
+                            ok = (_places_seen[inv.place] & PresetSeen) != 0;
                             cand = inv.place;
                         } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
                             inhib = true;
-                            ok = (_places_seen.get()[inv.place] & 2) != 0;
+                            ok = (_places_seen[inv.place] & PostsetSeen) != 0;
                             cand = inv.place;
                         }
                         if (ok) break;
