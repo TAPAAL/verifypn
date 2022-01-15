@@ -43,9 +43,8 @@ enum class APCompression {
 enum class LTLPartialOrder {
     None,
     Visible,
-    AutomatonReach,
-    VisibleReach,
-    FullAutomaton
+    Automaton,
+    Liebke
 };
 
 enum class BuchiOptimization {
@@ -96,7 +95,7 @@ struct options_t {
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
     APCompression ltl_compress_aps = APCompression::None;
-    LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;
+    LTLPartialOrder ltl_por = LTLPartialOrder::Automaton;
     BuchiOptimization buchiOptimization = BuchiOptimization::Low;
     LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
 
