@@ -47,7 +47,7 @@ namespace PetriEngine {
         delete[] _initialMarking;
     }
 
-    int PetriNet::inArc(uint32_t place, uint32_t transition) const
+    uint32_t PetriNet::inArc(uint32_t place, uint32_t transition) const
     {
         assert(_nplaces > 0);
         assert(place < _nplaces);
@@ -71,7 +71,7 @@ namespace PetriEngine {
         }
         return 0;
     }
-    int PetriNet::outArc(uint32_t transition, uint32_t place) const
+    uint32_t PetriNet::outArc(uint32_t transition, uint32_t place) const
     {
         assert(_nplaces > 0);
         assert(place < _nplaces);

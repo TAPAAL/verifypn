@@ -41,7 +41,7 @@ namespace PetriEngine {
         _colors.clear();
     }
 
-    void ColoredPetriNetBuilder::addPlace(const std::string& name, int tokens, double x, double y) {
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, uint32_t tokens, double x, double y) {
         if (!_isColored) {
             _ptBuilder.addPlace(name, tokens, x, y);
         }

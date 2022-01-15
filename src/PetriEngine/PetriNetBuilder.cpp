@@ -44,7 +44,7 @@ namespace PetriEngine {
 
     }
 
-    void PetriNetBuilder::addPlace(const std::string &name, int tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const std::string &name, uint32_t tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
