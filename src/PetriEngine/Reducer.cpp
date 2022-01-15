@@ -2362,7 +2362,7 @@ namespace PetriEngine {
         else
         {
             const char* rnames = "ABCDEFGHIJKLMNOPQR";
-            for(uint32_t i = reduction.size() - 1; i >= 0; --i)
+            for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
