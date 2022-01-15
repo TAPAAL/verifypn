@@ -1,5 +1,6 @@
 
 #include "PetriEngine/Synthesis/GameStubbornSet.h"
+#include "PetriEngine/Synthesis/IntervalVisitor.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
@@ -350,6 +351,34 @@ namespace PetriEngine {
             }
 
             const auto touches_query = approximateFuture(!_ctrl_acts.empty());
+            const bool reach_player = _is_safety ? _ctrl_acts.empty() : _env_acts.empty();
+            if (!reach_player) {
+                // TODO; approximate forward reach to avoid accidential
+                // acceptance
+                if (touches_query) {
+                    computeBounds(); // more precise analysis or forward reachability
+                    IntervalVisitor iv(_place_bounds.get());
+                    assert(_queries.size() == 1);
+                    for (auto* q : _queries) {
+                        q->visit(iv);
+                    }
+                    if(!iv.stable())
+                    {
+                        skip();
+                        return true;
+                    }
+                }
+                for (auto t : _reach_actions)
+                    addToStub(t);
+            } else {
+                for (auto t : _avoid_actions)
+                    addToStub(t);
+            }
+
+            closure([this] {
+                return !_added_unsafe;
+            });
+
             PQL::EvaluationContext context(_parent->marking(), &_net);
             InterestingTransitionVisitor visitor(*this, false);
             assert(_queries.size() == 1);
@@ -368,35 +397,21 @@ namespace PetriEngine {
             closure([this] {
                 return !_added_unsafe;
             });
+
             if (_added_unsafe) {
                 skip();
                 return true;
             }
 
-            const bool reach_player = _is_safety ? _ctrl_acts.empty() : _env_acts.empty();
-
-            if (!reach_player) {
-                // TODO; approximate forward reach to avoid accidential
-                // acceptance
-                if (touches_query) {
-                    computeBounds(); // more precise analysis or forward reachability
-                    skip();
-                    return true;
-                }
-                for (auto t : _reach_actions)
-                    addToStub(t);
-                closure([this] {
-                    return !_added_unsafe;
-                });
+            if(!reach_player) {
                 if (!_added_enabled)
                     addToStub(_ordering.front());
-            } else {
-                for (auto t : _avoid_actions)
-                    addToStub(t);
             }
+
             closure([this] {
                 return !_added_unsafe;
             });
+
             if (_added_unsafe) {
                 skip();
                 return true;
