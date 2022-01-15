@@ -461,8 +461,6 @@ bool options_t::parse(int argc, const char** argv) {
                 ltl_por = LTLPartialOrder::Visible;
             } else if (std::strcmp(argv[i + 1], "automaton") == 0) {
                 ltl_por = LTLPartialOrder::Automaton;
-            } else if (std::strcmp(argv[i + 1], "mix") == 0) {
-                ltl_por = LTLPartialOrder::Automaton;
             } else if (std::strcmp(argv[i + 1], "liebke") == 0) {
                 ltl_por = LTLPartialOrder::Liebke;
             } else if (std::strcmp(argv[i + 1], "none") == 0) {
