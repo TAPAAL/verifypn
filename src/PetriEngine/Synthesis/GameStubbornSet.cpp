@@ -367,6 +367,7 @@ namespace PetriEngine {
                         skip();
                         return true;
                     }
+                    // TODO, we could refine future enabled here!
                 }
                 for (auto t : _reach_actions)
                     addToStub(t);
