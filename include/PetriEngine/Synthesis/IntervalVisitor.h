@@ -163,7 +163,32 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::CompareConjunction* element) {
-                _result_tos = UNKNOWN;
+                bool stable = false;
+                for(auto& c : element->constraints())
+                {
+                    auto bnds = _bounds[c._place];
+                    if(bnds.second < c._lower ||
+                       bnds.first > c._upper)
+                    {
+                        // no overlap, return
+                        _result_tos = element->isNegated() ? TRUE : FALSE;
+                        return;
+                    }
+                    if(c._lower <= bnds.first &&
+                       c._upper >= bnds.second)
+                    {
+                        // surely included
+                        continue;
+                    }
+                    // otherwise we don't know!
+                    stable = false;
+                }
+
+                if(stable)
+                    _result_tos = element->isNegated() ? FALSE : TRUE;
+                else
+                    _result_tos = UNKNOWN;
+
             }
 
             virtual void _accept(const PQL::UnfoldedUpperBoundsCondition* element)
