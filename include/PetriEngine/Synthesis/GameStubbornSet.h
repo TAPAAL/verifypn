@@ -35,6 +35,7 @@ namespace PetriEngine {
             void skip();
             void computeSafe();
             bool approximateFuture(const bool ctrl);
+            void computeBounds();
             light_deque<uint32_t> _ctrl_acts;
             light_deque<uint32_t> _env_acts;
             bool _is_safety;
@@ -46,9 +47,12 @@ namespace PetriEngine {
             std::vector<bool> _inhibiting_place;
             std::vector<bool> _future_enabled;
             PQL::PlaceUseVisitor _in_query;
+            std::unique_ptr<uint32_t[]> _fireing_bounds;
+            std::unique_ptr<std::pair<uint32_t,uint32_t>[]> _place_bounds;
             bool _added_enabled = false;
             static constexpr uint8_t DECR = 32;
             static constexpr uint8_t INCR = 64;
+            static constexpr uint8_t WAITING = 128;
         };
     }
 }

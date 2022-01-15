@@ -22,25 +22,25 @@ namespace PetriEngine {
             computeSafe();
             _inhibiting_place.resize(_net.numberOfPlaces(), false);
             _future_enabled.resize(_net.numberOfTransitions(), false);
-            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
-            {
+            for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
                 auto [finv, linv] = _net.preset(t);
-                for(;finv < linv; ++finv)
-                    if(finv->inhibitor)
+                for (; finv < linv; ++finv)
+                    if (finv->inhibitor)
                         _inhibiting_place[finv->place] = true;
             }
             predicate->visit(_in_query);
+            _fireing_bounds = std::make_unique<uint32_t[]>(_net.numberOfTransitions());
+            _place_bounds = std::make_unique<std::pair<uint32_t,uint32_t>[]>(_net.numberOfPlaces());
         }
 
         void GameStubbornSet::addToStub(uint32_t t) {
             if (!_stubborn[t]) {
-                if(_enabled[t])
+                if (_enabled[t])
                     _added_enabled = true;
                 if (_enabled[t] && !_safe_actions[t])
                     _added_unsafe = true;
-                else
-                {
-                    if(_env_acts.empty() == _net.controllable(t) &&
+                else {
+                    if (_env_acts.empty() == _net.controllable(t) &&
                         !_future_enabled[t])
                         return;
                     StubbornSet::addToStub(t);
@@ -50,8 +50,8 @@ namespace PetriEngine {
 
         uint32_t GameStubbornSet::next_env() {
             while (!_env_acts.empty()) {
-                auto r = _env_acts.back();
-                _env_acts.pop_back();
+                auto r = _env_acts.front();
+                _env_acts.pop_front();
                 if (_stubborn[r]) return r;
             }
             return std::numeric_limits<uint32_t>::max();
@@ -59,8 +59,8 @@ namespace PetriEngine {
 
         uint32_t GameStubbornSet::next_ctrl() {
             while (!_ctrl_acts.empty()) {
-                auto r = _ctrl_acts.back();
-                _ctrl_acts.pop_back();
+                auto r = _ctrl_acts.front();
+                _ctrl_acts.pop_front();
                 if (_stubborn[r]) return r;
             }
             return std::numeric_limits<uint32_t>::max();
@@ -114,6 +114,125 @@ namespace PetriEngine {
                         }
                         break;
                     }
+                }
+            }
+        }
+
+        void GameStubbornSet::computeBounds() {
+            std::vector<uint32_t> waiting;
+            auto handle_transition = [this, &waiting](size_t t) {
+                if (!_future_enabled[t])
+                    return;
+                auto mx = std::numeric_limits<uint32_t>::max();
+                auto [finv, linv] = _net.preset(t);
+                auto [fout, lout] = _net.postset(t);
+                for (; finv < linv; ++finv) {
+                    if (finv->direction < 0 && !finv->inhibitor) {
+                        if (_place_bounds[finv->place].second == std::numeric_limits<uint32_t>::max())
+                            continue;
+                        while (fout < lout && fout->place < finv->place)
+                            ++fout;
+                        if (fout < lout && fout->place == finv->place) {
+                            mx = _place_bounds[finv->place].second / (fout->place - finv->tokens);
+                        } else {
+                            mx = _place_bounds[finv->place].second / finv->tokens;
+                        }
+                    }
+                }
+                if (_fireing_bounds[t] != mx) {
+                    _fireing_bounds[t] = mx;
+                    auto [fout, lout] = _net.postset(t);
+                    for (; fout < lout; ++fout) {
+                        if (fout->direction > 0 && (_places_seen[fout->place] & WAITING) == 0) {
+                            _places_seen[fout->place] |= WAITING;
+                            waiting.push_back(fout->place);
+                        }
+                    }
+                }
+            };
+
+            auto handle_place = [this, &handle_transition](size_t p) {
+                if (_place_bounds[p].second == 0)
+                    return;
+                _places_seen[p] &= ~WAITING;
+
+                // place loop
+                uint64_t sum = 0;
+                for (auto ti = _places[p].pre; ti != _places[p].post; ++ti) {
+                    trans_t& arc = _arcs[ti];
+                    if (arc.direction <= 0 ||
+                        _fireing_bounds[arc.index] == 0)
+                        continue;
+                    if (_fireing_bounds[arc.index] == std::numeric_limits<uint32_t>::max()) {
+                        assert(_place_bounds[p].second == std::numeric_limits<uint32_t>::max());
+                        return;
+                    }
+                    auto [finv, linv] = _net.preset(arc.index);
+                    auto [fout, lout] = _net.postset(arc.index);
+                    for (; fout < lout; ++fout) {
+                        if (fout->place != p)
+                            continue;
+                        while (finv < linv && finv->place < fout->place) ++finv;
+                        auto take = 0;
+                        if (finv < linv && finv->place == p && !finv->inhibitor) {
+                            take = finv->tokens;
+                        }
+                        sum += (fout->tokens - take) * _fireing_bounds[arc.index];
+                        break;
+                    }
+                }
+                assert(sum <= _place_bounds[p].second);
+                if (_place_bounds[p].second != sum) {
+                    _place_bounds[p].second = sum;
+                    for (auto ti = _places[p].post; ti != _places[p + 1].pre; ++ti) {
+                        if (_arcs[ti].direction < 0)
+                            handle_transition(_arcs[ti].index);
+                    }
+                }
+
+            };
+
+            // initialize places
+            for (size_t p = 0; p < _net.numberOfPlaces(); ++p) {
+                auto ub = (*_parent)[p];
+                auto lb = (*_parent)[p];
+                if (_places_seen[p] & DECR)
+                    lb = 0;
+                _place_bounds[p] = std::make_pair(lb, ub);
+            }
+            // initialize counters
+            for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
+                if (_enabled[t]) {
+                    _fireing_bounds[t] = std::numeric_limits<uint32_t>::max();
+                    handle_transition(t);
+                } else
+                    _fireing_bounds[t] = 0;
+            }
+
+            while (!waiting.empty()) {
+                auto p = waiting.back();
+                waiting.pop_back();
+                handle_place(p);
+            }
+            for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
+                auto [finv, linv] = _net.preset(t);
+                auto [fout, lout] = _net.postset(t);
+                for (; finv < linv; ++finv) {
+                    if (finv->direction >= 0 || finv->inhibitor) continue;
+                    uint64_t take = finv->tokens;
+                    if (_fireing_bounds[t] == std::numeric_limits<uint32_t>::max()) {
+                        _place_bounds[finv->place].first = 0;
+                        continue;
+                    }
+                    while (fout < lout && fout->place < finv->place) ++fout;
+                    if (fout < lout && fout->place == finv->place)
+                        take -= fout->tokens;
+                    assert(take > 0);
+                    take *= _fireing_bounds[t];
+                    if (take >= _place_bounds[finv->place].first)
+                        _place_bounds[finv->place].first = 0;
+                    else
+                        _place_bounds[finv->place].first -= take;
                 }
             }
         }
@@ -218,9 +337,8 @@ namespace PetriEngine {
                     _env_acts.push_back(t);
                 return true;
             });
-            if(!_ctrl_acts.empty() &&
-               !_env_acts.empty())
-            {
+            if (!_ctrl_acts.empty() &&
+                !_env_acts.empty()) {
                 skip();
                 return true;
             }
@@ -236,7 +354,7 @@ namespace PetriEngine {
             InterestingTransitionVisitor visitor(*this, false);
             assert(_queries.size() == 1);
             for (auto* q : _queries) {
-                if(_is_safety)
+                if (_is_safety)
                     visitor.negate();
                 q->evalAndSet(context);
                 q->visit(visitor);
@@ -260,8 +378,8 @@ namespace PetriEngine {
             if (!reach_player) {
                 // TODO; approximate forward reach to avoid accidential
                 // acceptance
-                if(touches_query)
-                {
+                if (touches_query) {
+                    computeBounds(); // more precise analysis or forward reachability
                     skip();
                     return true;
                 }
@@ -270,7 +388,7 @@ namespace PetriEngine {
                 closure([this] {
                     return !_added_unsafe;
                 });
-                if(!_added_enabled)
+                if (!_added_enabled)
                     addToStub(_ordering.front());
             } else {
                 for (auto t : _avoid_actions)
