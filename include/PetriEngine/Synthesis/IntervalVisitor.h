@@ -21,9 +21,10 @@ namespace PetriEngine {
             std::pair<int64_t,int64_t> _bound_tos{0,0};
             enum result_e {UNKNOWN, TRUE, FALSE};
             result_e _result_tos = UNKNOWN;
+            const PetriNet& _net;
         public:
-            IntervalVisitor(const std::pair<uint32_t,uint32_t>* bounds)
-                    : _bounds(bounds) {}
+            IntervalVisitor(const PetriNet& net, const std::pair<uint32_t,uint32_t>* bounds)
+                    : _net(net), _bounds(bounds) {}
             bool stable() const { return _result_tos != UNKNOWN; }
         protected:
             virtual void _accept(const PQL::NotCondition* element)
@@ -159,7 +160,62 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::DeadlockCondition* element) {
-                _result_tos = UNKNOWN;
+                // sufficient to look for one transition that is always enabled
+                // as if deadlock=true in the current state, then there are no
+                // succesors.
+                for(uint32_t t = 0; t < _net.numberOfTransitions(); ++t)
+                {
+                    auto [finv, linv] = _net.preset(t);
+                    bool always_ok = true;
+                    for(; finv < linv; ++finv)
+                    {
+                        auto bnds = _bounds[finv->place];
+                        if(finv->inhibitor)
+                        {
+                            if(bnds.first >= finv->tokens)
+                            {
+                                // always disabled
+                                always_ok = false;
+                                break;
+                            }
+                            else if(bnds.second < finv->tokens)
+                            {
+                                // not inhibied
+                                continue;
+                            }
+                            else
+                            {
+                                // could change enabledness
+                                always_ok = false;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if(bnds.first < finv->tokens)
+                            {
+                                always_ok = false;
+                                break;
+                            }
+                            else if(bnds.second >= finv->tokens)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                always_ok = false;
+                                break;
+                            }
+                        }
+                    }
+                    if(!always_ok)
+                    {
+                        _result_tos = UNKNOWN;
+                        return;
+                    }
+                }
+
+                _result_tos = FALSE; // no chance to have a deadlock
             }
 
             virtual void _accept(const PQL::CompareConjunction* element) {

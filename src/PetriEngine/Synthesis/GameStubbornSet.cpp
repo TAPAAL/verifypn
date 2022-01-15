@@ -357,7 +357,7 @@ namespace PetriEngine {
                 // acceptance
                 if (touches_query) {
                     computeBounds(); // more precise analysis or forward reachability
-                    IntervalVisitor iv(_place_bounds.get());
+                    IntervalVisitor iv(_net, _place_bounds.get());
                     assert(_queries.size() == 1);
                     for (auto* q : _queries) {
                         q->visit(iv);
