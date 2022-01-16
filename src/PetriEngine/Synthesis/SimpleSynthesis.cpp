@@ -196,7 +196,7 @@ namespace PetriEngine {
                 } else {
                     auto res = eval(prop, state.marking());
                     if (_is_safety) {
-                        if (res == true) // flipped by reductions, so negate result here!
+                        if (res == false)
                             meta._state = SynthConfig::LOSING;
                     } else {
                         if (res != false)

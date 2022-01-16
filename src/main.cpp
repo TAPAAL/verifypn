@@ -302,15 +302,16 @@ int main(int argc, const char** argv) {
             return to_underlying(ReturnValue::SuccessCode);
         }
 
+        // Assign indexes
+        if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode)
+        {
+            throw base_error("ERROR: An error occurred while assigning indexes");
+        }
+
         if (!ctl_ids.empty()) {
             options.usedctl = true;
             auto reachabilityStrategy = options.strategy;
 
-            // Assign indexes
-            if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode)
-            {
-                throw base_error("ERROR: An error occurred while assigning indexes");
-            }
             if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),
                         options.ctlalgorithm,
@@ -333,11 +334,6 @@ int main(int argc, const char** argv) {
 
         if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
             options.usedltl = true;
-            auto v = contextAnalysis(cpnBuilder, builder, net.get(), queries);
-            if (v != ReturnValue::ContinueCode) {
-                std::cerr << "Error performing context analysis" << std::endl;
-                return to_underlying(v);
-            }
 
             for (auto qid : ltl_ids) {
                 auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
@@ -398,9 +394,6 @@ int main(int argc, const char** argv) {
         options.siphontrapTimeout = 0;
 
         //----------------------- Reachability -----------------------//
-
-        //Analyse context again to reindex query
-        contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
         if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
