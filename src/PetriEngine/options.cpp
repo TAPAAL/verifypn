@@ -356,7 +356,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%u", &siphonDepth) != 1) {
                 throw base_error("Argument Error: Invalid siphon-depth count ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "-tar") == 0) {
+        } else if (std::strcmp(argv[i], "-tar") == 0 || std::strcmp(argv[i], "--trace-abstraction") == 0) {
             tar = true;
 
         } else if (std::strcmp(argv[i], "--max-intervals") == 0) {
