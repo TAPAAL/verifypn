@@ -75,8 +75,7 @@ namespace PetriEngine {
     void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            std::cerr << "ERROR: Could not find " << transition << std::endl;
-            std::exit(ErrorCode);
+            throw base_error("ERROR: Could not find ", transition);
         }
         if(_placenames.count(place) == 0)
         {
@@ -101,8 +100,7 @@ namespace PetriEngine {
     void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            std::cerr << "Could not find " << transition << std::endl;
-            std::exit(ErrorCode);
+            throw base_error("ERROR: Could not find ", transition);
         }
         if(_placenames.count(place) == 0)
         {

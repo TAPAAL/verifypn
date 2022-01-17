@@ -1,7 +1,7 @@
 #ifndef CTLENGINE_H
 #define CTLENGINE_H
 
-#include "../PetriEngine/errorcodes.h"
+#include "utils/errors.h"
 #include "../PetriEngine/PetriNet.h"
 #include "../PetriEngine/options.h"
 

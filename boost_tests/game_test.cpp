@@ -99,3 +99,7 @@ BOOST_AUTO_TEST_CASE(SafeTest) {
 BOOST_AUTO_TEST_CASE(UnsafeTest) {
     test_single_game("unsafe test", Reachability::ResultPrinter::Satisfied);
 }
+
+BOOST_AUTO_TEST_CASE(AGPorFail) {
+    test_single_game("AG_por_fail", Reachability::ResultPrinter::NotSatisfied);
+}

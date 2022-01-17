@@ -302,10 +302,7 @@ Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<std::
     }
     else
     {
-        std::cerr << "An error occurred parsing the binary input." << std::endl;
-        std::cerr << t << std::endl;
-        assert(false);
-        exit(ErrorCode);
+        throw base_error("ERROR: An error occurred parsing the binary input.\n", t);
         return nullptr;
     }
 }

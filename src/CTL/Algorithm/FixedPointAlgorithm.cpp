@@ -23,9 +23,7 @@ namespace Algorithm {
                 strategy = std::make_shared<HeuristicSearch>();
                 break;
             default:
-                std::cerr << "Search strategy is unsupported by the CTL-Engine"   <<  std::endl;
-                assert(false);
-                exit(ErrorCode);
+                throw base_error("ERROR: Search strategy is unsupported by the CTL-Engine");
         }
     }
 

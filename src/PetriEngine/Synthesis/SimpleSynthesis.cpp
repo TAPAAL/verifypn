@@ -24,11 +24,13 @@
 
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "PetriEngine/Synthesis/SynthConfig.h"
+#include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
 #include "PetriEngine/options.h"
-#include "utils/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "CTL/CTLResult.h"
-#include "PetriEngine/SuccessorGenerator.h"
+#include "PetriEngine/Synthesis/GameSuccessorGenerator.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
 
 #include <vector>
 
@@ -61,7 +63,6 @@ namespace PetriEngine {
                 return {false, (*a)[0].get()};
             }
             throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
-
         }
 
         ResultPrinter::Result SimpleSynthesis::synthesize(
@@ -79,7 +80,7 @@ namespace PetriEngine {
             if (PQL::isTemporal(_predicate))
                 throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
-            run(strategy, permissive);
+            run(use_stubborn, strategy, permissive);
 
             //printer.printResult(result);
             return _result.result ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
@@ -195,7 +196,7 @@ namespace PetriEngine {
                 } else {
                     auto res = eval(prop, state.marking());
                     if (_is_safety) {
-                        if (res == true) // flipped by reductions, so negate result here!
+                        if (res == false)
                             meta._state = SynthConfig::LOSING;
                     } else {
                         if (res != false)
@@ -241,7 +242,7 @@ namespace PetriEngine {
                     assert(conf._state == SynthConfig::WINNING);
                     continue;
                 }
-                SuccessorGenerator generator(_net);
+                GameSuccessorGenerator generator(_net);
                 Structures::State s(markings[id]);
                 generator.prepare(&s);
                 bool ok = false;
@@ -319,7 +320,7 @@ namespace PetriEngine {
             }
             if (&out == &std::cout) out << "\n##BEGIN STRATEGY##\n";
             out << "{\n";
-            SuccessorGenerator generator(_net);
+            GameSuccessorGenerator generator(_net);
             bool first_marking = true;
             while (!missing.empty()) {
                 auto nxt = missing.top();
@@ -409,12 +410,11 @@ namespace PetriEngine {
                 case Strategy::RDFS:
                     return std::make_unique<Structures::RDFSQueue>(0);
                 default:
-                    std::cerr << "Unsupported Search Strategy for Synthesis" << std::endl;
-                    std::exit(ErrorCode);
+                    throw base_error("ERROR: Unsupported Search Strategy for Synthesis");
             }
         }
 
-        std::tuple<bool, bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_ctrl_successors(SuccessorGenerator& generator,
+        std::tuple<bool, bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_ctrl_successors(GameSuccessorGenerator& generator,
             SynthConfig& cconf, const bool permissive, const bool env_empty) {
             //std::cerr << "CTRL " << std::endl;
             successors_t ctrl_buffer;
@@ -467,7 +467,7 @@ namespace PetriEngine {
 
         }
 
-        std::pair<bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf) {
+        std::pair<bool, SimpleSynthesis::successors_t> SimpleSynthesis::get_env_successors(GameSuccessorGenerator& generator, SynthConfig& cconf) {
             //std::cerr << "ENV " << std::endl;
             bool some_env = false;
             successors_t env_buffer;
@@ -539,8 +539,15 @@ namespace PetriEngine {
             }
         }
 
+        std::unique_ptr<GameSuccessorGenerator> make_generator(const PetriNet& net, PQL::Condition* predicate, bool is_safe, bool partial_order)
+        {
+            if(partial_order)
+                return std::make_unique<GamePORSuccessorGenerator>(net, predicate, is_safe);
+            else
+                return std::make_unique<GameSuccessorGenerator>(net);
+        }
 
-        void SimpleSynthesis::run( Strategy strategy, bool permissive) {
+        void SimpleSynthesis::run(bool use_stubborn, Strategy strategy, bool permissive) {
             // permissive == maximal in this case; there is a subtle difference
             // in wether you terminate the search at losing states (permissive)
             // or you saturate over the entire graph (maximal)
@@ -558,7 +565,8 @@ namespace PetriEngine {
             meta._waiting = 1;
 
             auto queue = make_queue(strategy);
-            SuccessorGenerator generator(_net);
+            auto generator = make_generator(_net, _predicate, _is_safety, use_stubborn);
+
 
             std::stack<SynthConfig*> back;
             queue->push(cid, nullptr, nullptr);
@@ -602,18 +610,17 @@ namespace PetriEngine {
                 cconf._state = SynthConfig::PROCESSED;
                 assert(cconf._marking == nid);
                 _stateset.decode(_parent, nid);
-                generator.prepare(_parent);
+                generator->prepare(_parent);
                 // first try all environment choices (if one is losing, everything is lost)
                 //std::cerr << "ENV" << std::endl;
-                auto [some_env, env_buffer] = get_env_successors(generator, cconf);
+                auto [some_env, env_buffer] = get_env_successors(*generator, cconf);
 
                 // if determined, no need to add more, just backprop (later)
                 bool some_ctrl = false;
                 bool some_winning = false;
                 successors_t ctrl_buffer;
                 if (!cconf.determined()) {
-                    generator.reset();
-                    std::tie(some_ctrl, some_winning, ctrl_buffer) = get_ctrl_successors(generator, cconf, permissive, env_buffer.empty());
+                    std::tie(some_ctrl, some_winning, ctrl_buffer) = get_ctrl_successors(*generator, cconf, permissive, env_buffer.empty());
                 }
 
                 fix_assignment(cconf, some_ctrl, some_winning, ctrl_buffer.empty(),

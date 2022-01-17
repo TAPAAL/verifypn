@@ -56,7 +56,7 @@ int main(int argc, const char** argv) {
 
     options_t options;
     if(options.parse(argc, argv)) // if options were --help or --version
-        return SuccessCode;
+        return to_underlying(ReturnValue::SuccessCode);
 
     if(options.printstatistics)
     {
@@ -73,15 +73,13 @@ int main(int argc, const char** argv) {
         cpnBuilder.parse_model(options.modelfile);
         options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
     } catch (const base_error& err) {
-        std::cout << "CANNOT_COMPUTE" << std::endl;
-        std::cerr << "Error parsing the model" << std::endl;
-        return ErrorCode;
+        throw base_error("ERROR: CANNOT_COMPUTE\nError parsing the model\n", err.what());
     }
 
     if(options.cpnOverApprox && !cpnBuilder.isColored())
     {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
-        return UnknownCode;
+        return to_underlying(ReturnValue::UnknownCode);
     }
 
     if (options.printstatistics) {
@@ -166,10 +164,9 @@ int main(int argc, const char** argv) {
         std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
 
 
-        if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
+        if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ReturnValue::ContinueCode)
         {
-            std::cerr << "Could not analyze the queries" << std::endl;
-            return ErrorCode;
+            throw base_error("ERROR: Could not analyze the queries");
         }
 
         if(options.unfold_query_out_file.size() > 0) {
@@ -224,7 +221,8 @@ int main(int argc, const char** argv) {
             }
         }
 
-        if(alldone && options.model_out_file.size() == 0) return SuccessCode;
+        if(alldone && options.model_out_file.size() == 0)
+            return to_underlying(ReturnValue::SuccessCode);
     }
 
     options.queryReductionTimeout = 0;
@@ -249,10 +247,11 @@ int main(int argc, const char** argv) {
         net->toXML(file);
     }
 
-    if(alldone) return SuccessCode;
+    if(alldone)
+        return to_underlying(ReturnValue::SuccessCode);
 
     if (options.replay_trace) {
-        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
         }
@@ -262,13 +261,13 @@ int main(int argc, const char** argv) {
             if (results[i] == ResultPrinter::Unknown || results[i] == ResultPrinter::CTL || results[i] == ResultPrinter::LTL)
                 replay.replay(net.get(), queries[i]);
         }
-        return SuccessCode;
+        return to_underlying(ReturnValue::SuccessCode);
     }
 
 
     if(options.strategy == Strategy::OverApprox)
     {
-        return SuccessCode;
+        return to_underlying(ReturnValue::SuccessCode);
     }
 
     if(options.doVerification){
@@ -293,7 +292,7 @@ int main(int argc, const char** argv) {
         }
 
         if (options.replay_trace) {
-            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 std::cerr << "Fatal error assigning indexes" << std::endl;
                 exit(1);
             }
@@ -302,19 +301,18 @@ int main(int argc, const char** argv) {
             for (int i : ltl_ids) {
                 replay.replay(net.get(), queries[i]);
             }
-            return SuccessCode;
+            return to_underlying(ReturnValue::SuccessCode);
+        }
+
+        // Assign indexes
+        if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode)
+        {
+            throw base_error("ERROR: An error occurred while assigning indexes");
         }
 
         if (!ctl_ids.empty()) {
             options.usedctl = true;
             auto reachabilityStrategy = options.strategy;
-
-            // Assign indexes
-            if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
-            {
-                std::cerr << "An error occurred while assigning indexes" << std::endl;
-                return ErrorCode;
-            }
 
             if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),
@@ -328,7 +326,7 @@ int main(int argc, const char** argv) {
                         options);
 
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-                return v;
+                return to_underlying(v);
             }
             // go back to previous strategy if the program continues
             options.strategy = reachabilityStrategy;
@@ -338,11 +336,6 @@ int main(int argc, const char** argv) {
 
         if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
             options.usedltl = true;
-            auto v = contextAnalysis(cpnBuilder, builder, net.get(), queries);
-            if (v != ContinueCode) {
-                std::cerr << "Error performing context analysis" << std::endl;
-                return v;
-            }
 
             for (auto qid : ltl_ids) {
                 auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
@@ -351,7 +344,7 @@ int main(int argc, const char** argv) {
 
             }
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-                return SuccessCode;
+                return to_underlying(ReturnValue::SuccessCode);
             }
         }
 
@@ -377,7 +370,7 @@ int main(int argc, const char** argv) {
             if(strategy_out != nullptr && strategy_out != &std::cout)
                 delete strategy_out;
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-                return SuccessCode;
+                return to_underlying(ReturnValue::SuccessCode);
             }
         }
 
@@ -399,15 +392,12 @@ int main(int argc, const char** argv) {
             }
 
             if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-                return SuccessCode;
+                return to_underlying(ReturnValue::SuccessCode);
             }
         }
         options.siphontrapTimeout = 0;
 
         //----------------------- Reachability -----------------------//
-
-        //Analyse context again to reindex query
-        contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
         if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
@@ -445,5 +435,5 @@ int main(int argc, const char** argv) {
     }
 
 
-    return SuccessCode;
+    return to_underlying(ReturnValue::SuccessCode);
 }

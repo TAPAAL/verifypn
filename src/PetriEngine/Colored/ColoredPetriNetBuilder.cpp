@@ -863,10 +863,11 @@ namespace PetriEngine {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
                                                 arc.expr->weight());
                     } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on input arc: " << arcToString(arc) << std::endl;
-                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
-                        std::cerr << e.what() << std::endl;
-                        exit(ErrorCode);
+                        std::stringstream ss;
+                        ss << "Exception on input arc: " << arcToString(arc) << std::endl;
+                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << e.what() << std::endl;
+                        throw base_error("ERROR: ", ss.str());
                     }
                 }
                 for (const auto& arc : transition.output_arcs) {
@@ -874,10 +875,11 @@ namespace PetriEngine {
                         _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
                                                 arc.expr->weight());
                     } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on output arc: " << arcToString(arc) << std::endl;
-                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
-                        std::cerr << e.what() << std::endl;
-                        exit(ErrorCode);
+                        std::stringstream ss;
+                        ss << "Exception on output arc: " << arcToString(arc) << std::endl;
+                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << e.what() << std::endl;
+                        throw base_error("ERROR: ", ss.str());
                     }
                 }
                 for(const auto& arc : _inhibitorArcs){

@@ -26,9 +26,9 @@
 #include "PetriEngine/TAR/TARReachability.h"
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/TAR/Solver.h"
-#include "PetriEngine/TAR/ContainsVisitor.h"
-#include "PetriEngine/TAR/PlaceUseVisitor.h"
-#include "utils/Stopwatch.h"
+#include "PetriEngine/PQL/ContainsVisitor.h"
+#include "PetriEngine/PQL/PlaceUseVisitor.h"
+#include "utils/stopwatch.h"
 
 
 namespace PetriEngine {
@@ -459,8 +459,7 @@ namespace PetriEngine {
                 {
                     if(in.first->inhibitor)
                     {
-                        std::cerr << "Trace Abstraction Refinement Error : Inhibitor Arcs are not yet supported by the TAR engine" << std::endl;
-                        std::exit(ErrorCode);
+                        throw base_error("ERROR: Trace Abstraction Refinement Error : Inhibitor Arcs are not yet supported by the TAR engine");
                     }
                 }
             }

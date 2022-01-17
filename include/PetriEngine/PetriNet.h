@@ -75,8 +75,12 @@ namespace PetriEngine {
         uint32_t numberOfPlaces() const {
             return _nplaces;
         }
-        int inArc(uint32_t place, uint32_t transition) const;
-        int outArc(uint32_t transition, uint32_t place) const;
+        uint32_t inArc(uint32_t place, uint32_t transition) const;
+        uint32_t outArc(uint32_t transition, uint32_t place) const;
+        bool controllable(uint32_t t) const
+        {
+            return _controllable[t];
+        }
 
 
         const std::vector<std::string>& transitionNames() const

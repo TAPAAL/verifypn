@@ -22,8 +22,8 @@
 #include <iostream>
 #include "State.h"
 #include "AlignedEncoder.h"
-#include "binarywrapper.h"
-#include "../errorcodes.h"
+#include "utils/structures/binarywrapper.h"
+#include "utils/errors.h"
 
 
 namespace PetriEngine {

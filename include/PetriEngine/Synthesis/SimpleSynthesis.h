@@ -27,9 +27,9 @@
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "utils/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "CTL/CTLResult.h"
-
+#include "GameSuccessorGenerator.h"
 
 #include <vector>
 #include <memory>
@@ -41,6 +41,8 @@
 
 namespace PetriEngine {
     namespace Synthesis {
+
+        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition);
 
         class SimpleSynthesis {
         public:
@@ -71,11 +73,11 @@ namespace PetriEngine {
             void validate(PetriEngine::PQL::Condition*, PetriEngine::Structures::AnnotatedStateSet<SynthConfig>&, bool is_safety);
 #endif
 
-            void run(Strategy strategy, bool permissive);
+            void run(bool use_stubborn, Strategy strategy, bool permissive);
 
             SynthConfig& get_config(Structures::State& marking, PQL::Condition* prop, size_t& cid);
-            std::pair<bool, successors_t> get_env_successors(SuccessorGenerator& generator, SynthConfig& cconf);
-            std::tuple<bool, bool, successors_t> get_ctrl_successors(SuccessorGenerator& generator, SynthConfig& cconf, const bool permissive, const bool env_empty);
+            std::pair<bool, successors_t> get_env_successors(GameSuccessorGenerator& generator, SynthConfig& cconf);
+            std::tuple<bool, bool, successors_t> get_ctrl_successors(GameSuccessorGenerator& generator, SynthConfig& cconf, const bool permissive, const bool env_empty);
             void fix_assignment(SynthConfig& cconf, const bool some_ctrl, const bool some_winning, const bool ctrl_empty,
             const bool some_env, const bool env_empty);
             void to_queue(Structures::Queue& q, successors_t& successors, bool is_ctrl, SynthConfig& cconf);
