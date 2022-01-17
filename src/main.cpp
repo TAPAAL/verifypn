@@ -203,6 +203,7 @@ int main(int argc, const char** argv) {
                 else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
+
             } else if (options.strategy == Strategy::OverApprox){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
                 if (options.printstatistics) {
@@ -262,6 +263,7 @@ int main(int argc, const char** argv) {
         }
         return to_underlying(ReturnValue::SuccessCode);
     }
+
 
     if(options.strategy == Strategy::OverApprox)
     {
@@ -346,6 +348,7 @@ int main(int argc, const char** argv) {
             }
         }
 
+
         for(auto i : synth_ids)
         {
             Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
@@ -370,6 +373,7 @@ int main(int argc, const char** argv) {
                 return to_underlying(ReturnValue::SuccessCode);
             }
         }
+
 
         //----------------------- Siphon Trap ------------------------//
 

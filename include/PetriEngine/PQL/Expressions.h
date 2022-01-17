@@ -679,7 +679,7 @@ namespace PetriEngine {
         {
         public:
             struct cons_t {
-                int32_t _place  = -1;
+                uint32_t _place = std::numeric_limits<uint32_t>::max();
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
                 std::string _name;
