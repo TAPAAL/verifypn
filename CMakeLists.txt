@@ -31,7 +31,6 @@ if (VERIFYPN_Static)
     if (VERIFYPN_MC_Simplification)
         message( FATAL_ERROR "Multicore Simplification is not compatible with static linking")
     endif (VERIFYPN_MC_Simplification)
-
     set(BUILD_SHARED_LIBS OFF)
     if (NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
@@ -52,7 +51,7 @@ endif ()
 
 ## Enabled INTERPROCEDURAL_OPTIMIZATION for non-macos
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT WIN32)
     	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif ()
 endif ()

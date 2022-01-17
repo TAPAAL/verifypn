@@ -206,6 +206,7 @@ int main(int argc, const char** argv) {
                 else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
+
             } else if (options.strategy == Strategy::OverApprox){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
                 if (options.printstatistics) {
@@ -264,6 +265,7 @@ int main(int argc, const char** argv) {
         return SuccessCode;
     }
 
+
     if(options.strategy == Strategy::OverApprox)
     {
         return SuccessCode;
@@ -313,6 +315,7 @@ int main(int argc, const char** argv) {
                 std::cerr << "An error occurred while assigning indexes" << std::endl;
                 return ErrorCode;
             }
+
             if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),
                         options.ctlalgorithm,
@@ -352,6 +355,7 @@ int main(int argc, const char** argv) {
             }
         }
 
+
         for(auto i : synth_ids)
         {
             Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
@@ -376,6 +380,7 @@ int main(int argc, const char** argv) {
                 return SuccessCode;
             }
         }
+
 
         //----------------------- Siphon Trap ------------------------//
 
