@@ -32,6 +32,11 @@ if (VERIFYPN_Static)
         message( FATAL_ERROR "Multicore Simplification is not compatible with static linking")
     endif (VERIFYPN_MC_Simplification)
     set(BUILD_SHARED_LIBS OFF)
+    if (NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+    else ()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    endif()
 endif (VERIFYPN_Static)
 
 ## Configure Traget Platform

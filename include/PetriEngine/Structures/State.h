@@ -2,17 +2,17 @@
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -46,13 +46,12 @@ namespace PetriEngine {
             void setMarking(MarkVal* m) {
                 _marking = m;
             }
-            
-            State()
-            {
-                _marking = NULL;
-            }
+
+            State() : _marking(nullptr) {}
 
             State (const State &state) = delete;
+
+            explicit State (MarkVal* val) : _marking(val) {}
 
             State (State &&state)
             :_marking(state._marking)
@@ -73,12 +72,19 @@ namespace PetriEngine {
             {
                 delete[] _marking;
             }
-            
+
+            void release() { _marking = nullptr; }
+
+            void copy(const MarkVal* other, size_t n)
+            {
+                std::copy(other, other + n, _marking);
+            }
+
             void swap(State& other)
             {
                 std::swap(_marking, other._marking);
             }
-            
+
             void print(const PetriNet& net, std::ostream &os = std::cout) {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
                     if(_marking[i])
@@ -101,6 +107,8 @@ namespace PetriEngine {
             bool operator!=(const State &rhs) const {
                 return !(rhs == *this);
             }
+
+            MarkVal operator[](size_t i) { return _marking[i]; }
 
         private:
             MarkVal* _marking;

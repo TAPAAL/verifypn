@@ -2,7 +2,7 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   Visitor.h
  * Author: Peter G. Jensen <root@petergjoel.dk>
  *
@@ -91,6 +91,10 @@ namespace PetriEngine {
 
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error
+            virtual void _accept(const ControlCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
             virtual void _accept(const EFCondition *condition) {
                 condition->SimpleQuantifierCondition::visit(*this);
             };

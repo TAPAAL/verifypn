@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   SuccessorGenerator.cpp
  * Author: Peter G. Jensen
- * 
+ *
  * Created on 30 March 2016, 19:50
  */
 
@@ -19,7 +19,7 @@
 namespace PetriEngine {
 
     SuccessorGenerator::SuccessorGenerator(const PetriNet& net)
-    : _net(net), _parent(NULL) {
+    : _net(net), _parent(nullptr) {
         reset();
     }
     SuccessorGenerator::SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries) : SuccessorGenerator(net){}
@@ -90,31 +90,6 @@ namespace PetriEngine {
             }
             write.marking()[_net._invariants[finv].place] = n;
         }
-    }
-
-    bool SuccessorGenerator::next(Structures::State& write) {
-        for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
-            // orphans are currently under "place 0" as a special case
-            if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {
-                if (_suc_tcounter == std::numeric_limits<uint32_t>::max()) {
-                    _suc_tcounter = _net._placeToPtrs[_suc_pcounter];
-                }
-                uint32_t last = _net._placeToPtrs[_suc_pcounter + 1];
-                for (; _suc_tcounter != last; ++_suc_tcounter) {
-
-                    if (!checkPreset(_suc_tcounter)) continue;
-                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
-                    consumePreset(write, _suc_tcounter);
-                    producePostset(write, _suc_tcounter);
-
-                    ++_suc_tcounter;
-                    return true;
-                }
-                _suc_tcounter = std::numeric_limits<uint32_t>::max();
-            }
-            _suc_tcounter = std::numeric_limits<uint32_t>::max();
-        }
-        return false;
     }
 
     bool SuccessorGenerator::next(Structures::State& write, uint32_t &tindex) {

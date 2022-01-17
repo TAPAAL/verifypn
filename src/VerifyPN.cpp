@@ -67,6 +67,58 @@ ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder&
     return ContinueCode;
 }
 
+std::vector<Condition_ptr>
+parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary) {
+    std::vector<QueryItem> queries;
+    std::vector<Condition_ptr> conditions;
+    if (binary) {
+        QueryBinaryParser parser;
+        if (!parser.parse(qfile, qnums)) {
+            fprintf(stderr, "Error: Failed parsing binary query file\n");
+            fprintf(stdout, "DO_NOT_COMPETE\n");
+            conditions.clear();
+            return conditions;
+        }
+        queries = std::move(parser.queries);
+    } else {
+        QueryXMLParser parser;
+        if (!parser.parse(qfile, qnums)) {
+            fprintf(stderr, "Error: Failed parsing XML query file\n");
+            fprintf(stdout, "DO_NOT_COMPETE\n");
+            conditions.clear();
+            return conditions;
+        }
+        queries = std::move(parser.queries);
+    }
+
+    size_t i = 0;
+    for (auto& q : queries) {
+        if (!qnums.empty()
+            && qnums.count(i) == 0) {
+            ++i;
+            continue;
+        }
+        ++i;
+
+        if (q.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
+            fprintf(stdout, "The selected query in the XML query file is not supported\n");
+            fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
+            continue;
+        }
+        // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
+
+        conditions.push_back(q.query);
+        if (conditions.back() == nullptr) {
+            fprintf(stderr, "Error: Failed to parse query \"%s\"\n", q.id.c_str()); //querystr.substr(2).c_str());
+            fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
+            conditions.pop_back();
+        }
+
+        qstrings.push_back(q.id);
+    }
+    return conditions;
+}
+
 std::vector<Condition_ptr >
 readQueries(options_t& options, std::vector<std::string>& qstrings) {
 
@@ -106,52 +158,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
             if (isInvariant) conditions.back() = std::make_shared<AGCondition>(conditions.back());
             else conditions.back() = std::make_shared<EFCondition>(conditions.back());
         } else {
-            std::vector<QueryItem> queries;
-            if (options.binary_query_io & 1) {
-                QueryBinaryParser parser;
-                if (!parser.parse(qfile, options.querynumbers)) {
-                    fprintf(stderr, "Error: Failed parsing binary query file\n");
-                    fprintf(stdout, "DO_NOT_COMPETE\n");
-                    conditions.clear();
-                    return conditions;
-                }
-                queries = std::move(parser.queries);
-            } else {
-                QueryXMLParser parser;
-                if (!parser.parse(qfile, options.querynumbers)) {
-                    fprintf(stderr, "Error: Failed parsing XML query file\n");
-                    fprintf(stdout, "DO_NOT_COMPETE\n");
-                    conditions.clear();
-                    return conditions;
-                }
-                queries = std::move(parser.queries);
-            }
-
-            size_t i = 0;
-            for (auto& q : queries) {
-                if (!options.querynumbers.empty()
-                    && options.querynumbers.count(i) == 0) {
-                    ++i;
-                    continue;
-                }
-                ++i;
-
-                if (q.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
-                    fprintf(stdout, "The selected query in the XML query file is not supported\n");
-                    fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
-                    continue;
-                }
-                // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
-
-                conditions.push_back(q.query);
-                if (conditions.back() == nullptr) {
-                    fprintf(stderr, "Error: Failed to parse query \"%s\"\n", q.id.c_str()); //querystr.substr(2).c_str());
-                    fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
-                    conditions.pop_back();
-                }
-
-                qstrings.push_back(q.id);
-            }
+            conditions = parseXMLQueries(qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
         }
         qfile.close();
         return conditions;

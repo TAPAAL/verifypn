@@ -6,7 +6,7 @@ add_subdirectory(PetriNets)
 add_subdirectory(SearchStrategy)
 
 add_library(CTL ${HEADER_FILES}
-CTLEngine.cpp)
+CTLEngine.cpp CTLResult.cpp)
 
 target_link_libraries(CTL Algorithm DependencyGraph PetriNets SearchStrategy)
 

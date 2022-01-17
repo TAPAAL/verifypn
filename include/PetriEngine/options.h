@@ -12,16 +12,14 @@
 #include "../CTL/Algorithm/AlgorithmTypes.h"
 #include "../LTL/AlgorithmTypes.h"
 
-namespace PetriEngine::Reachability {
-    enum Strategy {
-        BFS,
-        DFS,
-        HEUR,
-        RDFS,
-        OverApprox,
-        DEFAULT
-    };
-}
+enum class Strategy {
+    BFS,
+    DFS,
+    HEUR,
+    RDFS,
+    OverApprox,
+    DEFAULT
+};
 
 enum class TemporalLogic {
     CTL, LTL
@@ -70,7 +68,7 @@ struct options_t {
     bool statespaceexploration = false;
     bool printstatistics = true;
     std::set<size_t> querynumbers;
-    PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
+    Strategy strategy = Strategy::DEFAULT;
     int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
@@ -82,7 +80,6 @@ struct options_t {
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
     //CTL Specific options
-    bool gamemode = false;
     bool usedctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;
@@ -119,7 +116,8 @@ struct options_t {
     int max_intervals = 250; //0 disabled
     int max_intervals_reduced = 5;
 
-    
+    std::string strategy_output;
+
     size_t seed() { return ++seed_offset; }
     void print(std::ostream& out = std::cout);
     bool parse(int argc, const char** argv);

@@ -28,8 +28,23 @@ public:
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
+    virtual bool prepare(const Structures::State& state) { return prepare(&state); }
     virtual bool prepare(const Structures::State* state);
-    virtual bool next(Structures::State& write);
+    virtual bool next(Structures::State& write)
+    {
+        return _next(write, [](size_t){ return true; });
+    }
+
+    virtual bool next_ctrl(Structures::State& write)
+    {
+        return _next(write, [this](size_t t){ return _net._controllable[t]; });
+    }
+
+    virtual bool next_env(Structures::State& write)
+    {
+        return _next(write, [this](size_t t){ return !_net._controllable[t]; });
+    }
+
     uint32_t fired() const
     {
         return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : _suc_tcounter - 1;
@@ -72,6 +87,33 @@ protected:
     bool next(Structures::State &write, uint32_t &tindex);
 
     void _fire(Structures::State &write, uint32_t tid);
+
+    template<typename T>
+    bool _next(Structures::State& write, T predicate) {
+        for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
+            // orphans are currently under "place 0" as a special case
+            if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {
+                if (_suc_tcounter == std::numeric_limits<uint32_t>::max()) {
+                    _suc_tcounter = _net._placeToPtrs[_suc_pcounter];
+                }
+                uint32_t last = _net._placeToPtrs[_suc_pcounter + 1];
+                for (; _suc_tcounter != last; ++_suc_tcounter) {
+
+                    if (!checkPreset(_suc_tcounter)) continue;
+                    if (!predicate(_suc_tcounter)) continue;
+                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
+                    consumePreset(write, _suc_tcounter);
+                    producePostset(write, _suc_tcounter);
+
+                    ++_suc_tcounter;
+                    return true;
+                }
+                _suc_tcounter = std::numeric_limits<uint32_t>::max();
+            }
+            _suc_tcounter = std::numeric_limits<uint32_t>::max();
+        }
+        return false;
+    }
 
     const Structures::State* _parent;
 

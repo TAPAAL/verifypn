@@ -46,6 +46,7 @@
 
 
 #include "VerifyPN.h"
+#include "PetriEngine/Synthesis/SimpleSynthesis.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -205,13 +206,17 @@ int main(int argc, const char** argv) {
                 else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (options.strategy == PetriEngine::Reachability::OverApprox){
+
+            } else if (options.strategy == Strategy::OverApprox){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
             } else if (options.noreach || !PetriEngine::PQL::isReachability(queries[i])) {
-                results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
+                if(std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
+                    results[i] = ResultPrinter::Synthesis;
+                else
+                    results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                 alldone = false;
             } else {
                 queries[i] = prepareForReachability(queries[i]);
@@ -260,7 +265,8 @@ int main(int argc, const char** argv) {
         return SuccessCode;
     }
 
-    if(options.strategy == OverApprox)
+
+    if(options.strategy == Strategy::OverApprox)
     {
         return SuccessCode;
     }
@@ -270,6 +276,7 @@ int main(int argc, const char** argv) {
         //----------------------- Verify CTL queries -----------------------//
         std::vector<size_t> ctl_ids;
         std::vector<size_t> ltl_ids;
+        std::vector<size_t> synth_ids;
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == ResultPrinter::CTL)
@@ -278,6 +285,10 @@ int main(int argc, const char** argv) {
             }
             else if (results[i] == ResultPrinter::LTL) {
                 ltl_ids.push_back(i);
+            }
+            else if (results[i] == ResultPrinter::Synthesis)
+            {
+                synth_ids.push_back(i);
             }
         }
 
@@ -295,8 +306,8 @@ int main(int argc, const char** argv) {
         }
 
         if (!ctl_ids.empty()) {
-            options.usedctl=true;
-            PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
+            options.usedctl = true;
+            auto reachabilityStrategy = options.strategy;
 
             // Assign indexes
             if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
@@ -304,13 +315,12 @@ int main(int argc, const char** argv) {
                 std::cerr << "An error occurred while assigning indexes" << std::endl;
                 return ErrorCode;
             }
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+
+            if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
             auto v = CTLMain(net.get(),
                         options.ctlalgorithm,
                         options.strategy,
-                        options.gamemode,
                         options.printstatistics,
-                        true,
                         options.stubbornreduction,
                         querynames,
                         queries,
@@ -321,9 +331,8 @@ int main(int argc, const char** argv) {
                 return v;
             }
             // go back to previous strategy if the program continues
-            options.strategy=reachabilityStrategy;
+            options.strategy = reachabilityStrategy;
         }
-        options.usedctl=false;
 
         //----------------------- Verify LTL queries -----------------------//
 
@@ -345,6 +354,33 @@ int main(int argc, const char** argv) {
                 return SuccessCode;
             }
         }
+
+
+        for(auto i : synth_ids)
+        {
+            Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
+
+            std::ostream* strategy_out = nullptr;
+
+            results[i] = strategy.synthesize(options.strategy, options.stubbornreduction, false);
+
+            strategy.result().print(querynames[i], options.printstatistics, i, options, std::cout);
+
+            if(options.strategy_output == "_")
+                strategy_out = &std::cout;
+            else if(options.strategy_output.size() > 0)
+                strategy_out = new std::ofstream(options.strategy_output);
+
+            if(strategy_out != nullptr)
+                strategy.print_strategy(*strategy_out);
+
+            if(strategy_out != nullptr && strategy_out != &std::cout)
+                delete strategy_out;
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
+            }
+        }
+
 
         //----------------------- Siphon Trap ------------------------//
 
@@ -374,7 +410,7 @@ int main(int argc, const char** argv) {
         contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+        if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
         if(options.tar && net->numberOfPlaces() > 0)
         {
@@ -383,7 +419,7 @@ int main(int argc, const char** argv) {
 
             // Change default place-holder to default strategy
             fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
+            options.strategy = Strategy::DFS;
 
             //Reachability search
             strategy.reachable(queries, results,
@@ -395,7 +431,7 @@ int main(int argc, const char** argv) {
             ReachabilitySearch strategy(*net, printer, options.kbound);
 
             // Change default place-holder to default strategy
-            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+            if(options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
             //Reachability search
             strategy.reachable(queries, results,

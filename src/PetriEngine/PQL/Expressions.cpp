@@ -593,7 +593,7 @@ namespace PetriEngine {
         }
 
         Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) {
-	    return RUNKNOWN;
+            return RUNKNOWN;
         }
 
         Condition::Result EGCondition::evaluate(const EvaluationContext& context) {
@@ -604,6 +604,10 @@ namespace PetriEngine {
         Condition::Result AGCondition::evaluate(const EvaluationContext& context)
         {
             if(_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result ControlCondition::evaluate(const EvaluationContext& context) {
             return RUNKNOWN;
         }
 
@@ -876,6 +880,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void ControlCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void UntilCondition::visit(Visitor &ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1122,6 +1131,11 @@ namespace PetriEngine {
 
         /******************** Mutating visitor **********************************/
 
+        void ControlCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void UntilCondition::visit(MutatingVisitor &ctx)
         {
             ctx.accept<decltype(this)>(this);
@@ -1350,76 +1364,6 @@ namespace PetriEngine {
             return "*";
         }
 
-        /******************** Op (QuantifierCondition subclasses) ********************/
-
-        std::string ACondition::op() const {
-            return "A";
-        }
-
-        std::string ECondition::op() const {
-            return "E";
-        }
-
-        std::string GCondition::op() const {
-            return "G";
-        }
-
-        std::string FCondition::op() const {
-            return "F";
-        }
-
-        std::string XCondition::op() const {
-            return "X";
-        }
-
-        std::string EXCondition::op() const {
-            return "EX";
-        }
-
-        std::string EGCondition::op() const {
-            return "EG";
-        }
-
-        std::string EFCondition::op() const {
-            return "EF";
-        }
-
-        std::string AXCondition::op() const {
-            return "AX";
-        }
-
-        std::string AGCondition::op() const {
-            return "AG";
-        }
-
-        std::string AFCondition::op() const {
-            return "AF";
-        }
-
-        /******************** Op (UntilCondition subclasses) ********************/
-
-        std::string UntilCondition::op() const {
-            return "";
-        }
-
-        std::string EUCondition::op() const {
-            return "E";
-        }
-
-        std::string AUCondition::op() const {
-            return "A";
-        }
-
-        /******************** Op (LogicalCondition subclasses) ********************/
-
-        std::string AndCondition::op() const {
-            return "and";
-        }
-
-        std::string OrCondition::op() const {
-            return "or";
-        }
-
         /******************** Op (CompareCondition subclasses) ********************/
 
         std::string EqualCondition::op() const {
@@ -1486,8 +1430,6 @@ namespace PetriEngine {
         }
 
         /******************** Distance Condition ********************/
-
-
         template<>
         uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
             if (!negated)
@@ -1515,6 +1457,13 @@ namespace PetriEngine {
                 return v1 <= v2 ? 0 : v1 - v2;
             else
                 return v1 > v2 ? 0 : v2 - v1 + 1;
+        }
+
+        uint32_t ControlCondition::distance(DistanceContext& context) const {
+            std::cerr << "ERROR: Computing distance on a control-expression" << std::endl;
+            assert(false);
+            exit(ErrorCode);
+            return -1;
         }
 
         uint32_t NotCondition::distance(DistanceContext& context) const {

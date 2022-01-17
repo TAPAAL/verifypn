@@ -76,6 +76,10 @@ namespace PetriEngine::PQL {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
+    void IsCTLVisitor::_accept(const ControlCondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
     void IsCTLVisitor::_accept(const EFCondition *condition) {
         (*condition)[0]->visit(*this);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
@@ -286,6 +290,11 @@ namespace PetriEngine::PQL {
 
     void AsCTL::_accept(const UnfoldedUpperBoundsCondition *element) {
         _ctl_query = std::make_shared<UnfoldedUpperBoundsCondition>(*element);
+    }
+
+    void AsCTL::_accept(const ControlCondition* condition) {
+        (*condition)[0]->visit(*this);
+        _ctl_query = std::make_shared<ControlCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EFCondition *condition) {

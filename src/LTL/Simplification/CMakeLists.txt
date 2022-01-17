@@ -4,5 +4,5 @@ add_library(LTL_simplification ${HEADER_FILES}
         SpotToPQL.cpp)
 
 add_dependencies(LTL_simplification spot-ext)
-target_link_libraries(LTL_simplification PetriEngine)
+target_link_libraries(LTL_simplification LTL_algorithm PetriEngine)
 

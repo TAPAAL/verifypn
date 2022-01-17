@@ -18,6 +18,8 @@
  */
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "utils/errors.h"
+
 #include <chrono>
 #include <tuple>
 using std::get;
@@ -89,17 +91,17 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, int32_t player, double x, double y) {
         if (!_isColored) {
-            _ptBuilder.addTransition(name, x, y);
+            _ptBuilder.addTransition(name, player, x, y);
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(Colored::Transition {name, guard, x, y});
+            _transitions.emplace_back(Colored::Transition {name, guard, player, x, y});
             _transitionnames[name] = next;
         }
     }
@@ -126,15 +128,9 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
-        {
-            std::cout << "ERROR: Transition '" << transition << "' not found." << std::endl;
-            std::exit(-1);
-        }
+            throw base_error("ERROR: Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
-        {
-            std::cout << "ERROR: Place '" << place << "' not found. " << std::endl;
-            std::exit(-1);
-        }
+            throw base_error("ERROR: Place '", place, "' not found. ");
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
 
@@ -720,10 +716,10 @@ namespace PetriEngine {
             size_t i = 0;
             bool hasBindings = false;
             for (const auto &b : gen) {
-                const std::string &name = transition.name + "_" + std::to_string(i++);
+                const std::string name = transition.name + "_" + std::to_string(i++);
 
                 hasBindings = true;
-                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                _ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                 offset += 15;
 
                 for (auto& arc : transition.input_arcs) {
@@ -744,7 +740,7 @@ namespace PetriEngine {
             size_t i = 0;
             for (const auto &b : gen) {
                 const std::string &name = transition.name + "_" + std::to_string(i++);
-                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                _ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                 offset += 15;
 
                 for (const auto& arc : transition.input_arcs) {
@@ -861,7 +857,7 @@ namespace PetriEngine {
             }
 
             for (auto& transition : _transitions) {
-                _ptBuilder.addTransition(transition.name, transition._x, transition._y);
+                _ptBuilder.addTransition(transition.name, transition._player, transition._x, transition._y);
                 for (const auto& arc : transition.input_arcs) {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,

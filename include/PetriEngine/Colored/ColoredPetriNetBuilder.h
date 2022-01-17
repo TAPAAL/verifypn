@@ -45,20 +45,22 @@ namespace PetriEngine {
 
         void addPlace(const std::string& name,
                 int tokens,
-                double x = 0,
-                double y = 0) override ;
+                double x,
+                double y) override ;
         void addPlace(const std::string& name,
                 const Colored::ColorType* type,
                 Colored::Multiset&& tokens,
-                double x = 0,
-                double y = 0) override;
+                double x,
+                double y) override;
         void addTransition(const std::string& name,
-                double x = 0,
-                double y = 0) override;
+                int32_t player,
+                double x,
+                double y) override;
         void addTransition(const std::string& name,
                 const Colored::GuardExpression_ptr& guard,
-                double x = 0,
-                double y = 0) override;
+                int32_t player,
+                double x,
+                double y) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
@@ -69,7 +71,7 @@ namespace PetriEngine {
                 bool inhibitor, int weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight = 1) override;
+                int weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr) override;
