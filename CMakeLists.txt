@@ -46,7 +46,7 @@ endif ()
 
 ## Enabled INTERPROCEDURAL_OPTIMIZATION for non-macos
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT WIN32)
     	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif ()
 endif ()
