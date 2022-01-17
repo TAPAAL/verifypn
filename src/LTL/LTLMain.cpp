@@ -126,15 +126,14 @@ namespace LTL {
         }
 
         bool is_visible_stub = options.stubbornreduction
-                               && (options.ltl_por == LTLPartialOrder::Visible || options.ltl_por == LTLPartialOrder::VisibleReach)
+                               && options.ltl_por == LTLPartialOrder::Visible
                                && !net->has_inhibitor()
                                && !PetriEngine::PQL::containsNext(negated_formula);
         bool is_autreach_stub = options.stubbornreduction
-                && (options.ltl_por == LTLPartialOrder::AutomatonReach ||
-                    options.ltl_por == LTLPartialOrder::VisibleReach)
+                && options.ltl_por == LTLPartialOrder::Automaton
                 && !net->has_inhibitor();
         bool is_buchi_stub = options.stubbornreduction
-                && options.ltl_por == LTLPartialOrder::FullAutomaton
+                && options.ltl_por == LTLPartialOrder::Liebke
                 && !net->has_inhibitor();
 
         bool is_stubborn = options.ltl_por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
