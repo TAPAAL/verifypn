@@ -118,7 +118,7 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
                     for (auto& name : *ids) {
                         a.push_back(std::make_shared<FireableCondition>(name));
                     }
-		            $$ = new AndCondition(a);
+		            $$ = new OrCondition(a);
 		        }
 		    }
 		| ID QUESTIONMARK           { $$ = new FireableCondition(*$1); }
