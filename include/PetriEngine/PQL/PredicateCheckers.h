@@ -50,9 +50,11 @@ namespace PetriEngine::PQL {
 
     bool isReachability(const Condition_ptr& condition);
 
-    class IsReachabilityVisitor : public AnyVisitor {
+    // Check if it is NOT reachability
+    class IsNotReachabilityVisitor : public AnyVisitor {
 
     private:
+        // If it is currently nested inside an EF or AG quantifier
         bool _is_nested = false;
 
         void _accept(const EFCondition *element) override;
