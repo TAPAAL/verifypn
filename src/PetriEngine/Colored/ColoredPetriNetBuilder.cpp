@@ -53,20 +53,29 @@ namespace PetriEngine {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(Colored::Place {name, type, tokens, x, y});
+            _places.emplace_back(Colored::Place {name, type, std::move(tokens), x, y});
+            auto& place = _places.back();
             _placenames[name] = next;
+            for(const auto& t : place.marking)
+            {
+                if(t.first->getColorType() != type)
+                {
+                    throw base_error("ERROR: Mismatch in color-type on ", name, " expecting type ", type->getName(), " got ",
+                        t.first->getColorType()->getName(), " (instance ", Colored::Color::toString(t.first), ")");
+                }
+            }
 
             //set up place color fix points and initialize queue
-            if (!tokens.empty()) {
+            if (!place.marking.empty()) {
                 _placeFixpointQueue.emplace_back(next);
             }
 
             Colored::interval_vector_t placeConstraints;
-            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
+            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !place.marking.empty()};
             uint32_t colorCounter = 0;
 
-            if(tokens.size() == type->size()) {
-                for(const auto& colorPair : tokens){
+            if(place.marking.size() == type->size()) {
+                for(const auto& colorPair : place.marking){
                     if(colorPair.second > 0){
                         colorCounter++;
                     } else {
@@ -78,7 +87,7 @@ namespace PetriEngine {
             if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
             } else {
-                for (const auto& colorPair : tokens) {
+                for (const auto& colorPair : place.marking) {
                     Colored::interval_t tokenConstraints;
                     uint32_t index = 0;
                     colorPair.first->getColorConstraints(tokenConstraints, index);
