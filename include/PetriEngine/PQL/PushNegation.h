@@ -47,8 +47,8 @@ namespace PetriEngine::PQL {
 
         // This method visits the condition, restores the current arguments and returns the value
         // from the visit.
-        Condition_ptr subvisit(Condition_ptr condition, bool _nested, bool _negated)
-        { return subvisit(&*condition, _nested, _negated); }
+        Condition_ptr subvisit(const Condition_ptr& condition, bool _nested, bool _negated)
+        { return subvisit(condition.get(), _nested, _negated); }
         Condition_ptr subvisit(Condition* condition, bool _nested, bool _negated);
 
         Condition_ptr pushAnd(const std::vector<Condition_ptr> &_conds, bool _nested, bool negate_children);
@@ -80,6 +80,8 @@ namespace PetriEngine::PQL {
         void _accept(UpperBoundsCondition *element) override;
 
         void _accept(UnfoldedUpperBoundsCondition *element) override;
+
+        void _accept(ControlCondition *element) override;
 
         void _accept(EFCondition *condition) override;
 

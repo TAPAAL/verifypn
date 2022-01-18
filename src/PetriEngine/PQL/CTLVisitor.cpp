@@ -76,6 +76,10 @@ namespace PetriEngine::PQL {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
+    void IsCTLVisitor::_accept(const ControlCondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
     void IsCTLVisitor::_accept(const EFCondition *condition) {
         (*condition)[0]->visit(*this);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
@@ -288,6 +292,11 @@ namespace PetriEngine::PQL {
         _ctl_query = std::make_shared<UnfoldedUpperBoundsCondition>(*element);
     }
 
+    void AsCTL::_accept(const ControlCondition* condition) {
+        (*condition)[0]->visit(*this);
+        _ctl_query = std::make_shared<ControlCondition>(_ctl_query);
+    }
+
     void AsCTL::_accept(const EFCondition *condition) {
         (*condition)[0]->visit(*this);
         _ctl_query = std::make_shared<EFCondition>(_ctl_query);
@@ -354,7 +363,7 @@ namespace PetriEngine::PQL {
                 _ctl_query = std::make_shared<AUCondition>(first, _ctl_query);
                 break;
             }
-            case Path::pError:
+            default:
                 assert(false);
                 _ctl_query = nullptr;
                 break;
@@ -383,7 +392,7 @@ namespace PetriEngine::PQL {
                 _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
                 break;
             }
-            case Path::pError:
+            default:
                 assert(false);
                 _ctl_query = nullptr;
                 break;

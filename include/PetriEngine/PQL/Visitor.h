@@ -2,7 +2,7 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   Visitor.h
  * Author: Peter G. Jensen <root@petergjoel.dk>
  *
@@ -91,6 +91,10 @@ namespace PetriEngine {
 
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error
+            virtual void _accept(const ControlCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
             virtual void _accept(const EFCondition *condition) {
                 condition->SimpleQuantifierCondition::visit(*this);
             };
@@ -144,9 +148,13 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const ShallowCondition *element) {
-                assert(false);
-                std::cerr << "No accept for ShallowCondition" << std::endl;
-                exit(0);
+                if (element->getCompiled()) {
+                    element->getCompiled()->visit(*this);
+                } else {
+                    assert(false);
+                    std::cerr << "No accept for ShallowCondition" << std::endl;
+                    exit(0);
+                }
             }
 
             // shallow elements, neither of these should exist in a compiled expression
@@ -335,8 +343,8 @@ namespace PetriEngine {
 
             void _accept(const UntilCondition *condition) override
             {
-                condition->getCond1()->visit(*this);
-                condition->getCond2()->visit(*this);
+                (*condition)[0]->visit(*this);
+                (*condition)[1]->visit(*this);
             }
 
             void _accept(const ShallowCondition *element) override
@@ -374,6 +382,8 @@ namespace PetriEngine {
 
             void _accept(const IdentifierExpr *element) override
             {
+                if(const auto& compiled = element->compiled())
+                    compiled->visit(*this);
                 // no-op
             }
         };

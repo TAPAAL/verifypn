@@ -5,27 +5,25 @@
 #include "CTL/SearchStrategy/HeuristicSearch.h"
 
 namespace Algorithm {
-    FixedPointAlgorithm::FixedPointAlgorithm(PetriEngine::Reachability::Strategy type) {
+    FixedPointAlgorithm::FixedPointAlgorithm(Strategy type) {
         using namespace PetriEngine::Reachability;
         using namespace SearchStrategy;
         switch(type)
         {
-            case DFS:
+            case Strategy::DFS:
                 strategy = std::make_shared<DFSSearch>();
                 break;
-            case RDFS:
+            case Strategy::RDFS:
                 strategy = std::make_shared<RDFSSearch>();
                 break;
-            case BFS:
+            case Strategy::BFS:
                 strategy = std::make_shared<BFSSearch>();
                 break;
-            case HEUR:
+            case Strategy::HEUR:
                 strategy = std::make_shared<HeuristicSearch>();
                 break;
             default:
-                std::cerr << "Search strategy is unsupported by the CTL-Engine"   <<  std::endl;
-                assert(false);
-                exit(ErrorCode);                
+                throw base_error("ERROR: Search strategy is unsupported by the CTL-Engine");
         }
     }
 

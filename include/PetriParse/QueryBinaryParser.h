@@ -32,12 +32,12 @@ public:
 
     std::vector<QueryItem>  queries;
 
-    bool parse(std::ifstream& binary, const std::set<size_t>& );
+    bool parse(std::istream& binary, const std::set<size_t>& );
 
 private:
-    Condition_ptr parseQuery(std::ifstream& binary, const std::vector<std::string>& names);
-    Expr_ptr parseExpr(std::ifstream& binary, const std::vector<std::string>& names);
-    
+    Condition_ptr parseQuery(std::istream& binary, const std::vector<std::string>& names);
+    Expr_ptr parseExpr(std::istream& binary, const std::vector<std::string>& names);
+
 };
 
 

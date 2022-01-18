@@ -1,7 +1,4 @@
-/* Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>,
+/* Copyright (C) 2011  Peter Gjøl Jensen <root@petergjoel.dk>,
  *                     Rasmus Tollund <rtollu18@student.aau.dk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,39 +17,46 @@
 #include "PetriEngine/PQL/XMLPrinter.h"
 namespace PetriEngine {
     namespace PQL {
+
+        void XMLPrinter::print(const Condition& c, const std::string& name)
+        {
+            XMLPrinter::Tag p(this, "property");
+            outputLine("<id>", name, "</id>");
+            outputLine("<description>Simplified</description>");
+            {
+                XMLPrinter::Tag f(this, "formula");
+                c.visit(*this);
+            }
+        }
+
         std::ostream& XMLPrinter::generateTabs() {
-            for(uint32_t i = 0; i < tabs; i++) {
-                os << single_tab;
+            for(uint32_t i = 0; i < tabs*tab_size; ++i) {
+                os << ' ';
             }
             return os;
         }
 
-        void XMLPrinter::openXmlTag(const std::string &tag) {
+        void XMLPrinter::openXmlTag(const char* tag) {
             generateTabs() << "<" << tag << ">";
             newline();
-            tabs++;
+            ++tabs;
         }
 
-        void XMLPrinter::closeXmlTag(const std::string &tag) {
-            tabs--;
+        void XMLPrinter::closeXmlTag(const char* tag) {
+            --tabs;
             generateTabs() << "</" << tag << ">";
             newline();
         }
 
-        void XMLPrinter::outputLine(const std::string &line) {
-            generateTabs() << line;
-            newline();
-        }
-
         std::ostream& XMLPrinter::newline() {
-            os << '\n';
+            if(print_newlines)
+                os << '\n';
             return os;
         }
 
         void XMLPrinter::_accept(const NotCondition *element) {
-            openXmlTag("negation");
+            Tag t(this, "negation");
             element->getCond()->visit(*this);
-            closeXmlTag("negation");
         }
 
         void XMLPrinter::_accept(const AndCondition *element) {
@@ -66,25 +70,11 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
                 return;
             }
-            openXmlTag("conjunction");
-            (*element)[0]->visit(*this);
-            for(size_t i = 1; i < element->size(); ++i)
             {
-                if(i + 1 == element->size())
-                {
-                    (*element)[i]->visit(*this);
-                }
-                else
-                {
-                    openXmlTag("conjunction");
-                    (*element)[i]->visit(*this);
-                }
+                Tag t(this, "conjunction");
+                for(auto& e : *element)
+                    e->visit(*this);
             }
-            for(size_t i = element->size() - 1; i > 1; --i)
-            {
-                closeXmlTag("conjunction");
-            }
-            closeXmlTag("conjunction");
         }
 
         void XMLPrinter::_accept(const OrCondition *element) {
@@ -98,53 +88,35 @@ namespace PetriEngine {
                 (*element)[0]->visit(*this);
                 return;
             }
-            openXmlTag("disjunction");
-            (*element)[0]->visit(*this);
-            for(size_t i = 1; i < element->size(); ++i)
             {
-                if(i + 1 == element->size())
-                {
-                    (*element)[i]->visit(*this);
-                }
-                else
-                {
-                    openXmlTag("disjunction");
-                    (*element)[i]->visit(*this);
-                }
+                Tag d(this, "disjunction");
+                for(auto& e : *element)
+                    e->visit(*this);
             }
-            for(size_t i = element->size() - 1; i > 1; --i)
-            {
-                closeXmlTag("disjunction");
-            }
-            closeXmlTag("disjunction");
         }
 
         void XMLPrinter::_accept(const LessThanCondition *element) {
-            openXmlTag("integer-lt");
+            Tag t(this, "integer-lt");
             (*element)[0]->visit(*this);
             (*element)[1]->visit(*this);
-            closeXmlTag("integer-lt");
         }
 
         void XMLPrinter::_accept(const LessThanOrEqualCondition *element) {
-            openXmlTag("integer-le");
+            Tag t(this, "integer-le");
             (*element)[0]->visit(*this);
             (*element)[1]->visit(*this);
-            closeXmlTag("integer-le");
         }
 
         void XMLPrinter::_accept(const EqualCondition *element) {
-            openXmlTag("integer-eq");
+            Tag t(this, "integer-eq");
             (*element)[0]->visit(*this);
             (*element)[1]->visit(*this);
-            closeXmlTag("integer-eq");
         }
 
         void XMLPrinter::_accept(const NotEqualCondition *element) {
-            openXmlTag("integer-ne");
+            Tag t(this, "integer-ne");
             (*element)[0]->visit(*this);
             (*element)[1]->visit(*this);
-            closeXmlTag("integer-ne");
         }
 
         void XMLPrinter::_accept(const DeadlockCondition *element) {
@@ -170,18 +142,18 @@ namespace PetriEngine {
                     {
                         openXmlTag("integer-ge");
                         openXmlTag("tokens-count");
-                        outputLine("<place>" + c._name + "</place>");
+                        outputLine("<place>", c._name, "</place>");
                         closeXmlTag("tokens-count");
-                        outputLine("<integer-constant>" + std::to_string(c._lower) + "</integer-constant>");
+                        outputLine("<integer-constant>", c._lower, "</integer-constant>");
                         closeXmlTag("integer-ge");
                     }
                     if(c._upper != std::numeric_limits<uint32_t>::max())
                     {
                         openXmlTag("integer-le");
                         openXmlTag("tokens-count");
-                        outputLine("<place>" + c._name + "</place>");
+                        outputLine("<place>", c._name, "</place>");
                         closeXmlTag("tokens-count");
-                        outputLine("<integer-constant>" + std::to_string(c._upper) + "</integer-constant>");
+                        outputLine("<integer-constant>", c._upper, "</integer-constant>");
                         closeXmlTag("integer-le");
                     }
                 }
@@ -194,151 +166,155 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const UnfoldedUpperBoundsCondition *element) {
-            openXmlTag("place-bound");
+            Tag t(this, "place-bound");
             for(auto& p : element->places()) {
-                outputLine("<place>" + p._name + "</place>");
+                outputLine("<place>", p._name, "</place>");
             }
-            closeXmlTag("place-bound");
+        }
+
+        void XMLPrinter::_accept(const ControlCondition *condition) {
+            Tag t(this, "control");
+            (*condition)[0]->visit(*this);
         }
 
         void XMLPrinter::_accept(const EFCondition *condition) {
-            openXmlTag("exists-path");
-            openXmlTag("finally");
-            condition->getCond()->visit(*this);
-            closeXmlTag("finally");
-            closeXmlTag("exists-path");
+            Tag ep(this, "exists-path");
+            {
+                Tag f(this, "finally");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const EGCondition *condition) {
-            openXmlTag("exists-path");
-            openXmlTag("globally");
-            condition->getCond()->visit(*this);
-            closeXmlTag("globally");
-            closeXmlTag("exists-path");
+            Tag ep(this, "exists-path");
+            {
+                Tag g(this, "globally");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const AGCondition *condition) {
-            openXmlTag("all-paths");
-            openXmlTag("globally");
-            condition->getCond()->visit(*this);
-            closeXmlTag("globally");
-            closeXmlTag("all-paths");
+            Tag a(this, "all-paths");
+            {
+                Tag g(this, "globally");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const AFCondition *condition) {
-            openXmlTag("all-paths");
-            openXmlTag("finally");
-            condition->getCond()->visit(*this);
-            closeXmlTag("finally");
-            closeXmlTag("all-paths");
+            Tag a(this, "all-paths");
+            {
+                Tag f(this, "finally");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const EXCondition *condition) {
-            openXmlTag("exists-path");
-            openXmlTag("next");
-            condition->getCond()->visit(*this);
-            closeXmlTag("next");
-            closeXmlTag("exists-path");
+            Tag e(this, "exists-path");
+            {
+                Tag n(this, "next");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const AXCondition *condition) {
-            openXmlTag("all-paths");
-            openXmlTag("next");
-            condition->getCond()->visit(*this);
-            closeXmlTag("next");
-            closeXmlTag("all-paths");
+            Tag a(this, "all-paths");
+            {
+                Tag e(this, "next");
+                condition->getCond()->visit(*this);
+            }
         }
 
         void XMLPrinter::_accept(const EUCondition *condition) {
-            openXmlTag("exists-path");
-            openXmlTag("until");
-            openXmlTag("before");
-            (*condition)[0]->visit(*this);
-            closeXmlTag("before");
-            openXmlTag("reach");
-            (*condition)[1]->visit(*this);
-            closeXmlTag("reach");
-            closeXmlTag("until");
-            closeXmlTag("exists-path");
+            Tag e(this, "exists-path");
+            {
+                Tag u(this, "until");
+                {
+                    Tag b(this, "before");
+                    (*condition)[0]->visit(*this);
+                }
+                {
+                    Tag r(this, "reach");
+                    (*condition)[1]->visit(*this);
+                }
+            }
         }
 
         void XMLPrinter::_accept(const AUCondition *condition) {
-            openXmlTag("all-paths");
-            openXmlTag("until");
-            openXmlTag("before");
-            (*condition)[0]->visit(*this);
-            closeXmlTag("before");
-            openXmlTag("reach");
-            (*condition)[1]->visit(*this);
-            closeXmlTag("reach");
-            closeXmlTag("until");
-            closeXmlTag("all-paths");
-
+            Tag e(this, "all-paths");
+            {
+                Tag u(this, "until");
+                {
+                    Tag b(this, "before");
+                    (*condition)[0]->visit(*this);
+                }
+                {
+                    Tag r(this, "reach");
+                    (*condition)[1]->visit(*this);
+                }
+            }
         }
 
         void XMLPrinter::_accept(const ACondition *condition) {
-            openXmlTag("all-paths");
+            Tag a(this, "all-paths");
             condition->getCond()->visit(*this);
-            closeXmlTag("all-paths");
         }
 
         void XMLPrinter::_accept(const ECondition *condition) {
-            openXmlTag("exists-path");
+            Tag e(this, "exists-path");
             condition->getCond()->visit(*this);
-            closeXmlTag("exists-path");
         }
 
         void XMLPrinter::_accept(const GCondition *condition) {
-            openXmlTag("globally");
+            Tag g(this, "globally");
             condition->getCond()->visit(*this);
-            closeXmlTag("globally");
         }
 
         void XMLPrinter::_accept(const FCondition *condition) {
-            openXmlTag("finally");
+            Tag f(this, "finally");
             condition->getCond()->visit(*this);
-            closeXmlTag("finally");
         }
 
         void XMLPrinter::_accept(const XCondition *condition) {
-            openXmlTag("next");
+            Tag n(this, "next");
             condition->getCond()->visit(*this);
-            closeXmlTag("next");
         }
 
         void XMLPrinter::_accept(const UntilCondition *condition) {
-            openXmlTag("until") ;
-            openXmlTag("before");
-            (*condition)[0]->visit(*this);
-            closeXmlTag("before") ;
-            openXmlTag("reach");
-            (*condition)[1]->visit(*this);
-            closeXmlTag("reach") ;
-            closeXmlTag("until") ;
+            Tag u(this, "until");
+            {
+                {
+                    Tag b(this, "before");
+                    (*condition)[0]->visit(*this);
+                }
+                {
+                    Tag r(this, "reach");
+                    (*condition)[1]->visit(*this);
+                }
+            }
         }
 
         void XMLPrinter::_accept(const UnfoldedFireableCondition *element) {
-            outputLine("<is-fireable><transition>" + element->getName() + "</transition></is-fireable>");
+            outputLine("<is-fireable><transition>", element->getName(), "</transition></is-fireable>");
         }
 
         void XMLPrinter::_accept(const BooleanCondition *element) {
-            outputLine(element->value? "<true/>": "<false/>");
+            outputLine(element->value ? "<true/>": "<false/>");
         }
 
         void XMLPrinter::_accept(const UnfoldedIdentifierExpr *element) {
             if (token_count) {
-                outputLine("<place>" + element->name() + "</place>");
+                outputLine("<place>", element->name(), "</place>");
             }
             else
             {
-                openXmlTag("tokens-count");
-                outputLine("<place>" + element->name() + "</place>");
-                closeXmlTag("tokens-count");
+                Tag tc(this, "tokens-count");
+                outputLine("<place>", element->name(), "</place>");
             }
         }
 
         void XMLPrinter::_accept(const LiteralExpr *element) {
-            outputLine("<integer-constant>" + std::to_string(element->value()) + "</integer-constant>");
+            outputLine("<integer-constant>", element->value(), "</integer-constant>");
         }
 
         void XMLPrinter::_accept(const PlusExpr *element) {
@@ -349,49 +325,42 @@ namespace PetriEngine {
             }
 
             if(element->tk) {
-                openXmlTag("tokens-count");
+                Tag t(this, "tokens-count");
                 for(auto& e : element->places())
-                    outputLine("<place>" + e.second + "</place>");
+                    outputLine("<place>", e.second, "</place>");
                 for(auto& e : element->expressions())
                     e->visit(*this);
-                closeXmlTag("tokens-count");
                 return;
             }
-            openXmlTag("integer-sum");
-            outputLine("<integer-constant>" + std::to_string(element->constant()) + "</integer-constant>");
-            for(auto& i : element->places())
             {
-                openXmlTag("tokens-count");
-                outputLine("<place>" + i.second + "</place>");
-                closeXmlTag("tokens-count");
+                Tag t(this, "integer-sum");
+                outputLine("<integer-constant>", element->constant(), "</integer-constant>");
+                for(auto& i : element->places())
+                {
+                    Tag tc(this, "tokens-count");
+                    outputLine("<place>", i.second, "</place>");
+                }
+                for(auto& e : element->expressions())
+                    e->visit(*this);
             }
-            for(auto& e : element->expressions())
-                e->visit(*this);
-            closeXmlTag("integer-sum");
         }
 
         void XMLPrinter::_accept(const MultiplyExpr *element) {
-            openXmlTag("integer-product");
+            Tag i(this, "integer-product");
             for(auto& e : element->expressions())
                 e->visit(*this);
-            closeXmlTag("integer-product");
         }
 
         void XMLPrinter::_accept(const MinusExpr *element) {
-            openXmlTag("integer-product");
-            (*element)[0]->visit(*this);
-            openXmlTag("integer-difference");
+            Tag i(this, "integer-difference");
             outputLine("<integer-constant>0</integer-constant>");
-            outputLine("<integer-constant>1</integer-constant>");
-            closeXmlTag("integer-difference");
-            closeXmlTag("integer-product");
+            (*element)[0]->visit(*this);
         }
 
         void XMLPrinter::_accept(const SubtractExpr *element) {
-            openXmlTag("integer-difference");
+            Tag i(this, "integer-difference");
             for(auto& e : element->expressions())
                 e->visit(*this);
-            closeXmlTag("integer-difference");
         }
 
         void XMLPrinter::_accept(const IdentifierExpr *element) {

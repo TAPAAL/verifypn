@@ -665,6 +665,24 @@ namespace PetriEngine::PQL {
                                       (next, bounds[nplaces].first - offset, offset)))
     }
 
+    void Simplifier::_accept(const ControlCondition *condition) {
+        condition->getCond()->visit(*this);
+        if(return_value.formula->isTriviallyTrue() || return_value.formula->isTriviallyFalse())
+        {
+            bool is_true = return_value.formula->isTriviallyTrue() xor (!context.negated());
+            RETURN(Retval(is_true ?
+                           Retval(BooleanCondition::TRUE_CONSTANT) :
+                           Retval(BooleanCondition::FALSE_CONSTANT)))
+        }
+        else
+        {
+            RETURN(Retval(std::make_shared<ControlCondition>(context.negated() ?
+                std::make_shared<NotCondition>(return_value.formula) :
+                return_value.formula
+                )))
+        }
+    }
+
     void Simplifier::_accept(const EFCondition *condition) {
         condition->getCond()->visit(*this);
         RETURN(context.negated() ? simplifyAG(return_value) : simplifyEF(return_value))

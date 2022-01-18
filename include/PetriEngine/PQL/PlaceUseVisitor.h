@@ -2,7 +2,7 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   PlaceUseVisitor.h
  * Author: Peter G. Jensen <root@petergjoel.dk>
  *
@@ -25,7 +25,11 @@ namespace PQL {
 
         PlaceUseVisitor(size_t places);
 
-        const std::vector<bool> in_use() const {
+        bool operator[](size_t id) const {
+            return _in_use[id];
+        }
+
+        const std::vector<bool>& in_use() const {
             return _in_use;
         }
     protected:
@@ -44,7 +48,7 @@ namespace PQL {
         virtual void _accept(const SubtractExpr* element) override;
         virtual void _accept(const DeadlockCondition* element) override;
         virtual void _accept(const CompareConjunction* element) override;
-        virtual void _accept(const UnfoldedUpperBoundsCondition* element) override;        
+        virtual void _accept(const UnfoldedUpperBoundsCondition* element) override;
 
         virtual void _accept(const EFCondition* el);
         virtual void _accept(const EGCondition* el);
@@ -55,7 +59,7 @@ namespace PQL {
         virtual void _accept(const EUCondition* el);
         virtual void _accept(const AUCondition* el);
     private:
-        void visitCommutativeExpr(const CommutativeExpr* element);        
+        void visitCommutativeExpr(const CommutativeExpr* element);
     };
 }
 }

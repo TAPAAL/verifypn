@@ -99,6 +99,11 @@ namespace PetriEngine {
             os << ")";
         }
 
+        void QueryPrinter::_accept(const ControlCondition *condition) {
+            os << "control: ";
+            (*condition)[0]->visit(*this);
+        }
+
         void QueryPrinter::_accept(const EFCondition *condition) {
             os << "EF ";
             (*condition)[0]->visit(*this);
