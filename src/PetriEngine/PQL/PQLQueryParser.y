@@ -54,7 +54,6 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 query	: state_formula	            { query = Condition_ptr($1); }
         | path_formula_or           { query = Condition_ptr($1); } /* This one is not actually allowed in CTL* */
-		| error						{ yyerrok; }
 		;
 
 state_formula : state_formula OR state_formula_and		{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
