@@ -24,7 +24,12 @@ namespace PetriEngine::PQL {
 
     /*** Nested Deadlock ***/
 
-    bool hasNestedDeadlock(const Condition_ptr& condition) {
+    bool hasNestedDeadlock(const Condition_ptr& condition)
+    {
+        return hasNestedDeadlock(condition.get());
+    }
+
+    bool hasNestedDeadlock(const Condition* condition) {
         NestedDeadlockVisitor v;
         condition->visit(v);
         return v.getReturnValue();
@@ -44,11 +49,11 @@ namespace PetriEngine::PQL {
 
     /*** Is Temporal ***/
 
-    bool isTemporal(Condition_ptr condition) {
+    bool isTemporal(const Condition_ptr& condition) {
         return isTemporal(condition.get());
     }
 
-    bool isTemporal(Condition *condition) {
+    bool isTemporal(const Condition *condition) {
         IsTemporalVisitor visitor;
         condition->visit(visitor);
         return visitor.getReturnValue();
@@ -64,12 +69,16 @@ namespace PetriEngine::PQL {
 
 
     /*** Is Reachability ***/
-
-    bool isReachability(const Condition_ptr& condition) {
+    bool isReachability(const Condition* condition) {
         IsNotReachabilityVisitor visitor;
         condition->visit(visitor);
         return !visitor.getReturnValue();
     }
+
+    bool isReachability(const Condition_ptr& condition) {
+        return isReachability(condition.get());
+    }
+
 
     void IsNotReachabilityVisitor::_accept(const SimpleQuantifierCondition *element) {
         // AG and EF have their own accepts, all other quantifiers are forbidden

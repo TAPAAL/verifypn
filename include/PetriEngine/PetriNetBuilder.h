@@ -2,17 +2,17 @@
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -34,12 +34,13 @@ namespace PetriEngine {
     class PetriNetBuilder : public AbstractPetriNetBuilder {
     public:
         friend class Reducer;
-        
+
     public:
         PetriNetBuilder();
         PetriNetBuilder(const PetriNetBuilder& other);
         void addPlace(const std::string& name, int tokens, double x, double y) override;
         void addTransition(const std::string& name,
+                int32_t player,
                 double x,
                 double y) override;
         void addInputArc(const std::string& place,
@@ -57,36 +58,36 @@ namespace PetriEngine {
         {
             return initialMarking.data();
         }
-        
+
         uint32_t numberOfPlaces() const
         {
             return _placenames.size();
         }
-        
+
         uint32_t numberOfTransitions() const
         {
             return _transitionnames.size();
         }
-        
+
         const std::unordered_map<std::string, uint32_t>& getPlaceNames() const
         {
             return _placenames;
         }
-        
+
         const std::unordered_map<std::string, uint32_t>& getTransitionNames() const
         {
             return _transitionnames;
         }
 
-        void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
-                    std::vector<Reachability::ResultPrinter::Result>& results, 
+        void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query,
+                    std::vector<Reachability::ResultPrinter::Result>& results,
                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions);
-        
+
         size_t RemovedTransitions() const
         {
             return reducer.RemovedTransitions();
         }
-        
+
         size_t RemovedPlaces() const
         {
             return reducer.RemovedPlaces();
@@ -96,9 +97,9 @@ namespace PetriEngine {
         {
             reducer.printStats(out);
         }
-        
+
         Reducer* getReducer() { return &reducer; }
-        
+
         std::vector<std::pair<std::string, uint32_t>> orphanPlaces() const {
             std::vector<std::pair<std::string, uint32_t>> res;
             for(uint32_t p = 0; p < _places.size(); p++) {
@@ -123,7 +124,7 @@ namespace PetriEngine {
         void startTimer() {
             _start = std::chrono::high_resolution_clock::now();
         }
-        
+
     private:
         uint32_t nextPlaceId(std::vector<uint32_t>& counts,  std::vector<uint32_t>& pcounts, std::vector<uint32_t>& ids, bool reorder);
         std::chrono::high_resolution_clock::time_point _start;
@@ -134,10 +135,10 @@ namespace PetriEngine {
 
         std::vector< std::tuple<double, double> > _placelocations;
         std::vector< std::tuple<double, double> > _transitionlocations;
-        
+
         std::vector<PetriEngine::Transition> _transitions;
         std::vector<PetriEngine::Place> _places;
-        
+
         std::vector<MarkVal> initialMarking;
         Reducer reducer;
     };

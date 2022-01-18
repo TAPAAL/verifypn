@@ -5,20 +5,23 @@ add_subdirectory(LTL)
 add_subdirectory(PetriParse)
 add_subdirectory(PetriEngine)
 
-add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp)
-add_dependencies(verifypn-${ARCH_TYPE} glpk-ext spot-ext)
+add_library(verifypn VerifyPN.cpp)
+target_link_libraries(verifypn PUBLIC CTL LTL PetriEngine PetriParse)
 
-target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse)
+add_dependencies(verifypn glpk-ext spot-ext)
 
-# add_executable(parse-benchmark-asctl ParseOnly.cpp)
-
- #target_link_libraries(parse-benchmark-asctl PetriEngine PetriParse)
+add_executable(verifypn-${ARCH_TYPE} main.cpp)
+target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE verifypn)
 
 if (VERIFYPN_MC_Simplification)
     target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC pthread)
 endif(VERIFYPN_MC_Simplification)
 
 if (APPLE OR NOT VERIFYPN_Static)
-    target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE -static-libgcc -static-libstdc++)
+    target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC -static-libgcc -static-libstdc++)
+elseif (NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
+
+
 

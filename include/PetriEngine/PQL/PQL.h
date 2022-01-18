@@ -41,8 +41,8 @@ namespace PetriEngine {
         class MutatingVisitor;
 
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
-        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, EMPTY = -1 };
-        enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
+        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, BControl = 10, EMPTY = -1 };
+        enum Path { G = 1, X = 2, F = 3, U = 4, PControl = 5, pError = -1 };
 
 
         class AnalysisContext;
