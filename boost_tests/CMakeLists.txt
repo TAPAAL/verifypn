@@ -7,25 +7,25 @@ include_directories (${TEST_SOURCE_DIR}/include
                      ${unfoldtacpn_SOURCE_DIR}
                      )
 
-add_executable (Boost_Tests_run BinaryPrinterTests.cpp XMLPrinterTests.cpp PQLParserTests.cpp)
-
-target_link_libraries(Boost_Tests_run PRIVATE CTL LTL PetriEngine PetriParse)
-
-target_compile_definitions(Boost_Tests_run PRIVATE "BOOST_TEST_DYN_LINK=1")
-
-add_test(NAME Boost_Tests_run COMMAND Boost_Tests_run)
 
 
-
-
+add_executable (BinaryPrinterTests BinaryPrinterTests.cpp)
+add_executable (XMLPrinterTests XMLPrinterTests.cpp)
+add_executable (PQLParserTests PQLParserTests.cpp)
 add_executable (reachability reachability_test.cpp)
 add_executable (games game_test.cpp)
 add_executable (color color_test.cpp)
 
+target_link_libraries(BinaryPrinterTests PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
+target_link_libraries(XMLPrinterTests    PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
+target_link_libraries(PQLParserTests     PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 target_link_libraries(reachability PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 target_link_libraries(games        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 target_link_libraries(color        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 
+add_test(NAME BinaryPrinterTests COMMAND BinaryPrinterTests)
+add_test(NAME XMLPrinterTests COMMAND XMLPrinterTests)
+add_test(NAME PQLParserTests COMMAND PQLParserTests)
 add_test(NAME reachability COMMAND reachability)
 add_test(NAME games COMMAND games)
 add_test(NAME color COMMAND color)
