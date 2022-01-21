@@ -26,13 +26,13 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 /* Terminal type definition */
 %token <string> ID INT
-%token <token> A E X F G U
+%token <token> A E X F G U CONTROL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
 %token <token> EQUAL NEQUAL LESS LESSEQUAL GREATER GREATEREQUAL
 %token <token> PLUS MINUS MULTIPLY
-%token <token> COMMA
+%token <token> COMMA COLON
 %token <token> TOKENCOUNT QUESTIONMARK FIREABLE
 
 /* Terminal associativity */
@@ -42,18 +42,21 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 /* Nonterminal type definition */
 %type <expr> expr term factor
 %type <cond> path_formula path_formula_or path_formula_and path_formula_quantifier path_formula_until path_formula_paren
-%type <cond> state_formula state_formula_and state_formula_quantifier atomic_formula compare
+%type <cond> state_formula state_formula_and state_formula_quantifier atomic_formula compare query
 %type <ids> id_list
 
 /* Operator precedence, more possibly coming */
 %right MINUS
 
-%start query
+%start control
 
 %%
 
-query	: state_formula	            { query = Condition_ptr($1); }
-        | path_formula_or           { query = Condition_ptr($1); } /* This one is not actually allowed in CTL* */
+control : CONTROL COLON query { query = std::make_shared<ControlCondition>(Condition_ptr($3)); }
+        | query { query = Condition_ptr($1); }
+        ;
+
+query	: state_formula	            { $$ = $1; }
 		;
 
 state_formula : state_formula OR state_formula_and		{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
