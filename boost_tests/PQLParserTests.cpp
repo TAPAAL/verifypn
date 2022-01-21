@@ -13,13 +13,13 @@ BOOST_AUTO_TEST_CASE(fireable_condition) {
 
     auto actual = ParseQuery(query, _);
 
-    std::shared_ptr<AndCondition> andCondition;
-    BOOST_REQUIRE(andCondition = std::dynamic_pointer_cast<AndCondition>(actual));
+    std::shared_ptr<OrCondition> orCondition;
+    BOOST_REQUIRE(orCondition = std::dynamic_pointer_cast<OrCondition>(actual));
 
     std::shared_ptr<FireableCondition> fireable1;
     std::shared_ptr<FireableCondition> fireable2;
-    BOOST_TEST(fireable1 = std::dynamic_pointer_cast<FireableCondition>((*andCondition)[0]));
-    BOOST_TEST(fireable2 = std::dynamic_pointer_cast<FireableCondition>((*andCondition)[1]));
+    BOOST_TEST(fireable1 = std::dynamic_pointer_cast<FireableCondition>((*orCondition)[0]));
+    BOOST_TEST(fireable2 = std::dynamic_pointer_cast<FireableCondition>((*orCondition)[1]));
 
     BOOST_TEST(fireable1->getName() == "t1");
     BOOST_TEST(fireable2->getName() == "t2");
