@@ -1,12 +1,12 @@
 #define BOOST_TEST_MODULE PQLParserTests
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine::PQL;
 
-BOOST_AUTO_TEST_CASE(fireable_condition) {
+BOOST_AUTO_TEST_CASE(double_fireable_condition) {
     std::string query = R"(is-fireable("t1","t2"))";
     std::vector<std::string> _;
 
@@ -26,7 +26,6 @@ BOOST_AUTO_TEST_CASE(fireable_condition) {
 
 BOOST_AUTO_TEST_CASE(or_condition) {
     std::string query = R"(true || false)";
-    std::vector<std::string> _;
 
     auto actual = ParseQuery(query);
 
@@ -39,6 +38,9 @@ BOOST_AUTO_TEST_CASE(or_condition) {
     BOOST_REQUIRE(b1->value);
     BOOST_REQUIRE(!b2->value);
 }
+
+BOOST_AUTO_TEST_CASE(fireable_condition) {
+    std::string query = R"(is-fireable("t1"))";
 
     auto actual = ParseQuery(query);
 
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(A_not_F_deadlock_or_E_G_deadlock) {
     std::shared_ptr<DeadlockCondition> deadlockCondition2;
     BOOST_TEST(deadlockCondition2 = std::dynamic_pointer_cast<DeadlockCondition>((*gCondition)[0]));
 }
-
+BOOST_AUTO_TEST_CASE(control_condition) {
     auto query = R"(control: A G ("p0" <= 4))";
     std::vector<std::string> _;
 
