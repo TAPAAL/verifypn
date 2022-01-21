@@ -45,6 +45,7 @@ namespace PetriEngine {
                     }
                     if(fullyContained){
                         _equivalenceClasses.erase(_equivalenceClasses.begin() + i);
+                        break;
                     }
                 } 
             }

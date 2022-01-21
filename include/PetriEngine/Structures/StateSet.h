@@ -1,16 +1,16 @@
 /* VerifyPN - TAPAAL Petri Net Engine
  * Copyright (C) 2016  Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -22,13 +22,13 @@
 #include <iostream>
 #include "State.h"
 #include "AlignedEncoder.h"
-#include "binarywrapper.h"
-#include "../errorcodes.h"
+#include "utils/structures/binarywrapper.h"
+#include "utils/errors.h"
 
 
 namespace PetriEngine {
     namespace Structures {
-        
+
         class StateSetInterface
         {
         public:
@@ -42,22 +42,28 @@ namespace PetriEngine {
                 _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
                 _sp = binarywrapper_t(sizeof(uint32_t) * _nplaces * 8);
             }
-            
+
             virtual ~StateSetInterface()
             {
                 _sp.release();
             }
-            
+
+            virtual std::pair<bool, size_t> add(const State* state) { return add(*state); };
+
             virtual std::pair<bool, size_t> add(const State& state) = 0;
-            
+
+            virtual void decode(State* state, size_t id) { decode(*state, id); }
+
             virtual void decode(State& state, size_t id) = 0;
+
+            virtual std::pair<bool, size_t> lookup(State* state) { return lookup(*state); };
 
             virtual std::pair<bool, size_t> lookup(State &state) = 0;
 
             const PetriNet& net() { return _net;}
-            
+
             virtual void setHistory(size_t id, size_t transition) = 0;
-            
+
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) = 0;
 
         protected:
@@ -68,7 +74,7 @@ namespace PetriEngine {
             std::vector<uint32_t> _maxPlaceBound;
             AlignedEncoder _encoder;
             const PetriNet& _net;
-            binarywrapper_t _sp;     
+            binarywrapper_t _sp;
 #ifdef DEBUG
             std::vector<uint32_t*> _dbg;
 #endif
@@ -81,22 +87,22 @@ namespace PetriEngine {
 #ifdef DEBUG
                     assert(memcmp(state.marking(), _dbg[id], sizeof(uint32_t)*_net.numberOfPlaces()) == 0);
 #endif
-            }             
-            
+            }
+
             template<typename T>
             std::pair<bool, size_t> _add(const State& state, T& _trie) {
                 _discovered++;
-                
+
 #ifdef DEBUG
                 if(_discovered % 1000000 == 0) std::cout << "Found number " << _discovered << std::endl;
 #endif
-                
+
                 MarkVal sum = 0;
                 bool allsame = true;
                 uint32_t val = 0;
                 uint32_t active = 0;
                 uint32_t last = 0;
-                markingStats(state.marking(), sum, allsame, val, active, last);               
+                markingStats(state.marking(), sum, allsame, val, active, last);
 
                 if (_maxTokens < sum)
                     _maxTokens = sum;
@@ -104,7 +110,7 @@ namespace PetriEngine {
                 //Check that we're within k-bound
                 if (_kbound != 0 && sum > _kbound)
                     return std::pair<bool, size_t>(false, std::numeric_limits<size_t>::max());
-                    
+
                 unsigned char type = _encoder.getType(sum, active, allsame, val);
 
 
@@ -117,28 +123,28 @@ namespace PetriEngine {
                 binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w.raw(), w.size());
 
-                
+
                 if(!tit.first)
                 {
                     return std::pair<bool, size_t>(false, tit.second);
                 }
-                
+
 #ifdef DEBUG
                 _dbg.push_back(new uint32_t[_net.numberOfPlaces()]);
                 memcpy(_dbg.back(), state.marking(), _net.numberOfPlaces()*sizeof(uint32_t));
                 decode(state, _trie.size() - 1);
 #endif
-           
+
                 // update the max token bound for each place in the net (only for newly discovered markings)
-                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++) 
+                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
                 {
                     _maxPlaceBound[i] = std::max<MarkVal>( state.marking()[i],
                                                             _maxPlaceBound[i]);
                 }
 
-#ifdef DEBUG    
+#ifdef DEBUG
                 if(_trie.size() % 100000 == 0) std::cout << "Inserted " << _trie.size() << std::endl;
-#endif     
+#endif
                 return std::pair<bool, size_t>(true, tit.second);
             }
 
@@ -173,17 +179,17 @@ namespace PetriEngine {
             uint32_t maxTokens() const {
                 return _maxTokens;
             }
-            
+
             const std::vector<MarkVal>& maxPlaceBound() const {
                 return _maxPlaceBound;
             }
-            
+
         protected:
-            
+
             void markingStats(const uint32_t* marking, MarkVal& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
             {
                 uint32_t cnt = 0;
-                
+
                 for (uint32_t i = 0; i < _nplaces; i++)
                 {
                     uint32_t old = val;
@@ -199,21 +205,21 @@ namespace PetriEngine {
                 }
             }
         };
-        
+
 #define STATESET_BUCKETS 1000000
         class StateSet : public StateSetInterface {
         private:
             using wrapper_t = ptrie::binarywrapper_t;
             using ptrie_t = ptrie::set_stable<ptrie::uchar,17,128,4>;
-            
+
         public:
             using StateSetInterface::StateSetInterface;
-             
+
             virtual std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
-            
+
             virtual void decode(State& state, size_t id) override
             {
                 _decode(state, id, _trie);
@@ -227,46 +233,35 @@ namespace PetriEngine {
             virtual void setHistory(size_t id, size_t transition) override {}
 
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
-            { 
-                assert(false); 
-                return std::make_pair(0,0); 
+            {
+                assert(false);
+                return std::make_pair(0,0);
             }
 
         private:
             ptrie_t _trie;
         };
 
-        class TracableStateSet : public StateSetInterface
-        {
-        public:
-            struct traceable_t
-            {
-                ptrie::uint parent;
-                ptrie::uint transition = std::numeric_limits<ptrie::uint>::max();
-            };
-            
+        template<typename T>
+        class AnnotatedStateSet : public StateSetInterface {
         private:
-            using ptrie_t = ptrie::map<unsigned char,traceable_t>;
-            
+            using ptrie_t = ptrie::map<unsigned char, T>;
+
         public:
             using StateSetInterface::StateSetInterface;
 
             virtual std::pair<bool, size_t> add(const State& state) override
             {
-#ifdef DEBUG
-                size_t tmppar = _parent; // we might change this while debugging.
-#endif
-                auto res = _add(state, _trie);
-#ifdef DEBUG
-                _parent = tmppar;
-#endif
-                return res;
+                return _add(state, _trie);
             }
-            
+
             virtual void decode(State& state, size_t id) override
             {
-                _parent = id;
                 _decode(state, id, _trie);
+            }
+
+            T& get_data(size_t markingid){
+                return _trie.get_data(markingid);
             }
 
             virtual std::pair<bool, size_t> lookup(State& state) override
@@ -274,25 +269,53 @@ namespace PetriEngine {
                 return _lookup(state, _trie);
             }
 
+            virtual void setHistory(size_t id, size_t transition) override {}
+
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            {
+                assert(false);
+                return std::make_pair(0,0);
+            }
+
+        protected:
+            ptrie_t _trie;
+        };
+
+
+        struct traceable_t
+        {
+            ptrie::uint parent;
+            ptrie::uint transition;
+        };
+
+        class TracableStateSet : public AnnotatedStateSet<traceable_t>
+        {
+
+        public:
+            using AnnotatedStateSet<traceable_t>::AnnotatedStateSet;
+
+            virtual void decode(State& state, size_t id) override
+            {
+                _parent = id;
+                AnnotatedStateSet<traceable_t>::decode(state, id);
+            }
 
             virtual void setHistory(size_t id, size_t transition) override
             {
-                traceable_t& t = _trie.get_data(id);
+                traceable_t& t = get_data(id);
                 t.parent = _parent;
                 t.transition = transition;
             }
-            
+
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
-                traceable_t& t = _trie.get_data(markingid);
+                traceable_t& t = get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent, t.transition);
             }
 
         private:
-            ptrie_t _trie;
             size_t _parent = 0;
         };
-        
     }
 }
 

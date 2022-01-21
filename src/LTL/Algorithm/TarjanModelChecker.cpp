@@ -42,7 +42,10 @@ namespace LTL {
                     pop();
                     continue;
                 }
-                auto fired = this->successorGenerator->fired();
+#ifndef NDEBUG
+                auto fired =
+#endif
+                this->successorGenerator->fired();
 #ifndef NDEBUG
                 if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
                     std::cerr << "looping\n";

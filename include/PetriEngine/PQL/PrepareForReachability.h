@@ -25,7 +25,8 @@
 
 namespace PetriEngine::PQL {
 
-    Condition_ptr prepareForReachability(Condition_ptr condition);
+    Condition_ptr prepareForReachability(const Condition* condition);
+    Condition_ptr prepareForReachability(const Condition_ptr& condition);
 
     class PrepareForReachabilityVisitor : public Visitor {
 
@@ -47,6 +48,8 @@ namespace PetriEngine::PQL {
             _negated = prev_negated;
             return _return_value;
         }
+
+        void _accept(const ControlCondition *condition) override;
 
         void _accept(const EGCondition *condition) override;
 

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   Queue.h
  * Author: Peter G. Jensen
  *
@@ -20,67 +20,63 @@
 #include <random>
 
 #include "../PQL/PQL.h"
-#include "StateSet.h"
 
 namespace PetriEngine {
     namespace Structures {
         class Queue {
         public:
-            Queue(StateSetInterface* states, size_t s = 0);
+            Queue(size_t s = 0);
             virtual ~Queue();
-            virtual bool pop(Structures::State& state) = 0;
-            virtual void push(size_t id, PQL::DistanceContext&,
-                std::shared_ptr<PQL::Condition>& query) = 0;
-            size_t lastPopped()
-            {
-                return last;
-            }
-        protected:
-            StateSetInterface* _states;
-            size_t last = 0;
+            virtual size_t pop() = 0;
+
+            virtual void push(size_t id, PQL::DistanceContext* = nullptr,
+                const PQL::Condition* query = nullptr) = 0;
+            virtual bool empty() const = 0;
+            static constexpr size_t EMPTY = std::numeric_limits<size_t>::max();
         };
-        
+
         class BFSQueue : public Queue {
         public:
-            BFSQueue(StateSetInterface* states, size_t);
+            BFSQueue(size_t);
             virtual ~BFSQueue();
-            
-            virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, PQL::DistanceContext&,
-                std::shared_ptr<PQL::Condition>& query);
+
+            virtual size_t pop() override;
+            virtual void push(size_t id, PQL::DistanceContext*,
+                const PQL::Condition* query) override;
+            virtual bool empty() const override;
         private:
-            size_t _cnt;
-            size_t _nstates;
+            std::queue<size_t> _queue;
         };
-        
+
         class DFSQueue : public Queue {
         public:
-            DFSQueue(StateSetInterface* states, size_t);
+            DFSQueue(size_t);
             virtual ~DFSQueue();
-            
-            virtual bool pop(Structures::State& state);
-            bool top(Structures::State& state) const;
-            virtual void push(size_t id, PQL::DistanceContext&,
-                std::shared_ptr<PQL::Condition>& query);
+
+            virtual size_t pop();
+            //bool top(Structures::State& state) const;
+            virtual void push(size_t id, PQL::DistanceContext*,
+                const PQL::Condition* query);
+            virtual bool empty() const override;
         private:
             std::stack<uint32_t> _stack;
         };
-        
+
         class RDFSQueue : public Queue {
         public:
-            RDFSQueue(StateSetInterface* states, size_t seed);
+            RDFSQueue(size_t seed);
             virtual ~RDFSQueue();
-            
-            virtual bool pop(Structures::State& state);
-            bool top(Structures::State& state);
-            virtual void push(size_t id, PQL::DistanceContext&,
-                std::shared_ptr<PQL::Condition>& query);
+
+            virtual size_t pop();
+            virtual void push(size_t id, PQL::DistanceContext*,
+                const PQL::Condition* query);
+            virtual bool empty() const override;
         private:
             std::stack<uint32_t> _stack;
             std::vector<uint32_t> _cache;
             std::default_random_engine _rng;
         };
-        
+
         class HeuristicQueue : public Queue {
         public:
             struct weighted_t {
@@ -94,12 +90,13 @@ namespace PetriEngine {
                 }
             };
 
-            HeuristicQueue(StateSetInterface* states, size_t);
+            HeuristicQueue(size_t);
             virtual ~HeuristicQueue();
-            
-            virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, PQL::DistanceContext&,
-                std::shared_ptr<PQL::Condition>& query);
+
+            virtual size_t pop();
+            virtual void push(size_t id, PQL::DistanceContext*,
+                const PQL::Condition* query);
+            virtual bool empty() const override;
         private:
             std::priority_queue<weighted_t> _queue;
         };

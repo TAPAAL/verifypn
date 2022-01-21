@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,8 +32,9 @@ namespace PetriEngine {
     PetriNet::PetriNet(uint32_t trans, uint32_t invariants, uint32_t places)
     : _ninvariants(invariants), _ntransitions(trans), _nplaces(places),
             _transitions(_ntransitions+1),
-            _invariants(_ninvariants),            
-            _placeToPtrs(_nplaces+1) {
+            _invariants(_ninvariants),
+            _placeToPtrs(_nplaces+1),
+            _controllable(_ntransitions, true) {
 
         // to avoid special cases
         _transitions[_ntransitions].inputs = _ninvariants;
@@ -47,12 +48,12 @@ namespace PetriEngine {
         delete[] _initialMarking;
     }
 
-    int PetriNet::inArc(uint32_t place, uint32_t transition) const
+    uint32_t PetriNet::inArc(uint32_t place, uint32_t transition) const
     {
         assert(_nplaces > 0);
         assert(place < _nplaces);
         assert(transition < _ntransitions);
-        
+
         uint32_t imin = _transitions[transition].inputs;
         uint32_t imax = _transitions[transition].outputs;
         if(imin == imax)
@@ -60,7 +61,7 @@ namespace PetriEngine {
             // NO INPUT!
             return 0;
         }
-        
+
         for(;imin < imax; ++imin)
         {
             const Invariant& inv = _invariants[imin];
@@ -71,21 +72,21 @@ namespace PetriEngine {
         }
         return 0;
     }
-    int PetriNet::outArc(uint32_t transition, uint32_t place) const
+    uint32_t PetriNet::outArc(uint32_t transition, uint32_t place) const
     {
         assert(_nplaces > 0);
         assert(place < _nplaces);
         assert(transition < _ntransitions);
-        
+
         uint32_t imin = _transitions[transition].outputs;
         uint32_t imax = _transitions[transition+1].inputs;
         for(;imin < imax; ++imin)
         {
             if(_invariants[imin].place == place) return _invariants[imin].tokens;
         }
-        return 0;   
+        return 0;
     }
-    
+
     bool PetriNet::deadlocked(const MarkVal* m) const {
         //Check that we can take from the marking
         if(_nplaces == 0)
@@ -114,8 +115,8 @@ namespace PetriEngine {
                             break;
                         }
                     }
-                    
-                    if(allgood) 
+
+                    if(allgood)
                     {
                         return false;
                     }
@@ -124,7 +125,7 @@ namespace PetriEngine {
         }
         return true;
     }
-    
+
     std::pair<const Invariant*, const Invariant*> PetriNet::preset(uint32_t id) const
     {
         const TransPtr& transition = _transitions[id];
@@ -139,7 +140,7 @@ namespace PetriEngine {
         uint32_t last = _transitions[id+1].inputs;
         return std::make_pair(&_invariants[first], &_invariants[last]);
     }
-    
+
     bool PetriNet::fireable(const MarkVal *marking, int transitionIndex)
     {
         const TransPtr& transition = _transitions[transitionIndex];
@@ -164,7 +165,7 @@ namespace PetriEngine {
         std::copy(_initialMarking, _initialMarking+_nplaces, marking);
         return marking;
     }
-    
+
     void PetriNet::sort()
     {
         for(size_t i = 0; i < _ntransitions; ++i)
@@ -175,15 +176,15 @@ namespace PetriEngine {
             std::sort(&_invariants[t.outputs], &_invariants[t2.inputs], [](const auto& a, const auto& b) { return a.place < b.place; });
         }
     }
-    
+
     void PetriNet::toXML(std::ostream& out)
     {
         out << "<?xml version=\"1.0\"?>\n"
-            << "<pnml xmlns=\"http://www.pnml.org/version-2009/grammar/pnml\">\n" 
+            << "<pnml xmlns=\"http://www.pnml.org/version-2009/grammar/pnml\">\n"
             << "<net id=\"ClientsAndServers-PT-N0500P0\" type=\"http://www.pnml.org/version-2009/grammar/ptnet\">\n";
-        out << "<page id=\"page0\">\n" 
-            << "<name>\n" 
-            << "<text>DefaultPage</text>" 
+        out << "<page id=\"page0\">\n"
+            << "<name>\n"
+            << "<text>DefaultPage</text>"
             << "</name>";
 
         for(size_t i = 0; i < _nplaces; ++i)
@@ -204,6 +205,7 @@ namespace PetriEngine {
         {
             auto& transitionlocation = _transitionlocations[i];
             out << "<transition id=\"" << _transitionnames[i] << "\">\n"
+                << "<player><value>" << (_controllable[i] ? '0' : '1') << "</value></player>\n"
                 << "<name><text>" << _transitionnames[i] << "</text></name>\n";
             out << "<graphics><position x=\"" << std::get<0>(transitionlocation)
                 << "\" y=\"" << std::get<1>(transitionlocation) << "\"/></graphics>\n";
@@ -222,12 +224,12 @@ namespace PetriEngine {
                     << "\" type=\""
                     << (pre.first->inhibitor ? "inhibitor" : "normal")
                     << "\">\n";
-                
+
                 if(pre.first->tokens > 1)
                 {
-                    out << "<inscription><text>" << pre.first->tokens << "</text></inscription>\n";                    
+                    out << "<inscription><text>" << pre.first->tokens << "</text></inscription>\n";
                 }
-                
+
                 out << "</arc>\n";
             }
 
@@ -237,16 +239,16 @@ namespace PetriEngine {
                 out << "<arc id=\"" << (id++) << "\" source=\""
                     << _transitionnames[t] << "\" target=\""
                     << _placenames[post.first->place] << "\">\n";
-                
+
                 if(post.first->tokens > 1)
                 {
-                    out << "<inscription><text>" << post.first->tokens << "</text></inscription>\n";                    
+                    out << "<inscription><text>" << post.first->tokens << "</text></inscription>\n";
                 }
-                
+
                 out << "</arc>\n";
             }
         }
         out << "</page></net>\n</pnml>";
     }
-    
+
 } // PetriEngine

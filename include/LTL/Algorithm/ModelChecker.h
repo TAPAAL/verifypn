@@ -86,11 +86,11 @@ namespace LTL {
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
-        const PetriEngine::Reducer* _reducer;
-        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> successorGenerator;
 
         const PetriEngine::PetriNet *net;
         PetriEngine::PQL::Condition_ptr formula;
+        const PetriEngine::Reducer* _reducer;
+        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> successorGenerator;
         //const Structures::BuchiAutomaton *_aut;
         TraceLevel traceLevel;
         LTL::Structures::ProductStateFactory _factory;

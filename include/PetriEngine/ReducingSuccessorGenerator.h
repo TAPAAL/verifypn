@@ -3,7 +3,7 @@
 
 #include "SuccessorGenerator.h"
 #include "Structures/State.h"
-#include "Structures/light_deque.h"
+#include "utils/structures/light_deque.h"
 #include "PQL/PQL.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include <memory>
