@@ -1,10 +1,10 @@
+#define BOOST_TEST_MODULE PQLParserTests
+
 #include <boost/test/unit_test.hpp>
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine::PQL;
-
-BOOST_AUTO_TEST_SUITE(PQLParserTests)
 
 BOOST_AUTO_TEST_CASE(fireable_condition) {
     std::string query = R"(is-fireable("t1","t2"))";
@@ -158,5 +158,3 @@ BOOST_AUTO_TEST_CASE(control_AG) {
     BOOST_TEST(identifierExpr->name() == "p0");
     BOOST_TEST(literalExpr->value() == 4);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

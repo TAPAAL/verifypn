@@ -1,3 +1,5 @@
+#define BOOST_TEST_MODULE push_negation
+
 #include <boost/test/unit_test.hpp>
 #include <PetriEngine/PQL/Simplifier.h>
 #include "PetriEngine/PQL/Expressions.h"
@@ -5,9 +7,6 @@
 
 using namespace PetriEngine::PQL;
 
-using namespace boost::unit_test;
-
-BOOST_AUTO_TEST_SUITE(push_negation)
 
 BOOST_AUTO_TEST_CASE(not_less_than_literal_and_identifier) {
     auto identifier = std::make_shared<IdentifierExpr>("a");
@@ -63,5 +62,3 @@ BOOST_AUTO_TEST_CASE(not_less_than_literal_and_identifier) {
 //            )
 //    ));
 //}
-
-BOOST_AUTO_TEST_SUITE_END()
