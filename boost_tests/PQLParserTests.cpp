@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_CASE(fireable_condition) {
     std::string query = R"(is-fireable("t1","t2"))";
     std::vector<std::string> _;
 
-    auto actual = ParseQuery(query, _);
+    auto actual = ParseQuery(query);
 
     std::shared_ptr<OrCondition> orCondition;
     BOOST_REQUIRE(orCondition = std::dynamic_pointer_cast<OrCondition>(actual));
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(or_condition) {
     std::string query = R"(true || false)";
     std::vector<std::string> _;
 
-    auto actual = ParseQuery(query, _);
+    auto actual = ParseQuery(query);
 
     std::shared_ptr<OrCondition> orCondition;
     BOOST_REQUIRE(orCondition = std::dynamic_pointer_cast<OrCondition>(actual));
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(question_mark_fireable) {
     std::vector<std::string> _;
     //auto expected = std::make_shared<AndCondition>(std::make_shared<FireableCondition>("t1"), std::make_shared<FireableCondition>("t2"));
 
-    auto actual = ParseQuery(query, _);
+    auto actual = ParseQuery(query);
 
     std::shared_ptr<FireableCondition> fireable;
     BOOST_TEST(fireable = std::dynamic_pointer_cast<FireableCondition>(actual));
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(E_F_deadlock) {
         std::vector<std::string> _;
         //auto expected = std::make_shared<AndCondition>(std::make_shared<FireableCondition>("t1"), std::make_shared<FireableCondition>("t2"));
 
-        auto actual = ParseQuery(query, _);
+        auto actual = ParseQuery(query);
 
         std::shared_ptr<ECondition> eCondition;
         BOOST_REQUIRE(eCondition = std::dynamic_pointer_cast<ECondition>(actual));
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(A_G_compare) {
         std::vector<std::string> _;
         //auto expected = std::make_shared<AndCondition>(std::make_shared<FireableCondition>("t1"), std::make_shared<FireableCondition>("t2"));
 
-        auto actual = ParseQuery(query, _);
+        auto actual = ParseQuery(query);
 
         std::shared_ptr<ACondition> aCondition;
         BOOST_REQUIRE(aCondition = std::dynamic_pointer_cast<ACondition>(actual));
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(A_not_F_deadlock_or_E_G_deadlock) {
     std::string query = R"(A !F (deadlock) || E G (deadlock) )";
     std::vector<std::string> _;
 
-    auto actual = ParseQuery(query, _);
+    auto actual = ParseQuery(query);
 
     // Left hand side of OR
     std::shared_ptr<ACondition> aCondition;
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(control_AG) {
     auto query = R"(control: A G ("p0" <= 4))";
     std::vector<std::string> _;
 
-    auto actual = ParseQuery(query, _);
+    auto actual = ParseQuery(query);
 
     std::shared_ptr<ControlCondition> cCondition;
     BOOST_REQUIRE(cCondition = std::dynamic_pointer_cast<ControlCondition>(actual));

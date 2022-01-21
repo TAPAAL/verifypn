@@ -78,7 +78,7 @@ letter        [a-zA-Z_]
 
 %%
 namespace PetriEngine{ namespace PQL {
-std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vector<std::string>& placenameforbound) {
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
