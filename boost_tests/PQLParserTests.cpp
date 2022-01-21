@@ -40,11 +40,6 @@ BOOST_AUTO_TEST_CASE(or_condition) {
     BOOST_REQUIRE(!b2->value);
 }
 
-BOOST_AUTO_TEST_CASE(question_mark_fireable) {
-    std::string query = R"("t1"?)";
-    std::vector<std::string> _;
-    //auto expected = std::make_shared<AndCondition>(std::make_shared<FireableCondition>("t1"), std::make_shared<FireableCondition>("t2"));
-
     auto actual = ParseQuery(query);
 
     std::shared_ptr<FireableCondition> fireable;
@@ -132,7 +127,6 @@ BOOST_AUTO_TEST_CASE(A_not_F_deadlock_or_E_G_deadlock) {
     BOOST_TEST(deadlockCondition2 = std::dynamic_pointer_cast<DeadlockCondition>((*gCondition)[0]));
 }
 
-BOOST_AUTO_TEST_CASE(control_AG) {
     auto query = R"(control: A G ("p0" <= 4))";
     std::vector<std::string> _;
 

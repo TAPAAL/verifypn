@@ -12,7 +12,7 @@ extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
 
-%define api.prefix {pqlq}
+%name-prefix "pqlq"
 %expect 2 // and + or, which is ok.
 
 /* Possible data representation */
@@ -26,6 +26,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 /* Terminal type definition */
 %token <string> ID INT
+
 %token <token> A E X F G U EF EG AF AG EX AX CONTROL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
