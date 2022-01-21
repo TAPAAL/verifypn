@@ -36,6 +36,12 @@ letter        [a-zA-Z_]
 "OR"            {return TOKEN(OR);}
 "not"           {return TOKEN(NOT);}
 "NOT"           {return TOKEN(NOT);}
+"EF"						{return TOKEN(EF);}
+"EG"						{return TOKEN(EG);}
+"AF"						{return TOKEN(AF);}
+"AG"						{return TOKEN(AG);}
+"EX"						{return TOKEN(EX);}
+"AX"						{return TOKEN(AX);}
 "A"						{return TOKEN(A);}
 "E"						{return TOKEN(E);}
 "X"						{return TOKEN(X);}

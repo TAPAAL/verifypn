@@ -12,8 +12,8 @@ extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
 
-%name-prefix "pqlq"
-%expect 1
+%define api.prefix {pqlq}
+%expect 2 // and + or, which is ok.
 
 /* Possible data representation */
 %union {
@@ -26,7 +26,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 /* Terminal type definition */
 %token <string> ID INT
-%token <token> A E X F G U CONTROL
+%token <token> A E X F G U EF EG AF AG EX AX CONTROL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
@@ -36,42 +36,49 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %token <token> TOKENCOUNT QUESTIONMARK FIREABLE
 
 /* Terminal associativity */
-%left AND OR
+%left AND OR  EF EG AF AG EX AX F G A E
 %right NOT
 
 /* Nonterminal type definition */
 %type <expr> expr term factor
-%type <cond> path_formula path_formula_or path_formula_and path_formula_quantifier path_formula_until path_formula_paren
+%type <cond> path_formula state_formula_or
 %type <cond> state_formula state_formula_and state_formula_quantifier atomic_formula compare query
 %type <ids> id_list
 
 /* Operator precedence, more possibly coming */
 %right MINUS
 
-%start control
+%start query
 
 %%
 
-control : CONTROL COLON query { query = std::make_shared<ControlCondition>(Condition_ptr($3)); }
-        | query { query = Condition_ptr($1); }
+query : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition(Condition_ptr($3))); }
+        | state_formula { query = Condition_ptr($1); }
         ;
 
-query	: state_formula	            { $$ = $1; }
-		;
+state_formula : LPAREN state_formula RPAREN		{ $$ = $2; }
+              | state_formula_or { $$ = $1; }
 
-state_formula : state_formula OR state_formula_and		{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
-              | state_formula_and                       { $$ = $1; }
-              ;
+state_formula_or : state_formula_or OR state_formula_or	   { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
+                 | state_formula_and                       { $$ = $1; }
+                 ;
 
-state_formula_and : state_formula_and AND state_formula_quantifier	    { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
-                  | state_formula_quantifier            { $$ = $1; }
+state_formula_and : state_formula_and AND state_formula_and { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
+                  | state_formula_quantifier                { $$ = $1; }
                   ;
 
-state_formula_quantifier : A path_formula_quantifier        { $$ = new ACondition(Condition_ptr($2)); }
-                         | E path_formula_quantifier        { $$ = new ECondition(Condition_ptr($2)); }
-                         | NOT state_formula_quantifier	    { $$ = new NotCondition(Condition_ptr($2)); }
-                         | LPAREN state_formula RPAREN		{ $$ = $2; }
-                         | atomic_formula                   { $$ = $1; }
+
+state_formula_quantifier : A state_formula   { $$ = new ACondition(Condition_ptr($2)); }
+                         | E state_formula   { $$ = new ECondition(Condition_ptr($2)); }
+                         | EF state_formula  { $$ = new ECondition(std::make_shared<FCondition>(Condition_ptr($2))); }
+                         | EG state_formula  { $$ = new ECondition(std::make_shared<GCondition>(Condition_ptr($2))); }
+                         | AF state_formula  { $$ = new ACondition(std::make_shared<FCondition>(Condition_ptr($2))); }
+                         | AG state_formula  { $$ = new ACondition(std::make_shared<GCondition>(Condition_ptr($2))); }
+                         | EX state_formula  { $$ = new ECondition(std::make_shared<XCondition>(Condition_ptr($2))); }
+                         | AX state_formula  { $$ = new ACondition(std::make_shared<XCondition>(Condition_ptr($2))); }
+                         | NOT state_formula { $$ = new NotCondition(Condition_ptr($2)); }
+                         | atomic_formula    { $$ = $1; }
+                         | path_formula
                          ;
 
 atomic_formula : TRUE				            	{ $$ = new BooleanCondition(true);}
@@ -80,31 +87,12 @@ atomic_formula : TRUE				            	{ $$ = new BooleanCondition(true);}
                | compare				            { $$ = $1; }
                ;
 
-path_formula : state_formula                    { $$ = $1; }
-             | path_formula_or                  { $$ = $1; }
+path_formula : X state_formula                    { $$ = new XCondition(Condition_ptr($2)); }
+             | F state_formula                    { $$ = new FCondition(Condition_ptr($2)); }
+             | G state_formula                    { $$ = new GCondition(Condition_ptr($2)); }
+             | LPAREN state_formula RPAREN U LPAREN state_formula RPAREN
+               { $$ = new UntilCondition(Condition_ptr($2), Condition_ptr($6)); };
              ;
-
-path_formula_or : path_formula_or OR path_formula_and    { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
-                | path_formula_and                       { $$ = $1; }
-                ;
-
-path_formula_and : path_formula_and AND path_formula_quantifier	{ $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
-                 | path_formula_quantifier          { $$ = $1; }
-                 ;
-
-path_formula_quantifier : X path_formula_quantifier                    { $$ = new XCondition(Condition_ptr($2)); }
-                        | F path_formula_quantifier                    { $$ = new FCondition(Condition_ptr($2)); }
-                        | G path_formula_quantifier                    { $$ = new GCondition(Condition_ptr($2)); }
-                        | NOT path_formula_quantifier		{ $$ = new NotCondition(Condition_ptr($2)); }
-                        | path_formula_until                { $$ = $1; }
-                        ;
-
-path_formula_until : path_formula_paren U path_formula_paren      { $$ = new UntilCondition(Condition_ptr($1), Condition_ptr($3)); }
-                   | path_formula_paren                           { $$ = $1; }
-                   ;
-
-path_formula_paren : LPAREN path_formula RPAREN           { $$ = $2; }
-                   ;
 
 compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		| expr NEQUAL expr			{ $$ = new NotEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
