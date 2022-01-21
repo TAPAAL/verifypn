@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<property-set xmlns="http://mcc.lip6.fr/">
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-00</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>Gab1</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-01</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarPg</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-02</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarPgStarP3P2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-03</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStar</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-04</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarP3kStarP3P2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-05</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>GStarP3</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-06</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>Pip3</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-07</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarPgStar</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-08</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>PtP2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-09</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>Akt</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-10</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarPgStarP2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-11</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarPgStar</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-12</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarP3kStarP3P2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-13</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>PtP3P2</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-14</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>KdStarGStarP3kStar</place>
+      </place-bound>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-01-UpperBounds-15</id>
+    <description>Automatically generated</description>
+    <formula>
+      <place-bound>
+        <place>PtP3</place>
+      </place-bound>
+    </formula>
+  </property>
+</property-set>

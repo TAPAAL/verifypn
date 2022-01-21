@@ -8,7 +8,10 @@ bison_target(pql_parser "${CMAKE_CURRENT_SOURCE_DIR}/PQLQueryParser.y"
 
 add_flex_bison_dependency(pql_lexer pql_parser)
 
-add_library(PQL ${BISON_pql_parser_OUTPUTS} ${FLEX_pql_lexer_OUTPUTS} Expressions.cpp PQL.cpp Contexts.cpp QueryPrinter.cpp CTLVisitor.cpp XMLPrinter.cpp BinaryPrinter.cpp Simplifier.cpp PushNegation.cpp FormulaSize.cpp PrepareForReachability.cpp PredicateCheckers.cpp)
+add_library(PQL ${BISON_pql_parser_OUTPUTS} ${FLEX_pql_lexer_OUTPUTS} Expressions.cpp PQL.cpp
+ Contexts.cpp QueryPrinter.cpp CTLVisitor.cpp XMLPrinter.cpp BinaryPrinter.cpp
+    Simplifier.cpp PushNegation.cpp FormulaSize.cpp PrepareForReachability.cpp PredicateCheckers.cpp
+    PlaceUseVisitor.cpp)
 
 add_dependencies(PQL glpk-ext)
 target_link_libraries(PQL Simplification Reachability glpk PetriEngine)

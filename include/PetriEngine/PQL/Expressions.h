@@ -337,11 +337,20 @@ namespace PetriEngine {
 
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
-            virtual std::string op() const = 0;
-        private:
-
         protected:
             Condition_ptr _cond;
+        };
+
+        // technically quantifies over strategies
+        class ControlCondition : public SimpleQuantifierCondition
+        {
+            using SimpleQuantifierCondition::SimpleQuantifierCondition;
+            Quantifier getQuantifier() const override { return Quantifier::BControl; }
+            Path getPath() const override             { return Path::PControl; }
+            Result evaluate(const EvaluationContext& context) override;
+            uint32_t distance(DistanceContext& context) const override;
+            void visit(Visitor&) const override;
+            void visit(MutatingVisitor&) override;
         };
 
         class ECondition : public SimpleQuantifierCondition {
@@ -359,8 +368,6 @@ namespace PetriEngine {
             }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
       class ACondition : public SimpleQuantifierCondition {
@@ -378,9 +385,6 @@ namespace PetriEngine {
 
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-
-      private:
-            std::string op() const override;
         };
 
       class GCondition : public SimpleQuantifierCondition {
@@ -406,8 +410,6 @@ namespace PetriEngine {
           void visit(Visitor &) const override;
           void visit(MutatingVisitor &) override;
 
-      private:
-          std::string op() const override;
       };
 
       class FCondition : public SimpleQuantifierCondition {
@@ -425,8 +427,6 @@ namespace PetriEngine {
           Result evalAndSet(const EvaluationContext &context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class XCondition : public SimpleQuantifierCondition {
@@ -441,8 +441,6 @@ namespace PetriEngine {
             }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class EXCondition : public SimpleQuantifierCondition {
@@ -454,8 +452,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class EGCondition : public SimpleQuantifierCondition {
@@ -470,8 +466,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class EFCondition : public SimpleQuantifierCondition {
@@ -486,8 +480,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class AXCondition : public SimpleQuantifierCondition {
@@ -499,8 +491,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class AGCondition : public SimpleQuantifierCondition {
@@ -514,8 +504,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class AFCondition : public SimpleQuantifierCondition {
@@ -529,8 +517,6 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
-        private:
-            std::string op() const override;
         };
 
         class UntilCondition : public QuantifierCondition {
@@ -556,9 +542,6 @@ namespace PetriEngine {
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
-            virtual std::string op() const;
-        private:
-
         protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
@@ -572,9 +555,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-
-        private:
-            std::string op() const override;
         };
 
         class AUCondition : public UntilCondition {
@@ -584,8 +564,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
-        private:
-            std::string op() const override;
         };
 
         /******************** CONDITIONS ********************/
@@ -649,7 +627,6 @@ namespace PetriEngine {
             bool empty() const { return _conds.size() == 0; }
             bool singular() const { return _conds.size() == 1; }
             size_t size() const { return _conds.size(); }
-            virtual std::string op() const = 0;
 
         protected:
             LogicalCondition() {};
@@ -677,9 +654,6 @@ namespace PetriEngine {
             void visit(MutatingVisitor&) override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             uint32_t distance(DistanceContext& context) const override;
-        private:
-            //int logicalOp() const;
-            std::string op() const override;
         };
 
         /* Disjunctive or conditon */
@@ -699,16 +673,13 @@ namespace PetriEngine {
 
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             uint32_t distance(DistanceContext& context) const override;
-        private:
-            //int logicalOp() const;
-            std::string op() const override;
         };
 
         class CompareConjunction : public Condition
         {
         public:
             struct cons_t {
-                int32_t _place  = -1;
+                uint32_t _place = std::numeric_limits<uint32_t>::max();
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
                 std::string _name;

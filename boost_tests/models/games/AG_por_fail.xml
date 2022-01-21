@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<property-set xmlns="http://mcc.lip6.fr/">
+    <property>
+        <id>Angiogenesis-PT-01-ReachabilityCardinality-00</id>
+        <description>Automatically generated</description>
+        <formula>
+            <control>
+                <all-paths>
+                    <globally>
+                        <conjunction>
+                            <integer-le>
+                                <tokens-count>
+                                    <place>UPDATE_P_BATCHES</place>
+                                </tokens-count>
+                                <integer-constant>0</integer-constant>
+                            </integer-le>
+                            <disjunction>
+                                <negation>
+                                    <deadlock/>
+                                </negation>
+                                <integer-lt>
+                                    <tokens-count>
+                                        <place>TOPOLOGY_UV_3</place>
+                                    </tokens-count>
+                                    <integer-constant>2</integer-constant>
+                                </integer-lt>
+                                <conjunction>
+                                    <integer-eq>
+                                        <tokens-count>
+                                            <place>UPDATE_P_QUEUEING</place>
+                                        </tokens-count>
+                                        <integer-constant>1</integer-constant>
+                                    </integer-eq>
+                                    <integer-eq>
+                                        <tokens-count>
+                                            <place>SWITCH_P_1_FINAL</place>
+                                        </tokens-count>
+                                        <integer-constant>1</integer-constant>
+                                    </integer-eq>
+                                    <integer-eq>
+                                        <tokens-count>
+                                            <place>SWITCH_P_3_FINAL</place>
+                                        </tokens-count>
+                                        <integer-constant>1</integer-constant>
+                                    </integer-eq>
+                                </conjunction>
+                            </disjunction>
+                        </conjunction>
+                    </globally>
+                </all-paths>
+            </control>
+        </formula>
+    </property>
+</property-set>
+
+

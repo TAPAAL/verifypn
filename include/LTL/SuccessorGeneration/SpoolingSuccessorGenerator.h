@@ -94,7 +94,10 @@ namespace LTL {
             PetriEngine::SuccessorGenerator::prepare(state);
             if (sucinfo.successors == nullptr) {
                 uint32_t tid;
-                bool res = _spooler->prepare(state);
+#ifndef NDEBUG
+                bool res = 
+#endif
+                _spooler->prepare(state);
                 //assert(!res/* || !_net.deadlocked(state->marking())*/);
                 if (!_heuristic || !_heuristic->has_heuristic(*state)) {
                     uint32_t nsuc = 0;

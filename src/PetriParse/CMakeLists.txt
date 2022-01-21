@@ -1,4 +1,5 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_library(PetriParse ${HEADER_FILES} PNMLParser.cpp QueryBinaryParser.cpp QueryXMLParser.cpp)
-add_dependencies(PetriParse PetriEngine rapidxml-ext)
+add_library(PetriParse ${HEADER_FILES} AbstractPetriNetBuilder.cpp PNMLParser.cpp QueryBinaryParser.cpp QueryXMLParser.cpp)
+target_link_libraries(PetriParse Colored PetriEngine)
+add_dependencies(PetriParse rapidxml-ext)
