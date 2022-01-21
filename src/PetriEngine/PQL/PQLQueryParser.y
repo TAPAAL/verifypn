@@ -106,11 +106,15 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
 		        $$ = nullptr;
 		        {
 		            auto ids = $3;
-		            std::vector<Condition_ptr> a;
-                    for (auto& name : *ids) {
-                        a.push_back(std::make_shared<FireableCondition>(name));
-                    }
-		            $$ = new OrCondition(a);
+		            if ((*ids).size() == 1) {
+		                $$ = new FireableCondition((*ids)[0]);
+		            } else {
+		                std::vector<Condition_ptr> a;
+                        for (auto& name : *ids) {
+                            a.push_back(std::make_shared<FireableCondition>(name));
+                        }
+                        $$ = new OrCondition(a);
+		            }
 		        }
 		    }
 		| ID QUESTIONMARK           { $$ = new FireableCondition(*$1); }
