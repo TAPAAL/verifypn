@@ -41,8 +41,7 @@ namespace LTL {
                                            return ap == std::string_view(formula.ap_name());
                                        });
                 if (it == std::end(apinfo)) {
-                    std::cerr << "Error: Expected to find " << formula.ap_name() << " in APInfo.\n";
-                    exit(EXIT_FAILURE);
+                    throw base_error("Error: Expected to find ", formula.ap_name(), " in APInfo.\n");
                 } else {
                     return it->expression;
                 }
@@ -72,74 +71,53 @@ namespace LTL {
                 return std::make_shared<AndCondition>(conds);
             }
             case spot::op::R:
-                std::cerr << "Unimplemented: R" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: R");
             case spot::op::W:
-                std::cerr << "Unimplemented: W" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: W");
             case spot::op::M:
-                std::cerr << "Unimplemented: M" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: M");
             case spot::op::eword:
-                std::cerr << "Unimplemented: eword" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: eword");
             case spot::op::Closure:
-                std::cerr << "Unimplemented: Closure" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Closure");
             case spot::op::NegClosure:
-                std::cerr << "Unimplemented: NegClosure" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: NegClosure");
             case spot::op::NegClosureMarked:
-                std::cerr << "Unimplemented: NegClosureMarked" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: NegClosureMarked");
             case spot::op::Xor:
-                std::cerr << "Unimplemented: Xor" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Xor");
             case spot::op::Implies:
-                std::cerr << "Unimplemented: Implies" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Implies");
             case spot::op::Equiv:
-                std::cerr << "Unimplemented: Equiv" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Equiv");
             case spot::op::EConcat:
-                std::cerr << "Unimplemented: EConcat" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: EConcat");
             case spot::op::EConcatMarked:
-                std::cerr << "Unimplemented: EConcatMarked" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: EConcatMarked");
             case spot::op::UConcat:
-                std::cerr << "Unimplemented: UConcat" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: UConcat");
             case spot::op::OrRat:
-                std::cerr << "Unimplemented: OrRat" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: OrRat");
             case spot::op::AndRat:
-                std::cerr << "Unimplemented: AndRat" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: AndRat");
             case spot::op::AndNLM:
-                std::cerr << "Unimplemented: AndNLM" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: AndNLM");
             case spot::op::Concat:
-                std::cerr << "Unimplemented: Concat" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Concat");
             case spot::op::Fusion:
-                std::cerr << "Unimplemented: Fusion" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Fusion");
 
             case spot::op::Star:
-                std::cerr << "Unimplemented: Star" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: Star");
 
             case spot::op::FStar:
-                std::cerr << "Unimplemented: FStar" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: FStar");
             case spot::op::first_match:
-                std::cerr << "Unimplemented: first_match" << std::endl;
-                exit(0);
+                throw base_error("Unimplemented: first_match");
             default:
-                std::cerr << "Found unrecognized op in formula ";
-                formula.dump(std::cerr) << std::endl;
-                exit(0);
+                std::stringstream ss;
+                formula.dump(ss);
+                throw base_error("Found unrecognized op in formula ", ss.str());
         }
     }
 

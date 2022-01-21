@@ -33,8 +33,7 @@ namespace LTL {
         bool prepare(const PetriEngine::Structures::State *marking) override
         {
             assert(false);
-            std::cerr << "Error: SafeAutStubbornSet is implemented only for product states\n";
-            exit(1);
+            throw base_error("Error: SafeAutStubbornSet is implemented only for product states");
             return false;
         }
 

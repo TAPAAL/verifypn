@@ -269,8 +269,7 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
             ctlStarQuery->visit(asCtl);
             ctlQueries.push_back(asCtl._ctl_query);
         } else {
-            std::cerr << "Error: A query could not be translated from CTL* to CTL." << std::endl;
-            exit(1);
+            throw base_error("Error: A query could not be translated from CTL* to CTL.");
         }
 
     }
@@ -284,8 +283,7 @@ std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlSt
         if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
-            std::cerr << "Error: a query could not be translated from CTL* to LTL." << std::endl;
-            exit(1);
+            throw base_error("Error: a query could not be translated from CTL* to LTL.");
         }
     }
     return ltlQueries;

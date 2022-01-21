@@ -57,32 +57,28 @@ namespace PetriEngine {
         if (root) {
             parseRoot(root);
         } else {
-            std::cerr << "Error getting root node." << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Error getting root node.");
         }
 
     }
 
     void TraceReplay::parseRoot(const rapidxml::xml_node<> *pNode) {
         if (std::strcmp(pNode->name(), "trace") != 0) {
-            std::cerr << "Error: Expected trace node. Got: " << pNode->name() << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Error: Expected trace node. Got: ", pNode->name());
         }
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
             if (std::strcmp(it->name(), "loop") == 0) loop_idx = trace.size();
             else if (std::strcmp(it->name(), "transition") == 0 || std::strcmp(it->name(), "deadlock") == 0) {
                 trace.push_back(parseTransition(it));
             } else {
-                std::cerr << "Error: Expected transition or loop node. Got: " << it->name() << std::endl;
                 assert(false);
-                exit(1);
+                throw base_error("Error: Expected transition or loop node. Got: ", it->name());
             }
         }
         if (loop_idx == std::numeric_limits<size_t>::max() && options.logic == TemporalLogic::LTL) {
-            std::cerr << "Error: Missing <loop/> statement in trace\n";
-            exit(1);
+            throw base_error("Error: Missing <loop/> statement in trace");
         }
     }
 
@@ -102,9 +98,8 @@ namespace PetriEngine {
             id = DEADLOCK_TRANS;
         }
         if (id.empty()) {
-            std::cerr << "Error: Transition has no id attribute" << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Error: Transition has no id attribute");
         }
 
         Transition transition(id, buchi);
@@ -167,9 +162,8 @@ namespace PetriEngine {
             successorGenerator.prepare(&state);
             auto it = transitions.find(transition.id);
             if (it == std::end(transitions)) {
-                std::cerr << "Unrecognized transition name " << transition.id << std::endl;
                 assert(false);
-                exit(1);
+                throw base_error("Unrecognized transition name ", transition.id);
             }
             int tid = it->second;
 

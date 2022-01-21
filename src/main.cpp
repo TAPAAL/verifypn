@@ -252,8 +252,7 @@ int main(int argc, const char** argv) {
 
     if (options.replay_trace) {
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
-            std::cerr << "Fatal error assigning indexes" << std::endl;
-            exit(1);
+            throw base_error("Fatal error assigning indexes");
         }
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
         PetriEngine::TraceReplay replay{replay_file, net.get(), options};
@@ -293,8 +292,7 @@ int main(int argc, const char** argv) {
 
         if (options.replay_trace) {
             if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
-                std::cerr << "Fatal error assigning indexes" << std::endl;
-                exit(1);
+                throw base_error("Fatal error assigning indexes");
             }
             std::ifstream replay_file(options.replay_file, std::ifstream::in);
             PetriEngine::TraceReplay replay{replay_file, net.get(), options};
