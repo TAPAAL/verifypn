@@ -45,6 +45,7 @@
  */
 
 #include "VerifyPN.h"
+#include "PetriEngine/PQL/Analyze.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -54,7 +55,7 @@ ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder&
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
     for (auto& q : queries) {
-        q->analyze(context);
+        PetriEngine::PQL::analyze(q, context);
 
         //Print errors if any
         if (context.errors().size() > 0) {

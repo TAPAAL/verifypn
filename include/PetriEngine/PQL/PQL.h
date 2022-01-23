@@ -104,12 +104,11 @@ namespace PetriEngine {
         public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
-            /** Perform context analysis */
-            virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate the expression given marking and assignment */
             [[nodiscard]] virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
             virtual void visit(Visitor& visitor) const = 0;
+            virtual void visit(MutatingVisitor& visitor) = 0;
             /** Expression type */
             [[nodiscard]] virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
@@ -196,8 +195,6 @@ namespace PetriEngine {
         public:
             /** Virtual destructor */
             virtual ~Condition();
-            /** Perform context analysis  */
-            virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
             virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
