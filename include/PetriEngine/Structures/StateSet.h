@@ -117,7 +117,7 @@ namespace PetriEngine {
                 size_t length = _encoder.encode(state.marking(), type);
                 if(length*8 >= std::numeric_limits<uint16_t>::max())
                 {
-                    throw base_error("error: Marking could not be encoded into less than 2^16 bytes, current limit of PTries");
+                    throw base_error("Marking could not be encoded into less than 2^16 bytes, current limit of PTries");
                 }
                 binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w.raw(), w.size());

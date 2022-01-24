@@ -11,12 +11,12 @@ namespace PetriEngine {
     {
         std::ifstream mfile(model, std::ifstream::in);
         if (!mfile) {
-            throw base_error("Error: Model file ", std::quoted(model), " could not be opened");
+            throw base_error("Model file ", std::quoted(model), " could not be opened");
         }
         try {
             parse_model(mfile);
         } catch(const base_error& err) {
-            throw base_error("Error: Model file ", std::quoted(model), "\n\t", err.what());
+            throw base_error("Model file ", std::quoted(model), "\n\t", err.what());
         }
         mfile.close();
     }

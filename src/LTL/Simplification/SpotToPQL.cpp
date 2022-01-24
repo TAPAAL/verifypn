@@ -41,7 +41,7 @@ namespace LTL {
                                            return ap == std::string_view(formula.ap_name());
                                        });
                 if (it == std::end(apinfo)) {
-                    throw base_error("Error: Expected to find ", formula.ap_name(), " in APInfo.\n");
+                    throw base_error("Expected to find ", formula.ap_name(), " in APInfo.\n");
                 } else {
                     return it->expression;
                 }
@@ -71,49 +71,49 @@ namespace LTL {
                 return std::make_shared<AndCondition>(conds);
             }
             case spot::op::R:
-                throw base_error("Unimplemented: R");
+                throw base_error("R not implemented");
             case spot::op::W:
-                throw base_error("Unimplemented: W");
+                throw base_error("W not implemented");
             case spot::op::M:
-                throw base_error("Unimplemented: M");
+                throw base_error("M not implemented");
             case spot::op::eword:
-                throw base_error("Unimplemented: eword");
+                throw base_error("eword not implemented");
             case spot::op::Closure:
-                throw base_error("Unimplemented: Closure");
+                throw base_error("Closure not implemented");
             case spot::op::NegClosure:
-                throw base_error("Unimplemented: NegClosure");
+                throw base_error("NegClosure not implemented");
             case spot::op::NegClosureMarked:
-                throw base_error("Unimplemented: NegClosureMarked");
+                throw base_error("NegClosureMarked not implemented");
             case spot::op::Xor:
-                throw base_error("Unimplemented: Xor");
+                throw base_error("Xor not implemented");
             case spot::op::Implies:
-                throw base_error("Unimplemented: Implies");
+                throw base_error("Implies not implemented");
             case spot::op::Equiv:
-                throw base_error("Unimplemented: Equiv");
+                throw base_error("Equiv not implemented");
             case spot::op::EConcat:
-                throw base_error("Unimplemented: EConcat");
+                throw base_error("EConcat not implemented");
             case spot::op::EConcatMarked:
-                throw base_error("Unimplemented: EConcatMarked");
+                throw base_error("EConcatMarked not implemented");
             case spot::op::UConcat:
-                throw base_error("Unimplemented: UConcat");
+                throw base_error("UConcat not implemented");
             case spot::op::OrRat:
-                throw base_error("Unimplemented: OrRat");
+                throw base_error("OrRat not implemented");
             case spot::op::AndRat:
-                throw base_error("Unimplemented: AndRat");
+                throw base_error("AndRat not implemented");
             case spot::op::AndNLM:
-                throw base_error("Unimplemented: AndNLM");
+                throw base_error("AndNLM not implemented");
             case spot::op::Concat:
-                throw base_error("Unimplemented: Concat");
+                throw base_error("Concat not implemented");
             case spot::op::Fusion:
-                throw base_error("Unimplemented: Fusion");
+                throw base_error("Fusion not implemented");
 
             case spot::op::Star:
-                throw base_error("Unimplemented: Star");
+                throw base_error("Star not implemented");
 
             case spot::op::FStar:
-                throw base_error("Unimplemented: FStar");
+                throw base_error("FStar not implemented");
             case spot::op::first_match:
-                throw base_error("Unimplemented: first_match");
+                throw base_error("first_match not implemented");
             default:
                 std::stringstream ss;
                 formula.dump(ss);

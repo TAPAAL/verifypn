@@ -58,7 +58,7 @@ namespace PetriEngine {
             parseRoot(root);
         } else {
             assert(false);
-            throw base_error("Error getting root node.");
+            throw base_error("Could not get root node.");
         }
 
     }
@@ -66,7 +66,7 @@ namespace PetriEngine {
     void TraceReplay::parseRoot(const rapidxml::xml_node<> *pNode) {
         if (std::strcmp(pNode->name(), "trace") != 0) {
             assert(false);
-            throw base_error("Error: Expected trace node. Got: ", pNode->name());
+            throw base_error("Expected trace node. Got: ", pNode->name());
         }
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
             if (std::strcmp(it->name(), "loop") == 0) loop_idx = trace.size();
@@ -74,11 +74,11 @@ namespace PetriEngine {
                 trace.push_back(parseTransition(it));
             } else {
                 assert(false);
-                throw base_error("Error: Expected transition or loop node. Got: ", it->name());
+                throw base_error("Expected transition or loop node. Got: ", it->name());
             }
         }
         if (loop_idx == std::numeric_limits<size_t>::max() && options.logic == TemporalLogic::LTL) {
-            throw base_error("Error: Missing <loop/> statement in trace");
+            throw base_error("Missing <loop/> statement in trace");
         }
     }
 
@@ -99,7 +99,7 @@ namespace PetriEngine {
         }
         if (id.empty()) {
             assert(false);
-            throw base_error("Error: Transition has no id attribute");
+            throw base_error("Transition has no id attribute");
         }
 
         Transition transition(id, buchi);

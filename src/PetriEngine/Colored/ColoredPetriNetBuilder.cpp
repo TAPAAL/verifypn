@@ -60,7 +60,7 @@ namespace PetriEngine {
             {
                 if(t.first->getColorType() != type)
                 {
-                    throw base_error("ERROR: Mismatch in color-type on ", name, " expecting type ", type->getName(), " got ",
+                    throw base_error("Mismatch in color-type on ", name, " expecting type ", type->getName(), " got ",
                         t.first->getColorType()->getName(), " (instance ", Colored::Color::toString(t.first), ")");
                 }
             }
@@ -137,9 +137,9 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
-            throw base_error("ERROR: Transition '", transition, "' not found. ");
+            throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
-            throw base_error("ERROR: Place '", place, "' not found. ");
+            throw base_error("Place '", place, "' not found. ");
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
 
@@ -876,7 +876,7 @@ namespace PetriEngine {
                         ss << "Exception on input arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << arc.expr->toString() << std::endl;
                         ss << e.what() << std::endl;
-                        throw base_error("ERROR: ", ss.str());
+                        throw base_error(ss.str());
                     }
                 }
                 for (const auto& arc : transition.output_arcs) {
@@ -888,7 +888,7 @@ namespace PetriEngine {
                         ss << "Exception on output arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << arc.expr->toString() << std::endl;
                         ss << e.what() << std::endl;
-                        throw base_error("ERROR: ", ss.str());
+                        throw base_error(ss.str());
                     }
                 }
                 for(const auto& arc : _inhibitorArcs){
