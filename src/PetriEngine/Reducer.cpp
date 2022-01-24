@@ -2317,47 +2317,25 @@ namespace PetriEngine {
                 }
             }
         }
-        else if (enablereduction == 1) { // in the aggressive reduction all six rules are used as long as they remove something
+        else if (enablereduction == 1) {
             bool changed = false;
             do
             {
-                if(remove_loops && !next_safe)
-                    if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                do{
-                    do { // start by rules that do not move tokens
-                        changed = false;
-                        if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
-                        //while(ReducebyRuleE(context.getQueryPlaceCount(), useP)) changed = true;
-                        while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
-                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe)
-                        {
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            if(!remove_loops) 
-                                if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
-                            //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
-                        }
-                    } while(changed && !hasTimedout());
-                    if(!next_safe) 
-                    { // then apply tokens moving rules
-                        //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true; // For cleanup
-                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                        while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                        if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
-                    }
-                } while(changed && !hasTimedout());
-                if(!next_safe && !changed)
-                {
-                    // Only try RuleH last. It can reduce applicability of other rules.
-                    while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
-                }
+                changed = false;
+                while (!next_safe && ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                while (!next_safe && ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                while (ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                while (!next_safe && ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
+                while (ReducebyRuleN(context.getQueryPlaceCount(), true)) changed = true;
+                while (!next_safe && ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                if (!next_safe && ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+
             } while(!hasTimedout() && changed);
 
+            if (!next_safe) ReducebyRuleQ(context.getQueryPlaceCount());
+            while (!next_safe && _ruleR < 100 && ReducebyRuleR(context.getQueryPlaceCount(), 1));
+            ReducebyRuleL(context.getQueryPlaceCount());
         }
         else
         {
