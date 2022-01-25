@@ -105,16 +105,16 @@ namespace PetriEngine::PQL {
         void _accept(const BooleanCondition *element) override;
     };
 
-    Member constraint(const Expr *element, SimplificationContext &context);
+    Member constraint(const Expr *element, const SimplificationContext &context);
 
     class ConstraintVisitor : public ExpressionVisitor {
     public:
-        explicit ConstraintVisitor(SimplificationContext &context) : _context(context) {}
+        explicit ConstraintVisitor(const SimplificationContext &context) : _context(context) {}
 
         Member get_return_value() { return _return_value; }
 
     private:
-        SimplificationContext& _context;
+        const SimplificationContext& _context;
         Member _return_value;
 
         void _accept(const LiteralExpr *element) override;
@@ -131,7 +131,7 @@ namespace PetriEngine::PQL {
 
         void _commutative_cons(const CommutativeExpr *element, int _constant, const std::function<void(Member &, Member)> &op);
 
-        void _accept(const IdentifierExpr *element);
+        void _accept(const IdentifierExpr *element) override;
     };
 }
 #endif //VERIFYPN_SIMPLIFIER_H

@@ -210,7 +210,7 @@ namespace PetriEngine::PQL {
         }
     }
 
-    Member memberForPlace(size_t p, SimplificationContext &context) {
+    Member memberForPlace(size_t p, const SimplificationContext &context) {
         std::vector<int> row(context.net()->numberOfTransitions(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
@@ -220,7 +220,7 @@ namespace PetriEngine::PQL {
     }
 
     /********** Constraint Visitor **********/
-    Member constraint(const Expr *element, SimplificationContext &context) {
+    Member constraint(const Expr *element, const SimplificationContext &context) {
         ConstraintVisitor visitor(context);
         element->visit(visitor);
         return visitor.get_return_value();
