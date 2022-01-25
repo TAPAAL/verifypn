@@ -101,7 +101,6 @@ namespace PetriEngine {
             PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
 
             Expr::Types type() const override;
-            Member constraint(SimplificationContext& context) const override;
             bool tk = false;
 
             void visit(Visitor& visitor) const override;
@@ -121,7 +120,6 @@ namespace PetriEngine {
             {
             }
             Expr::Types type() const override;
-            Member constraint(SimplificationContext& context) const override;
 
 
             void visit(Visitor& visitor) const override;
@@ -138,7 +136,6 @@ namespace PetriEngine {
 
             MultiplyExpr(std::vector<Expr_ptr>&& exprs);
             Expr::Types type() const override;
-            Member constraint(SimplificationContext& context) const override;
 
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
@@ -157,7 +154,6 @@ namespace PetriEngine {
             }
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
-            Member constraint(SimplificationContext& context) const override;
 
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
@@ -182,7 +178,6 @@ namespace PetriEngine {
             int value() const {
                 return _value;
             };
-            Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return true; }
         private:
             int _value;
@@ -205,10 +200,6 @@ namespace PetriEngine {
             virtual bool placeFree() const override {
                 if(_compiled) return _compiled->placeFree();
                 return false;
-            }
-
-            Member constraint(SimplificationContext& context) const override {
-                return _compiled->constraint(context);
             }
 
             void visit(Visitor& visitor) const override;
@@ -250,7 +241,6 @@ namespace PetriEngine {
             {
                 return _name;
             }
-            Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return false; }
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;

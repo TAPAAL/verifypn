@@ -111,8 +111,6 @@ namespace PetriEngine {
             virtual void visit(MutatingVisitor& visitor) = 0;
             /** Expression type */
             [[nodiscard]] virtual Types type() const = 0;
-            /** Construct left/right side of equations used in query simplification */
-            virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
 
             [[nodiscard]] virtual bool placeFree() const = 0;
 
