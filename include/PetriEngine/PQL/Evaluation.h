@@ -27,6 +27,9 @@
 
 namespace PetriEngine::PQL {
 
+    int temp_apply(Expr *element, int lhs, int rhs);
+    bool temp_apply(Condition *element, int lhs, int rhs);
+
     class ApplyVisitor : public Visitor {
     public:
 
@@ -39,24 +42,27 @@ namespace PetriEngine::PQL {
         int _rhs;
         int _return_value;
 
-        void _accept(const PlusExpr *element);
+        void _accept(const PlusExpr *element) override;
 
-        void _accept(const MultiplyExpr *element);
+        void _accept(const MultiplyExpr *element) override;
 
-        void _accept(const SubtractExpr *element);
+        void _accept(const SubtractExpr *element) override;
 
-        void _accept(const EqualCondition *element);
+        void _accept(const EqualCondition *element) override;
 
-        void _accept(const NotEqualCondition *element);
+        void _accept(const NotEqualCondition *element) override;
 
-        void _accept(const LessThanCondition *element);
+        void _accept(const LessThanCondition *element) override;
 
-        void _accept(const LessThanOrEqualCondition *element);
+        void _accept(const LessThanOrEqualCondition *element) override;
     };
+
+    int evaluate(Expr *element, const EvaluationContext& context);
+    Condition::Result evaluate(Condition *element, const EvaluationContext& context);
 
     class EvaluationVisitor : public MutatingVisitor {
     public:
-        EvaluationVisitor(EvaluationContext context) : _context(context) {}
+        EvaluationVisitor(const EvaluationContext context) : _context(context) {}
 
         union EvaluationReturnType {
             int _value;
@@ -67,7 +73,7 @@ namespace PetriEngine::PQL {
 
     private:
 
-        EvaluationContext _context;
+        const EvaluationContext _context;
         EvaluationReturnType _return_value;
         ApplyVisitor _apply_visitor;
 
@@ -78,55 +84,57 @@ namespace PetriEngine::PQL {
 
         int32_t pre_op(const CommutativeExpr *element);
 
-        void _accept(UnfoldedIdentifierExpr *element);
+        void _accept(UnfoldedIdentifierExpr *element) override;
 
-        void _accept(LiteralExpr *element);
+        void _accept(LiteralExpr *element) override;
 
-        void _accept(MinusExpr *element);
+        void _accept(MinusExpr *element) override;
 
-        void _accept(CommutativeExpr *element);
+        void _accept(CommutativeExpr *element) override;
 
-        void _accept(NaryExpr *element);
+        void _accept(NaryExpr *element) override;
 
-        void _accept(SimpleQuantifierCondition *element);
+        void _accept(SimpleQuantifierCondition *element) override;
 
-        void _accept(EGCondition *element);
+        void _accept(EGCondition *element) override;
 
-        void _accept(AGCondition *element);
+        void _accept(AGCondition *element) override;
 
-        void _accept(ControlCondition *element);
+        void _accept(ControlCondition *element) override;
 
-        void _accept(EFCondition *element);
+        void _accept(EFCondition *element) override;
 
-        void _accept(AFCondition *element);
+        void _accept(AFCondition *element) override;
 
-        void _accept(ACondition *element);
+        void _accept(ACondition *element) override;
 
-        void _accept(ECondition *element);
+        void _accept(ECondition *element) override;
 
-        void _accept(FCondition *element);
+        void _accept(FCondition *element) override;
 
-        void _accept(GCondition *element);
+        void _accept(GCondition *element) override;
 
-        void _accept(UntilCondition *element);
+        void _accept(UntilCondition *element) override;
 
-        void _accept(AndCondition *element);
+        void _accept(AndCondition *element) override;
 
-        void _accept(OrCondition *element);
+        void _accept(OrCondition *element) override;
 
-        void _accept(CompareConjunction *element);
+        void _accept(CompareConjunction *element) override;
 
-        void _accept(CompareCondition *element);
+        void _accept(CompareCondition *element) override;
 
-        void _accept(NotCondition *element);
+        void _accept(NotCondition *element) override;
 
-        void _accept(BooleanCondition *element);
+        void _accept(BooleanCondition *element) override;
 
-        void _accept(DeadlockCondition *element);
+        void _accept(DeadlockCondition *element) override;
 
-        size_t unfolded_upper_bounds_value(UnfoldedUpperBoundsCondition *element, const MarkVal *marking);
+        void _accept(UnfoldedUpperBoundsCondition *element) override;
 
-        void _accept(UnfoldedUpperBoundsCondition *element);
+        void _accept(IdentifierExpr *element) override;
+
+        void _accept(ShallowCondition *element) override;
     };
 
 

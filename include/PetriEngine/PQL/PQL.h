@@ -105,7 +105,6 @@ namespace PetriEngine {
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
             /** Evaluate the expression given marking and assignment */
-            [[nodiscard]] virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
             virtual void visit(Visitor& visitor) const = 0;
             virtual void visit(MutatingVisitor& visitor) = 0;
@@ -196,7 +195,6 @@ namespace PetriEngine {
             /** Virtual destructor */
             virtual ~Condition();
             /** Evaluate condition */
-            virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             virtual void visit(Visitor& visitor) const = 0;
             virtual void visit(MutatingVisitor& visitor) = 0;

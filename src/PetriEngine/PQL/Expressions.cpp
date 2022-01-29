@@ -24,6 +24,7 @@
 #include "PetriEngine/PQL/MutatingVisitor.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 #include <sstream>
 #include <assert.h>
@@ -268,7 +269,7 @@ namespace PetriEngine {
         }
 
         int Expr::evalAndSet(const EvaluationContext& context) {
-            int r = evaluate(context);
+            int r = evaluate(this, context);
             setEval(r);
             return r;
         }
@@ -313,7 +314,7 @@ namespace PetriEngine {
 
         Condition::Result CompareConjunction::evalAndSet(const EvaluationContext& context)
         {
-            auto res = evaluate(context);
+            auto res = evaluate(this, context);
             setSatisfied(res);
             return res;
         }
@@ -321,7 +322,7 @@ namespace PetriEngine {
         Condition::Result CompareCondition::evalAndSet(const EvaluationContext& context) {
             int v1 = _expr1->evalAndSet(context);
             int v2 = _expr2->evalAndSet(context);
-            bool res = apply(v1, v2);
+            bool res = temp_apply(this, v1, v2);
             setSatisfied(res);
             return res ? RTRUE : RFALSE;
         }
@@ -347,7 +348,7 @@ namespace PetriEngine {
 
         Condition::Result UnfoldedUpperBoundsCondition::evalAndSet(const EvaluationContext& context)
         {
-            auto res = evaluate(context);
+            auto res = evaluate(this, context);
             setSatisfied(res);
             return res;
         }
@@ -1235,12 +1236,12 @@ namespace PetriEngine {
                 if(!id)
                 {
                     id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[1].get());
-                    val = (*cmp)[0]->evaluate(context);
+                    val = PetriEngine::PQL::evaluate((*cmp)[0].get(), context);
                     inverted = true;
                 }
                 else
                 {
-                    val = (*cmp)[1]->evaluate(context);
+                    val = PetriEngine::PQL::evaluate((*cmp)[1].get(), context);
                 }
                 assert(id);
                 cons_t next;
@@ -1292,7 +1293,7 @@ namespace PetriEngine {
                 if (e->placeFree())
                 {
                     EvaluationContext c;
-                    _constant = apply(_constant, e->evaluate(c));
+                    _constant = temp_apply(this, _constant, evaluate(e.get(), c));
                 }
                 else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
@@ -1302,7 +1303,7 @@ namespace PetriEngine {
                     // we should move up plus/multiply here when possible;
                     if(c->_ids.size() == 0 && c->_exprs.size() == 0)
                     {
-                        _constant = apply(_constant, c->_constant);
+                        _constant = temp_apply(this, _constant, c->_constant);
                     }
                     else
                     {

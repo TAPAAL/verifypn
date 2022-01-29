@@ -53,7 +53,6 @@ namespace PetriEngine {
 
             NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
             }
-            int evaluate(const EvaluationContext& context) override;
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
             size_t operands() const { return _exprs.size(); }
@@ -65,9 +64,7 @@ namespace PetriEngine {
             virtual std::string op() const = 0;
 
         protected:
-            virtual int apply(int v1, int v2) const = 0;
             std::vector<Expr_ptr> _exprs;
-            virtual int32_t preOp(const EvaluationContext& context) const;
         };
 
         class PlusExpr;
@@ -78,7 +75,6 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             friend CompareCondition;
-            int evaluate(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor& visitor) override;
             bool placeFree() const override;
@@ -88,7 +84,6 @@ namespace PetriEngine {
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
-            virtual int32_t preOp(const EvaluationContext& context) const override;
             int32_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
@@ -107,7 +102,6 @@ namespace PetriEngine {
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
 
@@ -127,7 +121,6 @@ namespace PetriEngine {
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
         };
@@ -143,7 +136,6 @@ namespace PetriEngine {
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
         };
@@ -155,7 +147,6 @@ namespace PetriEngine {
             MinusExpr(const Expr_ptr expr) {
                 _expr = expr;
             }
-            int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
 
@@ -174,7 +165,6 @@ namespace PetriEngine {
             LiteralExpr(int value) : _value(value) {
             }
             LiteralExpr(const LiteralExpr&) = default;
-            int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
 
             void visit(Visitor& visitor) const override;
@@ -194,9 +184,6 @@ namespace PetriEngine {
         public:
             IdentifierExpr(const std::string& name) : _name(name) {}
             IdentifierExpr(const IdentifierExpr&) = default;
-            int evaluate(const EvaluationContext& context) override {
-                return _compiled->evaluate(context);
-            }
             [[nodiscard]] Expr::Types type() const override {
                 if(_compiled) return _compiled->type();
                 return Expr::IdentifierExpr;
@@ -240,7 +227,6 @@ namespace PetriEngine {
 
             UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
 
-            int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
             /** Offset in marking or valuation */
             int offset() const {
@@ -263,8 +249,6 @@ namespace PetriEngine {
 
         class ShallowCondition : public Condition
         {
-            Result evaluate(const EvaluationContext& context) override
-            { return _compiled->evaluate(context); }
             Result evalAndSet(const EvaluationContext& context) override
             { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
@@ -295,8 +279,6 @@ namespace PetriEngine {
                 _cond = cond;
             }
 
-
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -332,7 +314,6 @@ namespace PetriEngine {
                 _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor& visitor) override;
@@ -349,7 +330,6 @@ namespace PetriEngine {
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Quantifier getQuantifier() const override { return Quantifier::BControl; }
             Path getPath() const override             { return Path::PControl; }
-            Result evaluate(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -358,9 +338,6 @@ namespace PetriEngine {
         class ECondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Result evaluate(const EvaluationContext& context) override;
-
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::pError; }
@@ -376,7 +353,6 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            Result evaluate(const EvaluationContext& context) override;
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
@@ -392,9 +368,6 @@ namespace PetriEngine {
       class GCondition : public SimpleQuantifierCondition {
       public:
           using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-          Result evaluate(const EvaluationContext &context) override;
-
 
           Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
 
@@ -417,9 +390,6 @@ namespace PetriEngine {
       class FCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Result evaluate(const EvaluationContext& context) override;
-
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
@@ -464,7 +434,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -478,7 +447,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -502,7 +470,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -515,7 +482,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -527,9 +493,6 @@ namespace PetriEngine {
                 _cond1 = cond1;
                 _cond2 = cond2;
             }
-
-            Result evaluate(const EvaluationContext& context) override;
-
             Result evalAndSet(const EvaluationContext& context) override;
 
             [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
@@ -646,7 +609,6 @@ namespace PetriEngine {
 
             AndCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -664,7 +626,6 @@ namespace PetriEngine {
 
             OrCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -732,7 +693,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor &visitor) override;
@@ -761,7 +721,6 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor& visitor) override;
@@ -789,13 +748,7 @@ namespace PetriEngine {
 
         protected:
             uint32_t _distance(DistanceContext& c,
-                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
-            {
-                return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
-            }
-        private:
-            virtual bool apply(int v1, int v2) const = 0;
-
+                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const;
         protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
@@ -815,7 +768,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -830,7 +782,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -845,7 +796,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -861,7 +811,6 @@ namespace PetriEngine {
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -878,7 +827,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -898,7 +846,6 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() = default;
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
@@ -1022,7 +969,6 @@ namespace PetriEngine {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
             size_t value(const MarkVal*);
-            Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;

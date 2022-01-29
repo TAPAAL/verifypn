@@ -13,6 +13,7 @@
 #define VISITOR_H
 
 #include "PetriEngine/PQL/Expressions.h"
+#include "utils/errors.h"
 #include <type_traits>
 
 namespace PetriEngine {

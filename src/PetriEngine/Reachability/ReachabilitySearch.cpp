@@ -20,6 +20,7 @@
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/SuccessorGenerator.h"
 
@@ -42,7 +43,7 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     EvaluationContext ec(state.marking(), &_net);
-                    if(queries[i]->evaluate(ec) == Condition::RTRUE)
+                    if(PetriEngine::PQL::evaluate(queries[i].get(), ec) == Condition::RTRUE)
                     {
                         auto r = doCallback(queries[i], i, ResultPrinter::Satisfied, ss, states);
                         results[i] = r.first;

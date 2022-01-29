@@ -20,6 +20,7 @@
 
 #include "LTL/LTLToBuchi.h"
 #include "LTL/AlgorithmTypes.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include <spot/twa/twagraph.hh>
 #include <unordered_map>
 
@@ -66,7 +67,7 @@ namespace LTL::Structures {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
                 using PetriEngine::PQL::Condition;
-                Condition::Result res = ap_info.at(var).expression->evaluate(ctx);
+                Condition::Result res = PetriEngine::PQL::evaluate(ap_info.at(var).expression.get(), ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:
                         std::cerr << "Unexpected unknown answer from evaluating query!\n";
