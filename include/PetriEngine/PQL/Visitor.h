@@ -29,7 +29,10 @@ namespace PetriEngine {
             //virtual ~Visitor() = default;
 
         protected:
-            virtual void _accept(const NotCondition* element) = 0;
+            virtual void _accept(const NotCondition* element) {
+                assert(false);
+                throw base_error("No accept for NotCondition");
+            };
 
             virtual void _accept(const AndCondition* element) {
                 element->LogicalCondition::visit(*this);
@@ -55,9 +58,20 @@ namespace PetriEngine {
                 element->CompareCondition::visit(*this);
             }
 
-            virtual void _accept(const DeadlockCondition* element) = 0;
-            virtual void _accept(const CompareConjunction* element) = 0;
-            virtual void _accept(const UnfoldedUpperBoundsCondition* element) = 0;
+            virtual void _accept(const DeadlockCondition* element) {
+                assert(false);
+                throw base_error("No accept for DeadlockCondition");
+            };
+
+            virtual void _accept(const CompareConjunction* element) {
+                assert(false);
+                throw base_error("No accept for CompareConjunction");
+            };
+
+            virtual void _accept(const UnfoldedUpperBoundsCondition* element) {
+                assert(false);
+                throw base_error("No accept for UndfoldedUpperBoundsCondition (may be called from subclass)");
+            };
 
             // Super classes, the default implementation of subclasses is to call these
             virtual void _accept(const CommutativeExpr *element) {

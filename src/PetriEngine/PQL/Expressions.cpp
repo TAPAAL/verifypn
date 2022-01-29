@@ -201,171 +201,6 @@ namespace PetriEngine {
             return ">";
         }
 
-        /******************** Evaluation ********************/
-
-        int NaryExpr::evaluate(const EvaluationContext& context) {
-            int32_t r = preOp(context);
-            for(size_t i = 1; i < _exprs.size(); ++i)
-            {
-                r = apply(r, _exprs[i]->evalAndSet(context));
-            }
-            return r;
-        }
-
-        int32_t NaryExpr::preOp(const EvaluationContext& context) const {
-            return _exprs[0]->evaluate(context);
-        }
-
-        int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
-            int32_t res = _constant;
-            for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
-            if(_exprs.size() > 0) res = this->apply(res, _exprs[0]->evalAndSet(context));
-            return res;
-        }
-
-        int CommutativeExpr::evaluate(const EvaluationContext& context) {
-            if(_exprs.size() == 0) return preOp(context);
-            return NaryExpr::evaluate(context);
-        }
-
-        int MinusExpr::evaluate(const EvaluationContext& context) {
-            return -(_expr->evaluate(context));
-        }
-
-        int LiteralExpr::evaluate(const EvaluationContext&) {
-            return _value;
-        }
-
-        int UnfoldedIdentifierExpr::evaluate(const EvaluationContext& context) {
-            assert(_offsetInMarking != -1);
-            return context.marking()[_offsetInMarking];
-        }
-
-        Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) {
-            return RUNKNOWN;
-        }
-
-        Condition::Result EGCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result AGCondition::evaluate(const EvaluationContext& context)
-        {
-            if(_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result ControlCondition::evaluate(const EvaluationContext& context) {
-            return RUNKNOWN;
-        }
-
-        Condition::Result EFCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RTRUE) return RTRUE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result AFCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RTRUE) return RTRUE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result ACondition::evaluate(const EvaluationContext& context) {
-            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result ECondition::evaluate(const EvaluationContext& context) {
-            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result FCondition::evaluate(const EvaluationContext& context) {
-            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result GCondition::evaluate(const EvaluationContext& context) {
-            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
-/*        Condition::Result XCondition::evaluate(const EvaluationContext& context) {
-            return _cond->evaluate(context);
-        }*/
-
-        Condition::Result UntilCondition::evaluate(const EvaluationContext& context) {
-            auto r2 = _cond2->evaluate(context);
-            if(r2 != RFALSE) return r2;
-            auto r1 = _cond1->evaluate(context);
-            if(r1 == RFALSE)
-            {
-                return RFALSE;
-            }
-            return RUNKNOWN;
-        }
-
-
-
-        Condition::Result AndCondition::evaluate(const EvaluationContext& context) {
-            auto res = RTRUE;
-            for(auto& c : _conds)
-            {
-                auto r = c->evaluate(context);
-                if(r == RFALSE) return RFALSE;
-                else if(r == RUNKNOWN) res = RUNKNOWN;
-            }
-            return res;
-        }
-
-        Condition::Result OrCondition::evaluate(const EvaluationContext& context) {
-            auto res = RFALSE;
-            for(auto& c : _conds)
-            {
-                auto r = c->evaluate(context);
-                if(r == RTRUE) return RTRUE;
-                else if(r == RUNKNOWN) res = RUNKNOWN;
-            }
-            return res;
-        }
-
-        Condition::Result CompareConjunction::evaluate(const EvaluationContext& context){
-//            auto rres = _org->evaluate(context);
-            bool res = true;
-            for(auto& c : _constraints)
-            {
-                res = res && context.marking()[c._place] <= c._upper &&
-                             context.marking()[c._place] >= c._lower;
-                if(!res) break;
-            }
-            return (_negated xor res) ? RTRUE : RFALSE;
-        }
-
-        Condition::Result CompareCondition::evaluate(const EvaluationContext& context) {
-            int v1 = _expr1->evaluate(context);
-            int v2 = _expr2->evaluate(context);
-            return apply(v1, v2) ? RTRUE : RFALSE;
-        }
-
-        Condition::Result NotCondition::evaluate(const EvaluationContext& context) {
-            auto res = _cond->evaluate(context);
-            if(res != RUNKNOWN) return res == RFALSE ? RTRUE : RFALSE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result BooleanCondition::evaluate(const EvaluationContext&) {
-            return value ? RTRUE : RFALSE;
-        }
-
-        Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) {
-            if (!context.net())
-                return RFALSE;
-            if (!context.net()->deadlocked(context.marking())) {
-                return RFALSE;
-            }
-            return RTRUE;
-        }
-
         size_t UnfoldedUpperBoundsCondition::value(const MarkVal* marking)
         {
             size_t tmp = 0;
@@ -378,14 +213,8 @@ namespace PetriEngine {
             return tmp;
         }
 
-        Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
-            setUpperBound(value(context.marking()));
-            return _max <= _bound ? RTRUE : RUNKNOWN;
-        }
-
-        /******************** Evaluation - save result ********************/
         Condition::Result SimpleQuantifierCondition::evalAndSet(const EvaluationContext& context) {
-	    return RUNKNOWN;
+        return RUNKNOWN;
         }
 
         Condition::Result GCondition::evalAndSet(const EvaluationContext &context) {
@@ -1032,38 +861,6 @@ namespace PetriEngine {
         void UnfoldedIdentifierExpr::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
-        }
-
-        /******************** Apply (BinaryExpr subclasses) ********************/
-
-        int PlusExpr::apply(int v1, int v2) const {
-            return v1 + v2;
-        }
-
-        int SubtractExpr::apply(int v1, int v2) const {
-            return v1 - v2;
-        }
-
-        int MultiplyExpr::apply(int v1, int v2) const {
-            return v1 * v2;
-        }
-
-        /******************** Apply (CompareCondition subclasses) ********************/
-
-        bool EqualCondition::apply(int v1, int v2) const {
-            return v1 == v2;
-        }
-
-        bool NotEqualCondition::apply(int v1, int v2) const {
-            return v1 != v2;
-        }
-
-        bool LessThanCondition::apply(int v1, int v2) const {
-            return v1 < v2;
-        }
-
-        bool LessThanOrEqualCondition::apply(int v1, int v2) const {
-            return v1 <= v2;
         }
 
         /******************** Op (BinaryExpr subclasses) ********************/

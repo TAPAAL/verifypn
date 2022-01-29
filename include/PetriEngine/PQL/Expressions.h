@@ -1045,6 +1045,7 @@ namespace PetriEngine {
 
             double getMax() const { return _max; }
             double getOffset() const { return _offset; }
+            double getBound() const { return _bound; }
 
         private:
             std::vector<place_t> _places;
