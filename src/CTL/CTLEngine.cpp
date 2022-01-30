@@ -37,7 +37,7 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
             algorithm = std::make_shared<Algorithm::CertainZeroFPA>(search);
             break;
         default:
-            throw base_error("ERROR: Unknown or unsupported algorithm");
+            throw base_error("Unknown or unsupported algorithm");
     }
     return ReturnValue::ContinueCode;
 }
@@ -60,10 +60,7 @@ bool singleSolve(Condition* query, PetriNet* net,
     OnTheFlyDG graph(net, partial_order);
     graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
-    if(getAlgorithm(alg, algorithmtype,  strategytype) == ReturnValue::ErrorCode)
-    {
-        throw base_error("ERROR");
-    }
+    getAlgorithm(alg, algorithmtype,  strategytype);
 
     stopwatch timer;
     timer.start();

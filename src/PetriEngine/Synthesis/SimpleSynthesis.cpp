@@ -62,7 +62,7 @@ namespace PetriEngine {
             } else if (auto a = dynamic_cast<PQL::AFCondition*> (condition)) {
                 return {false, (*a)[0].get()};
             }
-            throw base_error("ERROR: Only AF and AG propositions supported for synthesis");
+            throw base_error("Only AF and AG propositions supported for synthesis");
         }
 
         ResultPrinter::Result SimpleSynthesis::synthesize(
@@ -74,11 +74,11 @@ namespace PetriEngine {
 
             auto ctrl = dynamic_cast<PQL::ControlCondition*> (&_query);
             if (ctrl == nullptr)
-                throw base_error("ERROR: Missing topmost control-condition for synthesis");
+                throw base_error("Missing topmost control-condition for synthesis");
             auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*> ((*ctrl)[0].get());
             std::tie(_is_safety, _predicate) = get_predicate(quant);
             if (PQL::isTemporal(_predicate))
-                throw base_error("ERROR: Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
+                throw base_error("Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
             run(use_stubborn, strategy, permissive);
 
@@ -410,7 +410,7 @@ namespace PetriEngine {
                 case Strategy::RDFS:
                     return std::make_unique<Structures::RDFSQueue>(0);
                 default:
-                    throw base_error("ERROR: Unsupported Search Strategy for Synthesis");
+                    throw base_error("Unsupported Search Strategy for Synthesis");
             }
         }
 

@@ -53,20 +53,29 @@ namespace PetriEngine {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(Colored::Place {name, type, tokens, x, y});
+            _places.emplace_back(Colored::Place {name, type, std::move(tokens), x, y});
+            auto& place = _places.back();
             _placenames[name] = next;
+            for(const auto& t : place.marking)
+            {
+                if(t.first->getColorType() != type)
+                {
+                    throw base_error("Mismatch in color-type on ", name, " expecting type ", type->getName(), " got ",
+                        t.first->getColorType()->getName(), " (instance ", Colored::Color::toString(t.first), ")");
+                }
+            }
 
             //set up place color fix points and initialize queue
-            if (!tokens.empty()) {
+            if (!place.marking.empty()) {
                 _placeFixpointQueue.emplace_back(next);
             }
 
             Colored::interval_vector_t placeConstraints;
-            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
+            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !place.marking.empty()};
             uint32_t colorCounter = 0;
 
-            if(tokens.size() == type->size()) {
-                for(const auto& colorPair : tokens){
+            if(place.marking.size() == type->size()) {
+                for(const auto& colorPair : place.marking){
                     if(colorPair.second > 0){
                         colorCounter++;
                     } else {
@@ -78,7 +87,7 @@ namespace PetriEngine {
             if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
             } else {
-                for (const auto& colorPair : tokens) {
+                for (const auto& colorPair : place.marking) {
                     Colored::interval_t tokenConstraints;
                     uint32_t index = 0;
                     colorPair.first->getColorConstraints(tokenConstraints, index);
@@ -128,9 +137,9 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
-            throw base_error("ERROR: Transition '", transition, "' not found. ");
+            throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
-            throw base_error("ERROR: Place '", place, "' not found. ");
+            throw base_error("Place '", place, "' not found. ");
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
 
@@ -867,7 +876,7 @@ namespace PetriEngine {
                         ss << "Exception on input arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << arc.expr->toString() << std::endl;
                         ss << e.what() << std::endl;
-                        throw base_error("ERROR: ", ss.str());
+                        throw base_error(ss.str());
                     }
                 }
                 for (const auto& arc : transition.output_arcs) {
@@ -879,7 +888,7 @@ namespace PetriEngine {
                         ss << "Exception on output arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << arc.expr->toString() << std::endl;
                         ss << e.what() << std::endl;
-                        throw base_error("ERROR: ", ss.str());
+                        throw base_error(ss.str());
                     }
                 }
                 for(const auto& arc : _inhibitorArcs){

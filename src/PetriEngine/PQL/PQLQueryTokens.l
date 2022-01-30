@@ -36,12 +36,20 @@ letter        [a-zA-Z_]
 "OR"            {return TOKEN(OR);}
 "not"           {return TOKEN(NOT);}
 "NOT"           {return TOKEN(NOT);}
+"EF"						{return TOKEN(EF);}
+"EG"						{return TOKEN(EG);}
+"AF"						{return TOKEN(AF);}
+"AG"						{return TOKEN(AG);}
+"EX"						{return TOKEN(EX);}
+"AX"						{return TOKEN(AX);}
 "A"						{return TOKEN(A);}
 "E"						{return TOKEN(E);}
 "X"						{return TOKEN(X);}
 "F"						{return TOKEN(F);}
 "G"						{return TOKEN(G);}
 "U"						{return TOKEN(U);}
+"control"				{return TOKEN(CONTROL);}
+"NOT" {return TOKEN(NOT);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}
 (\"(\\.|[^"])*\") {SAVE_QUOTED_TOKEN; return ID;}
@@ -61,16 +69,16 @@ letter        [a-zA-Z_]
 "*"							{return TOKEN(MULTIPLY);}
 "="							{return TOKEN(EQUAL);}
 "?"                         {return TOKEN(QUESTIONMARK);}
-"NOT" {return TOKEN(NOT);}
 "is-fireable" {return TOKEN(FIREABLE);}
 "tokens-count"|"#tokens" {return TOKEN(TOKENCOUNT); }
 "," {return TOKEN(COMMA); }
+":" {return TOKEN(COLON); }
 .							{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
 
 
 %%
 namespace PetriEngine{ namespace PQL {
-std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vector<std::string>& placenameforbound) {
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
@@ -80,7 +88,7 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vecto
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
 	return query;
-} 
+}
 }}
 #ifdef __clang__
 #pragma clang diagnostic pop
