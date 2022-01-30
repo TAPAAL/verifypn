@@ -19,6 +19,7 @@
 #define VERIFYPN_MUTATINGVISITOR_H
 
 #include "PetriEngine/PQL/Expressions.h"
+#include "utils/errors.h"
 
 namespace PetriEngine {
     namespace PQL {
@@ -198,15 +199,16 @@ namespace PetriEngine {
 
             // Expression
             virtual void _accept(UnfoldedIdentifierExpr *element) {
-                assert(false);
-                std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
-                exit(0);
+                _accept(static_cast<Expr*>(element));
             };
 
-            virtual void _accept(LiteralExpr *element) {
+            virtual void _accept(Expr *element) {
                 assert(false);
-                std::cerr << "No accept for LiteralExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for Expr (May be called from derived class)");
+            }
+
+            virtual void _accept(LiteralExpr *element) {
+                _accept(static_cast<Expr*>(element));
             };
 
             virtual void _accept(PlusExpr *element) {
@@ -218,26 +220,19 @@ namespace PetriEngine {
             };
 
             virtual void _accept(MinusExpr *element) {
-                assert(false);
-                std::cerr << "No accept for MinusExpr" << std::endl;
-                exit(0);
+                _accept(static_cast<Expr*>(element));
             };
 
             virtual void _accept(NaryExpr *element) {
-                assert(false);
-                std::cerr << "No accept for LivenessCondition" << std::endl;
-                exit(0);
+                _accept(static_cast<Expr*>(element));
             }
 
             virtual void _accept(SubtractExpr *element) {
                 element->NaryExpr::visit(*this);
             }
 
-            // shallow expression, default to error
             virtual void _accept(IdentifierExpr *element) {
-                assert(false);
-                std::cerr << "No accept for IdentifierExpr" << std::endl;
-                exit(0);
+                _accept(static_cast<Expr*>(element));
             };
         };
     }

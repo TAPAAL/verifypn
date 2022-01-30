@@ -249,8 +249,6 @@ namespace PetriEngine {
 
         class ShallowCondition : public Condition
         {
-            Result evalAndSet(const EvaluationContext& context) override
-            { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
 
@@ -279,7 +277,6 @@ namespace PetriEngine {
                 _cond = cond;
             }
 
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -314,7 +311,6 @@ namespace PetriEngine {
                 _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor& visitor) override;
 
@@ -380,8 +376,6 @@ namespace PetriEngine {
               return retval;
           }
 
-          Result evalAndSet(const EvaluationContext &context) override;
-
           void visit(Visitor &) const override;
           void visit(MutatingVisitor &) override;
 
@@ -396,7 +390,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
-          Result evalAndSet(const EvaluationContext &context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         };
@@ -434,7 +427,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         };
@@ -447,7 +439,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         };
@@ -470,7 +461,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         };
@@ -482,7 +472,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         };
@@ -493,7 +482,6 @@ namespace PetriEngine {
                 _cond1 = cond1;
                 _cond2 = cond2;
             }
-            Result evalAndSet(const EvaluationContext& context) override;
 
             [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
             { if(i == 0) return _cond1; return _cond2;}
@@ -609,7 +597,6 @@ namespace PetriEngine {
 
             AndCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
@@ -626,7 +613,6 @@ namespace PetriEngine {
 
             OrCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
 
@@ -693,7 +679,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor &visitor) override;
 
@@ -721,7 +706,6 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor& visitor) override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -827,7 +811,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -846,7 +829,6 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() = default;
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -969,7 +951,6 @@ namespace PetriEngine {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
             size_t value(const MarkVal*);
-            Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;

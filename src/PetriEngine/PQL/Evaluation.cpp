@@ -21,116 +21,116 @@
 #include "PetriEngine/PQL/Evaluation.h"
 
 namespace PetriEngine::PQL {
-    int32_t EvaluationVisitor::pre_op(const NaryExpr *element) {
+    int32_t EvaluateVisitor::pre_op(const NaryExpr *element) {
         (*element)[0]->visit(*this);
         return _return_value._value;
     }
 
-    int32_t EvaluationVisitor::pre_op(const CommutativeExpr *element) {
+    int32_t EvaluateVisitor::pre_op(const CommutativeExpr *element) {
         int32_t res = element->constant();
         for (auto &i: element->places())
             res = apply(element, res, _context.marking()[i.first]);
         if (element->operands() > 0)
-            res = apply(element, res, (*element)[0]->evalAndSet(_context));
+            res = apply(element, res, evaluateAndSet((*element)[0].get(), _context));
         return res;
     }
 
 /******************** Evaluation ********************/
 
-    void EvaluationVisitor::_accept(NaryExpr *element) {
+    void EvaluateVisitor::_accept(NaryExpr *element) {
         int32_t r = pre_op(element);
         for (size_t i = 1; i < element->operands(); ++i) {
-            r = apply(element, r, (*element)[i]->evalAndSet(_context));
+            r = apply(element, r, evaluateAndSet((*element)[i].get(), _context));
         }
         _return_value = {r};
     }
 
-    void EvaluationVisitor::_accept(CommutativeExpr *element) {
+    void EvaluateVisitor::_accept(CommutativeExpr *element) {
         if (element->operands() == 0)
             _return_value = {pre_op(element)};
         else
             element->NaryExpr::visit(*this); // Will implicitly set _return_value
     }
 
-    void EvaluationVisitor::_accept(MinusExpr *element) {
+    void EvaluateVisitor::_accept(MinusExpr *element) {
         (*element)[0]->visit(*this);
         _return_value = {-_return_value._value};
     }
 
-    void EvaluationVisitor::_accept(LiteralExpr *element) {
+    void EvaluateVisitor::_accept(LiteralExpr *element) {
         _return_value = {element->value()};
     }
 
-    void EvaluationVisitor::_accept(UnfoldedIdentifierExpr *element) {
+    void EvaluateVisitor::_accept(UnfoldedIdentifierExpr *element) {
         assert(element->offset() != -1);
-        _return_value = {(int)_context.marking()[element->offset()]};
+        _return_value = {(int) _context.marking()[element->offset()]};
     }
 
-    void EvaluationVisitor::_accept(SimpleQuantifierCondition *element) {
-        _return_value = {._result = Condition::RUNKNOWN};
+    void EvaluateVisitor::_accept(SimpleQuantifierCondition *element) {
+        _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(EGCondition *element) {
+    void EvaluateVisitor::_accept(EGCondition *element) {
         (*element)[0]->visit(*this);
         if (_return_value._result == Condition::RFALSE)
-            _return_value = {._result = Condition::RFALSE};
+            _return_value = {Condition::RFALSE};
         else
-            _return_value = {._result = Condition::RUNKNOWN};
+            _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(AGCondition *element) {
+    void EvaluateVisitor::_accept(AGCondition *element) {
         (*element)[0]->visit(*this);
         if (_return_value._result == Condition::RFALSE)
-            _return_value = {._result = Condition::RFALSE};
+            _return_value = {Condition::RFALSE};
         else
-            _return_value = {._result = Condition::RUNKNOWN};
+            _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(ControlCondition *element) {
-        _return_value = {._result = Condition::RUNKNOWN};
+    void EvaluateVisitor::_accept(ControlCondition *element) {
+        _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(EFCondition *element) {
+    void EvaluateVisitor::_accept(EFCondition *element) {
         (*element)[0]->visit(*this);
         if (_return_value._result == Condition::RTRUE)
-            _return_value = {._result = Condition::RTRUE};
+            _return_value = {Condition::RTRUE};
         else
-            _return_value = {._result = Condition::RUNKNOWN};
+            _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(AFCondition *element) {
+    void EvaluateVisitor::_accept(AFCondition *element) {
         (*element)[0]->visit(*this);
         if (_return_value._result == Condition::RTRUE)
-            _return_value = {._result = Condition::RTRUE};
+            _return_value = {Condition::RTRUE};
         else
-            _return_value = {._result = Condition::RUNKNOWN};
+            _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(ACondition *element) {
+    void EvaluateVisitor::_accept(ACondition *element) {
         //if (_cond->evaluate(_context) == Condition::RFALSE) _return_value = {Condition::RFALSE};
-        _return_value = {._result = Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(ECondition *element) {
+    void EvaluateVisitor::_accept(ECondition *element) {
         //if (_cond->evaluate(_context) == Condition::RTRUE) _return_value = {Condition::RTRUE};
-        _return_value = {._result = Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(FCondition *element) {
+    void EvaluateVisitor::_accept(FCondition *element) {
         //if (_cond->evaluate(_context) == Condition::RTRUE) _return_value = {Condition::RTRUE};
-        _return_value = {._result = Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(GCondition *element) {
+    void EvaluateVisitor::_accept(GCondition *element) {
         //if (_cond->evaluate(_context) == Condition::RFALSE) _return_value = {Condition::RFALSE};
-        _return_value = {._result = Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
 /*        void EvaluationVisitor::_accept(XCondition *element) {
             return _cond->evaluate(_context);
         }*/
 
-    void EvaluationVisitor::_accept(UntilCondition *element) {
+    void EvaluateVisitor::_accept(UntilCondition *element) {
         (*element)[1]->visit(*this);
         if (_return_value._result != Condition::RFALSE)
             return;
@@ -138,144 +138,293 @@ namespace PetriEngine::PQL {
         if (_return_value._result == Condition::RFALSE) {
             return;
         } else {
-            _return_value = {._result = Condition::RUNKNOWN};
+            _return_value = {Condition::RUNKNOWN};
         }
     }
 
 
-    void EvaluationVisitor::_accept(AndCondition *element) {
+    void EvaluateVisitor::_accept(AndCondition *element) {
         auto res = Condition::RTRUE;
         for (auto &c: element->getOperands()) {
             c->visit(*this);
             if (_return_value._result == Condition::RFALSE) {
-                _return_value = {._result = Condition::RFALSE};
+                _return_value = {Condition::RFALSE};
                 return;
-            }
-            else if (_return_value._result == Condition::RUNKNOWN)
+            } else if (_return_value._result == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
-        _return_value = {._result = res};
+        _return_value = {res};
     }
 
-    void EvaluationVisitor::_accept(OrCondition *element) {
+    void EvaluateVisitor::_accept(OrCondition *element) {
         auto res = Condition::RFALSE;
         for (auto &c: element->getOperands()) {
             c->visit(*this);
             if (_return_value._result == Condition::RTRUE) {
-                _return_value = {._result = Condition::RTRUE};
+                _return_value = {Condition::RTRUE};
                 return;
-            }
-            else if (_return_value._result == Condition::RUNKNOWN)
+            } else if (_return_value._result == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
-        _return_value = {._result = res};
+        _return_value = {res};
     }
 
-    void EvaluationVisitor::_accept(CompareConjunction *element) {
+    void EvaluateVisitor::_accept(CompareConjunction *element) {
         bool res = true;
         for (auto &c: element->constraints()) {
             res = res && _context.marking()[c._place] <= c._upper && _context.marking()[c._place] >= c._lower;
             if (!res) break;
         }
-        _return_value = {._result = (element->isNegated() xor res) ? Condition::RTRUE : Condition::RFALSE};
+        _return_value = {(element->isNegated() xor res) ? Condition::RTRUE : Condition::RFALSE};
     }
 
-    void EvaluationVisitor::_accept(CompareCondition *element) {
+    void EvaluateVisitor::_accept(CompareCondition *element) {
         (*element)[0]->visit(*this);
         int v1 = _return_value._value;
         (*element)[1]->visit(*this);
         int v2 = _return_value._value;
-        _return_value = {._result = apply(element, v1, v2) ? Condition::RTRUE : Condition::RFALSE};
+        _return_value = {apply(element, v1, v2) ? Condition::RTRUE : Condition::RFALSE};
     }
 
-    void EvaluationVisitor::_accept(NotCondition *element) {
+    void EvaluateVisitor::_accept(NotCondition *element) {
         (*element)[0]->visit(*this);
         auto res = _return_value._result;
         if (res != Condition::RUNKNOWN)
-            _return_value = {._result = res == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
+            _return_value = {res == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
         else
             _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(BooleanCondition *element) {
-        _return_value = {._result = element->value ? Condition::RTRUE : Condition::RFALSE};
+    void EvaluateVisitor::_accept(BooleanCondition *element) {
+        _return_value = {element->value ? Condition::RTRUE : Condition::RFALSE};
     }
 
-    void EvaluationVisitor::_accept(DeadlockCondition *element) {
+    void EvaluateVisitor::_accept(DeadlockCondition *element) {
         if (!_context.net() || !_context.net()->deadlocked(_context.marking()))
             _return_value = {Condition::RFALSE};
         else
             _return_value = {Condition::RTRUE};
     }
 
-    void EvaluationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
+    void EvaluateVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
         element->setUpperBound(element->value(_context.marking()));
-        _return_value = {._result = element->getMax() <= element->getBound() ? Condition::RTRUE : Condition::RUNKNOWN};
+        _return_value = {element->getMax() <= element->getBound() ? Condition::RTRUE : Condition::RUNKNOWN};
     }
 
-    void EvaluationVisitor::_accept(IdentifierExpr *element) {
+    void EvaluateVisitor::_accept(IdentifierExpr *element) {
         element->compiled()->visit(*this);
     }
 
-    void EvaluationVisitor::_accept(ShallowCondition *element) {
+    void EvaluateVisitor::_accept(ShallowCondition *element) {
         element->getCompiled()->visit(*this);
     }
 
-    EvaluationVisitor::EvaluationReturnType EvaluationVisitor::get_return_value() {
+    BaseEvaluationVisitor::ReturnType BaseEvaluationVisitor::get_return_value() {
         return _return_value;
     }
 
-    bool EvaluationVisitor::apply(const Condition *element, int lhs, int rhs) {
+    bool BaseEvaluationVisitor::apply(const Condition *element, int lhs, int rhs) {
         _apply_visitor.set_args(lhs, rhs);
         element->visit(_apply_visitor);
         return _apply_visitor.get_return_value();
     }
 
-    int EvaluationVisitor::apply(const Expr *element, int lhs, int rhs) {
+    int BaseEvaluationVisitor::apply(const Expr *element, int lhs, int rhs) {
         _apply_visitor.set_args(lhs, rhs);
         element->visit(_apply_visitor);
         return _apply_visitor.get_return_value();
+    }
+
+    /****************** Evaluate and Set *******************/
+
+    Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context) {
+        EvaluateAndSetVisitor visitor(context);
+        element->visit(visitor);
+        return visitor.get_return_value()._result;
+    }
+
+    int evaluateAndSet(Expr *element, const EvaluationContext &context) {
+        EvaluateAndSetVisitor visitor(context);
+        element->visit(visitor);
+        return visitor.get_return_value()._value;
+    }
+
+    void EvaluateAndSetVisitor::_accept(SimpleQuantifierCondition *element) {
+        _return_value = {Condition::RUNKNOWN};
+    }
+
+    void EvaluateAndSetVisitor::_accept(GCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RFALSE)
+            _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._value);
+    }
+
+    void EvaluateAndSetVisitor::_accept(FCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RTRUE)
+            _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(EGCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(AGCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(EFCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(AFCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(UntilCondition *element) {
+        (*element)[1]->visit(*this);
+        if (_return_value._result != Condition::RFALSE)
+            return;
+
+        (*element)[0]->visit(*this);
+        if (_return_value._result == Condition::RFALSE)
+            return;
+        _return_value = {Condition::RUNKNOWN};
+    }
+
+    void EvaluateAndSetVisitor::_accept(Expr *element) {
+        int r = evaluate(element, _context);
+        element->setEval(r);
+        _return_value = {r};
+    }
+
+    void EvaluateAndSetVisitor::_accept(AndCondition *element) {
+        Condition::Result res = Condition::RTRUE;
+        for (auto &c: element->getOperands()) {
+            c->visit(*this);
+            if (_return_value._result == Condition::RFALSE) {
+                res = Condition::RFALSE;
+                break;
+            } else if (_return_value._result == Condition::RUNKNOWN) {
+                res = Condition::RUNKNOWN;
+            }
+        }
+        element->setSatisfied(res);
+        _return_value = {res};
+    }
+
+    void EvaluateAndSetVisitor::_accept(OrCondition *element) {
+        Condition::Result res = Condition::RFALSE;
+        for (auto &c: element->getOperands()) {
+            c->visit(*this);
+            if (_return_value._result == Condition::RTRUE) {
+                res = Condition::RTRUE;
+                break;
+            } else if (_return_value._result == Condition::RUNKNOWN) {
+                res = Condition::RUNKNOWN;
+            }
+        }
+        element->setSatisfied(res);
+        _return_value = {res};
+    }
+
+    void EvaluateAndSetVisitor::_accept(CompareConjunction *element) {
+        auto res = evaluate(element, _context);
+        element->setSatisfied(res);
+        _return_value = {res};
+    }
+
+    void EvaluateAndSetVisitor::_accept(CompareCondition *element) {
+        element->visit(*this);
+        int v1 = _return_value._value;
+        element->visit(*this);
+        int v2 = _return_value._value;
+
+        bool res = apply(element, v1, v2);
+        element->setSatisfied(res);
+        _return_value = {res ? Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateAndSetVisitor::_accept(NotCondition *element) {
+        (*element)[0]->visit(*this);
+        if (_return_value._result != Condition::RUNKNOWN)
+            _return_value = {_return_value._result == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
+        element->setSatisfied(_return_value._result);
+    }
+
+    void EvaluateAndSetVisitor::_accept(BooleanCondition *element) {
+        element->setSatisfied(element->value);
+        _return_value = {element->value ? Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateAndSetVisitor::_accept(DeadlockCondition *element) {
+        if (!_context.net()) {
+            _return_value = {Condition::RFALSE};
+        } else {
+            element->setSatisfied(_context.net()->deadlocked(_context.marking()));
+            _return_value = {element->isSatisfied() ? Condition::RTRUE : Condition::RFALSE};
+        }
+    }
+
+    void EvaluateAndSetVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
+        auto res = evaluate(element, _context);
+        element->setSatisfied(res);
+        _return_value = {res};
+    }
+
+    void EvaluateAndSetVisitor::_accept(ShallowCondition *element) {
+        element->getCompiled()->visit(*this);
     }
 
 
     /******************** Apply Visitor ********************/
 
-    void ApplyVisitor::_accept( const PlusExpr *element) {
+    void ApplyVisitor::_accept(const PlusExpr *element) {
         _return_value = _lhs + _rhs;
     }
 
-    void ApplyVisitor::_accept( const SubtractExpr *element) {
+    void ApplyVisitor::_accept(const SubtractExpr *element) {
         _return_value = _lhs - _rhs;
     }
 
-    void ApplyVisitor::_accept( const MultiplyExpr *element) {
+    void ApplyVisitor::_accept(const MultiplyExpr *element) {
         _return_value = _lhs * _rhs;
     }
 
-    void ApplyVisitor::_accept( const EqualCondition *element) {
+    void ApplyVisitor::_accept(const EqualCondition *element) {
         _return_value = _lhs == _rhs;
     }
 
-    void ApplyVisitor::_accept( const NotEqualCondition *element) {
+    void ApplyVisitor::_accept(const NotEqualCondition *element) {
         _return_value = _lhs != _rhs;
     }
 
-    void ApplyVisitor::_accept( const LessThanCondition *element) {
+    void ApplyVisitor::_accept(const LessThanCondition *element) {
         _return_value = _lhs < _rhs;
     }
 
-    void ApplyVisitor::_accept( const LessThanOrEqualCondition *element) {
+    void ApplyVisitor::_accept(const LessThanOrEqualCondition *element) {
         _return_value = _lhs <= _rhs;
     }
 
     int evaluate(Expr *element, const EvaluationContext &context) {
-        EvaluationVisitor visitor(context);
+        EvaluateVisitor visitor(context);
         element->visit(visitor);
         return visitor.get_return_value()._value;
     }
 
     Condition::Result evaluate(Condition *element, const EvaluationContext &context) {
-        EvaluationVisitor visitor(context);
+        EvaluateVisitor visitor(context);
         element->visit(visitor);
         return visitor.get_return_value()._result;
     }

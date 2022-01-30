@@ -18,6 +18,7 @@
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 #include "PetriEngine/PQL/Contexts.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 namespace PetriEngine {
     bool ReachabilityStubbornSet::prepare(const Structures::State *state) {
@@ -32,7 +33,7 @@ namespace PetriEngine {
         }
         assert(!_queries.empty());
         for (auto &q : _queries) {
-            q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
+            PetriEngine::PQL::evaluateAndSet(q, PQL::EvaluationContext((*_parent).marking(), &_net));
 
             assert(_interesting->get_negated() == false);
             q->visit(*_interesting);

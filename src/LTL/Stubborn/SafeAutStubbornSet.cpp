@@ -41,8 +41,8 @@ namespace LTL {
         InterestingTransitionVisitor interesting{*this, false};
 
         PQL::EvaluationContext ctx((*_parent).marking(), &_net);
-        _prog_cond->evalAndSet(ctx);
-        _sink_cond->evalAndSet(ctx);
+        PetriEngine::PQL::evaluateAndSet(_prog_cond.get(), ctx);
+        PetriEngine::PQL::evaluateAndSet(_sink_cond.get(), ctx);
         _prog_cond->visit(unsafe);
         _sink_cond->visit(unsafe);
 

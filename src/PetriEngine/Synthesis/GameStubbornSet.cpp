@@ -3,6 +3,7 @@
 #include "PetriEngine/Synthesis/IntervalVisitor.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 #include <stack>
 
@@ -386,7 +387,7 @@ namespace PetriEngine {
             for (auto* q : _queries) {
                 if (_is_safety)
                     visitor.negate();
-                q->evalAndSet(context);
+                PetriEngine::PQL::evaluateAndSet(q, context);
                 q->visit(visitor);
             }
 

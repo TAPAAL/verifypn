@@ -16,6 +16,7 @@
  */
 
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 namespace LTL {
 
@@ -93,34 +94,34 @@ namespace LTL {
     }
 
     void EvalAndSetVisitor::_accept(LessThanCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(LessThanOrEqualCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(EqualCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(NotEqualCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(DeadlockCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(CompareConjunction *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 
     void EvalAndSetVisitor::_accept(BooleanCondition *element) {
-        element->evalAndSet(_context);
+        PetriEngine::PQL::evaluateAndSet(element, _context);
     }
 }

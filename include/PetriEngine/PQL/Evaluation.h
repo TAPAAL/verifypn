@@ -57,29 +57,36 @@ namespace PetriEngine::PQL {
         void _accept(const LessThanOrEqualCondition *element) override;
     };
 
-    int evaluate(Expr *element, const EvaluationContext& context);
-    Condition::Result evaluate(Condition *element, const EvaluationContext& context);
-
-    class EvaluationVisitor : public MutatingVisitor {
+    class BaseEvaluationVisitor : public MutatingVisitor {
     public:
-        EvaluationVisitor(const EvaluationContext context) : _context(context) {}
-
-        union EvaluationReturnType {
+        union ReturnType {
             int _value;
             Condition::Result _result;
         };
 
-        EvaluationReturnType get_return_value();
+        explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
 
-    private:
+        ReturnType get_return_value();
 
-        const EvaluationContext _context;
-        EvaluationReturnType _return_value;
-        ApplyVisitor _apply_visitor;
+    protected:
 
         bool apply(const Condition* element, int lhs, int rhs);
         int apply(const Expr* element, int lhs, int rhs);
 
+        const EvaluationContext& _context;
+        ReturnType _return_value{};
+        ApplyVisitor _apply_visitor;
+    };
+
+    int evaluate(Expr *element, const EvaluationContext& context);
+    Condition::Result evaluate(Condition *element, const EvaluationContext& context);
+
+
+    class EvaluateVisitor : public BaseEvaluationVisitor {
+    public:
+        explicit EvaluateVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
+
+    private:
         int32_t pre_op(const NaryExpr *element);
 
         int32_t pre_op(const CommutativeExpr *element);
@@ -135,6 +142,51 @@ namespace PetriEngine::PQL {
         void _accept(IdentifierExpr *element) override;
 
         void _accept(ShallowCondition *element) override;
+    };
+
+    int evaluateAndSet(Expr *element, const EvaluationContext &context);
+    Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context);
+
+    class EvaluateAndSetVisitor : public BaseEvaluationVisitor {
+    public:
+        explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
+
+    private:
+        void _accept(SimpleQuantifierCondition *element);
+
+        void _accept(GCondition *element);
+
+        void _accept(FCondition *element);
+
+        void _accept(EGCondition *element);
+
+        void _accept(AGCondition *element);
+
+        void _accept(EFCondition *element);
+
+        void _accept(AFCondition *element);
+
+        void _accept(UntilCondition *element);
+
+        void _accept(AndCondition *element);
+
+        void _accept(OrCondition *element);
+
+        void _accept(CompareConjunction *element);
+
+        void _accept(CompareCondition *element);
+
+        void _accept(NotCondition *element);
+
+        void _accept(BooleanCondition *element);
+
+        void _accept(DeadlockCondition *element);
+
+        void _accept(UnfoldedUpperBoundsCondition *element);
+
+        void _accept(ShallowCondition *element);
+
+        void _accept(Expr *element);
     };
 
 
