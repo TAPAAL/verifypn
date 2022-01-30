@@ -29,11 +29,12 @@ mkdir build && cd  build
 cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF 
 
 #For mac, one need to enforce that we use the GCC compiler using:
-export CC=gcc-9
-export CXX=g++-9
+export CC=gcc-11
+export CXX=g++-11
 #and point to the correct version of flex and bison by adding
 #-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex 
-#to cmake call
+#to cmake call, e.g. like
+cmake -DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DFLEX_EXECUTABLE=/opt/homebrew/opt/flex/bin/flex   ..
 
 ```
 
