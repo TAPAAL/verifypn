@@ -1,3 +1,5 @@
+#define BOOST_TEST_MODULE XML_PRINTER_TESTS
+
 #include <boost/test/unit_test.hpp>
 #include <PetriEngine/PQL/XMLPrinter.h>
 #include <algorithm>
@@ -5,9 +7,6 @@
 #include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine::PQL;
-using namespace boost::unit_test;
-
-BOOST_AUTO_TEST_SUITE(XML_PRINTER_TESTS)
 
 BOOST_AUTO_TEST_CASE(LESSTHAN_LITERAL_LITERAL) {
     auto condition = std::make_shared<NotCondition>(
@@ -31,5 +30,3 @@ BOOST_AUTO_TEST_CASE(LESSTHAN_LITERAL_LITERAL) {
 
     BOOST_REQUIRE(strcmp(os.str().c_str(), expected) == 0);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

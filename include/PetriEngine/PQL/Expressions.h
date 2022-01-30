@@ -30,6 +30,7 @@
 #include "..//Simplification/Member.h"
 #include "../Simplification/LinearPrograms.h"
 #include "../Simplification/Retval.h"
+#include "utils/errors.h"
 
 using namespace PetriEngine::Simplification;
 
@@ -324,9 +325,14 @@ namespace PetriEngine {
 
         class SimpleQuantifierCondition : public QuantifierCondition {
         public:
-            SimpleQuantifierCondition(const Condition_ptr cond) {
+            template<typename T>
+            SimpleQuantifierCondition(std::shared_ptr<T> cond) {
                 assert(cond);
-                _cond = cond;
+                static_assert(
+                    std::is_base_of<Condition, T>::value,
+                    "T must be a descendant of Condition"
+                );
+                _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
             void analyze(AnalysisContext& context) override;
@@ -364,7 +370,7 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                assert(false); throw base_error("TODO implement");
             }
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;

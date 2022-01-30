@@ -62,7 +62,7 @@ ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder&
             for (size_t i = 0; i < context.errors().size(); i++) {
                 ss << "Query Context Analysis Error: " << context.errors()[i].toString() << "\n";
             }
-            throw base_error("ERROR: ", ss.str());
+            throw base_error(ss.str());
         }
     }
     return ReturnValue::ContinueCode;
@@ -135,38 +135,24 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
         }
 
         if (options.querynumbers.size() == 0) {
-            std::string querystring; // excluding EF and AG
 
             //Read everything
             std::stringstream buffer;
             buffer << qfile.rdbuf();
-            std::string querystr = buffer.str(); // including EF and AG
-            //Parse XML the queries and querystr let be the index of xmlquery
-
-            qstrings.push_back(querystring);
-            //Validate query type
-            if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
-                fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
-                return conditions;
-            }
-            //Check if is invariant
-            bool isInvariant = querystr.substr(0, 2) == "AG";
-
-            //Wrap in not if isInvariant
-            querystring = querystr.substr(2);
-            std::vector<std::string> tmp;
-            conditions.emplace_back(ParseQuery(querystring, tmp));
-            if (isInvariant) conditions.back() = std::make_shared<AGCondition>(conditions.back());
-            else conditions.back() = std::make_shared<EFCondition>(conditions.back());
+            auto str = buffer.str();
+            qstrings.push_back(options.queryfile);
+            auto q = ParseQuery(str);
+            if(q == nullptr)
+                throw base_error("Error parsing: ", qstrings.back());
+            conditions.emplace_back(q);
         } else {
             conditions = parseXMLQueries(qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
         }
         qfile.close();
         return conditions;
     } else { // state-space exploration
-        std::string querystring = "false";
-        std::vector<std::string> empty;
-        conditions.push_back(std::make_shared<EFCondition>(ParseQuery(querystring, empty)));
+        qstrings.push_back("statespace-search");
+        conditions.push_back(std::make_shared<EFCondition>(BooleanCondition::FALSE_CONSTANT));
         return conditions;
     }
 }
@@ -269,8 +255,7 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
             ctlStarQuery->visit(asCtl);
             ctlQueries.push_back(asCtl._ctl_query);
         } else {
-            std::cerr << "Error: A query could not be translated from CTL* to CTL." << std::endl;
-            exit(1);
+            throw base_error("A query could not be translated from CTL* to CTL.");
         }
 
     }
@@ -284,8 +269,7 @@ std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlSt
         if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
-            std::cerr << "Error: a query could not be translated from CTL* to LTL." << std::endl;
-            exit(1);
+            throw base_error("A query could not be translated from CTL* to LTL.");
         }
     }
     return ltlQueries;
@@ -335,7 +319,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
     }    catch (std::bad_alloc &ba) {
-        throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
+        throw base_error("Query reduction failed.\nException information: ", ba.what());
     }
 
     cond = initialMarkingRW([&]() {
@@ -482,7 +466,7 @@ void simplify_queries(  const MarkVal* marking,
                                 out << std::endl;
                             }
                         } catch (std::bad_alloc& ba) {
-                            throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
+                            throw base_error("Query reduction failed.\nException information: ", ba.what());
                         }
 
                         if (options.printstatistics) {
