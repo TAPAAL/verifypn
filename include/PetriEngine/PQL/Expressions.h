@@ -325,9 +325,14 @@ namespace PetriEngine {
 
         class SimpleQuantifierCondition : public QuantifierCondition {
         public:
-            SimpleQuantifierCondition(const Condition_ptr cond) {
+            template<typename T>
+            SimpleQuantifierCondition(std::shared_ptr<T> cond) {
                 assert(cond);
-                _cond = cond;
+                static_assert(
+                    std::is_base_of<Condition, T>::value,
+                    "T must be a descendant of Condition"
+                );
+                _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
             void analyze(AnalysisContext& context) override;

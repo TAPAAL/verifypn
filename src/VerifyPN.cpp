@@ -135,38 +135,24 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
         }
 
         if (options.querynumbers.size() == 0) {
-            std::string querystring; // excluding EF and AG
 
             //Read everything
             std::stringstream buffer;
             buffer << qfile.rdbuf();
-            std::string querystr = buffer.str(); // including EF and AG
-            //Parse XML the queries and querystr let be the index of xmlquery
-
-            qstrings.push_back(querystring);
-            //Validate query type
-            if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
-                fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
-                return conditions;
-            }
-            //Check if is invariant
-            bool isInvariant = querystr.substr(0, 2) == "AG";
-
-            //Wrap in not if isInvariant
-            querystring = querystr.substr(2);
-            std::vector<std::string> tmp;
-            conditions.emplace_back(ParseQuery(querystring, tmp));
-            if (isInvariant) conditions.back() = std::make_shared<AGCondition>(conditions.back());
-            else conditions.back() = std::make_shared<EFCondition>(conditions.back());
+            auto str = buffer.str();
+            qstrings.push_back(options.queryfile);
+            auto q = ParseQuery(str);
+            if(q == nullptr)
+                throw base_error("Error parsing: ", qstrings.back());
+            conditions.emplace_back(q);
         } else {
             conditions = parseXMLQueries(qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
         }
         qfile.close();
         return conditions;
     } else { // state-space exploration
-        std::string querystring = "false";
-        std::vector<std::string> empty;
-        conditions.push_back(std::make_shared<EFCondition>(ParseQuery(querystring, empty)));
+        qstrings.push_back("statespace-search");
+        conditions.push_back(std::make_shared<EFCondition>(BooleanCondition::FALSE_CONSTANT));
         return conditions;
     }
 }
