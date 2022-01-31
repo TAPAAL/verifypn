@@ -178,16 +178,22 @@ namespace PetriEngine::PQL {
     void IsNotReachabilityVisitor::_accept(const QuasiLivenessCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
     void IsNotReachabilityVisitor::_accept(const LivenessCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
     void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
     void IsNotReachabilityVisitor::_accept(const CompareConjunction *element) {
