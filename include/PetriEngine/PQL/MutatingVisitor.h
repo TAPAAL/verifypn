@@ -69,32 +69,21 @@ namespace PetriEngine {
             }
 
             virtual void _accept(SimpleQuantifierCondition *element) {
-                assert(false);
-                std::cerr << "No accept for SimpleQuantifierCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
             }
 
             virtual void _accept(LogicalCondition *element) {
-                assert(false);
-                std::cerr << "No accept for LogicalCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for LogicalCondition (may be called from subclass)");
             }
 
             virtual void _accept(CompareCondition *element) {
-                assert(false);
-                std::cerr << "No accept for CompareCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for CompareCondition (may be called from subclass)");
             }
 
             virtual void _accept(UntilCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UntilCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for UntilCondition");
             }
 
-
-            // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
-            // default behaviour is error
             virtual void _accept(ControlCondition *condition) {
                 condition->SimpleQuantifierCondition::visit(*this);
             };
@@ -155,9 +144,7 @@ namespace PetriEngine {
                 if (element->getCompiled()) {
                     element->getCompiled()->visit(*this);
                 } else {
-                    assert(false);
-                    std::cerr << "No accept for ShallowCondition" << std::endl;
-                    exit(0);
+                    throw base_error("No accept for ShallowCondition");
                 }
             }
 
@@ -191,22 +178,16 @@ namespace PetriEngine {
             };
 
             virtual void _accept(BooleanCondition *element) {
-                assert(false);
-                std::cerr << "No accept for BooleanCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for BooleanCondition");
             };
 
             // Expression
             virtual void _accept(UnfoldedIdentifierExpr *element) {
-                assert(false);
-                std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for UnfoldedIndentifierExpr");
             };
 
             virtual void _accept(LiteralExpr *element) {
-                assert(false);
-                std::cerr << "No accept for LiteralExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for LiteralExpr");
             };
 
             virtual void _accept(PlusExpr *element) {
@@ -218,15 +199,11 @@ namespace PetriEngine {
             };
 
             virtual void _accept(MinusExpr *element) {
-                assert(false);
-                std::cerr << "No accept for MinusExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for MinusExpr");
             };
 
             virtual void _accept(NaryExpr *element) {
-                assert(false);
-                std::cerr << "No accept for LivenessCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for NaryExpr (may be called from subclass)");
             }
 
             virtual void _accept(SubtractExpr *element) {
@@ -235,9 +212,7 @@ namespace PetriEngine {
 
             // shallow expression, default to error
             virtual void _accept(IdentifierExpr *element) {
-                assert(false);
-                std::cerr << "No accept for IdentifierExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for IdentifierExpr");
             };
         };
     }

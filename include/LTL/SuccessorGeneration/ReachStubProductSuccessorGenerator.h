@@ -102,7 +102,7 @@ namespace LTL {
                 this->_successor_generator->setSpooler(spooler);
             else {
                 assert(false);
-                std::cerr << "Fatal error\n"; exit(1);
+                throw base_error("Fatal error");
             }
         }
 
