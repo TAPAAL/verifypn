@@ -39,7 +39,7 @@ class ResultHandler : public Reachability::AbstractHandler {
         size_t exploredStates = 0,
         size_t discoveredStates = 0,
         int maxTokens = 0,
-        Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr) {
+        Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool = true) {
         if (result == Unknown) return std::make_pair(Unknown, false);
         auto retval = Satisfied;
         if (result == Satisfied)
