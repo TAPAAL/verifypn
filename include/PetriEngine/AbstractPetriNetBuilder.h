@@ -48,7 +48,7 @@ namespace PetriEngine {
                 double x,
                 double y)
         {
-            throw base_error("ERROR: Colored places are not supported in standard P/T nets");
+            throw base_error("Colored places are not supported in standard P/T nets");
         }
         /** Add a new transition with a unique name */
         virtual void addTransition(const std::string& name,
@@ -62,7 +62,7 @@ namespace PetriEngine {
                 double x,
                 double y)
         {
-            throw base_error("ERROR: Colored transitions are not supported in standard P/T nets");
+            throw base_error("Colored transitions are not supported in standard P/T nets");
         }
         /** Add input arc with given weight */
         virtual void addInputArc(const std::string& place,
@@ -75,7 +75,7 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool inhibitor, int weight)
         {
-            throw base_error("ERROR: Colored input arcs are not supported in standard P/T nets");
+            throw base_error("Colored input arcs are not supported in standard P/T nets");
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
@@ -86,13 +86,13 @@ namespace PetriEngine {
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr)
         {
-            throw base_error("ERROR: Colored output arcs are not supported in standard P/T nets");
+            throw base_error("Colored output arcs are not supported in standard P/T nets");
         }
         /** Add color types with id */
         virtual void addColorType(const std::string& id,
                 const Colored::ColorType* type)
         {
-            throw base_error("ERROR: Color types are not supported in standard P/T nets");
+            throw base_error("Color types are not supported in standard P/T nets");
         }
 
         virtual void enableColors() {

@@ -459,7 +459,7 @@ namespace PetriEngine {
                 {
                     if(in.first->inhibitor)
                     {
-                        throw base_error("ERROR: Trace Abstraction Refinement Error : Inhibitor Arcs are not yet supported by the TAR engine");
+                        throw base_error("Trace Abstraction Refinement Error : Inhibitor Arcs are not yet supported by the TAR engine");
                     }
                 }
             }
