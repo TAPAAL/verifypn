@@ -171,6 +171,11 @@ int main(int argc, const char** argv) {
                 throw base_error("Could not analyze the queries");
             }
 
+            if (options.unfold_query_out_file.size() > 0) {
+                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
+            }
+
+
             {
                 EvaluationContext context(qm0.get(), qnet.get());
                 for (size_t i = 0; i < queries.size(); ++i) {
@@ -186,10 +191,6 @@ int main(int argc, const char** argv) {
                         initial_marking_solved.emplace(i);
                     }
                 }
-            }
-
-            if (options.unfold_query_out_file.size() > 0) {
-                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
             }
 
             // simplification. We always want to do negation-push and initial marking check.
