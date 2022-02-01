@@ -38,7 +38,7 @@ namespace PetriEngine {
 
         /** Add a new place with a unique name */
         virtual void addPlace(const std::string& name,
-                int tokens,
+                uint32_t tokens,
                 double x,
                 double y) = 0;
         /** Add a new colored place with a unique name */
