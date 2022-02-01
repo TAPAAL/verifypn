@@ -60,7 +60,7 @@ namespace PetriEngine {
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
                 int maxTokens = 0,
-                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr) = 0;
+                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) = 0;
         };
 
         class ResultPrinter : public AbstractHandler {
@@ -69,6 +69,10 @@ namespace PetriEngine {
             options_t* options;
             std::vector<std::string>& querynames;
             Reducer* reducer;
+
+            std::string printTechniques();
+            void printTrace(Structures::StateSetInterface*, size_t lastmarking);
+
         public:
             const std::string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
             const std::string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
@@ -88,12 +92,27 @@ namespace PetriEngine {
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
                 int maxTokens = 0,
-                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr) override;
+                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) override;
+        };
 
-            std::string printTechniques();
-
-            void printTrace(Structures::StateSetInterface*, size_t lastmarking);
-
+        // The only purpose of this class is to pretty-print the "Solved by Trace
+        // abstraction refinement" after a query has been solved.
+        // The entire result-printer workflow is overdue a refactor.
+        class TarResultPrinter : public AbstractHandler {
+        private:
+            ResultPrinter& _printer;
+        public:
+            TarResultPrinter(ResultPrinter& printer) : _printer(printer) {}
+            std::pair<Result, bool> handle(
+                size_t index,
+                PQL::Condition* query,
+                Result result,
+                const std::vector<uint32_t>* maxPlaceBound = nullptr,
+                size_t expandedStates = 0,
+                size_t exploredStates = 0,
+                size_t discoveredStates = 0,
+                int maxTokens = 0,
+                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) override;
         };
     } // Reachability
 } // PetriEngine

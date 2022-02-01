@@ -6,6 +6,19 @@
 
 namespace PetriEngine {
     namespace Reachability {
+        std::pair<AbstractHandler::Result, bool> TarResultPrinter::handle(
+            size_t index, PQL::Condition* query, Result result, const std::vector<uint32_t>* maxPlaceBound,
+            size_t expandedStates, size_t exploredStates, size_t discoveredStates,
+            int maxTokens, Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace)
+        {
+            auto res = _printer.handle(index, query, result, maxPlaceBound, expandedStates, exploredStates, discoveredStates, maxTokens, stateset, lastmarking, initialMarking, false);
+            if(res.first == Satisfied || res.first == NotSatisfied)
+            {
+                std::cout << "\nSolved using Trace Abstraction Refinement\n" << std::endl;
+            }
+            return res;
+        }
+
         std::pair<AbstractHandler::Result, bool> ResultPrinter::handle(
                 size_t index,
                 PQL::Condition* query,
@@ -15,7 +28,7 @@ namespace PetriEngine {
                 size_t exploredStates,
                 size_t discoveredStates,
                 int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking)
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace)
         {
             if(result == Unknown) return std::make_pair(Unknown,false);
 
@@ -132,7 +145,7 @@ namespace PetriEngine {
             if(options->cpnOverApprox)
                 std::cout << "\nSolved using CPN Approximation\n" << std::endl;
 
-            if(showTrace && options->trace != TraceLevel::None)
+            if(showTrace && options->trace != TraceLevel::None && trace)
             {
                 if(stateset == nullptr)
                 {
