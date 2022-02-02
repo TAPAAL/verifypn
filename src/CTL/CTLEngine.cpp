@@ -99,7 +99,7 @@ class ResultHandler : public AbstractHandler {
                 size_t exploredStates,
                 size_t discoveredStates,
                 int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) override
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) override
         {
             if(result == ResultPrinter::Satisfied)
             {
@@ -192,7 +192,7 @@ public:
                 size_t exploredStates,
                 size_t discoveredStates,
                 int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) {
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
         return std::make_pair(result, false);
     }
 };
