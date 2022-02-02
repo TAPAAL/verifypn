@@ -157,11 +157,14 @@ int main(int argc, const char** argv) {
         //----------------------- Query Simplification -----------------------//
         bool alldone = options.queryReductionTimeout > 0;
         PetriNetBuilder b2(builder);
+        std::set<size_t> initial_marking_solved;
+        size_t initial_size = 0;
         ResultPrinter p2(&b2, &options, querynames);
         {
             std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
             std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
-
+            for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
+                initial_size += qm0[i];
 
             if (queries.size() == 0 ||
                 contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
@@ -172,6 +175,24 @@ int main(int argc, const char** argv) {
                 outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
             }
 
+
+            {
+                EvaluationContext context(qm0.get(), qnet.get());
+                for (size_t i = 0; i < queries.size(); ++i) {
+                    auto r = queries[i]->evaluate(context);
+                    if(r == Condition::RFALSE)
+                    {
+                        queries[i] = BooleanCondition::FALSE_CONSTANT;
+                        initial_marking_solved.emplace(i);
+                    }
+                    else if(r == Condition::RTRUE)
+                    {
+                        queries[i] = BooleanCondition::TRUE_CONSTANT;
+                        initial_marking_solved.emplace(i);
+                    }
+                }
+            }
+
             // simplification. We always want to do negation-push and initial marking check.
             simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
 
@@ -179,44 +200,62 @@ int main(int argc, const char** argv) {
             if (options.query_out_file.size() > 0) {
                 outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
             }
-        }
 
-        if (!options.statespaceexploration) {
-            for (size_t i = 0; i < queries.size(); ++i) {
-                if (queries[i]->isTriviallyTrue()) {
-                    results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied).first;
-                    if (results[i] == ResultPrinter::Ignore && options.printstatistics) {
-                        std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
-                    } else if (options.printstatistics) {
-                        std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
-                    }
-                } else if (queries[i]->isTriviallyFalse()) {
-                    results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied).first;
-                    if (results[i] == ResultPrinter::Ignore && options.printstatistics) {
-                        std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
-                    } else if (options.printstatistics) {
-                        std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
-                    }
+            if (!options.statespaceexploration) {
+                for (size_t i = 0; i < queries.size(); ++i) {
+                    if (queries[i]->isTriviallyTrue()) {
+                        if(initial_marking_solved.count(i) > 0 && options.trace != TraceLevel::None)
+                        {
+                            // we misuse the implementation to make sure we print the empty-trace
+                            // when the initial marking is sufficient.
+                            Structures::StateSet tmp(*qnet, 0);
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied, nullptr,
+                                                    0, 1, 1, initial_size, &tmp, 0, qm0.get()).first;
+                        }
+                        else
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied).first;
+                        if (results[i] == ResultPrinter::Ignore && options.printstatistics) {
+                            std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                        } else if (options.printstatistics) {
+                            std::cout << "Query solved by Query Simplification.\n" << std::endl;
+                        }
+                    } else if (queries[i]->isTriviallyFalse()) {
+                        if(initial_marking_solved.count(i) > 0 && options.trace != TraceLevel::None)
+                        {
+                            // we misuse the implementation to make sure we print the empty-trace
+                            // when the initial marking is sufficient.
+                            Structures::StateSet tmp(*qnet, 0);
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied, nullptr,
+                                                    0, 1, 1, initial_size, &tmp, 0, qm0.get()).first;
+                        }
+                        else
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied).first;
+                        if (results[i] == ResultPrinter::Ignore && options.printstatistics) {
+                            std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                        } else if (options.printstatistics) {
+                            std::cout << "Query solved by Query Simplification.\n" << std::endl;
+                        }
 
-                } else if (options.strategy == Strategy::OverApprox) {
-                    results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
-                    if (options.printstatistics) {
-                        std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                    } else if (options.strategy == Strategy::OverApprox) {
+                        results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
+                        if (options.printstatistics) {
+                            std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                        }
+                    } else if (options.noreach || !PetriEngine::PQL::isReachability(queries[i])) {
+                        if (std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
+                            results[i] = ResultPrinter::Synthesis;
+                        else
+                            results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
+                        alldone = false;
+                    } else {
+                        queries[i] = prepareForReachability(queries[i]);
+                        alldone = false;
                     }
-                } else if (options.noreach || !PetriEngine::PQL::isReachability(queries[i])) {
-                    if (std::dynamic_pointer_cast<PQL::ControlCondition>(queries[i]))
-                        results[i] = ResultPrinter::Synthesis;
-                    else
-                        results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
-                    alldone = false;
-                } else {
-                    queries[i] = prepareForReachability(queries[i]);
-                    alldone = false;
                 }
-            }
 
-            if (alldone && options.model_out_file.size() == 0)
-                return to_underlying(ReturnValue::SuccessCode);
+                if (alldone && options.model_out_file.size() == 0)
+                    return to_underlying(ReturnValue::SuccessCode);
+            }
         }
 
         options.queryReductionTimeout = 0;
@@ -390,7 +429,8 @@ int main(int argc, const char** argv) {
 
             if (options.tar && net->numberOfPlaces() > 0) {
                 //Create reachability search strategy
-                TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
+                TarResultPrinter tar_printer(printer);
+                TARReachabilitySearch strategy(tar_printer, *net, builder.getReducer(), options.kbound);
 
                 // Change default place-holder to default strategy
                 fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
