@@ -345,9 +345,9 @@ namespace PetriEngine::PQL {
     }
 
     void EvaluateAndSetVisitor::_accept(CompareCondition *element) {
-        element->visit(*this);
+        (*element)[0]->visit(*this);
         int v1 = _return_value._value;
-        element->visit(*this);
+        (*element)[1]->visit(*this);
         int v2 = _return_value._value;
 
         bool res = apply(element, v1, v2);
