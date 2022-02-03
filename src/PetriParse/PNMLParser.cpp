@@ -596,7 +596,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     std::string id(element->first_attribute("id")->value());
 
     auto initial = element->first_attribute("initialMarking");
-    uint32_t initialMarking = 0;
+    uint64_t initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
     const PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
