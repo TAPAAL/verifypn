@@ -40,7 +40,7 @@ jobs:
           buildDirectory: '${{runner.workspace}}/build'     
       - name: Test
         run: |
-          cd build
+          cd '${{runner.workspace}}/build/'
           make test
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
