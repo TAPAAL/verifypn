@@ -884,7 +884,7 @@ namespace PetriEngine {
         return continueReductions;
     }
     
-    bool Reducer::ReducebyRuleE(uint32_t* placeInQuery, bool useP) {
+    bool Reducer::ReducebyRuleEP(uint32_t* placeInQuery) {
         // Rule P is an extension on Rule E
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
@@ -893,7 +893,6 @@ namespace PetriEngine {
             if(hasTimedout()) return false;
             Place& place = parent->_places[p];
             if(place.skip) continue;
-            if(!useP && place.inhib) continue;
             // If more producers, we are guaranteed that one producer have a positive effect on the place, and as such E1 precondition is false
             if(place.producers.size() > place.consumers.size()) continue;
 
@@ -2304,7 +2303,6 @@ namespace PetriEngine {
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
             std::cout << "Rule H disabled when a trace is requested." << std::endl;
         bool applyF = std::count(reduction.begin(), reduction.end(), 5);
-        bool useP = std::count(reduction.begin(), reduction.end(), 15);
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
@@ -2327,7 +2325,7 @@ namespace PetriEngine {
                     do { // start by rules that do not move tokens
                         changed = false;
                         if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
-                        //while(ReducebyRuleE(context.getQueryPlaceCount(), useP)) changed = true;
+                        //while(ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
@@ -2411,7 +2409,7 @@ namespace PetriEngine {
                                 while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 4:
-                                while(ReducebyRuleE(context.getQueryPlaceCount(), useP)) changed = true;
+                                while(ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 5:
                                 while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
