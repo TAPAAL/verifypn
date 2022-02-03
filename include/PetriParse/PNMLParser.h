@@ -47,8 +47,9 @@ class PNMLParser {
 
     struct Transition {
         std::string id;
-        double x, y;
-        PetriEngine::Colored::GuardExpression_ptr expr;
+        int _player  = 0;
+        double x = 0, y = 0;
+        PetriEngine::Colored::GuardExpression_ptr expr = nullptr;
     };
     typedef std::vector<Transition> TransitionList;
     typedef TransitionList::iterator TransitionIter;
@@ -107,7 +108,7 @@ private:
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
-    TransitionList transitions;
+    TransitionList _transitions;
     ColorTypeMap colorTypes;
     VariableMap variables;
     bool isColored;

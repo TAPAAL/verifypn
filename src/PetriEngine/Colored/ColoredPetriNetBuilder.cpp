@@ -18,6 +18,8 @@
  */
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "utils/errors.h"
+
 #include <chrono>
 #include <tuple>
 using std::get;
@@ -51,20 +53,29 @@ namespace PetriEngine {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(Colored::Place {name, type, tokens, x, y});
+            _places.emplace_back(Colored::Place {name, type, std::move(tokens), x, y});
+            auto& place = _places.back();
             _placenames[name] = next;
+            for(const auto& t : place.marking)
+            {
+                if(t.first->getColorType() != type)
+                {
+                    throw base_error("Mismatch in color-type on ", name, " expecting type ", type->getName(), " got ",
+                        t.first->getColorType()->getName(), " (instance ", Colored::Color::toString(t.first), ")");
+                }
+            }
 
             //set up place color fix points and initialize queue
-            if (!tokens.empty()) {
+            if (!place.marking.empty()) {
                 _placeFixpointQueue.emplace_back(next);
             }
 
             Colored::interval_vector_t placeConstraints;
-            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
+            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !place.marking.empty()};
             uint32_t colorCounter = 0;
 
-            if(tokens.size() == type->size()) {
-                for(const auto& colorPair : tokens){
+            if(place.marking.size() == type->size()) {
+                for(const auto& colorPair : place.marking){
                     if(colorPair.second > 0){
                         colorCounter++;
                     } else {
@@ -76,7 +87,7 @@ namespace PetriEngine {
             if(colorCounter == type->size()){
                 colorFixpoint.constraints.addInterval(type->getFullInterval());
             } else {
-                for (const auto& colorPair : tokens) {
+                for (const auto& colorPair : place.marking) {
                     Colored::interval_t tokenConstraints;
                     uint32_t index = 0;
                     colorPair.first->getColorConstraints(tokenConstraints, index);
@@ -89,17 +100,17 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, int32_t player, double x, double y) {
         if (!_isColored) {
-            _ptBuilder.addTransition(name, x, y);
+            _ptBuilder.addTransition(name, player, x, y);
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(Colored::Transition {name, guard, x, y});
+            _transitions.emplace_back(Colored::Transition {name, guard, player, x, y});
             _transitionnames[name] = next;
         }
     }
@@ -126,15 +137,9 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
-        {
-            std::cout << "ERROR: Transition '" << transition << "' not found." << std::endl;
-            std::exit(-1);
-        }
+            throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
-        {
-            std::cout << "ERROR: Place '" << place << "' not found. " << std::endl;
-            std::exit(-1);
-        }
+            throw base_error("Place '", place, "' not found. ");
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
 
@@ -720,10 +725,10 @@ namespace PetriEngine {
             size_t i = 0;
             bool hasBindings = false;
             for (const auto &b : gen) {
-                const std::string &name = transition.name + "_" + std::to_string(i++);
+                const std::string name = transition.name + "_" + std::to_string(i++);
 
                 hasBindings = true;
-                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                _ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                 offset += 15;
 
                 for (auto& arc : transition.input_arcs) {
@@ -744,7 +749,7 @@ namespace PetriEngine {
             size_t i = 0;
             for (const auto &b : gen) {
                 const std::string &name = transition.name + "_" + std::to_string(i++);
-                _ptBuilder.addTransition(name, transition._x, transition._y + offset);
+                _ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                 offset += 15;
 
                 for (const auto& arc : transition.input_arcs) {
@@ -861,16 +866,17 @@ namespace PetriEngine {
             }
 
             for (auto& transition : _transitions) {
-                _ptBuilder.addTransition(transition.name, transition._x, transition._y);
+                _ptBuilder.addTransition(transition.name, transition._player, transition._x, transition._y);
                 for (const auto& arc : transition.input_arcs) {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
                                                 arc.expr->weight());
                     } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on input arc: " << arcToString(arc) << std::endl;
-                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
-                        std::cerr << e.what() << std::endl;
-                        exit(ErrorCode);
+                        std::stringstream ss;
+                        ss << "Exception on input arc: " << arcToString(arc) << std::endl;
+                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << e.what() << std::endl;
+                        throw base_error(ss.str());
                     }
                 }
                 for (const auto& arc : transition.output_arcs) {
@@ -878,10 +884,11 @@ namespace PetriEngine {
                         _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
                                                 arc.expr->weight());
                     } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on output arc: " << arcToString(arc) << std::endl;
-                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
-                        std::cerr << e.what() << std::endl;
-                        exit(ErrorCode);
+                        std::stringstream ss;
+                        ss << "Exception on output arc: " << arcToString(arc) << std::endl;
+                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << e.what() << std::endl;
+                        throw base_error(ss.str());
                     }
                 }
                 for(const auto& arc : _inhibitorArcs){

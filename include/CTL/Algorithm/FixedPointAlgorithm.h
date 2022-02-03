@@ -10,7 +10,7 @@ namespace Algorithm {
 class FixedPointAlgorithm {
 public:
     virtual bool search(DependencyGraph::BasicDependencyGraph &graph) =0;
-    FixedPointAlgorithm(ReachabilityStrategy type);
+    FixedPointAlgorithm(Strategy type);
     virtual ~FixedPointAlgorithm(){}
 
     size_t processedEdges() const { return _processedEdges; }

@@ -172,6 +172,11 @@ namespace PetriEngine {
             }
         }
 
+        void XMLPrinter::_accept(const ControlCondition *condition) {
+            Tag t(this, "control");
+            (*condition)[0]->visit(*this);
+        }
+
         void XMLPrinter::_accept(const EFCondition *condition) {
             Tag ep(this, "exists-path");
             {

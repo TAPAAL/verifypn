@@ -24,10 +24,18 @@
 
 namespace PetriEngine::PQL {
 
-    Condition_ptr prepareForReachability(Condition_ptr condition) {
+    Condition_ptr prepareForReachability(const Condition_ptr& condition) {
+        return prepareForReachability(condition.get());
+    }
+
+    Condition_ptr prepareForReachability(const Condition* condition) {
         PrepareForReachabilityVisitor visitor;
         condition->visit(visitor);
         return visitor.getReturnValue();
+    }
+
+    void PrepareForReachabilityVisitor::_accept(const ControlCondition *condition) {
+        RETURN(nullptr)
     }
 
     void PrepareForReachabilityVisitor::_accept(const EXCondition *condition) {
@@ -104,20 +112,18 @@ namespace PetriEngine::PQL {
     void PrepareForReachabilityVisitor::_accept(const GCondition* condition) {
         // TODO implement
         assert(false);
-        std::cerr << "TODO implement" << std::endl;
-        exit(0);
+        throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const FCondition* condition) {
         // TODO implement
         assert(false);
-        std::cerr << "TODO implement" << std::endl;
-        exit(0);
+        throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const XCondition* condition) {
         // TODO implement
-        assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+        assert(false); throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const ShallowCondition* condition) {

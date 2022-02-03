@@ -24,6 +24,6 @@ protected:
     std::stack<DependencyGraph::Edge*> W;
 };
 
-}   // end ReachabilityStrategy
+}   // end SearchStrategy
 
 #endif // DFSSEARCH_H

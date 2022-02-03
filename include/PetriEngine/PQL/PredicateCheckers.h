@@ -25,7 +25,9 @@
 
 namespace PetriEngine::PQL {
 
+    bool hasNestedDeadlock(const Condition* condition);
     bool hasNestedDeadlock(const Condition_ptr& condition);
+
 
     class NestedDeadlockVisitor : public AnyVisitor {
     private:
@@ -37,8 +39,8 @@ namespace PetriEngine::PQL {
     };
 
 
-    bool isTemporal(Condition_ptr condition);
-    bool isTemporal(Condition *condition);
+    bool isTemporal(const Condition_ptr& condition);
+    bool isTemporal(const Condition *condition);
 
     class IsTemporalVisitor : public AnyVisitor {
 
@@ -48,11 +50,14 @@ namespace PetriEngine::PQL {
     };
 
 
+    bool isReachability(const Condition* condition);
     bool isReachability(const Condition_ptr& condition);
 
-    class IsReachabilityVisitor : public AnyVisitor {
+    // Check if it is NOT reachability
+    class IsNotReachabilityVisitor : public AnyVisitor {
 
     private:
+        // If it is currently nested inside an EF or AG quantifier
         bool _is_nested = false;
 
         void _accept(const EFCondition *element) override;

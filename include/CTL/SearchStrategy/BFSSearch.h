@@ -30,7 +30,7 @@ protected:
     std::queue<DependencyGraph::Edge*> W;
 };
 
-}   // end ReachabilityStrategy
+}   // end SearchStrategy
 
 #endif /* BFSSEARCH_H */
 

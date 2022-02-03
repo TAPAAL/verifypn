@@ -24,7 +24,12 @@ namespace PetriEngine::PQL {
 
     /*** Nested Deadlock ***/
 
-    bool hasNestedDeadlock(const Condition_ptr& condition) {
+    bool hasNestedDeadlock(const Condition_ptr& condition)
+    {
+        return hasNestedDeadlock(condition.get());
+    }
+
+    bool hasNestedDeadlock(const Condition* condition) {
         NestedDeadlockVisitor v;
         condition->visit(v);
         return v.getReturnValue();
@@ -44,11 +49,11 @@ namespace PetriEngine::PQL {
 
     /*** Is Temporal ***/
 
-    bool isTemporal(Condition_ptr condition) {
+    bool isTemporal(const Condition_ptr& condition) {
         return isTemporal(condition.get());
     }
 
-    bool isTemporal(Condition *condition) {
+    bool isTemporal(const Condition *condition) {
         IsTemporalVisitor visitor;
         condition->visit(visitor);
         return visitor.getReturnValue();
@@ -64,108 +69,135 @@ namespace PetriEngine::PQL {
 
 
     /*** Is Reachability ***/
+    bool isReachability(const Condition* condition) {
+        IsNotReachabilityVisitor visitor;
+        condition->visit(visitor);
+        return !visitor.getReturnValue();
+    }
 
     bool isReachability(const Condition_ptr& condition) {
-        IsReachabilityVisitor visitor;
-        condition->visit(visitor);
-        return visitor.getReturnValue();
+        return isReachability(condition.get());
     }
 
-    void IsReachabilityVisitor::_accept(const SimpleQuantifierCondition *element) {
-        // Do nothing, some simple quantifiers have their own accept
+
+    void IsNotReachabilityVisitor::_accept(const SimpleQuantifierCondition *element) {
+        // AG and EF have their own accepts, all other quantifiers are forbidden
+        setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const UntilCondition *element) {
-        // Do nothing
+    void IsNotReachabilityVisitor::_accept(const UntilCondition *element) {
+        setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const EFCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const EFCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
             element->getCond()->visit(*this);
+            _is_nested = false;
+        } else {
+            setConditionFound();
         }
     }
 
-    void IsReachabilityVisitor ::_accept(const AGCondition *element) {
+    void IsNotReachabilityVisitor ::_accept(const AGCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
             element->getCond()->visit(*this);
+            _is_nested = false;
+        } else {
+            setConditionFound();
         }
     }
 
-    void IsReachabilityVisitor::_accept(const ECondition *element) {
+    void IsNotReachabilityVisitor::_accept(const ECondition *element) {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<FCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->visit(*this);
+                cond->getCond()->visit(*this);
+                _is_nested = false;
+            } else {
+                setConditionFound();
             }
+        } else {
+            setConditionFound();
         }
     }
 
-    void IsReachabilityVisitor::_accept(const ACondition *element) {
+    void IsNotReachabilityVisitor::_accept(const ACondition *element) {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<GCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->visit(*this);
+                cond->getCond()->visit(*this);
+                _is_nested = false;
+            } else {
+                setConditionFound();
             }
+        } else {
+            setConditionFound();
         }
     }
 
-    void IsReachabilityVisitor::_accept(const LogicalCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const LogicalCondition *element) {
         if (_is_nested) {
             for(auto& c : element->getOperands())
             {
-                // This breaks the ANY pattern, we need to check that all operands are reachability
-                _condition_found = false;
                 c->visit(*this);
 
-                if(!_condition_found)
+                if(_condition_found)
                     break;
             }
+        } else {
+            setConditionFound();
         }
     }
 
-    void IsReachabilityVisitor::_accept(const CompareCondition *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const CompareCondition *element) {
+        if (!_is_nested) setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const NotCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const NotCondition *element) {
         element->getCond()->visit(*this);
     }
 
-    void IsReachabilityVisitor::_accept(const BooleanCondition *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const BooleanCondition *element) {
+        if (!_is_nested) setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const DeadlockCondition *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const DeadlockCondition *element) {
+        if (!_is_nested) setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const UnfoldedUpperBoundsCondition *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const UnfoldedUpperBoundsCondition *element) {
+        if (!_is_nested) setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const ShallowCondition *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const ShallowCondition *element) {
+        if (!_is_nested) setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const QuasiLivenessCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const QuasiLivenessCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const LivenessCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const LivenessCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const StableMarkingCondition *element) {
+    void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
             element->getCompiled()->visit(*this);
+        else
+            setConditionFound();
     }
 
-    void IsReachabilityVisitor::_accept(const CompareConjunction *element) {
-        if (_is_nested) setConditionFound();
+    void IsNotReachabilityVisitor::_accept(const CompareConjunction *element) {
+        if (!_is_nested) setConditionFound();
     }
 
 

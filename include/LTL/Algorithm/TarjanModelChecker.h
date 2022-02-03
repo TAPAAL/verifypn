@@ -55,8 +55,7 @@ namespace LTL {
                   _seen(net, kbound)
         {
             if (buchi._buchi->num_states() > 65535) {
-                std::cerr << "Fatal error: cannot handle Büchi automata larger than 2^16 states\n";
-                exit(1);
+                throw base_error("Fatal error: cannot handle Büchi automata larger than 2^16 states");
             }
             _chash.fill(std::numeric_limits<idx_t>::max());
         }

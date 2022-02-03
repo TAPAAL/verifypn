@@ -26,13 +26,13 @@ void options_t::print(std::ostream& optionsOut) {
         return;
     }
 
-    if (strategy == ReachabilityStrategy::BFS) {
+    if (strategy == Strategy::BFS) {
         optionsOut << "\nSearch=BFS";
-    } else if (strategy == ReachabilityStrategy::DFS) {
+    } else if (strategy == Strategy::DFS) {
         optionsOut << "\nSearch=DFS";
-    } else if (strategy == ReachabilityStrategy::HEUR) {
+    } else if (strategy == Strategy::HEUR) {
         optionsOut << "\nSearch=HEUR";
-    } else if (strategy == ReachabilityStrategy::RDFS) {
+    } else if (strategy == Strategy::RDFS) {
         optionsOut << "\nSearch=RDFS";
     } else {
         optionsOut << "\nSearch=OverApprox";
@@ -138,16 +138,13 @@ void printHelp() {
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
-        "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
-        "                                       - reach      apply reachability stubborn sets in Büchi states\n"
-        "                                                    that represent reachability subproblems,\n"
-        "                                       - classic    classic stubborn set method.\n"
+        "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
+        "                                       - automaton  apply Büchi-guided stubborn set method (Jensen et al., 2021).\n"
+        "                                       - classic    classic stubborn set method (Valmari, 1990).\n"
         "                                                    Only applicable with formulae that do not \n"
         "                                                    contain the next-step operator.\n"
-        "                                       - mix        mix of reach and classic - use reach when applicable,\n"
-        "                                                    classic otherwise.\n"
-        "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
-        "                                       - none       disable stubborn reductions (equivalent to -p).\n"
+        "                                       - liebke     apply POR method by Liebke (2020).\n"
+        "                                       - none       disable stubborn reductions for LTL model checking (equivalent to -p).\n"
         "  --ltl-heur <type>                    Select search heuristic for best-first search in LTL engine\n"
         "                                       Defaults to aut\n"
         "                                       - dist           Formula-driven heuristic, guiding toward states that satisfy\n"
@@ -206,6 +203,8 @@ void printHelp() {
         "  --spot-optimization <1,2,3>          The optimization level passed to Spot for Büchi automaton creation.\n"
         "                                       1: Low (default), 2: Medium, 3: High\n"
         "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
+        "  --strategy-output <file>             Outputs the synthesized strategy (if a such exist) to <filename>\n"
+        "                                           Use '-' (dash) for outputting to standard output.\n"
         "\n"
         "Return Values:\n"
         "  0   Successful, query satisfiable\n"
@@ -238,15 +237,15 @@ bool options_t::parse(int argc, const char** argv) {
             }
             auto* s = argv[++i];
             if (std::strcmp(s, "BestFS") == 0)
-                strategy = HEUR;
+                strategy = Strategy::HEUR;
             else if (std::strcmp(s, "BFS") == 0)
-                strategy = BFS;
+                strategy = Strategy::BFS;
             else if (std::strcmp(s, "DFS") == 0)
-                strategy = DFS;
+                strategy = Strategy::DFS;
             else if (std::strcmp(s, "RDFS") == 0)
-                strategy = RDFS;
+                strategy = Strategy::RDFS;
             else if (std::strcmp(s, "OverApprox") == 0)
-                strategy = OverApprox;
+                strategy = Strategy::OverApprox;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
             }
@@ -371,7 +370,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%u", &siphonDepth) != 1) {
                 throw base_error("Argument Error: Invalid siphon-depth count ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "-tar") == 0) {
+        } else if (std::strcmp(argv[i], "-tar") == 0 || std::strcmp(argv[i], "--trace-abstraction") == 0) {
             tar = true;
 
         } else if (std::strcmp(argv[i], "--max-intervals") == 0) {
@@ -478,12 +477,10 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Missing argument to --ltl-por");
             } else if (std::strcmp(argv[i + 1], "classic") == 0) {
                 ltl_por = LTLPartialOrder::Visible;
-            } else if (std::strcmp(argv[i + 1], "reach") == 0) {
-                ltl_por = LTLPartialOrder::AutomatonReach;
-            } else if (std::strcmp(argv[i + 1], "mix") == 0) {
-                ltl_por = LTLPartialOrder::VisibleReach;
             } else if (std::strcmp(argv[i + 1], "automaton") == 0) {
-                ltl_por = LTLPartialOrder::FullAutomaton;
+                ltl_por = LTLPartialOrder::Automaton;
+            } else if (std::strcmp(argv[i + 1], "liebke") == 0) {
+                ltl_por = LTLPartialOrder::Liebke;
             } else if (std::strcmp(argv[i + 1], "none") == 0) {
                 ltl_por = LTLPartialOrder::None;
             } else {
@@ -507,8 +504,6 @@ bool options_t::parse(int argc, const char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "-noweak") == 0 || std::strcmp(argv[i], "--noweak") == 0) {
             ltluseweak = false;
-        } else if (std::strcmp(argv[i], "-g") == 0 || std::strcmp(argv[i], "--game-mode") == 0) {
-            gamemode = true;
         } else if (std::strcmp(argv[i], "-c") == 0 || std::strcmp(argv[i], "--cpn-overapproximation") == 0) {
             cpnOverApprox = true;
         } else if (std::strcmp(argv[i], "--disable-cfp") == 0) {
@@ -519,7 +514,14 @@ bool options_t::parse(int argc, const char** argv) {
             doVerification = false;
         } else if (std::strcmp(argv[i], "--disable-symmetry-vars") == 0) {
             symmetricVariables = false;
-        } else if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
+        } else if (std::strcmp(argv[i], "--strategy-output") == 0) {
+            if (argc == i + 1) {
+                throw base_error("Missing argument to --strategy-output");
+            }
+            ++i;
+            strategy_output = argv[i];
+        }
+        else if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
             printHelp();
             return true;
         } else if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--version") == 0) {
@@ -556,7 +558,7 @@ bool options_t::parse(int argc, const char** argv) {
             throw base_error("Argument Error: Unrecognized option ", std::quoted(modelfile));
         }
     }
-    
+
     if (statespaceexploration) {
         // for state-space exploration some options are mandatory
         enablereduction = 0;
@@ -592,11 +594,11 @@ bool options_t::parse(int argc, const char** argv) {
         if (siphonDepth != 0) {
             throw base_error("Argument Error: --siphon-depth is not compatible with LTL model checking.");
         }
-        if(strategy != DFS &&
-           strategy != RDFS &&
-           strategy != HEUR &&
-           strategy != DEFAULT &&
-           strategy != OverApprox)
+        if(strategy != Strategy::DFS &&
+           strategy != Strategy::RDFS &&
+           strategy != Strategy::HEUR &&
+           strategy != Strategy::DEFAULT &&
+           strategy != Strategy::OverApprox)
         {
             throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, and BestFS.");
         }

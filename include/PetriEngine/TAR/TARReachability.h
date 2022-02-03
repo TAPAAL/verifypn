@@ -47,9 +47,9 @@ namespace PetriEngine {
             }
             
             void reachable(
-                    std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                    std::vector<ResultPrinter::Result>& results,
-                    StatisticsLevel statisticsLevel, bool printtrace);
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                std::vector<ResultPrinter::Result>& results,
+                StatisticsLevel statisticsLevel, bool printtrace);
         private:
 
             void printTrace(trace_t& stack);

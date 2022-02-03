@@ -11,7 +11,7 @@ class LocalFPA : public FixedPointAlgorithm
 
     // FixedPointAlgorithm interface
 public:
-    LocalFPA(ReachabilityStrategy type) : FixedPointAlgorithm(type)
+    LocalFPA(Strategy type) : FixedPointAlgorithm(type)
     {
     }
     virtual ~LocalFPA (){}

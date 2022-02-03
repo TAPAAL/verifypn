@@ -35,27 +35,26 @@
 #include "EquivalenceVec.h"
 #include "ArcIntervals.h"
 #include "GuardRestrictor.h"
-#include "../errorcodes.h"
+#include "utils/errors.h"
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
-    
+
     namespace Colored {
         struct ExpressionContext {
-            
+
 
             const BindingMap& binding;
             const ColorTypeMap& colorTypes;
             const Colored::EquivalenceVec& placePartition;
-            
+
             const Color* findColor(const std::string& color) const {
                 for (auto& elem : colorTypes) {
                     auto col = (*elem.second)[color];
                     if (col)
                         return col;
                 }
-                printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
-                exit(ErrorCode);
+                throw base_error("Could not find color: ", color.c_str(), "\nCANNOT_COMPUTE\n");
             }
 
             const ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
@@ -69,8 +68,8 @@ namespace PetriEngine {
                 return nullptr;
             }
         };
-        
-        
+
+
 
         class WeightException : public std::exception {
         private:
@@ -87,11 +86,11 @@ namespace PetriEngine {
         inline bool instanceof(const T*) {
             return std::is_base_of<Base, T>::value;
         }
-        
+
         class Expression {
         public:
             Expression() {}
-        
+
             virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const {}
 
             virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) const {
@@ -121,18 +120,18 @@ namespace PetriEngine {
                 return false;
             }
 
-            
+
 
             virtual std::string toString() const {
                 return "Unsupported";
             }
         };
-        
+
         class ColorExpression : public Expression {
         public:
             ColorExpression() {}
             virtual ~ColorExpression() {}
-            
+
             virtual const Color* eval(const ExpressionContext& context) const = 0;
 
             virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
@@ -146,7 +145,7 @@ namespace PetriEngine {
             }
 
         };
-        
+
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(const ExpressionContext& context) const override {
@@ -165,9 +164,9 @@ namespace PetriEngine {
                 Colored::interval_t interval;
                 Colored::interval_vector_t tupleInterval;
                 const Color *dotColor = &(*ColorType::dotInstance()->begin());
-                 
+
                 colortypes.emplace_back(dotColor->getColorType());
-                
+
                 interval.addRange(dotColor->getId(), dotColor->getId());
                 tupleInterval.addInterval(interval);
                 return tupleInterval;
@@ -177,7 +176,7 @@ namespace PetriEngine {
                 const Color *dotColor = &(*ColorType::dotInstance()->begin());
                 constantMap[index] = dotColor;
             }
-            
+
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return ColorType::dotInstance();
             }
@@ -188,22 +187,22 @@ namespace PetriEngine {
         };
 
         typedef std::shared_ptr<ColorExpression> ColorExpression_ptr;
-        
+
         class VariableExpression : public ColorExpression {
         private:
             const Variable* _variable;
-            
+
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 return context.binding.find(_variable)->second;
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 variables.insert(_variable);
                 varPositions[index] = _variable;
                 if(varModifierMap.count(_variable) == 0){
                     std::vector<std::unordered_map<uint32_t, int32_t>> newVec;
-                    
+
                     for(auto pair : varModifierMap){
                         for(uint32_t i = 0; i < pair.second.size()-1; i++){
                             std::unordered_map<uint32_t, int32_t> emptyMap;
@@ -217,12 +216,12 @@ namespace PetriEngine {
                     varModifierMap[_variable] = newVec;
                 } else {
                     varModifierMap[_variable].back()[index] = 0;
-                }                
+                }
             }
 
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_vector_t varInterval;
-                
+
                 // If we see a new variable on an out arc, it gets its full interval
                 if (varMap.count(_variable) == 0){
                     varInterval.addInterval(_variable->colorType->getFullInterval());
@@ -230,8 +229,8 @@ namespace PetriEngine {
                     for(const auto& interval : varMap.find(_variable)->second){
                         varInterval.addInterval(interval);
                     }
-                }               
-                                           
+                }
+
                 std::vector<const ColorType*> varColorTypes;
                 _variable->colorType->getColortypes(varColorTypes);
 
@@ -264,11 +263,11 @@ namespace PetriEngine {
             VariableExpression(const Variable* variable)
                     : _variable(variable) {}
         };
-        
+
         class UserOperatorExpression : public ColorExpression {
         private:
             const Color* _userOperator;
-            
+
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 if(context.placePartition.getEquivalenceClasses().empty()){
@@ -280,7 +279,7 @@ namespace PetriEngine {
                     context.placePartition.applyPartition(tupleIds);
                     return _userOperator->getColorType()->getColor(tupleIds);
                 }
-                
+
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -289,7 +288,7 @@ namespace PetriEngine {
                     colorId += _userOperator->getColorType()->size();
                 }
                 colorId = colorId % _userOperator->getColorType()->size();
-                
+
                 if(arcIntervals._intervalTupleVec.empty()){
                     Colored::interval_vector_t newIntervalTuple;
                     bool colorInFixpoint = false;
@@ -313,7 +312,7 @@ namespace PetriEngine {
                         for (auto i = intervalsToRemove.rbegin(); i != intervalsToRemove.rend(); ++i) {
                             intervalTuple.removeInterval(*i);
                         }
-                    }              
+                    }
                     return !arcIntervals._intervalTupleVec[0].empty();
                 }
             }
@@ -325,7 +324,7 @@ namespace PetriEngine {
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 constantMap[index] = _userOperator;
             }
-            
+
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override {
                 return _userOperator->getColorType();
             }
@@ -333,9 +332,9 @@ namespace PetriEngine {
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_t interval;
                 Colored::interval_vector_t tupleInterval;
-                 
+
                 colortypes.emplace_back(_userOperator->getColorType());
-                
+
                 interval.addRange(_userOperator->getId(), _userOperator->getId());
                 tupleInterval.addInterval(interval);
                 return tupleInterval;
@@ -344,11 +343,11 @@ namespace PetriEngine {
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
         };
-        
+
         class SuccessorExpression : public ColorExpression {
         private:
             ColorExpression_ptr _color;
-            
+
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 return &++(*_color->eval(context));
@@ -357,7 +356,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _color->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = index;
@@ -366,9 +365,9 @@ namespace PetriEngine {
                     for(auto& idModPair : varModifierPair.second.back()){
                         if(idModPair.first <= index && idModPair.first >= indexBefore){
                             idModPair.second--;
-                        } 
-                    }                   
-                }                
+                        }
+                    }
+                }
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -402,11 +401,11 @@ namespace PetriEngine {
             SuccessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
         };
-        
+
         class PredecessorExpression : public ColorExpression {
         private:
             ColorExpression_ptr _color;
-            
+
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 return &--(*_color->eval(context));
@@ -415,7 +414,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _color->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = index;
@@ -424,15 +423,15 @@ namespace PetriEngine {
                     for(auto& idModPair : varModifierPair.second.back()){
                         if(idModPair.first <= index && idModPair.first >= indexBefore){
                             idModPair.second++;
-                        } 
-                    }                   
-                } 
+                        }
+                    }
+                }
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 return _color->getArcIntervals(arcIntervals, cfp, index, modifier-1);
             }
-            
+
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = colortypes.size();
@@ -460,12 +459,12 @@ namespace PetriEngine {
             PredecessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
         };
-        
+
         class TupleExpression : public ColorExpression {
         private:
             std::vector<ColorExpression_ptr> _colors;
             const ColorType* _colorType = nullptr;
-            
+
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 std::vector<const Color*> colors;
@@ -494,12 +493,12 @@ namespace PetriEngine {
 
                     if(intervals.empty()){
                         intervals = nested_intervals;
-                    } else {                        
+                    } else {
                         for(const auto& nested_interval : nested_intervals){
                             Colored::interval_vector_t newIntervals;
                             for(auto interval : intervals){
                                 for(const auto& nestedRange : nested_interval._ranges) {
-                                    interval.addRange(nestedRange);    
+                                    interval.addRange(nestedRange);
                                 }
                                 newIntervals.addInterval(interval);
                             }
@@ -508,7 +507,7 @@ namespace PetriEngine {
                             }
                         }
                         intervals = intervalHolder;
-                    }                  
+                    }
                 }
                 return intervals;
             }
@@ -523,7 +522,7 @@ namespace PetriEngine {
                 }
                 return true;
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 for (const auto& elem : _colors) {
                     elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
@@ -532,7 +531,7 @@ namespace PetriEngine {
             }
 
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
-                
+
                 std::vector<const ColorType*> types;
                 if(_colorType != nullptr){
                     return _colorType;
@@ -541,7 +540,7 @@ namespace PetriEngine {
                 for (const auto& color : _colors) {
                     types.push_back(color->getColorType(colorTypes));
                 }
-                
+
                 for (auto elem : colorTypes) {
                     auto* pt = dynamic_cast<const ProductType*>(elem.second);
                     if (pt && pt->containsTypes(types)) {
@@ -576,12 +575,12 @@ namespace PetriEngine {
             TupleExpression(std::vector<ColorExpression_ptr>&& colors)
                     : _colors(std::move(colors)) {}
         };
-        
+
         class GuardExpression : public Expression {
         public:
             GuardExpression() {}
             virtual ~GuardExpression() {}
-            
+
             virtual bool eval(const ExpressionContext& context) const = 0;
 
             virtual void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const = 0;
@@ -593,12 +592,12 @@ namespace PetriEngine {
         };
 
         typedef std::shared_ptr<GuardExpression> GuardExpression_ptr;
-        
+
         class LessThanExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) < _right->eval(context);
@@ -635,22 +634,22 @@ namespace PetriEngine {
                 Colored::GuardRestrictor guardRestrictor;
                 guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, true);
             }
-            
+
             std::string toString() const override {
                 std::string res = _left->toString() + " < " + _right->toString();
                 return res;
             }
 
-            
+
             LessThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class GreaterThanExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) > _right->eval(context);
@@ -659,7 +658,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -693,16 +692,16 @@ namespace PetriEngine {
                 std::string res = _left->toString() + " > " + _right->toString();
                 return res;
             }
-            
+
             GreaterThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class LessThanEqExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) <= _right->eval(context);
@@ -711,7 +710,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -738,7 +737,7 @@ namespace PetriEngine {
                 }
 
                 Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, false); 
+                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, false);
             }
 
             std::string toString() const override {
@@ -746,16 +745,16 @@ namespace PetriEngine {
                 return res;
             }
 
-            
+
             LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class GreaterThanEqExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) >= _right->eval(context);
@@ -764,7 +763,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -791,9 +790,9 @@ namespace PetriEngine {
                 }
 
                 Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, false, false);                
+                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, false, false);
             }
-            
+
             std::string toString() const override {
                 std::string res = _left->toString() + " >= " + _right->toString();
                 return res;
@@ -802,17 +801,17 @@ namespace PetriEngine {
             GreaterThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class EqualityExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) == _right->eval(context);
             }
-            
+
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
@@ -821,7 +820,7 @@ namespace PetriEngine {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
-            
+
 
             void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
                 VariableModifierMap varModifierMapL;
@@ -842,7 +841,7 @@ namespace PetriEngine {
                 if(leftVars.empty() && rightVars.empty()){
                     return;
                 }
-                
+
                 Colored::GuardRestrictor guardRestrictor;
                 guardRestrictor.restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
             }
@@ -855,12 +854,12 @@ namespace PetriEngine {
             EqualityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class InequalityExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) != _right->eval(context);
@@ -869,7 +868,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -902,16 +901,16 @@ namespace PetriEngine {
                 std::string res = _left->toString() + " != " + _right->toString();
                 return res;
             }
-            
+
             InequalityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class AndExpression : public GuardExpression {
         private:
             GuardExpression_ptr _left;
             GuardExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) && _right->eval(context);
@@ -920,7 +919,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -939,12 +938,12 @@ namespace PetriEngine {
             AndExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(left), _right(right) {}
         };
-        
+
         class OrExpression : public GuardExpression {
         private:
             GuardExpression_ptr _left;
             GuardExpression_ptr _right;
-            
+
         public:
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) || _right->eval(context);
@@ -953,7 +952,7 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -975,12 +974,12 @@ namespace PetriEngine {
             OrExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class ArcExpression : public Expression {
         public:
             ArcExpression() {}
             virtual ~ArcExpression() {}
-            
+
             virtual Multiset eval(const ExpressionContext& context) const = 0;
 
             virtual void getConstants(PositionColorsMap &constantMap, uint32_t &index) const = 0;
@@ -991,7 +990,7 @@ namespace PetriEngine {
 
             virtual std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec) const {
                 std::vector<const Colored::ColorType *> colortypes;
-                
+
                 return getOutputIntervals(varMapVec, colortypes);
             }
 
@@ -1001,11 +1000,11 @@ namespace PetriEngine {
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
-        
+
         class AllExpression : public Expression {
         private:
             const ColorType* _sort;
-            
+
         public:
             virtual ~AllExpression() {};
             std::vector<std::pair<const Color*,uint32_t>> eval(const ExpressionContext& context) const {
@@ -1020,7 +1019,7 @@ namespace PetriEngine {
                         colors.push_back(std::make_pair(_sort->getColor(eq_class.intervals().getLowerIds()),eq_class.size()));
                     }
                 }
-                
+
                 return colors;
             }
 
@@ -1041,16 +1040,16 @@ namespace PetriEngine {
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const {
-                
+
                 if(arcIntervals._intervalTupleVec.empty()){
                     bool colorsInFixpoint = false;
                     Colored::interval_vector_t newIntervalTuple;
                     if(cfp.constraints.getContainedColors() == _sort->size()){
                         colorsInFixpoint = true;
-                        for(const auto& interval : cfp.constraints){                            
+                        for(const auto& interval : cfp.constraints){
                             newIntervalTuple.addInterval(interval);
                         }
-                    }                    
+                    }
                     arcIntervals._intervalTupleVec.push_back(newIntervalTuple);
                     return colorsInFixpoint;
                 } else {
@@ -1074,20 +1073,20 @@ namespace PetriEngine {
                 return _sort->getName() + ".all";
             }
 
-            AllExpression(const ColorType* sort) : _sort(sort) 
+            AllExpression(const ColorType* sort) : _sort(sort)
             {
                 assert(sort != nullptr);
             }
         };
 
         typedef std::shared_ptr<AllExpression> AllExpression_ptr;
-        
+
         class NumberOfExpression : public ArcExpression {
         private:
             uint32_t _number;
             std::vector<ColorExpression_ptr> _color;
             AllExpression_ptr _all;
-            
+
         public:
             Multiset eval(const ExpressionContext& context) const override {
                 std::vector<std::pair<const Color*,uint32_t>> col;
@@ -1100,8 +1099,8 @@ namespace PetriEngine {
                     for(auto& pair : col){
                         pair.second = pair.second * _number;
                     }
-                }               
-                
+                }
+
                 return Multiset(col);
             }
             bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const override{
@@ -1150,7 +1149,7 @@ namespace PetriEngine {
                     for (const auto& elem : _color) {
                         for(const auto& varMap : varMapVec){
                             intervalsVec.push_back(elem->getOutputIntervals(varMap, colortypes));
-                        }                        
+                        }
                     }
                 } else {
                     intervalsVec.push_back(_all->getOutputIntervals(varMapVec, colortypes));
@@ -1207,11 +1206,11 @@ namespace PetriEngine {
         };
 
         typedef std::shared_ptr<NumberOfExpression> NumberOfExpression_ptr;
-        
+
         class AddExpression : public ArcExpression {
         private:
             std::vector<ArcExpression_ptr> _constituents;
-            
+
         public:
             Multiset eval(const ExpressionContext& context) const override {
                 Multiset ms;
@@ -1227,7 +1226,7 @@ namespace PetriEngine {
                         return false;
                     }
                 }
-                
+
                 if(numbers.size() < 2){
                     return false;
                 }
@@ -1241,7 +1240,7 @@ namespace PetriEngine {
                 }
                 return true;
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 for (const auto& elem : _constituents) {
                     for(auto& pair : varModifierMap){
@@ -1278,11 +1277,11 @@ namespace PetriEngine {
                     arcIntervals._intervalTupleVec.insert(arcIntervals._intervalTupleVec.end(), newArcIntervals._intervalTupleVec.begin(), newArcIntervals._intervalTupleVec.end());
                 }
                 return true;
-            }            
+            }
 
             std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
                 std::vector<Colored::interval_vector_t> intervalsVec;
-                
+
                 for (const auto& elem : _constituents) {
                     auto nestedIntervals = elem->getOutputIntervals(varMapVec, colortypes);
 
@@ -1318,17 +1317,17 @@ namespace PetriEngine {
             AddExpression(std::vector<ArcExpression_ptr>&& constituents)
                     : _constituents(std::move(constituents)) {}
         };
-        
+
         class SubtractExpression : public ArcExpression {
         private:
             ArcExpression_ptr _left;
             ArcExpression_ptr _right;
-            
+
         public:
             Multiset eval(const ExpressionContext& context) const override {
                 return _left->eval(context) - _right->eval(context);
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 //We ignore the restrictions imposed by the subtraction for now
@@ -1350,7 +1349,7 @@ namespace PetriEngine {
             std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
                 //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
                 return _left->getOutputIntervals(varMapVec, colortypes);
-            }   
+            }
 
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
                 uint32_t rIndex = index;
@@ -1379,17 +1378,17 @@ namespace PetriEngine {
             SubtractExpression(ArcExpression_ptr&& left, ArcExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
-        
+
         class ScalarProductExpression : public ArcExpression {
         private:
             uint32_t _scalar;
             ArcExpression_ptr _expr;
-            
+
         public:
             Multiset eval(const ExpressionContext& context) const override {
                 return _expr->eval(context) * _scalar;
             }
-            
+
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _expr->getVariables(variables, varPositions,varModifierMap, includeSubtracts);
             }

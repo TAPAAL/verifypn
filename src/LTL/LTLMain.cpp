@@ -92,10 +92,11 @@ namespace LTL {
                                               const Condition_ptr &negated_formula,
                                               const Structures::BuchiAutomaton& automaton,
                                               options_t &options) {
-        if (options.strategy == ReachabilityStrategy::RDFS) {
+
+        if (options.strategy == Strategy::RDFS) {
             return std::make_unique<RandomHeuristic>(options.seed());
         }
-        if (options.strategy != ReachabilityStrategy::HEUR && options.strategy != ReachabilityStrategy::DEFAULT) {
+        if (options.strategy != Strategy::HEUR && options.strategy != Strategy::DEFAULT) {
             return nullptr;
         }
         switch(options.ltlHeuristic) {
@@ -126,15 +127,14 @@ namespace LTL {
         }
 
         bool is_visible_stub = options.stubbornreduction
-                               && (options.ltl_por == LTLPartialOrder::Visible || options.ltl_por == LTLPartialOrder::VisibleReach)
+                               && options.ltl_por == LTLPartialOrder::Visible
                                && !net->has_inhibitor()
                                && !PetriEngine::PQL::containsNext(negated_formula);
         bool is_autreach_stub = options.stubbornreduction
-                && (options.ltl_por == LTLPartialOrder::AutomatonReach ||
-                    options.ltl_por == LTLPartialOrder::VisibleReach)
+                && options.ltl_por == LTLPartialOrder::Automaton
                 && !net->has_inhibitor();
         bool is_buchi_stub = options.stubbornreduction
-                && options.ltl_por == LTLPartialOrder::FullAutomaton
+                && options.ltl_por == LTLPartialOrder::Liebke
                 && !net->has_inhibitor();
 
         bool is_stubborn = options.ltl_por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
@@ -145,7 +145,8 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.strategy != ReachabilityStrategy::DFS) {
+
+                if (options.strategy != Strategy::DFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
                     gen.setSpooler(spooler.get());
@@ -165,7 +166,8 @@ namespace LTL {
                 break;
 
             case Algorithm::Tarjan:
-                if (options.strategy != ReachabilityStrategy::DFS || is_stubborn) {
+
+                if (options.strategy != Strategy::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
@@ -182,7 +184,8 @@ namespace LTL {
                     gen.setSpooler(spooler.get());
                     // if search strategy used, set heuristic, otherwise ignore it
                     // (default is null which is checked elsewhere)
-                    if (options.strategy != ReachabilityStrategy::DFS) {
+
+                    if (options.strategy != Strategy::DFS) {
                         assert(heuristic != nullptr);
                         gen.setHeuristic(heuristic.get());
                     }

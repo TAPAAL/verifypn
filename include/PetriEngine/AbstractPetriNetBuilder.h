@@ -39,30 +39,30 @@ namespace PetriEngine {
         /** Add a new place with a unique name */
         virtual void addPlace(const std::string& name,
                 int tokens,
-                double x = 0,
-                double y = 0) = 0;
+                double x,
+                double y) = 0;
         /** Add a new colored place with a unique name */
         virtual void addPlace(const std::string& name,
                 const Colored::ColorType* type,
                 Colored::Multiset&& tokens,
-                double x = 0,
-                double y = 0)
+                double x,
+                double y)
         {
-            std::cerr << "Colored places are not supported in standard P/T nets" << std::endl;
-            exit(ErrorCode);
+            throw base_error("Colored places are not supported in standard P/T nets");
         }
         /** Add a new transition with a unique name */
         virtual void addTransition(const std::string& name,
-                double x = 0,
-                double y = 0) = 0;
+                int32_t player,
+                double x,
+                double y) = 0;
         /** Add a new colored transition with a unique name */
         virtual void addTransition(const std::string& name,
                 const Colored::GuardExpression_ptr& guard,
-                double x = 0,
-                double y = 0)
+                int32_t player,
+                double x,
+                double y)
         {
-            std::cerr << "Colored transitions are not supported in standard P/T nets" << std::endl;
-            exit(ErrorCode);
+            throw base_error("Colored transitions are not supported in standard P/T nets");
         }
         /** Add input arc with given weight */
         virtual void addInputArc(const std::string& place,
@@ -75,27 +75,24 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool inhibitor, int weight)
         {
-            std::cerr << "Colored input arcs are not supported in standard P/T nets" << std::endl;
-            exit(ErrorCode);
+            throw base_error("Colored input arcs are not supported in standard P/T nets");
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight = 1) = 0;
+                int weight) = 0;
         /** Add output arc with given arc expression */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr)
         {
-            std::cerr << "Colored output arcs are not supported in standard P/T nets" << std::endl;
-            exit(ErrorCode);
+            throw base_error("Colored output arcs are not supported in standard P/T nets");
         }
         /** Add color types with id */
         virtual void addColorType(const std::string& id,
                 const Colored::ColorType* type)
         {
-            std::cerr << "Color types are not supported in standard P/T nets" << std::endl;
-            exit(ErrorCode);
+            throw base_error("Color types are not supported in standard P/T nets");
         }
 
         virtual void enableColors() {

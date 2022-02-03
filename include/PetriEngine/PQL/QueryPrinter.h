@@ -51,6 +51,8 @@ namespace PetriEngine {
 
             void _accept(const UnfoldedUpperBoundsCondition *element) override;
 
+            void _accept(const ControlCondition *condition) override;
+
             void _accept(const EFCondition *condition) override;
 
             void _accept(const EGCondition *condition) override;
