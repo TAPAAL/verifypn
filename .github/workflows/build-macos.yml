@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Packages
         run: |
-          brew install flex bison
+          brew install flex bison boost
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
@@ -32,13 +32,17 @@ jobs:
             -DVERIFYPN_MC_Simplification=OFF 
             -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison 
             -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex
+            -DVERIFYPN_TEST=ON
           cmakeBuildType: Release
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'
         env:
           CC: gcc-9
           CXX: g++-9
-          
+      - name: Test
+        run: |
+         cd build
+         make test
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
