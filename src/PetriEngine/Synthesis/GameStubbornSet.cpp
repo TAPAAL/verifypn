@@ -134,13 +134,14 @@ namespace PetriEngine {
                         while (fout < lout && fout->place < finv->place)
                             ++fout;
                         if (fout < lout && fout->place == finv->place) {
-                            mx = _place_bounds[finv->place].second / (fout->place - finv->tokens);
+                            mx = std::min(_place_bounds[finv->place].second / (fout->tokens - finv->tokens), mx);
                         } else {
-                            mx = _place_bounds[finv->place].second / finv->tokens;
+                            mx = std::min(_place_bounds[finv->place].second / finv->tokens, mx);
                         }
                     }
                 }
                 if (_fireing_bounds[t] != mx) {
+                    assert(_fireing_bounds[t] >= mx);
                     _fireing_bounds[t] = mx;
                     auto [fout, lout] = _net.postset(t);
                     for (; fout < lout; ++fout) {
@@ -168,6 +169,7 @@ namespace PetriEngine {
                         assert(_place_bounds[p].second == std::numeric_limits<uint32_t>::max());
                         return;
                     }
+                    assert(_future_enabled[arc.index]);
                     auto [finv, linv] = _net.preset(arc.index);
                     auto [fout, lout] = _net.postset(arc.index);
                     for (; fout < lout; ++fout) {
@@ -195,15 +197,19 @@ namespace PetriEngine {
 
             // initialize places
             for (size_t p = 0; p < _net.numberOfPlaces(); ++p) {
-                auto ub = (*_parent)[p];
-                auto lb = (*_parent)[p];
-                if (_places_seen[p] & DECR)
-                    lb = 0;
-                _place_bounds[p] = std::make_pair(lb, ub);
+                uint32_t ub = (*_parent)[p];
+                for (auto ti = _places[p].pre; ti != _places[p].post; ++ti) {
+                    trans_t& arc = _arcs[ti];
+                    if (arc.direction <= 0 || !_future_enabled[arc.index])
+                        continue;
+                    ub = std::numeric_limits<uint32_t>::max();
+                    break;
+                }
+                _place_bounds[p] = std::make_pair((*_parent)[p], ub);
             }
             // initialize counters
             for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
-                if (_enabled[t]) {
+                if (_future_enabled[t]) {
                     _fireing_bounds[t] = std::numeric_limits<uint32_t>::max();
                     handle_transition(t);
                 } else
@@ -362,6 +368,15 @@ namespace PetriEngine {
                     for (auto* q : _queries) {
                         q->visit(iv);
                     }
+
+#ifndef NDEBUG
+                    PQL::EvaluationContext context(_parent->marking(), &_net);
+                    auto r = _queries[0]->evaluate(context);
+                    if(iv.result() == IntervalVisitor::TRUE)
+                        assert(r != PQL::Condition::RFALSE);
+                    if(iv.result() == IntervalVisitor::FALSE)
+                        assert(r != PQL::Condition::RTRUE);
+#endif
                     if(!iv.stable())
                     {
                         skip();
