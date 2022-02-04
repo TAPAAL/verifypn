@@ -596,7 +596,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     std::string id(element->first_attribute("id")->value());
 
     auto initial = element->first_attribute("initialMarking");
-    long long initialMarking = 0;
+    uint64_t initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
     const PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
@@ -620,9 +620,9 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         }
     }
 
-    if(initialMarking > std::numeric_limits<int>::max())
+    if(initialMarking > std::numeric_limits<uint32_t>::max())
     {
-        throw base_error("Number of tokens in ", id, " exceeded ", std::numeric_limits<int>::max());
+        throw base_error("Number of tokens in ", id, " exceeded ", std::numeric_limits<uint32_t>::max());
     }
     //Create place
     if (!isColored) {
