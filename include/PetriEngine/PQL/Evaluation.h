@@ -152,41 +152,41 @@ namespace PetriEngine::PQL {
         explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
 
     private:
-        void _accept(SimpleQuantifierCondition *element);
+        void _accept(SimpleQuantifierCondition *element) override;
 
-        void _accept(GCondition *element);
+        void _accept(GCondition *element) override;
 
-        void _accept(FCondition *element);
+        void _accept(FCondition *element) override;
 
-        void _accept(EGCondition *element);
+        void _accept(EGCondition *element) override;
 
-        void _accept(AGCondition *element);
+        void _accept(AGCondition *element) override;
 
-        void _accept(EFCondition *element);
+        void _accept(EFCondition *element) override;
 
-        void _accept(AFCondition *element);
+        void _accept(AFCondition *element) override;
 
-        void _accept(UntilCondition *element);
+        void _accept(UntilCondition *element) override;
 
-        void _accept(AndCondition *element);
+        void _accept(AndCondition *element) override;
 
-        void _accept(OrCondition *element);
+        void _accept(OrCondition *element) override;
 
-        void _accept(CompareConjunction *element);
+        void _accept(CompareConjunction *element) override;
 
-        void _accept(CompareCondition *element);
+        void _accept(CompareCondition *element) override;
 
-        void _accept(NotCondition *element);
+        void _accept(NotCondition *element) override;
 
-        void _accept(BooleanCondition *element);
+        void _accept(BooleanCondition *element) override;
 
-        void _accept(DeadlockCondition *element);
+        void _accept(DeadlockCondition *element) override;
 
-        void _accept(UnfoldedUpperBoundsCondition *element);
+        void _accept(UnfoldedUpperBoundsCondition *element) override;
 
-        void _accept(ShallowCondition *element);
+        void _accept(ShallowCondition *element) override;
 
-        void _accept(Expr *element);
+        void _accept(Expr *element) override;
     };
 
 

@@ -36,27 +36,27 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const AndCondition* element) {
-                element->LogicalCondition::visit(*this);
+                _accept(static_cast<const LogicalCondition*>(element));
             }
 
             virtual void _accept(const OrCondition* element) {
-                element->LogicalCondition::visit(*this);
+                _accept(static_cast<const LogicalCondition*>(element));
             }
 
             virtual void _accept(const LessThanCondition* element) {
-                element->CompareCondition::visit(*this);
+                _accept(static_cast<const CompareCondition*>(element));
             }
 
             virtual void _accept(const LessThanOrEqualCondition* element) {
-                element->CompareCondition::visit(*this);
+                _accept(static_cast<const CompareCondition*>(element));
             }
 
             virtual void _accept(const EqualCondition* element) {
-                element->CompareCondition::visit(*this);
+                _accept(static_cast<const CompareCondition*>(element));
             }
 
             virtual void _accept(const NotEqualCondition* element) {
-                element->CompareCondition::visit(*this);
+                _accept(static_cast<const CompareCondition*>(element));
             }
 
             virtual void _accept(const DeadlockCondition* element) {
@@ -76,7 +76,7 @@ namespace PetriEngine {
 
             // Super classes, the default implementation of subclasses is to call these
             virtual void _accept(const CommutativeExpr *element) {
-                element->NaryExpr::visit(*this);
+                _accept(static_cast<const NaryExpr*>(element));
             }
 
             virtual void _accept(const SimpleQuantifierCondition *element) {
@@ -107,59 +107,59 @@ namespace PetriEngine {
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error
             virtual void _accept(const ControlCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const EFCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const EGCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const AGCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const AFCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const EXCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const AXCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const EUCondition *condition) {
-                condition->UntilCondition::visit(*this);
+                _accept(static_cast<const UntilCondition*>(condition));
             };
 
             virtual void _accept(const AUCondition *condition) {
-                condition->UntilCondition::visit(*this);
+                _accept(static_cast<const UntilCondition*>(condition));
             };
 
             virtual void _accept(const ACondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const ECondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const GCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const FCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const XCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
+                _accept(static_cast<const SimpleQuantifierCondition*>(condition));
             };
 
             virtual void _accept(const ShallowCondition *element) {
@@ -174,31 +174,31 @@ namespace PetriEngine {
 
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(const UnfoldedFireableCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const FireableCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const UpperBoundsCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const LivenessCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const KSafeCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const QuasiLivenessCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const StableMarkingCondition *element) {
-                element->ShallowCondition::visit(*this);
+                _accept(static_cast<const ShallowCondition*>(element));
             };
 
             virtual void _accept(const BooleanCondition *element) {
@@ -221,11 +221,11 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const PlusExpr *element) {
-                element->CommutativeExpr::visit(*this);
+                _accept(static_cast<const CommutativeExpr*>(element));
             };
 
             virtual void _accept(const MultiplyExpr *element) {
-                element->CommutativeExpr::visit(*this);
+                _accept(static_cast<const CommutativeExpr*>(element));
             };
 
             virtual void _accept(const MinusExpr *element) {
@@ -241,7 +241,7 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const SubtractExpr *element) {
-                element->NaryExpr::visit(*this);
+                _accept(static_cast<const NaryExpr*>(element));
             }
 
             // shallow expression, default to error
