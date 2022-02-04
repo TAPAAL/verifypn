@@ -54,12 +54,12 @@ namespace PetriEngine {
 
             NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
             }
-            virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
             size_t operands() const { return _exprs.size(); }
             void visit(Visitor&) const override;
+            void visit(MutatingVisitor& visitor) override;
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
@@ -76,11 +76,12 @@ namespace PetriEngine {
 
         class CommutativeExpr : public NaryExpr
         {
+            friend class AnalyzeVisitor;
         public:
             friend CompareCondition;
-            virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
+            void visit(MutatingVisitor& visitor) override;
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
@@ -105,6 +106,7 @@ namespace PetriEngine {
             bool tk = false;
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -124,6 +126,7 @@ namespace PetriEngine {
 
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -138,8 +141,8 @@ namespace PetriEngine {
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
 
-
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -153,12 +156,12 @@ namespace PetriEngine {
             MinusExpr(const Expr_ptr expr) {
                 _expr = expr;
             }
-            void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
             bool placeFree() const override;
             const Expr_ptr& operator[](size_t i) const { return _expr; };
         private:
@@ -172,11 +175,11 @@ namespace PetriEngine {
             LiteralExpr(int value) : _value(value) {
             }
             LiteralExpr(const LiteralExpr&) = default;
-            void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
             int value() const {
                 return _value;
             };
@@ -188,10 +191,10 @@ namespace PetriEngine {
 
 
         class IdentifierExpr : public Expr {
+            friend class AnalyzeVisitor;
         public:
             IdentifierExpr(const std::string& name) : _name(name) {}
             IdentifierExpr(const IdentifierExpr&) = default;
-            void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override {
                 return _compiled->evaluate(context);
             }
@@ -210,6 +213,7 @@ namespace PetriEngine {
             }
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
 
             [[nodiscard]] const std::string &name() const {
                 return _name;
@@ -226,6 +230,7 @@ namespace PetriEngine {
 
         /** Identifier expression */
         class UnfoldedIdentifierExpr : public Expr {
+            friend class AnalyzeVisitor;
         public:
             UnfoldedIdentifierExpr(const std::string& name, int offest)
             : _offsetInMarking(offest), _name(name) {
@@ -236,7 +241,6 @@ namespace PetriEngine {
 
             UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
 
-            void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
             /** Offset in marking or valuation */
@@ -250,6 +254,7 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return false; }
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
@@ -270,12 +275,6 @@ namespace PetriEngine {
             { return _compiled->getQuantifier(); }
             Path getPath() const override { return _compiled->getPath(); }
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
-
-            void analyze(AnalysisContext& context) override
-            {
-                if (_compiled) _compiled->analyze(context);
-                else _analyze(context);
-            }
         public:
             const Condition_ptr &getCompiled() const {
                 return _compiled;
@@ -283,9 +282,9 @@ namespace PetriEngine {
             virtual Condition_ptr clone() = 0;
 
             void visit(Visitor& visitor) const override;
+            void visit(MutatingVisitor& visitor) override;
 
         protected:
-            virtual void _analyze(AnalysisContext& context) = 0;
             Condition_ptr _compiled = nullptr;
         };
 
@@ -298,7 +297,6 @@ namespace PetriEngine {
             }
 
 
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
@@ -335,11 +333,10 @@ namespace PetriEngine {
                 _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
-
+            void visit(MutatingVisitor& visitor) override;
 
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
@@ -532,7 +529,6 @@ namespace PetriEngine {
                 _cond2 = cond2;
             }
 
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
 
             Result evalAndSet(const EvaluationContext& context) override;
@@ -575,6 +571,7 @@ namespace PetriEngine {
         /******************** CONDITIONS ********************/
 
         class UnfoldedFireableCondition : public ShallowCondition {
+            friend class AnalyzeVisitor;
         public:
             UnfoldedFireableCondition(const std::string& tname) : ShallowCondition(), _name(tname) {};
             void visit(Visitor&) const override;
@@ -584,8 +581,6 @@ namespace PetriEngine {
             }
 
         protected:
-            void _analyze(AnalysisContext& context) override;
-
             Condition_ptr clone() { return std::make_shared<UnfoldedFireableCondition>(_name); }
         public:
 
@@ -594,6 +589,7 @@ namespace PetriEngine {
         };
 
         class FireableCondition : public ShallowCondition {
+            friend class AnalyzeVisitor;
         public:
             FireableCondition(const std::string& tname) : _name(tname) {};
             void visit(Visitor&) const override;
@@ -603,7 +599,6 @@ namespace PetriEngine {
             }
 
         protected:
-            void _analyze(AnalysisContext& context) override;
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
         private:
             const std::string _name;
@@ -612,9 +607,9 @@ namespace PetriEngine {
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
-            void analyze(AnalysisContext& context) override;
 
             void visit(Visitor&) const override;
+            void visit(MutatingVisitor& visitor) override;
             const Condition_ptr& operator[](size_t i) const
             {
                 return _conds[i];
@@ -636,8 +631,6 @@ namespace PetriEngine {
 
         protected:
             LogicalCondition() {};
-
-            Retval simplifyAnd(SimplificationContext& context) const;
         private:
 
         protected:
@@ -683,6 +676,7 @@ namespace PetriEngine {
 
         class CompareConjunction : public Condition
         {
+            friend class AnalyzeVisitor;
         public:
             struct cons_t {
                 uint32_t _place = std::numeric_limits<uint32_t>::max();
@@ -736,7 +730,6 @@ namespace PetriEngine {
             void merge(const CompareConjunction& other);
             void merge(const std::vector<Condition_ptr>&, bool negated);
 
-            void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
@@ -769,10 +762,10 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
+            void visit(MutatingVisitor& visitor) override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -886,7 +879,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
@@ -907,7 +899,6 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() = default;
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
@@ -922,6 +913,7 @@ namespace PetriEngine {
 
         class KSafeCondition : public ShallowCondition
         {
+            friend class AnalyzeVisitor;
         public:
             KSafeCondition(const Expr_ptr& expr1) : _bound(expr1)
             {}
@@ -932,7 +924,6 @@ namespace PetriEngine {
 
 
         protected:
-            void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Condition_ptr clone() override
@@ -945,10 +936,10 @@ namespace PetriEngine {
 
         class LivenessCondition : public ShallowCondition
         {
+            friend class AnalyzeVisitor;
         public:
             LivenessCondition() {}
         protected:
-            void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<LivenessCondition>(); }
@@ -956,10 +947,10 @@ namespace PetriEngine {
 
         class QuasiLivenessCondition : public ShallowCondition
         {
+            friend class AnalyzeVisitor;
         public:
             QuasiLivenessCondition() {}
         protected:
-            void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<QuasiLivenessCondition>(); }
@@ -967,10 +958,10 @@ namespace PetriEngine {
 
         class StableMarkingCondition : public ShallowCondition
         {
+            friend class AnalyzeVisitor;
         public:
             StableMarkingCondition() {}
         protected:
-            void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<StableMarkingCondition>(); }
@@ -978,6 +969,7 @@ namespace PetriEngine {
 
         class UpperBoundsCondition : public ShallowCondition
         {
+            friend class AnalyzeVisitor;
         public:
             UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
             {}
@@ -992,7 +984,6 @@ namespace PetriEngine {
 
 
         protected:
-            void _analyze(AnalysisContext& context) override;
             void visit(Visitor&) const override;
             void visit(MutatingVisitor&) override;
         private:
@@ -1001,6 +992,7 @@ namespace PetriEngine {
 
         class UnfoldedUpperBoundsCondition : public Condition
         {
+            friend class AnalyzeVisitor;
         public:
             struct place_t {
                 std::string _name;
@@ -1030,7 +1022,6 @@ namespace PetriEngine {
                     : _places(places), _max(max), _offset(offset) {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
-            void analyze(AnalysisContext& context) override;
             size_t value(const MarkVal*);
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;

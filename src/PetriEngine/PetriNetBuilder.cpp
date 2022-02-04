@@ -29,6 +29,7 @@
 #include "PetriEngine/Reducer.h"
 #include <PetriEngine/PQL/PredicateCheckers.h>
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/Analyze.h"
 
 
 namespace PetriEngine {
@@ -470,7 +471,7 @@ namespace PetriEngine {
                results[i] == Reachability::ResultPrinter::CTL ||
                results[i] == Reachability::ResultPrinter::LTL)
             {
-                queries[i]->analyze(placecontext);
+                PetriEngine::PQL::analyze(queries[i], placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
                 remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.

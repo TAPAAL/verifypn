@@ -33,178 +33,185 @@ namespace PetriEngine {
 
         protected:
 
-            virtual void _accept(NotCondition *element) = 0;
+            virtual void _accept(NotCondition* element) = 0;
 
-            virtual void _accept(AndCondition *element) = 0;
+            virtual void _accept(AndCondition* element) {
+                element->LogicalCondition::visit(*this);
+            }
 
-            virtual void _accept(OrCondition *element) = 0;
+            virtual void _accept(OrCondition* element) {
+                element->LogicalCondition::visit(*this);
+            }
 
-            virtual void _accept(LessThanCondition *element) = 0;
+            virtual void _accept(LessThanCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
 
-            virtual void _accept(LessThanOrEqualCondition *element) = 0;
+            virtual void _accept(LessThanOrEqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
 
-            virtual void _accept(EqualCondition *element) = 0;
+            virtual void _accept(EqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
 
-            virtual void _accept(NotEqualCondition *element) = 0;
+            virtual void _accept(NotEqualCondition* element) {
+                element->CompareCondition::visit(*this);
+            }
 
-            virtual void _accept(DeadlockCondition *element) = 0;
+            virtual void _accept(DeadlockCondition* element) = 0;
+            virtual void _accept(CompareConjunction* element) = 0;
+            virtual void _accept(UnfoldedUpperBoundsCondition* element) = 0;
 
-            virtual void _accept(CompareConjunction *element) = 0;
+            // Super classes, the default implementation of subclasses is to call these
+            virtual void _accept(CommutativeExpr *element) {
+                element->NaryExpr::visit(*this);
+            }
 
-            virtual void _accept(UnfoldedUpperBoundsCondition *element) = 0;
+            virtual void _accept(SimpleQuantifierCondition *element) {
+                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
+            }
 
-            // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
-            // default behaviour is error
-            virtual void _accept(ControlCondition *) {
-                assert(false);
-                throw base_error("No accept for EFCondition");
-            };
+            virtual void _accept(LogicalCondition *element) {
+                throw base_error("No accept for LogicalCondition (may be called from subclass)");
+            }
 
-            virtual void _accept(EFCondition *) {
-                assert(false);
-                throw base_error("No accept for EFCondition");
-            };
+            virtual void _accept(CompareCondition *element) {
+                throw base_error("No accept for CompareCondition (may be called from subclass)");
+            }
 
-            virtual void _accept(EGCondition *) {
-                assert(false);
-                throw base_error("No accept for EGCondition");
-            };
-
-            virtual void _accept(AGCondition *) {
-                assert(false);
-                throw base_error("No accept for AGCondition");
-            };
-
-            virtual void _accept(AFCondition *) {
-                assert(false);
-                throw base_error("No accept for AFCondition");
-            };
-
-            virtual void _accept(EXCondition *) {
-                assert(false);
-                throw base_error("No accept for EXCondition");
-            };
-
-            virtual void _accept(AXCondition *) {
-                assert(false);
-                throw base_error("No accept for AXCondition");
-            };
-
-            virtual void _accept(EUCondition *) {
-                assert(false);
-                throw base_error("No accept for EUCondition");
-            };
-
-            virtual void _accept(AUCondition *) {
-                assert(false);
-                throw base_error("No accept for AUCondition");
-            };
-
-            virtual void _accept(ACondition *) {
-                assert(false);
-                throw base_error("No accept for ACondition");
-            };
-
-            virtual void _accept(ECondition *) {
-                assert(false);
-                throw base_error("No accept for ECondition");
-            };
-
-            virtual void _accept(GCondition *) {
-                assert(false);
-                throw base_error("No accept for GCondition");
-            };
-
-            virtual void _accept(FCondition *) {
-                assert(false);
-                throw base_error("No accept for FCondition");
-            };
-
-            virtual void _accept(XCondition *) {
-                assert(false);
-                throw base_error("No accept for XCondition");
-            };
-
-            virtual void _accept(UntilCondition *) {
-                assert(false);
+            virtual void _accept(UntilCondition *element) {
                 throw base_error("No accept for UntilCondition");
+            }
+
+            virtual void _accept(ControlCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
             };
+
+            virtual void _accept(EFCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(EGCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(AGCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(AFCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(EXCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(AXCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(EUCondition *condition) {
+                condition->UntilCondition::visit(*this);
+            };
+
+            virtual void _accept(AUCondition *condition) {
+                condition->UntilCondition::visit(*this);
+            };
+
+            virtual void _accept(ACondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(ECondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(GCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(FCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(XCondition *condition) {
+                condition->SimpleQuantifierCondition::visit(*this);
+            };
+
+            virtual void _accept(ShallowCondition *element) {
+                if (element->getCompiled()) {
+                    element->getCompiled()->visit(*this);
+                } else {
+                    throw base_error("No accept for ShallowCondition");
+                }
+            }
 
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(UnfoldedFireableCondition *element) {
-                assert(false);
-                throw base_error("No accept for UnfoldedFireableCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(FireableCondition *element) {
-                assert(false);
-                throw base_error("No accept for FireableCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(UpperBoundsCondition *element) {
-                assert(false);
-                throw base_error("No accept for UpperBoundsCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(LivenessCondition *element) {
-                assert(false);
-                throw base_error("No accept for LivenessCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(KSafeCondition *element) {
-                assert(false);
-                throw base_error("No accept for KSafeCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(QuasiLivenessCondition *element) {
-                assert(false);
-                throw base_error("No accept for QuasiLivenessCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(StableMarkingCondition *element) {
-                assert(false);
-                throw base_error("No accept for StableMarkingCondition");
+                element->ShallowCondition::visit(*this);
             };
 
             virtual void _accept(BooleanCondition *element) {
-                assert(false);
                 throw base_error("No accept for BooleanCondition");
             };
 
             // Expression
             virtual void _accept(UnfoldedIdentifierExpr *element) {
-                assert(false);
                 throw base_error("No accept for UnfoldedIndentifierExpr");
             };
 
             virtual void _accept(LiteralExpr *element) {
-                assert(false);
                 throw base_error("No accept for LiteralExpr");
             };
 
             virtual void _accept(PlusExpr *element) {
-                assert(false);
-                throw base_error("No accept for PlusExpr");
+                element->CommutativeExpr::visit(*this);
             };
 
             virtual void _accept(MultiplyExpr *element) {
-                assert(false);
-                throw base_error("No accept for MultiplyExpr");
+                element->CommutativeExpr::visit(*this);
             };
 
             virtual void _accept(MinusExpr *element) {
-                assert(false);
                 throw base_error("No accept for MinusExpr");
             };
 
+            virtual void _accept(NaryExpr *element) {
+                throw base_error("No accept for NaryExpr (may be called from subclass)");
+            }
+
             virtual void _accept(SubtractExpr *element) {
-                assert(false);
-                throw base_error("No accept for SubtractExpr");
-            };
+                element->NaryExpr::visit(*this);
+            }
 
             // shallow expression, default to error
             virtual void _accept(IdentifierExpr *element) {
-                assert(false);
                 throw base_error("No accept for IdentifierExpr");
             };
         };

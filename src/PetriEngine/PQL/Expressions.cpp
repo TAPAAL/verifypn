@@ -201,357 +201,6 @@ namespace PetriEngine {
             return ">";
         }
 
-        /******************** Context Analysis ********************/
-
-        void NaryExpr::analyze(AnalysisContext& context) {
-            for(auto& e : _exprs) e->analyze(context);
-        }
-
-        void CommutativeExpr::analyze(AnalysisContext& context) {
-            for(auto& i : _ids)
-            {
-                AnalysisContext::ResolutionResult result = context.resolve(i.second);
-                if (result.success) {
-                    i.first = result.offset;
-                } else {
-                    ExprError error("Unable to resolve identifier \"" + i.second + "\"",
-                            i.second.length());
-                    context.reportError(error);
-                }
-            }
-            NaryExpr::analyze(context);
-            std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
-            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
-            {
-                auto ida = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
-                auto idb = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
-                if(ida == nullptr) return false;
-                if(ida && !idb) return true;
-                return ida->offset() < idb->offset();
-            });
-        }
-
-        void MinusExpr::analyze(AnalysisContext& context) {
-            _expr->analyze(context);
-        }
-
-        void LiteralExpr::analyze(AnalysisContext&) {
-            return;
-        }
-
-        uint32_t getPlace(AnalysisContext& context, const std::string& name)
-        {
-            AnalysisContext::ResolutionResult result = context.resolve(name);
-            if (result.success) {
-                return result.offset;
-            } else {
-                ExprError error("Unable to resolve identifier \"" + name + "\"",
-                                name.length());
-                context.reportError(error);
-            }
-            return -1;
-        }
-
-        Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, std::unordered_map<uint32_t,std::string>& names, uint32_t colorIndex) {
-            std::string& place = names[colorIndex];
-            return std::make_shared<UnfoldedIdentifierExpr>(place, getPlace(context, place));
-        }
-
-        void IdentifierExpr::analyze(AnalysisContext &context) {
-            if (_compiled) {
-                _compiled->analyze(context);
-                return;
-            }
-
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                std::unordered_map<uint32_t,std::string> names;
-                if (!coloredContext->resolvePlace(_name, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext->reportError(error);
-                }
-
-                if (names.size() == 1) {
-                    _compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, names.begin()->first);
-                } else {
-                    std::vector<Expr_ptr> identifiers;
-                    for (auto& unfoldedName : names) {
-                        identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext,names,unfoldedName.first));
-                    }
-                    _compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
-                }
-            } else {
-                _compiled = std::make_shared<UnfoldedIdentifierExpr>(_name, getPlace(context, _name));
-            }
-            _compiled->analyze(context);
-        }
-
-        void UnfoldedIdentifierExpr::analyze(AnalysisContext& context) {
-            AnalysisContext::ResolutionResult result = context.resolve(_name);
-            if (result.success) {
-                _offsetInMarking = result.offset;
-            } else {
-                ExprError error("Unable to resolve identifier \"" + _name + "\"",
-                        _name.length());
-                context.reportError(error);
-            }
-        }
-
-        void SimpleQuantifierCondition::analyze(AnalysisContext& context) {
-            _cond->analyze(context);
-        }
-
-        void UntilCondition::analyze(AnalysisContext& context) {
-            _cond1->analyze(context);
-            _cond2->analyze(context);
-        }
-
-        void LogicalCondition::analyze(AnalysisContext& context) {
-            for(auto& c : _conds) c->analyze(context);
-        }
-
-        void UnfoldedFireableCondition::_analyze(AnalysisContext& context)
-        {
-            std::vector<Condition_ptr> conds;
-            AnalysisContext::ResolutionResult result = context.resolve(_name, false);
-            if (!result.success)
-            {
-                ExprError error("Unable to resolve identifier \"" + _name + "\"",
-                        _name.length());
-                context.reportError(error);
-                return;
-            }
-
-            assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
-            auto preset = context.net()->preset(result.offset);
-            for(; preset.first != preset.second; ++preset.first)
-            {
-                assert(preset.first->place != std::numeric_limits<uint32_t>::max());
-                assert(preset.first->place != -1);
-                auto id = std::make_shared<UnfoldedIdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
-                auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
-
-                if(!preset.first->inhibitor)
-                {
-                    conds.emplace_back(std::make_shared<LessThanOrEqualCondition>(lit, id));
-                }
-                else if(preset.first->tokens > 0)
-                {
-                    conds.emplace_back(std::make_shared<LessThanCondition>(id, lit));
-                }
-            }
-            if(conds.size() == 1) _compiled = conds[0];
-            else if (conds.empty()) {
-                _compiled = BooleanCondition::TRUE_CONSTANT;
-            }
-            else _compiled = std::make_shared<AndCondition>(conds);
-            _compiled->analyze(context);
-        }
-
-        void FireableCondition::_analyze(AnalysisContext &context) {
-
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            if(coloredContext != nullptr && coloredContext->isColored()) {
-                std::vector<std::string> names;
-                if (!coloredContext->resolveTransition(_name, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext->reportError(error);
-                    return;
-                }
-                if(names.size() < 1){
-                    //If the transition points to empty vector we know that it has
-                    //no legal bindings and can never fire
-                    _compiled = std::make_shared<BooleanCondition>(false);
-                    _compiled->analyze(context);
-                    return;
-                }
-                if (names.size() == 1) {
-                    _compiled = std::make_shared<UnfoldedFireableCondition>(names[0]);
-                } else {
-                    std::vector<Condition_ptr> identifiers;
-                    for (auto& unfoldedName : names) {
-                        identifiers.push_back(std::make_shared<UnfoldedFireableCondition>(unfoldedName));
-                    }
-                    _compiled = std::make_shared<OrCondition>(std::move(identifiers));
-                }
-            } else {
-                _compiled = std::make_shared<UnfoldedFireableCondition>(_name);
-            }
-            _compiled->analyze(context);
-        }
-
-        void CompareConjunction::analyze(AnalysisContext& context) {
-            for(auto& c : _constraints){
-                c._place = getPlace(context, c._name);
-                assert(c._place >= 0);
-            }
-            std::sort(std::begin(_constraints), std::end(_constraints));
-        }
-
-        void CompareCondition::analyze(AnalysisContext& context) {
-            _expr1->analyze(context);
-            _expr2->analyze(context);
-        }
-
-        void NotCondition::analyze(AnalysisContext& context) {
-            _cond->analyze(context);
-        }
-
-        void BooleanCondition::analyze(AnalysisContext&) {
-        }
-
-        void DeadlockCondition::analyze(AnalysisContext& c) {
-            c.setHasDeadlock();
-        }
-
-        void KSafeCondition::_analyze(AnalysisContext &context) {
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            std::vector<Condition_ptr> k_safe;
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                for(auto& p : coloredContext->allColoredPlaceNames())
-                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<IdentifierExpr>(p.first), _bound));
-            }
-            else
-            {
-                for(auto& p : context.allPlaceNames())
-                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<UnfoldedIdentifierExpr>(p.first), _bound));
-            }
-            _compiled = std::make_shared<AGCondition>(std::make_shared<AndCondition>(std::move(k_safe)));
-            _compiled->analyze(context);
-        }
-
-        void QuasiLivenessCondition::_analyze(AnalysisContext &context)
-        {
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            std::vector<Condition_ptr> quasi;
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                for(auto& n : coloredContext->allColoredTransitionNames())
-                {
-                    std::vector<Condition_ptr> disj;
-                    for(auto& tn : n.second)
-                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
-                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj))));
-                }
-            }
-            else
-            {
-                for(auto& n : context.allTransitionNames())
-                {
-                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first)));
-                }
-            }
-            _compiled = std::make_shared<AndCondition>(std::move(quasi));
-            _compiled->analyze(context);
-        }
-
-        void LivenessCondition::_analyze(AnalysisContext &context)
-        {
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            std::vector<Condition_ptr> liveness;
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                for(auto& n : coloredContext->allColoredTransitionNames())
-                {
-                    std::vector<Condition_ptr> disj;
-                    for(auto& tn : n.second)
-                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
-                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj)))));
-                }
-            }
-            else
-            {
-                for(auto& n : context.allTransitionNames())
-                {
-                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))));
-                }
-            }
-            _compiled = std::make_shared<AndCondition>(std::move(liveness));
-            _compiled->analyze(context);
-        }
-
-        void StableMarkingCondition::_analyze(AnalysisContext &context)
-        {
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            std::vector<Condition_ptr> stable_check;
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                for(auto& cpn : coloredContext->allColoredPlaceNames())
-                {
-                    std::vector<Expr_ptr> sum;
-                    MarkVal init_marking = 0;
-                    for(auto& pn : cpn.second)
-                    {
-                        auto id = std::make_shared<UnfoldedIdentifierExpr>(pn.second);
-                        id->analyze(context);
-                        init_marking += context.net()->initial(id->offset());
-                        sum.emplace_back(std::move(id));
-
-                    }
-                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
-                            std::make_shared<PlusExpr>(std::move(sum)),
-                            std::make_shared<LiteralExpr>(init_marking))));
-                }
-            }
-            else
-            {
-                size_t i = 0;
-                for(auto& p : context.net()->placeNames())
-                {
-                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
-                            std::make_shared<UnfoldedIdentifierExpr>(p, i),
-                            std::make_shared<LiteralExpr>(context.net()->initial(i)))));
-                    ++i;
-                }
-            }
-            _compiled = std::make_shared<OrCondition>(std::move(stable_check));
-            _compiled->analyze(context);
-        }
-
-        void UpperBoundsCondition::_analyze(AnalysisContext& context)
-        {
-            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
-            if(coloredContext != nullptr && coloredContext->isColored())
-            {
-                std::vector<std::string> uplaces;
-                for(auto& p : _places)
-                {
-                    std::unordered_map<uint32_t,std::string> names;
-                    if (!coloredContext->resolvePlace(p, names)) {
-                        ExprError error("Unable to resolve colored identifier \"" + p + "\"", p.length());
-                        coloredContext->reportError(error);
-                    }
-
-                    for(auto& id : names)
-                    {
-                        uplaces.push_back(names[id.first]);
-                    }
-                }
-                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
-            } else {
-                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(_places);
-            }
-            _compiled->analyze(context);
-        }
-
-        void UnfoldedUpperBoundsCondition::analyze(AnalysisContext& c)
-        {
-            for(auto& p : _places)
-            {
-                AnalysisContext::ResolutionResult result = c.resolve(p._name);
-                if (result.success) {
-                    p._place = result.offset;
-                } else {
-                    ExprError error("Unable to resolve identifier \"" + p._name + "\"",
-                            p._name.length());
-                    c.reportError(error);
-                }
-            }
-            std::sort(_places.begin(), _places.end());
-        }
-
         /******************** Evaluation ********************/
 
         int NaryExpr::evaluate(const EvaluationContext& context) {
@@ -1141,6 +790,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void SimpleQuantifierCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void EGCondition::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
@@ -1206,6 +860,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
 
+        void LogicalCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void AndCondition::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
@@ -1217,6 +876,11 @@ namespace PetriEngine {
         }
 
         void NotCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CompareCondition::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
         }
@@ -1312,8 +976,60 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
 
+        void ShallowCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
 
         void UnfoldedUpperBoundsCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NaryExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CommutativeExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void PlusExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void SubtractExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void MultiplyExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void MinusExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void LiteralExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void IdentifierExpr::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void UnfoldedIdentifierExpr::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
         }
