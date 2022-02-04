@@ -303,7 +303,8 @@ namespace PetriEngine::PQL {
     }
 
     void EvaluateAndSetVisitor::_accept(Expr *element) {
-        int r = evaluate(element, _context);
+        element->visit(_evaluate_visitor);
+        auto r = _evaluate_visitor.get_return_value()._value;
         element->setEval(r);
         _return_value = {r};
     }
@@ -339,7 +340,8 @@ namespace PetriEngine::PQL {
     }
 
     void EvaluateAndSetVisitor::_accept(CompareConjunction *element) {
-        auto res = evaluate(element, _context);
+        element->visit(_evaluate_visitor);
+        auto res = _evaluate_visitor.get_return_value()._result;
         element->setSatisfied(res);
         _return_value = {res};
     }

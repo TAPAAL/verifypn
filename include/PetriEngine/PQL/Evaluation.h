@@ -149,9 +149,12 @@ namespace PetriEngine::PQL {
 
     class EvaluateAndSetVisitor : public BaseEvaluationVisitor {
     public:
-        explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
+        explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context),
+                                                                           _evaluate_visitor(context) {}
 
     private:
+        EvaluateVisitor _evaluate_visitor;
+
         void _accept(SimpleQuantifierCondition *element) override;
 
         void _accept(GCondition *element) override;
