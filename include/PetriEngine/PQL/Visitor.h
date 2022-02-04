@@ -81,26 +81,22 @@ namespace PetriEngine {
 
             virtual void _accept(const SimpleQuantifierCondition *element) {
                 assert(false);
-                std::cerr << "No accept for SimpleQuantifierCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
             }
 
             virtual void _accept(const LogicalCondition *element) {
                 assert(false);
-                std::cerr << "No accept for LogicalCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for LogicalCondition (may be called from subclass)");
             }
 
             virtual void _accept(const CompareCondition *element) {
                 assert(false);
-                std::cerr << "No accept for CompareCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for CompareCondition (may be called from subclass)");
             }
 
             virtual void _accept(const UntilCondition *element) {
                 assert(false);
-                std::cerr << "No accept for UntilCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for UntilCondition (may be called from subclass)");
             }
 
 
@@ -167,8 +163,7 @@ namespace PetriEngine {
                     element->getCompiled()->visit(*this);
                 } else {
                     assert(false);
-                    std::cerr << "No accept for ShallowCondition" << std::endl;
-                    exit(0);
+                    throw base_error("No accept for ShallowCondition");
                 }
             }
 
@@ -203,21 +198,18 @@ namespace PetriEngine {
 
             virtual void _accept(const BooleanCondition *element) {
                 assert(false);
-                std::cerr << "No accept for BooleanCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for BooleanCondition");
             };
 
             // Expression
             virtual void _accept(const UnfoldedIdentifierExpr *element) {
                 assert(false);
-                std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for UnfoldedIdentifierExpr");
             };
 
             virtual void _accept(const LiteralExpr *element) {
                 assert(false);
-                std::cerr << "No accept for LiteralExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for LiteralExpr");
             };
 
             virtual void _accept(const PlusExpr *element) {
@@ -230,14 +222,12 @@ namespace PetriEngine {
 
             virtual void _accept(const MinusExpr *element) {
                 assert(false);
-                std::cerr << "No accept for MinusExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for MinusExpr");
             };
 
             virtual void _accept(const NaryExpr *element) {
                 assert(false);
-                std::cerr << "No accept for LivenessCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for LivenessCondition");
             }
 
             virtual void _accept(const SubtractExpr *element) {
@@ -247,8 +237,7 @@ namespace PetriEngine {
             // shallow expression, default to error
             virtual void _accept(const IdentifierExpr *element) {
                 assert(false);
-                std::cerr << "No accept for IdentifierExpr" << std::endl;
-                exit(0);
+                throw base_error("No accept for IdentifierExpr");
             };
         };
 
@@ -258,62 +247,52 @@ namespace PetriEngine {
         private:
             void _accept(const NotCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for NotCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for NotCondition");
             };
 
             void _accept(const AndCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for AndCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for AndCondition");
             };
 
             void _accept(const OrCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for OrCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for OrCondition");
             };
 
             void _accept(const LessThanCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for LessThanCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for LessThanCondition");
             };
 
             void _accept(const LessThanOrEqualCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for LessThanOrEqualCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for LessThanOrEqualCondition");
             };
 
             void _accept(const EqualCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for EqualCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for EqualCondition");
             };
 
             void _accept(const NotEqualCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for NotEqualCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for NotEqualCondition");
             };
 
             void _accept(const DeadlockCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for DeadlockCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for DeadlockCondition");
             };
 
             void _accept(const CompareConjunction *element) override {
                 assert(false);
-                std::cerr << "No accept for CompareConjunction" << std::endl;
-                exit(0);
+                throw base_error("No accept for CompareConjunction");
             };
 
             void _accept(const UnfoldedUpperBoundsCondition *element) override {
                 assert(false);
-                std::cerr << "No accept for UnfoldedUpperBoundsCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for UnfoldedUpperBoundsCondition");
             };
         };
 

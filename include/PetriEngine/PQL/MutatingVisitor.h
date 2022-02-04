@@ -70,32 +70,21 @@ namespace PetriEngine {
             }
 
             virtual void _accept(SimpleQuantifierCondition *element) {
-                assert(false);
-                std::cerr << "No accept for SimpleQuantifierCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
             }
 
             virtual void _accept(LogicalCondition *element) {
-                assert(false);
-                std::cerr << "No accept for LogicalCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for LogicalCondition (may be called from subclass)");
             }
 
             virtual void _accept(CompareCondition *element) {
-                assert(false);
-                std::cerr << "No accept for CompareCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for CompareCondition (may be called from subclass)");
             }
 
             virtual void _accept(UntilCondition *element) {
-                assert(false);
-                std::cerr << "No accept for UntilCondition (may be called from subclass)" << std::endl;
-                exit(0);
+                throw base_error("No accept for UntilCondition");
             }
 
-
-            // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
-            // default behaviour is error
             virtual void _accept(ControlCondition *condition) {
                 _accept(static_cast<SimpleQuantifierCondition*>(condition));
             };
@@ -156,9 +145,7 @@ namespace PetriEngine {
                 if (element->getCompiled()) {
                     element->getCompiled()->visit(*this);
                 } else {
-                    assert(false);
-                    std::cerr << "No accept for ShallowCondition" << std::endl;
-                    exit(0);
+                    throw base_error("No accept for ShallowCondition");
                 }
             }
 
@@ -192,9 +179,7 @@ namespace PetriEngine {
             };
 
             virtual void _accept(BooleanCondition *element) {
-                assert(false);
-                std::cerr << "No accept for BooleanCondition" << std::endl;
-                exit(0);
+                throw base_error("No accept for BooleanCondition");
             };
 
             // Expression
@@ -225,7 +210,7 @@ namespace PetriEngine {
 
             virtual void _accept(NaryExpr *element) {
                 _accept(static_cast<Expr*>(element));
-            }
+            };
 
             virtual void _accept(SubtractExpr *element) {
                 _accept(static_cast<NaryExpr*>(element));

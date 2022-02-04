@@ -70,9 +70,8 @@ namespace LTL::Structures {
                 Condition::Result res = PetriEngine::PQL::evaluate(ap_info.at(var).expression.get(), ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:
-                        std::cerr << "Unexpected unknown answer from evaluating query!\n";
                         assert(false);
-                        exit(1);
+                        throw base_error("Unexpected unknown answer from evaluating query!");
                         break;
                     case Condition::RFALSE:
                         bdd = bdd_low(bdd);

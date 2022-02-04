@@ -1,0 +1,939 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+	<net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+		<page id="page0">
+			<place id="TOPOLOGY_P_4">
+				<graphics>
+					<position x="1885" y="1742"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_P_4
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_UV_4">
+				<graphics>
+					<position x="2112" y="1742"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_UV_4
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_P_1">
+				<graphics>
+					<position x="1115" y="590"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_P_1
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_UV_1">
+				<graphics>
+					<position x="205" y="590"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_UV_1
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_P_3">
+				<graphics>
+					<position x="1098" y="1598"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_P_3
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_UV_3">
+				<graphics>
+					<position x="218" y="1598"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_UV_3
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_P_2">
+				<graphics>
+					<position x="421" y="446"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_P_2
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_UV_2">
+				<graphics>
+					<position x="225" y="446"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_UV_2
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_P_12">
+				<graphics>
+					<position x="481" y="302"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_P_12
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="TOPOLOGY_UV_12">
+				<graphics>
+					<position x="0" y="0"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_UV_12
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_QUEUEING">
+				<graphics>
+					<position x="965" y="1022"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_QUEUEING
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_UPDATING">
+				<graphics>
+					<position x="1309" y="1310"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_UPDATING
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_BATCHES">
+				<graphics>
+					<position x="244" y="734"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_BATCHES
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_INVCOUNT">
+				<graphics>
+					<position x="1292" y="1166"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_INVCOUNT
+					</text>
+				</name>
+				<initialMarking>
+					<text>2</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_COUNT">
+				<graphics>
+					<position x="244" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_COUNT
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_TOTAL_QUEUED">
+				<graphics>
+					<position x="514" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_TOTAL_QUEUED
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="UPDATE_P_INV_TOTAL_UPDATED">
+				<graphics>
+					<position x="1678" y="1022"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_P_INV_TOTAL_UPDATED
+					</text>
+				</name>
+				<initialMarking>
+					<text>3</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_3_INIT">
+				<graphics>
+					<position x="218" y="1454"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_3_INIT
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_3_QUEUE">
+				<graphics>
+					<position x="714" y="1022"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_3_QUEUE
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_3_FINAL">
+				<graphics>
+					<position x="1550" y="1310"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_3_FINAL
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_3_LIMITER">
+				<graphics>
+					<position x="410" y="1166"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_3_LIMITER
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_1_INIT">
+				<graphics>
+					<position x="775" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_1_INIT
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_1_QUEUE">
+				<graphics>
+					<position x="1056" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_1_QUEUE
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_1_FINAL">
+				<graphics>
+					<position x="421" y="590"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_1_FINAL
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_1_LIMITER">
+				<graphics>
+					<position x="467" y="1022"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_1_LIMITER
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_4_INIT">
+				<graphics>
+					<position x="1642" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_4_INIT
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_4_QUEUE">
+				<graphics>
+					<position x="1299" y="878"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_4_QUEUE
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_4_FINAL">
+				<graphics>
+					<position x="1237" y="734"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_4_FINAL
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="SWITCH_P_4_LIMITER">
+				<graphics>
+					<position x="1297" y="1022"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_P_4_LIMITER
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="DFA_Pstate_1">
+				<graphics>
+					<position x="663" y="302"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_Pstate_1
+					</text>
+				</name>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="DFA_Pstate_2">
+				<graphics>
+					<position x="772" y="158"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_Pstate_2
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="DFA_TURN">
+				<graphics>
+					<position x="721" y="14"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_TURN
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<place id="DFA_TRACK_Pswitch12">
+				<graphics>
+					<position x="873" y="302"/>
+				</graphics>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_TRACK_Pswitch12
+					</text>
+				</name>
+				<initialMarking>
+					<text>0</text>
+				</initialMarking>
+			</place>
+			<transition id="TOPOLOGY_T_4_3">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_T_4_3
+					</text>
+				</name>
+				<graphics>
+					<position x="1885" y="1670"/>
+				</graphics>
+			</transition>
+			<transition id="TOPOLOGY_T_3_2">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_T_3_2
+					</text>
+				</name>
+				<graphics>
+					<position x="218" y="1526"/>
+				</graphics>
+			</transition>
+			<transition id="TOPOLOGY_T_2_12">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_T_2_12
+					</text>
+				</name>
+				<graphics>
+					<position x="421" y="374"/>
+				</graphics>
+			</transition>
+			<transition id="TOPOLOGY_T_4_1">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_T_4_1
+					</text>
+				</name>
+				<graphics>
+					<position x="1237" y="662"/>
+				</graphics>
+			</transition>
+			<transition id="TOPOLOGY_T_1_2">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						TOPOLOGY_T_1_2
+					</text>
+				</name>
+				<graphics>
+					<position x="421" y="518"/>
+				</graphics>
+			</transition>
+			<transition id="UPDATE_T_CONUP">
+				<player>
+					<value>
+						0
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_T_CONUP
+					</text>
+				</name>
+				<graphics>
+					<position x="244" y="806"/>
+				</graphics>
+			</transition>
+			<transition id="UPDATE_T_READY">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						UPDATE_T_READY
+					</text>
+				</name>
+				<graphics>
+					<position x="1591" y="1094"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_3_QUEUE">
+				<player>
+					<value>
+						0
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_3_QUEUE
+					</text>
+				</name>
+				<graphics>
+					<position x="408" y="1094"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_3_UPDATE">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_3_UPDATE
+					</text>
+				</name>
+				<graphics>
+					<position x="1236" y="1382"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_1_QUEUE">
+				<player>
+					<value>
+						0
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_1_QUEUE
+					</text>
+				</name>
+				<graphics>
+					<position x="775" y="950"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_1_UPDATE">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_1_UPDATE
+					</text>
+				</name>
+				<graphics>
+					<position x="1308" y="1238"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_4_QUEUE">
+				<player>
+					<value>
+						0
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_4_QUEUE
+					</text>
+				</name>
+				<graphics>
+					<position x="1254" y="950"/>
+				</graphics>
+			</transition>
+			<transition id="SWITCH_T_4_UPDATE">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						SWITCH_T_4_UPDATE
+					</text>
+				</name>
+				<graphics>
+					<position x="1480" y="806"/>
+				</graphics>
+			</transition>
+			<transition id="PACKET_INJECT_T">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						PACKET_INJECT_T
+					</text>
+				</name>
+				<graphics>
+					<position x="2019" y="1238"/>
+				</graphics>
+			</transition>
+			<transition id="DFA_T0_Switch12">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_T0_Switch12
+					</text>
+				</name>
+				<graphics>
+					<position x="707" y="230"/>
+				</graphics>
+			</transition>
+			<transition id="DFA_T1_Switch12">
+				<player>
+					<value>
+						1
+					</value>
+				</player>
+				<name>
+					<graphics>
+						<offset x="0" y="0"/>
+					</graphics>
+					<text>
+						DFA_T1_Switch12
+					</text>
+				</name>
+				<graphics>
+					<position x="782" y="86"/>
+				</graphics>
+			</transition>
+			<arc id="11" source="TOPOLOGY_P_4" target="TOPOLOGY_T_4_3" type="normal"/>
+			<arc id="12" source="TOPOLOGY_UV_4" target="TOPOLOGY_T_4_3" type="normal"/>
+			<arc id="13" source="TOPOLOGY_T_4_3" target="TOPOLOGY_P_3" type="normal"/>
+			<arc id="15" source="TOPOLOGY_P_3" target="TOPOLOGY_T_3_2" type="normal"/>
+			<arc id="16" source="TOPOLOGY_UV_3" target="TOPOLOGY_T_3_2" type="normal"/>
+			<arc id="17" source="TOPOLOGY_T_3_2" target="TOPOLOGY_P_2" type="normal"/>
+			<arc id="19" source="TOPOLOGY_P_2" target="TOPOLOGY_T_2_12" type="normal"/>
+			<arc id="20" source="TOPOLOGY_UV_2" target="TOPOLOGY_T_2_12" type="normal"/>
+			<arc id="21" source="TOPOLOGY_T_2_12" target="TOPOLOGY_P_12" type="normal"/>
+			<arc id="23" source="TOPOLOGY_P_4" target="TOPOLOGY_T_4_1" type="normal"/>
+			<arc id="24" source="TOPOLOGY_UV_4" target="TOPOLOGY_T_4_1" type="normal"/>
+			<arc id="25" source="TOPOLOGY_T_4_1" target="TOPOLOGY_P_1" type="normal"/>
+			<arc id="27" source="TOPOLOGY_P_1" target="TOPOLOGY_T_1_2" type="normal"/>
+			<arc id="28" source="TOPOLOGY_UV_1" target="TOPOLOGY_T_1_2" type="normal"/>
+			<arc id="29" source="TOPOLOGY_T_1_2" target="TOPOLOGY_P_2" type="normal"/>
+			<arc id="39" source="UPDATE_P_COUNT" target="UPDATE_T_CONUP" type="normal"/>
+			<arc id="40" source="UPDATE_T_CONUP" target="UPDATE_P_COUNT" type="normal"/>
+			<arc id="41" source="UPDATE_P_QUEUEING" target="UPDATE_T_CONUP" type="normal"/>
+			<arc id="42" source="UPDATE_T_CONUP" target="UPDATE_P_UPDATING" type="normal"/>
+			<arc id="43" source="UPDATE_T_CONUP" target="UPDATE_P_BATCHES" type="normal"/>
+			<arc id="44" source="UPDATE_P_UPDATING" target="UPDATE_T_READY" type="normal"/>
+			<arc id="45" source="UPDATE_T_READY" target="UPDATE_P_QUEUEING" type="normal"/>
+			<arc id="46" source="UPDATE_P_INVCOUNT" target="UPDATE_T_READY" type="normal">
+				<inscription>
+					<text>3</text>
+				</inscription>
+			</arc>
+			<arc id="47" source="UPDATE_T_READY" target="UPDATE_P_INVCOUNT" type="normal">
+				<inscription>
+					<text>3</text>
+				</inscription>
+			</arc>
+			<arc id="48" source="UPDATE_T_READY" target="UPDATE_P_INV_TOTAL_UPDATED" type="normal"/>
+			<arc id="49" source="UPDATE_P_INV_TOTAL_UPDATED" target="UPDATE_T_READY" type="normal"/>
+			<arc id="56" source="SWITCH_T_3_QUEUE" target="UPDATE_P_COUNT" type="normal"/>
+			<arc id="57" source="UPDATE_P_COUNT" target="SWITCH_T_3_UPDATE" type="normal"/>
+			<arc id="58" source="SWITCH_P_3_INIT" target="SWITCH_T_3_QUEUE" type="normal"/>
+			<arc id="59" source="SWITCH_T_3_QUEUE" target="SWITCH_P_3_INIT" type="normal"/>
+			<arc id="60" source="SWITCH_P_3_LIMITER" target="SWITCH_T_3_QUEUE" type="normal"/>
+			<arc id="61" source="SWITCH_T_3_QUEUE" target="SWITCH_P_3_QUEUE" type="normal"/>
+			<arc id="62" source="SWITCH_P_3_INIT" target="SWITCH_T_3_UPDATE" type="normal"/>
+			<arc id="63" source="SWITCH_P_3_QUEUE" target="SWITCH_T_3_UPDATE" type="normal"/>
+			<arc id="64" source="SWITCH_T_3_UPDATE" target="SWITCH_P_3_FINAL" type="normal"/>
+			<arc id="65" source="UPDATE_P_INVCOUNT" target="SWITCH_T_3_QUEUE" type="normal"/>
+			<arc id="66" source="SWITCH_T_3_QUEUE" target="UPDATE_P_QUEUEING" type="normal"/>
+			<arc id="67" source="UPDATE_P_QUEUEING" target="SWITCH_T_3_QUEUE" type="normal"/>
+			<arc id="68" source="UPDATE_P_UPDATING" target="SWITCH_T_3_UPDATE" type="normal"/>
+			<arc id="69" source="SWITCH_T_3_UPDATE" target="UPDATE_P_UPDATING" type="normal"/>
+			<arc id="70" source="SWITCH_T_3_UPDATE" target="UPDATE_P_INVCOUNT" type="normal"/>
+			<arc id="71" source="SWITCH_T_3_QUEUE" target="UPDATE_P_TOTAL_QUEUED" type="normal"/>
+			<arc id="72" source="UPDATE_P_INV_TOTAL_UPDATED" target="SWITCH_T_3_UPDATE" type="normal"/>
+			<arc id="73" source="UPDATE_P_TOTAL_QUEUED" target="SWITCH_T_3_QUEUE" type="normal">
+				<inscription>
+					<text>2</text>
+				</inscription>
+			</arc>
+			<arc id="74" source="SWITCH_P_3_INIT" target="TOPOLOGY_T_3_2" type="normal"/>
+			<arc id="75" source="TOPOLOGY_T_3_2" target="SWITCH_P_3_INIT" type="normal"/>
+			<arc id="82" source="SWITCH_T_1_QUEUE" target="UPDATE_P_COUNT" type="normal"/>
+			<arc id="83" source="UPDATE_P_COUNT" target="SWITCH_T_1_UPDATE" type="normal"/>
+			<arc id="84" source="SWITCH_P_1_INIT" target="SWITCH_T_1_QUEUE" type="normal"/>
+			<arc id="85" source="SWITCH_T_1_QUEUE" target="SWITCH_P_1_INIT" type="normal"/>
+			<arc id="86" source="SWITCH_P_1_LIMITER" target="SWITCH_T_1_QUEUE" type="normal"/>
+			<arc id="87" source="SWITCH_T_1_QUEUE" target="SWITCH_P_1_QUEUE" type="normal"/>
+			<arc id="88" source="SWITCH_P_1_INIT" target="SWITCH_T_1_UPDATE" type="normal"/>
+			<arc id="89" source="SWITCH_P_1_QUEUE" target="SWITCH_T_1_UPDATE" type="normal"/>
+			<arc id="90" source="SWITCH_T_1_UPDATE" target="SWITCH_P_1_FINAL" type="normal"/>
+			<arc id="91" source="UPDATE_P_INVCOUNT" target="SWITCH_T_1_QUEUE" type="normal"/>
+			<arc id="92" source="SWITCH_T_1_QUEUE" target="UPDATE_P_QUEUEING" type="normal"/>
+			<arc id="93" source="UPDATE_P_QUEUEING" target="SWITCH_T_1_QUEUE" type="normal"/>
+			<arc id="94" source="UPDATE_P_UPDATING" target="SWITCH_T_1_UPDATE" type="normal"/>
+			<arc id="95" source="SWITCH_T_1_UPDATE" target="UPDATE_P_UPDATING" type="normal"/>
+			<arc id="96" source="SWITCH_T_1_UPDATE" target="UPDATE_P_INVCOUNT" type="normal"/>
+			<arc id="97" source="SWITCH_T_1_QUEUE" target="UPDATE_P_TOTAL_QUEUED" type="normal"/>
+			<arc id="98" source="UPDATE_P_INV_TOTAL_UPDATED" target="SWITCH_T_1_UPDATE" type="normal"/>
+			<arc id="99" source="SWITCH_P_1_FINAL" target="TOPOLOGY_T_1_2" type="normal"/>
+			<arc id="100" source="TOPOLOGY_T_1_2" target="SWITCH_P_1_FINAL" type="normal"/>
+			<arc id="107" source="SWITCH_T_4_QUEUE" target="UPDATE_P_COUNT" type="normal"/>
+			<arc id="108" source="UPDATE_P_COUNT" target="SWITCH_T_4_UPDATE" type="normal"/>
+			<arc id="109" source="SWITCH_P_4_INIT" target="SWITCH_T_4_QUEUE" type="normal"/>
+			<arc id="110" source="SWITCH_T_4_QUEUE" target="SWITCH_P_4_INIT" type="normal"/>
+			<arc id="111" source="SWITCH_P_4_LIMITER" target="SWITCH_T_4_QUEUE" type="normal"/>
+			<arc id="112" source="SWITCH_T_4_QUEUE" target="SWITCH_P_4_QUEUE" type="normal"/>
+			<arc id="113" source="SWITCH_P_4_INIT" target="SWITCH_T_4_UPDATE" type="normal"/>
+			<arc id="114" source="SWITCH_P_4_QUEUE" target="SWITCH_T_4_UPDATE" type="normal"/>
+			<arc id="115" source="SWITCH_T_4_UPDATE" target="SWITCH_P_4_FINAL" type="normal"/>
+			<arc id="116" source="UPDATE_P_INVCOUNT" target="SWITCH_T_4_QUEUE" type="normal"/>
+			<arc id="117" source="SWITCH_T_4_QUEUE" target="UPDATE_P_QUEUEING" type="normal"/>
+			<arc id="118" source="UPDATE_P_QUEUEING" target="SWITCH_T_4_QUEUE" type="normal"/>
+			<arc id="119" source="UPDATE_P_UPDATING" target="SWITCH_T_4_UPDATE" type="normal"/>
+			<arc id="120" source="SWITCH_T_4_UPDATE" target="UPDATE_P_UPDATING" type="normal"/>
+			<arc id="121" source="SWITCH_T_4_UPDATE" target="UPDATE_P_INVCOUNT" type="normal"/>
+			<arc id="122" source="SWITCH_T_4_QUEUE" target="UPDATE_P_TOTAL_QUEUED" type="normal"/>
+			<arc id="123" source="UPDATE_P_INV_TOTAL_UPDATED" target="SWITCH_T_4_UPDATE" type="normal"/>
+			<arc id="124" source="SWITCH_P_4_INIT" target="TOPOLOGY_T_4_3" type="normal"/>
+			<arc id="125" source="TOPOLOGY_T_4_3" target="SWITCH_P_4_INIT" type="normal"/>
+			<arc id="126" source="SWITCH_P_4_FINAL" target="TOPOLOGY_T_4_1" type="normal"/>
+			<arc id="127" source="TOPOLOGY_T_4_1" target="SWITCH_P_4_FINAL" type="normal"/>
+			<arc id="129" source="UPDATE_P_UPDATING" target="PACKET_INJECT_T" type="normal"/>
+			<arc id="130" source="PACKET_INJECT_T" target="TOPOLOGY_P_4" type="normal"/>
+			<arc id="135" source="DFA_Pstate_1" target="DFA_T0_Switch12" type="normal"/>
+			<arc id="136" source="DFA_T0_Switch12" target="DFA_Pstate_2" type="normal"/>
+			<arc id="137" source="DFA_Pstate_2" target="DFA_T1_Switch12" type="normal"/>
+			<arc id="138" source="DFA_T1_Switch12" target="DFA_Pstate_2" type="normal"/>
+			<arc id="141" source="DFA_TRACK_Pswitch12" target="DFA_T0_Switch12" type="normal"/>
+			<arc id="142" source="DFA_TRACK_Pswitch12" target="DFA_T1_Switch12" type="normal"/>
+			<arc id="143" source="TOPOLOGY_T_2_12" target="DFA_TRACK_Pswitch12" type="normal"/>
+			<arc id="144" source="PACKET_INJECT_T" target="DFA_TURN" type="normal"/>
+			<arc id="145" source="DFA_TURN" target="TOPOLOGY_T_2_12" type="normal"/>
+			<arc id="146" source="DFA_T0_Switch12" target="DFA_TURN" type="normal"/>
+			<arc id="147" source="DFA_T1_Switch12" target="DFA_TURN" type="normal"/>
+		</page>
+		<name>
+			<text>
+				ComposedModel
+			</text>
+		</name>
+	</net>
+</pnml>

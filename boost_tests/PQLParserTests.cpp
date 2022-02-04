@@ -98,22 +98,24 @@ BOOST_AUTO_TEST_CASE(A_G_compare) {
 
 BOOST_AUTO_TEST_CASE(A_not_F_deadlock_or_E_G_deadlock) {
     std::string query = R"(A !F (deadlock) || E G (deadlock) )";
-    std::vector<std::string> _;
 
     auto actual = ParseQuery(query);
+    actual->toString(std::cerr);
+    std::cerr << std::endl;
 
     // Left hand side of OR
+    std::shared_ptr<OrCondition> orCondition;
+    BOOST_TEST(orCondition = std::dynamic_pointer_cast<OrCondition>(actual));
+
+
     std::shared_ptr<ACondition> aCondition;
-    BOOST_REQUIRE(aCondition = std::dynamic_pointer_cast<ACondition>(actual));
+    BOOST_REQUIRE(aCondition = std::dynamic_pointer_cast<ACondition>((*orCondition)[0]));
 
     std::shared_ptr<NotCondition> notCondition;
     BOOST_REQUIRE(notCondition = std::dynamic_pointer_cast<NotCondition>((*aCondition)[0]));
 
-    std::shared_ptr<OrCondition> orCondition;
-    BOOST_TEST(orCondition = std::dynamic_pointer_cast<OrCondition>((*notCondition)[0]));
-
     std::shared_ptr<FCondition> fCondition;
-    BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*orCondition)[0]));
+    BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*notCondition)[0]));
 
     std::shared_ptr<DeadlockCondition> deadlockCondition;
     BOOST_TEST(deadlockCondition = std::dynamic_pointer_cast<DeadlockCondition>((*fCondition)[0]));
@@ -130,7 +132,6 @@ BOOST_AUTO_TEST_CASE(A_not_F_deadlock_or_E_G_deadlock) {
 }
 BOOST_AUTO_TEST_CASE(control_condition) {
     auto query = R"(control: A G ("p0" <= 4))";
-    std::vector<std::string> _;
 
     auto actual = ParseQuery(query);
 
@@ -153,4 +154,30 @@ BOOST_AUTO_TEST_CASE(control_condition) {
 
     BOOST_TEST(identifierExpr->name() == "p0");
     BOOST_TEST(literalExpr->value() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(large_query_and) {
+    auto query = R"(control: AF ( true and (Inter0laneWtoEp0 = 16) and (Inter0laneEtoWp0 = 16) and (Inter0laneNtoSp0 = 16) and (Inter0laneStoNp0 = 16) and (Inter1laneWtoEp0 = 16) and (Inter1laneEtoWp0 = 16) and (Inter1laneNtoSp0 = 16) and (Inter1laneStoNp0 = 16) and (Inter2laneWtoEp0 = 16) and (Inter2laneEtoWp0 = 16) and (Inter2laneNtoSp0 = 16) and (Inter2laneStoNp0 = 16) and (Inter3laneWtoEp0 = 16) and (Inter3laneEtoWp0 = 16) and (Inter3laneNtoSp0 = 16) and (Inter3laneStoNp0 = 16) and (Inter4laneWtoEp0 = 16) and (Inter4laneEtoWp0 = 16) and (Inter4laneNtoSp0 = 16) and (Inter4laneStoNp0 = 16) and (Inter5laneWtoEp0 = 16) and (Inter5laneEtoWp0 = 16) and (Inter5laneNtoSp0 = 16) and (Inter5laneStoNp0 = 16) and (Inter6laneWtoEp0 = 16) and (Inter6laneEtoWp0 = 16) and (Inter6laneNtoSp0 = 16) and (Inter6laneStoNp0 = 16) ))";
+    auto actual = ParseQuery(query);
+    std::shared_ptr<ControlCondition> cCondition;
+    BOOST_REQUIRE(cCondition = std::dynamic_pointer_cast<ControlCondition>(actual));
+
+    std::shared_ptr<ACondition> aCondition;
+    BOOST_REQUIRE(aCondition = std::dynamic_pointer_cast<ACondition>((*cCondition)[0]));
+
+    std::shared_ptr<FCondition> fCondition;
+    BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*aCondition)[0]));
+}
+
+BOOST_AUTO_TEST_CASE(large_query_mix_and_or) {
+    auto query = R"(control: AF ( true or (Inter0laneWtoEp0 = 16) or (Inter0laneEtoWp0 = 16) or (Inter0laneNtoSp0 = 16) or (Inter0laneStoNp0 = 16) or (Inter1laneWtoEp0 = 16) or (Inter1laneEtoWp0 = 16) or (Inter1laneNtoSp0 = 16) or (Inter1laneStoNp0 = 16) and (Inter2laneWtoEp0 = 16) and (Inter2laneEtoWp0 = 16) and (Inter2laneNtoSp0 = 16) and (Inter2laneStoNp0 = 16) and (Inter3laneWtoEp0 = 16) and (Inter3laneEtoWp0 = 16) and (Inter3laneNtoSp0 = 16) and (Inter3laneStoNp0 = 16) and (Inter4laneWtoEp0 = 16) and (Inter4laneEtoWp0 = 16) and (Inter4laneNtoSp0 = 16) and (Inter4laneStoNp0 = 16) and (Inter5laneWtoEp0 = 16) and (Inter5laneEtoWp0 = 16) and (Inter5laneNtoSp0 = 16) and (Inter5laneStoNp0 = 16) and (Inter6laneWtoEp0 = 16) and (Inter6laneEtoWp0 = 16) and (Inter6laneNtoSp0 = 16) and (Inter6laneStoNp0 = 16) ))";
+    auto actual = ParseQuery(query);
+    std::shared_ptr<ControlCondition> cCondition;
+    BOOST_REQUIRE(cCondition = std::dynamic_pointer_cast<ControlCondition>(actual));
+
+    std::shared_ptr<ACondition> aCondition;
+    BOOST_REQUIRE(aCondition = std::dynamic_pointer_cast<ACondition>((*cCondition)[0]));
+
+    std::shared_ptr<FCondition> fCondition;
+    BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*aCondition)[0]));
 }
