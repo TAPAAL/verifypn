@@ -138,7 +138,7 @@ namespace PetriEngine::PQL {
                 visitor->accept(static_cast<EGCondition*>(c));
                 break;
             default:
-                __builtin_unreachable();
+                __builtin_unreachable(); // <-- helps the compiler optimize
         }
     }
 
