@@ -40,6 +40,27 @@ namespace PetriEngine {
         class Visitor;
         class MutatingVisitor;
 
+        using type_id_t = uint8_t;
+
+        template<typename T>
+        constexpr type_id_t type_id() {
+            if constexpr (std::is_pointer<T>::value) {
+                using Q = typename std::remove_pointer<T>::type;
+                return type_id<Q>();
+            }
+            else if constexpr (std::is_const<T>::value) {
+                using Q = typename std::remove_cv<T>::type;
+                return type_id<Q>();
+            }
+            else
+            {
+                assert(false);
+                T::fail_here_badly;
+                return 0;
+            }
+        }
+
+
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, BControl = 10, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, PControl = 5, pError = -1 };
@@ -239,6 +260,7 @@ namespace PetriEngine {
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
             void toString(std::ostream& os = std::cout);
+            virtual type_id_t type() const = 0;
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.
