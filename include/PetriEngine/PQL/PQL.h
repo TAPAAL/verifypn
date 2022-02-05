@@ -107,29 +107,13 @@ namespace PetriEngine {
         class Expr {
             int _eval = 0;
         public:
-            /** Types of expressions */
-            enum Types {
-                /** Binary addition expression */
-                PlusExpr,
-                /** Binary subtraction expression */
-                SubtractExpr,
-                /** Binary multiplication expression */
-                MultiplyExpr,
-                /** Unary minus expression */
-                MinusExpr,
-                /** Literal integer expression */
-                LiteralExpr,
-                /** Identifier expression */
-                IdentifierExpr
-            };
-        public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
             /** Evaluate the expression given marking and assignment */
             virtual void visit(Visitor& visitor) const = 0;
             virtual void visit(MutatingVisitor& visitor) = 0;
             /** Expression type */
-            [[nodiscard]] virtual Types type() const = 0;
+            virtual type_id_t type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
 

@@ -778,32 +778,6 @@ namespace PetriEngine {
             return _expr->placeFree();
         }
 
-        /******************** Expr::type() implementation ********************/
-
-        Expr::Types PlusExpr::type() const {
-            return Expr::PlusExpr;
-        }
-
-        Expr::Types SubtractExpr::type() const {
-            return Expr::SubtractExpr;
-        }
-
-        Expr::Types MultiplyExpr::type() const {
-            return Expr::MinusExpr;
-        }
-
-        Expr::Types MinusExpr::type() const {
-            return Expr::MinusExpr;
-        }
-
-        Expr::Types LiteralExpr::type() const {
-            return Expr::LiteralExpr;
-        }
-
-        Expr::Types UnfoldedIdentifierExpr::type() const {
-            return Expr::IdentifierExpr;
-        }
-
         /******************** Distance Condition ********************/
         template<>
         uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
