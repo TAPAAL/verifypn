@@ -179,7 +179,7 @@ int main(int argc, const char** argv) {
             {
                 EvaluationContext context(qm0.get(), qnet.get());
                 for (size_t i = 0; i < queries.size(); ++i) {
-                    auto r = queries[i]->evaluate(context);
+                    auto r = PetriEngine::PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
                         queries[i] = BooleanCondition::FALSE_CONSTANT;
