@@ -57,7 +57,7 @@ namespace PetriEngine { namespace PQL {
             (*condition)[0]->setEval(v1);
         Visitor::visit(eval, (*condition)[1]);
         if constexpr (std::is_same<EvaluateAndSetVisitor,V>::value)
-            (*condition)[0]->setEval(eval.value());
+            (*condition)[1]->setEval(eval.value());
         if      constexpr (std::is_same<C,EqualCondition>::value)
             return v1 == eval.value();
         else if constexpr (std::is_same<C,NotEqualCondition>::value)
