@@ -22,26 +22,56 @@
 
 namespace PetriEngine { namespace PQL {
 
+    class ExprEvalVisitor : public ExpressionVisitor {
+    public:
+        explicit ExprEvalVisitor(const EvaluationContext& context) : _context(context) {}
+        virtual void _accept(const PlusExpr *element) override final;
+
+        virtual void _accept(const MultiplyExpr *element) override final;
+
+        virtual void _accept(const SubtractExpr *element) override final;
+
+        virtual void _accept(const MinusExpr *element) override final;
+
+        virtual void _accept(const UnfoldedIdentifierExpr *element) override final;
+
+        virtual void _accept(const IdentifierExpr *element) override final;
+
+        virtual void _accept(const LiteralExpr *element) override final;
+
+        int64_t value() const { return _value; }
+    protected:
+        const EvaluationContext& _context;
+        int64_t _value;
+    };
+
+
     template<typename V, typename C>
     bool compare(V* visitor, C* condition)
     {
-        Visitor::visit(visitor, (*condition)[0]);
-        auto v1 = visitor->get_return_value()._value;
-        Visitor::visit(visitor, (*condition)[1]);
+        ExprEvalVisitor eval(visitor->context());
+        Visitor::visit(eval, (*condition)[0]);
+
+        auto v1 = eval.value();
+        if constexpr (std::is_same<EvaluateAndSetVisitor,V>::value)
+            (*condition)[0]->setEval(v1);
+        Visitor::visit(eval, (*condition)[1]);
+        if constexpr (std::is_same<EvaluateAndSetVisitor,V>::value)
+            (*condition)[0]->setEval(eval.value());
         if      constexpr (std::is_same<C,EqualCondition>::value)
-            return v1 == visitor->get_return_value()._value;
+            return v1 == eval.value();
         else if constexpr (std::is_same<C,NotEqualCondition>::value)
-            return v1 != visitor->get_return_value()._value;
+            return v1 != eval.value();
         else if constexpr (std::is_same<C,LessThanCondition>::value)
-            return v1 <  visitor->get_return_value()._value;
+            return v1 <  eval.value();
         else if constexpr (std::is_same<C,LessThanOrEqualCondition>::value)
-            return v1 <= visitor->get_return_value()._value;
+            return v1 <= eval.value();
         else
             return C::fail_hard_here;
     }
 
     template<typename V, typename E>
-    int64_t commutiative(V* visitor, E* element, const EvaluationContext& context) {
+    int64_t commutative(V* visitor, const E* element, const EvaluationContext& context) {
         int64_t r = element->constant();
         for(auto& i : element->places())
         {
@@ -50,62 +80,61 @@ namespace PetriEngine { namespace PQL {
             else if constexpr (std::is_same<E, MultiplyExpr>::value)
                 r += context.marking()[i.first];
             else
-                E::fail_here;
+                E::fail_hard_here;
         }
         for (auto& e : element->expressions())
         {
             Visitor::visit(visitor, e);
             if constexpr (std::is_same<E, PlusExpr>::value)
-                r *= visitor->get_return_value()._value;
+                r *= visitor->value();
             else if constexpr (std::is_same<E, MultiplyExpr>::value)
-                r += visitor->get_return_value()._value;
+                r += visitor->value();
             else
-                E::fail_here;
+                E::fail_hard_here;
         }
         return r;
     }
 
-    void BaseEvaluationVisitor::_accept(PlusExpr *element)
+    void ExprEvalVisitor::_accept(const PlusExpr *element)
     {
-        _return_value._value = commutiative(this, element, _context);
+        _value = commutative(this, element, _context);
     }
 
-    void BaseEvaluationVisitor::_accept(MultiplyExpr *element)
+    void ExprEvalVisitor::_accept(const MultiplyExpr *element)
     {
-        _return_value._value = commutiative(this, element, _context);
+        _value = commutative(this, element, _context);
     }
 
-    void BaseEvaluationVisitor::_accept(SubtractExpr *element)
+    void ExprEvalVisitor::_accept(const SubtractExpr *element)
     {
         Visitor::visit(this, (*element)[0]);
-        int64_t r = 0;
-        r = _return_value._value;
+        int64_t r = _value;
         for(size_t i = 1; i < element->operands(); ++i)
         {
             Visitor::visit(this, (*element)[i]);
-            r -= _return_value._value;
+            r -= _value;
         }
-        _return_value._value = r;
+        _value = r;
     }
 
-    void BaseEvaluationVisitor::_accept(MinusExpr *element)
+    void ExprEvalVisitor::_accept(const MinusExpr *element)
     {
         Visitor::visit(this, (*element)[0]);
-        _return_value._value *= -1;
+        _value *= -1;
     }
 
-    void BaseEvaluationVisitor::_accept(UnfoldedIdentifierExpr *element) {
+    void ExprEvalVisitor::_accept(const UnfoldedIdentifierExpr *element) {
         assert(element->offset() != -1);
-        _return_value._value = (int64_t) _context.marking()[element->offset()];
+        _value = (int64_t) _context.marking()[element->offset()];
     }
 
-    void BaseEvaluationVisitor::_accept(IdentifierExpr *element) {
+    void ExprEvalVisitor::_accept(const IdentifierExpr *element) {
         Visitor::visit(this, element->compiled());
     }
 
 
-    void BaseEvaluationVisitor::_accept(LiteralExpr *element) {
-        _return_value = {element->value()};
+    void ExprEvalVisitor::_accept(const LiteralExpr *element) {
+        _value = {element->value()};
     }
 
 /******************** Evaluation ********************/
@@ -116,7 +145,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(EGCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RFALSE)
+        if (_return_value == Condition::RFALSE)
             _return_value = {Condition::RFALSE};
         else
             _return_value = {Condition::RUNKNOWN};
@@ -124,7 +153,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(AGCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RFALSE)
+        if (_return_value == Condition::RFALSE)
             _return_value = {Condition::RFALSE};
         else
             _return_value = {Condition::RUNKNOWN};
@@ -136,7 +165,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(EFCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RTRUE)
+        if (_return_value == Condition::RTRUE)
             _return_value = {Condition::RTRUE};
         else
             _return_value = {Condition::RUNKNOWN};
@@ -144,7 +173,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(AFCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RTRUE)
+        if (_return_value == Condition::RTRUE)
             _return_value = {Condition::RTRUE};
         else
             _return_value = {Condition::RUNKNOWN};
@@ -173,10 +202,10 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
-        if (_return_value._result != Condition::RFALSE)
+        if (_return_value != Condition::RFALSE)
             return;
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RFALSE) {
+        if (_return_value == Condition::RFALSE) {
             return;
         } else {
             _return_value = {Condition::RUNKNOWN};
@@ -188,10 +217,10 @@ namespace PetriEngine { namespace PQL {
         auto res = Condition::RTRUE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_return_value._result == Condition::RFALSE) {
+            if (_return_value == Condition::RFALSE) {
                 _return_value = {Condition::RFALSE};
                 return;
-            } else if (_return_value._result == Condition::RUNKNOWN)
+            } else if (_return_value == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
         _return_value = {res};
@@ -201,10 +230,10 @@ namespace PetriEngine { namespace PQL {
         auto res = Condition::RFALSE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_return_value._result == Condition::RTRUE) {
+            if (_return_value == Condition::RTRUE) {
                 _return_value = {Condition::RTRUE};
                 return;
-            } else if (_return_value._result == Condition::RUNKNOWN)
+            } else if (_return_value == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
         _return_value = {res};
@@ -241,7 +270,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        auto res = _return_value._result;
+        auto res = _return_value;
         if (res != Condition::RUNKNOWN)
             _return_value = {res == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
         else
@@ -268,23 +297,13 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, element->getCompiled());
     }
 
-    const BaseEvaluationVisitor::ReturnType& BaseEvaluationVisitor::get_return_value() {
-        return _return_value;
-    }
-
 
     /****************** Evaluate and Set *******************/
 
     Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context) {
         EvaluateAndSetVisitor visitor(context);
         Visitor::visit(&visitor, element);
-        return visitor.get_return_value()._result;
-    }
-
-    int64_t evaluateAndSet(Expr *element, const EvaluationContext &context) {
-        EvaluateAndSetVisitor visitor(context);
-        Visitor::visit(&visitor, element);
-        return visitor.get_return_value()._value;
+        return visitor.get_return_value();
     }
 
     void EvaluateAndSetVisitor::_accept(SimpleQuantifierCondition *element) {
@@ -293,67 +312,61 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateAndSetVisitor::_accept(GCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RFALSE)
+        if (_return_value != Condition::RFALSE)
             _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._value);
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(FCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RTRUE)
+        if (_return_value != Condition::RTRUE)
             _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._result);
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(EGCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._result);
+        if (_return_value != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(AGCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._result);
+        if (_return_value != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(EFCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._result);
+        if (_return_value != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(AFCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value._result);
+        if (_return_value != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
-        if (_return_value._result != Condition::RFALSE)
+        if (_return_value != Condition::RFALSE)
             return;
 
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result == Condition::RFALSE)
+        if (_return_value == Condition::RFALSE)
             return;
         _return_value = {Condition::RUNKNOWN};
-    }
-
-    void EvaluateAndSetVisitor::_accept(Expr *element) {
-        int64_t r = evaluate(element, _context);
-        element->setEval(r);
-        _return_value = {r};
     }
 
     void EvaluateAndSetVisitor::_accept(AndCondition *element) {
         Condition::Result res = Condition::RTRUE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_return_value._result == Condition::RFALSE) {
+            if (_return_value == Condition::RFALSE) {
                 res = Condition::RFALSE;
                 break;
-            } else if (_return_value._result == Condition::RUNKNOWN) {
+            } else if (_return_value == Condition::RUNKNOWN) {
                 res = Condition::RUNKNOWN;
             }
         }
@@ -365,10 +378,10 @@ namespace PetriEngine { namespace PQL {
         Condition::Result res = Condition::RFALSE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_return_value._result == Condition::RTRUE) {
+            if (_return_value == Condition::RTRUE) {
                 res = Condition::RTRUE;
                 break;
-            } else if (_return_value._result == Condition::RUNKNOWN) {
+            } else if (_return_value == Condition::RUNKNOWN) {
                 res = Condition::RUNKNOWN;
             }
         }
@@ -397,7 +410,7 @@ namespace PetriEngine { namespace PQL {
     void EvaluateAndSetVisitor::_accept(EqualCondition *element) {
         auto res = compare(this, element);
         element->setSatisfied(res);
-        _return_value._result = res ? Condition::RTRUE : Condition::RFALSE;
+        _return_value = res ? Condition::RTRUE : Condition::RFALSE;
     }
 
     void EvaluateAndSetVisitor::_accept(NotEqualCondition *element) {
@@ -408,9 +421,9 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateAndSetVisitor::_accept(NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
-        if (_return_value._result != Condition::RUNKNOWN)
-            _return_value = {_return_value._result == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
-        element->setSatisfied(_return_value._result);
+        if (_return_value != Condition::RUNKNOWN)
+            _return_value = {_return_value == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
+        element->setSatisfied(_return_value);
     }
 
     void EvaluateAndSetVisitor::_accept(BooleanCondition *element) {
@@ -437,16 +450,15 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, element->getCompiled());
     }
 
-
     int64_t evaluate(Expr *element, const EvaluationContext &context) {
-        EvaluateVisitor visitor(context);
+        ExprEvalVisitor visitor(context);
         Visitor::visit(&visitor, element);
-        return visitor.get_return_value()._value;
+        return visitor.value();
     }
 
     Condition::Result evaluate(Condition *element, const EvaluationContext &context) {
         EvaluateVisitor visitor(context);
         Visitor::visit(&visitor, element);
-        return visitor.get_return_value()._result;
+        return visitor.get_return_value();
     }
 } }

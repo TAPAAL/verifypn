@@ -31,6 +31,11 @@ namespace PetriEngine {
             }
 
             template<typename T, typename Q>
+            static void visit(T& visitor, Q c) {
+                visit(&visitor, c);
+            }
+
+            template<typename T, typename Q>
             static void visit(T* visitor, const std::shared_ptr<Q>& c) {
                 visit(visitor, c.get());
             }

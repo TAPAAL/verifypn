@@ -29,33 +29,13 @@ namespace PetriEngine { namespace PQL {
 
     class BaseEvaluationVisitor : public MutatingVisitor {
     public:
-        union ReturnType {
-            int64_t _value;
-            Condition::Result _result;
-        };
-        const ReturnType& get_return_value();
-
+        Condition::Result get_return_value() { return _return_value; }
+        const EvaluationContext& context() const { return _context; }
     protected:
-        virtual void _accept(PlusExpr *element) override final;
-
-        virtual void _accept(MultiplyExpr *element) override final;
-
-        virtual void _accept(SubtractExpr *element) override final;
-
-        virtual void _accept(MinusExpr *element) override final;
-
-        virtual void _accept(UnfoldedIdentifierExpr *element) override final;
-
-        virtual void _accept(IdentifierExpr *element) override final;
-
-        virtual void _accept(LiteralExpr *element) override final;
-
         explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
-
     protected:
-
         const EvaluationContext& _context;
-        ReturnType _return_value{};
+        Condition::Result _return_value = Condition::RUNKNOWN;
     };
 
     int64_t evaluate(Expr *element, const EvaluationContext& context);
@@ -114,7 +94,6 @@ namespace PetriEngine { namespace PQL {
         void _accept(ShallowCondition *element) override;
     };
 
-    int64_t evaluateAndSet(Expr *element, const EvaluationContext &context);
     Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context);
 
     class EvaluateAndSetVisitor : public BaseEvaluationVisitor {
@@ -161,8 +140,6 @@ namespace PetriEngine { namespace PQL {
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(ShallowCondition *element) override;
-
-        void _accept(Expr *element) override;
     };
 } }
 
