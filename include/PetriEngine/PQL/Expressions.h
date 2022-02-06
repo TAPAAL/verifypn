@@ -246,7 +246,8 @@ namespace PetriEngine {
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
-            int32_t _constant;
+            virtual int64_t apply(int64_t, int64_t) const = 0;
+            int64_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
         };
@@ -264,7 +265,7 @@ namespace PetriEngine {
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
         protected:
-            //int binaryOp() const;
+            int64_t apply(int64_t a, int64_t b) const { return a + b; }
             std::string op() const override;
 
         };
@@ -298,7 +299,7 @@ namespace PetriEngine {
             void visit(Visitor& visitor) const override;
             void visit(MutatingVisitor& visitor) override;
         protected:
-            //int binaryOp() const;
+            int64_t apply(int64_t a, int64_t b) const { return a * b; }
             std::string op() const override;
         };
 

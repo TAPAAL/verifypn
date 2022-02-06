@@ -25,60 +25,40 @@
 #include "Visitor.h"
 #include "Contexts.h"
 
-namespace PetriEngine::PQL {
-
-    int temp_apply(Expr *element, int lhs, int rhs);
-    bool temp_apply(Condition *element, int lhs, int rhs);
-
-    class ApplyVisitor : public Visitor {
-    public:
-
-        void set_args(int lhs, int rhs) { _lhs = lhs; _rhs = rhs; }
-
-        [[nodiscard]] int get_return_value() const { return _return_value; }
-
-    private:
-        int _lhs;
-        int _rhs;
-        int _return_value;
-
-        void _accept(const PlusExpr *element) override;
-
-        void _accept(const MultiplyExpr *element) override;
-
-        void _accept(const SubtractExpr *element) override;
-
-        void _accept(const EqualCondition *element) override;
-
-        void _accept(const NotEqualCondition *element) override;
-
-        void _accept(const LessThanCondition *element) override;
-
-        void _accept(const LessThanOrEqualCondition *element) override;
-    };
+namespace PetriEngine { namespace PQL {
 
     class BaseEvaluationVisitor : public MutatingVisitor {
     public:
         union ReturnType {
-            int _value;
+            int64_t _value;
             Condition::Result _result;
         };
+        const ReturnType& get_return_value();
+
+    protected:
+        virtual void _accept(PlusExpr *element) override final;
+
+        virtual void _accept(MultiplyExpr *element) override final;
+
+        virtual void _accept(SubtractExpr *element) override final;
+
+        virtual void _accept(MinusExpr *element) override final;
+
+        virtual void _accept(UnfoldedIdentifierExpr *element) override final;
+
+        virtual void _accept(IdentifierExpr *element) override final;
+
+        virtual void _accept(LiteralExpr *element) override final;
 
         explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
 
-        ReturnType get_return_value();
-
     protected:
-
-        bool apply(const Condition* element, int lhs, int rhs);
-        int apply(const Expr* element, int lhs, int rhs);
 
         const EvaluationContext& _context;
         ReturnType _return_value{};
-        ApplyVisitor _apply_visitor;
     };
 
-    int evaluate(Expr *element, const EvaluationContext& context);
+    int64_t evaluate(Expr *element, const EvaluationContext& context);
     Condition::Result evaluate(Condition *element, const EvaluationContext& context);
 
 
@@ -87,20 +67,6 @@ namespace PetriEngine::PQL {
         explicit EvaluateVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
 
     private:
-        int32_t pre_op(const NaryExpr *element);
-
-        int32_t pre_op(const CommutativeExpr *element);
-
-        void _accept(UnfoldedIdentifierExpr *element) override;
-
-        void _accept(LiteralExpr *element) override;
-
-        void _accept(MinusExpr *element) override;
-
-        void _accept(CommutativeExpr *element) override;
-
-        void _accept(NaryExpr *element) override;
-
         void _accept(SimpleQuantifierCondition *element) override;
 
         void _accept(EGCondition *element) override;
@@ -129,7 +95,13 @@ namespace PetriEngine::PQL {
 
         void _accept(CompareConjunction *element) override;
 
-        void _accept(CompareCondition *element) override;
+        void _accept(NotEqualCondition *element) override;
+
+        void _accept(EqualCondition *element) override;
+
+        void _accept(LessThanCondition *element) override;
+
+        void _accept(LessThanOrEqualCondition *element) override;
 
         void _accept(NotCondition *element) override;
 
@@ -139,12 +111,10 @@ namespace PetriEngine::PQL {
 
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
-        void _accept(IdentifierExpr *element) override;
-
         void _accept(ShallowCondition *element) override;
     };
 
-    int evaluateAndSet(Expr *element, const EvaluationContext &context);
+    int64_t evaluateAndSet(Expr *element, const EvaluationContext &context);
     Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context);
 
     class EvaluateAndSetVisitor : public BaseEvaluationVisitor {
@@ -174,7 +144,13 @@ namespace PetriEngine::PQL {
 
         void _accept(CompareConjunction *element) override;
 
-        void _accept(CompareCondition *element) override;
+        void _accept(NotEqualCondition *element) override;
+
+        void _accept(EqualCondition *element) override;
+
+        void _accept(LessThanCondition *element) override;
+
+        void _accept(LessThanOrEqualCondition *element) override;
 
         void _accept(NotCondition *element) override;
 
@@ -188,8 +164,6 @@ namespace PetriEngine::PQL {
 
         void _accept(Expr *element) override;
     };
-
-
-}
+} }
 
 #endif //VERIFYPN_EVALUATION_H

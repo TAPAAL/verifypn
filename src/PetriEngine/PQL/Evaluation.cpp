@@ -20,52 +20,95 @@
 
 #include "PetriEngine/PQL/Evaluation.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
-    int32_t EvaluateVisitor::pre_op(const NaryExpr *element) {
-        Visitor::visit(this, (*element)[0]);
-        return _return_value._value;
-    }
-
-    int32_t EvaluateVisitor::pre_op(const CommutativeExpr *element) {
-        int32_t res = element->constant();
-        for (auto &i: element->places())
-            res = apply(element, res, _context.marking()[i.first]);
-        if (element->operands() > 0)
-            res = apply(element, res, evaluateAndSet((*element)[0].get(), _context));
-        return res;
-    }
-
-/******************** Evaluation ********************/
-
-    void EvaluateVisitor::_accept(NaryExpr *element) {
-        int32_t r = pre_op(element);
-        for (size_t i = 1; i < element->operands(); ++i) {
-            r = apply(element, r, evaluateAndSet((*element)[i].get(), _context));
-        }
-        _return_value = {r};
-    }
-
-    void EvaluateVisitor::_accept(CommutativeExpr *element) {
-        if (element->operands() == 0)
-            _return_value = {pre_op(element)};
+    template<typename V, typename C>
+    bool compare(V* visitor, C* condition)
+    {
+        Visitor::visit(visitor, (*condition)[0]);
+        auto v1 = visitor->get_return_value()._value;
+        Visitor::visit(visitor, (*condition)[1]);
+        if      constexpr (std::is_same<C,EqualCondition>::value)
+            return v1 == visitor->get_return_value()._value;
+        else if constexpr (std::is_same<C,NotEqualCondition>::value)
+            return v1 != visitor->get_return_value()._value;
+        else if constexpr (std::is_same<C,LessThanCondition>::value)
+            return v1 <  visitor->get_return_value()._value;
+        else if constexpr (std::is_same<C,LessThanOrEqualCondition>::value)
+            return v1 <= visitor->get_return_value()._value;
         else
-            element->NaryExpr::visit(*this); // Will implicitly set _return_value
+            return C::fail_hard_here;
     }
 
-    void EvaluateVisitor::_accept(MinusExpr *element) {
+    template<typename V, typename E>
+    int64_t commutiative(V* visitor, E* element, const EvaluationContext& context) {
+        int64_t r = element->constant();
+        for(auto& i : element->places())
+        {
+            if constexpr (std::is_same<E, PlusExpr>::value)
+                r *= context.marking()[i.first];
+            else if constexpr (std::is_same<E, MultiplyExpr>::value)
+                r += context.marking()[i.first];
+            else
+                E::fail_here;
+        }
+        for (auto& e : element->expressions())
+        {
+            Visitor::visit(visitor, e);
+            if constexpr (std::is_same<E, PlusExpr>::value)
+                r *= visitor->get_return_value()._value;
+            else if constexpr (std::is_same<E, MultiplyExpr>::value)
+                r += visitor->get_return_value()._value;
+            else
+                E::fail_here;
+        }
+        return r;
+    }
+
+    void BaseEvaluationVisitor::_accept(PlusExpr *element)
+    {
+        _return_value._value = commutiative(this, element, _context);
+    }
+
+    void BaseEvaluationVisitor::_accept(MultiplyExpr *element)
+    {
+        _return_value._value = commutiative(this, element, _context);
+    }
+
+    void BaseEvaluationVisitor::_accept(SubtractExpr *element)
+    {
         Visitor::visit(this, (*element)[0]);
-        _return_value = {-_return_value._value};
+        int64_t r = 0;
+        r = _return_value._value;
+        for(size_t i = 1; i < element->operands(); ++i)
+        {
+            Visitor::visit(this, (*element)[i]);
+            r -= _return_value._value;
+        }
+        _return_value._value = r;
     }
 
-    void EvaluateVisitor::_accept(LiteralExpr *element) {
+    void BaseEvaluationVisitor::_accept(MinusExpr *element)
+    {
+        Visitor::visit(this, (*element)[0]);
+        _return_value._value *= -1;
+    }
+
+    void BaseEvaluationVisitor::_accept(UnfoldedIdentifierExpr *element) {
+        assert(element->offset() != -1);
+        _return_value._value = (int64_t) _context.marking()[element->offset()];
+    }
+
+    void BaseEvaluationVisitor::_accept(IdentifierExpr *element) {
+        Visitor::visit(this, element->compiled());
+    }
+
+
+    void BaseEvaluationVisitor::_accept(LiteralExpr *element) {
         _return_value = {element->value()};
     }
 
-    void EvaluateVisitor::_accept(UnfoldedIdentifierExpr *element) {
-        assert(element->offset() != -1);
-        _return_value = {(int) _context.marking()[element->offset()]};
-    }
+/******************** Evaluation ********************/
 
     void EvaluateVisitor::_accept(SimpleQuantifierCondition *element) {
         _return_value = {Condition::RUNKNOWN};
@@ -127,9 +170,6 @@ namespace PetriEngine::PQL {
         _return_value = {Condition::RUNKNOWN};
     }
 
-/*        void EvaluationVisitor::_accept(XCondition *element) {
-            return _cond->evaluate(_context);
-        }*/
 
     void EvaluateVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
@@ -179,12 +219,24 @@ namespace PetriEngine::PQL {
         _return_value = {(element->isNegated() xor res) ? Condition::RTRUE : Condition::RFALSE};
     }
 
-    void EvaluateVisitor::_accept(CompareCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        int v1 = _return_value._value;
-        Visitor::visit(this, (*element)[1]);
-        int v2 = _return_value._value;
-        _return_value = {apply(element, v1, v2) ? Condition::RTRUE : Condition::RFALSE};
+    void EvaluateVisitor::_accept(LessThanOrEqualCondition *element) {
+        _return_value = {compare(this, element) ?
+            Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateVisitor::_accept(LessThanCondition *element) {
+        _return_value = {compare(this, element) ?
+            Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateVisitor::_accept(EqualCondition *element) {
+        _return_value = {compare(this, element) ?
+            Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateVisitor::_accept(NotEqualCondition *element) {
+        _return_value = {compare(this, element) ?
+            Condition::RTRUE : Condition::RFALSE};
     }
 
     void EvaluateVisitor::_accept(NotCondition *element) {
@@ -212,29 +264,14 @@ namespace PetriEngine::PQL {
         _return_value = {element->getMax() <= element->getBound() ? Condition::RTRUE : Condition::RUNKNOWN};
     }
 
-    void EvaluateVisitor::_accept(IdentifierExpr *element) {
-        Visitor::visit(this, element->compiled());
-    }
-
     void EvaluateVisitor::_accept(ShallowCondition *element) {
         Visitor::visit(this, element->getCompiled());
     }
 
-    BaseEvaluationVisitor::ReturnType BaseEvaluationVisitor::get_return_value() {
+    const BaseEvaluationVisitor::ReturnType& BaseEvaluationVisitor::get_return_value() {
         return _return_value;
     }
 
-    bool BaseEvaluationVisitor::apply(const Condition *element, int lhs, int rhs) {
-        _apply_visitor.set_args(lhs, rhs);
-        Visitor::visit(&_apply_visitor, element);
-        return _apply_visitor.get_return_value();
-    }
-
-    int BaseEvaluationVisitor::apply(const Expr *element, int lhs, int rhs) {
-        _apply_visitor.set_args(lhs, rhs);
-        Visitor::visit(&_apply_visitor, element);
-        return _apply_visitor.get_return_value();
-    }
 
     /****************** Evaluate and Set *******************/
 
@@ -244,7 +281,7 @@ namespace PetriEngine::PQL {
         return visitor.get_return_value()._result;
     }
 
-    int evaluateAndSet(Expr *element, const EvaluationContext &context) {
+    int64_t evaluateAndSet(Expr *element, const EvaluationContext &context) {
         EvaluateAndSetVisitor visitor(context);
         Visitor::visit(&visitor, element);
         return visitor.get_return_value()._value;
@@ -304,7 +341,7 @@ namespace PetriEngine::PQL {
     }
 
     void EvaluateAndSetVisitor::_accept(Expr *element) {
-        int r = evaluate(element, _context);
+        int64_t r = evaluate(element, _context);
         element->setEval(r);
         _return_value = {r};
     }
@@ -345,13 +382,26 @@ namespace PetriEngine::PQL {
         _return_value = {res};
     }
 
-    void EvaluateAndSetVisitor::_accept(CompareCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        int v1 = _return_value._value;
-        Visitor::visit(this, (*element)[1]);
-        int v2 = _return_value._value;
+    void EvaluateAndSetVisitor::_accept(LessThanCondition *element) {
+        auto res = compare(this, element);
+        element->setSatisfied(res);
+        _return_value = {res ? Condition::RTRUE : Condition::RFALSE};
+    }
 
-        bool res = apply(element, v1, v2);
+    void EvaluateAndSetVisitor::_accept(LessThanOrEqualCondition *element) {
+        auto res = compare(this, element);
+        element->setSatisfied(res);
+        _return_value = {res ? Condition::RTRUE : Condition::RFALSE};
+    }
+
+    void EvaluateAndSetVisitor::_accept(EqualCondition *element) {
+        auto res = compare(this, element);
+        element->setSatisfied(res);
+        _return_value._result = res ? Condition::RTRUE : Condition::RFALSE;
+    }
+
+    void EvaluateAndSetVisitor::_accept(NotEqualCondition *element) {
+        auto res = compare(this, element);
         element->setSatisfied(res);
         _return_value = {res ? Condition::RTRUE : Condition::RFALSE};
     }
@@ -388,37 +438,7 @@ namespace PetriEngine::PQL {
     }
 
 
-    /******************** Apply Visitor ********************/
-
-    void ApplyVisitor::_accept(const PlusExpr *element) {
-        _return_value = _lhs + _rhs;
-    }
-
-    void ApplyVisitor::_accept(const SubtractExpr *element) {
-        _return_value = _lhs - _rhs;
-    }
-
-    void ApplyVisitor::_accept(const MultiplyExpr *element) {
-        _return_value = _lhs * _rhs;
-    }
-
-    void ApplyVisitor::_accept(const EqualCondition *element) {
-        _return_value = _lhs == _rhs;
-    }
-
-    void ApplyVisitor::_accept(const NotEqualCondition *element) {
-        _return_value = _lhs != _rhs;
-    }
-
-    void ApplyVisitor::_accept(const LessThanCondition *element) {
-        _return_value = _lhs < _rhs;
-    }
-
-    void ApplyVisitor::_accept(const LessThanOrEqualCondition *element) {
-        _return_value = _lhs <= _rhs;
-    }
-
-    int evaluate(Expr *element, const EvaluationContext &context) {
+    int64_t evaluate(Expr *element, const EvaluationContext &context) {
         EvaluateVisitor visitor(context);
         Visitor::visit(&visitor, element);
         return visitor.get_return_value()._value;
@@ -429,18 +449,4 @@ namespace PetriEngine::PQL {
         Visitor::visit(&visitor, element);
         return visitor.get_return_value()._result;
     }
-
-    int temp_apply(Expr *element, int lhs, int rhs) {
-        ApplyVisitor visitor;
-        visitor.set_args(lhs, rhs);
-        Visitor::visit(&visitor, element);
-        return visitor.get_return_value();
-    }
-
-    bool temp_apply(Condition *element, int lhs, int rhs) {
-        ApplyVisitor visitor;
-        visitor.set_args(lhs, rhs);
-        Visitor::visit(&visitor, element);
-        return visitor.get_return_value();
-    }
-}
+} }

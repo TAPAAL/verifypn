@@ -1128,7 +1128,7 @@ namespace PetriEngine {
                 if (e->placeFree())
                 {
                     EvaluationContext c;
-                    _constant = temp_apply(this, _constant, evaluate(e.get(), c));
+                    _constant = apply(_constant, evaluate(e.get(), c));
                 }
                 else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
@@ -1138,7 +1138,7 @@ namespace PetriEngine {
                     // we should move up plus/multiply here when possible;
                     if(c->_ids.size() == 0 && c->_exprs.size() == 0)
                     {
-                        _constant = temp_apply(this, _constant, c->_constant);
+                        _constant = apply(_constant, c->_constant);
                     }
                     else
                     {
