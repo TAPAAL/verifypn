@@ -46,46 +46,6 @@ namespace LTL {
             }
         };
 
-        void _accept(const PetriEngine::PQL::EFCondition *condition) override {
-            setBad();
-            std::cerr << "found EFCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EGCondition *condition) override {
-            setBad();
-            std::cerr << "found EGCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AGCondition *condition) override {
-            setBad();
-            std::cerr << "found AGCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AFCondition *condition) override {
-            setBad();
-            std::cerr << "found AFCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EXCondition *condition) override {
-            setBad();
-            std::cerr << "found EXCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AXCondition *condition) override {
-            setBad();
-            std::cerr << "found AXCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EUCondition *condition) override {
-            setBad();
-            std::cerr << "found EUCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AUCondition *condition) override {
-            setBad();
-            std::cerr << "found AUCondition" << std::endl;
-        }
-
         void _accept(const PetriEngine::PQL::ACondition *condition) override {
             setBad();
         }

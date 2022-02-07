@@ -73,22 +73,6 @@ namespace PetriEngine {
 
             void _accept(const ControlCondition *condition) override;
 
-            void _accept(const EFCondition *condition) override;
-
-            void _accept(const EGCondition *condition) override;
-
-            void _accept(const AGCondition *condition) override;
-
-            void _accept(const AFCondition *condition) override;
-
-            void _accept(const EXCondition *condition) override;
-
-            void _accept(const AXCondition *condition) override;
-
-            void _accept(const EUCondition *condition) override;
-
-            void _accept(const AUCondition *condition) override;
-
             void _accept(const ACondition *condition) override;
 
             void _accept(const ECondition *condition) override;

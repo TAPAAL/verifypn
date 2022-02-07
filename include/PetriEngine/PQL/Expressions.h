@@ -446,82 +446,6 @@ namespace PetriEngine {
             void visit(MutatingVisitor&) override;
         };
 
-        class EXCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
-            uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
-        class EGCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::G; }
-            uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
-        class EFCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::F; }
-            uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
-        class AXCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::X; }
-            uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
-        class AGCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::G; }
-            uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
-        class AFCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::F; }
-            uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
-
         class UntilCondition : public QuantifierCondition {
         public:
             UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
@@ -548,24 +472,6 @@ namespace PetriEngine {
             Condition_ptr _cond1;
             Condition_ptr _cond2;
 
-        };
-
-        class EUCondition : public UntilCondition {
-        public:
-            using UntilCondition::UntilCondition;
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-            uint32_t distance(DistanceContext& context) const override;
-        };
-
-        class AUCondition : public UntilCondition {
-        public:
-            using UntilCondition::UntilCondition;
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-            uint32_t distance(DistanceContext& context) const override;
         };
 
         /******************** CONDITIONS ********************/

@@ -34,96 +34,27 @@ namespace PetriEngine::PQL {
         return visitor.getReturnValue();
     }
 
-    void PrepareForReachabilityVisitor::_accept(const ControlCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const EXCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const EGCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const EFCondition *condition) {
-        condition->getCond()->setInvariant(_negated);
-        RETURN(condition->getCond());
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const AXCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const AGCondition *condition) {
-        Condition_ptr cond = std::make_shared<NotCondition>(condition->getCond());
-        cond->setInvariant(!_negated);
-        RETURN(cond)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const AFCondition *condition) {
-        RETURN(nullptr)
-    }
-
     void PrepareForReachabilityVisitor::_accept(const ACondition *condition) {
-        auto g = std::dynamic_pointer_cast<GCondition>(condition->getCond());
-        auto agcond = std::make_shared<AGCondition>((*g)[0]);
-        RETURN(g ? subvisit(agcond.get(), _negated) : nullptr)
+        if (auto g = std::dynamic_pointer_cast<GCondition>(condition->getCond())) {
+            Condition_ptr cond = std::make_shared<NotCondition>(g->getCond());
+            cond->setInvariant(!_negated);
+            RETURN(cond)
+        } else {
+            RETURN(nullptr)
+        }
     }
 
     void PrepareForReachabilityVisitor::_accept(const ECondition *condition) {
-        auto f = std::dynamic_pointer_cast<FCondition>(condition->getCond());
-        auto efcond = std::make_shared<EFCondition>((*f)[0]);
-        RETURN(f ? subvisit(efcond.get(), _negated) : nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const UntilCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const LogicalCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const CompareConjunction *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const CompareCondition *condition) {
-        RETURN(nullptr)
+        if (auto f = std::dynamic_pointer_cast<FCondition>(condition->getCond())) {
+            f->getCond()->setInvariant(_negated);
+            RETURN(f->getCond());
+        } else {
+            RETURN(nullptr)
+        }
     }
 
     void PrepareForReachabilityVisitor::_accept(const NotCondition *condition) {
         RETURN(subvisit(condition->getCond().get(), !_negated))
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const BooleanCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const DeadlockCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const UnfoldedUpperBoundsCondition *condition) {
-        RETURN(nullptr)
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const GCondition* condition) {
-        // TODO implement
-        assert(false);
-        throw base_error("TODO implement");
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const FCondition* condition) {
-        // TODO implement
-        assert(false);
-        throw base_error("TODO implement");
-    }
-
-    void PrepareForReachabilityVisitor::_accept(const XCondition* condition) {
-        // TODO implement
-        assert(false); throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const ShallowCondition* condition) {

@@ -245,28 +245,7 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
-        Condition::Result EGCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result AGCondition::evaluate(const EvaluationContext& context)
-        {
-            if(_cond->evaluate(context) == RFALSE) return RFALSE;
-            return RUNKNOWN;
-        }
-
         Condition::Result ControlCondition::evaluate(const EvaluationContext& context) {
-            return RUNKNOWN;
-        }
-
-        Condition::Result EFCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RTRUE) return RTRUE;
-            return RUNKNOWN;
-        }
-
-        Condition::Result AFCondition::evaluate(const EvaluationContext& context) {
-            if(_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;
         }
 
@@ -402,34 +381,6 @@ namespace PetriEngine {
             return res;
         }
 
-        Condition::Result EGCondition::evalAndSet(const EvaluationContext& context) {
-            auto res = _cond->evalAndSet(context);
-            if(res != RFALSE) res = RUNKNOWN;
-            setSatisfied(res);
-            return res;
-        }
-
-        Condition::Result AGCondition::evalAndSet(const EvaluationContext& context) {
-            auto res = _cond->evalAndSet(context);
-            if(res != RFALSE) res = RUNKNOWN;
-            setSatisfied(res);
-            return res;
-        }
-
-        Condition::Result EFCondition::evalAndSet(const EvaluationContext& context) {
-            auto res = _cond->evalAndSet(context);
-            if(res != RTRUE) res = RUNKNOWN;
-            setSatisfied(res);
-            return res;
-        }
-
-        Condition::Result AFCondition::evalAndSet(const EvaluationContext& context) {
-            auto res = _cond->evalAndSet(context);
-            if(res != RTRUE) res = RUNKNOWN;
-            setSatisfied(res);
-            return res;
-        }
-
         Condition::Result UntilCondition::evalAndSet(const EvaluationContext& context) {
             auto r2 = _cond2->evalAndSet(context);
             if(r2 != RFALSE) return r2;
@@ -535,46 +486,6 @@ namespace PetriEngine {
         }
 
         void UntilCondition::visit(Visitor &ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EGCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EUCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EXCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EFCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AUCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AXCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AFCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AGCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
@@ -791,46 +702,6 @@ namespace PetriEngine {
         }
 
         void SimpleQuantifierCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EGCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EUCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EXCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void EFCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AUCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AXCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AFCondition::visit(MutatingVisitor& ctx)
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
-        void AGCondition::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
         }

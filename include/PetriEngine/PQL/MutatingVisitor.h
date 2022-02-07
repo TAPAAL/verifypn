@@ -88,38 +88,6 @@ namespace PetriEngine {
                 condition->SimpleQuantifierCondition::visit(*this);
             };
 
-            virtual void _accept(EFCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(EGCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(AGCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(AFCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(EXCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(AXCondition *condition) {
-                condition->SimpleQuantifierCondition::visit(*this);
-            };
-
-            virtual void _accept(EUCondition *condition) {
-                condition->UntilCondition::visit(*this);
-            };
-
-            virtual void _accept(AUCondition *condition) {
-                condition->UntilCondition::visit(*this);
-            };
-
             virtual void _accept(ACondition *condition) {
                 condition->SimpleQuantifierCondition::visit(*this);
             };

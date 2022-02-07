@@ -50,14 +50,6 @@ namespace PQL {
         virtual void _accept(const CompareConjunction* element) override;
         virtual void _accept(const UnfoldedUpperBoundsCondition* element) override;
 
-        virtual void _accept(const EFCondition* el);
-        virtual void _accept(const EGCondition* el);
-        virtual void _accept(const AGCondition* el);
-        virtual void _accept(const AFCondition* el);
-        virtual void _accept(const EXCondition* el);
-        virtual void _accept(const AXCondition* el);
-        virtual void _accept(const EUCondition* el);
-        virtual void _accept(const AUCondition* el);
     private:
         void visitCommutativeExpr(const CommutativeExpr* element);
     };

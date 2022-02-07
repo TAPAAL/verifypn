@@ -226,26 +226,6 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
-    void IsLoopSensitiveVisitor::_accept(const EXCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const EGCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AXCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AFCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AUCondition* condition) {
-        setConditionFound();
-    }
-
     void IsLoopSensitiveVisitor::_accept(const DeadlockCondition* condition) {
         setConditionFound();
     }
@@ -259,14 +239,6 @@ namespace PetriEngine::PQL {
     }
 
     void ContainsNextVisitor::_accept(const XCondition* condition) {
-        setConditionFound();
-    }
-
-    void ContainsNextVisitor::_accept(const EXCondition* condition) {
-        setConditionFound();
-    }
-
-    void ContainsNextVisitor::_accept(const AXCondition* condition) {
         setConditionFound();
     }
 

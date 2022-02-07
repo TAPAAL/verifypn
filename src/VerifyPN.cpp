@@ -153,7 +153,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
         return conditions;
     } else { // state-space exploration
         qstrings.push_back("statespace-search");
-        conditions.push_back(std::make_shared<EFCondition>(BooleanCondition::FALSE_CONSTANT));
+        conditions.push_back(std::make_shared<ECondition>(std::make_shared<FCondition>(BooleanCondition::FALSE_CONSTANT)));
         return conditions;
     }
 }
@@ -252,11 +252,9 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
         IsCTLVisitor isCtlVisitor;
         ctlStarQuery->visit(isCtlVisitor);
         if (isCtlVisitor.isCTL) {
-            AsCTL asCtl;
-            ctlStarQuery->visit(asCtl);
-            ctlQueries.push_back(asCtl._ctl_query);
+            ctlQueries.push_back(ctlStarQuery);
         } else {
-            throw base_error("A query could not be translated from CTL* to CTL.");
+            throw base_error("A CTL* query could not be interpreted as CTL.");
         }
 
     }

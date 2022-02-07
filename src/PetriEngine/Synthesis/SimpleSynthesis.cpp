@@ -57,10 +57,6 @@ namespace PetriEngine {
                 } else if (auto p = dynamic_cast<PQL::GCondition*> ((*a)[0].get())) {
                     return {true, (*p)[0].get()};
                 }
-            } else if (auto a = dynamic_cast<PQL::AGCondition*> (condition)) {
-                return {true, (*a)[0].get()};
-            } else if (auto a = dynamic_cast<PQL::AFCondition*> (condition)) {
-                return {false, (*a)[0].get()};
             }
             throw base_error("Only AF and AG propositions supported for synthesis");
         }

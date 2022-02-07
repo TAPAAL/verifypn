@@ -104,46 +104,6 @@ namespace PetriEngine {
             (*condition)[0]->visit(*this);
         }
 
-        void QueryPrinter::_accept(const EFCondition *condition) {
-            os << "EF ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const EGCondition *condition) {
-            os << "EG ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const AGCondition *condition) {
-            os << "AG ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const AFCondition *condition) {
-            os << "AF ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const EXCondition *condition) {
-            os << "AF ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const AXCondition *condition) {
-            os << "AX ";
-            (*condition)[0]->visit(*this);
-        }
-
-        void QueryPrinter::_accept(const EUCondition *condition) {
-            os << "E ";
-            _accept((UntilCondition*) condition);
-        }
-
-        void QueryPrinter::_accept(const AUCondition *condition) {
-            os << "A ";
-            _accept((UntilCondition*) condition);
-        }
-
         void QueryPrinter::_accept(const ACondition *condition) {
             os << "A ";
             (*condition)[0]->visit(*this);

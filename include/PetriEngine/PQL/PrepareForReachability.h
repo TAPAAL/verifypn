@@ -49,45 +49,12 @@ namespace PetriEngine::PQL {
             return _return_value;
         }
 
-        void _accept(const ControlCondition *condition) override;
-
-        void _accept(const EGCondition *condition) override;
-
-        void _accept(const EXCondition *condition) override;
-
-        void _accept(const EFCondition *condition) override;
-
-        void _accept(const AXCondition *condition) override;
-
-        void _accept(const AGCondition *condition) override;
-
-        void _accept(const AFCondition *condition) override;
 
         void _accept(const ACondition *condition) override;
 
         void _accept(const ECondition *condition) override;
 
-        void _accept(const UntilCondition *condition) override;
-
-        void _accept(const LogicalCondition *condition) override;
-
-        void _accept(const CompareConjunction *condition) override;
-
-        void _accept(const CompareCondition *condition) override;
-
         void _accept(const NotCondition *condition) override;
-
-        void _accept(const BooleanCondition *condition) override;
-
-        void _accept(const DeadlockCondition *condition) override;
-
-        void _accept(const UnfoldedUpperBoundsCondition *condition) override;
-
-        void _accept(const GCondition *condition) override;
-
-        void _accept(const FCondition *condition) override;
-
-        void _accept(const XCondition *condition) override;
 
         void _accept(const ShallowCondition *condition) override;
     };

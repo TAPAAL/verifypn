@@ -30,22 +30,17 @@ namespace PetriEngine::PQL {
 
     public:
         explicit Simplifier(SimplificationContext& context) :
-            context(context) {}
+                _context(context) {}
 
-        Retval return_value;
+        Retval _return_value;
 
     protected:
-        SimplificationContext& context;
+        SimplificationContext& _context;
 
         Retval simplifyOr(const LogicalCondition* element);
         Retval simplifyAnd(const LogicalCondition *element);
 
-        Retval simplifyAG(Retval &r);
-        Retval simplifyAF(Retval &r);
         Retval simplifyAX(Retval &r);
-
-        Retval simplifyEG(Retval &r);
-        Retval simplifyEF(Retval &r);
         Retval simplifyEX(Retval &r);
 
         template <typename Quantifier>
@@ -72,22 +67,6 @@ namespace PetriEngine::PQL {
         void _accept(const UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(const ControlCondition *condition) override;
-
-        void _accept(const EFCondition *condition) override;
-
-        void _accept(const EGCondition *condition) override;
-
-        void _accept(const AGCondition *condition) override;
-
-        void _accept(const AFCondition *condition) override;
-
-        void _accept(const EXCondition *condition) override;
-
-        void _accept(const AXCondition *condition) override;
-
-        void _accept(const EUCondition *condition) override;
-
-        void _accept(const AUCondition *condition) override;
 
         void _accept(const ACondition *condition) override;
 

@@ -147,7 +147,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
     else if (query_type == PATHQEURY){
         if(v->query->getQuantifier() == A){
             if (v->query->getPath() == U){
-                auto cond = static_cast<AUCondition*>(v->query);
+                auto cond = static_cast<UntilCondition*>((*static_cast<ACondition*>(v->query))[0].get());
                 Edge *right = NULL;
                 auto r1 = fastEval((*cond)[1], &query_marking);
                 if (r1 != Condition::RUNKNOWN){
@@ -211,7 +211,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->getPath() == F){
-                auto cond = static_cast<AFCondition*>(v->query);
+                auto cond = static_cast<FCondition*>((*static_cast<ACondition*>(v->query))[0].get());
                 Edge *subquery = NULL;
                 auto r = fastEval((*cond)[0], &query_marking);
                 if (r != Condition::RUNKNOWN) {
@@ -259,7 +259,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->getPath() == X){
-                auto cond = static_cast<AXCondition*>(v->query);
+                auto cond = static_cast<XCondition*>((*static_cast<ACondition*>(v->query))[0].get());
                 Edge* e = newEdge(*v, std::numeric_limits<uint32_t>::max());
                 Condition::Result allValid = Condition::RTRUE;
                 nextStates(query_marking, cond,
@@ -305,7 +305,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
         }
         else if(v->query->getQuantifier() == E){
             if (v->query->getPath() == U){
-                auto cond = static_cast<EUCondition*>(v->query);
+                auto cond = static_cast<UntilCondition*>((*static_cast<ECondition*>(v->query))[0].get());
                 Edge *right = NULL;
                 auto r1 = fastEval((*cond)[1], &query_marking);
                 if (r1 == Condition::RUNKNOWN) {
@@ -371,7 +371,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->getPath() == F){
-                auto cond = static_cast<EFCondition*>(v->query);
+                auto cond = static_cast<FCondition*>((*static_cast<ECondition*>(v->query))[0].get());
                 Edge *subquery = NULL;
                 auto r = fastEval((*cond)[0], &query_marking);
                 if (r != Condition::RUNKNOWN) {
@@ -419,7 +419,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->getPath() == X){
-                auto cond = static_cast<EXCondition*>(v->query);
+                auto cond = static_cast<XCondition*>((*static_cast<ECondition*>(v->query))[0].get());
                 auto query = (*cond)[0];
                 nextStates(query_marking, cond,
                         [](){},
