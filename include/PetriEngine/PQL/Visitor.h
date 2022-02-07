@@ -446,9 +446,14 @@ namespace PetriEngine {
             // shallow expression, default to error
 
             virtual void _accept(const IdentifierExpr *element) {
-                assert(false);
-                std::cerr << "No accept for IdentifierExpr" << std::endl;
-                exit(0);
+                if(element->compiled())
+                    Visitor::visit(this, element->compiled());
+                else
+                {
+                    assert(false);
+                    std::cerr << "No accept for IdentifierExpr" << std::endl;
+                    exit(0);
+                }
             };
         };
 
