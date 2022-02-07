@@ -16,6 +16,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include <memory>
 #include <vector>
 
@@ -290,7 +291,7 @@ namespace PetriEngine {
                     if(_query->getQuantifier() != Quantifier::UPPERBOUNDS)
                     {                        
                         EvaluationContext ctx(_mark.get(), &_net);
-                        auto r = _query->evalAndSet(ctx);
+                        auto r = PetriEngine::PQL::evaluateAndSet(_query, ctx);
 #ifndef NDEBUG 
                         if(first_fail == std::numeric_limits<decltype(first_fail)>::max())
                         {
@@ -306,7 +307,7 @@ namespace PetriEngine {
                                 if(t.get_edge_cnt() == 0)
                                 {
                                     EvaluationContext ctx(_mark.get(), &_net);
-                                    auto otherr = _query->evalAndSet(ctx);
+                                    auto otherr = PetriEngine::PQL::evaluateAndSet(_query, ctx);
                                     assert(otherr == r);
                                 }
                                 else if(_gen.checkPreset(t.get_edge_cnt()-1))
@@ -352,7 +353,7 @@ namespace PetriEngine {
                         else
                         {
                             EvaluationContext ctx(_mark.get(), &_net);
-                            _query->evalAndSet(ctx);
+                            PetriEngine::PQL::evaluateAndSet(_query, ctx);
                             return fail;
                         }
                     }

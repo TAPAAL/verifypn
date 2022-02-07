@@ -30,6 +30,7 @@
 #include "CTL/CTLResult.h"
 #include "PetriEngine/Synthesis/GameSuccessorGenerator.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
 
 #include <vector>
@@ -158,7 +159,7 @@ namespace PetriEngine {
 
         bool SimpleSynthesis::eval(PQL::Condition* cond, const MarkVal* marking) {
             PQL::EvaluationContext ctx(marking, &_net);
-            return cond->evaluate(ctx) == PQL::Condition::RTRUE;
+            return PetriEngine::PQL::evaluate(cond, ctx) == PQL::Condition::RTRUE;
             // TODO, we can use the stability in the fixpoint computation to prun the Dep-graph
         }
 
@@ -231,7 +232,7 @@ namespace PetriEngine {
                     conf._state != SynthConfig::PROCESSED)
                     continue;
                 PQL::EvaluationContext ctx(markings[id], &_net);
-                auto res = query->evaluate(ctx);
+                auto res = PetriEngine::PQL::evaluate(query, ctx);
                 if (conf._state != SynthConfig::WINNING)
                     assert((res != PQL::Condition::RTRUE) == is_safety);
                 else if (res != is_safety) {

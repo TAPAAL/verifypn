@@ -11,6 +11,8 @@
 
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/Evaluation.h"
+
 namespace PetriEngine {
     using namespace PQL;
    
@@ -64,7 +66,7 @@ namespace PetriEngine {
         bool dirty = false;
         assert(!_is_dirty);
         for (auto& e : *element) {
-            if (e->evalAndSet(ctx) == Condition::RFALSE) {
+            if (PetriEngine::PQL::evaluateAndSet(e.get(), ctx) == Condition::RFALSE) {
                 _ranges = vect;
                 e->visit(*this);
                 dirty |= _is_dirty;
