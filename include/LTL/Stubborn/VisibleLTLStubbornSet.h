@@ -40,7 +40,7 @@ namespace LTL {
             memset(_visible.get(), 0, sizeof(bool) * net.numberOfPlaces());
             VisibleTransitionVisitor visible{_visible};
             for (auto &q : queries) {
-                q->visit(visible);
+                PetriEngine::PQL::Visitor::visit(visible, q);
             }
         }
 
@@ -52,7 +52,7 @@ namespace LTL {
             memset(places.get(), 0, sizeof(bool) * net.numberOfPlaces());
             memset(_visible.get(), 0, sizeof(bool) * net.numberOfTransitions());
             VisibleTransitionVisitor visible{places};
-            query->visit(visible);
+            PetriEngine::PQL::Visitor::visit(visible, query);
 
             memset(_places_seen.get(), 0, _net.numberOfPlaces());
             for (uint32_t p = 0; p < net.numberOfPlaces(); ++p) {

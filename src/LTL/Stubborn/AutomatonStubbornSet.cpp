@@ -191,10 +191,10 @@ namespace LTL {
         //Interesting on each progressing formula gives NLG.
         for (auto &q : buchi_state.progressing) {
             LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q.condition->visit(evalAndSetVisitor);
+            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q.condition);
 
             NondeterministicConjunctionVisitor interesting{*this};
-            q.condition->visit(interesting);
+            PetriEngine::PQL::Visitor::visit(interesting, q.condition);
             if (_done) return true;
             else {
                 assert(!_track_changes);

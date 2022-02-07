@@ -24,7 +24,7 @@ namespace PetriEngine {
     bool ReachabilityStubbornSet::prepare(const Structures::State *state) {
         reset();
         _parent = state;
-        
+
         constructEnabled();
         if (_ordering.size() == 0) return false;
         if (_ordering.size() == 1) {
@@ -36,7 +36,7 @@ namespace PetriEngine {
             PetriEngine::PQL::evaluateAndSet(q, PQL::EvaluationContext((*_parent).marking(), &_net));
 
             assert(_interesting->get_negated() == false);
-            q->visit(*_interesting);
+            PQL::Visitor::visit(_interesting, q);
         }
 
         closure();

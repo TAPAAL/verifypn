@@ -43,8 +43,8 @@ namespace LTL {
         PQL::EvaluationContext ctx((*_parent).marking(), &_net);
         PetriEngine::PQL::evaluateAndSet(_prog_cond.get(), ctx);
         PetriEngine::PQL::evaluateAndSet(_sink_cond.get(), ctx);
-        _prog_cond->visit(unsafe);
-        _sink_cond->visit(unsafe);
+        PetriEngine::PQL::Visitor::visit(unsafe, _prog_cond);
+        PetriEngine::PQL::Visitor::visit(unsafe, _sink_cond);
 
         //_ret_cond->evalAndSet(ctx);
         //(std::make_shared<PetriEngine::PQL::NotCondition>(_ret_cond))->visit(interesting);
@@ -62,7 +62,7 @@ namespace LTL {
 
 
         // sink condition is not interesting, just unsafe.
-        _prog_cond->visit(interesting);
+        PetriEngine::PQL::Visitor::visit(interesting, _prog_cond);
         //_sink_cond->visit(interesting);
         closure();
         if (_bad) {

@@ -36,7 +36,7 @@ namespace LTL {
         //TODO needed? We do not run Interesting visitor so we do not immediately need it, but is is needed by closure?
         for (auto &q : _queries) {
             LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q->visit(evalAndSetVisitor);
+            Visitor::visit(evalAndSetVisitor, q);
         }
         findKeyTransition();
 

@@ -41,6 +41,7 @@ namespace PetriEngine {
         class MutatingVisitor;
 
         using type_id_t = uint8_t;
+        constexpr auto untyped = std::numeric_limits<type_id_t>::max();
 
         template<typename T>
         constexpr type_id_t type_id() {
@@ -54,9 +55,7 @@ namespace PetriEngine {
             }
             else
             {
-                assert(false);
-                T::fail_here_badly;
-                return 0;
+                return untyped;
             }
         }
 
@@ -109,9 +108,6 @@ namespace PetriEngine {
         public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
-            /** Evaluate the expression given marking and assignment */
-            virtual void visit(Visitor& visitor) const = 0;
-            virtual void visit(MutatingVisitor& visitor) = 0;
             /** Expression type */
             virtual type_id_t type() const = 0;
             /** Construct left/right side of equations used in query simplification */
@@ -198,10 +194,6 @@ namespace PetriEngine {
         public:
             /** Virtual destructor */
             virtual ~Condition();
-            /** Evaluate condition */
-            virtual void visit(Visitor& visitor) const = 0;
-            virtual void visit(MutatingVisitor& visitor) = 0;
-
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
 

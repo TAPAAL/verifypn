@@ -484,9 +484,9 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     PlaceUseVisitor visitor(_net.numberOfPlaces());
-                    queries[i]->visit(visitor);
+                    Visitor::visit(visitor, queries[i]);
                     ContainsVisitor<DeadlockCondition> dlvisitor;
-                    queries[i]->visit(dlvisitor);
+                    Visitor::visit(dlvisitor, queries[i]);
                     auto used = visitor.in_use();
                     if(dlvisitor.does_contain())
                     {

@@ -155,7 +155,7 @@ namespace PetriEngine {
 
             void _accept(const PQL::IdentifierExpr *element) override
             {
-                element->compiled()->visit(*this);
+                Visitor::visit(this, element->compiled());
             }
 
             void _accept(const PQL::UnfoldedIdentifierExpr *element) override;
@@ -184,7 +184,7 @@ namespace PetriEngine {
 
             void _accept(const PQL::IdentifierExpr *element) override
             {
-                element->compiled()->visit(*this);
+                Visitor::visit(this, element->compiled());
             }
 
             void _accept(const PQL::UnfoldedIdentifierExpr *element) override;

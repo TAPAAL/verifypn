@@ -2,10 +2,10 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   Solver.cpp
  * Author: Peter G. Jensen <root@petergjoel.dk>
- * 
+ *
  * Created on April 3, 2020, 8:08 PM
  */
 
@@ -24,7 +24,7 @@ namespace PetriEngine {
     namespace Reachability {
         using namespace PQL;
         Solver::Solver(PetriNet& net, MarkVal* initial, Condition* query, std::vector<bool>& inq)
-        : _net(net), _initial(initial), _query(query), _inq(inq) 
+        : _net(net), _initial(initial), _query(query), _inq(inq)
 #ifndef NDEBUG
         , _gen(_net)
 #endif
@@ -32,7 +32,7 @@ namespace PetriEngine {
             _dirty.resize(_net.numberOfPlaces());
             _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
             _failm = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-            _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
+            _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());
             _use_count = std::make_unique<uint64_t[]>(_net.numberOfPlaces());
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                 if(inq[p])
@@ -45,7 +45,7 @@ namespace PetriEngine {
                     _use_count[it->place] += _net.numberOfTransitions();
                 }
             }
-            
+
             // make total order
             /*uint64_t mn = std::numeric_limits<decltype(mn)>::max();
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
@@ -126,17 +126,17 @@ namespace PetriEngine {
                             }*/
                             RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
                             //inter.back().first.print(std::cerr) << std::endl;
-                            _query->visit(ctx);
+                            Visitor::visit(ctx, _query);
 /*                            _query->toString(std::cerr);
                             std::cerr << std::endl;
                             std::cerr << "AFTER QUERY" << std::endl;
                             inter.back().first.print(std::cerr) << std::endl;*/
                             if(!ctx.satisfied() && !ctx.constraint().is_false(_net.numberOfPlaces()))
                             {
-                                
+
                                 /*std::cerr << "\n\nBETTER\n";
                                 ctx.constraint().print(std::cerr) << std::endl;
-                                inter.back().first.print(std::cerr) << std::endl;                              
+                                inter.back().first.print(std::cerr) << std::endl;
                                 std::cerr << "\n IS INVALID IN " << std::endl;
                                 if(ctx.constraint().is_true()){
                                     RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
@@ -238,7 +238,7 @@ namespace PetriEngine {
                                     }
                                 }
                             }
-                            
+
                             auto post = _net.postset(t);
                             for(; post.first != post.second; ++post.first)
                             {
@@ -258,7 +258,7 @@ namespace PetriEngine {
             }
             return {};
         }
-        
+
         int64_t Solver::findFailure(trace_t& trace, bool to_end)
         {
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
@@ -289,10 +289,10 @@ namespace PetriEngine {
                         else _mark[p] = _m[p];
                     }
                     if(_query->getQuantifier() != Quantifier::UPPERBOUNDS)
-                    {                        
+                    {
                         EvaluationContext ctx(_mark.get(), &_net);
                         auto r = PetriEngine::PQL::evaluateAndSet(_query, ctx);
-#ifndef NDEBUG 
+#ifndef NDEBUG
                         if(first_fail == std::numeric_limits<decltype(first_fail)>::max())
                         {
                             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
@@ -313,7 +313,7 @@ namespace PetriEngine {
                                 else if(_gen.checkPreset(t.get_edge_cnt()-1))
                                 {
                                     _gen.consumePreset(s, t.get_edge_cnt()-1);
-                                    
+
                                     _gen.producePostset(s, t.get_edge_cnt()-1);
                                 }
                                 else
@@ -369,7 +369,7 @@ namespace PetriEngine {
                             std::cerr << "P" << p << "<" << _m[p] << ">,";
                     }
                     std::cerr << std::endl;
-*/ 
+*/
                     for(; pre.first != pre.second; ++pre.first)
                     {
                         if(_m[pre.first->place] < pre.first->tokens)
@@ -402,14 +402,14 @@ namespace PetriEngine {
             assert(false);
             return -1;
         }
-        
+
         bool Solver::computeTerminal(state_t& end, inter_t& last)
         {
             last.second = end.get_edge_cnt();
             if(end.get_edge_cnt() == 0)
             {
                 RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get(), _dirty);
-                _query->visit(ctx);
+                Visitor::visit(ctx, _query);
                 if(ctx.is_dirty())
                     return false;
                 last.first.compact();
@@ -423,7 +423,7 @@ namespace PetriEngine {
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
 #endif
-                
+
 #ifndef NDEBUG
                 bool some = false;
 #endif
@@ -491,7 +491,7 @@ namespace PetriEngine {
                             _dirty[post.first->place] = true;
                             return false;
                         }
-                        r -= post.first->tokens;   
+                        r -= post.first->tokens;
                     }
                     else
                     {
@@ -580,7 +580,7 @@ namespace PetriEngine {
                 {
                     if(computeHoare(trace, ranges, fail-1))
                     {
-                        interpolants.addTrace(ranges);                        
+                        interpolants.addTrace(ranges);
                         if(fail != (int)(trace.size() - 1))
                             break;
                     }

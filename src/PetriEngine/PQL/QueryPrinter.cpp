@@ -21,26 +21,26 @@ namespace PetriEngine {
     namespace PQL {
         void QueryPrinter::_accept(const NotCondition *element) {
             os << "(not ";
-            element->operator[](0)->visit(*this);
+            Visitor::visit(this, (*element)[0]);
             os << ")";
         }
 
 
         void QueryPrinter::_accept(const LogicalCondition *element, const std::string &op) {
             os << "(";
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
             for (size_t i = 1; i < element->operands(); ++i) {
                 os << " " << op << " ";
-                (*element)[i]->visit(*this);
+                Visitor::visit(this, (*element)[i]);
             }
             os << ")";
         }
 
         void QueryPrinter::_accept(const CompareCondition *element, const std::string &op) {
             os << "(";
-            element->getExpr1()->visit(*this);
+            Visitor::visit(this, element->getExpr1());
             os << " " << op << " ";
-            element->getExpr2()->visit(*this);
+            Visitor::visit(this, element->getExpr2());
             os << ")";
         }
 
@@ -101,37 +101,37 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const ControlCondition *condition) {
             os << "control: ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const EFCondition *condition) {
             os << "EF ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const EGCondition *condition) {
             os << "EG ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const AGCondition *condition) {
             os << "AG ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const AFCondition *condition) {
             os << "AF ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const EXCondition *condition) {
             os << "AF ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const AXCondition *condition) {
             os << "AX ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const EUCondition *condition) {
@@ -146,34 +146,34 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const ACondition *condition) {
             os << "A ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const ECondition *condition) {
             os << "E ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const GCondition *condition) {
             os << "G ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const FCondition *condition) {
             os << "F ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const XCondition *condition) {
             os << "X ";
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void QueryPrinter::_accept(const UntilCondition *condition) {
             os << "(";
-            condition->getCond1()->visit(*this);
+            Visitor::visit(this, condition->getCond1());
             os << " U ";
-            condition->getCond2()->visit(*this);
+            Visitor::visit(this, condition->getCond2());
             os << ")";
         }
 
@@ -199,7 +199,7 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const LivenessCondition *element) {
             const Condition_ptr& cond = element->getCompiled();
             if (cond) {
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
             else {
                 os << "liveness";
@@ -208,11 +208,11 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const KSafeCondition *element) {
             if (element->getCompiled()) {
-                element->getCompiled()->visit(*this);
+                Visitor::visit(this, element->getCompiled());
             }
             else {
                 os << "k-safe(";
-                element->getBound()->visit(*this);
+                Visitor::visit(this, element->getBound());
                 os << ")";
             }
         }
@@ -220,7 +220,7 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const QuasiLivenessCondition *element) {
             const Condition_ptr& cond = element->getCompiled();
             if (cond) {
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
             else {
                 os << "liveness";
@@ -230,7 +230,7 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const StableMarkingCondition *element) {
             const Condition_ptr& cond = element->getCompiled();
             if (cond) {
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
             else {
                 os << "stable-marking";
@@ -256,18 +256,18 @@ namespace PetriEngine {
             }
             for (const auto &expr : element->expressions()) {
                 os << " " << op << " ";
-                expr->visit(*this);
+                Visitor::visit(this, expr);
             }
             os << ")";
         }
 
         void QueryPrinter::_accept(const NaryExpr *element, const std::string &op) {
             os << "(";
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
             for(size_t i = 1; i < element->operands(); ++i)
             {
                 os << " " << op << " ";
-                (*element)[i]->visit(*this);
+                Visitor::visit(this, (*element)[i]);
             }
             os << ")";
         }
@@ -282,7 +282,7 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const MinusExpr *element) {
             os << "-";
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
 
         void QueryPrinter::_accept(const SubtractExpr *element) {

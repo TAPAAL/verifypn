@@ -31,14 +31,14 @@ namespace PetriEngine::PQL {
 
     bool hasNestedDeadlock(const Condition* condition) {
         NestedDeadlockVisitor v;
-        condition->visit(v);
+        Visitor::visit(v, condition);
         return v.getReturnValue();
     }
 
     void NestedDeadlockVisitor::_accept(const LogicalCondition *condition) {
         _nested_in_logical_condition = true;
         for (auto& c : condition->getOperands())
-            c->visit(*this);
+            Visitor::visit(this, c);
         _nested_in_logical_condition = false;
     }
 
@@ -55,7 +55,7 @@ namespace PetriEngine::PQL {
 
     bool isTemporal(const Condition *condition) {
         IsTemporalVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -72,7 +72,7 @@ namespace PetriEngine::PQL {
 
     bool isReachability(const Condition* condition) {
         IsReachabilityVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -95,14 +95,14 @@ namespace PetriEngine::PQL {
     void IsReachabilityVisitor::_accept(const EFCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
-            element->getCond()->visit(*this);
+            Visitor::visit(this, element->getCond());
         }
     }
 
     void IsReachabilityVisitor ::_accept(const AGCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
-            element->getCond()->visit(*this);
+            Visitor::visit(this, element->getCond());
         }
     }
 
@@ -110,7 +110,7 @@ namespace PetriEngine::PQL {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<FCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
         }
     }
@@ -119,7 +119,7 @@ namespace PetriEngine::PQL {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<GCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
         }
     }
@@ -130,7 +130,7 @@ namespace PetriEngine::PQL {
             {
                 // This breaks the ANY pattern, we need to check that all operands are reachability
                 _condition_found = false;
-                c->visit(*this);
+                Visitor::visit(this, c);
 
                 if(!_condition_found)
                     break;
@@ -143,7 +143,7 @@ namespace PetriEngine::PQL {
     }
 
     void IsReachabilityVisitor::_accept(const NotCondition *element) {
-        element->getCond()->visit(*this);
+        Visitor::visit(this, element->getCond());
     }
 
     void IsReachabilityVisitor::_accept(const BooleanCondition *element) {
@@ -164,17 +164,17 @@ namespace PetriEngine::PQL {
 
     void IsReachabilityVisitor::_accept(const QuasiLivenessCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
     }
 
     void IsReachabilityVisitor::_accept(const LivenessCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
     }
 
     void IsReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
     }
 
     void IsReachabilityVisitor::_accept(const CompareConjunction *element) {
@@ -185,7 +185,7 @@ namespace PetriEngine::PQL {
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
         IsLoopSensitiveVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -235,7 +235,7 @@ namespace PetriEngine::PQL {
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
         ContainsNextVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
