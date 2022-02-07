@@ -22,30 +22,6 @@
 
 namespace PetriEngine { namespace PQL {
 
-    class ExprEvalVisitor : public ExpressionVisitor {
-    public:
-        explicit ExprEvalVisitor(const EvaluationContext& context) : _context(context) {}
-        virtual void _accept(const PlusExpr *element) override final;
-
-        virtual void _accept(const MultiplyExpr *element) override final;
-
-        virtual void _accept(const SubtractExpr *element) override final;
-
-        virtual void _accept(const MinusExpr *element) override final;
-
-        virtual void _accept(const UnfoldedIdentifierExpr *element) override final;
-
-        virtual void _accept(const IdentifierExpr *element) override final;
-
-        virtual void _accept(const LiteralExpr *element) override final;
-
-        int64_t value() const { return _value; }
-    protected:
-        const EvaluationContext& _context;
-        int64_t _value;
-    };
-
-
     template<typename V, typename C>
     bool compare(V* visitor, C* condition)
     {
@@ -76,9 +52,9 @@ namespace PetriEngine { namespace PQL {
         for(auto& i : element->places())
         {
             if constexpr (std::is_same<E, PlusExpr>::value)
-                r *= context.marking()[i.first];
-            else if constexpr (std::is_same<E, MultiplyExpr>::value)
                 r += context.marking()[i.first];
+            else if constexpr (std::is_same<E, MultiplyExpr>::value)
+                r *= context.marking()[i.first];
             else
                 E::fail_hard_here;
         }
@@ -86,9 +62,9 @@ namespace PetriEngine { namespace PQL {
         {
             Visitor::visit(visitor, e);
             if constexpr (std::is_same<E, PlusExpr>::value)
-                r *= visitor->value();
-            else if constexpr (std::is_same<E, MultiplyExpr>::value)
                 r += visitor->value();
+            else if constexpr (std::is_same<E, MultiplyExpr>::value)
+                r *= visitor->value();
             else
                 E::fail_hard_here;
         }
@@ -120,7 +96,7 @@ namespace PetriEngine { namespace PQL {
     void ExprEvalVisitor::_accept(const MinusExpr *element)
     {
         Visitor::visit(this, (*element)[0]);
-        _value *= -1;
+        _value = -_value;
     }
 
     void ExprEvalVisitor::_accept(const UnfoldedIdentifierExpr *element) {

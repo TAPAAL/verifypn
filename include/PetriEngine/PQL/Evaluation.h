@@ -27,6 +27,29 @@
 
 namespace PetriEngine { namespace PQL {
 
+    class ExprEvalVisitor : public ExpressionVisitor {
+    public:
+        explicit ExprEvalVisitor(const EvaluationContext& context) : _context(context) {}
+        virtual void _accept(const PlusExpr *element) override final;
+
+        virtual void _accept(const MultiplyExpr *element) override final;
+
+        virtual void _accept(const SubtractExpr *element) override final;
+
+        virtual void _accept(const MinusExpr *element) override final;
+
+        virtual void _accept(const UnfoldedIdentifierExpr *element) override final;
+
+        virtual void _accept(const IdentifierExpr *element) override final;
+
+        virtual void _accept(const LiteralExpr *element) override final;
+
+        int64_t value() const { return _value; }
+    protected:
+        const EvaluationContext& _context;
+        int64_t _value;
+    };
+
     class BaseEvaluationVisitor : public MutatingVisitor {
     public:
         Condition::Result get_return_value() { return _return_value; }
