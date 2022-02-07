@@ -148,8 +148,7 @@ namespace PetriEngine {
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
-        std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
-        std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
+        std::vector<std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptarcs = 0;
@@ -161,9 +160,9 @@ namespace PetriEngine {
         std::vector<Colored::Arc> _inhibitorArcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
         //transition id to vector of vectors of variables, where variable in vector are symmetric
-        std::unordered_map<uint32_t, std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
+        std::vector<std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
 
-        std::unordered_map<uint32_t, std::string> _sumPlacesNames;
+        std::vector<std::string> _sumPlacesNames;
         Colored::ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
@@ -172,7 +171,7 @@ namespace PetriEngine {
         bool _partitionComputed = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
-        std::unordered_map<uint32_t, Colored::EquivalenceVec> _partition;
+        std::vector<Colored::EquivalenceVec> _partition;
 
         double _time;
         double _fixPointCreationTime;

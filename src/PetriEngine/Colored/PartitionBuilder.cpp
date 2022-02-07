@@ -12,7 +12,7 @@ namespace PetriEngine {
         }
 
         PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
-        : _transitions(transitions), _places(places) {
+        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(transitions.size()) {
 
             //Instantiate partitions
             for(uint32_t i = 0; i < _places.size(); i++){
@@ -33,18 +33,19 @@ namespace PetriEngine {
         }
 
         void PartitionBuilder::printPartion() const {
-            for(const auto &equivalenceVec : _partition){
-                std::cout << "Partition for place " << _places[equivalenceVec.first].name << std::endl;
+            for(size_t i = 0; i < _partition.size(); ++i){
+                auto& equivalenceVec = _partition[i];
+                std::cout << "Partition for place " << _places[i].name << std::endl;
                 std::cout << "Diag variables: (";
-                for(auto daigPos : equivalenceVec.second.getDiagonalTuplePositions()){
+                for(auto daigPos : equivalenceVec.getDiagonalTuplePositions()){
                     std::cout << daigPos << ",";
                 }
                 std::cout << ")" << std::endl;
-                for (const auto &equivalenceClass : equivalenceVec.second.getEquivalenceClasses()){
+                for (const auto &equivalenceClass : equivalenceVec.getEquivalenceClasses()){
                     std::cout << equivalenceClass.toString() << std::endl;
 
                 }
-                std::cout << "Diagonal " << equivalenceVec.second.isDiagonal() << std::endl << std::endl;;
+                std::cout << "Diagonal " << equivalenceVec.isDiagonal() << std::endl << std::endl;;
             }
         }
 
@@ -78,16 +79,17 @@ namespace PetriEngine {
             return _placeQueue.empty();
         }
 
-        void PartitionBuilder::assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const{
-            for(auto& eqVec : partition){
-                if(eqVec.second.isDiagonal()){
+        void PartitionBuilder::assignColorMap(std::vector<EquivalenceVec> &partition) const{
+            for(size_t pi = 0; pi < partition.size(); ++pi){
+                auto& eqVec = partition[pi];
+                if(eqVec.isDiagonal()){
                     continue;
                 }
 
-                const ColorType *colorType = _places[eqVec.first].type;
+                const ColorType *colorType = _places[pi].type;
                 for(uint32_t i = 0; i < colorType->size(); i++){
                     const Color *color = &(*colorType)[i];
-                    eqVec.second.addColorToEqClassMap(color);
+                    eqVec.addColorToEqClassMap(color);
                 }
             }
         }
@@ -345,7 +347,7 @@ namespace PetriEngine {
 
         bool PartitionBuilder::splitPartition(PetriEngine::Colored::EquivalenceVec equivalenceVec, uint32_t placeId){
             bool split = false;
-            if(_partition.count(placeId) == 0){
+            if(_partition.empty()){
                 _partition[placeId] = equivalenceVec;
             } else {
                 EquivalenceClass intersection(++_eq_id_counter);

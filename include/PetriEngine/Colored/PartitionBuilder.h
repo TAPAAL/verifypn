@@ -20,17 +20,17 @@ namespace PetriEngine {
                 //void initPartition();
                 bool partitionNet(int32_t timeout);
                 void printPartion() const;
-                void assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition) const;
+                void assignColorMap(std::vector<EquivalenceVec> &partition) const;
 
-                std::unordered_map<uint32_t, EquivalenceVec> getPartition() const{
+                const std::vector<EquivalenceVec>& getPartition() const{
                     return _partition;
                 }
 
             private:
                 const std::vector<Transition> &_transitions;
                 const std::vector<Place> &_places;
-                std::unordered_map<uint32_t,bool> _inQueue;
-                std::unordered_map<uint32_t, EquivalenceVec> _partition;
+                std::vector<bool> _inQueue;
+                std::vector<EquivalenceVec> _partition;
                 const PetriEngine::Colored::IntervalGenerator _interval_generator = IntervalGenerator();
                 std::vector<uint32_t> _placeQueue;
 
