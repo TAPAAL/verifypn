@@ -50,9 +50,7 @@ namespace PetriEngine::PQL {
             if (result.success) {
                 i.first = result.offset;
             } else {
-                ExprError error("Unable to resolve identifier \"" + i.second + "\"",
-                                i.second.length());
-                _context.reportError(error);
+                throw base_error("Unable to resolve identifier \"", i.second, "\"");
             }
         }
         for(auto& e : element->expressions())
@@ -84,9 +82,7 @@ namespace PetriEngine::PQL {
         if (result.success) {
             return result.offset;
         } else {
-            ExprError error("Unable to resolve identifier \"" + name + "\"",
-                            name.length());
-            context.reportError(error);
+            throw base_error("Unable to resolve identifier \"", name, "\"");
         }
         return -1;
     }
@@ -107,8 +103,7 @@ namespace PetriEngine::PQL {
         {
             std::unordered_map<uint32_t,std::string> names;
             if (!coloredContext->resolvePlace(element->name(), names)) {
-                ExprError error("Unable to resolve colored identifier \"" + element->name() + "\"", element->name().length());
-                coloredContext->reportError(error);
+                throw base_error("Unable to resolve colored identifier \"", element->name(), "\"");
             }
 
             if (names.size() == 1) {
@@ -132,8 +127,7 @@ namespace PetriEngine::PQL {
         if (result.success) {
             element->_offsetInMarking = result.offset;
         } else {
-            ExprError error("Unable to resolve identifier \"" + element->name() + "\"", element->name().length());
-            _context.reportError(error);
+            throw base_error("Unable to resolve identifier \"", element->name(), "\"");
         }
     }
 
@@ -144,8 +138,7 @@ namespace PetriEngine::PQL {
         AnalysisContext::ResolutionResult result = _context.resolve(element->getName(), false);
         if (!result.success)
         {
-            ExprError error("Unable to resolve identifier \"" + element->getName() + "\"", element->getName().length());
-            _context.reportError(error);
+            throw base_error("Unable to resolve identifier \"" + element->getName() + "\"");
             return;
         }
 
@@ -182,8 +175,7 @@ namespace PetriEngine::PQL {
         if(coloredContext != nullptr && coloredContext->isColored()) {
             std::vector<std::string> names;
             if (!coloredContext->resolveTransition(element->getName(), names)) {
-                ExprError error("Unable to resolve colored identifier \"" + element->getName() + "\"", element->getName().length());
-                coloredContext->reportError(error);
+                throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
                 return;
             }
             if(names.size() < 1){
@@ -368,8 +360,7 @@ namespace PetriEngine::PQL {
             {
                 std::unordered_map<uint32_t,std::string> names;
                 if (!coloredContext->resolvePlace(p, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + p + "\"", p.length());
-                    coloredContext->reportError(error);
+                    throw base_error("Unable to resolve colored identifier \"", p, "\"");
                 }
 
                 for(auto& id : names)
@@ -390,9 +381,7 @@ namespace PetriEngine::PQL {
             if (result.success) {
                 p._place = result.offset;
             } else {
-                ExprError error("Unable to resolve identifier \"" + p._name + "\"",
-                                p._name.length());
-                _context.reportError(error);
+                throw base_error("Unable to resolve identifier \"",  p._name, "\"");
             }
         }
         std::sort(element->_places.begin(), element->_places.end());

@@ -54,18 +54,8 @@ using namespace PetriEngine::Reachability;
 ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
-    for (auto& q : queries) {
+    for (auto& q : queries)
         PetriEngine::PQL::analyze(q, context);
-
-        //Print errors if any
-        if (context.errors().size() > 0) {
-            std::stringstream ss;
-            for (size_t i = 0; i < context.errors().size(); i++) {
-                ss << "Query Context Analysis Error: " << context.errors()[i].toString() << "\n";
-            }
-            throw base_error("ERROR: ", ss.str());
-        }
-    }
     return ReturnValue::ContinueCode;
 }
 
@@ -210,7 +200,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::ve
         out.open(filename, std::ios::binary | std::ios::out);
         uint32_t cnt = 0;
         for (uint32_t j = 0; j < queries.size(); j++) {
-            if (queries[j]->isTriviallyTrue() || queries[j]->isTriviallyFalse()) continue;
+            if (PQL::is_true(queries[j]) || PQL::is_false(queries[j])) continue;
             ++cnt;
         }
         out.write(reinterpret_cast<const char *> (&cnt), sizeof (uint32_t));
@@ -228,7 +218,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::ve
 
     for (uint32_t j = 0; j < queries.size(); j++) {
         auto i = order[j];
-        if (queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
+        if (PQL::is_true(queries[i]) || PQL::is_false(queries[i])) continue;
         if (binary) {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof (char));
@@ -332,7 +322,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         return LTL::simplify(pushNegation(cond, stats, evalContext, false, false, true), options);
     }, stats, evalContext, false, false, true);
 
-    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
+    if (PQL::is_true(cond) || PQL::is_false(cond)) {
         // nothing
     } else if (wasACond) {
         cond = std::make_shared<ACondition>(cond);
@@ -490,9 +480,9 @@ void simplify_queries(  const MarkVal* marking,
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
                     if (options.cpnOverApprox && wasAGCPNApprox) {
-                        if (queries[i]->isTriviallyTrue())
+                        if (PQL::is_true(queries[i]))
                             queries[i] = std::make_shared<BooleanCondition>(false);
-                        else if (queries[i]->isTriviallyFalse())
+                        else if (PQL::is_false(queries[i]))
                             queries[i] = std::make_shared<BooleanCondition>(true);
                         queries[i]->setInvariant(wasAGCPNApprox);
                     }

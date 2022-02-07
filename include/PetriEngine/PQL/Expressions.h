@@ -906,11 +906,6 @@ namespace PetriEngine {
         public:
 
             BooleanCondition(bool value) : value(value) {
-                if (value) {
-                    trivial = 1;
-                } else {
-                    trivial = 2;
-                }
             }
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;

@@ -185,7 +185,7 @@ int main(int argc, const char** argv) {
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if(queries[i]->isTriviallyTrue()){
+            if(PQL::is_true(queries[i])){
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied).first;
                 if(results[i] == ResultPrinter::Ignore && options.printstatistics)
                 {
@@ -194,7 +194,7 @@ int main(int argc, const char** argv) {
                 else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (queries[i]->isTriviallyFalse()) {
+            } else if (PQL::is_false(queries[i])) {
                 results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied).first;
                 if(results[i] == ResultPrinter::Ignore &&  options.printstatistics)
                 {

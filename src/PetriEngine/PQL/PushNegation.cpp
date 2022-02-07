@@ -462,8 +462,8 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> nef, other;
         for (auto &c: _conds) {
             auto n = subvisit(c, _nested, negate_children);
-            if (n->isTriviallyFalse()) return n;
-            if (n->isTriviallyTrue()) continue;
+            if (is_false(n)) return n;
+            if (is_true(n)) continue;
             if (auto neg = dynamic_cast<NotCondition *>(n.get())) {
                 if (auto ef = dynamic_cast<EFCondition *>((*neg)[0].get())) {
                     nef.push_back((*ef)[0]);
@@ -495,10 +495,10 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> nef, other;
         for (auto &c: _conds) {
             auto n = subvisit(c, _nested, negate_children);
-            if (n->isTriviallyTrue()) {
+            if (is_true(n)) {
                 return n;
             }
-            if (n->isTriviallyFalse()) continue;
+            if (is_false(n)) continue;
             if (auto ef = dynamic_cast<EFCondition *>(n.get())) {
                 nef.push_back((*ef)[0]);
             } else {
