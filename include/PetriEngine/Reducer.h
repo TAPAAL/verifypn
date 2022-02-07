@@ -88,7 +88,7 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool all_ltl, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
 
         size_t numberOfSkippedTransitions() const {
             return _skippedTransitions.size();
@@ -157,7 +157,7 @@ namespace PetriEngine {
         bool ReducebyRuleM(uint32_t* placeInQuery);
         bool ReducebyRuleN(uint32_t* placeInQuery, bool applyF);
         bool ReducebyRuleQ(uint32_t* placeInQuery);
-        bool ReducebyRuleR(uint32_t* placeInQuery, uint8_t rmode);
+        bool ReducebyRuleR(uint32_t* placeInQuery);
 
         std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
 

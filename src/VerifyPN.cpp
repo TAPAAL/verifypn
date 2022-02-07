@@ -271,7 +271,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     std::vector<std::string> q2 = explode(argv[++i]);
                     for (auto& qn: q2) {
                         int32_t n;
-                        if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 20) {
+                        if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 17) {
                             std::cerr << "Error in secondary reduction rule choice : " << qn << std::endl;
                             return ErrorCode;
                         } else {

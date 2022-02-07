@@ -454,6 +454,7 @@ namespace PetriEngine {
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
+        bool all_ltl = true;
         bool remove_loops = true;
         bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
@@ -464,13 +465,14 @@ namespace PetriEngine {
             {
                 queries[i]->analyze(placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
+                all_ltl &= results[i] == Reachability::ResultPrinter::LTL;
                 remove_loops &= !queries[i]->isLoopSensitive();
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        
                 contains_next |= queries[i]->containsNext() || queries[i]->nestedDeadlock();                        
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions, secondaryreductions);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions, secondaryreductions);
     }
 
 

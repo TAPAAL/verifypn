@@ -2091,28 +2091,16 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleR(uint32_t* placeInQuery, uint8_t rmode)
+    bool Reducer::ReducebyRuleR(uint32_t* placeInQuery)
     {
-        // rmode has 4 options:
-        // 0 for normal operation
-        // 1 for a 2 second local time limit
-        // 2 for a 1.25x original transitions space limit
-        // 3 for only applying once after all other rules have run to exhaustion, and then applying the other rules again.
+        // Rule R performs post agglomeration on a single producer, merging its firing with all consumers
 
-        std::chrono::high_resolution_clock::time_point localTimer = std::chrono::high_resolution_clock::now();
-        int localTimeout = 2;
-        uint32_t spaceLimit = (uint32_t)(1.25 * (double)parent->originalNumberOfTransitions());
         bool continueReductions = false;
 
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++)
         {
             if (hasTimedout())
                 return false;
-            if (rmode == 1 && genericTimeout(localTimer, localTimeout)) {
-                return continueReductions;
-            } else if (rmode == 2 && parent->numberOfUnskippedTransitions() > spaceLimit) {
-                return continueReductions;
-            }
 
             const Place& place = parent->_places[pid];
 
@@ -2163,7 +2151,7 @@ namespace PetriEngine {
 
                 if (!ok) break;
 
-                // Find greatest weight between pid and consumers
+                // Find the greatest weight between pid and consumers
                 maxConW = std::max(maxConW, tran.pre[0].weight);
             }
 
@@ -2179,11 +2167,6 @@ namespace PetriEngine {
 
                 if (hasTimedout())
                     return false;
-                if (rmode == 1 && genericTimeout(localTimer, localTimeout)) {
-                    return continueReductions;
-                } else if (rmode == 2 && parent->numberOfUnskippedTransitions() > spaceLimit) {
-                    return continueReductions;
-                }
 
                 Transition prod = parent->_transitions[prod_id];
                 auto prodArc = getOutArc(prod, pid);
@@ -2294,7 +2277,7 @@ namespace PetriEngine {
             "T-server_process_7"
     };
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction, std::vector<uint32_t>& secondaryreductions) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool all_ltl, bool next_safe, std::vector<uint32_t>& reduction, std::vector<uint32_t>& secondaryreductions) {
 
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
@@ -2346,7 +2329,7 @@ namespace PetriEngine {
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                         if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
+                        while(all_ltl && ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
                     }
                 } while(changed && !hasTimedout());
                 if(!next_safe && !changed)
@@ -2378,13 +2361,12 @@ namespace PetriEngine {
                 }
             }
             bool changed = true;
-            bool rLastAvailable = (std::find(reduction.begin(), reduction.end(), 20) != reduction.end());
             uint8_t lastChangeRound = 0;
             uint8_t currentRound = 0;
             std::vector<std::vector<uint32_t>> reductionset = {reduction, secondaryreductions};
 
             do{
-                while((changed || rLastAvailable) && !hasTimedout())
+                while(changed && !hasTimedout())
                 {
                     changed = false;
                     for(auto r : reductionset[currentRound])
@@ -2442,22 +2424,7 @@ namespace PetriEngine {
                                 if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 17:
-                                while (ReducebyRuleR(context.getQueryPlaceCount(), 0)) changed = true;
-                                break;
-                            case 18:
-                                while (ReducebyRuleR(context.getQueryPlaceCount(), 1)) changed = true;
-                                break;
-                            case 19:
-                                while (ReducebyRuleR(context.getQueryPlaceCount(), 2)) changed = true;
-                                break;
-                            case 20:
-                                if (!changed && rLastAvailable){
-                                    if (ReducebyRuleR(context.getQueryPlaceCount(), 3)){
-                                        changed = true;
-                                    } else {
-                                        rLastAvailable = false;
-                                    }
-                                }
+                                while (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
                                 break;
                         }
     #ifndef NDEBUG
