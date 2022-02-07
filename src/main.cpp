@@ -410,7 +410,7 @@ int main(int argc, const char** argv) {
                         STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                         stSolver.solve(options.siphontrapTimeout);
                         results[i] = stSolver.printResult();
-                        if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
+                        if (results[i] != Reachability::ResultPrinter::Unknown && options.printstatistics) {
                             std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
                         }
                     }
