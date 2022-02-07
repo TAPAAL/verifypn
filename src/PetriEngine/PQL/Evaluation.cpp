@@ -85,7 +85,7 @@ namespace PetriEngine { namespace PQL {
     {
         Visitor::visit(this, (*element)[0]);
         int64_t r = _value;
-        for(size_t i = 1; i < element->operands(); ++i)
+        for(size_t i = 1; i < element->size(); ++i)
         {
             Visitor::visit(this, (*element)[i]);
             r -= _value;
@@ -198,7 +198,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(AndCondition *element) {
         auto res = Condition::RTRUE;
-        for (auto &c: element->getOperands()) {
+        for (auto &c: *element) {
             Visitor::visit(this, c);
             if (_return_value == Condition::RFALSE) {
                 _return_value = {Condition::RFALSE};
@@ -211,7 +211,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(OrCondition *element) {
         auto res = Condition::RFALSE;
-        for (auto &c: element->getOperands()) {
+        for (auto &c: *element) {
             Visitor::visit(this, c);
             if (_return_value == Condition::RTRUE) {
                 _return_value = {Condition::RTRUE};
@@ -344,7 +344,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateAndSetVisitor::_accept(AndCondition *element) {
         Condition::Result res = Condition::RTRUE;
-        for (auto &c: element->getOperands()) {
+        for (auto &c: *element) {
             Visitor::visit(this, c);
             if (_return_value == Condition::RFALSE) {
                 res = Condition::RFALSE;
@@ -359,7 +359,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateAndSetVisitor::_accept(OrCondition *element) {
         Condition::Result res = Condition::RFALSE;
-        for (auto &c: element->getOperands()) {
+        for (auto &c: *element) {
             Visitor::visit(this, c);
             if (_return_value == Condition::RTRUE) {
                 res = Condition::RTRUE;

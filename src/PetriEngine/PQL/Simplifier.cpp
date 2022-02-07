@@ -48,7 +48,7 @@ namespace PetriEngine::PQL {
 
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
-        for (const auto &c: element->getOperands()) {
+        for (const auto &c: *element) {
             Visitor::visit(this, c);
             auto r = std::move(return_value);
             assert(r.neglps);
@@ -95,7 +95,7 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
-        for (auto &c: element->getOperands()) {
+        for (auto &c: *element) {
             Visitor::visit(this, c);
             auto r = std::move(return_value);
             if (is_false(r.formula)) {
@@ -279,9 +279,9 @@ namespace PetriEngine::PQL {
     void Simplifier::_accept(const AndCondition *element) {
         if (context.timeout()) {
             if (context.negated()) {
-                RETURN(Retval(std::make_shared<NotCondition>(makeAnd(element->getOperands()))))
+                RETURN(Retval(std::make_shared<NotCondition>(makeAnd(element->operands()))))
             } else {
-                RETURN(Retval(makeAnd(element->getOperands())))
+                RETURN(Retval(makeAnd(element->operands())))
             }
         }
 
@@ -295,9 +295,9 @@ namespace PetriEngine::PQL {
     void Simplifier::_accept(const OrCondition *element) {
         if (context.timeout()) {
             if (context.negated()) {
-                RETURN(Retval(std::make_shared<NotCondition>(makeOr(element->getOperands()))))
+                RETURN(Retval(std::make_shared<NotCondition>(makeOr(element->operands()))))
             } else {
-                RETURN(Retval(makeOr(element->getOperands())))
+                RETURN(Retval(makeOr(element->operands())))
             }
         }
         if (context.negated()) {

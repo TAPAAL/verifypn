@@ -29,7 +29,7 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const LogicalCondition *element, const std::string &op) {
             os << "(";
             Visitor::visit(this, (*element)[0]);
-            for (size_t i = 1; i < element->operands(); ++i) {
+            for (size_t i = 1; i < element->size(); ++i) {
                 os << " " << op << " ";
                 Visitor::visit(this, (*element)[i]);
             }
@@ -264,7 +264,7 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const NaryExpr *element, const std::string &op) {
             os << "(";
             Visitor::visit(this, (*element)[0]);
-            for(size_t i = 1; i < element->operands(); ++i)
+            for(size_t i = 1; i < element->size(); ++i)
             {
                 os << " " << op << " ";
                 Visitor::visit(this, (*element)[i]);

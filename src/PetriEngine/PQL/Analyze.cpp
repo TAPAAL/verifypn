@@ -254,7 +254,7 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(LogicalCondition *element) {
-        for (auto& cond : element->getOperands())
+        for (auto& cond : element->operands())
             Visitor::visit(this, cond);
     }
 

@@ -520,8 +520,8 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(OrCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushAnd(element->getOperands(), nested, true) :
-                   pushOr(element->getOperands(), nested, false);
+            return negated ? pushAnd(element->operands(), nested, true) :
+                   pushOr(element->operands(), nested, false);
         }, stats, context, nested, negated, initrw);
         RETURN(cond)
     }
@@ -529,8 +529,8 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(AndCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushOr(element->getOperands(), nested, true) :
-                   pushAnd(element->getOperands(), nested, false);
+            return negated ? pushOr(element->operands(), nested, true) :
+                   pushAnd(element->operands(), nested, false);
 
         }, stats, context, nested, negated, initrw);
         RETURN(cond);

@@ -26,8 +26,8 @@ namespace PetriEngine::PQL {
     }
 
     void IsCTLVisitor::_accept(const LogicalCondition *element) {
-        for (size_t i = 0; i < element->operands(); i++){
-            Visitor::visit(this, (*element)[i]);
+        for (auto& e : *element){
+            Visitor::visit(this, e);
             if (_cur_type != CTLSyntaxType::BOOLEAN){
                 isCTL = false;
                 break;
