@@ -156,30 +156,37 @@ namespace PetriEngine { namespace PQL {
     }
 
     void EvaluateVisitor::_accept(ACondition *element) {
-        //if (_cond->evaluate(_context) == Condition::RFALSE) _return_value = {Condition::RFALSE};
-        _return_value = {Condition::RUNKNOWN};
+        visit(this, (*element)[0]);
+        if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
+        else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(ECondition *element) {
-        //if (_cond->evaluate(_context) == Condition::RTRUE) _return_value = {Condition::RTRUE};
-        _return_value = {Condition::RUNKNOWN};
+        visit(this, (*element)[0]);
+        if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
+        else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(FCondition *element) {
-        //if (_cond->evaluate(_context) == Condition::RTRUE) _return_value = {Condition::RTRUE};
-        _return_value = {Condition::RUNKNOWN};
+        visit(this, (*element)[0]);
+        if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
+        else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(GCondition *element) {
-        //if (_cond->evaluate(_context) == Condition::RFALSE) _return_value = {Condition::RFALSE};
-        _return_value = {Condition::RUNKNOWN};
+        visit(this, (*element)[0]);
+        if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
+        else _return_value = {Condition::RUNKNOWN};
     }
 
 
     void EvaluateVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
         if (_return_value != Condition::RFALSE)
+        {
+            // retain return, either true or unknown.
             return;
+        }
         Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RFALSE) {
             return;
