@@ -156,25 +156,25 @@ namespace PetriEngine { namespace PQL {
     }
 
     void EvaluateVisitor::_accept(ACondition *element) {
-        visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
         else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(ECondition *element) {
-        visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
         else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(FCondition *element) {
-        visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
         else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(GCondition *element) {
-        visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
         else _return_value = {Condition::RUNKNOWN};
     }
