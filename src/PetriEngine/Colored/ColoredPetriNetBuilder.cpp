@@ -146,7 +146,8 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        input? _placePostTransitionMap[p].emplace_back(t): _placePreTransitionMap[p].emplace_back(t);
+        if(input) _places[p]._post.emplace_back(t);
+        else      _places[p]._pre.emplace_back(t);
 
         Colored::Arc arc;
         arc.place = p;
@@ -294,7 +295,9 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePartition(int32_t timeout){
         if(_isColored){
             auto partitionStart = std::chrono::high_resolution_clock::now();
-            Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(_transitions, _places, _placePostTransitionMap, _placePreTransitionMap);
+            Colored::PartitionBuilder pBuilder = _fixpointDone ?
+                Colored::PartitionBuilder(_transitions, _places, &_placeColorFixpoints) :
+                Colored::PartitionBuilder(_transitions, _places);
 
             if(pBuilder.partitionNet(timeout)){
                 //pBuilder.printPartion();
@@ -341,10 +344,8 @@ namespace PetriEngine {
                 uint32_t currentPlaceId = _placeFixpointQueue.back();
                 _placeFixpointQueue.pop_back();
                 _placeColorFixpoints[currentPlaceId].inQueue = false;
-                std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
 
-
-                for (uint32_t transitionId : connectedTransitions) {
+                for (auto transitionId : _places[currentPlaceId]._post) {
                     Colored::Transition& transition = _transitions[transitionId];
                     // Skip transitions that cannot add anything new,
                     // such as transitions with only constants on their arcs that have been processed once
@@ -586,13 +587,12 @@ namespace PetriEngine {
     //by an output arc with an equivalent arc expression and vice versa
     void ColoredPetriNetBuilder::findStablePlaces(){
         for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
-            if(_placePostTransitionMap.count(placeId) != 0 &&
-                !_placePostTransitionMap[placeId].empty() &&
-                _placePostTransitionMap[placeId].size() == _placePreTransitionMap[placeId].size()){
+            if( !_places[placeId]._post.empty() &&
+                _places[placeId]._post.size() == _places[placeId]._pre.size()){
 
-                for(auto transitionId : _placePostTransitionMap[placeId]){
+                for(auto transitionId : _places[placeId]._post){
                     bool matched = false;
-                    for(auto transitionId2 : _placePreTransitionMap[placeId]){
+                    for(auto transitionId2 : _places[placeId]._pre){
                         if(transitionId == transitionId2){
                             matched = true;
                             break;

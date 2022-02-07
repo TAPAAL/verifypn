@@ -149,8 +149,6 @@ namespace PetriEngine {
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
         std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
-        std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
-        std::unordered_map<uint32_t,std::vector<uint32_t>> _placePreTransitionMap;
         std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
