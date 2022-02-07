@@ -1028,60 +1028,144 @@ namespace PetriEngine {
         return reduced;
     }
    
-    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleFNO(uint32_t* placeInQuery) {
+        // Redundant arc (and place) removal.
+        // If a place p never disables a transition, we can remove its arc to the
+        // transitions as long as the effect is maintained (Rule N). Similarly, we can remove
+        // transitions that are always inhibited (Rule O). If all arcs to a place is removed,
+        // then we remove the place too (Rule F).
+
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
-        for(uint32_t p = 0; p < numberofplaces; ++p)
+
+        for (uint32_t p = 0; p < numberofplaces; ++p)
         {
-            if(hasTimedout()) return false;
+            if (hasTimedout()) return false;
             Place& place = parent->_places[p];
-            if(place.skip) continue;
-            if(place.inhib) continue;
-            if(place.producers.size() < place.consumers.size()) continue;
-            if(placeInQuery[p] != 0) continue; 
-            
-            bool ok = true;
-            for(uint32_t cons : place.consumers)
+            if (place.skip) continue;
+
+            bool removePlace = placeInQuery[p] == 0;
+
+            // Use tflags to mark producers with negative effect
+            _tflags.resize(parent->_transitions.size(), 0);
+            std::fill(_tflags.begin(), _tflags.end(), 0);
+
+            // Assume all consumers are disableable and non-negative until proven otherwise. Used to apply F.
+            uint32_t disableableNonNegative = place.consumers.size();
+
+            uint32_t inhibArcs = 0;
+
+            uint32_t low = parent->initialMarking[p];
+
+            for (uint32_t cons : place.consumers)
             {
-                Transition& t = getTransition(cons);
-                auto w = getInArc(p, t)->weight;
-                if(w > parent->initialMarking[p])
+                Transition& tran = getTransition(cons);
+                const auto & inArc = getInArc(p, tran);
+
+                if (inArc->inhib)
                 {
-                    ok = false;
-                    break;
-                }               
+                    inhibArcs++;
+                    continue;
+                }
+
+                const auto & outArc = getOutArc(tran, p);
+
+                if (outArc != tran.post.end()) {
+
+                    uint32_t outArcWeight = outArc->weight;
+                    uint32_t inArcWeight = inArc->weight;
+
+                    if (outArcWeight < inArcWeight)
+                    {
+                        // This transition is a consumer with negative effect
+                        disableableNonNegative -= 1;
+                        _tflags[cons] = 1;
+                        removePlace = false;
+
+                        if (outArcWeight < low)
+                        {
+                            // We found a new lower bound
+                            low = outArcWeight;
+                        }
+                    }
+                }
                 else
                 {
-                    auto it = getOutArc(t, p);
-                    if(it == t.post.end() || 
-                       it->place != p     ||
-                       it->weight < w)
+                    low = 0;
+                    break;
+                }
+            }
+
+            // Consumer arcs exists, but none will have a weight lower than 0, so we cannot reduce
+            if (!place.consumers.empty() && low == 0) continue;
+
+            std::set<uint32_t> alwaysInhibited;
+
+            // Copy of the vector to iterate over while removing from the original
+            const std::vector<uint32_t> consumers = place.consumers;
+            for (uint32_t cons : consumers)
+            {
+                if (_tflags[cons] == 1) continue;
+
+                Transition& tran = getTransition(cons);
+                const auto & inArc = getInArc(p, tran);
+
+                if (inArc->weight <= low)
+                {
+                    if (inArc->inhib)
                     {
-                        ok = false;
-                        break;
+                        // This transition is always disabled by p
+                        alwaysInhibited.insert(cons);
+                        continueReductions = true;
+                    }
+                    else
+                    {
+                        // This consumer is never disabled by p, so we can remove its arc (Rule N)
+                        const auto & outArc = getOutArc(tran, p);
+                        if (inArc->weight == outArc->weight)
+                        {
+                            skipOutArc(cons, p);
+                        }
+                        else
+                        {
+                            outArc->weight -= inArc->weight;
+                        }
+                        skipInArc(p, cons);
+
+                        disableableNonNegative -= 1;
+                        continueReductions = true;
+                        _ruleN += 1;
                     }
                 }
             }
-            
-            if(!ok) continue;
-            
-            ++_ruleF;
-            
-            if((numberofplaces - _skippedPlaces) > 1)
+
+            // Apply rule O
+            inhibArcs -= alwaysInhibited.size();
+            _ruleO += alwaysInhibited.size();
+
+            for (const auto & inhibited : alwaysInhibited)
+                skipTransition(inhibited);
+
+            // Apply rule F
+            if (removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _skippedPlaces > 1)
             {
                 if(reconstructTrace)
                 {
-                    for(auto t : place.consumers)
+                    for(const auto & t : place.consumers)
                     {
-                        std::string tname = getTransitionName(t);
-                        const ArcIter arc = getInArc(p, getTransition(t));
+                        const std::string & tname = getTransitionName(t);
+                        const auto & arc = getInArc(p, getTransition(t));
                         _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
                     }
                 }
                 skipPlace(p);
                 continueReductions = true;
+                _ruleF++;
             }
-            
+            else if (inhibArcs == 0)
+            {
+                place.inhib = false;
+            }
         }
         assert(consistent());
         return continueReductions;
@@ -1875,145 +1959,6 @@ namespace PetriEngine {
         }
     }*/
 
-    bool Reducer::ReducebyRuleN(uint32_t* placeInQuery, bool applyF) {
-        // Redundant arc (and place) removal.
-        // If a place p never disables a transition, we can remove its arc to the
-        // transitions as long as the effect is maintained. Similarly, we can remove
-        // transitions that are always inhibited.
-
-        bool continueReductions = false;
-        const size_t numberofplaces = parent->numberOfPlaces();
-
-        for (uint32_t p = 0; p < numberofplaces; ++p)
-        {
-            if (hasTimedout()) return false;
-            Place& place = parent->_places[p];
-            if (place.skip) continue;
-
-            bool removePlace = placeInQuery[p] == 0;
-
-            // Use tflags to mark transitions with negative effect
-            _tflags.resize(parent->_transitions.size(), 0);
-            std::fill(_tflags.begin(), _tflags.end(), 0);
-
-            // Assume all consumers are disableable and non-negative until proven otherwise. Used to apply F.
-            uint32_t disableableNonNegative = place.consumers.size();
-
-            uint32_t inhibArcs = 0;
-
-            uint32_t low = parent->initialMarking[p];
-
-            for (uint32_t cons : place.consumers)
-            {
-                Transition& tran = getTransition(cons);
-                const auto & inArc = getInArc(p, tran);
-
-                if (inArc->inhib)
-                {
-                    inhibArcs++;
-                    continue;
-                }
-
-                const auto & outArc = getOutArc(tran, p);
-
-                if (outArc != tran.post.end()) {
-
-                    uint32_t outArcWeight = outArc->weight;
-                    uint32_t inArcWeight = inArc->weight;
-
-                    if (outArcWeight < inArcWeight)
-                    {
-                        disableableNonNegative -= 1;
-                        _tflags[cons] = 1;
-                        removePlace = false;
-
-                        if (outArcWeight < low)
-                        {
-                            low = outArcWeight;
-                        }
-                    }
-                }
-                else
-                {
-                    low = 0;
-                    break;
-                }
-            }
-
-            // Consumer arcs exists, but none will have a weight lower than 0
-            if (!place.consumers.empty() && low == 0) continue;
-
-            std::set<uint32_t> alwaysInhibited;
-
-            // Copy of the vector to iterate over while removing from the original without invalidating the loop
-            const std::vector<uint32_t> consumersProxy = place.consumers;
-            for (uint32_t cons : consumersProxy)
-            {
-                if (_tflags[cons] == 1) continue;
-
-                Transition& tran = getTransition(cons);
-                const auto & inArc = getInArc(p, tran);
-
-                if (inArc->weight <= low)
-                {
-                    if (inArc->inhib)
-                    {
-                        alwaysInhibited.insert(cons);
-                        continueReductions = true;
-                    }
-                    else
-                    {
-                        const auto & outArc = getOutArc(tran, p);
-                        if (inArc->weight == outArc->weight)
-                        {
-                            skipOutArc(cons, p);
-                        }
-                        else
-                        {
-                            outArc->weight -= inArc->weight;
-                        }
-                        skipInArc(p, cons);
-
-                        disableableNonNegative -= 1;
-                        continueReductions = true;
-                        _ruleN += 1;
-
-                        // TODO Reconstruct trace
-                    }
-                }
-            }
-
-            inhibArcs -= alwaysInhibited.size();
-            _ruleN += alwaysInhibited.size();
-
-            for (const auto & inhibited : alwaysInhibited)
-                skipTransition(inhibited);
-
-            if (applyF && removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _skippedPlaces > 1)
-            {
-                if(reconstructTrace)
-                {
-                    for(const auto & t : place.consumers)
-                    {
-                        const std::string & tname = getTransitionName(t);
-                        const auto & arc = getInArc(p, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
-                    }
-                }
-                skipPlace(p);
-                continueReductions = true;
-                _ruleF++;
-            }
-            else if (inhibArcs == 0)
-            {
-                place.inhib = false;
-            }
-
-        }
-        assert(consistent());
-        return continueReductions;
-    }
-
     bool Reducer::ReducebyRuleQ(uint32_t* placeInQuery)
     {
         // Fire initially enabled transitions if they are the single consumer of their preset
@@ -2285,7 +2230,6 @@ namespace PetriEngine {
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
             std::cout << "Rule H disabled when a trace is requested." << std::endl;
-        bool applyF = std::count(reduction.begin(), reduction.end(), 5);
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
@@ -2310,8 +2254,7 @@ namespace PetriEngine {
                         if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
                         //while(ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
-                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleFNO(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                         if(!next_safe)
                         {
@@ -2394,7 +2337,7 @@ namespace PetriEngine {
                                 while(ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 5:
-                                while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                                while(ReducebyRuleFNO(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 6:
                                 while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -2416,9 +2359,6 @@ namespace PetriEngine {
                                 break;
                             case 12:
                                 if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
-                                break;
-                            case 13:
-                                if (ReducebyRuleN(context.getQueryPlaceCount(), applyF)) changed = true;
                                 break;
                             case 16:
                                 if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;

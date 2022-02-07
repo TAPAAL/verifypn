@@ -49,7 +49,7 @@ struct options_t {
     char* modelfile = nullptr;
     char* queryfile = nullptr;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving, 3 ... selection
-    std::vector<uint32_t> reductions{8,12,2,3,4,13,5,7,6,0,16,1,11,17};
+    std::vector<uint32_t> reductions{8,12,2,3,4,5,7,6,0,16,1,11,17};
     std::vector<uint32_t> secondaryreductions{};
     int reductionTimeout = 60;
     bool stubbornreduction = true; 
