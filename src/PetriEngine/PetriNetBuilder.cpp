@@ -46,7 +46,7 @@ namespace PetriEngine {
 
     }
 
-    void PetriNetBuilder::addPlace(const std::string &name, int tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const std::string &name, uint32_t tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
@@ -76,7 +76,7 @@ namespace PetriEngine {
     void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            throw base_error("ERROR: Could not find ", transition);
+            throw base_error("Could not find ", transition);
         }
         if(_placenames.count(place) == 0)
         {
@@ -101,7 +101,7 @@ namespace PetriEngine {
     void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
-            throw base_error("ERROR: Could not find ", transition);
+            throw base_error("Could not find ", transition);
         }
         if(_placenames.count(place) == 0)
         {
@@ -464,8 +464,7 @@ namespace PetriEngine {
         {
             if(results[i] == Reachability::ResultPrinter::Synthesis)
             {
-                std::cerr << "ERROR: Reductions not supported due to 'control' predicate in query." << std::endl;
-                std::exit(-1);
+                throw base_error("Reductions not supported due to 'control' predicate in query.");
                 return; // we disable mode reductions if there is a synthesis query present.
             }
             if(results[i] == Reachability::ResultPrinter::Unknown ||

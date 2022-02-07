@@ -16,16 +16,18 @@
 namespace PetriEngine {
     namespace Synthesis {
         class IntervalVisitor : public PQL::Visitor {
-        private:
-            const std::pair<uint32_t,uint32_t>* _bounds;
-            std::pair<int64_t,int64_t> _bound_tos{0,0};
+        public:
             enum result_e {UNKNOWN, TRUE, FALSE};
+        private:
+            std::pair<int64_t,int64_t> _bound_tos{0,0};
             result_e _result_tos = UNKNOWN;
             const PetriNet& _net;
+            const std::pair<uint32_t,uint32_t>* _bounds;
         public:
             IntervalVisitor(const PetriNet& net, const std::pair<uint32_t,uint32_t>* bounds)
                     : _net(net), _bounds(bounds) {}
             bool stable() const { return _result_tos != UNKNOWN; }
+            result_e result() const { return _result_tos; }
         protected:
             virtual void _accept(const PQL::NotCondition* element)
             {

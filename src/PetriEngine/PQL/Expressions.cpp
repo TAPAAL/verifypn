@@ -298,7 +298,7 @@ namespace PetriEngine {
         }
 
         uint32_t ControlCondition::distance(DistanceContext& context) const {
-            throw base_error("ERROR: Computing distance on a control-expression");
+            throw base_error("Computing distance on a control-expression");
         }
 
         uint32_t NotCondition::distance(DistanceContext& context) const {
@@ -517,7 +517,7 @@ namespace PetriEngine {
             auto neg = _negated != other._negated;
             if(neg && other._constraints.size() > 1)
             {
-                throw base_error("ERROR: MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED");
+                throw base_error("MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED");
             }
             auto il = _constraints.begin();
             for(auto c : other._constraints)
@@ -531,7 +531,7 @@ namespace PetriEngine {
                 }
                 else if (c._upper != std::numeric_limits<uint32_t>::max() && c._lower != 0 && neg)
                 {
-                    throw base_error("ERROR: MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED");
+                    throw base_error("MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED");
                 }
 
                 il = std::lower_bound(_constraints.begin(), _constraints.end(), c);
@@ -592,7 +592,7 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    throw base_error("ERROR: UNKNOWN");
+                    throw base_error("UNKNOWN");
                 }
                 if(negated)
                     next.invert();

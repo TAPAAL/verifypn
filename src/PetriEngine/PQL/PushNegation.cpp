@@ -641,14 +641,14 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(UpperBoundsCondition* element) {
         if (negated) {
-            throw base_error("ERROR: UPPER BOUNDS CANNOT BE NEGATED!");
+            throw base_error("UPPER BOUNDS CANNOT BE NEGATED!");
         }
         RETURN(element->clone())
     }
 
     void PushNegationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
         if (negated) {
-            throw base_error("ERROR: UPPER BOUNDS CANNOT BE NEGATED!");
+            throw base_error("UPPER BOUNDS CANNOT BE NEGATED!");
         }
         RETURN(std::make_shared<UnfoldedUpperBoundsCondition>(element->places(), element->getMax(), element->getOffset()));
     }

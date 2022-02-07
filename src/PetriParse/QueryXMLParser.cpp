@@ -133,7 +133,7 @@ bool QueryXMLParser::parseTags(rapidxml::xml_node<>*  element) {
 }
 
 void QueryXMLParser::fatal_error(const std::string &token) {
-    throw base_error("ERROR: An error occurred while parsing the query.", token);
+    throw base_error("An error occurred while parsing the query.", token);
 }
 
 Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {

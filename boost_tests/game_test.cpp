@@ -103,3 +103,7 @@ BOOST_AUTO_TEST_CASE(UnsafeTest) {
 BOOST_AUTO_TEST_CASE(AGPorFail) {
     test_single_game("AG_por_fail", Reachability::ResultPrinter::NotSatisfied);
 }
+
+BOOST_AUTO_TEST_CASE(GenModel0PorSuccFail) {
+    test_single_game("gen_model_0", Reachability::ResultPrinter::NotSatisfied);
+}
