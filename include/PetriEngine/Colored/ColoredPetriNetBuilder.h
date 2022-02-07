@@ -44,7 +44,7 @@ namespace PetriEngine {
         virtual ~ColoredPetriNetBuilder();
 
         void addPlace(const std::string& name,
-                int tokens,
+                uint32_t tokens,
                 double x,
                 double y) override ;
         void addPlace(const std::string& name,

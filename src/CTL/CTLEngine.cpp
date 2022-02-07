@@ -37,7 +37,7 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
             algorithm = std::make_shared<Algorithm::CertainZeroFPA>(search);
             break;
         default:
-            throw base_error("ERROR: Unknown or unsupported algorithm");
+            throw base_error("Unknown or unsupported algorithm");
     }
     return ReturnValue::ContinueCode;
 }
@@ -60,10 +60,7 @@ bool singleSolve(Condition* query, PetriNet* net,
     OnTheFlyDG graph(net, partial_order);
     graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
-    if(getAlgorithm(alg, algorithmtype,  strategytype) == ReturnValue::ErrorCode)
-    {
-        throw base_error("ERROR");
-    }
+    getAlgorithm(alg, algorithmtype,  strategytype);
 
     stopwatch timer;
     timer.start();
@@ -102,7 +99,7 @@ class ResultHandler : public AbstractHandler {
                 size_t exploredStates,
                 size_t discoveredStates,
                 int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) override
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) override
         {
             if(result == ResultPrinter::Satisfied)
             {
@@ -195,7 +192,7 @@ public:
                 size_t exploredStates,
                 size_t discoveredStates,
                 int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) {
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
         return std::make_pair(result, false);
     }
 };

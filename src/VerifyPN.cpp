@@ -246,8 +246,7 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
             Visitor::visit(asCtl, ctlStarQuery);
             ctlQueries.push_back(asCtl._ctl_query);
         } else {
-            std::cerr << "Error: A query could not be translated from CTL* to CTL." << std::endl;
-            exit(1);
+            throw base_error("A query could not be translated from CTL* to CTL.");
         }
 
     }
@@ -261,8 +260,7 @@ std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlSt
         if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
-            std::cerr << "Error: a query could not be translated from CTL* to LTL." << std::endl;
-            exit(1);
+            throw base_error("A query could not be translated from CTL* to LTL.");
         }
     }
     return ltlQueries;
@@ -312,7 +310,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
     }    catch (std::bad_alloc &ba) {
-        throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
+        throw base_error("Query reduction failed.\nException information: ", ba.what());
     }
 
     cond = initialMarkingRW([&]() {
@@ -459,7 +457,7 @@ void simplify_queries(  const MarkVal* marking,
                                 out << std::endl;
                             }
                         } catch (std::bad_alloc& ba) {
-                            throw base_error("ERROR: Query reduction failed.\nException information: ", ba.what());
+                            throw base_error("Query reduction failed.\nException information: ", ba.what());
                         }
 
                         if (options.printstatistics) {

@@ -57,15 +57,15 @@ query : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition
         | state_formula { query = Condition_ptr($1); }
         ;
 
-state_formula : LPAREN state_formula RPAREN		{ $$ = $2; }
-              | state_formula_or { $$ = $1; }
+state_formula : LPAREN state_formula RPAREN	{ $$ = $2; }
+              | state_formula_or            { $$ = $1; }
 
-state_formula_or : state_formula_or OR state_formula_or	   { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
-                 | state_formula_and                       { $$ = $1; }
+state_formula_or : state_formula OR state_formula	   { $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
+                 | state_formula_and                   { $$ = $1; }
                  ;
 
-state_formula_and : state_formula_and AND state_formula_and { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
-                  | state_formula_quantifier                { $$ = $1; }
+state_formula_and : state_formula AND state_formula { $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
+                  | state_formula_quantifier        { $$ = $1; }
                   ;
 
 

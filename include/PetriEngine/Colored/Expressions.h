@@ -54,7 +54,7 @@ namespace PetriEngine {
                     if (col)
                         return col;
                 }
-                throw base_error("ERROR: Could not find color: ", color.c_str(), "\nCANNOT_COMPUTE\n");
+                throw base_error("Could not find color: ", color.c_str(), "\nCANNOT_COMPUTE\n");
             }
 
             const ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {

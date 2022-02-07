@@ -112,20 +112,18 @@ namespace PetriEngine::PQL {
     void PrepareForReachabilityVisitor::_accept(const GCondition* condition) {
         // TODO implement
         assert(false);
-        std::cerr << "TODO implement" << std::endl;
-        exit(0);
+        throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const FCondition* condition) {
         // TODO implement
         assert(false);
-        std::cerr << "TODO implement" << std::endl;
-        exit(0);
+        throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const XCondition* condition) {
         // TODO implement
-        assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+        assert(false); throw base_error("TODO implement");
     }
 
     void PrepareForReachabilityVisitor::_accept(const ShallowCondition* condition) {

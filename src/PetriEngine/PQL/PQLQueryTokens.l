@@ -49,6 +49,7 @@ letter        [a-zA-Z_]
 "G"						{return TOKEN(G);}
 "U"						{return TOKEN(U);}
 "control"				{return TOKEN(CONTROL);}
+"NOT" {return TOKEN(NOT);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}
 (\"(\\.|[^"])*\") {SAVE_QUOTED_TOKEN; return ID;}
@@ -68,7 +69,6 @@ letter        [a-zA-Z_]
 "*"							{return TOKEN(MULTIPLY);}
 "="							{return TOKEN(EQUAL);}
 "?"                         {return TOKEN(QUESTIONMARK);}
-"NOT" {return TOKEN(NOT);}
 "is-fireable" {return TOKEN(FIREABLE);}
 "tokens-count"|"#tokens" {return TOKEN(TOKENCOUNT); }
 "," {return TOKEN(COMMA); }

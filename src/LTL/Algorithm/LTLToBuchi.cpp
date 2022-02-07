@@ -81,43 +81,37 @@ namespace LTL {
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LiteralExpr *element) {
         assert(false);
-        std::cerr << "LiteralExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("LiteralExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::PlusExpr *element) {
         assert(false);
-        std::cerr << "PlusExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("PlusExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MultiplyExpr *element) {
         assert(false);
-        std::cerr << "MultiplyExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("MultiplyExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MinusExpr *element) {
         assert(false);
-        std::cerr << "MinusExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("MinusExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::SubtractExpr *element) {
         assert(false);
-        std::cerr << "LiteralExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("LiteralExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::IdentifierExpr *element) {
         assert(false);
-        std::cerr << "IdentifierExpr should not be visited by Spot serializer" << std::endl;
-        exit(1);
+        throw base_error("IdentifierExpr should not be visited by Spot serializer");
         //make_atomic_prop(element->shared_from_this());
     }
 
