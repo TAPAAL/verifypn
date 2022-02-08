@@ -333,6 +333,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout) {
         if(_isColored){
+            _arcIntervals.resize(_transitions.size());
             for(size_t t = 0; t < _transitions.size(); ++t)
                 _arcIntervals[t] = setupTransitionVars(_transitions[t]);
 
@@ -392,6 +393,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::createPartionVarmaps(){
+        _arcIntervals.resize(_transitions.size());
         for(uint32_t transitionId = 0; transitionId < _transitions.size(); transitionId++){
             Colored::Transition &transition = _transitions[transitionId];
             std::set<const Colored::Variable *> variables;

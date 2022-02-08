@@ -12,7 +12,7 @@ namespace PetriEngine {
         }
 
         PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
-        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(transitions.size()) {
+        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size()) {
 
             //Instantiate partitions
             for(uint32_t i = 0; i < _places.size(); i++){
