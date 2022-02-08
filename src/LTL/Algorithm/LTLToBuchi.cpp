@@ -130,14 +130,14 @@ namespace LTL {
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
         if(element->getCompiled())
-            Visitor::visit(this, (*element)->getCompiled());
+            Visitor::visit(this, element->getCompiled());
         else
             _formula = make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
         if(element->getCompiled())
-            Visitor::visit(this, (*element)->getCompiled());
+            Visitor::visit(this, element->getCompiled());
         else
             _formula = make_atomic_prop(std::make_shared<FireableCondition>(*element));
     }
