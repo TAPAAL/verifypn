@@ -411,10 +411,11 @@ void simplify_queries(  const MarkVal* marking,
         for (size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c) {
 #ifdef VERIFYPN_MC_Simplification
             threads.push_back(std::thread([&, c]() {
-                auto& out = std::cout;
+            std::stringstream out;
 #else
             auto simplify = [&, c]() {
-                std::stringstream out;
+
+                auto& out = std::cout;
 #endif
 
                 auto& cache = caches[c];
@@ -533,8 +534,6 @@ void simplify_queries(  const MarkVal* marking,
 #else
         for (size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i) {
             threads[i].join();
-            outstream << tstream[i].str();
-            outstream << std::endl;
         }
 #endif
         end = std::chrono::high_resolution_clock::now();
