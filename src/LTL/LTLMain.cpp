@@ -64,7 +64,7 @@ namespace LTL {
         } else {
             converted = formula;
         }
-        converted->visit(validator);
+        Visitor::visit(validator, converted);
         if (validator.bad()) {
             converted = nullptr;
         }

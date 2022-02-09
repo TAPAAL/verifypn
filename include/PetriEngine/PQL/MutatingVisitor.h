@@ -19,6 +19,7 @@
 #define VERIFYPN_MUTATINGVISITOR_H
 
 #include "PetriEngine/PQL/Expressions.h"
+#include "Visitor.h"
 #include "utils/errors.h"
 
 namespace PetriEngine {
@@ -125,7 +126,7 @@ namespace PetriEngine {
 
             virtual void _accept(ShallowCondition *element) {
                 if (element->getCompiled()) {
-                    element->getCompiled()->visit(*this);
+                    Visitor::visit(this, element->getCompiled());
                 } else {
                     throw base_error("No accept for ShallowCondition");
                 }
@@ -199,7 +200,11 @@ namespace PetriEngine {
             }
 
             virtual void _accept(IdentifierExpr *element) {
-                _accept(static_cast<Expr*>(element));
+                if (element->compiled()) {
+                    Visitor::visit(*this, element->compiled());
+                } else {
+                    _accept(static_cast<Expr*>(element));
+                }
             };
         };
     }

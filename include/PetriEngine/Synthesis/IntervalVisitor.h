@@ -19,10 +19,10 @@ namespace PetriEngine {
         public:
             enum result_e {UNKNOWN, TRUE, FALSE};
         private:
-            const std::pair<uint32_t,uint32_t>* _bounds;
             std::pair<int64_t,int64_t> _bound_tos{0,0};
             result_e _result_tos = UNKNOWN;
             const PetriNet& _net;
+            const std::pair<uint32_t,uint32_t>* _bounds;
         public:
             IntervalVisitor(const PetriNet& net, const std::pair<uint32_t,uint32_t>* bounds)
                     : _net(net), _bounds(bounds) {}
@@ -49,7 +49,7 @@ namespace PetriEngine {
                 bool stable = true;
                 for(auto& c : *element)
                 {
-                    c->visit(*this);
+                    Visitor::visit(this, c);
                     switch(_result_tos)
                     {
                         case FALSE:
@@ -70,7 +70,7 @@ namespace PetriEngine {
                 bool stable = true;
                 for(auto& c : *element)
                 {
-                    c->visit(*this);
+                    Visitor::visit(this, c);
                     switch(_result_tos)
                     {
                         case TRUE:
@@ -88,9 +88,9 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::LessThanCondition* element) {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 auto bnds = _bound_tos;
-                (*element)[1]->visit(*this);
+                Visitor::visit(this, (*element)[1]);
                 if(bnds.second < _bound_tos.first)
                     _result_tos = TRUE;
                 else if(bnds.first >= _bound_tos.second)
@@ -100,9 +100,9 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::LessThanOrEqualCondition* element) {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 auto bnds = _bound_tos;
-                (*element)[1]->visit(*this);
+                Visitor::visit(this, (*element)[1]);
                 if(bnds.second <= _bound_tos.first)
                     _result_tos = TRUE;
                 else if(bnds.first > _bound_tos.second)
@@ -112,9 +112,9 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::EqualCondition* element) {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 auto bnds = _bound_tos;
-                (*element)[1]->visit(*this);
+                Visitor::visit(this, (*element)[1]);
                 if(bnds.second < _bound_tos.first ||
                    _bound_tos.second < bnds.first)
                 {
@@ -137,9 +137,9 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PQL::NotEqualCondition* element) {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 auto bnds = _bound_tos;
-                (*element)[1]->visit(*this);
+                Visitor::visit(this, (*element)[1]);
                 if(bnds.second < _bound_tos.first ||
                    _bound_tos.second < bnds.first)
                 {
@@ -278,7 +278,7 @@ namespace PetriEngine {
                 }
                 for(auto& e : element->expressions())
                 {
-                    e->visit(*this);
+                    Visitor::visit(this, e);
                     bounds.first += _bound_tos.first;
                     bounds.second += _bound_tos.second;
                 }
@@ -308,7 +308,7 @@ namespace PetriEngine {
                 }
                 for(auto& e : element->expressions())
                 {
-                    e->visit(*this);
+                    Visitor::visit(this, e);
                     bounds = multiply(bounds, _bound_tos);
                 }
                 _bound_tos = bounds;
@@ -325,7 +325,7 @@ namespace PetriEngine {
                 bool first = true;
                 for(auto& e : element->expressions())
                 {
-                    e->visit(*this);
+                    Visitor::visit(this, e);
                     if(first)
                     {
                         bounds.first = _bound_tos.second;

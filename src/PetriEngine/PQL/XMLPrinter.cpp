@@ -25,7 +25,7 @@ namespace PetriEngine {
             outputLine("<description>Simplified</description>");
             {
                 XMLPrinter::Tag f(this, "formula");
-                c.visit(*this);
+                Visitor::visit(this, c);
             }
         }
 
@@ -56,67 +56,67 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const NotCondition *element) {
             Tag t(this, "negation");
-            element->getCond()->visit(*this);
+            Visitor::visit(this, element->getCond());
         }
 
         void XMLPrinter::_accept(const AndCondition *element) {
             if(element->empty())
             {
-                BooleanCondition::TRUE_CONSTANT->visit(*this);
+                Visitor::visit(this, BooleanCondition::TRUE_CONSTANT);
                 return;
             }
             if(element->size() == 1)
             {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 return;
             }
             {
                 Tag t(this, "conjunction");
                 for(auto& e : *element)
-                    e->visit(*this);
+                    Visitor::visit(this, e);
             }
         }
 
         void XMLPrinter::_accept(const OrCondition *element) {
             if(element->empty())
             {
-                BooleanCondition::FALSE_CONSTANT->visit(*this);
+                Visitor::visit(this, BooleanCondition::FALSE_CONSTANT);
                 return;
             }
             if(element->size() == 1)
             {
-                (*element)[0]->visit(*this);
+                Visitor::visit(this, (*element)[0]);
                 return;
             }
             {
                 Tag d(this, "disjunction");
                 for(auto& e : *element)
-                    e->visit(*this);
+                    Visitor::visit(this, e);
             }
         }
 
         void XMLPrinter::_accept(const LessThanCondition *element) {
             Tag t(this, "integer-lt");
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void XMLPrinter::_accept(const LessThanOrEqualCondition *element) {
             Tag t(this, "integer-le");
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void XMLPrinter::_accept(const EqualCondition *element) {
             Tag t(this, "integer-eq");
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void XMLPrinter::_accept(const NotEqualCondition *element) {
             Tag t(this, "integer-ne");
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void XMLPrinter::_accept(const DeadlockCondition *element) {
@@ -128,7 +128,7 @@ namespace PetriEngine {
                 generateTabs() << "<negation>";
             }
 
-            if(element->constraints().empty()) BooleanCondition::TRUE_CONSTANT->visit(*this);
+            if(element->constraints().empty()) Visitor::visit(this, BooleanCondition::TRUE_CONSTANT);
             else
             {
                 bool single = element->constraints().size() == 1 &&
@@ -174,32 +174,32 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const ControlCondition *condition) {
             Tag t(this, "control");
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void XMLPrinter::_accept(const ACondition *condition) {
             Tag a(this, "all-paths");
-            condition->getCond()->visit(*this);
+            Visitor::visit(this, condition->getCond());
         }
 
         void XMLPrinter::_accept(const ECondition *condition) {
             Tag e(this, "exists-path");
-            condition->getCond()->visit(*this);
+            Visitor::visit(this, condition->getCond());
         }
 
         void XMLPrinter::_accept(const GCondition *condition) {
             Tag g(this, "globally");
-            condition->getCond()->visit(*this);
+            Visitor::visit(this, condition->getCond());
         }
 
         void XMLPrinter::_accept(const FCondition *condition) {
             Tag f(this, "finally");
-            condition->getCond()->visit(*this);
+            Visitor::visit(this, condition->getCond());
         }
 
         void XMLPrinter::_accept(const XCondition *condition) {
             Tag n(this, "next");
-            condition->getCond()->visit(*this);
+            Visitor::visit(this, condition->getCond());
         }
 
         void XMLPrinter::_accept(const UntilCondition *condition) {
@@ -207,11 +207,11 @@ namespace PetriEngine {
             {
                 {
                     Tag b(this, "before");
-                    (*condition)[0]->visit(*this);
+                    Visitor::visit(this, (*condition)[0]);
                 }
                 {
                     Tag r(this, "reach");
-                    (*condition)[1]->visit(*this);
+                    Visitor::visit(this, (*condition)[1]);
                 }
             }
         }
@@ -242,7 +242,7 @@ namespace PetriEngine {
         void XMLPrinter::_accept(const PlusExpr *element) {
             if (token_count) {
                 for(auto& e : element->expressions())
-                    e->visit(*this);
+                    Visitor::visit(this, e);
                 return;
             }
 
@@ -251,7 +251,7 @@ namespace PetriEngine {
                 for(auto& e : element->places())
                     outputLine("<place>", e.second, "</place>");
                 for(auto& e : element->expressions())
-                    e->visit(*this);
+                    Visitor::visit(this, e);
                 return;
             }
             {
@@ -263,34 +263,34 @@ namespace PetriEngine {
                     outputLine("<place>", i.second, "</place>");
                 }
                 for(auto& e : element->expressions())
-                    e->visit(*this);
+                    Visitor::visit(this, e);
             }
         }
 
         void XMLPrinter::_accept(const MultiplyExpr *element) {
             Tag i(this, "integer-product");
             for(auto& e : element->expressions())
-                e->visit(*this);
+                Visitor::visit(this, e);
         }
 
         void XMLPrinter::_accept(const MinusExpr *element) {
             Tag i(this, "integer-difference");
             outputLine("<integer-constant>0</integer-constant>");
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
 
         void XMLPrinter::_accept(const SubtractExpr *element) {
             Tag i(this, "integer-difference");
             for(auto& e : element->expressions())
-                e->visit(*this);
+                Visitor::visit(this, e);
         }
 
         void XMLPrinter::_accept(const IdentifierExpr *element) {
-            element->compiled()->visit(*this);
+            Visitor::visit(this, element->compiled());
         }
 
         void XMLPrinter::_accept(const ShallowCondition *element) {
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
         }
     }
 }

@@ -22,13 +22,13 @@ using namespace PetriEngine::PQL;
 
 int PetriEngine::PQL::formulaSize(const Condition_constptr& condition) {
     FormulaSizeVisitor formulaSizeVisitor;
-    condition->visit(formulaSizeVisitor);
+    Visitor::visit(formulaSizeVisitor, condition);
     return formulaSizeVisitor.getReturnValue();
 }
 
 int formulaSize(const Expr_ptr &element) {
     FormulaSizeVisitor formulaSizeVisitor;
-    element->visit(formulaSizeVisitor);
+    Visitor::visit(formulaSizeVisitor, element);
     return formulaSizeVisitor.getReturnValue();
 }
 

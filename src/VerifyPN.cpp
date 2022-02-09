@@ -233,7 +233,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::ve
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof (char));
             BinaryPrinter binary_printer(out);
-            queries[i]->visit(binary_printer);
+            Visitor::visit(binary_printer, queries[i]);
         } else {
             XMLPrinter xml_printer(out, compact ? 0 : 3, compact ? 0 : 2, !compact);
             xml_printer.print(*queries[i], querynames[i]);
@@ -250,7 +250,7 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
     std::vector<Condition_ptr> ctlQueries;
     for (const auto &ctlStarQuery : ctlStarQueries) {
         IsCTLVisitor isCtlVisitor;
-        ctlStarQuery->visit(isCtlVisitor);
+        Visitor::visit(isCtlVisitor, ctlStarQuery);
         if (isCtlVisitor.isCTL) {
             ctlQueries.push_back(ctlStarQuery);
         } else {

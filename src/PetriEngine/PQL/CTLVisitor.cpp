@@ -20,14 +20,14 @@
 
 namespace PetriEngine::PQL {
     void IsCTLVisitor::_accept(const NotCondition *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const LogicalCondition *element) {
         for (size_t i = 0; i < element->operands(); i++){
-            (*element)[i]->visit(*this);
+            Visitor::visit(this, (*element)[i]);
             if (_cur_type != CTLSyntaxType::BOOLEAN){
                 isCTL = false;
                 break;
@@ -77,97 +77,49 @@ namespace PetriEngine::PQL {
     }
 
     void IsCTLVisitor::_accept(const ControlCondition *condition) {
-        (*condition)[0]->visit(*this);
-    }
-
-    void IsCTLVisitor::_accept(const EFCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const EGCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const AGCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const AFCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const EXCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const AXCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const EUCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
-    }
-
-    void IsCTLVisitor::_accept(const AUCondition *condition) {
-        (*condition)[0]->visit(*this);
-        if (_cur_type != CTLSyntaxType::BOOLEAN)
-            isCTL = false;
+        Visitor::visit(this, (*condition)[0]);
     }
 
     void IsCTLVisitor::_accept(const ACondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const ECondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const GCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const FCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const XCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const UntilCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[1]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;

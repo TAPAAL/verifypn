@@ -58,7 +58,7 @@ namespace PetriEngine::PQL {
     Condition_ptr
     pushNegation(Condition_ptr cond, negstat_t &stats, const EvaluationContext &context, bool nested, bool negated, bool initrw) {
         PushNegationVisitor pn_visitor(stats, context, nested, negated, initrw);
-        cond->visit(pn_visitor);
+        Visitor::visit(pn_visitor, cond);
         return pn_visitor.return_value;
     }
 
@@ -688,7 +688,7 @@ namespace PetriEngine::PQL {
             nested = _nested;
             negated = _negated;
 
-            condition->visit(*this);
+            Visitor::visit(this, condition);
 #ifndef NDEBUG
             assert(has_returned); // Subvisit should return value
             has_returned = false;

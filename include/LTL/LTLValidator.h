@@ -31,9 +31,9 @@ namespace LTL {
             std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
             if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
                 (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
-                (*quantifierCondition)[0]->visit(*this);
+                Visitor::visit(this, (*quantifierCondition)[0]);
             } else {
-                condition->visit(*this);
+                Visitor::visit(this, condition);
             }
             return !bad();
         }
@@ -42,7 +42,7 @@ namespace LTL {
 
         void _visitNary(const PetriEngine::PQL::LogicalCondition *condition) {
             for (const auto &cond : *condition) {
-                cond->visit(*this);
+                Visitor::visit(this, cond);
             }
         };
 
@@ -55,7 +55,7 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override {
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
 
         void _accept(const PetriEngine::PQL::AndCondition *element) override {
@@ -67,23 +67,23 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::LessThanCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void _accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void _accept(const PetriEngine::PQL::EqualCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void _accept(const PetriEngine::PQL::NotEqualCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
         }
 
         void _accept(const PetriEngine::PQL::DeadlockCondition *element) override {
@@ -99,19 +99,19 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::GCondition *condition) override {
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void _accept(const PetriEngine::PQL::FCondition *condition) override {
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void _accept(const PetriEngine::PQL::XCondition *condition) override {
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void _accept(const PetriEngine::PQL::UntilCondition *condition) override {
-            (*condition)[0]->visit(*this);
+            Visitor::visit(this, (*condition)[0]);
         }
 
         void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override {
