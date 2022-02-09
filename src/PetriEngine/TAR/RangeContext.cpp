@@ -2,23 +2,25 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   RangeContext.cpp
  * Author: Peter G. Jensen <root@petergjoel.dk>
- * 
+ *
  * Created on March 31, 2020, 5:01 PM
  */
 
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/Evaluation.h"
+
 namespace PetriEngine {
     using namespace PQL;
-   
+
     RangeContext::RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses, MarkVal* marking, const std::vector<bool>& dirty)
     : _ranges(vector), _base(base), _net(net), _uses(uses), _marking(marking), _dirty(dirty)
     {
     }
-    
+
     void RangeContext::handle_compare(const Expr_ptr& left, const Expr_ptr& right, bool strict)
     {
         auto vl = left->getEval();
@@ -27,32 +29,32 @@ namespace PetriEngine {
         {
             _limit = vr + (strict ? 0 : 1);
             _lt = false;
-            left->visit(*this);
-        } 
+            Visitor::visit(this, left);
+        }
         else if(left->placeFree())
         {
             _limit = vl - (strict ? 0 : 1);
             _lt = true;
-            right->visit(*this);            
+            Visitor::visit(this, right);
         }
         else
         {
             _lt = false;
             _limit = vr + (strict ? 0 : 1);
-            left->visit(*this);
+            Visitor::visit(this, left);
             _lt = true;
             _limit = vr;
-            right->visit(*this);
+            Visitor::visit(this, right);
         }
     }
-   
+
     void RangeContext::_accept(const NotCondition* element)
     {
         assert(false);
         throw base_error("Unsupported query type for TAR");
     }
 
-   
+
     void RangeContext::_accept(const PetriEngine::PQL::AndCondition* element)
     {
         if (element->isSatisfied()) return;
@@ -64,9 +66,9 @@ namespace PetriEngine {
         bool dirty = false;
         assert(!_is_dirty);
         for (auto& e : *element) {
-            if (e->evalAndSet(ctx) == Condition::RFALSE) {
+            if (PetriEngine::PQL::evaluateAndSet(e.get(), ctx) == Condition::RFALSE) {
                 _ranges = vect;
-                e->visit(*this);
+                Visitor::visit(this, e);
                 dirty |= _is_dirty;
                 if(_is_dirty)
                 {
@@ -108,33 +110,33 @@ namespace PetriEngine {
             _is_dirty = true;
         }
     }
-    
+
     void RangeContext::_accept(const OrCondition* element)
     {
         // if(element->isSatisfied()) return;
         for (auto& e : *element) {
             //assert(!e->isSatisfied());
-            e->visit(*this);
+            Visitor::visit(this, e);
             if(_is_dirty)
                 return;
         }
     }
-    
-    void RangeContext::_accept(const NotEqualCondition* element)    
+
+    void RangeContext::_accept(const NotEqualCondition* element)
     {
-        _is_dirty = true; // TODO improve        
+        _is_dirty = true; // TODO improve
     }
-    
+
     void RangeContext::_accept(const EqualCondition* element)
     {
         _is_dirty = true; // TODO improve
     }
-     
+
     void RangeContext::_accept(const LessThanCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], true);
     }
-   
+
     void RangeContext::_accept(const LessThanOrEqualCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], false);
@@ -144,7 +146,7 @@ namespace PetriEngine {
     {
     }
 
-    
+
     void RangeContext::_accept(const UnfoldedIdentifierExpr* element)
     {
         if(_dirty[element->offset()])
@@ -160,7 +162,7 @@ namespace PetriEngine {
         assert(pr._range._lower <= _base[element->offset()]);
         assert(pr._range._upper >= _base[element->offset()]);
     }
-    
+
     void RangeContext::_accept(const PlusExpr* element)
     {
         //auto fdf = std::abs(_limit - element->getEval())/
@@ -181,7 +183,7 @@ namespace PetriEngine {
         }
         for (auto& e : element->expressions()) {
             _limit = e->getEval();
-            e->visit(*this);
+            Visitor::visit(this, e);
             if(_is_dirty) return;
         }
     }
@@ -195,13 +197,13 @@ namespace PetriEngine {
     {
         _is_dirty = true; // TODO improve
     }
-    
+
     void RangeContext::_accept(const SubtractExpr*)
     {
         _is_dirty = true; // TODO improve
     }
-    
-    
+
+
     void RangeContext::_accept(const DeadlockCondition* element)
     {
         assert(!element->isSatisfied());
@@ -215,7 +217,7 @@ namespace PetriEngine {
                 assert(!pre.first->inhibitor);
                 if (_base[pre.first->place] < pre.first->tokens) {
                     ok = false;
-                } 
+                }
                 if(_dirty[pre.first->place])
                 {
                     dirty = true;
@@ -253,7 +255,7 @@ namespace PetriEngine {
 
         assert(false);
     }
-    
+
     void RangeContext::_accept(const CompareConjunction* element)
     {
         assert(!element->isSatisfied());
@@ -314,7 +316,7 @@ namespace PetriEngine {
             _ranges.compact();
         }
     }
-    
+
     void RangeContext::_accept(const UnfoldedUpperBoundsCondition* element)
     {
         for(auto& pb : element->places())

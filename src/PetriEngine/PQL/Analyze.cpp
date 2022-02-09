@@ -23,7 +23,7 @@
 namespace PetriEngine::PQL {
     void analyze(Condition *condition, AnalysisContext& context) {
         AnalyzeVisitor visitor(context);
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
     }
 
     void analyze(Condition_ptr condition, AnalysisContext& context) {
@@ -32,11 +32,11 @@ namespace PetriEngine::PQL {
 
     void AnalyzeVisitor::_accept(NaryExpr *element) {
         for(auto& e : element->expressions())
-            e->visit(*this);
+            Visitor::visit(this, e);
     }
 
     void AnalyzeVisitor::_accept(MinusExpr *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
     }
 
     void AnalyzeVisitor::_accept(LiteralExpr *element) {
@@ -55,8 +55,8 @@ namespace PetriEngine::PQL {
                 _context.reportError(error);
             }
         }
-        element->NaryExpr::visit(*this);
-        std::sort(element->_ids.begin(), element->_ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
+        for(auto& e : element->expressions())
+            Visitor::visit(this, e);
         std::sort(element->_exprs.begin(), element->_exprs.end(), [](auto& a, auto& b)
         {
             auto ida = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
@@ -65,6 +65,17 @@ namespace PetriEngine::PQL {
             if(ida && !idb) return true;
             return ida->offset() < idb->offset();
         });
+
+        size_t i = 0;
+        for(; i < element->_exprs.size(); ++i)
+        {
+            auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(element->_exprs[i]);
+            if(!id) break;
+            element->_ids.emplace_back(id->offset(), id->name());
+        }
+        element->_ids.erase(element->_ids.begin(), element->_ids.begin() + i);
+        std::sort(element->_ids.begin(), element->_ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
+
     }
 
     uint32_t getPlace(AnalysisContext& context, const std::string& name)
@@ -87,7 +98,7 @@ namespace PetriEngine::PQL {
 
     void AnalyzeVisitor::_accept(IdentifierExpr *element) {
         if (element->compiled()) {
-            element->compiled()->visit(*this);
+            Visitor::visit(this, element->compiled());
             return;
         }
 
@@ -113,7 +124,7 @@ namespace PetriEngine::PQL {
         } else {
             element->_compiled = std::make_shared<UnfoldedIdentifierExpr>(element->name(), getPlace(_context, element->name()));
         }
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(UnfoldedIdentifierExpr *element) {
@@ -127,7 +138,7 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(UnfoldedFireableCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         std::vector<Condition_ptr> conds;
         AnalysisContext::ResolutionResult result = _context.resolve(element->getName(), false);
@@ -161,11 +172,11 @@ namespace PetriEngine::PQL {
             element->_compiled = BooleanCondition::TRUE_CONSTANT;
         }
         else element->_compiled = std::make_shared<AndCondition>(conds);
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(FireableCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored()) {
@@ -179,7 +190,7 @@ namespace PetriEngine::PQL {
                 //If the transition points to empty vector we know that it has
                 //no legal bindings and can never fire
                 element->_compiled = std::make_shared<BooleanCondition>(false);
-                element->_compiled->visit(*this);
+                Visitor::visit(this, element->_compiled);
                 return;
             }
             if (names.size() == 1) {
@@ -194,7 +205,7 @@ namespace PetriEngine::PQL {
         } else {
             element->_compiled = std::make_shared<UnfoldedFireableCondition>(element->getName());
         }
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(CompareConjunction *element) {
@@ -206,21 +217,21 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(CompareCondition *element) {
-        (*element)[0]->visit(*this);
-        (*element)[1]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
     }
 
     void AnalyzeVisitor::_accept(UntilCondition *element) {
-        (*element)[0]->visit(*this);
-        (*element)[1]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
     }
 
     void AnalyzeVisitor::_accept(SimpleQuantifierCondition *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
     }
 
     void AnalyzeVisitor::_accept(NotCondition *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
     }
 
     void AnalyzeVisitor::_accept(BooleanCondition *element) {
@@ -232,7 +243,7 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(KSafeCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> k_safe;
@@ -247,16 +258,16 @@ namespace PetriEngine::PQL {
                 k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<UnfoldedIdentifierExpr>(p.first), element->_bound));
         }
         element->_compiled = std::make_shared<AGCondition>(std::make_shared<AndCondition>(std::move(k_safe)));
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(LogicalCondition *element) {
         for (auto& cond : element->getOperands())
-            cond->visit(*this);
+            Visitor::visit(this, cond);
     }
 
     void AnalyzeVisitor::_accept(QuasiLivenessCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> quasi;
@@ -278,11 +289,11 @@ namespace PetriEngine::PQL {
             }
         }
         element->_compiled = std::make_shared<AndCondition>(std::move(quasi));
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(LivenessCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> liveness;
@@ -304,11 +315,11 @@ namespace PetriEngine::PQL {
             }
         }
         element->_compiled = std::make_shared<AndCondition>(std::move(liveness));
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(StableMarkingCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> stable_check;
@@ -321,7 +332,7 @@ namespace PetriEngine::PQL {
                 for(auto& pn : cpn.second)
                 {
                     auto id = std::make_shared<UnfoldedIdentifierExpr>(pn.second);
-                    id->visit(*this);
+                    Visitor::visit(this, id);
                     init_marking += _context.net()->initial(id->offset());
                     sum.emplace_back(std::move(id));
 
@@ -343,11 +354,11 @@ namespace PetriEngine::PQL {
             }
         }
         element->_compiled = std::make_shared<OrCondition>(std::move(stable_check));
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(UpperBoundsCondition *element) {
-        if (element->getCompiled()) element->getCompiled()->visit(*this);
+        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored())
@@ -370,7 +381,7 @@ namespace PetriEngine::PQL {
         } else {
             element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(element->getPlaces());
         }
-        element->_compiled->visit(*this);
+        Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(UnfoldedUpperBoundsCondition *element) {

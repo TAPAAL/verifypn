@@ -37,6 +37,168 @@ using namespace PetriEngine::Simplification;
 namespace PetriEngine {
     namespace PQL {
 
+        class OrCondition;
+        template<>
+        constexpr type_id_t type_id<OrCondition>() { return 0; }
+
+        class AndCondition;
+        template<>
+        constexpr type_id_t type_id<AndCondition>() { return type_id<OrCondition>() + 1; }
+
+        class CompareConjunction;
+        template<>
+        constexpr type_id_t type_id<CompareConjunction>() { return type_id<AndCondition>() + 1; }
+
+        class LessThanCondition;
+        template<>
+        constexpr type_id_t type_id<LessThanCondition>() { return type_id<CompareConjunction>() + 1; }
+
+        class LessThanOrEqualCondition;
+        template<>
+        constexpr type_id_t type_id<LessThanOrEqualCondition>() { return type_id<LessThanCondition>() + 1; }
+
+        class EqualCondition;
+        template<>
+        constexpr type_id_t type_id<EqualCondition>() { return type_id<LessThanOrEqualCondition>() + 1; }
+
+        class NotEqualCondition;
+        template<>
+        constexpr type_id_t type_id<NotEqualCondition>() { return type_id<EqualCondition>() + 1; }
+
+        class DeadlockCondition;
+        template<>
+        constexpr type_id_t type_id<DeadlockCondition>() { return type_id<NotEqualCondition>() + 1; }
+
+        class UnfoldedUpperBoundsCondition;
+        template<>
+        constexpr type_id_t type_id<UnfoldedUpperBoundsCondition>() { return type_id<DeadlockCondition>() + 1; }
+
+        class NotCondition;
+        template<>
+        constexpr type_id_t type_id<NotCondition>() { return type_id<UnfoldedUpperBoundsCondition>() + 1; }
+
+        class BooleanCondition;
+        template<>
+        constexpr type_id_t type_id<BooleanCondition>() { return type_id<NotCondition>() + 1; }
+
+        class ECondition;
+        template<>
+        constexpr type_id_t type_id<ECondition>() { return type_id<BooleanCondition>() + 1; }
+
+        class ACondition;
+        template<>
+        constexpr type_id_t type_id<ACondition>() { return type_id<ECondition>() + 1; }
+
+        class FCondition;
+        template<>
+        constexpr type_id_t type_id<FCondition>() { return type_id<ACondition>() + 1; }
+
+        class GCondition;
+        template<>
+        constexpr type_id_t type_id<GCondition>() { return type_id<FCondition>() + 1; }
+
+        class UntilCondition;
+        template<>
+        constexpr type_id_t type_id<UntilCondition>() { return type_id<GCondition>() + 1; }
+
+        class XCondition;
+        template<>
+        constexpr type_id_t type_id<XCondition>() { return type_id<UntilCondition>() + 1; }
+
+        class ControlCondition;
+        template<>
+        constexpr type_id_t type_id<ControlCondition>() { return type_id<XCondition>() + 1; }
+
+        class StableMarkingCondition;
+        template<>
+        constexpr type_id_t type_id<StableMarkingCondition>() { return type_id<ControlCondition>() + 1; }
+
+        class QuasiLivenessCondition;
+        template<>
+        constexpr type_id_t type_id<QuasiLivenessCondition>() { return type_id<StableMarkingCondition>() + 1; }
+
+        class LivenessCondition;
+        template<>
+        constexpr type_id_t type_id<LivenessCondition>() { return type_id<QuasiLivenessCondition>() + 1; }
+
+        class KSafeCondition;
+        template<>
+        constexpr type_id_t type_id<KSafeCondition>() { return type_id<LivenessCondition>() + 1; }
+
+        class UpperBoundsCondition;
+        template<>
+        constexpr type_id_t type_id<UpperBoundsCondition>() { return type_id<KSafeCondition>() + 1; }
+
+        class FireableCondition;
+        template<>
+        constexpr type_id_t type_id<FireableCondition>() { return type_id<UpperBoundsCondition>() + 1; }
+
+        class UnfoldedFireableCondition;
+        template<>
+        constexpr type_id_t type_id<UnfoldedFireableCondition>() { return type_id<FireableCondition>() + 1; }
+
+        class EFCondition;
+        template<>
+        constexpr type_id_t type_id<EFCondition>() { return type_id<UnfoldedFireableCondition>() + 1; }
+
+        class AGCondition;
+        template<>
+        constexpr type_id_t type_id<AGCondition>() { return type_id<EFCondition>() + 1; }
+
+        class AUCondition;
+        template<>
+        constexpr type_id_t type_id<AUCondition>() { return type_id<AGCondition>() + 1; }
+
+        class EUCondition;
+        template<>
+        constexpr type_id_t type_id<EUCondition>() { return type_id<AUCondition>() + 1; }
+
+        class EXCondition;
+        template<>
+        constexpr type_id_t type_id<EXCondition>() { return type_id<EUCondition>() + 1; }
+
+        class AXCondition;
+        template<>
+        constexpr type_id_t type_id<AXCondition>() { return type_id<EXCondition>() + 1; }
+
+        class AFCondition;
+        template<>
+        constexpr type_id_t type_id<AFCondition>() { return type_id<AXCondition>() + 1; }
+
+        class EGCondition;
+        template<>
+        constexpr type_id_t type_id<EGCondition>() { return type_id<AFCondition>() + 1; }
+
+
+        class PlusExpr;
+        template<>
+        constexpr type_id_t type_id<PlusExpr>() { return 0; }
+
+        class MinusExpr;
+        template<>
+        constexpr type_id_t type_id<MinusExpr>() { return type_id<PlusExpr>() + 1; }
+
+        class SubtractExpr;
+        template<>
+        constexpr type_id_t type_id<SubtractExpr>() { return type_id<MinusExpr>() + 1; }
+
+        class MultiplyExpr;
+        template<>
+        constexpr type_id_t type_id<MultiplyExpr>() { return type_id<SubtractExpr>() + 1; }
+
+        class IdentifierExpr;
+        template<>
+        constexpr type_id_t type_id<IdentifierExpr>() { return type_id<MultiplyExpr>() + 1; }
+
+        class LiteralExpr;
+        template<>
+        constexpr type_id_t type_id<LiteralExpr>() { return type_id<IdentifierExpr>() + 1; }
+
+        class UnfoldedIdentifierExpr;
+        template<>
+        constexpr type_id_t type_id<UnfoldedIdentifierExpr>() { return type_id<LiteralExpr>() + 1; }
+
+
         Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr);
         Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b);
         Condition_ptr makeAnd(const std::vector<Condition_ptr>& cptr);
@@ -54,21 +216,16 @@ namespace PetriEngine {
 
             NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
             }
-            int evaluate(const EvaluationContext& context) override;
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
             size_t operands() const { return _exprs.size(); }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor& visitor) override;
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
             virtual std::string op() const = 0;
 
         protected:
-            virtual int apply(int v1, int v2) const = 0;
             std::vector<Expr_ptr> _exprs;
-            virtual int32_t preOp(const EvaluationContext& context) const;
         };
 
         class PlusExpr;
@@ -79,9 +236,6 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             friend CompareCondition;
-            int evaluate(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor& visitor) override;
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
@@ -89,8 +243,8 @@ namespace PetriEngine {
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
-            virtual int32_t preOp(const EvaluationContext& context) const override;
-            int32_t _constant;
+            virtual int64_t apply(int64_t, int64_t) const = 0;
+            int64_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
         };
@@ -101,15 +255,12 @@ namespace PetriEngine {
 
             PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
 
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             Member constraint(SimplificationContext& context) const override;
             bool tk = false;
 
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
-            //int binaryOp() const;
+            int64_t apply(int64_t a, int64_t b) const { return a + b; }
             std::string op() const override;
 
         };
@@ -121,14 +272,10 @@ namespace PetriEngine {
             SubtractExpr(std::vector<Expr_ptr>&& exprs) : NaryExpr(std::move(exprs))
             {
             }
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             Member constraint(SimplificationContext& context) const override;
 
-
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
         };
@@ -138,14 +285,11 @@ namespace PetriEngine {
         public:
 
             MultiplyExpr(std::vector<Expr_ptr>&& exprs);
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             Member constraint(SimplificationContext& context) const override;
 
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
         protected:
-            int apply(int v1, int v2) const override;
-            //int binaryOp() const;
+            int64_t apply(int64_t a, int64_t b) const { return a * b; }
             std::string op() const override;
         };
 
@@ -156,12 +300,9 @@ namespace PetriEngine {
             MinusExpr(const Expr_ptr expr) {
                 _expr = expr;
             }
-            int evaluate(const EvaluationContext& context) override;
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             Member constraint(SimplificationContext& context) const override;
 
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
             bool placeFree() const override;
             const Expr_ptr& operator[](size_t i) const { return _expr; };
         private:
@@ -175,18 +316,15 @@ namespace PetriEngine {
             LiteralExpr(int value) : _value(value) {
             }
             LiteralExpr(const LiteralExpr&) = default;
-            int evaluate(const EvaluationContext& context) override;
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
 
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
-            int value() const {
+            int64_t value() const {
                 return _value;
             };
             Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return true; }
         private:
-            int _value;
+            int64_t _value;
         };
 
 
@@ -195,13 +333,7 @@ namespace PetriEngine {
         public:
             IdentifierExpr(const std::string& name) : _name(name) {}
             IdentifierExpr(const IdentifierExpr&) = default;
-            int evaluate(const EvaluationContext& context) override {
-                return _compiled->evaluate(context);
-            }
-            [[nodiscard]] Expr::Types type() const override {
-                if(_compiled) return _compiled->type();
-                return Expr::IdentifierExpr;
-            }
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
 
             virtual bool placeFree() const override {
                 if(_compiled) return _compiled->placeFree();
@@ -211,9 +343,6 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override {
                 return _compiled->constraint(context);
             }
-
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
 
             [[nodiscard]] const std::string &name() const {
                 return _name;
@@ -241,8 +370,7 @@ namespace PetriEngine {
 
             UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
 
-            int evaluate(const EvaluationContext& context) override;
-            Expr::Types type() const override;
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
@@ -253,8 +381,6 @@ namespace PetriEngine {
             }
             Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return false; }
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
@@ -264,10 +390,6 @@ namespace PetriEngine {
 
         class ShallowCondition : public Condition
         {
-            Result evaluate(const EvaluationContext& context) override
-            { return _compiled->evaluate(context); }
-            Result evalAndSet(const EvaluationContext& context) override
-            { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
 
@@ -280,10 +402,6 @@ namespace PetriEngine {
                 return _compiled;
             }
             virtual Condition_ptr clone() = 0;
-
-            void visit(Visitor& visitor) const override;
-            void visit(MutatingVisitor& visitor) override;
-
         protected:
             Condition_ptr _compiled = nullptr;
         };
@@ -296,17 +414,13 @@ namespace PetriEngine {
                 _cond = cond;
             }
 
-
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             const Condition_ptr& getCond() const { return _cond; };
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
             Condition_ptr _cond;
         };
@@ -333,11 +447,6 @@ namespace PetriEngine {
                 _cond = std::dynamic_pointer_cast<Condition>(cond);
             }
 
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor& visitor) override;
-
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             const Condition_ptr& getCond() const { return _cond; }
         protected:
@@ -350,18 +459,14 @@ namespace PetriEngine {
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Quantifier getQuantifier() const override { return Quantifier::BControl; }
             Path getPath() const override             { return Path::PControl; }
-            Result evaluate(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
+
 
         class ECondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Result evaluate(const EvaluationContext& context) override;
-
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::pError; }
@@ -369,15 +474,13 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); throw base_error("TODO implement");
             }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
       class ACondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            Result evaluate(const EvaluationContext& context) override;
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
@@ -386,16 +489,13 @@ namespace PetriEngine {
                 return retval;
             }
 
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+      };
+
 
       class GCondition : public SimpleQuantifierCondition {
       public:
           using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-          Result evaluate(const EvaluationContext &context) override;
-
 
           Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
 
@@ -408,29 +508,21 @@ namespace PetriEngine {
               return retval;
           }
 
-          Result evalAndSet(const EvaluationContext &context) override;
-
-          void visit(Visitor &) const override;
-          void visit(MutatingVisitor &) override;
-
+          virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
       };
+
 
       class FCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Result evaluate(const EvaluationContext& context) override;
-
 
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
-          Result evalAndSet(const EvaluationContext &context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        };
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+      };
 
         class XCondition : public SimpleQuantifierCondition {
         public:
@@ -442,8 +534,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override {
                 return _cond->distance(context);
             }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class EXCondition : public SimpleQuantifierCondition {
@@ -453,8 +544,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class EGCondition : public SimpleQuantifierCondition {
@@ -465,10 +555,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class EFCondition : public SimpleQuantifierCondition {
@@ -479,10 +566,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class AXCondition : public SimpleQuantifierCondition {
@@ -492,8 +576,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class AGCondition : public SimpleQuantifierCondition {
@@ -503,10 +586,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class AFCondition : public SimpleQuantifierCondition {
@@ -516,10 +596,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class UntilCondition : public QuantifierCondition {
@@ -529,10 +606,6 @@ namespace PetriEngine {
                 _cond2 = cond2;
             }
 
-            Result evaluate(const EvaluationContext& context) override;
-
-            Result evalAndSet(const EvaluationContext& context) override;
-
             [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override { return Path::U; }
@@ -540,10 +613,9 @@ namespace PetriEngine {
             [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
             [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
 
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
@@ -554,18 +626,16 @@ namespace PetriEngine {
         public:
             using UntilCondition::UntilCondition;
             Quantifier getQuantifier() const override { return Quantifier::E; }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class AUCondition : public UntilCondition {
         public:
             using UntilCondition::UntilCondition;
             Quantifier getQuantifier() const override { return Quantifier::A; }
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         /******************** CONDITIONS ********************/
@@ -574,12 +644,10 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             UnfoldedFireableCondition(const std::string& tname) : ShallowCondition(), _name(tname) {};
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             std::string getName() const {
                 return _name;
             }
-
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<UnfoldedFireableCondition>(_name); }
         public:
@@ -592,12 +660,10 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             FireableCondition(const std::string& tname) : _name(tname) {};
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             std::string getName() const {
                 return _name;
             }
-
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
         private:
@@ -607,9 +673,6 @@ namespace PetriEngine {
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
-
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor& visitor) override;
             const Condition_ptr& operator[](size_t i) const
             {
                 return _conds[i];
@@ -647,12 +710,9 @@ namespace PetriEngine {
 
             AndCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             uint32_t distance(DistanceContext& context) const override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         /* Disjunctive or conditon */
@@ -665,13 +725,9 @@ namespace PetriEngine {
 
             OrCondition(Condition_ptr left, Condition_ptr right);
 
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             uint32_t distance(DistanceContext& context) const override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class CompareConjunction : public Condition
@@ -733,10 +789,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor &visitor) override;
 
             Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
             bool isNegated() const { return _negated; }
@@ -749,11 +801,11 @@ namespace PetriEngine {
             const std::vector<cons_t>& constraints() const { return _constraints; }
             std::vector<cons_t>::const_iterator begin() const { return _constraints.begin(); }
             std::vector<cons_t>::const_iterator end() const { return _constraints.end(); }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
             std::vector<cons_t> _constraints;
             bool _negated = false;
         };
-
 
         /* Comparison conditon */
         class CompareCondition : public Condition {
@@ -762,10 +814,6 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
             : _expr1(expr1), _expr2(expr2) {}
 
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor& visitor) override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -790,13 +838,7 @@ namespace PetriEngine {
 
         protected:
             uint32_t _distance(DistanceContext& c,
-                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
-            {
-                return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
-            }
-        private:
-            virtual bool apply(int v1, int v2) const = 0;
-
+                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const;
         protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
@@ -813,10 +855,8 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
 
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -828,10 +868,8 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -843,10 +881,8 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -859,10 +895,8 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
 
             uint32_t distance(DistanceContext& context) const override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
-            bool apply(int v1, int v2) const override;
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
@@ -879,10 +913,6 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;
             static Condition_ptr FALSE_CONSTANT;
@@ -892,6 +922,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             const bool value;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         /* Deadlock condition */
@@ -899,16 +930,13 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() = default;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
 
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::DEADLOCK; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
         class KSafeCondition : public ShallowCondition
@@ -922,10 +950,8 @@ namespace PetriEngine {
                 return _bound;
             }
 
-
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             Condition_ptr clone() override
             {
                 return std::make_shared<KSafeCondition>(_bound);
@@ -939,9 +965,8 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             LivenessCondition() {}
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<LivenessCondition>(); }
         };
 
@@ -950,22 +975,22 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             QuasiLivenessCondition() {}
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<QuasiLivenessCondition>(); }
         };
+
 
         class StableMarkingCondition : public ShallowCondition
         {
             friend class AnalyzeVisitor;
         public:
             StableMarkingCondition() {}
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             Condition_ptr clone() override { return std::make_shared<StableMarkingCondition>(); }
         };
+
 
         class UpperBoundsCondition : public ShallowCondition
         {
@@ -981,14 +1006,12 @@ namespace PetriEngine {
             {
                 return std::make_shared<UpperBoundsCondition>(_places);
             }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
 
-
-        protected:
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
         private:
             std::vector<std::string> _places;
         };
+
 
         class UnfoldedUpperBoundsCondition : public Condition
         {
@@ -1023,10 +1046,6 @@ namespace PetriEngine {
             };
             UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
             size_t value(const MarkVal*);
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
             uint32_t distance(DistanceContext& context) const override;
 
             Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
@@ -1046,7 +1065,8 @@ namespace PetriEngine {
 
             double getMax() const { return _max; }
             double getOffset() const { return _offset; }
-
+            double getBound() const { return _bound; }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;

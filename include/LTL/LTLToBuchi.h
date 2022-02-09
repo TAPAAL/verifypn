@@ -136,7 +136,7 @@ namespace LTL {
                 ss << ap_info.size();
             } else {
                 PetriEngine::PQL::QueryPrinter _printer{ss};
-                cond->visit(_printer);
+                Visitor::visit(_printer, cond);
             }
             ss << "\"";
             os << ss.str();
