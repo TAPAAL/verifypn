@@ -35,11 +35,11 @@ namespace PetriEngine::PQL {
         int _return_value = -1;
 
         int subvisit(const Condition_ptr& condition) {
-            condition->visit(*this);
+            Visitor::visit(this, condition);
             return _return_value;
         }
         int subvisit(const Expr_ptr& expr) {
-            expr->visit(*this);
+            Visitor::visit(this, expr);
             return _return_value;
         }
 

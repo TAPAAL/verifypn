@@ -28,6 +28,7 @@
 #include "PetriEngine/TAR/Solver.h"
 #include "PetriEngine/PQL/ContainsVisitor.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include "utils/stopwatch.h"
 
 
@@ -483,9 +484,9 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     PlaceUseVisitor visitor(_net.numberOfPlaces());
-                    queries[i]->visit(visitor);
+                    Visitor::visit(visitor, queries[i]);
                     ContainsVisitor<DeadlockCondition> dlvisitor;
-                    queries[i]->visit(dlvisitor);
+                    Visitor::visit(dlvisitor, queries[i]);
                     auto used = visitor.in_use();
                     if(dlvisitor.does_contain())
                     {
@@ -522,7 +523,7 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     EvaluationContext ec(state.marking(), &_net);
-                    if(queries[i]->evaluate(ec) == Condition::RTRUE)
+                    if(PetriEngine::PQL::evaluate(queries[i].get(), ec) == Condition::RTRUE)
                     {
                         auto ret = _printer.handle(i, queries[i].get(), ResultPrinter::Satisfied);
                         results[i] = ret.first;
