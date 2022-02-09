@@ -179,6 +179,9 @@ int main(int argc, const char** argv) {
             {
                 EvaluationContext context(qm0.get(), qnet.get());
                 for (size_t i = 0; i < queries.size(); ++i) {
+                    ContainsFireabilityVisitor has_fireability;
+                    Visitor::visit(has_fireability, queries[i]);
+                    if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
                     auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
