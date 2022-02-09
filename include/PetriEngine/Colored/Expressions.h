@@ -645,58 +645,6 @@ namespace PetriEngine {
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
 
-        class GreaterThanExpression : public GuardExpression {
-        private:
-            ColorExpression_ptr _left;
-            ColorExpression_ptr _right;
-
-        public:
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) > _right->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Colored::Variable *> leftVars;
-                std::set<const Colored::Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, false, true);
-            }
-
-            std::string toString() const override {
-                std::string res = _left->toString() + " > " + _right->toString();
-                return res;
-            }
-
-            GreaterThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-        };
-
         class LessThanEqExpression : public GuardExpression {
         private:
             ColorExpression_ptr _left;
@@ -747,58 +695,6 @@ namespace PetriEngine {
 
 
             LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-        };
-
-        class GreaterThanEqExpression : public GuardExpression {
-        private:
-            ColorExpression_ptr _left;
-            ColorExpression_ptr _right;
-
-        public:
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) >= _right->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Colored::Variable *> leftVars;
-                std::set<const Colored::Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, false, false);
-            }
-
-            std::string toString() const override {
-                std::string res = _left->toString() + " >= " + _right->toString();
-                return res;
-            }
-
-            GreaterThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
 

@@ -378,7 +378,8 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
 		auto left = element->first_node();
 		auto right = left->next_sibling();
 		if(notFlag){
-			return std::make_shared<PetriEngine::Colored::GreaterThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
+			return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(
+                parseColorExpression(right), parseColorExpression(left));
 		} else {
 			return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));
 		}
@@ -389,14 +390,16 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
 		if(notFlag){
 			return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
 		} else {
-			return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));
+			return std::make_shared<PetriEngine::Colored::LessThanExpression>(
+                parseColorExpression(right), parseColorExpression(left));
 		}
 	} else if (strcmp(element->name(), "leq") == 0 || strcmp(element->name(), "lessthanorequal") == 0) {
 		auto left = element->first_node();
 		auto right = left->next_sibling();
 
 		if(notFlag){
-			return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));
+			return std::make_shared<PetriEngine::Colored::LessThanExpression>(
+                parseColorExpression(right), parseColorExpression(left));
 		} else {
 			return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
 		}
@@ -407,7 +410,7 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
 		if(notFlag){
 			return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));
 		} else {
-			return std::make_shared<PetriEngine::Colored::GreaterThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
+			return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(right), parseColorExpression(left));
 		}
 	} else if (strcmp(element->name(), "eq") == 0 || strcmp(element->name(), "equality") == 0) {
 		auto left = element->first_node();
