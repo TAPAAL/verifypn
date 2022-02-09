@@ -36,6 +36,7 @@
 #include "ArcIntervals.h"
 #include "GuardRestrictor.h"
 #include "utils/errors.h"
+#include "ColorExpressionVisitor.h"
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
@@ -120,7 +121,7 @@ namespace PetriEngine {
                 return false;
             }
 
-
+            virtual void visit(ColorExpressionVisitor& visitor) const = 0;
 
             virtual std::string toString() const {
                 return "Unsupported";
@@ -184,6 +185,8 @@ namespace PetriEngine {
             std::string toString() const override {
                 return "dot";
             }
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         typedef std::shared_ptr<ColorExpression> ColorExpression_ptr;
@@ -262,6 +265,8 @@ namespace PetriEngine {
 
             VariableExpression(const Variable* variable)
                     : _variable(variable) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class UserOperatorExpression : public ColorExpression {
@@ -279,7 +284,6 @@ namespace PetriEngine {
                     context.placePartition.applyPartition(tupleIds);
                     return _userOperator->getColorType()->getColor(tupleIds);
                 }
-
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -342,6 +346,8 @@ namespace PetriEngine {
 
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class SuccessorExpression : public ColorExpression {
@@ -400,6 +406,8 @@ namespace PetriEngine {
 
             SuccessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class PredecessorExpression : public ColorExpression {
@@ -458,6 +466,8 @@ namespace PetriEngine {
 
             PredecessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class TupleExpression : public ColorExpression {
@@ -643,6 +653,8 @@ namespace PetriEngine {
 
             LessThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class LessThanEqExpression : public GuardExpression {
@@ -696,6 +708,8 @@ namespace PetriEngine {
 
             LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class EqualityExpression : public GuardExpression {
@@ -749,6 +763,8 @@ namespace PetriEngine {
 
             EqualityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class InequalityExpression : public GuardExpression {
@@ -800,6 +816,8 @@ namespace PetriEngine {
 
             InequalityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class AndExpression : public GuardExpression {
@@ -833,6 +851,8 @@ namespace PetriEngine {
 
             AndExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(left), _right(right) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class OrExpression : public GuardExpression {
@@ -869,6 +889,8 @@ namespace PetriEngine {
 
             OrExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class ArcExpression : public Expression {
@@ -973,6 +995,8 @@ namespace PetriEngine {
             {
                 assert(sort != nullptr);
             }
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         typedef std::shared_ptr<AllExpression> AllExpression_ptr;
@@ -1099,6 +1123,8 @@ namespace PetriEngine {
                     : _number(number), _color(std::move(color)), _all(nullptr) {}
             NumberOfExpression(AllExpression_ptr&& all, uint32_t number = 1)
                     : _number(number), _color(), _all(std::move(all)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         typedef std::shared_ptr<NumberOfExpression> NumberOfExpression_ptr;
@@ -1212,6 +1238,8 @@ namespace PetriEngine {
 
             AddExpression(std::vector<ArcExpression_ptr>&& constituents)
                     : _constituents(std::move(constituents)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class SubtractExpression : public ArcExpression {
@@ -1273,6 +1301,8 @@ namespace PetriEngine {
 
             SubtractExpression(ArcExpression_ptr&& left, ArcExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class ScalarProductExpression : public ArcExpression {
@@ -1315,6 +1345,8 @@ namespace PetriEngine {
 
             ScalarProductExpression(ArcExpression_ptr&& expr, uint32_t scalar)
                     : _scalar(std::move(scalar)), _expr(expr) {}
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
     }
 }
