@@ -127,7 +127,7 @@ namespace PetriEngine::PQL {
                 os.write("=", 1);
                 break;
             case PQL::type_id<NotEqualCondition>():
-                os.write("!=", 2);
+                os.write("!", 1);
                 break;
             default:
                 assert(false);
