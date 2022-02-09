@@ -47,7 +47,7 @@ namespace PetriEngine {
 
         void Condition::toString(std::ostream &os) {
             QueryPrinter printer{os};
-            this->visit(printer);
+            Visitor::visit(printer, this);
         }
     } // PQL
 } // PetriEngine

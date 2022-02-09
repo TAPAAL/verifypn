@@ -3,6 +3,7 @@
 #include "PetriEngine/Synthesis/IntervalVisitor.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 #include <stack>
 
@@ -29,7 +30,7 @@ namespace PetriEngine {
                     if (finv->inhibitor)
                         _inhibiting_place[finv->place] = true;
             }
-            predicate->visit(_in_query);
+            PQL::Visitor::visit(_in_query, predicate);
             _fireing_bounds = std::make_unique<uint32_t[]>(_net.numberOfTransitions());
             _place_bounds = std::make_unique<std::pair<uint32_t,uint32_t>[]>(_net.numberOfPlaces());
         }
@@ -366,12 +367,12 @@ namespace PetriEngine {
                     IntervalVisitor iv(_net, _place_bounds.get());
                     assert(_queries.size() == 1);
                     for (auto* q : _queries) {
-                        q->visit(iv);
+                        PQL::Visitor::visit(iv, q);
                     }
 
 #ifndef NDEBUG
                     PQL::EvaluationContext context(_parent->marking(), &_net);
-                    auto r = _queries[0]->evaluate(context);
+                    auto r = PQL::evaluate(_queries[0], context);
                     if(iv.result() == IntervalVisitor::TRUE)
                         assert(r != PQL::Condition::RFALSE);
                     if(iv.result() == IntervalVisitor::FALSE)
@@ -401,8 +402,8 @@ namespace PetriEngine {
             for (auto* q : _queries) {
                 if (_is_safety)
                     visitor.negate();
-                q->evalAndSet(context);
-                q->visit(visitor);
+                PetriEngine::PQL::evaluateAndSet(q, context);
+                PQL::Visitor::visit(visitor, q);
             }
 
             if (_added_unsafe) {

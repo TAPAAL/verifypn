@@ -35,7 +35,7 @@ namespace LTL {
      */
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
         os << "(! ";
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         os << ")";
     }
 
@@ -116,18 +116,18 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ACondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ECondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
     }
 
     std::pair<spot::formula, APInfo>
     to_spot_formula (const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss, options.ltl_compress_aps};
-        query->visit(spotConverter);
+        Visitor::visit(spotConverter, query);
         std::string spotFormula = ss.str();
         if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
             spotFormula = spotFormula.substr(2);

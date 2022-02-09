@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(LESSTHAN_LITERAL_LITERAL) {
     std::ostringstream os;
     XMLPrinter xmlPrinter(os, 0, 2);
 
-    condition->visit(xmlPrinter);
+    Visitor::visit(xmlPrinter, condition); 
 
     auto expected = "<negation>\n"
                     "  <integer-lt>\n"

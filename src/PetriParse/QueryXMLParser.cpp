@@ -532,7 +532,7 @@ void QueryXMLParser::printQueries(size_t i) {
     } else {
         std::cout << "\t";
         PetriEngine::PQL::QueryPrinter printer;
-        it.query->visit(printer);
+        Visitor::visit(printer, it.query);
         std::cout << std::endl;
     }
 }
