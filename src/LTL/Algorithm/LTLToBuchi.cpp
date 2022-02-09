@@ -34,85 +34,156 @@ namespace LTL {
      * Formula serializer to SPOT-compatible syntax.
      */
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
-        os << "(! ";
         Visitor::visit(this, (*element)[0]);
-        os << ")";
+        _formula = spot::formula::Not(_formula);
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AndCondition *element) {
-        QueryPrinter::_accept(element, "&&");
+        std::vector<spot::formula> ops;
+        for(auto& e : *element)
+        {
+            Visitor::visit(this, e);
+            ops.emplace_back(_formula);
+        }
+        _formula = spot::formula::And(std::move(ops));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::OrCondition *element) {
-        QueryPrinter::_accept(element, "||");
+        std::vector<spot::formula> ops;
+        for(auto& e : *element)
+        {
+            Visitor::visit(this, e);
+            ops.emplace_back(_formula);
+        }
+        _formula = spot::formula::Or(std::move(ops));
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::XCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::X(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EXCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::X(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AXCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::X(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::F(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EFCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::F(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AFCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::F(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::G(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EGCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::G(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AGCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        _formula = spot::formula::G(_formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UntilCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        auto lhs = _formula;
+        Visitor::visit(this, (*element)[1]);
+        _formula = spot::formula::U(lhs, _formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AUCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        auto lhs = _formula;
+        Visitor::visit(this, (*element)[1]);
+        _formula = spot::formula::U(lhs, _formula);
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EUCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        auto lhs = _formula;
+        Visitor::visit(this, (*element)[1]);
+        _formula = spot::formula::U(lhs, _formula);
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-        make_atomic_prop(std::make_shared<LessThanCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<LessThanCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
-        make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
-        make_atomic_prop(std::make_shared<FireableCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<FireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-        make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
-        make_atomic_prop(std::make_shared<EqualCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<EqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-        make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
+        _formula = make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::CompareConjunction *element) {
-        make_atomic_prop(element->shared_from_this());
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::BooleanCondition *element) {
-        os << (element->value ? "1" : "0");
+        _formula = (element->value ? spot::formula::tt() : spot::formula::ff());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LiteralExpr *element) {
         assert(false);
         throw base_error("LiteralExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::PlusExpr *element) {
         assert(false);
         throw base_error("PlusExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MultiplyExpr *element) {
         assert(false);
         throw base_error("MultiplyExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MinusExpr *element) {
         assert(false);
         throw base_error("MinusExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::SubtractExpr *element) {
         assert(false);
         throw base_error("LiteralExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::IdentifierExpr *element) {
         assert(false);
         throw base_error("IdentifierExpr should not be visited by Spot serializer");
-        //make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ACondition *condition) {
@@ -125,14 +196,9 @@ namespace LTL {
 
     std::pair<spot::formula, APInfo>
     to_spot_formula (const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
-        std::stringstream ss;
-        FormulaToSpotSyntax spotConverter{ss, options.ltl_compress_aps};
+        FormulaToSpotSyntax spotConverter{options.ltl_compress_aps};
         Visitor::visit(spotConverter, query);
-        std::string spotFormula = ss.str();
-        if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
-            spotFormula = spotFormula.substr(2);
-        }
-        auto spot_formula = spot::parse_formula(spotFormula);
+        auto spot_formula = spotConverter.formula();
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 

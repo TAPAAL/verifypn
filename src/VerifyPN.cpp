@@ -324,10 +324,13 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     }
 
     cond = initialMarkingRW([&]() {
+        auto r = pushNegation(cond, stats, evalContext, false, false, true);
+        {
 #ifdef VERIFYPN_MC_Simplification
-        std::scoped_lock scopedLock{spot_mutex};
+            std::scoped_lock scopedLock{spot_mutex};
 #endif
-        return LTL::simplify(pushNegation(cond, stats, evalContext, false, false, true), options);
+            return LTL::simplify(r, options);
+        }
     }, stats, evalContext, false, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
