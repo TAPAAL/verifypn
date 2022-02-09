@@ -12,6 +12,7 @@
 #include "CTL/SearchStrategy/SearchStrategy.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/PQL/Evaluation.h"
 
 using namespace PetriEngine::PQL;
 using namespace DependencyGraph;
@@ -46,13 +47,13 @@ Condition::Result OnTheFlyDG::initialEval()
 {
     initialConfiguration();
     EvaluationContext e(query_marking.marking(), net);
-    return query->evaluate(e);
+    return PetriEngine::PQL::evaluate(query, e);
 }
 
 Condition::Result OnTheFlyDG::fastEval(Condition* query, Marking* unfolded)
 {
     EvaluationContext e(unfolded->marking(), net);
-    return query->evaluate(e);
+    return PetriEngine::PQL::evaluate(query, e);
 }
 
 

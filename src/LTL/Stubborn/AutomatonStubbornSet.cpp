@@ -17,7 +17,7 @@
 
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
-#include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "LTL/Stubborn/LTLEvalAndSetVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 using namespace PetriEngine;
@@ -190,11 +190,11 @@ namespace LTL {
 
         //Interesting on each progressing formula gives NLG.
         for (auto &q : buchi_state.progressing) {
-            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q.condition->visit(evalAndSetVisitor);
+            LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q.condition);
 
             NondeterministicConjunctionVisitor interesting{*this};
-            q.condition->visit(interesting);
+            PetriEngine::PQL::Visitor::visit(interesting, q.condition);
             if (_done) return true;
             else {
                 assert(!_track_changes);

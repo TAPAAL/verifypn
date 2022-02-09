@@ -43,7 +43,7 @@ namespace PetriEngine::PQL {
             bool prev_negated = _negated;
             _negated = negated;
 
-            condition->visit(*this);
+            Visitor::visit(this, condition);
 
             _negated = prev_negated;
             return _return_value;
