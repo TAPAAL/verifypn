@@ -415,7 +415,7 @@ void simplify_queries(  const MarkVal* marking,
 #else
             auto simplify = [&, c]() {
 
-                auto& out = std::cout;
+                auto& out = outstream;
 #endif
 
                 auto& cache = caches[c];
@@ -448,7 +448,7 @@ void simplify_queries(  const MarkVal* marking,
                             context, simplificationContext, out);
 #ifdef VERIFYPN_MC_Simplification
                         out_lock.lock();
-                        std::cout << out.str();
+                        outstream << out.str();
                         out.clear();
                         out_lock.unlock();
 #endif
@@ -516,7 +516,7 @@ void simplify_queries(  const MarkVal* marking,
                     }
 #ifdef VERIFYPN_MC_Simplification
                     out_lock.lock();
-                    std::cout << out.str();
+                    outstream << out.str();
                     out.clear();
                     out_lock.unlock();
 #endif
