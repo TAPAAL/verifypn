@@ -97,7 +97,7 @@ namespace PetriEngine {
         }
 
         void CExprToString::accept(const NumberOfExpression* no) {
-            if (no->isAll()) {
+            if (no->is_all()) {
                 _out << no->number() << "'(";
                 no->all()->visit(*this);
                 _out << ")";

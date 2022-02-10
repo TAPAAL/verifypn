@@ -868,12 +868,12 @@ namespace PetriEngine {
                     return _number * _all->size();
             }
 
-            bool isAll() const {
+            bool is_all() const {
                 return (bool)_all;
             }
 
-            bool isSingleColor() const {
-                return !isAll() && _color.size() == 1;
+            bool is_single_color() const {
+                return !is_all() && _color.size() == 1;
             }
 
             uint32_t number() const {
@@ -1029,11 +1029,11 @@ namespace PetriEngine {
 
             uint32_t weight() const override {
                 auto* left = dynamic_cast<NumberOfExpression*>(_left.get());
-                if (!left || !left->isAll()) {
+                if (!left || !left->is_all()) {
                     throw WeightException("Left constituent of subtract is not an all expression!");
                 }
                 auto* right = dynamic_cast<NumberOfExpression*>(_right.get());
-                if (!right || !right->isSingleColor()) {
+                if (!right || !right->is_single_color()) {
                     throw WeightException("Right constituent of subtract is not a single color number of expression!");
                 }
 

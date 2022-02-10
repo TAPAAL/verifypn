@@ -111,7 +111,7 @@ namespace PetriEngine {
                     col.push_back(std::make_pair(_cres, no->number()));
                 }
                 _mres = Multiset(col);
-            } else if (no->isAll()) {
+            } else if (no->is_all()) {
                 std::vector<std::pair<const Color*,uint32_t>> colors;
 
                 if(_context.placePartition.isDiagonal() ||
