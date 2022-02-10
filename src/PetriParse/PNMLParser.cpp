@@ -286,8 +286,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTu
             for (const auto& color : set) {
                 colors.push_back(color);
             }
-            std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
-            tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));
+            std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors), colorTypes);
             std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;
             placeholderVector.push_back(tupleExpr);
             numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));
@@ -492,8 +491,7 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             colors.push_back(parseColorExpression(it));
         }
-        std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
-		tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));
+        std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors), colorTypes);
 		return tupleExpr;
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseColorExpression(element->first_node());

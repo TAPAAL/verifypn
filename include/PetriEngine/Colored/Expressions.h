@@ -93,12 +93,12 @@ namespace PetriEngine {
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
-            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const = 0;
 
             virtual Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const {
                 return Colored::interval_vector_t();
             }
 
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const = 0;
         };
 
         class DotConstantExpression : public ColorExpression {
@@ -128,11 +128,12 @@ namespace PetriEngine {
                 constantMap[index] = dotColor;
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
-                return ColorType::dotInstance();
-            }
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+                return ColorType::dotInstance();
+            }
         };
 
         typedef std::shared_ptr<ColorExpression> ColorExpression_ptr;
@@ -197,9 +198,6 @@ namespace PetriEngine {
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
-                return _variable->colorType;
-            }
 
             const Variable* variable() const {
                 return _variable;
@@ -209,6 +207,11 @@ namespace PetriEngine {
                     : _variable(variable) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+                return _variable->colorType;
+            }
+
         };
 
         class UserOperatorExpression : public ColorExpression {
@@ -259,10 +262,6 @@ namespace PetriEngine {
                 constantMap[index] = _userOperator;
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override {
-                return _userOperator->getColorType();
-            }
-
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_t interval;
                 Colored::interval_vector_t tupleInterval;
@@ -278,6 +277,10 @@ namespace PetriEngine {
                     : _userOperator(userOperator) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override {
+                return _userOperator->getColorType();
+            }
         };
 
         class SuccessorExpression : public ColorExpression {
@@ -322,14 +325,14 @@ namespace PetriEngine {
                 return _color;
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
-                return _color->getColorType(colorTypes);
-            }
-
             SuccessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+                return _color->getColorType(colorTypes);
+            }
         };
 
         class PredecessorExpression : public ColorExpression {
@@ -374,14 +377,14 @@ namespace PetriEngine {
                 return _color;
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
-                return _color->getColorType(colorTypes);
-            }
-
             PredecessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+                return _color->getColorType(colorTypes);
+            }
         };
 
         class TupleExpression : public ColorExpression {
@@ -437,7 +440,33 @@ namespace PetriEngine {
                 }
             }
 
-            const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+                for (const auto& elem : _colors) {
+                    elem->getConstants(constantMap, index);
+                    index++;
+                }
+            }
+
+            size_t size() const {
+                return _colors.size();
+            }
+
+            auto begin() const {
+                return _colors.begin();
+            }
+
+            auto end() const {
+                return _colors.end();
+            }
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
+
+            TupleExpression(std::vector<ColorExpression_ptr>&& colors, const ColorTypeMap& colorTypes)
+                    : _colors(std::move(colors)) {
+                _colorType = getColorType(colorTypes);
+            }
+
+            virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
 
                 std::vector<const ColorType*> types;
                 if(_colorType != nullptr){
@@ -458,34 +487,6 @@ namespace PetriEngine {
                 throw base_error("COULD NOT FIND PRODUCT TYPE");
                 return nullptr;
             }
-
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                for (const auto& elem : _colors) {
-                    elem->getConstants(constantMap, index);
-                    index++;
-                }
-            }
-
-            size_t size() const {
-                return _colors.size();
-            }
-
-            auto begin() const {
-                return _colors.begin();
-            }
-
-            auto end() const {
-                return _colors.end();
-            }
-
-            void setColorType(const ColorType* ct){
-                _colorType = ct;
-            }
-
-            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
-
-            TupleExpression(std::vector<ColorExpression_ptr>&& colors)
-                    : _colors(std::move(colors)) {}
         };
 
         class GuardExpression : public Expression {
