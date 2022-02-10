@@ -131,6 +131,18 @@ namespace PetriEngine::PQL {
 
         void _accept(const AXCondition *condition) override;
     };
+
+    class ContainsFireabilityVisitor : public AnyVisitor {
+        void _accept(const FireableCondition* c) override
+        {
+            setConditionFound();
+        }
+
+        void _accept(const UnfoldedFireableCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
 }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H
