@@ -114,10 +114,6 @@ namespace PetriEngine {
                 getVariables(variables, varPositions, varModifierMap, false, index);
             }
 
-            virtual bool isTuple() const {
-                return false;
-            }
-
             virtual bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const{
                 return false;
             }
@@ -353,10 +349,6 @@ namespace PetriEngine {
                 return &++(*_color->eval(context));
             }
 
-            bool isTuple() const override {
-                return _color->isTuple();
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = index;
@@ -411,10 +403,6 @@ namespace PetriEngine {
         public:
             const Color* eval(const ExpressionContext& context) const override {
                 return &--(*_color->eval(context));
-            }
-
-            bool isTuple() const override {
-                return _color->isTuple();
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
@@ -482,10 +470,6 @@ namespace PetriEngine {
                 const Color* col = pt->getColor(colors);
                 assert(col != nullptr);
                 return col;
-            }
-
-            bool isTuple() const override {
-                return true;
             }
 
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
@@ -631,10 +615,6 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
             }
 
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
             void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
                 VariableModifierMap varModifierMapL;
                 VariableModifierMap varModifierMapR;
@@ -667,10 +647,6 @@ namespace PetriEngine {
 
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) <= _right->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
@@ -713,10 +689,6 @@ namespace PetriEngine {
                 return _left->eval(context) == _right->eval(context);
             }
 
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -756,10 +728,6 @@ namespace PetriEngine {
 
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) != _right->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
@@ -820,10 +788,6 @@ namespace PetriEngine {
                 return _left->eval(context) && _right->eval(context);
             }
 
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -842,10 +806,6 @@ namespace PetriEngine {
             using LogicalExpression::LogicalExpression;
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) || _right->eval(context);
-            }
-
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
@@ -910,10 +870,6 @@ namespace PetriEngine {
                 }
 
                 return colors;
-            }
-
-            bool isTuple() const override {
-                return _sort->productSize() > 1;
             }
 
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const {
@@ -1002,15 +958,6 @@ namespace PetriEngine {
                 numbers.emplace_back(_number);
                 //Maybe we need to check color expression also
                 return true;
-            }
-
-            bool isTuple() const override {
-                for(const auto& colorExpr : _color){
-                    if(colorExpr->isTuple()){
-                        return true;
-                    }
-                }
-                return false;
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
@@ -1153,15 +1100,6 @@ namespace PetriEngine {
                 }
             }
 
-            bool isTuple() const override {
-                for(const auto& arcExpr : _constituents){
-                    if(arcExpr->isTuple()){
-                        return true;
-                    }
-                }
-                return false;
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 for (const auto& elem : _constituents) {
                     uint32_t newIndex = 0;
@@ -1248,10 +1186,6 @@ namespace PetriEngine {
                 }
             }
 
-            bool isTuple() const override {
-                return _left->isTuple() || _right->isTuple();
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 return _left->getArcIntervals(arcIntervals, cfp, index, modifier);
                 //We ignore the restrictions imposed by the subtraction for now
@@ -1311,10 +1245,6 @@ namespace PetriEngine {
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _expr->getVariables(variables, varPositions,varModifierMap, includeSubtracts);
-            }
-
-            bool isTuple() const override {
-                return _expr->isTuple();
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
