@@ -80,10 +80,6 @@ namespace PetriEngine {
                 getVariables(variables, varPositions, varModifierMap, false, index);
             }
 
-            virtual bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const{
-                return false;
-            }
-
             virtual void visit(ColorExpressionVisitor& visitor) const = 0;
 
         };
@@ -817,16 +813,6 @@ namespace PetriEngine {
 
         public:
 
-            bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const override{
-                //Not entirely sure what to do if there is more than one colorExpression, but should probably return false
-                if(_color.size() > 1){
-                    return false;
-                }
-                numbers.emplace_back(_number);
-                //Maybe we need to check color expression also
-                return true;
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 if (_all != nullptr)
                     return;
@@ -928,26 +914,7 @@ namespace PetriEngine {
             std::vector<ArcExpression_ptr> _constituents;
 
         public:
-            bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const override{
-                for(const auto& elem : _constituents){
-                    if(!elem->isEligibleForSymmetry(numbers)){
-                        return false;
-                    }
-                }
 
-                if(numbers.size() < 2){
-                    return false;
-                }
-                //pick a number
-                //every number has to be equal
-                uint32_t firstNumber = numbers[0];
-                for(uint32_t number : numbers){
-                    if(firstNumber != number){
-                        return false;
-                    }
-                }
-                return true;
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 for (const auto& elem : _constituents) {

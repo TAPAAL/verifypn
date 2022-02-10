@@ -19,6 +19,7 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
+#include "PetriEngine/Colored/SymmetryVisitor.h"
 
 #include "utils/errors.h"
 
@@ -189,7 +190,6 @@ namespace PetriEngine {
 
                 for(const auto &inArc : transition.input_arcs){
                     std::set<const Colored::Variable*> inArcVars;
-                    std::vector<uint32_t> numbers;
 
                     //Application of symmetric variables for partitioned places is currently unhandled
                     if(_partitionComputed && !_partition[inArc.place].isDiagonal()){
@@ -198,7 +198,7 @@ namespace PetriEngine {
 
                     //the expressions is eligible if it is an addexpression that contains only
                     //numberOfExpressions with the same number
-                    bool isEligible = inArc.expr->isEligibleForSymmetry(numbers);
+                    auto [isEligible, numbers] = Colored::SymmetryVisitor::eligible_for_symmetry(*inArc.expr);
 
                     if(isEligible && numbers.size() > 1){
                         inArc.expr->getVariables(inArcVars);
