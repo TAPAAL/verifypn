@@ -228,7 +228,12 @@ int main(int argc, const char** argv) {
                             // we misuse the implementation to make sure we print the empty-trace
                             // when the initial marking is sufficient.
                             Structures::StateSet tmp(*qnet, 0);
-                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied, nullptr,
+                            // we are tricking the printer into printing the trace here.
+                            // TODO fix, remove setInvariant
+                            // also we make a new FALSE object here to avoid sideeffects. 
+                            queries[i] = std::make_shared<BooleanCondition>(false);
+                            queries[i]->setInvariant(true);
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied, nullptr,
                                                     0, 1, 1, initial_size, &tmp, 0, qm0.get()).first;
                         }
                         else
