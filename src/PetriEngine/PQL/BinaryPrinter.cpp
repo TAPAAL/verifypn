@@ -47,8 +47,12 @@ namespace PetriEngine::PQL {
     }
 
     void BinaryPrinter::_accept(const CommutativeExpr *element){
-        auto sop = element->op();
-        os.write(&sop[0], sizeof(char));
+        if (PQL::type_id<PlusExpr>() == element->type())
+            os.write("+", 1);
+        else if (PQL::type_id<PlusExpr>() == element->type())
+            os.write("*", 1);
+        else
+            throw base_error("Unknown type for BinaryPrinter");
         int32_t temp_constant = element->constant();
         os.write(reinterpret_cast<const char*>(&temp_constant), sizeof(int32_t));
         uint32_t size = element->places().size();
@@ -83,7 +87,7 @@ namespace PetriEngine::PQL {
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-        uint32_t size = condition->operands();
+        uint32_t size = condition->size();
         os.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
         for(auto& c : *condition)
             Visitor::visit(this, c);
@@ -111,8 +115,23 @@ namespace PetriEngine::PQL {
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-        std::string sop = condition->op();
-        os.write(sop.data(), sop.size());
+        switch(condition->type())
+        {
+            case PQL::type_id<LessThanCondition>():
+                os.write("<", 1);
+                break;
+            case PQL::type_id<LessThanOrEqualCondition>():
+                os.write("<=", 2);
+                break;
+            case PQL::type_id<EqualCondition>():
+                os.write("=", 1);
+                break;
+            case PQL::type_id<NotEqualCondition>():
+                os.write("!", 1);
+                break;
+            default:
+                assert(false);
+        }
         os.write("\0", sizeof(char));
         Visitor::visit(this, (*condition)[0]);
         Visitor::visit(this, (*condition)[1]);

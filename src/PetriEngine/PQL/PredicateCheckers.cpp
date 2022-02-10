@@ -37,7 +37,7 @@ namespace PetriEngine::PQL {
 
     void NestedDeadlockVisitor::_accept(const LogicalCondition *condition) {
         _nested_in_logical_condition = true;
-        for (auto& c : condition->getOperands())
+        for (auto& c : *condition)
             Visitor::visit(this, c);
         _nested_in_logical_condition = false;
     }
@@ -139,7 +139,7 @@ namespace PetriEngine::PQL {
 
     void IsNotReachabilityVisitor::_accept(const LogicalCondition *element) {
         if (_is_nested) {
-            for(auto& c : element->getOperands())
+            for(auto& c : *element)
             {
                 Visitor::visit(this, c);
                 if(_condition_found)

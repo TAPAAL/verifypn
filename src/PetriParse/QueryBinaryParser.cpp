@@ -126,14 +126,10 @@ Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vec
             if(sop == "<")
                 return std::make_shared<LessThanCondition>(e1, e2);
             else if(sop == "<=")
-                return std::make_shared<LessThanOrEqualCondition>(e1, e2);
-            else if(sop == ">=")
-                return std::make_shared<LessThanOrEqualCondition>(e2, e1);
-            else if(sop == ">")
                 return std::make_shared<LessThanCondition>(e2, e1);
-            else if(sop == "==")
+            else if(sop == "=")
                 return std::make_shared<EqualCondition>(e1, e2);
-            else if(sop == "!=")
+            else if(sop == "!")
                 return std::make_shared<NotEqualCondition>(e1, e2);
             else
             {

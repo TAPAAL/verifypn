@@ -59,52 +59,29 @@ namespace PetriEngine {
             }
         }
 
+        bool is_true(const Condition& c);
+        bool is_false(const Condition& c);
+        template<typename C>
+        bool is_true(const C* c) { return is_true(*c); }
+        template<typename C>
+        bool is_false(const C* c) { return is_false(*c); }
+        template<typename C>
+        bool is_true(const std::shared_ptr<C>& c) { return is_true(c.get()); }
+        template<typename C>
+        bool is_false(const std::shared_ptr<C>& c) { return is_false(c.get()); }
+
 
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, BControl = 10, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, PControl = 5, pError = -1 };
 
 
-        class AnalysisContext;
-        class EvaluationContext;
         class DistanceContext;
         class SimplificationContext;
 
-        /** Representation of a PQL error */
-        class ExprError {
-            std::string _text;
-            int _length;
-        public:
-
-            ExprError(std::string text = "", int length = 0) {
-                _text = text;
-                _length = length;
-            }
-
-            /** Human readable explaination of the error */
-            const std::string& text() const {
-                return _text;
-            }
-
-            /** length in the source, 0 if not applicable */
-            int length() const {
-                return _length;
-            }
-
-            /** Convert error to string */
-            std::string toString() const {
-                return "Parsing error \"" + text() + "\"";
-            }
-
-            /** True, if this is a default created ExprError without any information */
-            bool isEmpty() const {
-                return _text.empty() && _length == 0;
-            }
-        };
-
         /** Representation of an expression */
         class Expr {
-            int _eval = 0;
+            int64_t _eval = 0;
         public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
@@ -115,11 +92,11 @@ namespace PetriEngine {
 
             [[nodiscard]] virtual bool placeFree() const = 0;
 
-            void setEval(int eval) {
+            void setEval(int64_t eval) {
                 _eval = eval;
             }
 
-            [[nodiscard]] int getEval() const {
+            [[nodiscard]] int64_t getEval() const {
                 return _eval;
             }
         };
@@ -197,11 +174,6 @@ namespace PetriEngine {
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
 
-            /** Checks if the condition is trivially true */
-            [[nodiscard]] bool isTriviallyTrue();
-            /*** Checks if the condition is trivially false */
-            [[nodiscard]] bool isTriviallyFalse();
-
             [[nodiscard]] bool isSatisfied() const
             {
                 return _eval == RTRUE;
@@ -237,10 +209,6 @@ namespace PetriEngine {
             [[nodiscard]] virtual Path getPath() const = 0;
             void toString(std::ostream& os = std::cout);
             virtual type_id_t type() const = 0;
-        protected:
-            //Value for checking if condition is trivially true or false.
-            //0 is undecided (default), 1 is true, 2 is false.
-            uint32_t trivial = 0;
         };
         typedef std::shared_ptr<Condition> Condition_ptr;
         using Condition_constptr = std::shared_ptr<const Condition>;

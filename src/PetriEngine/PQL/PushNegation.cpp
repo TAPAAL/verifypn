@@ -462,8 +462,8 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> nef, other;
         for (auto &c: _conds) {
             auto n = subvisit(c, _nested, negate_children);
-            if (n->isTriviallyFalse()) return n;
-            if (n->isTriviallyTrue()) continue;
+            if (is_false(n)) return n;
+            if (is_true(n)) continue;
             if (auto neg = dynamic_cast<NotCondition *>(n.get())) {
                 if (auto ef = dynamic_cast<EFCondition *>((*neg)[0].get())) {
                     nef.push_back((*ef)[0]);
@@ -495,10 +495,10 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> nef, other;
         for (auto &c: _conds) {
             auto n = subvisit(c, _nested, negate_children);
-            if (n->isTriviallyTrue()) {
+            if (is_true(n)) {
                 return n;
             }
-            if (n->isTriviallyFalse()) continue;
+            if (is_false(n)) continue;
             if (auto ef = dynamic_cast<EFCondition *>(n.get())) {
                 nef.push_back((*ef)[0]);
             } else {
@@ -520,8 +520,8 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(OrCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushAnd(element->getOperands(), nested, true) :
-                   pushOr(element->getOperands(), nested, false);
+            return negated ? pushAnd(element->operands(), nested, true) :
+                   pushOr(element->operands(), nested, false);
         }, stats, context, nested, negated, initrw);
         RETURN(cond)
     }
@@ -529,8 +529,8 @@ namespace PetriEngine::PQL {
 
     void PushNegationVisitor::_accept(AndCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushOr(element->getOperands(), nested, true) :
-                   pushAnd(element->getOperands(), nested, false);
+            return negated ? pushOr(element->operands(), nested, true) :
+                   pushAnd(element->operands(), nested, false);
 
         }, stats, context, nested, negated, initrw);
         RETURN(cond);

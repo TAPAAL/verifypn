@@ -27,20 +27,14 @@ namespace PetriEngine {
 
         Expr::~Expr()= default;
 
-        bool Condition::isTriviallyTrue() {
-            if (trivial == 1) {
-                return true;
-            }
-
-            return false;
+        bool is_true(const Condition& c)
+        {
+            return c.type() == type_id<BooleanCondition>() && static_cast<const BooleanCondition&>(c).value;
         }
 
-        bool Condition::isTriviallyFalse() {
-            if (trivial == 2) {
-                return true;
-            }
-
-            return false;
+        bool is_false(const Condition& c)
+        {
+            return c.type() == type_id<BooleanCondition>() && !static_cast<const BooleanCondition&>(c).value;
         }
 
         Condition::~Condition() = default;

@@ -168,40 +168,6 @@ namespace PetriEngine {
             }
         }
 
-        /******************** opTAPAAL ********************/
-
-        std::string EqualCondition::opTAPAAL() const {
-            return "=";
-        }
-
-        std::string NotEqualCondition::opTAPAAL() const {
-            return "=";
-        } //Handled with hack in NotEqualCondition::toTAPAALQuery
-
-        std::string LessThanCondition::opTAPAAL() const {
-            return "<";
-        }
-
-        std::string LessThanOrEqualCondition::opTAPAAL() const {
-            return "<=";
-        }
-
-        std::string EqualCondition::sopTAPAAL() const {
-            return "=";
-        }
-
-        std::string NotEqualCondition::sopTAPAAL() const {
-            return "=";
-        } //Handled with hack in NotEqualCondition::toTAPAALQuery
-
-        std::string LessThanCondition::sopTAPAAL() const {
-            return ">=";
-        }
-
-        std::string LessThanOrEqualCondition::sopTAPAAL() const {
-            return ">";
-        }
-
         size_t UnfoldedUpperBoundsCondition::value(const MarkVal* marking)
         {
             size_t tmp = 0;
@@ -213,40 +179,6 @@ namespace PetriEngine {
             }
             return tmp;
         }
-
-        /******************** Op (BinaryExpr subclasses) ********************/
-
-        std::string PlusExpr::op() const {
-            return "+";
-        }
-
-        std::string SubtractExpr::op() const {
-            return "-";
-        }
-
-        std::string MultiplyExpr::op() const {
-            return "*";
-        }
-
-        /******************** Op (CompareCondition subclasses) ********************/
-
-        std::string EqualCondition::op() const {
-            return "==";
-        }
-
-        std::string NotEqualCondition::op() const {
-            return "!=";
-        }
-
-        std::string LessThanCondition::op() const {
-            return "<";
-        }
-
-        std::string LessThanOrEqualCondition::op() const {
-            return "<=";
-        }
-
-        /******************** free of places ********************/
 
         bool NaryExpr::placeFree() const
         {

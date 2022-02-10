@@ -218,11 +218,10 @@ namespace PetriEngine {
             }
             bool placeFree() const override;
             auto& expressions() const { return _exprs; }
-            size_t operands() const { return _exprs.size(); }
+            size_t size() const { return _exprs.size(); }
             const Expr_ptr &operator[](size_t i) const {
                 return _exprs[i];
             }
-            virtual std::string op() const = 0;
 
         protected:
             std::vector<Expr_ptr> _exprs;
@@ -261,8 +260,6 @@ namespace PetriEngine {
 
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a + b; }
-            std::string op() const override;
-
         };
 
         /** Binary minus expression */
@@ -276,8 +273,6 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
 
         protected:
-            //int binaryOp() const;
-            std::string op() const override;
         };
 
         /** Binary multiplication expression **/
@@ -290,7 +285,6 @@ namespace PetriEngine {
 
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a * b; }
-            std::string op() const override;
         };
 
         /** Unary minus expression*/
@@ -677,10 +671,7 @@ namespace PetriEngine {
             {
                 return _conds[i];
             };
-            size_t operands() const {
-                return _conds.size();
-            }
-            const std::vector<Condition_ptr>& getOperands() const { return _conds; }
+            const std::vector<Condition_ptr>& operands() const { return _conds; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             Path getPath() const override         { return Path::pError; }
 
@@ -828,14 +819,6 @@ namespace PetriEngine {
 
             [[nodiscard]] const Expr_ptr &getExpr2() const { return _expr2; }
 
-            virtual std::string op() const = 0;
-
-            /** Operator when exported to TAPAAL */
-            virtual std::string opTAPAAL() const = 0;
-
-            /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
-            virtual std::string sopTAPAAL() const = 0;
-
         protected:
             uint32_t _distance(DistanceContext& c,
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const;
@@ -856,10 +839,6 @@ namespace PetriEngine {
 
             uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        private:
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
         };
 
         /* None equality conditon */
@@ -869,10 +848,6 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        private:
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
         };
 
         /* Less-than conditon */
@@ -882,10 +857,6 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        private:
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
         };
 
         /* Less-than-or-equal conditon */
@@ -896,10 +867,6 @@ namespace PetriEngine {
 
             uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        private:
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
         };
 
         /* Bool condition */
@@ -907,11 +874,6 @@ namespace PetriEngine {
         public:
 
             BooleanCondition(bool value) : value(value) {
-                if (value) {
-                    trivial = 1;
-                } else {
-                    trivial = 2;
-                }
             }
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;

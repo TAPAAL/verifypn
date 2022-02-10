@@ -206,7 +206,7 @@ int main(int argc, const char** argv) {
 
             if (!options.statespaceexploration) {
                 for (size_t i = 0; i < queries.size(); ++i) {
-                    if (queries[i]->isTriviallyTrue()) {
+                    if (PQL::is_true(queries[i])) {
                         if(initial_marking_solved.count(i) > 0 && options.trace != TraceLevel::None)
                         {
                             // we misuse the implementation to make sure we print the empty-trace
@@ -222,7 +222,7 @@ int main(int argc, const char** argv) {
                         } else if (options.printstatistics) {
                             std::cout << "Query solved by Query Simplification.\n" << std::endl;
                         }
-                    } else if (queries[i]->isTriviallyFalse()) {
+                    } else if (PQL::is_false(queries[i])) {
                         if(initial_marking_solved.count(i) > 0 && options.trace != TraceLevel::None)
                         {
                             // we misuse the implementation to make sure we print the empty-trace
