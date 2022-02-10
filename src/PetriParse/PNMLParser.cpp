@@ -28,6 +28,7 @@
 
 #include "PetriParse/PNMLParser.h"
 #include "utils/errors.h"
+#include "PetriEngine/Colored/EvaluationVisitor.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -617,7 +618,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;
             PetriEngine::Colored::EquivalenceVec placePartition;
 			PetriEngine::Colored::ExpressionContext context {binding, colorTypes, placePartition};
-            hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
+            auto ae = parseArcExpression(it->first_node("structure"));
+            hlinitialMarking = PetriEngine::Colored::EvaluationVisitor::evaluate(*ae, context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);
         }

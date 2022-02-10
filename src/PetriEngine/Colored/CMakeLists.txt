@@ -9,5 +9,6 @@ EquivalenceClass.cpp
 GuardRestrictor.cpp
 IntervalGenerator.cpp
 EquivalenceVec.cpp
-CExprToString.cpp)
+CExprToString.cpp
+EvaluationVisitor.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

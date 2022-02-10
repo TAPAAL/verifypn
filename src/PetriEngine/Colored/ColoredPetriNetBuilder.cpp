@@ -18,6 +18,8 @@
  */
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/Colored/EvaluationVisitor.h"
+
 #include "utils/errors.h"
 
 #include <chrono>
@@ -802,7 +804,7 @@ namespace PetriEngine {
         }
 
         const Colored::ExpressionContext &context {binding, _colors, _partition[arc.place]};
-        const auto &ms = arc.expr->eval(context);
+        const auto ms = Colored::EvaluationVisitor::evaluate(*arc.expr, context);
         int shadowWeight = 0;
 
         const Colored::Color *newColor;

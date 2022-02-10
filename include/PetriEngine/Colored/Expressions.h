@@ -43,35 +43,6 @@ namespace PetriEngine {
     class ColoredPetriNetBuilder;
 
     namespace Colored {
-        struct ExpressionContext {
-
-
-            const BindingMap& binding;
-            const ColorTypeMap& colorTypes;
-            const Colored::EquivalenceVec& placePartition;
-
-            const Color* findColor(const std::string& color) const {
-                for (auto& elem : colorTypes) {
-                    auto col = (*elem.second)[color];
-                    if (col)
-                        return col;
-                }
-                throw base_error("Could not find color: ", color.c_str(), "\nCANNOT_COMPUTE\n");
-            }
-
-            const ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
-                for (auto& elem : colorTypes) {
-                    auto* pt = dynamic_cast<const ProductType*>(elem.second);
-
-                    if (pt && pt->containsTypes(types)) {
-                        return pt;
-                    }
-                }
-                return nullptr;
-            }
-        };
-
-
 
         class WeightException : public std::exception {
         private:
@@ -84,29 +55,24 @@ namespace PetriEngine {
             }
         };
 
-        template<typename Base, typename T>
-        inline bool instanceof(const T*) {
-            return std::is_base_of<Base, T>::value;
-        }
-
         class Expression {
         public:
             Expression() {}
 
             virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const {}
 
-            virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) const {
+            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) const {
                 uint32_t index = 0;
                 getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
             }
 
-            virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions) const {
+            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions) const {
                 VariableModifierMap varModifierMap;
                 uint32_t index = 0;
                 getVariables(variables, varPositions, varModifierMap, false, index);
             }
 
-            virtual void getVariables(std::set<const Colored::Variable*>& variables) const {
+            void getVariables(std::set<const Colored::Variable*>& variables) const {
                 PositionVariableMap varPositions;
                 VariableModifierMap varModifierMap;
                 uint32_t index = 0;
@@ -127,8 +93,6 @@ namespace PetriEngine {
             ColorExpression() {}
             virtual ~ColorExpression() {}
 
-            virtual const Color* eval(const ExpressionContext& context) const = 0;
-
             virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
@@ -143,10 +107,6 @@ namespace PetriEngine {
 
         class DotConstantExpression : public ColorExpression {
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                return &(*ColorType::dotInstance()->begin());
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 if (arcIntervals._intervalTupleVec.empty()) {
                     //We can add all place tokens when considering the dot constant as, that must be present
@@ -186,10 +146,6 @@ namespace PetriEngine {
             const Variable* _variable;
 
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                return context.binding.find(_variable)->second;
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 variables.insert(_variable);
                 varPositions[index] = _variable;
@@ -264,18 +220,6 @@ namespace PetriEngine {
             const Color* _userOperator;
 
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                if(context.placePartition.getEquivalenceClasses().empty()){
-                    return _userOperator;
-                } else {
-                    std::vector<uint32_t> tupleIds;
-                    _userOperator->getTupleId(tupleIds);
-
-                    context.placePartition.applyPartition(tupleIds);
-                    return _userOperator->getColorType()->getColor(tupleIds);
-                }
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 uint32_t colorId = _userOperator->getId() + modifier;
                 while(colorId < 0){
@@ -345,10 +289,6 @@ namespace PetriEngine {
             ColorExpression_ptr _color;
 
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                return &++(*_color->eval(context));
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = index;
@@ -401,10 +341,6 @@ namespace PetriEngine {
             ColorExpression_ptr _color;
 
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                return &--(*_color->eval(context));
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = index;
@@ -458,19 +394,6 @@ namespace PetriEngine {
             const ColorType* _colorType = nullptr;
 
         public:
-            const Color* eval(const ExpressionContext& context) const override {
-                std::vector<const Color*> colors;
-                std::vector<const ColorType*> types;
-                for (const auto& color : _colors) {
-                    colors.push_back(color->eval(context));
-                    types.push_back(colors.back()->getColorType());
-                }
-                const ProductType* pt = context.findProductColorType(types);
-                assert(pt != nullptr);
-                const Color* col = pt->getColor(colors);
-                assert(col != nullptr);
-                return col;
-            }
 
             Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
                 Colored::interval_vector_t intervals;
@@ -573,8 +496,6 @@ namespace PetriEngine {
         public:
             virtual ~GuardExpression() {};
 
-            virtual bool eval(const ExpressionContext& context) const = 0;
-
             virtual void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const = 0;
 
             virtual void restrictVars(std::vector<VariableIntervalMap>& variableMap) const {
@@ -605,10 +526,6 @@ namespace PetriEngine {
         class LessThanExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) < _right->eval(context);
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -644,10 +561,6 @@ namespace PetriEngine {
         class LessThanEqExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) <= _right->eval(context);
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -685,10 +598,6 @@ namespace PetriEngine {
         public:
             using CompareExpression::CompareExpression;
 
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) == _right->eval(context);
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -725,10 +634,6 @@ namespace PetriEngine {
         class InequalityExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) != _right->eval(context);
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -784,10 +689,6 @@ namespace PetriEngine {
         public:
             using LogicalExpression::LogicalExpression;
 
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) && _right->eval(context);
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
                 _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -804,9 +705,6 @@ namespace PetriEngine {
         class OrExpression : public LogicalExpression {
         public:
             using LogicalExpression::LogicalExpression;
-            bool eval(const ExpressionContext& context) const override {
-                return _left->eval(context) || _right->eval(context);
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -828,8 +726,6 @@ namespace PetriEngine {
         public:
             ArcExpression() {}
             virtual ~ArcExpression() {}
-
-            virtual Multiset eval(const ExpressionContext& context) const = 0;
 
             virtual void getConstants(PositionColorsMap &constantMap, uint32_t &index) const = 0;
 
@@ -856,21 +752,6 @@ namespace PetriEngine {
 
         public:
             virtual ~AllExpression() {};
-            std::vector<std::pair<const Color*,uint32_t>> eval(const ExpressionContext& context) const {
-                std::vector<std::pair<const Color*,uint32_t>> colors;
-                assert(_sort != nullptr);
-                if(context.placePartition.isDiagonal() || context.placePartition.getEquivalenceClasses().empty()){
-                    for (size_t i = 0; i < _sort->size(); i++) {
-                        colors.push_back(std::make_pair(&(*_sort)[i], 1));
-                    }
-                } else {
-                    for (const auto& eq_class : context.placePartition.getEquivalenceClasses()){
-                        colors.push_back(std::make_pair(_sort->getColor(eq_class.intervals().getLowerIds()),eq_class.size()));
-                    }
-                }
-
-                return colors;
-            }
 
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const {
                 for (size_t i = 0; i < _sort->size(); i++) {
@@ -935,21 +816,7 @@ namespace PetriEngine {
             AllExpression_ptr _all;
 
         public:
-            Multiset eval(const ExpressionContext& context) const override {
-                std::vector<std::pair<const Color*,uint32_t>> col;
-                if (!_color.empty()) {
-                    for (const auto& elem : _color) {
-                        col.push_back(std::make_pair(elem->eval(context), _number));
-                    }
-                } else if (_all != nullptr) {
-                    col = _all->eval(context);
-                    for(auto& pair : col){
-                        pair.second = pair.second * _number;
-                    }
-                }
 
-                return Multiset(col);
-            }
             bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const override{
                 //Not entirely sure what to do if there is more than one colorExpression, but should probably return false
                 if(_color.size() > 1){
@@ -1061,14 +928,6 @@ namespace PetriEngine {
             std::vector<ArcExpression_ptr> _constituents;
 
         public:
-            Multiset eval(const ExpressionContext& context) const override {
-                Multiset ms;
-                for (const auto& expr : _constituents) {
-                    ms += expr->eval(context);
-                }
-                return ms;
-            }
-
             bool isEligibleForSymmetry(std::vector<uint32_t>& numbers) const override{
                 for(const auto& elem : _constituents){
                     if(!elem->isEligibleForSymmetry(numbers)){
@@ -1174,9 +1033,6 @@ namespace PetriEngine {
             ArcExpression_ptr _right;
 
         public:
-            Multiset eval(const ExpressionContext& context) const override {
-                return _left->eval(context) - _right->eval(context);
-            }
 
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
@@ -1239,10 +1095,6 @@ namespace PetriEngine {
             ArcExpression_ptr _expr;
 
         public:
-            Multiset eval(const ExpressionContext& context) const override {
-                return _expr->eval(context) * _scalar;
-            }
-
             void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
                 _expr->getVariables(variables, varPositions,varModifierMap, includeSubtracts);
             }
