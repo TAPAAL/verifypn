@@ -33,6 +33,7 @@
 namespace PetriEngine {
 
     namespace Colored {
+        class Expression;
         class DotConstantExpression;
         class VariableExpression;
         class UserOperatorExpression;

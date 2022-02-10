@@ -8,5 +8,6 @@ PartitionBuilder.cpp
 EquivalenceClass.cpp
 GuardRestrictor.cpp
 IntervalGenerator.cpp
-EquivalenceVec.cpp)
+EquivalenceVec.cpp
+CExprToString.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

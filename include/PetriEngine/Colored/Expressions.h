@@ -37,6 +37,7 @@
 #include "GuardRestrictor.h"
 #include "utils/errors.h"
 #include "ColorExpressionVisitor.h"
+#include "CExprToString.h"
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
@@ -123,9 +124,6 @@ namespace PetriEngine {
 
             virtual void visit(ColorExpressionVisitor& visitor) const = 0;
 
-            virtual std::string toString() const {
-                return "Unsupported";
-            }
         };
 
         class ColorExpression : public Expression {
@@ -180,10 +178,6 @@ namespace PetriEngine {
 
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return ColorType::dotInstance();
-            }
-
-            std::string toString() const override {
-                return "dot";
             }
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
@@ -255,12 +249,12 @@ namespace PetriEngine {
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
             }
 
-            std::string toString() const override {
-                return _variable->name;
-            }
-
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
                 return _variable->colorType;
+            }
+
+            const Variable* variable() const {
+                return _variable;
             }
 
             VariableExpression(const Variable* variable)
@@ -321,8 +315,8 @@ namespace PetriEngine {
                 }
             }
 
-            std::string toString() const override {
-                return _userOperator->toString();
+            const Color* user_operator() const {
+                return _userOperator;
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -396,8 +390,8 @@ namespace PetriEngine {
                 }
             }
 
-            std::string toString() const override {
-                return _color->toString() + "++";
+            const ColorExpression_ptr& child() const {
+                return _color;
             }
 
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
@@ -456,8 +450,8 @@ namespace PetriEngine {
                 }
             }
 
-            std::string toString() const override {
-                return _color->toString() + "--";
+            const ColorExpression_ptr& child() const {
+                return _color;
             }
 
             const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
@@ -557,8 +551,8 @@ namespace PetriEngine {
                         return pt;
                     }
                 }
-                std::cout << "COULD NOT FIND PRODUCT TYPE" << std::endl;
                 assert(false);
+                throw base_error("COULD NOT FIND PRODUCT TYPE");
                 return nullptr;
             }
 
@@ -569,18 +563,19 @@ namespace PetriEngine {
                 }
             }
 
-            std::string toString() const override {
-                std::string res = "(" + _colors[0]->toString();
-                for (uint32_t i = 1; i < _colors.size(); ++i) {
-                    res += "," + _colors[i]->toString();
-                }
-                res += ")";
-                return res;
+            auto begin() const {
+                return _colors.begin();
+            }
+
+            auto end() const {
+                return _colors.end();
             }
 
             void setColorType(const ColorType* ct){
                 _colorType = ct;
             }
+
+            void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
 
             TupleExpression(std::vector<ColorExpression_ptr>&& colors)
                     : _colors(std::move(colors)) {}
@@ -588,8 +583,7 @@ namespace PetriEngine {
 
         class GuardExpression : public Expression {
         public:
-            GuardExpression() {}
-            virtual ~GuardExpression() {}
+            virtual ~GuardExpression() {};
 
             virtual bool eval(const ExpressionContext& context) const = 0;
 
@@ -601,14 +595,29 @@ namespace PetriEngine {
             }
         };
 
-        typedef std::shared_ptr<GuardExpression> GuardExpression_ptr;
-
-        class LessThanExpression : public GuardExpression {
-        private:
+        class CompareExpression : public GuardExpression {
+        protected:
             ColorExpression_ptr _left;
             ColorExpression_ptr _right;
 
         public:
+            CompareExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
+            size_t size() const {
+                return 2;
+            }
+
+            const ColorExpression_ptr& operator[](size_t i) const {
+                return (i == 0) ? _left : _right;
+            }
+        };
+
+        typedef std::shared_ptr<GuardExpression> GuardExpression_ptr;
+
+        class LessThanExpression : public CompareExpression {
+        public:
+            using CompareExpression::CompareExpression;
+
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) < _right->eval(context);
             }
@@ -645,24 +654,13 @@ namespace PetriEngine {
                 guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, true);
             }
 
-            std::string toString() const override {
-                std::string res = _left->toString() + " < " + _right->toString();
-                return res;
-            }
-
-
-            LessThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
-        class LessThanEqExpression : public GuardExpression {
-        private:
-            ColorExpression_ptr _left;
-            ColorExpression_ptr _right;
-
+        class LessThanEqExpression : public CompareExpression {
         public:
+            using CompareExpression::CompareExpression;
+
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) <= _right->eval(context);
             }
@@ -700,24 +698,13 @@ namespace PetriEngine {
                 guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, false);
             }
 
-            std::string toString() const override {
-                std::string res = _left->toString() + " <= " + _right->toString();
-                return res;
-            }
-
-
-            LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
-        class EqualityExpression : public GuardExpression {
-        private:
-            ColorExpression_ptr _left;
-            ColorExpression_ptr _right;
-
+        class EqualityExpression : public CompareExpression {
         public:
+            using CompareExpression::CompareExpression;
+
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) == _right->eval(context);
             }
@@ -756,23 +743,13 @@ namespace PetriEngine {
                 guardRestrictor.restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
             }
 
-            std::string toString() const override {
-                std::string res = _left->toString() + " == " + _right->toString();
-                return res;
-            }
-
-            EqualityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
-        class InequalityExpression : public GuardExpression {
-        private:
-            ColorExpression_ptr _left;
-            ColorExpression_ptr _right;
-
+        class InequalityExpression : public CompareExpression {
         public:
+            using CompareExpression::CompareExpression;
+
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) != _right->eval(context);
             }
@@ -809,23 +786,32 @@ namespace PetriEngine {
                 guardRestrictor.restrictInEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
             }
 
-            std::string toString() const override {
-                std::string res = _left->toString() + " != " + _right->toString();
-                return res;
-            }
-
-            InequalityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
-        class AndExpression : public GuardExpression {
-        private:
+        class LogicalExpression : public GuardExpression {
+        protected:
             GuardExpression_ptr _left;
             GuardExpression_ptr _right;
 
         public:
+            LogicalExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
+            size_t size() const {
+                return 2;
+            }
+
+            const GuardExpression_ptr& operator[](size_t i) const {
+                return (i == 0) ? _left : _right;
+            }
+
+        };
+
+
+        class AndExpression : public LogicalExpression {
+        public:
+            using LogicalExpression::LogicalExpression;
+
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) && _right->eval(context);
             }
@@ -844,23 +830,12 @@ namespace PetriEngine {
                 _right->restrictVars(variableMap, diagonalVars);
             }
 
-            std::string toString() const override {
-                std::string res = _left->toString() + " && " + _right->toString();
-                return res;
-            }
-
-            AndExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
-                    : _left(left), _right(right) {}
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
-        class OrExpression : public GuardExpression {
-        private:
-            GuardExpression_ptr _left;
-            GuardExpression_ptr _right;
-
+        class OrExpression : public LogicalExpression {
         public:
+            using LogicalExpression::LogicalExpression;
             bool eval(const ExpressionContext& context) const override {
                 return _left->eval(context) || _right->eval(context);
             }
@@ -881,14 +856,6 @@ namespace PetriEngine {
 
                 variableMap.insert(variableMap.end(), varMapCopy.begin(), varMapCopy.end());
             }
-
-            std::string toString() const override {
-                std::string res = _left->toString() + " || " + _right->toString();
-                return res;
-            }
-
-            OrExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
-                    : _left(std::move(left)), _right(std::move(right)) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
@@ -987,8 +954,8 @@ namespace PetriEngine {
                 return  _sort->size();
             }
 
-            std::string toString() const override {
-                return _sort->getName() + ".all";
+            const ColorType* sort() const {
+                return _sort;
             }
 
             AllExpression(const ColorType* sort) : _sort(sort)
@@ -1108,15 +1075,24 @@ namespace PetriEngine {
                 return _number;
             }
 
-            std::string toString() const override {
-                if (isAll())
-                    return std::to_string(_number) + "'(" + _all->toString() + ")";
-                std::string res = std::to_string(_number) + "'(" + _color[0]->toString() + ")";
-                for (uint32_t i = 1; i < _color.size(); ++i) {
-                    res += " + ";
-                    res += std::to_string(_number) + "'(" + _color[i]->toString() + ")";
-                }
-                return res;
+            const ColorExpression_ptr& operator[](size_t i ) const {
+                return _color[i];
+            }
+
+            size_t size() const {
+                return _color.size();
+            }
+
+            auto begin() const {
+                return _color.begin();
+            }
+
+            auto end() const {
+                return _color.end();
+            }
+
+            const AllExpression_ptr& all() const {
+                return _all;
             }
 
             NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint32_t number = 1)
@@ -1228,12 +1204,20 @@ namespace PetriEngine {
                 return res;
             }
 
-            std::string toString() const override {
-                std::string res = _constituents[0]->toString();
-                for (uint32_t i = 1; i < _constituents.size(); ++i) {
-                    res += " + " + _constituents[i]->toString();
-                }
-                return res;
+            size_t size() const {
+                return _constituents.size();
+            }
+
+            const ArcExpression_ptr& operator[](size_t i) const {
+                return _constituents[i];
+            }
+
+            auto begin() const {
+                return _constituents.begin();
+            }
+
+            auto end() const {
+                return _constituents.end();
             }
 
             AddExpression(std::vector<ArcExpression_ptr>&& constituents)
@@ -1295,9 +1279,15 @@ namespace PetriEngine {
                 return _left->weight() - val;
             }
 
-            std::string toString() const override {
-                return _left->toString() + " - " + _right->toString();
+            size_t size() const {
+                return 2;
             }
+
+            const ArcExpression_ptr& operator[](size_t i ) const {
+                if(i == 0) return _left;
+                else return _right;
+            }
+
 
             SubtractExpression(ArcExpression_ptr&& left, ArcExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
@@ -1339,8 +1329,12 @@ namespace PetriEngine {
                 return _scalar * _expr->weight();
             }
 
-            std::string toString() const override {
-                return std::to_string(_scalar) + " * " + _expr->toString();
+            auto scalar() const {
+                return _scalar;
+            }
+
+            const ArcExpression_ptr& child() const {
+                return _expr;
             }
 
             ScalarProductExpression(ArcExpression_ptr&& expr, uint32_t scalar)

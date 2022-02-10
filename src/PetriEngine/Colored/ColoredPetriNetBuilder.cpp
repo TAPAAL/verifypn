@@ -616,7 +616,8 @@ namespace PetriEngine {
                     bool mirroredArcs = false;
                     for(auto& arc : _transitions[transitionId].output_arcs){
                         if(arc.place == placeId){
-                            if(arc.expr->toString() == inArc->expr->toString()){
+
+                            if(to_string(*arc.expr) == to_string(*inArc->expr)){
                                 mirroredArcs = true;
                             }
                             break;
@@ -881,7 +882,7 @@ namespace PetriEngine {
                     } catch (Colored::WeightException& e) {
                         std::stringstream ss;
                         ss << "Exception on input arc: " << arcToString(arc) << std::endl;
-                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << "In expression: " << *arc.expr << std::endl;
                         ss << e.what() << std::endl;
                         throw base_error(ss.str());
                     }
@@ -893,7 +894,7 @@ namespace PetriEngine {
                     } catch (Colored::WeightException& e) {
                         std::stringstream ss;
                         ss << "Exception on output arc: " << arcToString(arc) << std::endl;
-                        ss << "In expression: " << arc.expr->toString() << std::endl;
+                        ss << "In expression: " << *arc.expr << std::endl;
                         ss << e.what() << std::endl;
                         throw base_error(ss.str());
                     }
