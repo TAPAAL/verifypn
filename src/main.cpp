@@ -172,7 +172,7 @@ int main(int argc, const char** argv) {
             }
 
             if (options.unfold_query_out_file.size() > 0) {
-                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
+                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file, options.keep_solved);
             }
 
 
@@ -201,7 +201,7 @@ int main(int argc, const char** argv) {
 
 
             if (options.query_out_file.size() > 0) {
-                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
+                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
             }
 
             if (!options.statespaceexploration) {
@@ -230,7 +230,7 @@ int main(int argc, const char** argv) {
                             Structures::StateSet tmp(*qnet, 0);
                             // we are tricking the printer into printing the trace here.
                             // TODO fix, remove setInvariant
-                            // also we make a new FALSE object here to avoid sideeffects. 
+                            // also we make a new FALSE object here to avoid sideeffects.
                             queries[i] = std::make_shared<BooleanCondition>(false);
                             queries[i]->setInvariant(true);
                             results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied, nullptr,
