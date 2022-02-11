@@ -55,7 +55,7 @@ namespace LTL {
     BuchiSuccessorGenerator
     makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
 
-    class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
+    class FormulaToSpotSyntax : public PetriEngine::PQL::Visitor {
     protected:
         void _accept(const PetriEngine::PQL::ACondition *condition) override;
 
@@ -95,10 +95,34 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
 
+        void _accept(const PetriEngine::PQL::EFCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::EGCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AGCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::AFCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::EXCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AXCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::EUCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AUCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::GCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::FCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::XCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
+
     public:
 
-        explicit FormulaToSpotSyntax(std::ostream &os = std::cout, APCompression compress_aps = APCompression::Choose)
-                : PetriEngine::PQL::QueryPrinter(os), compress(compress_aps) {}
+        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose)
+                : compress(compress_aps) {}
 
 
         auto begin() const
@@ -115,18 +139,17 @@ namespace LTL {
         {
             return ap_info;
         }
-
+        spot::formula& formula() { return _formula; }
     private:
         APInfo ap_info;
         bool is_quoted = false;
         APCompression compress;
-
-        void make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
+        spot::formula _formula;
+        spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
         {
             auto cond =
                     const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
             std::stringstream ss;
-            ss << "\"";
             bool choice = compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
             if (compress == APCompression::Full || choice) {
                 // FIXME Very naive; this completely removes APs being in multiple places in the query,
@@ -138,9 +161,8 @@ namespace LTL {
                 PetriEngine::PQL::QueryPrinter _printer{ss};
                 Visitor::visit(_printer, cond);
             }
-            ss << "\"";
-            os << ss.str();
-            ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
+            ap_info.push_back(AtomicProposition{cond, ss.str()});
+            return spot::formula::ap(ap_info.back().text);
         }
     };
 

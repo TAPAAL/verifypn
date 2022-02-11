@@ -47,6 +47,8 @@
 #include "VerifyPN.h"
 #include "PetriEngine/PQL/Analyze.h"
 
+#include <mutex>
+
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
@@ -324,10 +326,13 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     }
 
     cond = initialMarkingRW([&]() {
+        auto r = pushNegation(cond, stats, evalContext, false, false, true);
+        {
 #ifdef VERIFYPN_MC_Simplification
-        std::scoped_lock scopedLock{spot_mutex};
+            std::scoped_lock scopedLock{spot_mutex};
 #endif
-        return LTL::simplify(pushNegation(cond, stats, evalContext, false, false, true), options);
+            return LTL::simplify(r, options);
+        }
     }, stats, evalContext, false, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
@@ -399,18 +404,20 @@ void simplify_queries(  const MarkVal* marking,
             qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
         std::atomic<uint32_t> cnt(0);
 #ifdef VERIFYPN_MC_Simplification
-
         std::vector<std::thread> threads;
+        std::mutex out_lock;
 #endif
-        std::vector<std::stringstream> tstream(queries.size());
         uint32_t old = to_handle;
         for (size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c) {
 #ifdef VERIFYPN_MC_Simplification
             threads.push_back(std::thread([&, c]() {
+            std::stringstream out;
 #else
             auto simplify = [&, c]() {
+
+                auto& out = outstream;
 #endif
-                auto& out = tstream[c];
+
                 auto& cache = caches[c];
                 while (true) {
                     auto i = cnt++;
@@ -430,15 +437,21 @@ void simplify_queries(  const MarkVal* marking,
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
-                    int preSize = formulaSize(queries[i]);
+                    auto preSize = formulaSize(queries[i]);
 
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
                     if (options.logic == TemporalLogic::LTL) {
-                        if (options.queryReductionTimeout == 0) continue;
+                        if (options.queryReductionTimeout == 0 || qt == 0) continue;
                         SimplificationContext simplificationContext(marking, net, qt,
                             options.lpsolveTimeout, &cache);
                         queries[i] = simplify_ltl_query(queries[i], options,
                             context, simplificationContext, out);
+#ifdef VERIFYPN_MC_Simplification
+                        out_lock.lock();
+                        outstream << out.str();
+                        out.clear();
+                        out_lock.unlock();
+#endif
                         continue;
                     }
                     queries[i] = pushNegation(initialMarkingRW([&]() {
@@ -497,10 +510,16 @@ void simplify_queries(  const MarkVal* marking,
 
 
                     if (options.printstatistics) {
-                        int postSize = formulaSize(queries[i]);
+                        auto postSize = formulaSize(queries[i]);
                         double redPerc = preSize - postSize == 0 ? 0 : ((double) (preSize - postSize) / (double) preSize)*100;
                         out << "Query size reduced from " << preSize << " to " << postSize << " nodes ( " << redPerc << " percent reduction).\n";
                     }
+#ifdef VERIFYPN_MC_Simplification
+                    out_lock.lock();
+                    outstream << out.str();
+                    out.clear();
+                    out_lock.unlock();
+#endif
                 }
             }
 #ifdef VERIFYPN_MC_Simplification
@@ -511,13 +530,10 @@ void simplify_queries(  const MarkVal* marking,
 #endif
         }
 #ifndef VERIFYPN_MC_Simplification
-        std::cout << tstream[0].str() << std::endl;
         break;
 #else
         for (size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i) {
             threads[i].join();
-            outstream << tstream[i].str();
-            outstream << std::endl;
         }
 #endif
         end = std::chrono::high_resolution_clock::now();
