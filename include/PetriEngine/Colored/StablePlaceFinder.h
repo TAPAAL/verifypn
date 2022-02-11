@@ -36,8 +36,8 @@ namespace PetriEngine {
 
         class StablePlaceFinder {
         private:
-            std::vector<bool> _stable;
             const ColoredPetriNetBuilder& _builder;
+            std::vector<bool> _stable;
         public:
 
             StablePlaceFinder(const ColoredPetriNetBuilder& b) : _builder(b) {
