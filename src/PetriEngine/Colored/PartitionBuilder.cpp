@@ -1,4 +1,5 @@
 #include "PetriEngine/Colored/PartitionBuilder.h"
+#include "PetriEngine/Colored/OutputIntervalVisitor.h"
 #include <numeric>
 #include <chrono>
 
@@ -96,11 +97,11 @@ namespace PetriEngine {
 
         void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
             const PetriEngine::Colored::Transition &transition = _transitions[transitionId];
-            Arc postArc;
+            const Arc* postArc;
             bool arcFound = false;
             for(const auto& outArc : transition.output_arcs){
                 if(outArc.place == postPlaceId){
-                    postArc = outArc;
+                    postArc = &outArc;
                     arcFound = true;
                     break;
                 }
@@ -110,7 +111,7 @@ namespace PetriEngine {
                 return;
             }
 
-            handleTransition(transition, postPlaceId, &postArc);
+            handleTransition(transition, postPlaceId, postArc);
         }
 
         //Check if a variable appears more than once on the output arc
@@ -241,7 +242,7 @@ namespace PetriEngine {
         void PartitionBuilder::applyNewIntervals(const Arc &inArc, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps){
             //Retrieve the intervals for the current place,
             //based on the intervals from the postPlace, the postArc, preArc and guard
-            auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
+            auto outIntervals = OutputIntervalVisitor::intervals(*inArc.expr, varMaps);
             EquivalenceVec newEqVec;
             for(auto& intervalTuple : outIntervals){
                 intervalTuple.simplify();

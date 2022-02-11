@@ -488,7 +488,7 @@ namespace PetriEngine{
             intervals = std::move(invertedIntervalvec);
         }
 
-        interval_vector_t GuardRestrictor::shiftIntervals(const VariableIntervalMap& varMap, const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::interval_vector_t &intervals, int32_t modifier, uint32_t ctSizeBefore) const {
+        interval_vector_t GuardRestrictor::shiftIntervals(const std::vector<const Colored::ColorType *> &colortypes, PetriEngine::Colored::interval_vector_t &intervals, int32_t modifier, uint32_t ctSizeBefore) {
             Colored::interval_vector_t newIntervals;
             for(uint32_t i = 0;  i < intervals.size(); i++) {
                 Colored::interval_t newInterval;

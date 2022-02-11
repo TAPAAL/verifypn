@@ -94,10 +94,6 @@ namespace PetriEngine {
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
 
-            virtual Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const {
-                return Colored::interval_vector_t();
-            }
-
             virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const = 0;
         };
 
@@ -109,18 +105,6 @@ namespace PetriEngine {
                     arcIntervals._intervalTupleVec.push_back(cfp.constraints);
                 }
                 return !cfp.constraints.empty();
-            }
-
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                Colored::interval_t interval;
-                Colored::interval_vector_t tupleInterval;
-                const Color *dotColor = &(*ColorType::dotInstance()->begin());
-
-                colortypes.emplace_back(dotColor->getColorType());
-
-                interval.addRange(dotColor->getId(), dotColor->getId());
-                tupleInterval.addInterval(interval);
-                return tupleInterval;
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -163,28 +147,6 @@ namespace PetriEngine {
                 } else {
                     varModifierMap[_variable].back()[index] = 0;
                 }
-            }
-
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                Colored::interval_vector_t varInterval;
-
-                // If we see a new variable on an out arc, it gets its full interval
-                if (varMap.count(_variable) == 0){
-                    varInterval.addInterval(_variable->colorType->getFullInterval());
-                } else {
-                    for(const auto& interval : varMap.find(_variable)->second){
-                        varInterval.addInterval(interval);
-                    }
-                }
-
-                std::vector<const ColorType*> varColorTypes;
-                _variable->colorType->getColortypes(varColorTypes);
-
-                for(auto &ct : varColorTypes){
-                    colortypes.push_back(std::move(ct));
-                }
-
-                return varInterval;
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
@@ -262,17 +224,6 @@ namespace PetriEngine {
                 constantMap[index] = _userOperator;
             }
 
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                Colored::interval_t interval;
-                Colored::interval_vector_t tupleInterval;
-
-                colortypes.emplace_back(_userOperator->getColorType());
-
-                interval.addRange(_userOperator->getId(), _userOperator->getId());
-                tupleInterval.addInterval(interval);
-                return tupleInterval;
-            }
-
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
 
@@ -303,15 +254,6 @@ namespace PetriEngine {
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                return _color->getArcIntervals(arcIntervals, cfp, index, modifier+1);
-            }
-
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                //store the number of colortyps already in colortypes vector and use that as offset when indexing it
-                auto colortypesBefore = colortypes.size();
-
-                auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::GuardRestrictor guardRestrictor = Colored::GuardRestrictor();
-                return guardRestrictor.shiftIntervals(varMap, colortypes, nestedInterval, 1, colortypesBefore);
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -357,15 +299,6 @@ namespace PetriEngine {
                 return _color->getArcIntervals(arcIntervals, cfp, index, modifier-1);
             }
 
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                //store the number of colortyps already in colortypes vector and use that as offset when indexing it
-                auto colortypesBefore = colortypes.size();
-
-                auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::GuardRestrictor guardRestrictor;
-                return guardRestrictor.shiftIntervals(varMap, colortypes, nestedInterval, -1, colortypesBefore);
-            }
-
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 _color->getConstants(constantMap, index);
                 for(auto& constIndexPair : constantMap){
@@ -393,34 +326,6 @@ namespace PetriEngine {
             const ColorType* _colorType = nullptr;
 
         public:
-
-            Colored::interval_vector_t getOutputIntervals(const VariableIntervalMap& varMap, std::vector<const Colored::ColorType *> &colortypes) const override {
-                Colored::interval_vector_t intervals;
-
-                for(const auto& colorExp : _colors) {
-                    Colored::interval_vector_t intervalHolder;
-                    auto nested_intervals = colorExp->getOutputIntervals(varMap, colortypes);
-
-                    if(intervals.empty()){
-                        intervals = nested_intervals;
-                    } else {
-                        for(const auto& nested_interval : nested_intervals){
-                            Colored::interval_vector_t newIntervals;
-                            for(auto interval : intervals){
-                                for(const auto& nestedRange : nested_interval._ranges) {
-                                    interval.addRange(nestedRange);
-                                }
-                                newIntervals.addInterval(interval);
-                            }
-                            for(const auto& newInterval : newIntervals){
-                                intervalHolder.addInterval(newInterval);
-                            }
-                        }
-                        intervals = intervalHolder;
-                    }
-                }
-                return intervals;
-            }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 for (const auto& expr : _colors) {
@@ -729,16 +634,6 @@ namespace PetriEngine {
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
             virtual uint32_t weight() const = 0;
-
-            virtual std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec) const {
-                std::vector<const Colored::ColorType *> colortypes;
-
-                return getOutputIntervals(varMapVec, colortypes);
-            }
-
-            virtual std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const{
-                return std::vector<Colored::interval_vector_t>(0);
-            }
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
@@ -754,12 +649,6 @@ namespace PetriEngine {
                 for (size_t i = 0; i < _sort->size(); i++) {
                     constantMap[index].push_back(&(*_sort)[i]);
                 }
-            }
-
-            Colored::interval_vector_t getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const {
-                Colored::interval_vector_t newIntervalTuple;
-                newIntervalTuple.addInterval(_sort->getFullInterval());
-                return newIntervalTuple;
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const {
@@ -833,20 +722,6 @@ namespace PetriEngine {
                     }
                 }
                 return true;
-            }
-
-            std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
-                std::vector<Colored::interval_vector_t> intervalsVec;
-                if (_all == nullptr) {
-                    for (const auto& elem : _color) {
-                        for(const auto& varMap : varMapVec){
-                            intervalsVec.push_back(elem->getOutputIntervals(varMap, colortypes));
-                        }
-                    }
-                } else {
-                    intervalsVec.push_back(_all->getOutputIntervals(varMapVec, colortypes));
-                }
-                return intervalsVec;
             }
 
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
@@ -946,17 +821,6 @@ namespace PetriEngine {
                 return true;
             }
 
-            std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
-                std::vector<Colored::interval_vector_t> intervalsVec;
-
-                for (const auto& elem : _constituents) {
-                    auto nestedIntervals = elem->getOutputIntervals(varMapVec, colortypes);
-
-                    intervalsVec.insert(intervalsVec.end(), nestedIntervals.begin(), nestedIntervals.end());
-                }
-                return intervalsVec;
-            }
-
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
                 uint32_t indexCopy = index;
                 for (const auto& elem : _constituents) {
@@ -1016,11 +880,6 @@ namespace PetriEngine {
                 //_right->getArcIntervals(arcIntervals, cfp, &rightIndex);
             }
 
-            std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
-                //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
-                return _left->getOutputIntervals(varMapVec, colortypes);
-            }
-
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
                 uint32_t rIndex = index;
                 _left->getConstants(constantMap, index);
@@ -1069,10 +928,6 @@ namespace PetriEngine {
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                return _expr ->getArcIntervals(arcIntervals, cfp, index, modifier);
-            }
-
-            std::vector<Colored::interval_vector_t> getOutputIntervals(const std::vector<VariableIntervalMap>& varMapVec, std::vector<const Colored::ColorType *> &colortypes) const override {
-                return _expr->getOutputIntervals(varMapVec, colortypes);
             }
 
             void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {

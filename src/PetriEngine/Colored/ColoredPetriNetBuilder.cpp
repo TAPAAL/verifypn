@@ -20,6 +20,7 @@
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
 #include "PetriEngine/Colored/SymmetryVisitor.h"
+#include "PetriEngine/Colored/OutputIntervalVisitor.h"
 
 #include "utils/errors.h"
 
@@ -562,7 +563,7 @@ namespace PetriEngine {
                 }
             }
 
-            auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
+            auto intervals = Colored::OutputIntervalVisitor::intervals(*arc.expr, transition.variableMaps);
 
 
             for(auto& intervalTuple : intervals){
