@@ -10,5 +10,6 @@ GuardRestrictor.cpp
 IntervalGenerator.cpp
 EquivalenceVec.cpp
 CExprToString.cpp
-EvaluationVisitor.cpp)
+EvaluationVisitor.cpp
+StablePlaceFinder.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

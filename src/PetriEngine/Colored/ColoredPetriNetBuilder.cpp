@@ -31,12 +31,12 @@
 #include <tuple>
 using std::get;
 namespace PetriEngine {
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder() : _stable(*this) {
     }
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig)
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
-       _places(orig._places), _transitions(orig._transitions)
+       _places(orig._places), _transitions(orig._transitions), _stable(*this, orig._stable)
     {
     }
 
@@ -593,48 +593,7 @@ namespace PetriEngine {
     //Find places for which the marking cannot change as all input arcs are matched
     //by an output arc with an equivalent arc expression and vice versa
     void ColoredPetriNetBuilder::findStablePlaces(){
-        for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
-            if( !_places[placeId]._post.empty() &&
-                _places[placeId]._post.size() == _places[placeId]._pre.size()){
 
-                for(auto transitionId : _places[placeId]._post){
-                    bool matched = false;
-                    for(auto transitionId2 : _places[placeId]._pre){
-                        if(transitionId == transitionId2){
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if(!matched){
-                        _places[placeId].stable = false;
-                        break;
-                    }
-                    const Colored::Arc *inArc;
-                    for(const auto &arc : _transitions[transitionId].input_arcs){
-                        if(arc.place == placeId){
-                            inArc = &arc;
-                            break;
-                        }
-                    }
-                    bool mirroredArcs = false;
-                    for(auto& arc : _transitions[transitionId].output_arcs){
-                        if(arc.place == placeId){
-
-                            if(to_string(*arc.expr) == to_string(*inArc->expr)){
-                                mirroredArcs = true;
-                            }
-                            break;
-                        }
-                    }
-                    if(!mirroredArcs){
-                        _places[placeId].stable = false;
-                        break;
-                    }
-                }
-            } else {
-                _places[placeId].stable = false;
-            }
-        }
     }
 
     //----------------------- Unfolding -----------------------//
@@ -645,7 +604,7 @@ namespace PetriEngine {
             auto start = std::chrono::high_resolution_clock::now();
 
             if(_fixpointDone){
-                findStablePlaces();
+                _stable.compute();
             }
 
             if(!_fixpointDone && _partitionComputed){
@@ -800,7 +759,7 @@ namespace PetriEngine {
         //This exploits the fact that since the transition is being unfolded with this binding
         //we know that this place contains the tokens to activate the transition for this binding
         //because color fixpoint allowed the binding
-        if(_fixpointDone && place.stable){
+        if(_fixpointDone && _stable[arc.place]){
             return;
         }
 

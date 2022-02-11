@@ -30,6 +30,7 @@
 #include "IntervalGenerator.h"
 #include "PartitionBuilder.h"
 #include "ArcIntervals.h"
+#include "StablePlaceFinder.h"
 
 namespace PetriEngine {
 
@@ -145,6 +146,14 @@ namespace PetriEngine {
         void computeSymmetricVariables();
         void printSymmetricVariables() const;
 
+        const std::vector<Colored::Place>& places() const {
+            return _places;
+        }
+
+        const std::vector<Colored::Transition>& transitions() const {
+            return _transitions;
+        }
+
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
@@ -178,6 +187,8 @@ namespace PetriEngine {
 
         double _partitionTimer = 0;
 
+        Colored::StablePlaceFinder _stable;
+
         std::string arcToString(const Colored::Arc& arc) const ;
 
         void printPlaceTable() const;
@@ -193,8 +204,6 @@ namespace PetriEngine {
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input, bool inhibitor, int weight);
-
-        void findStablePlaces();
 
         void getArcIntervals(const Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);

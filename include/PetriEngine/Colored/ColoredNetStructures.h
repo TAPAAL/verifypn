@@ -55,7 +55,6 @@ namespace PetriEngine {
             Multiset marking;
             double _x = 0, _y = 0;
             bool inhibitor;
-            bool stable = true;
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
         };

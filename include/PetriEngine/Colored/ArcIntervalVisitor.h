@@ -226,8 +226,6 @@ namespace PetriEngine {
                 return v._ok;
             }
         };
-
-
     }
 }
 
