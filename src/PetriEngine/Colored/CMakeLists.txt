@@ -11,5 +11,6 @@ IntervalGenerator.cpp
 EquivalenceVec.cpp
 CExprToString.cpp
 EvaluationVisitor.cpp
-StablePlaceFinder.cpp)
+StablePlaceFinder.cpp
+ForwardFixedPoint.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

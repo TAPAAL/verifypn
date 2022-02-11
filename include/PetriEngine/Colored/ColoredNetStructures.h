@@ -45,8 +45,6 @@ namespace PetriEngine {
             double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            std::vector<std::unordered_map<const Variable *, interval_vector_t>> variableMaps;
-            bool considered;
         };
 
         struct Place {
