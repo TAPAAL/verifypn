@@ -373,7 +373,7 @@ namespace PetriEngine {
             _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
             //printPlaceTable();
-            _placeColorFixpoints.clear();
+            //_placeColorFixpoints.clear();
         }
     }
 
@@ -616,7 +616,9 @@ namespace PetriEngine {
                     bool mirroredArcs = false;
                     for(auto& arc : _transitions[transitionId].output_arcs){
                         if(arc.place == placeId){
+                            std::cerr <<  arc.expr->toString() << " == " << inArc->expr->toString() << std::endl;
                             if(arc.expr->toString() == inArc->expr->toString()){
+                                std::cerr << "MIRROR" << std::endl;
                                 mirroredArcs = true;
                             }
                             break;

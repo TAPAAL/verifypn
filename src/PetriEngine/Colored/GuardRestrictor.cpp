@@ -317,10 +317,11 @@ namespace PetriEngine{
 
             for(const auto &varPositionPair : varPositionsL){
                 uint32_t index = varPositionPair.first;
-                if(varPositionsR.count(index)){
+                if(varPositionsR.count(index) > 0){
                     restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR,
                                     constantMapL, constantMapR, diagonalVars, varPositionPair.second, index, lessthan, strict);
                 } else {
+                    assert(constantMapR.count(index));
                     restrictByConstant(variableMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR,
                                     varPositionPair.second, varPositionPair.second, index, lessthan, strict);
                 }
@@ -329,9 +330,10 @@ namespace PetriEngine{
             for(const auto &varPositionPair : varPositionsR){
                 uint32_t index = varPositionPair.first;
 
-                if(constantMapL.count(index)){
+                if(constantMapL.count(index) > 0){
+                    assert(varPositionsL.count(index) == 0);
                     restrictByConstant(variableMap,varModifierMapL, varModifierMapR, varPositionsL, constantMapL,
-                                    varPositionPair.second, varPositionsR.find(index)->second,index, lessthan, strict);
+                                    varPositionPair.second, varPositionsR.find(index)->second,index, !lessthan, strict);
                 }
             }
         }
