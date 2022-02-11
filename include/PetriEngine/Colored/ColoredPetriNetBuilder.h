@@ -32,6 +32,7 @@
 #include "ArcIntervals.h"
 #include "StablePlaceFinder.h"
 #include "ForwardFixedPoint.h"
+#include "VariableSymmetry.h"
 
 namespace PetriEngine {
 
@@ -147,8 +148,8 @@ namespace PetriEngine {
             _fixed_point.compute(max_intervals, max_intervals_reduced, timeout);
         }
         void computePartition(int32_t timeout);
-        void computeSymmetricVariables();
-        void printSymmetricVariables() const;
+        void computeSymmetricVariables() { _symmetries.compute(); }
+        void printSymmetricVariables() const { _symmetries.printSymmetricVariables(); }
 
         const std::vector<Colored::Place>& places() const {
             return _places;
@@ -182,8 +183,6 @@ namespace PetriEngine {
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _inhibitorArcs;
-        //transition id to vector of vectors of variables, where variable in vector are symmetric
-        std::vector<std::vector<std::set<const Colored::Variable *>>> symmetric_var_map;
 
         std::vector<std::string> _sumPlacesNames;
         Colored::ColorTypeMap _colors;
@@ -200,16 +199,9 @@ namespace PetriEngine {
 
         Colored::StablePlaceFinder _stable;
         Colored::ForwardFixedPoint _fixed_point;
+        Colored::VariableSymmetry _symmetries;
 
         std::string arcToString(const Colored::Arc& arc) const ;
-
-        void printPlaceTable() const;
-
-        void checkSymmetricVarsInArcs(const Colored::Transition &transition, const Colored::Arc &inArc, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible ) const;
-        void checkSymmetricVarsOutArcs(const Colored::Transition &transition, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
-        void removeInvalidVarmaps(Colored::Transition& transition) const;
-        void addTransitionVars(Colored::Transition& transition) const;
-
 
         void addArc(const std::string& place,
                 const std::string& transition,

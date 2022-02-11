@@ -12,5 +12,6 @@ EquivalenceVec.cpp
 CExprToString.cpp
 EvaluationVisitor.cpp
 StablePlaceFinder.cpp
-ForwardFixedPoint.cpp)
+ForwardFixedPoint.cpp
+VariableSymmetry)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)
