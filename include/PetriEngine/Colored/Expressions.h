@@ -58,28 +58,6 @@ namespace PetriEngine {
         class Expression {
         public:
             Expression() {}
-
-            virtual void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const {}
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) const {
-                uint32_t index = 0;
-                getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-            }
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions) const {
-                VariableModifierMap varModifierMap;
-                uint32_t index = 0;
-                getVariables(variables, varPositions, varModifierMap, false, index);
-            }
-
-            void getVariables(std::set<const Colored::Variable*>& variables) const {
-                PositionVariableMap varPositions;
-                VariableModifierMap varModifierMap;
-                uint32_t index = 0;
-
-                getVariables(variables, varPositions, varModifierMap, false, index);
-            }
-
             virtual void visit(ColorExpressionVisitor& visitor) const = 0;
 
         };
@@ -89,7 +67,6 @@ namespace PetriEngine {
             ColorExpression() {}
             virtual ~ColorExpression() {}
 
-            virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
@@ -107,12 +84,6 @@ namespace PetriEngine {
                 return !cfp.constraints.empty();
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                const Color *dotColor = &(*ColorType::dotInstance()->begin());
-                constantMap[index] = dotColor;
-            }
-
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
 
             virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
@@ -127,27 +98,6 @@ namespace PetriEngine {
             const Variable* _variable;
 
         public:
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                variables.insert(_variable);
-                varPositions[index] = _variable;
-                if(varModifierMap.count(_variable) == 0){
-                    std::vector<std::unordered_map<uint32_t, int32_t>> newVec;
-
-                    for(auto pair : varModifierMap){
-                        for(uint32_t i = 0; i < pair.second.size()-1; i++){
-                            std::unordered_map<uint32_t, int32_t> emptyMap;
-                            newVec.push_back(emptyMap);
-                        }
-                        break;
-                    }
-                    std::unordered_map<uint32_t, int32_t> newMap;
-                    newMap[index] = 0;
-                    newVec.push_back(newMap);
-                    varModifierMap[_variable] = newVec;
-                } else {
-                    varModifierMap[_variable].back()[index] = 0;
-                }
-            }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 if (arcIntervals._intervalTupleVec.empty()){
@@ -155,9 +105,6 @@ namespace PetriEngine {
                     arcIntervals._intervalTupleVec.push_back(cfp.constraints);
                 }
                 return !cfp.constraints.empty();
-            }
-
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
             }
 
 
@@ -220,10 +167,6 @@ namespace PetriEngine {
                 return _userOperator;
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                constantMap[index] = _userOperator;
-            }
-
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
 
@@ -239,28 +182,9 @@ namespace PetriEngine {
             ColorExpression_ptr _color;
 
         public:
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                //save index before evaluating nested expression to decrease all the correct modifiers
-                uint32_t indexBefore = index;
-                _color->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-                for(auto& varModifierPair : varModifierMap){
-                    for(auto& idModPair : varModifierPair.second.back()){
-                        if(idModPair.first <= index && idModPair.first >= indexBefore){
-                            idModPair.second--;
-                        }
-                    }
-                }
-            }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                return _color->getArcIntervals(arcIntervals, cfp, index, modifier+1);
-            }
-
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                _color->getConstants(constantMap, index);
-                for(auto& constIndexPair : constantMap){
-                    constIndexPair.second = &constIndexPair.second->operator++();
-                }
             }
 
             const ColorExpression_ptr& child() const {
@@ -282,28 +206,8 @@ namespace PetriEngine {
             ColorExpression_ptr _color;
 
         public:
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                //save index before evaluating nested expression to decrease all the correct modifiers
-                uint32_t indexBefore = index;
-                _color->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-                for(auto& varModifierPair : varModifierMap){
-                    for(auto& idModPair : varModifierPair.second.back()){
-                        if(idModPair.first <= index && idModPair.first >= indexBefore){
-                            idModPair.second++;
-                        }
-                    }
-                }
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 return _color->getArcIntervals(arcIntervals, cfp, index, modifier-1);
-            }
-
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                _color->getConstants(constantMap, index);
-                for(auto& constIndexPair : constantMap){
-                    constIndexPair.second = &constIndexPair.second->operator--();
-                }
             }
 
             const ColorExpression_ptr& child() const {
@@ -336,20 +240,6 @@ namespace PetriEngine {
                     ++index;
                 }
                 return true;
-            }
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                for (const auto& elem : _colors) {
-                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-                    ++index;
-                }
-            }
-
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                for (const auto& elem : _colors) {
-                    elem->getConstants(constantMap, index);
-                    index++;
-                }
             }
 
             size_t size() const {
@@ -397,13 +287,6 @@ namespace PetriEngine {
         class GuardExpression : public Expression {
         public:
             virtual ~GuardExpression() {};
-
-            virtual void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const = 0;
-
-            virtual void restrictVars(std::vector<VariableIntervalMap>& variableMap) const {
-                std::set<const Colored::Variable*> diagonalVars;
-                restrictVars(variableMap, diagonalVars);
-            }
         };
 
         class CompareExpression : public GuardExpression {
@@ -428,142 +311,24 @@ namespace PetriEngine {
         class LessThanExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Variable *> leftVars;
-                std::set<const Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, true);
-            }
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class LessThanEqExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Colored::Variable *> leftVars;
-                std::set<const Colored::Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictVars(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars, true, false);
-            }
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class EqualityExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Colored::Variable *> leftVars;
-                std::set<const Colored::Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
-            }
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class InequalityExpression : public CompareExpression {
         public:
             using CompareExpression::CompareExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                VariableModifierMap varModifierMapL;
-                VariableModifierMap varModifierMapR;
-                PositionVariableMap varPositionsL;
-                PositionVariableMap varPositionsR;
-                std::unordered_map<uint32_t, const Color*> constantMapL;
-                std::unordered_map<uint32_t, const Color*> constantMapR;
-                std::set<const Colored::Variable *> leftVars;
-                std::set<const Colored::Variable *> rightVars;
-                uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL, varModifierMapL, false);
-                _right->getVariables(rightVars, varPositionsR, varModifierMapR, false);
-                _left->getConstants(constantMapL, index);
-                index = 0;
-                _right->getConstants(constantMapR, index);
-
-                if(leftVars.empty() && rightVars.empty()){
-                    return;
-                }
-                Colored::GuardRestrictor guardRestrictor;
-                guardRestrictor.restrictInEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
-            }
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
@@ -590,37 +355,12 @@ namespace PetriEngine {
         class AndExpression : public LogicalExpression {
         public:
             using LogicalExpression::LogicalExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
-                _left->restrictVars(variableMap, diagonalVars);
-                _right->restrictVars(variableMap, diagonalVars);
-            }
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
         class OrExpression : public LogicalExpression {
         public:
             using LogicalExpression::LogicalExpression;
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-            }
-
-            void restrictVars(std::vector<VariableIntervalMap>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override{
-                auto varMapCopy = variableMap;
-                _left->restrictVars(variableMap, diagonalVars);
-                _right->restrictVars(varMapCopy, diagonalVars);
-
-                variableMap.insert(variableMap.end(), varMapCopy.begin(), varMapCopy.end());
-            }
-
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };
 
@@ -628,8 +368,6 @@ namespace PetriEngine {
         public:
             ArcExpression() {}
             virtual ~ArcExpression() {}
-
-            virtual void getConstants(PositionColorsMap &constantMap, uint32_t &index) const = 0;
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const = 0;
 
@@ -644,12 +382,6 @@ namespace PetriEngine {
 
         public:
             virtual ~AllExpression() {};
-
-            void getConstants(PositionColorsMap &constantMap, uint32_t &index) const {
-                for (size_t i = 0; i < _sort->size(); i++) {
-                    constantMap[index].push_back(&(*_sort)[i]);
-                }
-            }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const {
 
@@ -703,15 +435,6 @@ namespace PetriEngine {
 
         public:
 
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                if (_all != nullptr)
-                    return;
-                for (const auto& elem : _color) {
-                    //TODO: can there be more than one element in a number of expression?
-                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
-                }
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 if (_all != nullptr) {
                     return _all->getArcIntervals(arcIntervals, cfp, index, modifier);
@@ -724,17 +447,6 @@ namespace PetriEngine {
                 return true;
             }
 
-            void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
-                if (_all != nullptr)
-                    _all->getConstants(constantMap, index);
-                else for (const auto& elem : _color) {
-                    std::unordered_map<uint32_t, const Color*> elemMap;
-                    elem->getConstants(elemMap, index);
-                    for(const auto& pair : elemMap){
-                        constantMap[pair.first].push_back(pair.second);
-                    }
-                }
-            }
 
             uint32_t weight() const override {
                 if (_all == nullptr)
@@ -791,17 +503,6 @@ namespace PetriEngine {
 
         public:
 
-
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                for (const auto& elem : _constituents) {
-                    for(auto& pair : varModifierMap){
-                        std::unordered_map<uint32_t, int32_t> newMap;
-                        pair.second.push_back(newMap);
-                    }
-                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                }
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 for (const auto& elem : _constituents) {
                     uint32_t newIndex = 0;
@@ -819,14 +520,6 @@ namespace PetriEngine {
                     arcIntervals._intervalTupleVec.insert(arcIntervals._intervalTupleVec.end(), newArcIntervals._intervalTupleVec.begin(), newArcIntervals._intervalTupleVec.end());
                 }
                 return true;
-            }
-
-            void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
-                uint32_t indexCopy = index;
-                for (const auto& elem : _constituents) {
-                    uint32_t localIndex = indexCopy;
-                    elem->getConstants(constantMap, localIndex);
-                }
             }
 
             uint32_t weight() const override {
@@ -866,24 +559,10 @@ namespace PetriEngine {
 
         public:
 
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _left->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                //We ignore the restrictions imposed by the subtraction for now
-                if(includeSubtracts){
-                    _right->getVariables(variables, varPositions, varModifierMap, includeSubtracts);
-                }
-            }
-
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                 return _left->getArcIntervals(arcIntervals, cfp, index, modifier);
                 //We ignore the restrictions imposed by the subtraction for now
                 //_right->getArcIntervals(arcIntervals, cfp, &rightIndex);
-            }
-
-            void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
-                uint32_t rIndex = index;
-                _left->getConstants(constantMap, index);
-                _right->getConstants(constantMap, rIndex);
             }
 
             uint32_t weight() const override {
@@ -922,16 +601,9 @@ namespace PetriEngine {
             ArcExpression_ptr _expr;
 
         public:
-            void getVariables(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts, uint32_t& index) const override {
-                _expr->getVariables(variables, varPositions,varModifierMap, includeSubtracts);
-            }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals,const PetriEngine::Colored::ColorFixpoint& cfp, uint32_t& index, int32_t modifier) const override {
                return _expr ->getArcIntervals(arcIntervals, cfp, index, modifier);
-            }
-
-            void getConstants(PositionColorsMap &constantMap, uint32_t &index) const override {
-                _expr->getConstants(constantMap, index);
             }
 
             uint32_t weight() const override {

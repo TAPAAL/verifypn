@@ -23,7 +23,7 @@ namespace PetriEngine{
 
         GuardRestrictor::GuardRestrictor(){}
 
-        int32_t GuardRestrictor::getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) const{
+        int32_t GuardRestrictor::getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) {
             int32_t modifier;
             for(auto idModPair : modPairMap){
                 if(idModPair.first == index){
@@ -34,7 +34,7 @@ namespace PetriEngine{
             return modifier;
         }
 
-        interval_t GuardRestrictor::getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) const{
+        interval_t GuardRestrictor::getIntervalFromIds(const std::vector<uint32_t> &idVec, uint32_t ctSize, int32_t modifier) {
             interval_t interval;
             for(auto id : idVec){
                 int32_t val = ctSize + (id + modifier);
@@ -44,7 +44,7 @@ namespace PetriEngine{
             return interval;
         }
 
-        interval_vector_t GuardRestrictor::getIntervalOverlap(const interval_vector_t &intervals1, const interval_vector_t &intervals2) const{
+        interval_vector_t GuardRestrictor::getIntervalOverlap(const interval_vector_t &intervals1, const interval_vector_t &intervals2) {
             interval_vector_t newIntervalTuple;
             for(const auto &mainInterval : intervals1){
                 for(const auto &otherInterval : intervals2){
@@ -64,7 +64,7 @@ namespace PetriEngine{
                         const PositionVariableMap &varPositions,
                         const std::unordered_map<uint32_t, const Color*> &constantMap,
                         const Variable *otherVar,
-                        std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index) const{
+                        std::vector<uint32_t> &idVec, size_t targetSize, uint32_t index) {
             while(idVec.size() < targetSize){
                 if(varPositions.count(index)){
                     const auto &rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
@@ -95,7 +95,7 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *otherVar,
-                            Colored::interval_vector_t &intervalVec, size_t targetSize, uint32_t index) const {
+                            Colored::interval_vector_t &intervalVec, size_t targetSize, uint32_t index) {
             while(intervalVec.size() < targetSize){
                 if(varPositions.count(index)){
                     auto rightTupleInterval = varMap.find(varPositions.find(index)->second)->second;
@@ -127,7 +127,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *var,
                             const Colored::Variable *otherVar,
-                            uint32_t index, bool lessthan, bool strict) const{
+                            uint32_t index, bool lessthan, bool strict) {
             for(auto& varMap : variableMap){
                 auto leftColor = constantMap.find(index)->second;
                 auto &rightTupleInterval = varMap.find(var)->second;
@@ -150,7 +150,7 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositions,
                             const std::unordered_map<uint32_t, const Color*> &constantMap,
                             const Colored::Variable *var,
-                            uint32_t index) const{
+                            uint32_t index) {
             for(auto& varMap : variableMap){
                 auto color = constantMap.find(index)->second;
                 auto &tupleInterval = varMap.find(var)->second;
@@ -178,7 +178,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
                             const Colored::Variable *var,
-                            uint32_t index, bool lessthan, bool strict) const{
+                            uint32_t index, bool lessthan, bool strict) {
 
             diagonalVars.insert(var);
             diagonalVars.insert(varPositionsR.find(index)->second);
@@ -249,7 +249,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
                             const Colored::Variable *var,
-                            uint32_t index) const{
+                            uint32_t index) {
             diagonalVars.insert(var);
             diagonalVars.insert(varPositionsR.find(index)->second);
 
@@ -313,7 +313,7 @@ namespace PetriEngine{
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
                             std::set<const Colored::Variable*> &diagonalVars,
-                            bool lessthan, bool strict) const{
+                            bool lessthan, bool strict) {
 
             for(const auto &varPositionPair : varPositionsL){
                 uint32_t index = varPositionPair.first;
@@ -345,7 +345,7 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositionsR,
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
-                            std::set<const Colored::Variable*> &diagonalVars) const {
+                            std::set<const Colored::Variable*> &diagonalVars) {
             for(const auto& varPositionPair : varPositionsL){
                 uint32_t index = varPositionPair.first;
                 if(varPositionsR.count(index)){
@@ -374,7 +374,7 @@ namespace PetriEngine{
                             const PositionVariableMap &varPositionsR,
                             const std::unordered_map<uint32_t, const Color*> &constantMapL,
                             const std::unordered_map<uint32_t, const Color*> &constantMapR,
-                            std::set<const Colored::Variable*> &diagonalVars) const {
+                            std::set<const Colored::Variable*> &diagonalVars) {
             auto variableMapCopy = variableMap;
             restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, diagonalVars);
 
@@ -397,7 +397,7 @@ namespace PetriEngine{
 
         void GuardRestrictor::handleInequalityConstants(const std::vector<VariableIntervalMap> &variableMapCopy,
                                         std::vector<VariableIntervalMap> &variableMap,
-                                        const Variable *var, uint32_t varMapIndex) const{
+                                        const Variable *var, uint32_t varMapIndex) {
             const uint32_t colorsBefore = variableMapCopy[varMapIndex].find(var)->second.getContainedColors();
             const uint32_t colorsAfter = variableMap[varMapIndex][var].getContainedColors();
             if(colorsBefore != 0 && colorsAfter == 0){
@@ -416,7 +416,7 @@ namespace PetriEngine{
 
         void GuardRestrictor::handleInequalityVars(const std::vector<VariableIntervalMap> &variableMapCopy,
                                         std::vector<VariableIntervalMap> &variableMap,
-                                        const Variable *var1, const Variable *var2, uint32_t varMapIndex) const{
+                                        const Variable *var1, const Variable *var2, uint32_t varMapIndex) {
             const uint32_t rightColorsBefore = variableMapCopy[varMapIndex].find(var2)->second.getContainedColors();
             const uint32_t rightColorsAfter = variableMap[varMapIndex][var2].getContainedColors();
             const uint32_t leftColorsBefore = variableMapCopy[varMapIndex].find(var1)->second.getContainedColors();
@@ -457,7 +457,7 @@ namespace PetriEngine{
 
         //Retrieve the intervals remaining when the intervals created from restricting by equvalence
         //are removed from the original intervals
-        void GuardRestrictor::invertIntervals(interval_vector_t &intervals, const interval_vector_t &oldIntervals, const ColorType *colorType) const{
+        void GuardRestrictor::invertIntervals(interval_vector_t &intervals, const interval_vector_t &oldIntervals, const ColorType *colorType) {
             const std::vector<bool> diagonalPositions(colorType->size(), false);
             interval_vector_t invertedIntervalvec;
 

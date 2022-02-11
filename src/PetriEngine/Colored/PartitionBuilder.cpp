@@ -1,5 +1,6 @@
 #include "PetriEngine/Colored/PartitionBuilder.h"
 #include "PetriEngine/Colored/OutputIntervalVisitor.h"
+#include "PetriEngine/Colored/RestrictVisitor.h"
 #include <numeric>
 #include <chrono>
 
@@ -265,12 +266,12 @@ namespace PetriEngine {
             std::set<const PetriEngine::Colored::Variable *> guardVars;
             std::set<const Colored::Variable*> diagonalVars;
 
-            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
+            Colored::VariableVisitor::get_variables(*postArc->expr, postArcVars, varPositionMap, varModifierMap, true);
 
             checkVarOnArc(varModifierMap, diagonalVars, postPlaceId, false);
 
             if(transition.guard != nullptr){
-                transition.guard->getVariables(guardVars);
+                Colored::VariableVisitor::get_variables(*transition.guard, guardVars);
             }
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
             const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId].getEquivalenceClasses();
@@ -289,7 +290,7 @@ namespace PetriEngine {
                     }
                 }
                 if(transition.guard != nullptr){
-                    transition.guard->restrictVars(varMaps, diagonalVars);
+                    Colored::RestrictVisitor::restrict(*transition.guard, varMaps, diagonalVars);
                 }
 
                 handleInArcs(transition, diagonalVars, varPositionMap, varMaps, postPlaceId);
@@ -310,7 +311,7 @@ namespace PetriEngine {
                 VariableModifierMap preVarModifierMap;
                 PositionVariableMap preVarPositionMap;
                 std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
+                Colored::VariableVisitor::get_variables(*inArc.expr, preArcVars, preVarPositionMap, preVarModifierMap, true);
                 checkVarOnInputArcs(placeVariableMap, preVarPositionMap, diagonalVars, inArc.place);
                 placeVariableMap[inArc.place] = preVarPositionMap;
                 if(checkDiagonal(inArc.place)) continue;

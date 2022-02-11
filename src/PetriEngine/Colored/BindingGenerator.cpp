@@ -19,6 +19,7 @@
 
 #include "PetriEngine/Colored/BindingGenerator.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
+#include "PetriEngine/Colored/VariableVisitor.h"
 
 namespace PetriEngine {
 
@@ -52,15 +53,15 @@ namespace PetriEngine {
         _expr = transition.guard;
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
-            _expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*_expr, variables);
         }
         for (const auto& arc : transition.input_arcs) {
             assert(arc.expr != nullptr);
-            arc.expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
         }
         for (const auto& arc : transition.output_arcs) {
             assert(arc.expr != nullptr);
-            arc.expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
         }
         for (const auto& var : variables) {
             _bindings[var] = &var->colorType->operator[](0);
@@ -156,15 +157,15 @@ namespace PetriEngine {
 
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
-            _expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*_expr, variables);
         }
         for (const auto &arc : _transition.input_arcs) {
             assert(arc.expr != nullptr);
-            arc.expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
         }
         for (const auto &arc : _transition.output_arcs) {
             assert(arc.expr != nullptr);
-            arc.expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
         }
 
         for(const auto &varSet : symmetric_vars){

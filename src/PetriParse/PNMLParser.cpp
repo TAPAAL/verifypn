@@ -29,6 +29,7 @@
 #include "PetriParse/PNMLParser.h"
 #include "utils/errors.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
+#include "PetriEngine/Colored/ConstantVisitor.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -324,9 +325,7 @@ void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector
 	} else if (strcmp(element->name(), "all") == 0) {
 		std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
 		auto expr = parseAllExpression(element);
-		std::unordered_map<uint32_t, std::vector<const PetriEngine::Colored::Color *>> constantMap;
-		uint32_t index = 0;
-		expr->getConstants(constantMap, index);
+		auto constantMap = Colored::ConstantVisitor::get_constants(*expr);
 		for(const auto& positionColors : constantMap){
 			for(const auto& color : positionColors.second){
 				expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(color));

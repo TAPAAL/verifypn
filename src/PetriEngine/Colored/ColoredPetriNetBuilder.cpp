@@ -21,8 +21,10 @@
 #include "PetriEngine/Colored/EvaluationVisitor.h"
 #include "PetriEngine/Colored/SymmetryVisitor.h"
 #include "PetriEngine/Colored/OutputIntervalVisitor.h"
+#include "PetriEngine/Colored/VariableVisitor.h"
 
 #include "utils/errors.h"
+#include "PetriEngine/Colored/RestrictVisitor.h"
 
 #include <chrono>
 #include <tuple>
@@ -202,7 +204,7 @@ namespace PetriEngine {
                     auto [isEligible, numbers] = Colored::SymmetryVisitor::eligible_for_symmetry(*inArc.expr);
 
                     if(isEligible && numbers.size() > 1){
-                        inArc.expr->getVariables(inArcVars);
+                        Colored::VariableVisitor::get_variables(*inArc.expr, inArcVars);
                         //It cannot be symmetric with anything if there is only one variable
                         if(inArcVars.size() < 2){
                             continue;
@@ -230,7 +232,7 @@ namespace PetriEngine {
                 continue;
             }
             std::set<const Colored::Variable*> otherArcVars;
-            otherInArc.expr->getVariables(otherArcVars);
+            Colored::VariableVisitor::get_variables(*otherInArc.expr, otherArcVars);
             for(auto* var : inArcVars){
                 if(otherArcVars.find(var) != otherArcVars.end()){
                     isEligible = false;
@@ -246,7 +248,7 @@ namespace PetriEngine {
         for(auto& outputArc : transition.output_arcs){
             bool foundArc = true;
             std::set<const Colored::Variable*> otherArcVars;
-            outputArc.expr->getVariables(otherArcVars);
+            Colored::VariableVisitor::get_variables(*outputArc.expr, otherArcVars);
             for(auto* var : inArcVars){
                 if(otherArcVars.find(var) == otherArcVars.end()){
                     foundArc = false;
@@ -387,7 +389,7 @@ namespace PetriEngine {
             std::set<const Colored::Variable *> variables;
             Colored::PositionVariableMap varPositions;
             Colored::VariableModifierMap varModifiersMap;
-            arc.expr->getVariables(variables, varPositions, varModifiersMap, false);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, false);
 
             Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varModifiersMap);
             res[arc.place] = newArcInterval;
@@ -417,11 +419,10 @@ namespace PetriEngine {
             }
 
             intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId]);
-            for(const auto &outArc : transition.output_arcs){
-                outArc.expr->getVariables(variables);
-            }
+            for(const auto &outArc : transition.output_arcs)
+                Colored::VariableVisitor::get_variables(*outArc.expr, variables);
             if(transition.guard != nullptr){
-                transition.guard->getVariables(variables);
+                Colored::VariableVisitor::get_variables(*transition.guard, variables);
             }
             for(auto* var : variables){
                 for(auto& varmap : transition.variableMaps){
@@ -460,7 +461,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addTransitionVars(Colored::Transition& transition) const{
         std::set<const Colored::Variable *> variables;
-        transition.guard->getVariables(variables);
+        Colored::VariableVisitor::get_variables(*transition.guard, variables);
         for(auto* var : variables){
             for(auto& varmap : transition.variableMaps){
                 if(varmap.count(var) == 0){
@@ -501,7 +502,7 @@ namespace PetriEngine {
         if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){
             if(transition.guard != nullptr) {
                 addTransitionVars(transition);
-                transition.guard->restrictVars(transition.variableMaps);
+                Colored::RestrictVisitor::restrict(*transition.guard, transition.variableMaps);
                 removeInvalidVarmaps(transition);
 
                 if(transition.variableMaps.empty()){
@@ -526,7 +527,7 @@ namespace PetriEngine {
             uint32_t colorsBefore = placeFixpoint.constraints.getContainedColors();
 
             std::set<const Colored::Variable *> variables;
-            arc.expr->getVariables(variables);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
 
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
