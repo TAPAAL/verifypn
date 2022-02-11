@@ -178,9 +178,10 @@ void printHelp() {
         "  --max-intervals <interval count>     The max amount of intervals kept when computing the color fixpoint\n"
         "                  <interval count>     Default is 250 and then after <interval-timeout> second(s) to 5\n"
         "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
+        "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
+        "  --keep-solved                        Keeps queries reduced to TRUE and FALSE in the output (--write-simplified, --write-unfolded-queries)\n"
         "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
         "  --write-unfolded-net <filename>      Outputs the model to the given file before structural reduction but after unfolding\n"
-        "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
         "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
         "                                       - 0 MCC XML format for Input and Output\n"
         "                                       - 1 Input is binary, output is XML\n"
@@ -427,6 +428,10 @@ bool options_t::parse(int argc, const char** argv) {
             }
         }
 #endif
+        else if (std::strcmp(argv[i], "--keep-solved") == 0)
+        {
+            keep_solved = true;
+        }
         else if (std::strcmp(argv[i], "-noreach") == 0 || std::strcmp(argv[i], "--noreach") == 0) {
             noreach = true;
         } else if (std::strcmp(argv[i], "-ctl") == 0 || std::strcmp(argv[i], "--ctl-algorithm") == 0) {
