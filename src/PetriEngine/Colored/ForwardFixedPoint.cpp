@@ -86,7 +86,10 @@ namespace PetriEngine {
                 add_place(p);
             _transition_variable_maps.clear();
             _transition_variable_maps.resize(transitions.size());
-
+            _arcIntervals.clear();
+            _arcIntervals.resize(transitions.size());
+            for (size_t t = 0; t < transitions.size(); ++t)
+                _arcIntervals[t] = setupTransitionVars(t);
         }
 
         void ForwardFixedPoint::set_default() {
@@ -94,11 +97,9 @@ namespace PetriEngine {
             auto& transitions = _builder.transitions();
             auto& places = _builder.places();
             init();
-            _arcIntervals.resize(transitions.size());
             for (uint32_t transitionId = 0; transitionId < transitions.size(); transitionId++) {
                 const Colored::Transition &transition = transitions[transitionId];
                 std::set<const Colored::Variable *> variables;
-                _arcIntervals[transitionId] = setupTransitionVars(transitionId);
 
                 for (const auto &inArc : transition.input_arcs) {
                     Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][inArc.place];
@@ -140,9 +141,6 @@ namespace PetriEngine {
                     _placeFixpointQueue.emplace_back(i);
                 _considered.resize(transitions.size());
                 std::fill(_considered.begin(), _considered.end(), false);
-                _arcIntervals.resize(transitions.size());
-                for (size_t t = 0; t < transitions.size(); ++t)
-                    _arcIntervals[t] = setupTransitionVars(t);
 
                 //Start timers for timing color fixpoint creation and max interval reduction steps
                 auto start = std::chrono::high_resolution_clock::now();
@@ -214,7 +212,7 @@ namespace PetriEngine {
                 PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
                 curCFP.constraints.restrict(max_intervals);
                 _max_intervals = std::max(_max_intervals, curCFP.constraints.size());
-
+                assert(_arcIntervals.size() >= transitionId);
                 Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
                 arcInterval._intervalTupleVec.clear();
 
