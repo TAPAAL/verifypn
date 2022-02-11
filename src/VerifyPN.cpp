@@ -205,14 +205,14 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
 }
 
 void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool compact) {
+    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool keep_solved, bool compact) {
     std::fstream out;
 
     if (binary) {
         out.open(filename, std::ios::binary | std::ios::out);
         uint32_t cnt = 0;
         for (uint32_t j = 0; j < queries.size(); j++) {
-            if (queries[j]->isTriviallyTrue() || queries[j]->isTriviallyFalse()) continue;
+            if ((queries[j]->isTriviallyTrue() || queries[j]->isTriviallyFalse()) && !keep_solved) continue;
             ++cnt;
         }
         out.write(reinterpret_cast<const char *> (&cnt), sizeof (uint32_t));
@@ -230,7 +230,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::ve
 
     for (uint32_t j = 0; j < queries.size(); j++) {
         auto i = order[j];
-        if (queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
+        if ((queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) && !keep_solved) continue;
         if (binary) {
             out.write(querynames[i].data(), querynames[i].size());
             out.write("\0", sizeof (char));
@@ -362,7 +362,7 @@ void outputNet(const PetriNetBuilder &builder, std::string out_file) {
 }
 
 void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-    std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io) {
+    std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io, bool keep_solved) {
     std::vector<uint32_t> reorder(queries.size());
     for (uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
     std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b) {
@@ -375,16 +375,16 @@ void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine
             return containsNext(queries[a]) < containsNext(queries[b]);
         return formulaSize(queries[a]) < formulaSize(queries[b]);
     });
-    writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames());
+    writeQueries(queries, querynames, reorder, filename, binary_query_io & 2, builder.getPlaceNames(), keep_solved);
 }
 
 void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-    std::vector<std::string> &querynames, std::string filename) {
+    std::vector<std::string> &querynames, std::string filename, bool keep_solved) {
     //Don't know if this is needed
     std::vector<uint32_t> reorder(queries.size());
     for (uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
 
-    writeQueries(queries, querynames, reorder, filename, false, builder.getPlaceNames(), true);
+    writeQueries(queries, querynames, reorder, filename, false, builder.getPlaceNames(), keep_solved, true);
 }
 
 void simplify_queries(  const MarkVal* marking,

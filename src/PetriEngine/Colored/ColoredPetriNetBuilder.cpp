@@ -671,13 +671,14 @@ namespace PetriEngine {
             _ptplacenames[place.name][0] = std::move(name);
         } else {
             uint32_t usedTokens = 0;
-
+            bool any = false;
             for(const auto &unfoldedPlace : _ptplacenames[place.name]){
+                any = true;
                 auto unfoldedMarking = _ptBuilder.initMarking();
                 usedTokens += unfoldedMarking[unfoldedPlaceMap.find(unfoldedPlace.second)->second];
             }
 
-            if(place.marking.size() > usedTokens){
+            if(place.marking.size() > usedTokens || !any){
                 const std::string &name = place.name + "_orphan";
                 _ptBuilder.addPlace(name, place.marking.size() - usedTokens, place._x, place._y);
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);

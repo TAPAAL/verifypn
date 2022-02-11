@@ -110,7 +110,7 @@ std::vector<Condition_ptr > readQueries(options_t& options, std::vector<std::str
 void printStats(PetriNetBuilder& builder, options_t& options);
 void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options);
 void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool compact = false);
+    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool keep_solved, bool compact = false);
 std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlStarQueries);
 std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlStarQueries);
 Condition_ptr simplify_ltl_query(Condition_ptr query,
@@ -121,10 +121,10 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 
 void outputNet(const PetriNetBuilder &builder, std::string out_file);
 void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-        std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io);
+        std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io, bool keep_solved);
 
 void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-    std::vector<std::string> &querynames, std::string filename);
+    std::vector<std::string> &querynames, std::string filenamem, bool keep_solved);
 
 void simplify_queries(const MarkVal* marking,
                       const PetriNet* net,

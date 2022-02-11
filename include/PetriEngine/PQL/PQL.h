@@ -108,10 +108,8 @@ namespace PetriEngine {
         public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
-            /** Expression type */
+
             virtual type_id_t type() const = 0;
-            /** Construct left/right side of equations used in query simplification */
-            virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
 
             [[nodiscard]] virtual bool placeFree() const = 0;
 
