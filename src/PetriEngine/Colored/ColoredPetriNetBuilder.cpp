@@ -25,6 +25,7 @@
 
 #include "utils/errors.h"
 #include "PetriEngine/Colored/RestrictVisitor.h"
+#include "PetriEngine/Colored/ArcIntervalVisitor.h"
 
 #include <chrono>
 #include <tuple>
@@ -406,14 +407,13 @@ namespace PetriEngine {
 
             for(const auto &inArc : transition.input_arcs){
                 Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][inArc.place];
-                uint32_t index = 0;
                 arcInterval._intervalTupleVec.clear();
 
                 Colored::interval_vector_t intervalTuple;
                 intervalTuple.addInterval(_places[inArc.place].type->getFullInterval());
                 const PetriEngine::Colored::ColorFixpoint &cfp {intervalTuple};
 
-                inArc.expr->getArcIntervals(arcInterval, cfp, index, 0);
+                Colored::ArcIntervalVisitor::intervals(*inArc.expr, arcInterval, cfp);
 
                 _partition[inArc.place].applyPartition(arcInterval);
             }
@@ -444,10 +444,9 @@ namespace PetriEngine {
             _maxIntervals = std::max(_maxIntervals, (uint32_t) curCFP.constraints.size());
 
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
-            uint32_t index = 0;
             arcInterval._intervalTupleVec.clear();
 
-            if(!arc.expr->getArcIntervals(arcInterval, curCFP, index, 0)){
+            if(!Colored::ArcIntervalVisitor::intervals(*arc.expr, arcInterval, curCFP)){
                 transitionActivated = false;
                 return;
             }
@@ -883,7 +882,7 @@ namespace PetriEngine {
                     try {
                         _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
                                                 arc.expr->weight());
-                    } catch (Colored::WeightException& e) {
+                    } catch (base_error& e) {
                         std::stringstream ss;
                         ss << "Exception on input arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << *arc.expr << std::endl;
@@ -895,7 +894,7 @@ namespace PetriEngine {
                     try {
                         _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
                                                 arc.expr->weight());
-                    } catch (Colored::WeightException& e) {
+                    } catch (base_error& e) {
                         std::stringstream ss;
                         ss << "Exception on output arc: " << arcToString(arc) << std::endl;
                         ss << "In expression: " << *arc.expr << std::endl;

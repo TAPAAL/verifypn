@@ -1,6 +1,7 @@
 #include "PetriEngine/Colored/PartitionBuilder.h"
 #include "PetriEngine/Colored/OutputIntervalVisitor.h"
 #include "PetriEngine/Colored/RestrictVisitor.h"
+#include "PetriEngine/Colored/ArcIntervalVisitor.h"
 #include <numeric>
 #include <chrono>
 
@@ -408,9 +409,8 @@ namespace PetriEngine {
             ColorFixpoint postPlaceFixpoint;
             postPlaceFixpoint.constraints = eqClass.intervals();
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
-            uint32_t index = 0;
 
-            arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, index, 0);
+            ArcIntervalVisitor::intervals(*arc->expr, newArcInterval, postPlaceFixpoint);
             placeArcIntervals[placeId] = std::move(newArcInterval);
             _interval_generator.getVarIntervals(varMaps, placeArcIntervals);
 
