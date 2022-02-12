@@ -48,7 +48,7 @@ namespace PetriEngine {
     }
 
     NaiveBindingGenerator::NaiveBindingGenerator(const Colored::Transition& transition,
-            Colored::ColorTypeMap& colorTypes)
+            const Colored::ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
         _expr = transition.guard;

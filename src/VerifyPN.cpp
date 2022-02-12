@@ -53,9 +53,62 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
+
+std::tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
+unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
+    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx) {
+    Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
+
+    if (compute_partiton && cpnBuilder.isColored() && !over_approx) {
+        partition.compute(partitionTimeout);
+    }
+
+    Colored::VariableSymmetry symmetry(cpnBuilder, partition);
+    if (compute_symmetry && cpnBuilder.isColored() && !over_approx) {
+        symmetry.compute();
+    }
+
+    Colored::ForwardFixedPoint fixed_point(cpnBuilder, partition);
+    if (computed_fixed_point && cpnBuilder.isColored() && !over_approx) {
+        fixed_point.compute(max_intervals, intervals_reduced, interval_timeout);
+    }
+
+    Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point);
+    if(over_approx || !cpnBuilder.isColored())
+    {
+        auto r = unfolder.unfold();
+        return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
+            (std::move(r),unfolder.transition_names(),unfolder.place_names());
+    }
+    else
+    {
+        auto r = unfolder.unfold();
+        if (computed_fixed_point) {
+            out << "\nColor fixpoint computed in " << fixed_point.time() << " seconds" << std::endl;
+            out << "Max intervals used: " << fixed_point.max_intervals() << std::endl;
+        }
+
+        out << "Size of colored net: " <<
+            cpnBuilder.getPlaceCount() << " places, " <<
+            cpnBuilder.getTransitionCount() << " transitions, and " <<
+            cpnBuilder.getArcCount() << " arcs" << std::endl;
+        out << "Size of unfolded net: " <<
+            r.numberOfPlaces() << " places, " <<
+            r.numberOfTransitions() << " transitions, and " <<
+            unfolder.number_of_arcs() << " arcs" << std::endl;
+        out << "Unfolded in " << unfolder.time() << " seconds" << std::endl;
+        if (compute_partiton) {
+            out << "Partitioned in " << partition.time() << " seconds" << std::endl;
+        }
+        return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
+            (std::move(r),unfolder.transition_names(),unfolder.place_names());
+    }
+}
+
+ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
     //Context analysis
-    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
+    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
+        place_names, transition_names, cpnBuilder.isColored());
     for (auto& q : queries) {
         PetriEngine::PQL::analyze(q, context);
 
@@ -179,30 +232,6 @@ void printStats(PetriNetBuilder& builder, options_t& options) {
     }
 }
 
-void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
-    //if (options.printstatistics) {
-    if (!builder.isColored() && !builder.isUnfolded())
-        return;
-    if (options.computeCFP) {
-        std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
-        std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
-    }
-
-    std::cout << "Size of colored net: " <<
-        builder.getPlaceCount() << " places, " <<
-        builder.getTransitionCount() << " transitions, and " <<
-        builder.getArcCount() << " arcs" << std::endl;
-    std::cout << "Size of unfolded net: " <<
-        builder.getUnfoldedPlaceCount() << " places, " <<
-        builder.getUnfoldedTransitionCount() << " transitions, and " <<
-        builder.getUnfoldedArcCount() << " arcs" << std::endl;
-    std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
-    if (options.computePartition) {
-        std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
-    }
-
-    //}
-}
 
 void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
     std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool keep_solved, bool compact) {

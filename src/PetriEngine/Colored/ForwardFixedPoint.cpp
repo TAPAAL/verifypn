@@ -111,7 +111,7 @@ namespace PetriEngine {
 
                     Colored::ArcIntervalVisitor::intervals(*inArc.expr, arcInterval, cfp);
 
-                    _builder.partition()[inArc.place].applyPartition(arcInterval);
+                    _partition.partition()[inArc.place].applyPartition(arcInterval);
                 }
 
                 IntervalGenerator::getVarIntervals(_transition_variable_maps[transitionId], _arcIntervals[transitionId]);
@@ -221,8 +221,8 @@ namespace PetriEngine {
                     return;
                 }
 
-                if (_builder.partition_computed()) {
-                    _builder.partition()[arc.place].applyPartition(arcInterval);
+                if (_partition.computed()) {
+                    _partition.partition()[arc.place].applyPartition(arcInterval);
                 }
             }
 
@@ -281,12 +281,12 @@ namespace PetriEngine {
 
                 //Apply partitioning to unbound outgoing variables such that
                 // bindings are only created for colors used in the rest of the net
-                if (_builder.partition_computed() && !_builder.partition()[arc.place].isDiagonal()) {
+                if (_partition.computed() && !_partition.partition()[arc.place].isDiagonal()) {
                     for (auto* outVar : variables) {
                         for (auto& varMap : _transition_variable_maps[transition_id]) {
                             if (varMap.count(outVar) == 0) {
                                 Colored::interval_vector_t varIntervalTuple;
-                                for (const auto& EqClass : _builder.partition()[arc.place].getEquivalenceClasses()) {
+                                for (const auto& EqClass : _partition.partition()[arc.place].getEquivalenceClasses()) {
                                     varIntervalTuple.addInterval(EqClass.intervals().back().getSingleColorInterval());
                                 }
                                 varMap[outVar] = std::move(varIntervalTuple);

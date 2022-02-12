@@ -30,6 +30,7 @@
 
 #include "ColoredNetStructures.h"
 #include "Colors.h"
+#include "PartitionBuilder.h"
 
 #include <vector>
 #include <unordered_map>
@@ -54,6 +55,7 @@ namespace PetriEngine {
             std::vector<std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
             std::vector<uint32_t> _placeFixpointQueue;
             std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
+            PartitionBuilder& _partition;
             std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(size_t tid) const;
             void processInputArcs(const Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
             void processOutputArcs(const Colored::Transition& transition, size_t transition_id);
@@ -64,18 +66,9 @@ namespace PetriEngine {
             void init();
         public:
 
-            ForwardFixedPoint(ColoredPetriNetBuilder& b) : _builder(b) {
+            ForwardFixedPoint(ColoredPetriNetBuilder& b, PartitionBuilder& partition) : _builder(b), _partition(partition) {
             }
 
-            ForwardFixedPoint(ColoredPetriNetBuilder& b, const ForwardFixedPoint& other)
-            :
-            _builder(b),
-            _fixpointDone(other._fixpointDone),
-            _fixPointCreationTime(other._fixPointCreationTime),
-            _max_intervals(other._max_intervals),
-            _arcIntervals(other._arcIntervals),
-            _placeColorFixpoints(other._placeColorFixpoints) {
-            }
             void printPlaceTable() const;
             void compute(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout);
 
@@ -90,6 +83,11 @@ namespace PetriEngine {
             auto& fixed_point() const {
                 return _placeColorFixpoints;
             }
+
+            auto max_intervals() const {
+                return _max_intervals;
+            }
+
             void set_default();
 
             const TransitionVariableMap& variable_map() const {

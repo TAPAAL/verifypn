@@ -23,7 +23,7 @@ namespace PetriEngine {
                         std::set<const Colored::Variable*> inArcVars;
 
                         //Application of symmetric variables for partitioned places is currently unhandled
-                        if (_builder.partition_computed() && !_builder.partition()[inArc.place].isDiagonal()) {
+                        if (_partition.computed() && !_partition.partition()[inArc.place].isDiagonal()) {
                             continue;
                         }
 
@@ -86,7 +86,7 @@ namespace PetriEngine {
                 }
                 if (foundArc) {
                     //Application of symmetric variables for partitioned places is currently unhandled
-                    if (_builder.partition_computed() && !_builder.partition()[outputArc.place].isDiagonal()) {
+                    if (_partition.computed() && !_partition.partition()[outputArc.place].isDiagonal()) {
                         isEligible = false;
                         break;
                     }

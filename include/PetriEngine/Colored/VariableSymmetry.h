@@ -31,6 +31,7 @@
 #include "Colors.h"
 
 #include "ColoredNetStructures.h"
+#include "PartitionBuilder.h"
 
 #include <vector>
 #include <set>
@@ -43,13 +44,12 @@ namespace PetriEngine {
             const ColoredPetriNetBuilder& _builder;
             //transition id to vector of vectors of variables, where variable in vector are symmetric
             SymVarMap _symmetric_var_map;
+            PartitionBuilder& _partition;
             void checkSymmetricVarsInArcs(const Colored::Transition &transition, const Colored::Arc &inArc, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
             void checkSymmetricVarsOutArcs(const Colored::Transition &transition, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
         public:
-            VariableSymmetry(const ColoredPetriNetBuilder& b)
-                    : _builder(b) {}
-            VariableSymmetry(const ColoredPetriNetBuilder& b, const VariableSymmetry& other)
-                    : _builder(b), _symmetric_var_map(other._symmetric_var_map) {}
+            VariableSymmetry(const ColoredPetriNetBuilder& b, PartitionBuilder& partition)
+                    : _builder(b), _partition(partition) {}
 
             void compute();
             void printSymmetricVariables() const;

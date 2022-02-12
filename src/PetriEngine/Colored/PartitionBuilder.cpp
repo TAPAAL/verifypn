@@ -52,7 +52,7 @@ namespace PetriEngine {
             }
         }
 
-        bool PartitionBuilder::partitionNet(int32_t timeout) {
+        bool PartitionBuilder::compute(int32_t timeout) {
             const auto start = std::chrono::high_resolution_clock::now();
             handleLeafTransitions();
             auto end = std::chrono::high_resolution_clock::now();
@@ -79,6 +79,15 @@ namespace PetriEngine {
                 }
                 end = std::chrono::high_resolution_clock::now();
             }
+            if(_placeQueue.empty())
+            {
+                end = std::chrono::high_resolution_clock::now();
+                _computed = true;
+                _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+                assignColorMap(_partition);
+            }
+            else
+                _computed = false;
             return _placeQueue.empty();
         }
 

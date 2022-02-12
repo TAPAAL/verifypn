@@ -56,13 +56,13 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     ColoredPetriNetBuilder cpnBuilder;
     auto f = loadFile(model.c_str());
     cpnBuilder.parse_model(f);
-    auto builder = cpnBuilder.unfold();
+    auto [builder, trans_names, place_names] = unfold(cpnBuilder, false, false, false, std::cerr);
     builder.sort();
     auto q = loadFile(queries.c_str());
     std::vector<std::string> qstrings;
     auto conditions = parseXMLQueries(qstrings, q, qnums, false);
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
-    contextAnalysis(cpnBuilder, builder, pn.get(), conditions);
+    contextAnalysis(cpnBuilder, trans_names, place_names, builder, pn.get(), conditions);
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
 }
 

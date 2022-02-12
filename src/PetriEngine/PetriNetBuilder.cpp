@@ -46,6 +46,12 @@ namespace PetriEngine {
 
     }
 
+    PetriNetBuilder::PetriNetBuilder(PetriNetBuilder&& other)
+    : _placenames(std::move(other._placenames)), _transitionnames(std::move(other._transitionnames)),
+       _placelocations(std::move(other._placelocations)), _transitionlocations(std::move(other._transitionlocations)),
+       _transitions(std::move(other._transitions)), _places(std::move(other._places)),
+       initialMarking(std::move(other.initialMarking)), reducer(this) {}
+
     void PetriNetBuilder::addPlace(const std::string &name, uint32_t tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {

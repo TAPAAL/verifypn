@@ -13,5 +13,6 @@ CExprToString.cpp
 EvaluationVisitor.cpp
 StablePlaceFinder.cpp
 ForwardFixedPoint.cpp
-VariableSymmetry)
+VariableSymmetry.cpp
+Unfolder.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)
