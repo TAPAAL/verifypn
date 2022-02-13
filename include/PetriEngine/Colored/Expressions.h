@@ -563,6 +563,10 @@ namespace PetriEngine {
                 }
             }
 
+            size_t size() const {
+                return _colors.size();
+            }
+
             auto begin() const {
                 return _colors.begin();
             }

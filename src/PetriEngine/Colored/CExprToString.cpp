@@ -28,7 +28,7 @@ namespace PetriEngine {
         }
 
         void CExprToString::accept(const UserOperatorExpression* e) {
-            e->user_operator()->toString();
+            _out << e->user_operator()->toString();
         }
 
         void CExprToString::accept(const SuccessorExpression* e) {
@@ -42,13 +42,14 @@ namespace PetriEngine {
         }
 
         void CExprToString::accept(const TupleExpression* tup) {
-            _out << "(";
+            if(tup->size() > 1) _out << "(";
             bool first = true;
             for (auto& e : *tup) {
                 if (!first) _out << ",";
                 first = false;
                 e->visit(*this);
             }
+            if(tup->size() > 1) _out << ")";
         }
 
         void CExprToString::accept(const LessThanExpression* lt) {
@@ -76,15 +77,19 @@ namespace PetriEngine {
         }
 
         void CExprToString::accept(const AndExpression* andexpr) {
+            _out << "(";
             (*andexpr)[0]->visit(*this);
             _out << " && ";
             (*andexpr)[1]->visit(*this);
+            _out << ")";
         }
 
         void CExprToString::accept(const OrExpression* orexpr) {
+            _out << "(";
             (*orexpr)[0]->visit(*this);
             _out << " || ";
             (*orexpr)[1]->visit(*this);
+            _out << ")";
         }
 
         void CExprToString::accept(const AllExpression* all) {
@@ -111,23 +116,29 @@ namespace PetriEngine {
 
         void CExprToString::accept(const AddExpression* add) {
             bool first = true;
+            _out << "(";
             for (auto& e : *add) {
                 if (!first) _out << " + ";
                 first = false;
                 e->visit(*this);
             }
+            _out << ")";
         }
 
         void CExprToString::accept(const SubtractExpression* sub) {
+            _out << "(";
             (*sub)[0]->visit(*this);
             _out << " - ";
             (*sub)[1]->visit(*this);
+            _out << ")";
         }
 
         void CExprToString::accept(const ScalarProductExpression* scalar) {
+            _out << "(";
             _out << scalar->scalar();
             _out << " * ";
             scalar->child()->visit(*this);
+            _out << ")";
         }
     }
 }
