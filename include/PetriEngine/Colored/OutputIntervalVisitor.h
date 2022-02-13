@@ -50,24 +50,22 @@ namespace PetriEngine {
             virtual void accept(const DotConstantExpression*)
             {
                 _result.clear();
-                Colored::interval_vector_t tupleInterval;
                 Colored::interval_t interval;
                 const Color *dotColor = &(*ColorType::dotInstance()->begin());
                 _colortypes.emplace_back(dotColor->getColorType());
                 interval.addRange(dotColor->getId(), dotColor->getId());
-                tupleInterval.addInterval(interval);
-                _result = std::move(tupleInterval);
+                _result.addInterval(interval);
             }
 
             virtual void accept(const VariableExpression* e)
             {
-                Colored::interval_vector_t varInterval;
+                _result.clear();
                 // If we see a new variable on an out arc, it gets its full interval
                 if (_varmap->count(e->variable()) == 0){
-                    varInterval.addInterval(e->variable()->colorType->getFullInterval());
+                    _result.addInterval(e->variable()->colorType->getFullInterval());
                 } else {
                     for(const auto& interval : _varmap->find(e->variable())->second){
-                        varInterval.addInterval(interval);
+                        _result.addInterval(interval);
                     }
                 }
 
@@ -77,19 +75,17 @@ namespace PetriEngine {
                 for(auto &ct : varColorTypes){
                     _colortypes.push_back(std::move(ct));
                 }
-                _result = std::move(varInterval);
             }
 
             virtual void accept(const UserOperatorExpression* e)
             {
-                Colored::interval_vector_t tupleInterval;
+                _result.clear();
                 Colored::interval_t interval;
 
                 _colortypes.emplace_back(e->user_operator()->getColorType());
 
                 interval.addRange(e->user_operator()->getId(), e->user_operator()->getId());
-                tupleInterval.addInterval(interval);
-                _result = std::move(tupleInterval);
+                _result.addInterval(interval);
             }
 
             virtual void accept(const SuccessorExpression* e)
@@ -97,16 +93,14 @@ namespace PetriEngine {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = _colortypes.size();
                 e->child()->visit(*this);
-                auto nestedInterval = _result;
-                _result = Colored::GuardRestrictor::shiftIntervals(_colortypes, nestedInterval, 1, colortypesBefore);
+                _result = Colored::GuardRestrictor::shiftIntervals(_colortypes, _result, 1, colortypesBefore);
             }
 
             virtual void accept(const PredecessorExpression* e)
             {
                 auto colortypesBefore = _colortypes.size();
                 e->child()->visit(*this);
-                auto nestedInterval = _result;
-                _result = Colored::GuardRestrictor::shiftIntervals(_colortypes, nestedInterval, -1, colortypesBefore);
+                _result = Colored::GuardRestrictor::shiftIntervals(_colortypes, _result, -1, colortypesBefore);
             }
 
             virtual void accept(const TupleExpression* tup)
@@ -116,11 +110,10 @@ namespace PetriEngine {
                 for(const auto& colorExp : *tup) {
                     Colored::interval_vector_t intervalHolder;
                     colorExp->visit(*this);
-                    auto nested_intervals = _result;
                     if(intervals.empty()){
-                        intervals = nested_intervals;
+                        intervals = _result;
                     } else {
-                        for(const auto& nested_interval : nested_intervals){
+                        for(const auto& nested_interval : _result){
                             Colored::interval_vector_t newIntervals;
                             for(auto& interval : intervals){
                                 for(const auto& nestedRange : nested_interval._ranges) {
@@ -164,27 +157,25 @@ namespace PetriEngine {
 
             virtual void accept(const AllExpression* all)
             {
-                Colored::interval_vector_t newIntervalTuple;
-                newIntervalTuple.addInterval(all->sort()->getFullInterval());
-                _result = std::move(newIntervalTuple);
+                _result.clear();
+                _result.addInterval(all->sort()->getFullInterval());
             }
 
             virtual void accept(const NumberOfExpression* no)
             {
-                std::vector<Colored::interval_vector_t> intervalsVec;
+                _result_v.clear();
                 if (!no->is_all()) {
                     for (const auto& elem : *no) {
                         for(const auto& varMap : _varmap_vec){
                             _varmap = &varMap;
                             elem->visit(*this);
-                            intervalsVec.emplace_back(_result);
+                            _result_v.emplace_back(_result);
                         }
                     }
                 } else {
                     no->all()->visit(*this);
-                    intervalsVec.emplace_back(_result);
+                    _result_v.emplace_back(_result);
                 }
-                _result_v = std::move(intervalsVec);
             }
 
             virtual void accept(const AddExpression* add)
@@ -213,7 +204,7 @@ namespace PetriEngine {
             {
                 OutputIntervalVisitor v(varMapVec);
                 e.visit(v);
-                return v._result_v;
+                return std::move(v._result_v);
             }
         };
 
