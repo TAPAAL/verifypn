@@ -135,7 +135,7 @@ namespace PetriEngine {
             if (_builder.isColored()) {
                 init();
                 auto& places = _builder.places();
-                auto& transitions = _builder.places();
+                auto& transitions = _builder.transitions();
                 for (size_t i = 0; i < places.size(); ++i)
                     _placeFixpointQueue.emplace_back(i);
                 _considered.resize(transitions.size());
@@ -162,6 +162,8 @@ namespace PetriEngine {
                         const Colored::Transition& transition = _builder.transitions()[transitionId];
                         // Skip transitions that cannot add anything new,
                         // such as transitions with only constants on their arcs that have been processed once
+                        assert(transitionId < _builder.transitions().size());
+                        assert(transitionId < _considered.size());
                         if (_considered[transitionId]) continue;
                         bool transitionActivated = true;
                         _transition_variable_maps[transitionId].clear();
