@@ -48,7 +48,7 @@ namespace PetriEngine {
             {
                 e->child()->visit(*this);
                 for(auto& constIndexPair : _color_map){
-                    constIndexPair.second = --constIndexPair.second;
+                    constIndexPair.second = &(--*constIndexPair.second);
                 }
             }
 
@@ -56,7 +56,7 @@ namespace PetriEngine {
             {
                 e->child()->visit(*this);
                 for(auto& constIndexPair : _color_map){
-                    constIndexPair.second = --constIndexPair.second;
+                    constIndexPair.second = &(--*constIndexPair.second);
                 }
             }
 
