@@ -59,22 +59,24 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
     std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx) {
     Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
 
-    if (compute_partiton && cpnBuilder.isColored() && !over_approx) {
+    if(!cpnBuilder.isColored())
+        return {cpnBuilder.pt_builder(), {}, {}};
+    if (compute_partiton && !over_approx) {
         partition.compute(partitionTimeout);
     }
 
     Colored::VariableSymmetry symmetry(cpnBuilder, partition);
-    if (compute_symmetry && cpnBuilder.isColored() && !over_approx) {
+    if (compute_symmetry && !over_approx) {
         symmetry.compute();
     }
 
     Colored::ForwardFixedPoint fixed_point(cpnBuilder, partition);
-    if (computed_fixed_point && cpnBuilder.isColored() && !over_approx) {
+    if (computed_fixed_point && !over_approx) {
         fixed_point.compute(max_intervals, intervals_reduced, interval_timeout);
     }
 
     Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point);
-    if(over_approx || !cpnBuilder.isColored())
+    if(over_approx)
     {
         auto r = unfolder.unfold();
         return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>

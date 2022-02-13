@@ -118,6 +118,10 @@ namespace PetriEngine {
             return _colors;
         }
 
+        PetriNetBuilder pt_builder() const {
+            return _ptBuilder;
+        }
+
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
