@@ -49,7 +49,7 @@ namespace PetriEngine {
             }
 
 
-            virtual void accept(const DotConstantExpression*)
+            virtual void accept(const DotConstantExpression* e)
             {
             }
 
@@ -119,37 +119,55 @@ namespace PetriEngine {
             virtual void accept(const LessThanExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const LessThanEqExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const EqualityExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const InequalityExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const AndExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const OrExpression* e)
             {
                 for(auto i : {0,1})
+                {
+                    _index = 0;
                     (*e)[i]->visit(*this);
+                }
             }
 
             virtual void accept(const AllExpression* all)
@@ -162,7 +180,10 @@ namespace PetriEngine {
                 {
                     //TODO: can there be more than one element in a number of expression?
                     for(auto& e : *no)
+                    {
+                        _index = 0;
                         e->visit(*this);
+                    }
                 }
             }
 
@@ -173,21 +194,25 @@ namespace PetriEngine {
                         std::unordered_map<uint32_t, int32_t> newMap;
                         pair.second.push_back(newMap);
                     }
+                    _index = 0;
                     elem->visit(*this);
                 }
             }
 
             virtual void accept(const SubtractExpression* sub)
             {
+                _index = 0;
                 (*sub)[0]->visit(*this);
                 //We ignore the restrictions imposed by the subtraction for now
                 if(_include_subtracts){
+                    _index = 0;
                     (*sub)[1]->visit(*this);
                 }
             }
 
             virtual void accept(const ScalarProductExpression* scalar)
             {
+                _index = 0;
                 scalar->child()->visit(*this);
             }
 
