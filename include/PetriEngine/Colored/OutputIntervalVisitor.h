@@ -115,7 +115,7 @@ namespace PetriEngine {
                     } else {
                         for(const auto& nested_interval : _result){
                             Colored::interval_vector_t newIntervals;
-                            for(auto& interval : intervals){
+                            for(auto& interval : intervals) {
                                 for(const auto& nestedRange : nested_interval._ranges) {
                                     interval.addRange(nestedRange);
                                 }
@@ -125,7 +125,7 @@ namespace PetriEngine {
                                 intervalHolder.addInterval(newInterval);
                             }
                         }
-                        intervals = intervalHolder;
+                        intervals = std::move(intervalHolder);
                     }
                 }
                 _result = std::move(intervals);
@@ -207,8 +207,6 @@ namespace PetriEngine {
                 return std::move(v._result_v);
             }
         };
-
-
     }
 }
 
