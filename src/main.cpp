@@ -172,13 +172,16 @@ int main(int argc, const char** argv) {
             }
 
             if (options.unfold_query_out_file.size() > 0) {
-                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
+                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file, options.keep_solved);
             }
 
 
             {
                 EvaluationContext context(qm0.get(), qnet.get());
                 for (size_t i = 0; i < queries.size(); ++i) {
+                    ContainsFireabilityVisitor has_fireability;
+                    Visitor::visit(has_fireability, queries[i]);
+                    if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
                     auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
@@ -198,7 +201,7 @@ int main(int argc, const char** argv) {
 
 
             if (options.query_out_file.size() > 0) {
-                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
+                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
             }
 
             if (!options.statespaceexploration) {
@@ -225,7 +228,12 @@ int main(int argc, const char** argv) {
                             // we misuse the implementation to make sure we print the empty-trace
                             // when the initial marking is sufficient.
                             Structures::StateSet tmp(*qnet, 0);
-                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied, nullptr,
+                            // we are tricking the printer into printing the trace here.
+                            // TODO fix, remove setInvariant
+                            // also we make a new FALSE object here to avoid sideeffects.
+                            queries[i] = std::make_shared<BooleanCondition>(false);
+                            queries[i]->setInvariant(true);
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied, nullptr,
                                                     0, 1, 1, initial_size, &tmp, 0, qm0.get()).first;
                         }
                         else

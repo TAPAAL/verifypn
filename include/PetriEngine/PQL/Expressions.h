@@ -223,7 +223,6 @@ namespace PetriEngine {
             PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
 
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            Member constraint(SimplificationContext& context) const override;
             bool tk = false;
 
         protected:
@@ -240,7 +239,6 @@ namespace PetriEngine {
             {
             }
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            Member constraint(SimplificationContext& context) const override;
 
         protected:
             //int binaryOp() const;
@@ -253,7 +251,6 @@ namespace PetriEngine {
 
             MultiplyExpr(std::vector<Expr_ptr>&& exprs);
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            Member constraint(SimplificationContext& context) const override;
 
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a * b; }
@@ -268,7 +265,6 @@ namespace PetriEngine {
                 _expr = expr;
             }
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            Member constraint(SimplificationContext& context) const override;
 
             bool placeFree() const override;
             const Expr_ptr& operator[](size_t i) const { return _expr; };
@@ -288,7 +284,6 @@ namespace PetriEngine {
             int64_t value() const {
                 return _value;
             };
-            Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return true; }
         private:
             int64_t _value;
@@ -305,10 +300,6 @@ namespace PetriEngine {
             virtual bool placeFree() const override {
                 if(_compiled) return _compiled->placeFree();
                 return false;
-            }
-
-            Member constraint(SimplificationContext& context) const override {
-                return _compiled->constraint(context);
             }
 
             [[nodiscard]] const std::string &name() const {
@@ -346,7 +337,6 @@ namespace PetriEngine {
             {
                 return _name;
             }
-            Member constraint(SimplificationContext& context) const override;
             bool placeFree() const override { return false; }
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */

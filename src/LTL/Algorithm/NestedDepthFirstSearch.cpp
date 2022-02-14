@@ -161,8 +161,7 @@ namespace LTL {
     template<typename S>
     void NestedDepthFirstSearch<S>::print_trace(light_deque<StackEntry>& _todo, light_deque<StackEntry>& _nested_todo, std::ostream &os)
     {
-        os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-              "<trace>\n";
+        os << "<trace>\n";
         if(this->_reducer)
             this->_reducer->initFire(os);
         size_t loop_id = std::numeric_limits<size_t>::max();

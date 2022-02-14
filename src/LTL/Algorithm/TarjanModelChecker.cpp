@@ -211,8 +211,7 @@ namespace LTL {
             return;
         } else {
             assert(_violation);
-            os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-                  "<trace>\n";
+            os << "<trace>\n";
             this->_reducer->initFire(os);
             if (_cstack[dstack.top()._pos]._stateid == _loop_state)
                 this->printLoop(os);

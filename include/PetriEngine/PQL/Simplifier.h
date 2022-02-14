@@ -32,19 +32,20 @@ namespace PetriEngine::PQL {
         explicit Simplifier(SimplificationContext& context) :
                 _context(context) {}
 
-        Retval _return_value;
+        Retval get_return_value() { return std::move(_return_value); }
 
     protected:
         SimplificationContext& _context;
+        Retval _return_value;
 
-        Retval simplifyOr(const LogicalCondition* element);
-        Retval simplifyAnd(const LogicalCondition *element);
+        Retval simplify_or(const LogicalCondition* element);
+        Retval simplify_and(const LogicalCondition *element);
 
         Retval simplifyAX(Retval &r);
         Retval simplifyEX(Retval &r);
 
         template <typename Quantifier>
-        Retval simplifySimpleQuant(Retval &r);
+        Retval simplify_simple_quantifier(Retval &r);
 
         void _accept(const NotCondition *element) override;
 
@@ -81,6 +82,35 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const BooleanCondition *element) override;
+    };
+
+    Member constraint(const Expr *element, const SimplificationContext &context);
+
+    class ConstraintVisitor : public ExpressionVisitor {
+    public:
+        explicit ConstraintVisitor(const SimplificationContext &context) : _context(context) {}
+
+        Member get_return_value() { return _return_value; }
+
+    private:
+        const SimplificationContext& _context;
+        Member _return_value;
+
+        void _accept(const LiteralExpr *element) override;
+
+        void _accept(const UnfoldedIdentifierExpr *element) override;
+
+        void _accept(const PlusExpr *element) override;
+
+        void _accept(const SubtractExpr *element) override;
+
+        void _accept(const MultiplyExpr *element) override;
+
+        void _accept(const MinusExpr *element) override;
+
+        void _commutative_cons(const CommutativeExpr *element, int _constant, const std::function<void(Member &, Member)> &op);
+
+        void _accept(const IdentifierExpr *element) override;
     };
 }
 #endif //VERIFYPN_SIMPLIFIER_H

@@ -26,7 +26,7 @@ namespace PetriEngine::PQL {
     Retval simplify(const std::shared_ptr<Condition> element, SimplificationContext& context) {
         Simplifier query_simplifier(context);
         Visitor::visit(query_simplifier, element);
-        return std::move(query_simplifier._return_value);
+        return std::move(query_simplifier.get_return_value());
     }
 
     AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr> &&lps) {
@@ -44,7 +44,7 @@ namespace PetriEngine::PQL {
         return lps[0];
     }
 
-    Retval Simplifier::simplifyOr(const LogicalCondition *element) {
+    Retval Simplifier::simplify_or(const LogicalCondition *element) {
 
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
@@ -90,7 +90,7 @@ namespace PetriEngine::PQL {
                 std::move(neglps));
     }
 
-    Retval Simplifier::simplifyAnd(const LogicalCondition *element) {
+    Retval Simplifier::simplify_and(const LogicalCondition *element) {
 
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lpsv;
@@ -159,7 +159,7 @@ namespace PetriEngine::PQL {
     }
 
     template<typename Quantifier>
-    Retval Simplifier::simplifySimpleQuant(Retval &r) {
+    Retval Simplifier::simplify_simple_quantifier(Retval &r) {
         static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
@@ -170,11 +170,7 @@ namespace PetriEngine::PQL {
         }
     }
 
-    Member LiteralExpr::constraint(SimplificationContext &context) const {
-        return Member(_value);
-    }
-
-    Member memberForPlace(size_t p, SimplificationContext &context) {
+    Member memberForPlace(size_t p, const SimplificationContext &context) {
         std::vector<int> row(context.net()->numberOfTransitions(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
@@ -183,51 +179,78 @@ namespace PetriEngine::PQL {
         return Member(std::move(row), context.marking()[p]);
     }
 
-    Member UnfoldedIdentifierExpr::constraint(SimplificationContext &context) const {
-        return memberForPlace(_offsetInMarking, context);
+    /********** Constraint Visitor **********/
+    Member constraint(const Expr *element, const SimplificationContext &context) {
+        ConstraintVisitor visitor(context);
+        Visitor::visit(visitor, element);
+        return visitor.get_return_value();
     }
 
-    Member CommutativeExpr::commutativeCons(int constant, SimplificationContext &context,
-                                            std::function<void(Member &a, Member b)> op) const {
+    void ConstraintVisitor::_commutative_cons(const CommutativeExpr *element, int _constant, const std::function<void(Member &a, Member b)>& op) {
         Member res;
         bool first = true;
-        if (_constant != constant || (_exprs.size() == 0 && _ids.size() == 0)) {
+        if (element->constant() != _constant || (element->operands() == 0 && element->places().empty())) {
             first = false;
-            res = Member(_constant);
+            res = Member(element->constant());
         }
 
-        for (auto &i: _ids) {
-            if (first) res = memberForPlace(i.first, context);
-            else op(res, memberForPlace(i.first, context));
+        for (auto &i: element->places()) {
+            if (first) res = memberForPlace(i.first, _context);
+            else op(res, memberForPlace(i.first, _context));
             first = false;
         }
 
-        for (auto &e: _exprs) {
-            if (first) res = e->constraint(context);
-            else op(res, e->constraint(context));
+        for (auto &e: element->expressions()) {
+            Visitor::visit(*this, e);
+            if (first) {
+                res = _return_value;
+            }
+            else {
+                op(res, _return_value);
+            }
             first = false;
         }
-        return res;
+        _return_value = res;
     }
 
-    Member PlusExpr::constraint(SimplificationContext &context) const {
-        return commutativeCons(0, context, [](auto &a, auto b) { a += b; });
+    void ConstraintVisitor::_accept(const UnfoldedIdentifierExpr *element) {
+        _return_value = memberForPlace(element->offset(), _context);
     }
 
-    Member SubtractExpr::constraint(SimplificationContext &context) const {
-        Member res = _exprs[0]->constraint(context);
-        for (size_t i = 1; i < _exprs.size(); ++i) res -= _exprs[i]->constraint(context);
-        return res;
+    void ConstraintVisitor::_accept(const PlusExpr *element) {
+        _commutative_cons(element, 0, [](auto &a, auto b) { a += b; });
     }
 
-    Member MultiplyExpr::constraint(SimplificationContext &context) const {
-        return commutativeCons(1, context, [](auto &a, auto b) { a *= b; });
+    void ConstraintVisitor::_accept(const SubtractExpr *element) {
+        Visitor::visit(*this, (*element)[0]);
+        Member res = _return_value;
+        for (size_t i = 1; i < element->operands(); ++i) {
+            Visitor::visit(*this, (*element)[i]);
+            res -= _return_value;
+        }
+        _return_value = res;
     }
 
-    Member MinusExpr::constraint(SimplificationContext &context) const {
+    void ConstraintVisitor::_accept(const MultiplyExpr *element) {
+        _commutative_cons(element, 1, [](auto &a, auto b) { a *= b; });
+    }
+
+    void ConstraintVisitor::_accept(const MinusExpr *element) {
         Member neg(-1);
-        return _expr->constraint(context) *= neg;
+        Visitor::visit(*this, (*element)[0]);
+        _return_value = _return_value *= neg;
     }
+
+    void ConstraintVisitor::_accept(const LiteralExpr *element) {
+        _return_value = Member(element->value());
+    }
+
+    void ConstraintVisitor::_accept(const IdentifierExpr *element) {
+        Visitor::visit(*this, element->compiled());
+    }
+
+
+    /******* Simplifier accepts ********/
 
     void Simplifier::_accept(const NotCondition *element) {
         _context.negate();
@@ -246,9 +269,9 @@ namespace PetriEngine::PQL {
         }
 
         if (_context.negated()) {
-            RETURN(simplifyOr(element))
+            RETURN(simplify_or(element))
         } else {
-            RETURN(simplifyAnd(element))
+            RETURN(simplify_and(element))
         }
     }
 
@@ -261,15 +284,15 @@ namespace PetriEngine::PQL {
             }
         }
         if (_context.negated()) {
-            RETURN(simplifyAnd(element))
+            RETURN(simplify_and(element))
         } else {
-            RETURN(simplifyOr(element))
+            RETURN(simplify_or(element))
         }
     }
 
     void Simplifier::_accept(const LessThanCondition *element) {
-        Member m1 = (*element)[0]->constraint(_context);
-        Member m2 = (*element)[1]->constraint(_context);
+        Member m1 = constraint((*element)[0].get(), _context);
+        Member m2 = constraint((*element)[1].get(), _context);
         AbstractProgramCollection_ptr lps, neglps;
         if (!_context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
             // test for trivial comparison
@@ -308,8 +331,8 @@ namespace PetriEngine::PQL {
     }
 
     void Simplifier::_accept(const LessThanOrEqualCondition *element) {
-        Member m1 = (*element)[0]->constraint(_context);
-        Member m2 = (*element)[1]->constraint(_context);
+        Member m1 = constraint((*element)[0].get(), _context);
+        Member m2 = constraint((*element)[1].get(), _context);
 
         AbstractProgramCollection_ptr lps, neglps;
         if (!_context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
@@ -352,8 +375,8 @@ namespace PetriEngine::PQL {
     }
 
     void Simplifier::_accept(const EqualCondition *element) {
-        Member m1 = (*element)[0]->constraint(_context);
-        Member m2 = (*element)[1]->constraint(_context);
+        Member m1 = constraint((*element)[0].get(), _context);
+        Member m2 = constraint((*element)[1].get(), _context);
         std::shared_ptr<AbstractProgramCollection> lps, neglps;
         if (!_context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
             if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
@@ -395,8 +418,8 @@ namespace PetriEngine::PQL {
     }
 
     void Simplifier::_accept(const NotEqualCondition *element) {
-        Member m1 = (*element)[0]->constraint(_context);
-        Member m2 = (*element)[1]->constraint(_context);
+        Member m1 = constraint((*element)[0].get(), _context);
+        Member m2 = constraint((*element)[1].get(), _context);
         std::shared_ptr<AbstractProgramCollection> lps, neglps;
         if (!_context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
             if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
@@ -454,7 +477,7 @@ namespace PetriEngine::PQL {
         std::vector<CompareConjunction::cons_t> nconstraints;
         for (auto &c: element->constraints()) {
             nconstraints.push_back(c);
-            if (c._lower != 0 /*&& !context.timeout()*/ ) {
+            if (c._lower != 0 /*&& !_context.timeout()*/ ) {
                 auto m2 = memberForPlace(c._place, _context);
                 Member m1(c._lower);
                 // test for trivial comparison
@@ -477,7 +500,7 @@ namespace PetriEngine::PQL {
                 }
             }
 
-            if (c._upper != std::numeric_limits<uint32_t>::max() /*&& !context.timeout()*/) {
+            if (c._upper != std::numeric_limits<uint32_t>::max() /*&& !_context.timeout()*/) {
                 auto m1 = memberForPlace(c._place, _context);
                 Member m2(c._upper);
                 // test for trivial comparison
@@ -662,6 +685,7 @@ namespace PetriEngine::PQL {
         }
         Visitor::visit(this, condition->getCond1());
         Retval r1 = std::move(_return_value);
+
         _context.setNegate(neg);
 
         if (_context.negated()) {
@@ -688,38 +712,38 @@ namespace PetriEngine::PQL {
     void Simplifier::_accept(const ECondition *condition) {
         if (const std::shared_ptr<XCondition> xcond = std::dynamic_pointer_cast<XCondition>((*condition)[0])) {
             Visitor::visit(*this, (*xcond)[0]);
-            RETURN(simplifyEX(_return_value));
+            RETURN(_context.negated() ? simplifyAX(_return_value) : simplifyEX(_return_value));
         }
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplifySimpleQuant<ACondition>(_return_value)
-                                  : simplifySimpleQuant<ECondition>(_return_value))
+        RETURN(_context.negated() ? simplify_simple_quantifier<ACondition>(_return_value)
+                                         : simplify_simple_quantifier<ECondition>(_return_value))
     }
 
     void Simplifier::_accept(const ACondition *condition) {
         if (const std::shared_ptr<XCondition> xcond = std::dynamic_pointer_cast<XCondition>((*condition)[0])) {
             Visitor::visit(*this, (*xcond)[0]);
-            RETURN(simplifyAX(_return_value))
+            RETURN(_context.negated() ? simplifyEX(_return_value) : simplifyAX(_return_value))
         }
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplifySimpleQuant<ECondition>(_return_value)
-                                  : simplifySimpleQuant<ACondition>(_return_value))
+        RETURN(_context.negated() ? simplify_simple_quantifier<ECondition>(_return_value)
+                                         : simplify_simple_quantifier<ACondition>(_return_value))
     }
 
     void Simplifier::_accept(const FCondition *condition) {
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplifySimpleQuant<GCondition>(_return_value)
-                                  : simplifySimpleQuant<FCondition>(_return_value))
+        RETURN(_context.negated() ? simplify_simple_quantifier<GCondition>(_return_value)
+                                         : simplify_simple_quantifier<FCondition>(_return_value))
     }
 
     void Simplifier::_accept(const GCondition *condition) {
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplifySimpleQuant<FCondition>(_return_value)
-                                  : simplifySimpleQuant<GCondition>(_return_value))
+        RETURN(_context.negated() ? simplify_simple_quantifier<FCondition>(_return_value)
+                                         : simplify_simple_quantifier<GCondition>(_return_value))
     }
 
     void Simplifier::_accept(const XCondition *condition) {
         Visitor::visit(this, condition->getCond());
-        RETURN(simplifySimpleQuant<XCondition>(_return_value))
+        RETURN(simplify_simple_quantifier<XCondition>(_return_value))
     }
 
     void Simplifier::_accept(const BooleanCondition *condition) {
