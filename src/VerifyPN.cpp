@@ -73,12 +73,12 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
     Colored::ForwardFixedPoint fixed_point(cpnBuilder, partition);
     if (computed_fixed_point && !over_approx) {
         fixed_point.compute(max_intervals, intervals_reduced, interval_timeout);
-    }
+    } else fixed_point.set_default();
 
     Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point);
     if(over_approx)
     {
-        auto r = unfolder.unfold();
+        auto r = unfolder.strip_colors();
         return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
             (std::move(r),unfolder.transition_names(),unfolder.place_names());
     }

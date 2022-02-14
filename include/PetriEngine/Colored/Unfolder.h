@@ -62,16 +62,16 @@ namespace PetriEngine {
             std::vector<std::string> _sumPlacesNames;
             const VariableSymmetry& _symmetry;
             const PartitionBuilder& _partition;
-            ForwardFixedPoint& _fixed_point;
+            const ForwardFixedPoint& _fixed_point;
 
 
         public:
-            Unfolder(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition, const VariableSymmetry& symmetry, ForwardFixedPoint& fixed_point)
+            Unfolder(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition, const VariableSymmetry& symmetry, const ForwardFixedPoint& fixed_point)
             : _builder(b),
               _stable(b),
               _symmetry(symmetry),
               _partition(partition),
-            _fixed_point(fixed_point) {}
+              _fixed_point(fixed_point) {}
 
             PetriNetBuilder unfold();
 

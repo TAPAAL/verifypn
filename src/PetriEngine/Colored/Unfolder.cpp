@@ -61,10 +61,6 @@ namespace PetriEngine {
                     _stable.compute();
                 }
 
-                if (!_fixed_point.computed() && _partition.computed()) {
-                    _fixed_point.set_default();
-                }
-
                 for (uint32_t transitionId = 0; transitionId < _builder.transitions().size(); transitionId++) {
                     unfoldTransition(ptBuilder, transitionId);
                 }
@@ -143,6 +139,8 @@ namespace PetriEngine {
             double offset = 0;
             const Colored::Transition &transition = _builder.transitions()[transitionId];
             if (_fixed_point.computed() || _partition.computed()) {
+                assert(_fixed_point.variable_map().size() > transitionId);
+                assert(_symmetry.symmetries().size() > transitionId);
                 FixpointBindingGenerator gen(transition, _builder.colors(), _symmetry.symmetries()[transitionId],
                     _fixed_point.variable_map()[transitionId]);
                 size_t i = 0;

@@ -8,10 +8,16 @@
 namespace PetriEngine {
     namespace Colored {
 
+        void VariableSymmetry::default_init() {
+            _symmetric_var_map.clear();
+            auto& transitions = _builder.transitions();
+            _symmetric_var_map.resize(transitions.size());
+        }
+
         void VariableSymmetry::compute() {
+            default_init();
             if (_builder.isColored()) {
                 auto& transitions = _builder.transitions();
-                _symmetric_var_map.resize(transitions.size());
                 for (uint32_t transitionId = 0; transitionId < transitions.size(); transitionId++) {
                     const Colored::Transition &transition = transitions[transitionId];
                     if (transition.guard) {

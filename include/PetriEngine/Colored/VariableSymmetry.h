@@ -47,9 +47,10 @@ namespace PetriEngine {
             PartitionBuilder& _partition;
             void checkSymmetricVarsInArcs(const Colored::Transition &transition, const Colored::Arc &inArc, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
             void checkSymmetricVarsOutArcs(const Colored::Transition &transition, const std::set<const Colored::Variable*> &inArcVars, bool &isEligible) const;
+            void default_init();
         public:
             VariableSymmetry(const ColoredPetriNetBuilder& b, PartitionBuilder& partition)
-                    : _builder(b), _partition(partition) {}
+                    : _builder(b), _partition(partition) { default_init(); }
 
             void compute();
             void printSymmetricVariables() const;
