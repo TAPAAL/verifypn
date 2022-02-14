@@ -34,6 +34,7 @@
 #include "ForwardFixedPoint.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "VariableSymmetry.h"
+#include "StablePlaceFinder.h"
 
 
 namespace PetriEngine {

@@ -18,16 +18,8 @@
  */
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
-#include "PetriEngine/Colored/EvaluationVisitor.h"
-#include "PetriEngine/Colored/SymmetryVisitor.h"
-#include "PetriEngine/Colored/OutputIntervalVisitor.h"
-#include "PetriEngine/Colored/VariableVisitor.h"
-
 #include "utils/errors.h"
-#include "PetriEngine/Colored/RestrictVisitor.h"
-#include "PetriEngine/Colored/ArcIntervalVisitor.h"
 
-#include <chrono>
 #include <tuple>
 using std::get;
 namespace PetriEngine {

@@ -1,5 +1,7 @@
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
+#include "PetriEngine/Colored/Unfolder.h"
+#include "PetriEngine/Colored/BindingGenerator.h"
 
 namespace PetriEngine {
     namespace Colored {

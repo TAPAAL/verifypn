@@ -42,8 +42,7 @@ namespace PetriEngine {
                 Colored::VariableModifierMap varModifiersMap;
                 Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, false);
 
-                Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varModifiersMap);
-                res[arc.place] = newArcInterval;
+                res.emplace(std::make_pair(arc.place, Colored::ArcIntervals(std::move(varModifiersMap))));
             }
             return res;
         }
@@ -107,7 +106,7 @@ namespace PetriEngine {
 
                     Colored::interval_vector_t intervalTuple;
                     intervalTuple.addInterval(places[inArc.place].type->getFullInterval());
-                    const PetriEngine::Colored::ColorFixpoint & cfp{intervalTuple};
+                    const PetriEngine::Colored::ColorFixpoint cfp{intervalTuple};
 
                     Colored::ArcIntervalVisitor::intervals(*inArc.expr, arcInterval, cfp);
                     if(_partition.computed())

@@ -47,7 +47,7 @@ namespace PetriEngine {
                 : _arcIntervals(arcIntervals), _cfp(cfp) {
             }
 
-            virtual void accept(const DotConstantExpression*)
+            virtual void accept(const DotConstantExpression* e)
             {
                 if (_arcIntervals._intervalTupleVec.empty()) {
                     //We can add all place tokens when considering the dot constant as, that must be present
@@ -169,27 +169,26 @@ namespace PetriEngine {
                 }
             }
 
-            virtual void accept(const NumberOfExpression* no)
+            virtual void accept(const NumberOfExpression* e)
             {
-                if (no->is_all()) {
-                    no->all()->visit(*this);
+                if (e->is_all()) {
+                    e->all()->visit(*this);
                 }
                 else
                 {
-                    for (const auto& elem : *no) {
+                    _index = 0;
+                    for (const auto& elem : *e) {
                         elem->visit(*this);
                         if(!_ok) return;
                     }
                 }
             }
 
-            virtual void accept(const AddExpression* add)
+            virtual void accept(const AddExpression* e)
             {
-                auto old_index = _index;
                 Colored::ArcIntervals old_intervals;
                 std::swap(_arcIntervals, old_intervals);
-                for (const auto& elem : *add) {
-                    _index = 0;
+                for (const auto& elem : *e) {
                     _arcIntervals = ArcIntervals();
 
                     elem->visit(*this);
@@ -197,14 +196,16 @@ namespace PetriEngine {
                         _ok = false;
 
                     if(!_ok)
+                    {
+                        std::swap(old_intervals, _arcIntervals);
                         return;
+                    }
 
                     old_intervals._intervalTupleVec.insert(
                         old_intervals._intervalTupleVec.end(),
                             _arcIntervals._intervalTupleVec.begin(), _arcIntervals._intervalTupleVec.end());
                 }
                 std::swap(old_intervals, _arcIntervals);
-                _index = old_index;
             }
 
             virtual void accept(const SubtractExpression* sub)
@@ -219,7 +220,7 @@ namespace PetriEngine {
                 scalar->child()->visit(*this);
             }
 
-            static inline bool intervals(Expression& e, Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp)
+            static inline bool intervals(ArcExpression& e, Colored::ArcIntervals& arcIntervals, const PetriEngine::Colored::ColorFixpoint& cfp)
             {
                 ArcIntervalVisitor v(arcIntervals, cfp);
                 e.visit(v);

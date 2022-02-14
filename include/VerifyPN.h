@@ -77,6 +77,13 @@
 #include "PetriEngine/PQL/CTLVisitor.h"
 #include "PetriEngine/PQL/XMLPrinter.h"
 #include "PetriEngine/PQL/FormulaSize.h"
+#include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/PQL/BinaryPrinter.h"
+#include "PetriEngine/PQL/Simplifier.h"
+#include "PetriEngine/PQL/PushNegation.h"
+#include "PetriEngine/PQL/PrepareForReachability.h"
+
 #include "PetriEngine/options.h"
 #include "utils/errors.h"
 #include "PetriEngine/STSolver.h"
@@ -85,18 +92,16 @@
 #include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
-#include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/Colored/Unfolder.h"
 #include "LTL/LTL.h"
-#include "PetriEngine/TraceReplay.h"
 #include "LTL/LTLMain.h"
-#include "PetriEngine/PQL/PredicateCheckers.h"
+
+#include "PetriEngine/TraceReplay.h"
+
 
 #include <atomic>
-#include <PetriEngine/PQL/BinaryPrinter.h>
-#include <PetriEngine/PQL/Simplifier.h>
-#include <PetriEngine/PQL/PushNegation.h>
-#include <PetriEngine/PQL/PrepareForReachability.h>
+
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;

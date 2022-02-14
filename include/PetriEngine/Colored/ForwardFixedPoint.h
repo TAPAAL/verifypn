@@ -48,14 +48,14 @@ namespace PetriEngine {
         private:
             TransitionVariableMap _transition_variable_maps;
             std::vector<bool> _considered;
-            ColoredPetriNetBuilder& _builder;
+            const ColoredPetriNetBuilder& _builder;
             bool _fixpointDone = false;
             double _fixPointCreationTime;
             size_t _max_intervals = 0;
             std::vector<std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
             std::vector<uint32_t> _placeFixpointQueue;
             std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
-            PartitionBuilder& _partition;
+            const PartitionBuilder& _partition;
             std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(size_t tid) const;
             void processInputArcs(const Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
             void processOutputArcs(const Colored::Transition& transition, size_t transition_id);
@@ -66,7 +66,7 @@ namespace PetriEngine {
             void init();
         public:
 
-            ForwardFixedPoint(ColoredPetriNetBuilder& b, PartitionBuilder& partition) : _builder(b), _partition(partition) {
+            ForwardFixedPoint(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition) : _builder(b), _partition(partition) {
             }
 
             void printPlaceTable() const;

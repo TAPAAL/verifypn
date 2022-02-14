@@ -424,7 +424,7 @@ namespace PetriEngine {
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
             postPlaceFixpoint.constraints = eqClass.intervals();
-            ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
+            ArcIntervals newArcInterval(varModifierMap);
 
             ArcIntervalVisitor::intervals(*arc->expr, newArcInterval, postPlaceFixpoint);
             placeArcIntervals[placeId] = std::move(newArcInterval);

@@ -26,14 +26,6 @@
 
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
-#include "BindingGenerator.h"
-#include "IntervalGenerator.h"
-#include "PartitionBuilder.h"
-#include "ArcIntervals.h"
-#include "StablePlaceFinder.h"
-#include "ForwardFixedPoint.h"
-#include "VariableSymmetry.h"
-#include "Unfolder.h"
 
 namespace PetriEngine {
 
