@@ -47,6 +47,9 @@ namespace PetriEngine {
                 std::vector<uint32_t> _placeQueue;
                 bool _computed = false;
                 double _time = 0;
+                const std::vector<Colored::ColorFixpoint> *_fixed_point = nullptr;
+
+                void init();
 
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 

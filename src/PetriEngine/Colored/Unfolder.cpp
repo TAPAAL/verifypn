@@ -98,7 +98,7 @@ namespace PetriEngine {
                 if (place.marking.size() > usedTokens || !any) {
                     const std::string &name = place.name + "_orphan";
                     ptBuilder.addPlace(name, place.marking.size() - usedTokens, place._x, place._y);
-                    _ptplacenames[place.name][UINT32_MAX] = std::move(name);
+                    _ptplacenames[place.name][std::numeric_limits<uint32_t>::max()] = std::move(name);
                 }
             }
         }
@@ -216,7 +216,8 @@ namespace PetriEngine {
                 return;
             }
 
-            const Colored::ExpressionContext & context{binding, _builder.colors(), _partition.partition()[arc.place]};
+            assert(_partition.partition().size() > arc.place);
+            const Colored::ExpressionContext context{binding, _builder.colors(), _partition.partition()[arc.place]};
             const auto ms = Colored::EvaluationVisitor::evaluate(*arc.expr, context);
             int shadowWeight = 0;
 

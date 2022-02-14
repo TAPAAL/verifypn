@@ -114,9 +114,9 @@ namespace PetriEngine {
             } else if (no->is_all()) {
                 std::vector<std::pair<const Color*,uint32_t>> colors;
 
-                if(_context.placePartition.isDiagonal() ||
-                   _context.placePartition.getEquivalenceClasses().empty()){
-                    for (size_t i = 0; i < no->all()->sort()->size(); i++) {
+                if(_context.placePartition.getEquivalenceClasses().empty() ||
+                   _context.placePartition.isDiagonal()){
+                    for (size_t i = 0; i < no->all()->sort()->size(); ++i) {
                         colors.push_back(std::make_pair(&(*no->all()->sort())[i], no->number()));
                     }
                 } else {

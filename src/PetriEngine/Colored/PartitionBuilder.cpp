@@ -14,25 +14,12 @@ namespace PetriEngine {
         : PartitionBuilder(transitions, places, nullptr){
         }
 
-        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
-        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size()) {
+        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places,
+            const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
+        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size())
+        , _fixed_point(placeColorFixpoints) {
 
-            //Instantiate partitions
-            for(uint32_t i = 0; i < _places.size(); i++){
-                const PetriEngine::Colored::Place& place = _places[i];
-                EquivalenceClass fullClass = EquivalenceClass(++_eq_id_counter, place.type);
-                if(placeColorFixpoints != nullptr){
-                    fullClass.setIntervalVector(placeColorFixpoints->operator[](i).constraints);
-                } else {
-                    fullClass.addInterval(place.type->getFullInterval());
-                }
-                _partition[i].push_back_Eqclass(fullClass);
-                for(uint32_t j = 0; j < place.type->productSize(); j++){
-                    _partition[i].push_back_diagonalTuplePos(false);
-                }
-                _placeQueue.push_back(i);
-                _inQueue[i] = true;
-            }
+
         }
 
         void PartitionBuilder::printPartion() const {
@@ -52,8 +39,28 @@ namespace PetriEngine {
             }
         }
 
+        void PartitionBuilder::init() {
+            //Instantiate partitions
+            for(uint32_t i = 0; i < _places.size(); i++){
+                const PetriEngine::Colored::Place& place = _places[i];
+                EquivalenceClass fullClass = EquivalenceClass(++_eq_id_counter, place.type);
+                if(_fixed_point != nullptr){
+                    fullClass.setIntervalVector((*_fixed_point)[i].constraints);
+                } else {
+                    fullClass.addInterval(place.type->getFullInterval());
+                }
+                _partition[i].push_back_Eqclass(fullClass);
+                for(uint32_t j = 0; j < place.type->productSize(); j++){
+                    _partition[i].push_back_diagonalTuplePos(false);
+                }
+                _placeQueue.push_back(i);
+                _inQueue[i] = true;
+            }
+        }
+
         bool PartitionBuilder::compute(int32_t timeout) {
             const auto start = std::chrono::high_resolution_clock::now();
+            init();
             handleLeafTransitions();
             auto end = std::chrono::high_resolution_clock::now();
 

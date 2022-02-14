@@ -110,8 +110,8 @@ namespace PetriEngine {
                     const PetriEngine::Colored::ColorFixpoint & cfp{intervalTuple};
 
                     Colored::ArcIntervalVisitor::intervals(*inArc.expr, arcInterval, cfp);
-
-                    _partition.partition()[inArc.place].applyPartition(arcInterval);
+                    if(_partition.computed())
+                        _partition.partition()[inArc.place].applyPartition(arcInterval);
                 }
 
                 IntervalGenerator::getVarIntervals(_transition_variable_maps[transitionId], _arcIntervals[transitionId]);

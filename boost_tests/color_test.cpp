@@ -100,17 +100,18 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03) {
             {
                 for(auto approx : {false, true})
                 {
+                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                     try {
                         auto [pn, conditions, qstrings] = load_pn(model.c_str(),
                             query.c_str(), qnums, partition, symmetry, cfp, approx);
                         for(auto i : qnums)
                         {
+                            std::cerr << "\t\tQ[" << i << "] " << std::endl;
                             auto c2 = prepareForReachability(conditions[i]);
                             ReachabilitySearch strategy(*pn, handler, 0);
                             std::vector<Condition_ptr> vec{c2};
                             std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
                             strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                            std::cerr << "\tQ[" << i << "] partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                             BOOST_REQUIRE(!approx);
                             BOOST_REQUIRE_EQUAL(expected[i], results[0]);
                         }
@@ -154,17 +155,18 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2) {
             {
                 for(auto approx : {false, true})
                 {
+                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                     try {
                         auto [pn, conditions, qstrings] = load_pn(model.c_str(),
                             query.c_str(), qnums, partition, symmetry, cfp, approx);
                         for(auto i : qnums)
                         {
+                            std::cerr << "\t\tQ[" << i << "] " << std::endl;
                             auto c2 = prepareForReachability(conditions[i]);
                             ReachabilitySearch strategy(*pn, handler, 0);
                             std::vector<Condition_ptr> vec{c2};
                             std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
                             strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                            std::cerr << "\tQ[" << i << "] partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                             if(!approx)
                                 BOOST_REQUIRE_EQUAL(expected[i], results[0]);
                             else
@@ -172,6 +174,7 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2) {
                                     (results[0] != Reachability::ResultPrinter::Satisfied && results[0] != Reachability::ResultPrinter::NotSatisfied));
                         }
                     } catch (const base_error& er) {
+                        std::cerr << er.what() << std::endl;
                         BOOST_REQUIRE(false);
                     }
                 }
