@@ -109,7 +109,7 @@ std::tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
     std::ostream& out = std::cout, int32_t partitionTimeout = 0, int32_t max_intervals = 0, int32_t intervals_reduced = 0, int32_t interval_timeout = 0, bool over_approx = false);
 
-ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries);
+ReturnValue contextAnalysis(bool colored, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries);
 std::vector<Condition_ptr > readQueries(options_t& options, std::vector<std::string>& qstrings);
 void printStats(PetriNetBuilder& builder, options_t& options);
 void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,

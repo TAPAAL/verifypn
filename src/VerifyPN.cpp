@@ -107,21 +107,12 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
     }
 }
 
-ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
+ReturnValue contextAnalysis(bool colored, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
-        place_names, transition_names, cpnBuilder.isColored());
+        place_names, transition_names, colored);
     for (auto& q : queries) {
         PetriEngine::PQL::analyze(q, context);
-
-        //Print errors if any
-        if (context.errors().size() > 0) {
-            std::stringstream ss;
-            for (size_t i = 0; i < context.errors().size(); i++) {
-                ss << "Query Context Analysis Error: " << context.errors()[i].toString() << "\n";
-            }
-            throw base_error(ss.str());
-        }
     }
     return ReturnValue::ContinueCode;
 }

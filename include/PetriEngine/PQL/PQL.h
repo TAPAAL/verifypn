@@ -70,38 +70,6 @@ namespace PetriEngine {
         class DistanceContext;
         class SimplificationContext;
 
-        /** Representation of a PQL error */
-        class ExprError {
-            std::string _text;
-            int _length;
-        public:
-
-            ExprError(std::string text = "", int length = 0) {
-                _text = text;
-                _length = length;
-            }
-
-            /** Human readable explaination of the error */
-            const std::string& text() const {
-                return _text;
-            }
-
-            /** length in the source, 0 if not applicable */
-            int length() const {
-                return _length;
-            }
-
-            /** Convert error to string */
-            std::string toString() const {
-                return "Parsing error \"" + text() + "\"";
-            }
-
-            /** True, if this is a default created ExprError without any information */
-            bool isEmpty() const {
-                return _text.empty() && _length == 0;
-            }
-        };
-
         /** Representation of an expression */
         class Expr {
             int _eval = 0;

@@ -160,7 +160,7 @@ int main(int argc, const char** argv) {
                 initial_size += qm0[i];
 
             if (queries.size() == 0 ||
-                contextAnalysis(cpnBuilder, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Could not analyze the queries");
             }
 
@@ -285,7 +285,7 @@ int main(int argc, const char** argv) {
             return to_underlying(ReturnValue::SuccessCode);
 
         if (options.replay_trace) {
-            if (contextAnalysis(cpnBuilder, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+            if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Fatal error assigning indexes");
             }
             std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -320,7 +320,7 @@ int main(int argc, const char** argv) {
             }
 
             if (options.replay_trace) {
-                if (contextAnalysis(cpnBuilder, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                     throw base_error("Fatal error assigning indexes");
                 }
                 std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -333,7 +333,7 @@ int main(int argc, const char** argv) {
 
             // Assign indexes
             if (queries.empty() ||
-                contextAnalysis(cpnBuilder, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("An error occurred while assigning indexes");
             }
 

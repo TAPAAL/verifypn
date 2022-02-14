@@ -64,7 +64,7 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     std::vector<std::string> qstrings;
     auto conditions = parseXMLQueries(qstrings, q, qnums, false);
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
-    contextAnalysis(cpnBuilder, trans_names, place_names, builder, pn.get(), conditions);
+    contextAnalysis(cpnBuilder.isColored() && !over_approx, trans_names, place_names, builder, pn.get(), conditions);
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
 }
 
