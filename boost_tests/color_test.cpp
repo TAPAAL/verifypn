@@ -20,6 +20,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <set>
+#include <vector>
 
 #include "utils.h"
 
@@ -64,4 +66,116 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch) {
     }
 
     BOOST_REQUIRE(!saw_exception);
+}
+
+
+BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03) {
+
+    std::string model("/models/PhilosophersDyn-COL-03/model.pnml");
+    std::string query("/models/PhilosophersDyn-COL-03/ReachabilityCardinality.xml");
+    std::vector<Reachability::ResultPrinter::Result> expected{
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied};
+    ResultHandler handler;
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    for(auto partition : {false, true})
+    {
+        for(auto symmetry : {false, true})
+        {
+            for(auto cfp : {false, true})
+            {
+                for(auto approx : {false, true})
+                {
+                    try {
+                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                            query.c_str(), qnums, partition, symmetry, cfp, approx);
+                        for(auto i : qnums)
+                        {
+                            auto c2 = prepareForReachability(conditions[i]);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{c2};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                            std::cerr << "\tQ[" << i << "] partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                            BOOST_REQUIRE(!approx);
+                            BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                        }
+                    } catch (const base_error& er) {
+                        BOOST_REQUIRE(approx);
+                    }
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PetersonCOL2) {
+
+    std::string model("/models/Peterson-COL-2/model.pnml");
+    std::string query("/models/Peterson-COL-2/ReachabilityCardinality.xml");
+    std::vector<Reachability::ResultPrinter::Result> expected{
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::NotSatisfied,
+        Reachability::ResultPrinter::Satisfied};
+    ResultHandler handler;
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    for(auto partition : {false, true})
+    {
+        for(auto symmetry : {false, true})
+        {
+            for(auto cfp : {false, true})
+            {
+                for(auto approx : {false, true})
+                {
+                    try {
+                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                            query.c_str(), qnums, partition, symmetry, cfp, approx);
+                        for(auto i : qnums)
+                        {
+                            auto c2 = prepareForReachability(conditions[i]);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{c2};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                            std::cerr << "\tQ[" << i << "] partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                            if(!approx)
+                                BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                            else
+                                BOOST_REQUIRE(expected[i] == results[0] || // either solved correctly or not determined.
+                                    (results[0] != Reachability::ResultPrinter::Satisfied && results[0] != Reachability::ResultPrinter::NotSatisfied));
+                        }
+                    } catch (const base_error& er) {
+                        BOOST_REQUIRE(false);
+                    }
+                }
+            }
+        }
+    }
 }
