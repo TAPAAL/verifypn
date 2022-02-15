@@ -29,18 +29,19 @@ jobs:
           ./configure
           make 
           sudo make install
-          mkdir '${{runner.workspace}}/build'
 
       - name: Test
         run: |
-          cd '${{runner.workspace}}/build'
+          mkdir -p build
+          cd build
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Debug -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=ON
           make
           make test
 
       - name: Build 
         run: |
-          cd '${{runner.workspace}}/build'
+          mkdir -p build
+          cd build
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=OFF
           make
 
@@ -48,4 +49,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: verifypn-linux64
-          path: '${{runner.workspace}}/build/verifypn/bin/verifypn-linux64'
+          path: build/verifypn/bin/verifypn-linux64
