@@ -362,7 +362,7 @@ namespace PetriEngine {
                 if(!_intervals.empty()) {
                     assert(_intervals[0].size() == interval.size());
                 } else {
-                    _intervals.push_back(interval);
+                    _intervals.emplace_back(interval);
                     return;
                 }
 
@@ -400,7 +400,7 @@ namespace PetriEngine {
                     vecIndex++;
                 }
 
-                _intervals.insert(_intervals.begin() + vecIndex, interval);
+                _intervals.emplace(_intervals.begin() + vecIndex, interval);
             }
 
             void constrainLower(const std::vector<uint32_t>& values, bool strict) {

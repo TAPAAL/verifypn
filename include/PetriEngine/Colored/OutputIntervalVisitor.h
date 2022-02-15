@@ -47,7 +47,7 @@ namespace PetriEngine {
             : _varmap_vec(varmap) {
             }
 
-            virtual void accept(const DotConstantExpression*)
+            virtual void accept(const DotConstantExpression* e)
             {
                 _result.clear();
                 Colored::interval_t interval;
@@ -109,13 +109,14 @@ namespace PetriEngine {
 
                 for(const auto& colorExp : *tup) {
                     Colored::interval_vector_t intervalHolder;
+                    _result.clear();
                     colorExp->visit(*this);
                     if(intervals.empty()){
-                        intervals = _result;
+                        std::swap(_result, intervals);
                     } else {
                         for(const auto& nested_interval : _result){
                             Colored::interval_vector_t newIntervals;
-                            for(auto& interval : intervals) {
+                            for(auto interval : intervals) { // copy out here
                                 for(const auto& nestedRange : nested_interval._ranges) {
                                     interval.addRange(nestedRange);
                                 }
@@ -200,7 +201,7 @@ namespace PetriEngine {
                 scalar->child()->visit(*this);
             }
 
-            static inline std::vector<Colored::interval_vector_t> intervals(Expression& e, const std::vector<VariableIntervalMap>& varMapVec)
+            static inline std::vector<Colored::interval_vector_t> intervals(ArcExpression& e, const std::vector<VariableIntervalMap>& varMapVec)
             {
                 OutputIntervalVisitor v(varMapVec);
                 e.visit(v);
