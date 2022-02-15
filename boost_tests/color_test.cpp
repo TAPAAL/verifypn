@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-/*
+
 BOOST_AUTO_TEST_CASE(InitialMarkingMismatch) {
 
     std::string model("/models/color_mismatch.pnml");
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04) {
             }
         }
     }
-}*/
+}
 
 BOOST_AUTO_TEST_CASE(NeoElectionCOL3) {
 
