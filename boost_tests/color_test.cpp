@@ -186,3 +186,35 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2) {
         }
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04) {
+
+    std::string model("/models/UtilityControlRoom-COL-Z2T3N04/model.pnml");
+    std::string query("/models/UtilityControlRoom-COL-Z2T3N04/ReachabilityCardinality.xml");
+    // this model is to large to verify as a test, but unfolding should be ok.
+    // the unfolding provoked an error in the CFP of colored nets.
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    for(auto partition : {false, true})
+    {
+        for(auto symmetry : {false, true})
+        {
+            for(auto cfp : {false, true})
+            {
+                for(auto approx : {false, true})
+                {
+                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                    try {
+                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                            query.c_str(), qnums, partition, symmetry, cfp, approx);
+                        BOOST_REQUIRE(pn->numberOfTransitions() > 0);
+                        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                    } catch (const base_error& er) {
+                        std::cerr << er.what() << std::endl;
+                        BOOST_REQUIRE(false);
+                    }
+                }
+            }
+        }
+    }
+}
