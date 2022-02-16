@@ -2,6 +2,7 @@
  *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
  *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
  *                     Andreas H. Klostergaard
+ *                     Peter G. Jensen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,47 +18,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COLOREDNETSTRUCTURES_H
-#define COLOREDNETSTRUCTURES_H
+/*
+ * File:   StablePlaceFinder.h
+ * Author: pgj
+ *
+ * Created on 11 February 2022, 21.51
+ */
+
+#ifndef STABLEPLACEFINDER_H
+#define STABLEPLACEFINDER_H
 
 #include <vector>
-#include <set>
-#include <assert.h>
-#include "Colors.h"
-#include "Expressions.h"
-#include "Multiset.h"
 
 namespace PetriEngine {
+    class ColoredPetriNetBuilder;
     namespace Colored {
 
-        struct Arc {
-            uint32_t place;
-            uint32_t transition;
-            ArcExpression_ptr expr;
-            bool input;
-            uint32_t weight;
-        };
+        class StablePlaceFinder {
+        private:
+            const ColoredPetriNetBuilder& _builder;
+            std::vector<bool> _stable;
+        public:
 
-        struct Transition {
-            std::string name;
-            GuardExpression_ptr guard;
-            int32_t _player;
-            double _x = 0, _y = 0;
-            std::vector<Arc> input_arcs;
-            std::vector<Arc> output_arcs;
-        };
+            StablePlaceFinder(const ColoredPetriNetBuilder& b) : _builder(b) {
+            }
 
-        struct Place {
-            std::string name;
-            const ColorType* type;
-            Multiset marking;
-            double _x = 0, _y = 0;
-            bool inhibitor;
-            std::vector<uint32_t> _pre;
-            std::vector<uint32_t> _post;
+            StablePlaceFinder(const ColoredPetriNetBuilder& b, const StablePlaceFinder& other)
+                    : _builder(b), _stable(other._stable) {}
+
+            void compute();
+
+            bool operator[](size_t i) const {
+                if(i >= _stable.size()) return false;
+                return _stable[i];
+            }
         };
     }
 }
 
-#endif /* COLOREDNETSTRUCTURES_H */
+
+#endif /* STABLEPLACEFINDER_H */
 

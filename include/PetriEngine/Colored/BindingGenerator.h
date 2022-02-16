@@ -22,6 +22,7 @@
 
 #include "ColoredNetStructures.h"
 #include "EquivalenceClass.h"
+#include "ForwardFixedPoint.h"
 
 namespace PetriEngine {
 
@@ -30,10 +31,10 @@ namespace PetriEngine {
         class Iterator {
         private:
             NaiveBindingGenerator* _generator;
-            
+
         public:
             Iterator(NaiveBindingGenerator* generator);
-            
+
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
@@ -42,13 +43,13 @@ namespace PetriEngine {
     private:
         Colored::GuardExpression_ptr _expr;
         Colored::BindingMap _bindings;
-        Colored::ColorTypeMap& _colorTypes;
-        
+        const Colored::ColorTypeMap& _colorTypes;
+
         bool eval() const;
-        
+
     public:
         NaiveBindingGenerator(const Colored::Transition& transition,
-                Colored::ColorTypeMap& colorTypes);
+                const Colored::ColorTypeMap& colorTypes);
 
         const Colored::BindingMap& nextBinding();
         const Colored::BindingMap& currentBinding() const;
@@ -63,10 +64,10 @@ namespace PetriEngine {
         class Iterator {
         private:
             FixpointBindingGenerator* _generator;
-                        
+
         public:
             Iterator(FixpointBindingGenerator* generator);
-            
+
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
@@ -80,6 +81,7 @@ namespace PetriEngine {
         const Colored::ColorTypeMap& _colorTypes;
         const Colored::Transition &_transition;
         const std::vector<std::set<const Colored::Variable *>>& _symmetric_vars;
+        const Colored::ForwardFixedPoint::VarMap& _var_map;
         Colored::BindingMap::iterator _bindingIterator;
         bool _isDone;
         bool _noValidBindings;
@@ -87,7 +89,7 @@ namespace PetriEngine {
         uint32_t _currentOuterId = 0;
         uint32_t _currentInnerId = 0;
         uint32_t _symmetric_vars_set = 0;
-        
+
         bool eval() const;
         bool assignSymmetricVars();
         void generateCombinations(
@@ -95,13 +97,13 @@ namespace PetriEngine {
             uint32_t samples,
             std::vector<std::vector<uint32_t>> &result,
             std::vector<uint32_t> &current) const;
-        
+
     public:
         FixpointBindingGenerator(const Colored::Transition &transition,
-                const Colored::ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars);
+                const Colored::ColorTypeMap& colorTypes,  const std::vector<std::set<const Colored::Variable *>>& symmetric_vars, const Colored::ForwardFixedPoint::VarMap& var_map);
 
         FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
-        
+
         FixpointBindingGenerator& operator= (const FixpointBindingGenerator& b) = default;
 
         const Colored::BindingMap& nextBinding();
@@ -109,5 +111,5 @@ namespace PetriEngine {
         bool isInitial() const;
         Iterator begin();
         Iterator end();
-    };    
+    };
 }

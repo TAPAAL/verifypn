@@ -131,21 +131,14 @@ int main(int argc, const char** argv) {
             }
         }
 
+        std::stringstream ss;
+        std::ostream& out = options.printstatistics ? std::cout : ss;
+        auto [builder, transition_names, place_names] = unfold(cpnBuilder,
+            options.computePartition, options.symmetricVariables,
+            options.computeCFP, out,
+            options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
+            options.intervalTimeout, options.cpnOverApprox);
 
-        if (options.computePartition) {
-            cpnBuilder.computePartition(options.partitionTimeout);
-        }
-        if (options.symmetricVariables) {
-            cpnBuilder.computeSymmetricVariables();
-        }
-        if (options.computeCFP) {
-            cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced,
-                                                 options.intervalTimeout);
-        }
-
-
-        auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
-        printUnfoldingStats(cpnBuilder, options);
         builder.sort();
         std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
         ResultPrinter printer(&builder, &options, querynames);
@@ -167,7 +160,7 @@ int main(int argc, const char** argv) {
                 initial_size += qm0[i];
 
             if (queries.size() == 0 ||
-                contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Could not analyze the queries");
             }
 
@@ -292,7 +285,7 @@ int main(int argc, const char** argv) {
             return to_underlying(ReturnValue::SuccessCode);
 
         if (options.replay_trace) {
-            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+            if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Fatal error assigning indexes");
             }
             std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -327,7 +320,7 @@ int main(int argc, const char** argv) {
             }
 
             if (options.replay_trace) {
-                if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                     throw base_error("Fatal error assigning indexes");
                 }
                 std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -340,7 +333,7 @@ int main(int argc, const char** argv) {
 
             // Assign indexes
             if (queries.empty() ||
-                contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("An error occurred while assigning indexes");
             }
 

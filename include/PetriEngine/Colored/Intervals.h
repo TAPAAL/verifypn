@@ -60,7 +60,7 @@ namespace PetriEngine {
             void addRange(Reachability::range_t&& newRange) {
                 _ranges.emplace_back(newRange);
             }
-            
+
             void addRange(const Reachability::range_t& newRange) {
                 _ranges.emplace_back(newRange);
             }
@@ -77,7 +77,7 @@ namespace PetriEngine {
                 assert(index < _ranges.size());
                 return _ranges[index];
             }
-            
+
             const Reachability::range_t& operator[] (size_t index) const {
 
                 return _ranges[index];
@@ -117,7 +117,7 @@ namespace PetriEngine {
                 uint32_t colors = 1;
                 for(const auto& range : _ranges) {
                     colors *= 1+  range._upper - range._lower;
-                }          
+                }
                 return colors;
             }
 
@@ -159,7 +159,7 @@ namespace PetriEngine {
                     } else {
                         auto rangeCopy = _ranges[i];
                         overlapInterval.addRange(rangeCopy &= other[i]);
-                    }                    
+                    }
                 }
 
                 return overlapInterval;
@@ -172,30 +172,30 @@ namespace PetriEngine {
                 }
                 return *this;
             }
-            
+
             bool intersects(const interval_t& otherInterval) const {
                 assert(size() == otherInterval.size());
-                for(uint32_t k = 0; k < size(); k++) {     
+                for(uint32_t k = 0; k < size(); k++) {
                     if(!_ranges[k].intersects(otherInterval[k])) {
                         return false;
                     }
                 }
                 return true;
             }
-            
+
             std::vector<interval_t> getSubtracted(const interval_t& other, const std::vector<bool> &diagonalPositions) const {
                 std::vector<interval_t> result;
-                
+
                 if(size() != other.size()){
                     return result;
                 }
-                
+
                 for(uint32_t i = 0; i < size(); i++){
                     interval_t newInterval = *this;
                     if(diagonalPositions[i]){
                         continue;
                     }
-                    
+
                     int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
                     uint32_t newMaxLower = std::max(other[i]._upper +1, _ranges[i]._lower);
 
@@ -207,7 +207,7 @@ namespace PetriEngine {
                         intervalCopy._ranges[i] = upperRange;
                         result.push_back(std::move(intervalCopy));
                         result.push_back(std::move(newInterval));
-                        
+
                     } else if (((int32_t) _ranges[i]._lower)  <= newMinUpper){
                         auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
                         newInterval._ranges[i] = lowerRange;
@@ -216,8 +216,8 @@ namespace PetriEngine {
                         auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
                         newInterval._ranges[i] = upperRange;
                         result.push_back(std::move(newInterval));
-                    }                    
-                }                
+                    }
+                }
                 return result;
             }
 
@@ -245,7 +245,7 @@ namespace PetriEngine {
         class interval_vector_t {
         private:
             std::vector<interval_t> _intervals;
-        public:            
+        public:
 
             ~interval_vector_t() {
             }
@@ -261,7 +261,7 @@ namespace PetriEngine {
             std::vector<interval_t>::const_iterator begin() const { return _intervals.begin(); }
             std::vector<interval_t>::const_iterator end() const { return _intervals.end(); }
 
-            
+
             bool empty() const {
                 return _intervals.empty();
             }
@@ -269,7 +269,7 @@ namespace PetriEngine {
             void clear() {
                 _intervals.clear();
             }
-            
+
             const interval_t& front() const{
                 return _intervals[0];
             }
@@ -289,7 +289,7 @@ namespace PetriEngine {
             uint32_t getContainedColors() const {
                 uint32_t colors = 0;
                 for (const auto& interval : _intervals) {
-                    colors += interval.getContainedColors();              
+                    colors += interval.getContainedColors();
                 }
                 return colors;
             }
@@ -318,11 +318,11 @@ namespace PetriEngine {
                 assert(index < _intervals.size());
                 return _intervals[index];
             }
-            
+
             void append(const interval_vector_t& other) {
                 _intervals.insert(_intervals.end(), other._intervals.begin(), other._intervals.end());
             }
-            
+
             interval_t isRangeEnd(const std::vector<uint32_t>& ids) const {
                 for (uint32_t j = 0; j < _intervals.size(); j++) {
                     bool rangeEnd = true;
@@ -362,7 +362,7 @@ namespace PetriEngine {
                 if(!_intervals.empty()) {
                     assert(_intervals[0].size() == interval.size());
                 } else {
-                    _intervals.push_back(interval);
+                    _intervals.emplace_back(interval);
                     return;
                 }
 
@@ -378,11 +378,11 @@ namespace PetriEngine {
                         if(interval[k]._lower < localInterval[k]._lower){
                             if(foundPlace == undecided){
                                 foundPlace = lower;
-                            }                            
+                            }
                         } else if (interval[k]._lower > localInterval[k]._lower){
                             if(foundPlace == undecided){
                                 foundPlace = greater;
-                            }                            
+                            }
                         }
                         if(!extendsInterval && foundPlace != undecided){
                             break;
@@ -396,11 +396,11 @@ namespace PetriEngine {
                         return;
                     } else if(foundPlace == lower){
                         break;
-                    }                    
+                    }
                     vecIndex++;
                 }
 
-                _intervals.insert(_intervals.begin() + vecIndex, interval);
+                _intervals.emplace(_intervals.begin() + vecIndex, interval);
             }
 
             void constrainLower(const std::vector<uint32_t>& values, bool strict) {
@@ -408,10 +408,10 @@ namespace PetriEngine {
                     for(uint32_t j = 0; j < values.size(); ++j){
                         if(strict && _intervals[i][j]._lower <= values[j]){
                             _intervals[i][j]._lower = values[j]+1;
-                        } 
+                        }
                         else if(!strict && _intervals[i][j]._lower < values[j]){
                             _intervals[i][j]._lower = values[j];
-                        }                          
+                        }
                     }
                 }
                 simplify();
@@ -422,10 +422,10 @@ namespace PetriEngine {
                     for(uint32_t j = 0; j < values.size(); ++j){
                         if(strict && _intervals[i][j]._upper >= values[j]){
                             _intervals[i][j]._upper = values[j]-1;
-                        } 
+                        }
                         else if(!strict && _intervals[i][j]._upper > values[j]){
                             _intervals[i][j]._upper = values[j];
-                        }                        
+                        }
                     }
                 }
                 simplify();
@@ -474,7 +474,7 @@ namespace PetriEngine {
                                 ids.push_back(0);
                             } else {
                                 ids.push_back(shiftedInterval.first);
-                            }                            
+                            }
                         }
                     } else {
                         for(uint32_t i = 0; i < ids.size(); i++){
@@ -486,7 +486,7 @@ namespace PetriEngine {
                                 ids[i] = 0;
                             } else {
                                 ids[i] = std::max(ids[i], shiftedInterval.first);
-                            }                            
+                            }
                         }
                     }
                 }
@@ -505,7 +505,7 @@ namespace PetriEngine {
                                 ids.push_back(sizes[i]-1);
                             } else {
                                 ids.push_back(shiftedInterval.second);
-                            }                            
+                            }
                         }
                     } else {
                         for(uint32_t i = 0; i < ids.size(); i++){
@@ -518,7 +518,7 @@ namespace PetriEngine {
                                 ids[i] = sizes[i]-1;
                             } else {
                                 ids[i] = std::max(ids[i], shiftedInterval.second);
-                            }                            
+                            }
                         }
                     }
                 }
@@ -549,11 +549,11 @@ namespace PetriEngine {
                                 interval1[i]._upper = shiftedInterval.second;
                             }
                         }
-                        newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());                                                
+                        newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());
                     }
                     collectedIntervals.insert(collectedIntervals.end(), newIntervals.begin(), newIntervals.end());
                 }
-                
+
                 _intervals = std::move(collectedIntervals);
             }
 
@@ -566,27 +566,27 @@ namespace PetriEngine {
                 return false;
             }
 
-            void removeInterval(uint32_t index) {               
-                _intervals.erase(_intervals.begin() + index); 
+            void removeInterval(uint32_t index) {
+                _intervals.erase(_intervals.begin() + index);
             }
 
-            
 
-            void restrict(uint32_t k) {              
+
+            void restrict(uint32_t k) {
                 simplify();
                 if(k == 0){
                     return;
                 }
-                
-                while (size() > k){ 
+
+                while (size() > k){
                     interval_dist_t closestInterval = getClosestIntervals();
-                    auto& interval = _intervals[closestInterval.intervalId1]; 
-                    const auto& otherInterval = _intervals[closestInterval.intervalId2]; 
+                    auto& interval = _intervals[closestInterval.intervalId1];
+                    const auto& otherInterval = _intervals[closestInterval.intervalId2];
 
                     for(uint32_t l = 0; l < interval.size(); l++) {
                         interval[l] |= otherInterval[l];
                     }
-                    
+
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
                 }
                 simplify();
@@ -618,7 +618,7 @@ namespace PetriEngine {
                             if(currentBest.distance == 1){
                                 return currentBest;
                             }
-                        }                           
+                        }
                     }
                 }
                 return currentBest;
@@ -628,7 +628,7 @@ namespace PetriEngine {
                 while(!_intervals.empty() && !_intervals[0].isSound()){
                     _intervals.erase(_intervals.begin());
                 }
-                for (size_t i = 0; i < _intervals.size(); ++i) {                    
+                for (size_t i = 0; i < _intervals.size(); ++i) {
                     for(size_t j = _intervals.size()-1; j > i; --j){
                         const auto& otherInterval = _intervals[j];
                         auto& interval = _intervals[i];
@@ -654,43 +654,43 @@ namespace PetriEngine {
                     if(!interval.isSound()){
                         rangesToRemove.insert(i);
                         continue;
-                    }   
+                    }
                     for(uint32_t j = i+1; j < _intervals.size(); j++){
                         const auto& otherInterval = _intervals[j];
 
                         if(!otherInterval.isSound()){
                             continue;
-                        }   
+                        }
                         bool overlap = true;
 
                         uint32_t dist = 1;
 
                         if(overlap){
-                            for(uint32_t k = 0; k < interval.size(); k++) {                            
+                            for(uint32_t k = 0; k < interval.size(); k++) {
                                 if(interval[k]._lower > otherInterval[k]._upper  || otherInterval[k]._lower > interval[k]._upper) {
-                                    if(interval[k]._lower > otherInterval[k]._upper + dist  || 
+                                    if(interval[k]._lower > otherInterval[k]._upper + dist  ||
                                         otherInterval[k]._lower > interval[k]._upper + dist) {
                                         overlap = false;
                                         break;
                                     } else {
                                         dist = 0;
-                                    }                                    
+                                    }
                                 }
                             }
                         }
-                        
+
                         if(overlap) {
                             for(uint32_t l = 0; l < interval.size(); l++) {
                                 interval[l] |= otherInterval[l];
                             }
                             rangesToRemove.insert(j);
-                        }  
+                        }
                     }
                 }
                 for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
                     _intervals.erase(_intervals.begin() + *i);
                 }
-            } 
+            }
         };
     }
 }

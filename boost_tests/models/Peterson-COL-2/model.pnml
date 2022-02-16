@@ -1,0 +1,1081 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="Peterson-COL-2" type="http://www.pnml.org/version-2009/grammar/symmetricnet">
+    <page id="petersonDefaultPage">
+      <place id="Idle">
+        <name>
+          <text>Idle</text>
+        </name>
+        <type>
+          <text>Process</text>
+          <structure>          <usersort declaration="process"/>
+</structure>
+        </type>
+        <hlinitialMarking>
+          <text>Process.all</text>
+          <structure>          <all>
+            <usersort declaration="process"/>
+          </all>
+</structure>
+        </hlinitialMarking>
+      </place>
+      <place id="WantSection">
+        <name>
+          <text>WantSection</text>
+        </name>
+        <type>
+          <text>ProcBool</text>
+          <structure>          <usersort declaration="procbool"/>
+</structure>
+        </type>
+        <hlinitialMarking>
+          <text>1'(Process.all, F)</text>
+          <structure>          <add>
+            <subterm>            <numberof>
+              <subterm>              <numberconstant value="1">
+                <positive/>
+              </numberconstant>
+              </subterm>              <subterm>              <tuple>
+                <subterm>                <useroperator declaration="process0"/>                </subterm>                <subterm>                <useroperator declaration="false"/>                </subterm>              </tuple>
+              </subterm>            </numberof>
+            </subterm>            <subterm>            <numberof>
+              <subterm>              <numberconstant value="1">
+                <positive/>
+              </numberconstant>
+              </subterm>              <subterm>              <tuple>
+                <subterm>                <useroperator declaration="process1"/>                </subterm>                <subterm>                <useroperator declaration="false"/>                </subterm>              </tuple>
+              </subterm>            </numberof>
+            </subterm>            <subterm>            <numberof>
+              <subterm>              <numberconstant value="1">
+                <positive/>
+              </numberconstant>
+              </subterm>              <subterm>              <tuple>
+                <subterm>                <useroperator declaration="process2"/>                </subterm>                <subterm>                <useroperator declaration="false"/>                </subterm>              </tuple>
+              </subterm>            </numberof>
+            </subterm>          </add>
+</structure>
+        </hlinitialMarking>
+      </place>
+      <place id="AskForSection">
+        <name>
+          <text>AskForSection</text>
+        </name>
+        <type>
+          <text>ProcTour</text>
+          <structure>          <usersort declaration="proctour"/>
+</structure>
+        </type>
+      </place>
+      <place id="Turn">
+        <name>
+          <text>Turn</text>
+        </name>
+        <type>
+          <text>TourProc</text>
+          <structure>          <usersort declaration="tourproc"/>
+</structure>
+        </type>
+        <hlinitialMarking>
+          <text>1'(Tour.all, 0)</text>
+          <structure>          <add>
+            <subterm>            <numberof>
+              <subterm>              <numberconstant value="1">
+                <positive/>
+              </numberconstant>
+              </subterm>              <subterm>              <tuple>
+                <subterm>                <useroperator declaration="tour0"/>                </subterm>                <subterm>                <useroperator declaration="process0"/>                </subterm>              </tuple>
+              </subterm>            </numberof>
+            </subterm>            <subterm>            <numberof>
+              <subterm>              <numberconstant value="1">
+                <positive/>
+              </numberconstant>
+              </subterm>              <subterm>              <tuple>
+                <subterm>                <useroperator declaration="tour1"/>                </subterm>                <subterm>                <useroperator declaration="process0"/>                </subterm>              </tuple>
+              </subterm>            </numberof>
+            </subterm>          </add>
+</structure>
+        </hlinitialMarking>
+      </place>
+      <place id="TestTurn">
+        <name>
+          <text>TestTurn</text>
+        </name>
+        <type>
+          <text>ProcTour</text>
+          <structure>          <usersort declaration="proctour"/>
+</structure>
+        </type>
+      </place>
+      <place id="BeginLoop">
+        <name>
+          <text>BeginLoop</text>
+        </name>
+        <type>
+          <text>ProcTourProc</text>
+          <structure>          <usersort declaration="proctourproc"/>
+</structure>
+        </type>
+      </place>
+      <place id="EndTurn">
+        <name>
+          <text>EndTurn</text>
+        </name>
+        <type>
+          <text>ProcTour</text>
+          <structure>          <usersort declaration="proctour"/>
+</structure>
+        </type>
+      </place>
+      <place id="CS">
+        <name>
+          <text>CS</text>
+        </name>
+        <type>
+          <text>Process</text>
+          <structure>          <usersort declaration="process"/>
+</structure>
+        </type>
+      </place>
+      <place id="TestIdentity">
+        <name>
+          <text>TestIdentity</text>
+        </name>
+        <type>
+          <text>ProcTourProc</text>
+          <structure>          <usersort declaration="proctourproc"/>
+</structure>
+        </type>
+      </place>
+      <place id="TestAlone">
+        <name>
+          <text>TestAlone</text>
+        </name>
+        <type>
+          <text>ProcTourProc</text>
+          <structure>          <usersort declaration="proctourproc"/>
+</structure>
+        </type>
+      </place>
+      <place id="IsEndLoop">
+        <name>
+          <text>IsEndLoop</text>
+        </name>
+        <type>
+          <text>ProcTourProc</text>
+          <structure>          <usersort declaration="proctourproc"/>
+</structure>
+        </type>
+      </place>
+      <transition id="Ask">
+        <name>
+          <text>Ask</text>
+        </name>
+      </transition>
+      <transition id="UpdateTurn">
+        <name>
+          <text>UpdateTurn</text>
+        </name>
+      </transition>
+      <transition id="TurnEqual">
+        <name>
+          <text>TurnEqual</text>
+        </name>
+      </transition>
+      <transition id="TurnDiff">
+        <name>
+          <text>TurnDiff</text>
+        </name>
+        <condition>
+          <text>[i ineq k]</text>
+          <structure>          <inequality>
+            <subterm>            <variable refvariable="vari"/>
+            </subterm>            <subterm>            <variable refvariable="vark"/>
+            </subterm>          </inequality>
+</structure>
+        </condition>
+      </transition>
+      <transition id="AccessCS">
+        <name>
+          <text>AccessCS</text>
+        </name>
+      </transition>
+      <transition id="ProgressTurn">
+        <name>
+          <text>ProgressTurn</text>
+        </name>
+        <condition>
+          <text>[j ineq 1]</text>
+          <structure>          <inequality>
+            <subterm>            <variable refvariable="varj"/>
+            </subterm>            <subterm>            <useroperator declaration="tour1"/>            </subterm>          </inequality>
+</structure>
+        </condition>
+      </transition>
+      <transition id="BecomeIdle">
+        <name>
+          <text>BecomeIdle</text>
+        </name>
+      </transition>
+      <transition id="ContinueLoop">
+        <name>
+          <text>ContinueLoop</text>
+        </name>
+      </transition>
+      <transition id="Identity">
+        <name>
+          <text>Identity</text>
+        </name>
+      </transition>
+      <transition id="NoIdentity">
+        <name>
+          <text>NoIdentity</text>
+        </name>
+        <condition>
+          <text>[i ineq k]</text>
+          <structure>          <inequality>
+            <subterm>            <variable refvariable="vari"/>
+            </subterm>            <subterm>            <variable refvariable="vark"/>
+            </subterm>          </inequality>
+</structure>
+        </condition>
+      </transition>
+      <transition id="Loop">
+        <name>
+          <text>Loop</text>
+        </name>
+        <condition>
+          <text>[k ineq 2]</text>
+          <structure>          <inequality>
+            <subterm>            <variable refvariable="vark"/>
+            </subterm>            <subterm>            <useroperator declaration="process2"/>            </subterm>          </inequality>
+</structure>
+        </condition>
+      </transition>
+      <transition id="NotAlone">
+        <name>
+          <text>NotAlone</text>
+        </name>
+      </transition>
+      <transition id="Alone1">
+        <name>
+          <text>Alone1</text>
+        </name>
+      </transition>
+      <transition id="EndLoop">
+        <name>
+          <text>EndLoop</text>
+        </name>
+      </transition>
+      <arc id="Idle2ask" source="Idle" target="Ask">
+        <name>
+          <text>Idle2Ask</text>
+        </name>
+        <hlinscription>
+          <text>1'(i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <variable refvariable="vari"/>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="becomeidle2idle" source="BecomeIdle" target="Idle">
+        <name>
+          <text>BecomeIdle2Idle</text>
+        </name>
+        <hlinscription>
+          <text>1'(i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <variable refvariable="vari"/>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="WantSection2ask" source="WantSection" target="Ask">
+        <name>
+          <text>WantSection2Ask</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,F)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="false"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Ask2wantSection" source="Ask" target="WantSection">
+        <name>
+          <text>Ask2WantSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,T)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="true"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="WantSection2becomeIdle" source="WantSection" target="BecomeIdle">
+        <name>
+          <text>WantSection2BecomeIdle</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,T)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="true"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="BecomeIdle2wantSection" source="BecomeIdle" target="WantSection">
+        <name>
+          <text>BecomeIdle2WantSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,F)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="false"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="AskForSection2updateTurn" source="AskForSection" target="UpdateTurn">
+        <name>
+          <text>AskForSection2UpdateTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Ask2askForSection" source="Ask" target="AskForSection">
+        <name>
+          <text>Ask2askForSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,0)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="tour0"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="ProgressTurn2askForSection" source="ProgressTurn" target="AskForSection">
+        <name>
+          <text>ProgressTurn2AskForSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j++1)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <successor>
+                <subterm>                <variable refvariable="varj"/>
+                </subterm>              </successor>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Turn2updateTurn" source="Turn" target="UpdateTurn">
+        <name>
+          <text>Turn2updateTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="UpdateTurn2turn" source="UpdateTurn" target="Turn">
+        <name>
+          <text>UpdateTurn2Turn</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vari"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Turn2turnDiff" source="Turn" target="TurnDiff">
+        <name>
+          <text>Turn2TurnDiff</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TurnDiff2turn" source="TurnDiff" target="Turn">
+        <name>
+          <text>TurnDiff2turn</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Turn2turnEqual" source="Turn" target="TurnEqual">
+        <name>
+          <text>Turn2TurnEqual</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vari"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TurnEqual2turn" source="TurnEqual" target="Turn">
+        <name>
+          <text>TurnEqual2Turn</text>
+        </name>
+        <hlinscription>
+          <text>1'(j,i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vari"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestTurn2turnEqual" source="TestTurn" target="TurnEqual">
+        <name>
+          <text>TestTurn2turnEqual</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestTurn2turnDiff" source="TestTurn" target="TurnDiff">
+        <name>
+          <text>TestTurn2TurnDiff</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="NotAlone2testTurn" source="NotAlone" target="TestTurn">
+        <name>
+          <text>NotAlone2TestTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="UpdateTurn2testTurn" source="UpdateTurn" target="TestTurn">
+        <name>
+          <text>UpdateTurn2TestTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="BeginLoop2continueLoop" source="BeginLoop" target="ContinueLoop">
+        <name>
+          <text>BeginLoop2continueLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TurnEqual2beginLoop" source="TurnEqual" target="BeginLoop">
+        <name>
+          <text>TurnEqual2BeginLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,0)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <useroperator declaration="process0"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Loop2beginLoop" source="Loop" target="BeginLoop">
+        <name>
+          <text>Loop2beginLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k++1)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <successor>
+                <subterm>                <variable refvariable="vark"/>
+                </subterm>              </successor>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="EndTurn2progressTurn" source="EndTurn" target="ProgressTurn">
+        <name>
+          <text>EndTurn2ProgressTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="EndTurn2accessCS" source="EndTurn" target="AccessCS">
+        <name>
+          <text>endTurn2accessCS</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,1)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <useroperator declaration="tour1"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TurnDiff2endTurn" source="TurnDiff" target="EndTurn">
+        <name>
+          <text>TurnDiff2EndTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="EndLoop2endTurn" source="EndLoop" target="EndTurn">
+        <name>
+          <text>EndLoop2EndTurn</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestIdentity2noIdentity" source="TestIdentity" target="NoIdentity">
+        <name>
+          <text>TestIdentity2NoIdentity</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestIdentity2identity" source="TestIdentity" target="Identity">
+        <name>
+          <text>TestIdentity2Identity</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vari"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="ContinueLoop2testIdentity" source="ContinueLoop" target="TestIdentity">
+        <name>
+          <text>ContinueLoop2TestIdentity</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="cs2becomeIdle" source="CS" target="BecomeIdle">
+        <name>
+          <text>CS2BecomeIdle</text>
+        </name>
+        <hlinscription>
+          <text>1'(i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <variable refvariable="vari"/>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="access2cs" source="AccessCS" target="CS">
+        <name>
+          <text>Access2Cs</text>
+        </name>
+        <hlinscription>
+          <text>1'(i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <variable refvariable="vari"/>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestAlone2notAlone" source="TestAlone" target="NotAlone">
+        <name>
+          <text>TestAlone2NotAlone</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="TestAlone2alone1" source="TestAlone" target="Alone1">
+        <name>
+          <text>TestAlone2Alone1</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="NoIdentity2testAlone" source="NoIdentity" target="TestAlone">
+        <name>
+          <text>noIdentity2testAlone</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="IsEndLoop2Loop" source="IsEndLoop" target="Loop">
+        <name>
+          <text>IsEndLoop2Loop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="IsEndLoop2endLoop" source="IsEndLoop" target="EndLoop">
+        <name>
+          <text>IsEndLoop2EndLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <useroperator declaration="process2"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Identity2isEndLoop" source="Identity" target="IsEndLoop">
+        <name>
+          <text>Identity2EsEndLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,i)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vari"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Alone12isEndLoop" source="Alone1" target="IsEndLoop">
+        <name>
+          <text>Alone12IsEndLoop</text>
+        </name>
+        <hlinscription>
+          <text>1'(i,j,k)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vari"/>
+              </subterm>              <subterm>              <variable refvariable="varj"/>
+              </subterm>              <subterm>              <variable refvariable="vark"/>
+              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="WantSection2alone1" source="WantSection" target="Alone1">
+        <name>
+          <text>wantSection2Alone1</text>
+        </name>
+        <hlinscription>
+          <text>1'(k,F)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vark"/>
+              </subterm>              <subterm>              <useroperator declaration="false"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="Alone12wantSection" source="Alone1" target="WantSection">
+        <name>
+          <text>Alone12WantSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(k,F)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vark"/>
+              </subterm>              <subterm>              <useroperator declaration="false"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="WantSection2notAlone" source="WantSection" target="NotAlone">
+        <name>
+          <text>WantSection2NotAlone</text>
+        </name>
+        <hlinscription>
+          <text>1'(k,T)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vark"/>
+              </subterm>              <subterm>              <useroperator declaration="true"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+      <arc id="NotAlone2wantSection" source="NotAlone" target="WantSection">
+        <name>
+          <text>NotAlone2WantSection</text>
+        </name>
+        <hlinscription>
+          <text>1'(k,T)</text>
+          <structure>          <numberof>
+            <subterm>            <numberconstant value="1">
+              <positive/>
+            </numberconstant>
+            </subterm>            <subterm>            <tuple>
+              <subterm>              <variable refvariable="vark"/>
+              </subterm>              <subterm>              <useroperator declaration="true"/>              </subterm>            </tuple>
+            </subterm>          </numberof>
+</structure>
+        </hlinscription>
+      </arc>
+    </page>
+    <name>
+      <text>Peterson-COL-2</text>
+    </name>
+    <declaration>
+      <structure>      <declarations>
+        <namedsort id="process" name="Process">
+          <cyclicenumeration>
+            <feconstant id="process0" name="0"/>
+            <feconstant id="process1" name="1"/>
+            <feconstant id="process2" name="2"/>
+          </cyclicenumeration>
+        </namedsort>
+        <namedsort id="tour" name="Tour">
+          <cyclicenumeration>
+            <feconstant id="tour0" name="0"/>
+            <feconstant id="tour1" name="1"/>
+          </cyclicenumeration>
+        </namedsort>
+        <namedsort id="bool" name="Bool">
+          <cyclicenumeration>
+            <feconstant id="false" name="F"/>
+            <feconstant id="true" name="T"/>
+          </cyclicenumeration>
+        </namedsort>
+        <namedsort id="proctour" name="ProcTour">
+          <productsort>
+            <usersort declaration="process"/>
+            <usersort declaration="tour"/>
+          </productsort>
+        </namedsort>
+        <namedsort id="tourproc" name="TourProc">
+          <productsort>
+            <usersort declaration="tour"/>
+            <usersort declaration="process"/>
+          </productsort>
+        </namedsort>
+        <namedsort id="proctourproc" name="ProcTourProc">
+          <productsort>
+            <usersort declaration="process"/>
+            <usersort declaration="tour"/>
+            <usersort declaration="process"/>
+          </productsort>
+        </namedsort>
+        <namedsort id="procbool" name="ProcBool">
+          <productsort>
+            <usersort declaration="process"/>
+            <usersort declaration="bool"/>
+          </productsort>
+        </namedsort>
+        <variabledecl id="vari" name="i">
+          <usersort declaration="process"/>
+        </variabledecl>
+        <variabledecl id="vark" name="k">
+          <usersort declaration="process"/>
+        </variabledecl>
+        <variabledecl id="varj" name="j">
+          <usersort declaration="tour"/>
+        </variabledecl>
+      </declarations>
+</structure>
+    </declaration>
+  </net>
+</pnml>
