@@ -118,6 +118,11 @@ namespace LTL {
         _buchi.output_buchi(out, type);
     }
 
+    void LTLSearch::print_stats(std::ostream& out)
+    {
+        _checker->print_stats(out);
+    }
+
     bool LTLSearch::solve(  const bool trace,
                             const uint64_t k_bound,
                             const Algorithm algorithm,
@@ -126,32 +131,31 @@ namespace LTL {
                             const LTLHeuristic heuristics_flag,
                             const bool utilize_weak,
                             const uint64_t seed) {
-        bool is_visible_stub =
+        _is_visible_stub =
                por == LTLPartialOrder::Visible
             && !_net.has_inhibitor()
             && !PetriEngine::PQL::containsNext(_negated_formula);
-        bool is_autreach_stub =
+        _is_autreach_stub =
                por == LTLPartialOrder::Automaton
             && !_net.has_inhibitor();
-        bool is_buchi_stub =
+        _is_buchi_stub =
                por == LTLPartialOrder::Liebke
             && !_net.has_inhibitor();
 
-        const bool is_stubborn = por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
-
+        _is_stubborn = por != LTLPartialOrder::None && (_is_visible_stub || _is_autreach_stub || _is_buchi_stub);
+        _heuristic = make_heuristic(_net, _negated_formula, _buchi, search_strategy, heuristics_flag, seed);
         std::unique_ptr<SuccessorSpooler> spooler;
-        std::unique_ptr<Heuristic> heuristic;
 
         Result result;
         switch (algorithm) {
             case Algorithm::NDFS:
             {
-                NestedDepthFirstSearch dfs(_net, _negated_formula, _buchi, trace, k_bound);
-                dfs.set_utilize_weak(utilize_weak);
-                if (search_strategy != Strategy::DFS) {
-                    dfs.set_heuristic(make_heuristic(_net, _negated_formula, _buchi, search_strategy, heuristics_flag, seed));
-                }
-                return dfs.check();
+                _is_stubborn = false;
+                _checker = std::make_unique<NestedDepthFirstSearch>(_net, _negated_formula, _buchi, trace, k_bound);
+                NestedDepthFirstSearch* dfs = static_cast<NestedDepthFirstSearch*>(_checker.get());
+                dfs->set_utilize_weak(utilize_weak);
+                dfs->set_heuristic(_heuristic.get());
+                return dfs->check();
                 break;
             }
             /*case Algorithm::Tarjan:

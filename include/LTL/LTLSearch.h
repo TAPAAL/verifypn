@@ -35,6 +35,7 @@
 #include "Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
+
     class LTLSearch {
     private:
         const PetriEngine::PetriNet& _net;
@@ -44,12 +45,15 @@ namespace LTL {
         bool _negated_answer = false;
         APCompression _compression;
         std::unique_ptr<NestedDepthFirstSearch> _checker;
+        std::unique_ptr<Heuristic> _heuristic;
+        bool _is_visible_stub, _is_autreach_stub, _is_buchi_stub, _is_stubborn;
+
     public:
         LTLSearch(const PetriEngine::PetriNet& net,
-                  const PetriEngine::PQL::Condition_ptr &query, const BuchiOptimization optimization = BuchiOptimization::High,
-                  const APCompression compression = APCompression::Full);
+                const PetriEngine::PQL::Condition_ptr &query, const BuchiOptimization optimization = BuchiOptimization::High,
+                const APCompression compression = APCompression::Full);
 
-    bool solve(
+        bool solve(
                 const bool trace,
                 const uint64_t k_bound = 0,
                 const Algorithm algorithm = Algorithm::Tarjan,
@@ -58,8 +62,35 @@ namespace LTL {
                 const LTLHeuristic heuristics = LTLHeuristic::Automaton,
                 const bool utilize_weak = true,
                 const uint64_t seed = 0);
-    void print_buchi(std::ostream& out, const BuchiOutType type = BuchiOutType::Dot);
+        void print_buchi(std::ostream& out, const BuchiOutType type = BuchiOutType::Dot);
+        void print_stats(std::ostream& out);
 
+        bool use_visible_stubborn() const {
+            return _is_visible_stub && use_stubborn();
+        }
+
+        bool use_autreach_stubborn() const {
+            return _is_autreach_stub && use_stubborn();
+        }
+
+        bool use_buchi_stubborn() const {
+            return _is_buchi_stub && use_stubborn();
+        }
+
+        bool use_stubborn() const {
+            return _is_stubborn;
+        }
+
+        bool is_weak() const {
+            return _checker->is_weak();
+        }
+
+        std::string heuristic_type() const {
+            std::stringstream ss;
+            if(_heuristic)
+                _heuristic->output(ss);
+            return ss.str();
+        }
 
 
     };

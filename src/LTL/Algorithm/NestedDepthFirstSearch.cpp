@@ -27,7 +27,7 @@ namespace LTL {
             SpoolingSuccessorGenerator gen(_net, _formula);
             EnabledSpooler spooler(_net, gen);
             gen.set_spooler(spooler);
-            gen.set_heuristic(_heuristic.get());
+            gen.set_heuristic(_heuristic);
             ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
             dfs(prod_gen);
         } else {

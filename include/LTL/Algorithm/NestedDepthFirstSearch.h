@@ -40,9 +40,6 @@ namespace LTL {
      *   On Nested Depth First Search<br>
      *   https://spinroot.com/gerard/pdf/inprint/spin96.pdf
      * </p>
-     * For most use cases, Tarjan's algorithm (see LTL::TarjanModelChecker) is faster.
-     * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
-     *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
      */
     class NestedDepthFirstSearch : public ModelChecker {
     public:
@@ -50,8 +47,8 @@ namespace LTL {
                                const Structures::BuchiAutomaton &buchi, const bool print_trace, uint32_t kbound)
                 : ModelChecker(net, query, buchi), _states(net, kbound) {}
 
-        void set_heuristic(std::unique_ptr<Heuristic>&& heuristic) {
-            _heuristic = std::move(heuristic);
+        void set_heuristic(Heuristic* heuristic) {
+            _heuristic = heuristic;
         }
 
         virtual bool check();
@@ -79,7 +76,7 @@ namespace LTL {
 
         //Used for printing the trace
         std::stack<std::pair<size_t, size_t>> _nested_transitions;
-        std::unique_ptr<Heuristic> _heuristic = nullptr;
+        Heuristic* _heuristic = nullptr;
 
         template<typename T>
         void dfs(ProductSuccessorGenerator<T>& successor_generator);

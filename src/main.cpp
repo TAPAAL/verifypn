@@ -371,10 +371,28 @@ int main(int argc, const char** argv) {
                     auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
                         options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
                         options.strategy, options.ltlHeuristic, options.seed_offset);
+
+                    if(options.printstatistics)
+                        search.print_stats(std::cerr);
+
+                    std::cout << "FORMULA " << querynames[qid]
+                        << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                        << LTL::to_string(options.ltlalgorithm)
+                        << (search.is_weak() ? " WEAK_SKIP" : "")
+                        << (search.use_stubborn() ? " STUBBORN" : "")
+                        << (search.use_visible_stubborn() ? " CLASSIC_STUB" : "")
+                        << (search.use_autreach_stubborn() ? " REACH_STUB" : "")
+                        << (search.use_buchi_stubborn() ? " BUCHI_STUB" : "");
+                    auto heur = search.heuristic_type();
+                    if (!heur.empty())
+                        std::cout << " HEURISTIC " << heur;
+                    std::cout << " OPTIM-" << to_underlying(options.buchiOptimization) << std::endl;
+
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
                 }
+
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
                     return to_underlying(ReturnValue::SuccessCode);
                 }
