@@ -373,7 +373,7 @@ int main(int argc, const char** argv) {
                         options.strategy, options.ltlHeuristic, options.seed_offset);
 
                     if(options.printstatistics)
-                        search.print_stats(std::cerr);
+                        search.print_stats(std::cout);
 
                     std::cout << "FORMULA " << querynames[qid]
                         << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
@@ -390,6 +390,9 @@ int main(int argc, const char** argv) {
 
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
+
+                    if(options.trace != TraceLevel::None)
+                        search.print_trace(std::cerr, *builder.getReducer());
 
                 }
 

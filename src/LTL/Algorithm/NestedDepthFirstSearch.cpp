@@ -92,6 +92,8 @@ namespace LTL {
                     else
                         ndfs(successor_generator, curState, nested_todo);
                     if (_violation) {
+                        if(_built_trace)
+                            build_trace(todo, nested_todo);
                         return;
                     }
                 }
@@ -108,6 +110,8 @@ namespace LTL {
                        successor_generator.has_invariant_self_loop(curState))
                     {
                         _violation = true;
+                        if(_built_trace)
+                            build_trace(todo, nested_todo);
                         return;
                     }
                     todo.push_back(stack_entry_t<T>{stateid, T::initial_suc_info()});
@@ -163,40 +167,35 @@ namespace LTL {
     }
 
 
-    /*template<typename S>
-    void NestedDepthFirstSearch<S>::print_trace(light_deque<stack_entry_t>& _todo, light_deque<stack_entry_t>& _nested_todo, std::ostream &os)
+    template<typename T>
+    void NestedDepthFirstSearch::build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo)
     {
-        os << "<trace>\n";
-        if(this->_reducer)
-            this->_reducer->initFire(os);
         size_t loop_id = std::numeric_limits<size_t>::max();
         // last element of todo-stack always has a "garbage" transition, it is the
         // current working element OR first element of nested.
 
-        if(!_todo.empty())
-            _todo.pop_back();
-        if(!_nested_todo.empty()) {
+        if(!todo.empty())
+            todo.pop_back();
+        if(!nested_todo.empty()) {
             // here the last state is significant
             // of the successor is the check that demonstrates the violation.
-            loop_id = _nested_todo.back()._id;
-            _nested_todo.pop_back();
+            loop_id = nested_todo.back()._id;
+            nested_todo.pop_back();
         }
 
-        for(auto* stck : {&_todo, &_nested_todo})
+        for(auto* stck : {&todo, &nested_todo})
         {
             while(!(*stck).empty())
             {
                 auto& top = (*stck).front();
                 if(top._id == loop_id)
                 {
-                    this->printLoop(os);
+                    _loop = _trace.size();
                     loop_id = std::numeric_limits<size_t>::max();
                 }
-                this->printTransition(top._sucinfo.transition(), os) << std::endl;
+                _trace.emplace_back(top._sucinfo.transition());
                 (*stck).pop_front();
             }
         }
-        os << std::endl << "</trace>" << std::endl;
-    }*/
-
+    }
 }

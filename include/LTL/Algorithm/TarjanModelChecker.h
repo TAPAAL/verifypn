@@ -49,9 +49,9 @@ namespace LTL {
         TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen& successorGen,
-                           uint32_t kbound,
+                           uint32_t kbound, bool trace,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker(net, cond, buchi),
+                : ModelChecker(net, cond, buchi, trace),
                   _successorGenerator(
                     std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
                                                                           std::move(spooler)...)),

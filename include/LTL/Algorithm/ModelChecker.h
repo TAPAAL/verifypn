@@ -33,50 +33,54 @@
 #include <algorithm>
 
 namespace LTL {
+
     class ModelChecker {
     public:
+
         ModelChecker(const PetriEngine::PetriNet& net,
-                     const PetriEngine::PQL::Condition_ptr &condition,
-                     const Structures::BuchiAutomaton &buchi)
-                : _net(net), _formula(condition),
-                  _factory(net, buchi), _buchi(buchi)
-        { }
+                const PetriEngine::PQL::Condition_ptr &condition,
+                const Structures::BuchiAutomaton &buchi, bool built_trace)
+        : _net(net), _formula(condition),
+          _factory(net, buchi), _buchi(buchi), _built_trace(built_trace) {
+        }
 
-        /*void set_trace_level(TraceLevel level) {
-            _traceLevel = level;
-            if (_traceLevel != TraceLevel::None) {
-                _maxTransName = 0;
-                for (const auto &transname : _net->transitionNames()) {
-                    _maxTransName = std::max(transname.size(), _maxTransName);
-                }
-            }
-        }*/
-        void set_utilize_weak(bool b) { _shortcircuitweak = b; }
-
+        void set_utilize_weak(bool b) {
+            _shortcircuitweak = b;
+        }
 
         virtual bool check() = 0;
 
         virtual ~ModelChecker() = default;
 
-        //virtual void print_stats(std::ostream &os) = 0;
+        [[nodiscard]] bool is_weak() const {
+            return _is_weak;
+        }
 
-        [[nodiscard]] bool is_weak() const { return _is_weak; }
-
-        size_t get_explored() { return _explored; }
+        size_t get_explored() {
+            return _explored;
+        }
 
         virtual void print_stats(std::ostream&) = 0;
+
+        size_t loop_index() const {
+            return _loop;
+        }
+
+        const std::vector<size_t>& trace() const {
+            return _trace;
+        }
+
 
     protected:
         size_t _explored = 0;
         size_t _expanded = 0;
 
-        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
-        {
+        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
             std::cout << "STATS:\n"
-                      << "\tdiscovered states: " << stateSet.discovered() << std::endl
-                      << "\texplored states:   " << _explored << std::endl
-                      << "\texpanded states:   " << _expanded << std::endl
-                      << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
+                    << "\tdiscovered states: " << stateSet.discovered() << std::endl
+                    << "\texplored states:   " << _explored << std::endl
+                    << "\texpanded states:   " << _expanded << std::endl
+                    << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
 
@@ -88,50 +92,10 @@ namespace LTL {
         bool _shortcircuitweak;
         bool _weakskip = false;
         bool _is_weak = false;
-        //size_t _maxTransName;
+        bool _built_trace = false;
 
-        /*
-        static constexpr auto indent = "  ";
-        static constexpr auto tokenIndent = "    ";
-
-        void printLoop(std::ostream &os)
-        {
-            os << indent << "<loop/>\n";
-        }
-
-        std::ostream &
-        printTransition(size_t transition, std::ostream &os, const LTL::Structures::ProductState* state = nullptr)
-        {
-            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-                os << indent << "<deadlock/>";
-                return os;
-            }
-            os << indent << "<transition id="
-                // field width stuff obsolete without büchi state printing.
-                << std::quoted(_net->transitionNames()[transition]);
-            os << ">";
-            if(_reducer) {
-                _reducer->extraConsume(os, _net->transitionNames()[transition]);
-            }
-            os << std::endl;
-            auto [fpre, lpre] = _net->preset(transition);
-            for(; fpre < lpre; ++fpre) {
-                if (fpre->inhibitor) {
-                    assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
-                    continue;
-                }
-                for (size_t i = 0; i < fpre->tokens; ++i) {
-                    assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
-                    os << tokenIndent << R"(<token age="0" place=")" << _net->placeNames()[fpre->place] << "\"/>\n";
-                }
-            }
-            os << indent << "</transition>\n";
-            if(_reducer)
-            {
-                _reducer->postFire(os, _net->transitionNames()[transition]);
-            }
-           return os;
-        }*/
+        size_t _loop = std::numeric_limits<size_t>::max();
+        std::vector<size_t> _trace;
     };
 }
 

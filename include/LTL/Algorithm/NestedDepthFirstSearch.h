@@ -44,8 +44,8 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, const bool print_trace, uint32_t kbound)
-                : ModelChecker(net, query, buchi), _states(net, kbound) {}
+                               const Structures::BuchiAutomaton &buchi, const bool built_trace, uint32_t kbound)
+                : ModelChecker(net, query, buchi, built_trace), _states(net, kbound) {}
 
         void set_heuristic(Heuristic* heuristic) {
             _heuristic = heuristic;
@@ -84,7 +84,8 @@ namespace LTL {
         template<typename T>
         void ndfs(ProductSuccessorGenerator<T>& successor_generator, const State &state, light_deque<stack_entry_t<T>>& nested_todo);
 
-        //void print_trace(light_deque<stack_entry_t>& todo, light_deque<stack_entry_t>& nested_todo, std::ostream &os = std::cout);
+        template<typename T>
+        void build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo);
     };
 
 }

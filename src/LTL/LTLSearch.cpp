@@ -123,6 +123,63 @@ namespace LTL {
         _checker->print_stats(out);
     }
 
+    static constexpr auto _indent = "  ";
+    static constexpr auto _tokenIndent = "    ";
+
+    void print_loop(std::ostream &os) {
+        os << _indent << "<loop/>\n";
+    }
+
+    // TODO refactor this into a trace-printer, this does not belong in the solver.
+    void LTLSearch::_print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const {
+        os << "<trace>\n";
+        reducer.initFire(os);
+        auto& trace = _checker->trace();
+        for (size_t i = 0; i < trace.size(); ++i) {
+            if (i == _checker->loop_index())
+                print_loop(os);
+            print_transition(trace[i], reducer, os);
+        }
+        os << std::endl << "</trace>" << std::endl;
+    }
+
+    std::ostream &
+    LTLSearch::print_transition(size_t transition, const PetriEngine::Reducer& reducer, std::ostream &os) const {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << _indent << "<deadlock/>";
+            return os;
+        }
+        os << _indent << "<transition id="
+                // field width stuff obsolete without büchi state printing.
+                << std::quoted(_net.transitionNames()[transition]);
+        os << ">";
+        reducer.extraConsume(os, _net.transitionNames()[transition]);
+        os << std::endl;
+        auto [fpre, lpre] = _net.preset(transition);
+        for (; fpre < lpre; ++fpre) {
+            if (fpre->inhibitor) {
+                continue;
+            }
+            for (size_t i = 0; i < fpre->tokens; ++i) {
+                os << _tokenIndent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
+            }
+        }
+        os << _indent << "</transition>\n";
+        reducer.postFire(os, _net.transitionNames()[transition]);
+        return os;
+    }
+
+    bool LTLSearch::print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const
+    {
+        if(_result)
+        {
+            _print_trace(reducer, out);
+            return true;
+        }
+        else
+            return false;
+    }
+
     bool LTLSearch::solve(  const bool trace,
                             const uint64_t k_bound,
                             const Algorithm algorithm,
@@ -155,7 +212,8 @@ namespace LTL {
                 NestedDepthFirstSearch* dfs = static_cast<NestedDepthFirstSearch*>(_checker.get());
                 dfs->set_utilize_weak(utilize_weak);
                 dfs->set_heuristic(_heuristic.get());
-                return dfs->check();
+                _result = dfs->check();
+                return _negated_answer xor _negated_answer;
                 break;
             }
             /*case Algorithm::Tarjan:

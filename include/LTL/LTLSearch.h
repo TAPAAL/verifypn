@@ -47,6 +47,7 @@ namespace LTL {
         std::unique_ptr<NestedDepthFirstSearch> _checker;
         std::unique_ptr<Heuristic> _heuristic;
         bool _is_visible_stub, _is_autreach_stub, _is_buchi_stub, _is_stubborn;
+        bool _result;
 
     public:
         LTLSearch(const PetriEngine::PetriNet& net,
@@ -92,6 +93,12 @@ namespace LTL {
             return ss.str();
         }
 
+        bool print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const;
+
+    private:
+        void _print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const;
+        std::ostream &
+        print_transition(size_t transition, const PetriEngine::Reducer& reducer, std::ostream &os) const;
 
     };
 
