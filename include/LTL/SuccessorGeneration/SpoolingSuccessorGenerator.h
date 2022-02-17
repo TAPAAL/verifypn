@@ -66,7 +66,7 @@ namespace LTL {
             _spooler = &spooler;
         }
 
-        void setHeuristic(Heuristic *const heuristic)
+        void set_heuristic(Heuristic *const heuristic)
         {
             _heuristic = heuristic;
         }

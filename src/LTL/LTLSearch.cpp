@@ -91,7 +91,6 @@ namespace LTL {
             return std::make_unique<RandomHeuristic>(seed);
         }
         if (search_strategy != Strategy::HEUR && search_strategy != Strategy::DEFAULT) {
-            throw base_error("Unsupported search strategy for LTL engine");
             return nullptr;
         }
         switch (heuristics) {
@@ -125,6 +124,7 @@ namespace LTL {
                             const LTL::LTLPartialOrder por,
                             const Strategy search_strategy,
                             const LTLHeuristic heuristics_flag,
+                            const bool utilize_weak,
                             const uint64_t seed) {
         bool is_visible_stub =
                por == LTLPartialOrder::Visible
@@ -140,29 +140,21 @@ namespace LTL {
         const bool is_stubborn = por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
 
         std::unique_ptr<SuccessorSpooler> spooler;
-        std::unique_ptr<Heuristic> heuristic = make_heuristic(_net, _negated_formula, _buchi, search_strategy, heuristics_flag, seed);
+        std::unique_ptr<Heuristic> heuristic;
 
         Result result;
         switch (algorithm) {
             case Algorithm::NDFS:
+            {
+                NestedDepthFirstSearch dfs(_net, _negated_formula, _buchi, trace, k_bound);
+                dfs.set_utilize_weak(utilize_weak);
                 if (search_strategy != Strategy::DFS) {
-                    SpoolingSuccessorGenerator gen(_net, _negated_formula);
-                    spooler = std::make_unique<EnabledSpooler>(_net, gen);
-                    gen.set_spooler(*spooler);
-                    gen.setHeuristic(heuristic.get());
-                    result = _verify(
-                        std::make_unique<NestedDepthFirstSearch < SpoolingSuccessorGenerator >> (
-                        _net, _negated_formula, _buchi, gen, trace, k_bound));
-
-                } else {
-                    ResumingSuccessorGenerator gen(_net);
-                    result = _verify(
-                        std::make_unique<NestedDepthFirstSearch < ResumingSuccessorGenerator >> (
-                        _net, _negated_formula, _buchi, gen, trace, k_bound));
+                    dfs.set_heuristic(make_heuristic(_net, _negated_formula, _buchi, search_strategy, heuristics_flag, seed));
                 }
+                return dfs.check();
                 break;
-
-            case Algorithm::Tarjan:
+            }
+            /*case Algorithm::Tarjan:
                 if (search_strategy != Strategy::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
@@ -256,8 +248,9 @@ namespace LTL {
                             k_bound));
                     }
                 }
-                break;
+                break;*/
             case Algorithm::None:
+            default:
                 assert(false);
                 std::cerr << "Error: cannot LTL verify with algorithm None";
         }

@@ -31,6 +31,8 @@
 #include "PetriEngine/options.h"
 #include "LTL/Structures/BuchiAutomaton.h"
 #include "LTLOptions.h"
+#include "Algorithm/ModelChecker.h"
+#include "Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
     class LTLSearch {
@@ -41,10 +43,11 @@ namespace LTL {
         PetriEngine::PQL::Condition_ptr _negated_formula;
         bool _negated_answer = false;
         APCompression _compression;
+        std::unique_ptr<NestedDepthFirstSearch> _checker;
     public:
         LTLSearch(const PetriEngine::PetriNet& net,
                   const PetriEngine::PQL::Condition_ptr &query, const BuchiOptimization optimization = BuchiOptimization::High,
-                 const APCompression compression = APCompression::Full);
+                  const APCompression compression = APCompression::Full);
 
     bool solve(
                 const bool trace,
@@ -53,8 +56,11 @@ namespace LTL {
                 LTLPartialOrder por = LTLPartialOrder::Automaton,
                 const Strategy search_strategy = Strategy::HEUR,
                 const LTLHeuristic heuristics = LTLHeuristic::Automaton,
+                const bool utilize_weak = true,
                 const uint64_t seed = 0);
-        void print_buchi(std::ostream& out, const BuchiOutType type = BuchiOutType::Dot);
+    void print_buchi(std::ostream& out, const BuchiOutType type = BuchiOutType::Dot);
+
+
 
     };
 

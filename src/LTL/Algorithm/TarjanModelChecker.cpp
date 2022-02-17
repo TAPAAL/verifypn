@@ -20,7 +20,7 @@
 namespace LTL {
 
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
-    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::is_satisfied()
+    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::check()
     {
         this->_is_weak = this->_successorGenerator->is_weak() && this->_shortcircuitweak;
         std::vector<State> initial_states = this->_successorGenerator->make_initial_state();

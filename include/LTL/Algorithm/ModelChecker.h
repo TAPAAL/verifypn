@@ -33,18 +33,13 @@
 #include <algorithm>
 
 namespace LTL {
-    template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, typename... Spooler>
     class ModelChecker {
     public:
         ModelChecker(const PetriEngine::PetriNet& net,
                      const PetriEngine::PQL::Condition_ptr &condition,
-                     const Structures::BuchiAutomaton &buchi,
-                     SuccessorGen& successorGen,
-                     std::unique_ptr<Spooler> &&...spooler)
-                : _net(net), _formula(condition), _successorGenerator(
-                std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
-                                                                          std::move(spooler)...)),
-                  _factory(net, buchi, this->_successorGenerator->initial_buchi_state())
+                     const Structures::BuchiAutomaton &buchi)
+                : _net(net), _formula(condition),
+                  _factory(net, buchi), _buchi(buchi)
         { }
 
         /*void set_trace_level(TraceLevel level) {
@@ -59,7 +54,7 @@ namespace LTL {
         void set_utilize_weak(bool b) { _shortcircuitweak = b; }
 
 
-        virtual bool is_satisfied() = 0;
+        virtual bool check() = 0;
 
         virtual ~ModelChecker() = default;
 
@@ -69,25 +64,26 @@ namespace LTL {
 
         size_t get_explored() { return _explored; }
 
+        virtual void print_stats(std::ostream&) = 0;
+
     protected:
         size_t _explored = 0;
         size_t _expanded = 0;
 
-        /*virtual void _printStats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
+        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
         {
             std::cout << "STATS:\n"
                       << "\tdiscovered states: " << stateSet.discovered() << std::endl
-                      << "\texplored states:   " << stats._explored << std::endl
-                      << "\texpanded states:   " << stats._expanded << std::endl
+                      << "\texplored states:   " << _explored << std::endl
+                      << "\texpanded states:   " << _expanded << std::endl
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
-        }*/
+        }
 
 
         const PetriEngine::PetriNet& _net;
         PetriEngine::PQL::Condition_ptr _formula;
-        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> _successorGenerator;
-        LTL::Structures::ProductStateFactory _factory;
-
+        Structures::ProductStateFactory _factory;
+        const Structures::BuchiAutomaton& _buchi;
         size_t _discovered = 0;
         bool _shortcircuitweak;
         bool _weakskip = false;

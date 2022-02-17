@@ -44,15 +44,18 @@ namespace LTL {
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
     template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, bool SaveTrace = false, typename... Spooler>
-    class TarjanModelChecker : public ModelChecker<ProductSucGen, SuccessorGen, Spooler...> {
+    class TarjanModelChecker : public ModelChecker {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen& successorGen,
                            uint32_t kbound,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
-                  _seen(net, kbound)
+                : ModelChecker(net, cond, buchi),
+                  _successorGenerator(
+                    std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
+                                                                          std::move(spooler)...)),
+                _seen(net, kbound)
         {
             if (buchi.buchi().num_states() > 65535) {
                 throw base_error("Cannot handle Büchi automata larger than 2^16 states");
@@ -60,7 +63,7 @@ namespace LTL {
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
 
-        bool is_satisfied() override;
+        bool check() override;
 
         /*void print_stats(std::ostream &os) override
         {
@@ -68,6 +71,7 @@ namespace LTL {
         }*/
 
     private:
+        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> _successorGenerator;
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
         // 64 MB hash table
