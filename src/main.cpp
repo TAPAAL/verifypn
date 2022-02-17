@@ -47,6 +47,8 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
+#include "LTL/LTLSearch.h"
+#include "PetriEngine/PQL/PQL.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -365,7 +367,10 @@ int main(int argc, const char** argv) {
                 options.usedltl = true;
 
                 for (auto qid: ltl_ids) {
-                    auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
+                    LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
+                    auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
+                        options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
+                        options.strategy, options.ltlHeuristic, options.seed_offset);
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 

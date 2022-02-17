@@ -15,20 +15,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_ALGORITHMTYPES_H
-#define VERIFYPN_ALGORITHMTYPES_H
+#ifndef VERIFYPN_LTL_OPTIONS_H
+#define VERIFYPN_LTL_OPTIONS_H
 
 #include "utils/errors.h"
 
 namespace LTL {
+
     enum class Algorithm {
-        NDFS, Tarjan, None=-1
+        NDFS, Tarjan, None = -1
     };
 
     enum class BuchiOutType {
         Dot,
         HOA,
         Spin
+    };
+
+    enum class APCompression {
+        Choose,
+        None,
+        Full
+    };
+
+    enum class LTLPartialOrder {
+        None,
+        Visible,
+        Automaton,
+        Liebke
+    };
+
+    enum class BuchiOptimization {
+        Low = 1,
+        Medium = 2,
+        High = 3
+    };
+
+    enum class LTLHeuristic {
+        Distance,
+        Automaton,
+        FireCount,
     };
 
     inline auto to_string(Algorithm alg) {
@@ -39,9 +65,9 @@ namespace LTL {
                 return "TARJAN";
             case Algorithm::None:
             default:
-                throw base_error("to_string: Invalid LTL Algorithm ", static_cast<int>(alg));
+                throw base_error("to_string: Invalid LTL Algorithm ", static_cast<int> (alg));
         }
     }
 }
 
-#endif //VERIFYPN_ALGORITHMTYPES_H
+#endif //VERIFYPN_LTL_OPTIONS_H

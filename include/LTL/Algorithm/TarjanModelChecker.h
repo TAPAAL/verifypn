@@ -46,26 +46,26 @@ namespace LTL {
     template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, bool SaveTrace = false, typename... Spooler>
     class TarjanModelChecker : public ModelChecker<ProductSucGen, SuccessorGen, Spooler...> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
+        TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
-                           SuccessorGen *successorGen,
-                           int kbound, const PetriEngine::Reducer* reducer,
+                           SuccessorGen& successorGen,
+                           uint32_t kbound,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, reducer, std::move(spooler)...),
+                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, std::move(spooler)...),
                   _seen(net, kbound)
         {
-            if (buchi._buchi->num_states() > 65535) {
-                throw base_error("Fatal error: cannot handle Büchi automata larger than 2^16 states");
+            if (buchi.buchi().num_states() > 65535) {
+                throw base_error("Cannot handle Büchi automata larger than 2^16 states");
             }
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
 
-        bool isSatisfied() override;
+        bool is_satisfied() override;
 
-        void printStats(std::ostream &os) override
+        /*void print_stats(std::ostream &os) override
         {
-            this->_printStats(os, _seen);
-        }
+            //this->_printStats(os, _seen);
+        }*/
 
     private:
         using State = LTL::Structures::ProductState;
@@ -90,38 +90,38 @@ namespace LTL {
             return id % _hash_sz;
         }
 
-        struct PlainCEntry {
+        struct plain_centry_t {
             idx_t _lowlink;
             idx_t _stateid;
             idx_t _next = std::numeric_limits<idx_t>::max();
             bool _dstack = true;
 
-            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
+            plain_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
         };
 
-        struct TracableCEntry : PlainCEntry {
+        struct tracable_centry_t : plain_centry_t {
             idx_t _lowsource = std::numeric_limits<idx_t>::max();
             idx_t _sourcetrans;
 
-            TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
+            tracable_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : plain_centry_t(lowlink, stateid, next) {}
         };
 
-        using CEntry = std::conditional_t<SaveTrace,
-                TracableCEntry,
-                PlainCEntry>;
+        using centry_t = std::conditional_t<SaveTrace,
+                tracable_centry_t,
+                plain_centry_t>;
 
-        struct DEntry {
+        struct dentry_t {
             idx_t _pos; // position in cstack.
 
             typename SuccessorGen::successor_info_t _sucinfo;
 
-            explicit DEntry(idx_t pos) : _pos(pos), _sucinfo(SuccessorGen::initial_suc_info()) {}
+            explicit dentry_t(idx_t pos) : _pos(pos), _sucinfo(SuccessorGen::initial_suc_info()) {}
         };
 
         // master list of state information.
-        std::vector<CEntry> _cstack;
+        std::vector<centry_t> _cstack;
         // depth-first search stack, contains current search path.
-        std::stack<DEntry> _dstack;
+        std::stack<dentry_t> _dstack;
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> _astack;
 
@@ -136,11 +136,11 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, State &parent, DEntry &delem);
+        bool next_trans(State &state, State &parent, dentry_t &delem);
 
         void popCStack();
 
-        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
+        void print_trace(std::stack<dentry_t> &&dstack, std::ostream &os = std::cout);
     };
 
     extern template

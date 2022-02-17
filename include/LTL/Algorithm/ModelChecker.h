@@ -36,71 +36,65 @@ namespace LTL {
     template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, typename... Spooler>
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet *net,
+        ModelChecker(const PetriEngine::PetriNet& net,
                      const PetriEngine::PQL::Condition_ptr &condition,
                      const Structures::BuchiAutomaton &buchi,
-                     SuccessorGen *successorGen, const PetriEngine::Reducer* reducer,
+                     SuccessorGen& successorGen,
                      std::unique_ptr<Spooler> &&...spooler)
-                : net(net), formula(condition), _reducer(reducer), successorGenerator(
+                : _net(net), _formula(condition), _successorGenerator(
                 std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
                                                                           std::move(spooler)...)),
-                  _factory(net, buchi, this->successorGenerator->initial_buchi_state())
-        {
-//            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen, std::move(spooler)...);
-        }
+                  _factory(net, buchi, this->_successorGenerator->initial_buchi_state())
+        { }
 
-        void setOptions(const options_t &options) {
-            traceLevel = options.trace;
-            shortcircuitweak = options.ltluseweak;
-            if (traceLevel != TraceLevel::None) {
-                maxTransName = 0;
-                for (const auto &transname : net->transitionNames()) {
-                    maxTransName = std::max(transname.size(), maxTransName);
+        /*void set_trace_level(TraceLevel level) {
+            _traceLevel = level;
+            if (_traceLevel != TraceLevel::None) {
+                _maxTransName = 0;
+                for (const auto &transname : _net->transitionNames()) {
+                    _maxTransName = std::max(transname.size(), _maxTransName);
                 }
             }
-        }
+        }*/
+        void set_utilize_weak(bool b) { _shortcircuitweak = b; }
 
-        virtual bool isSatisfied() = 0;
+
+        virtual bool is_satisfied() = 0;
 
         virtual ~ModelChecker() = default;
 
-        virtual void printStats(std::ostream &os) = 0;
+        //virtual void print_stats(std::ostream &os) = 0;
 
-        [[nodiscard]] bool isweak() const { return is_weak; }
+        [[nodiscard]] bool is_weak() const { return _is_weak; }
 
-        size_t get_explored() { return stats.explored; }
+        size_t get_explored() { return _explored; }
 
     protected:
-        struct stats_t {
-            size_t explored = 0, expanded = 0;
-        };
+        size_t _explored = 0;
+        size_t _expanded = 0;
 
-        stats_t stats;
-
-        virtual void _printStats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
+        /*virtual void _printStats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
         {
             std::cout << "STATS:\n"
                       << "\tdiscovered states: " << stateSet.discovered() << std::endl
-                      << "\texplored states:   " << stats.explored << std::endl
-                      << "\texpanded states:   " << stats.expanded << std::endl
+                      << "\texplored states:   " << stats._explored << std::endl
+                      << "\texpanded states:   " << stats._expanded << std::endl
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
-        }
+        }*/
 
 
-        const PetriEngine::PetriNet *net;
-        PetriEngine::PQL::Condition_ptr formula;
-        const PetriEngine::Reducer* _reducer;
-        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> successorGenerator;
-        //const Structures::BuchiAutomaton *_aut;
-        TraceLevel traceLevel;
+        const PetriEngine::PetriNet& _net;
+        PetriEngine::PQL::Condition_ptr _formula;
+        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> _successorGenerator;
         LTL::Structures::ProductStateFactory _factory;
 
         size_t _discovered = 0;
-        bool shortcircuitweak;
-        bool weakskip = false;
-        bool is_weak = false;
-        size_t maxTransName;
+        bool _shortcircuitweak;
+        bool _weakskip = false;
+        bool _is_weak = false;
+        //size_t _maxTransName;
 
+        /*
         static constexpr auto indent = "  ";
         static constexpr auto tokenIndent = "    ";
 
@@ -118,13 +112,13 @@ namespace LTL {
             }
             os << indent << "<transition id="
                 // field width stuff obsolete without büchi state printing.
-                << std::quoted(net->transitionNames()[transition]);
+                << std::quoted(_net->transitionNames()[transition]);
             os << ">";
             if(_reducer) {
-                _reducer->extraConsume(os, net->transitionNames()[transition]);
+                _reducer->extraConsume(os, _net->transitionNames()[transition]);
             }
             os << std::endl;
-            auto [fpre, lpre] = net->preset(transition);
+            auto [fpre, lpre] = _net->preset(transition);
             for(; fpre < lpre; ++fpre) {
                 if (fpre->inhibitor) {
                     assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
@@ -132,16 +126,16 @@ namespace LTL {
                 }
                 for (size_t i = 0; i < fpre->tokens; ++i) {
                     assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
-                    os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
+                    os << tokenIndent << R"(<token age="0" place=")" << _net->placeNames()[fpre->place] << "\"/>\n";
                 }
             }
             os << indent << "</transition>\n";
             if(_reducer)
             {
-                _reducer->postFire(os, net->transitionNames()[transition]);
+                _reducer->postFire(os, _net->transitionNames()[transition]);
             }
            return os;
-        }
+        }*/
     };
 }
 

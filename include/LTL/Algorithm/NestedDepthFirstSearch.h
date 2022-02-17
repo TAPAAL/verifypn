@@ -47,14 +47,14 @@ namespace LTL {
     template<typename SucGen>
     class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
     public:
-        NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace, int kbound, const PetriEngine::Reducer* reducer)
-                : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen, reducer),
-                  _states(net, kbound), _print_trace(print_trace) {}
+        NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
+                               const Structures::BuchiAutomaton &buchi, SucGen& gen, const bool print_trace, uint32_t kbound)
+                : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen),
+                  _states(net, kbound) {}
 
-        bool isSatisfied() override;
+        bool is_satisfied() override;
 
-        void printStats(std::ostream &os) override;
+        //void print_stats(std::ostream &os) override;
 
     private:
         using State = LTL::Structures::ProductState;
@@ -64,27 +64,25 @@ namespace LTL {
         LTL::Structures::BitProductStateSet<> _states;
 
         std::unordered_map<size_t, uint8_t> _markers;
-        //std::vector<uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
 
-        struct StackEntry {
+        struct stack_entry_t {
             size_t _id;
             typename SucGen::successor_info_t _sucinfo;
         };
 
         bool _violation = false;
-        const bool _print_trace = false;
 
         //Used for printing the trace
         std::stack<std::pair<size_t, size_t>> _nested_transitions;
 
         void dfs();
 
-        void ndfs(const State &state, light_deque<StackEntry>& nested_todo);
+        void ndfs(const State &state, light_deque<stack_entry_t>& nested_todo);
 
-        void print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os = std::cout);
+        void print_trace(light_deque<stack_entry_t>& todo, light_deque<stack_entry_t>& nested_todo, std::ostream &os = std::cout);
     };
 
     extern template

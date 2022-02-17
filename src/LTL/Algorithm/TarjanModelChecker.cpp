@@ -20,22 +20,22 @@
 namespace LTL {
 
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
-    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::isSatisfied()
+    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::is_satisfied()
     {
-        this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
-        std::vector<State> initial_states = this->successorGenerator->makeInitialState();
-        State working = this->_factory.newState();
-        State parent = this->_factory.newState();
+        this->_is_weak = this->_successorGenerator->is_weak() && this->_shortcircuitweak;
+        std::vector<State> initial_states = this->_successorGenerator->make_initial_state();
+        State working = this->_factory.new_state();
+        State parent = this->_factory.new_state();
         for (auto &state : initial_states) {
             const auto res = _seen.add(state);
             if (res.first) {
                 push(state, res.second);
             }
             while (!_dstack.empty() && !_violation) {
-                DEntry &dtop = _dstack.top();
+                dentry_t &dtop = _dstack.top();
                 // write next successor state to working.
-                if (!nexttrans(working, parent, dtop)) {
-                    ++this->stats.expanded;
+                if (!next_trans(working, parent, dtop)) {
+                    ++this->_expanded;
 #ifndef NDEBUG
                     std::cerr << "backtrack\n";
 #endif
@@ -45,7 +45,7 @@ namespace LTL {
 #ifndef NDEBUG
                 auto fired =
 #endif
-                this->successorGenerator->fired();
+                this->_successorGenerator->fired();
 #ifndef NDEBUG
                 if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
                     std::cerr << "looping\n";
@@ -54,7 +54,7 @@ namespace LTL {
                     //state.print(*this->net, std::cerr); std::cerr << ": <transition id='" << this->net->transitionNames()[fired] << "'>" << std::endl ;
                 }
 #endif
-                ++this->stats.explored;
+                ++this->_explored;
                 const auto[isnew, stateid] = _seen.add(working);
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
@@ -62,19 +62,19 @@ namespace LTL {
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        _seen.setHistory(stateid, this->successorGenerator->fired());
+                        _seen.setHistory(stateid, this->_successorGenerator->fired());
                     }
                 }
 
-                dtop._sucinfo.last_state = stateid;
+                dtop._sucinfo._last_state = stateid;
 
                 // lookup successor in 'hash' table
                 auto suc_pos = _chash[hash(stateid)];
-                auto marking = _seen.getMarkingId(stateid);
+                auto marking = _seen.get_marking_id(stateid);
                 while (suc_pos != std::numeric_limits<idx_t>::max() && _cstack[suc_pos]._stateid != stateid) {
                     if constexpr (_is_spooling) {
-                        if (_cstack[suc_pos]._dstack && _seen.getMarkingId(_cstack[suc_pos]._stateid) == marking) {
-                            this->successorGenerator->generateAll(&parent, dtop._sucinfo);
+                        if (_cstack[suc_pos]._dstack && _seen.get_marking_id(_cstack[suc_pos]._stateid) == marking) {
+                            this->_successorGenerator->generate_all(&parent, dtop._sucinfo);
                         }
                     }
                     suc_pos = _cstack[suc_pos]._next;
@@ -82,7 +82,7 @@ namespace LTL {
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
                     if constexpr (_is_spooling) {
                         if (_cstack[suc_pos]._dstack) {
-                            this->successorGenerator->generateAll(&parent, dtop._sucinfo);
+                            this->_successorGenerator->generate_all(&parent, dtop._sucinfo);
                         }
                     }
                     // we found the successor, i.e. there's a loop!
@@ -97,12 +97,12 @@ namespace LTL {
             if constexpr (SaveTrace) {
                 // print counter-example if it exists.
                 if (_violation) {
-                    std::stack<DEntry> revstack;
+                    std::stack<dentry_t> revstack;
                     while (!_dstack.empty()) {
                         revstack.push(std::move(_dstack.top()));
                         _dstack.pop();
                     }
-                    printTrace(std::move(revstack));
+                    print_trace(std::move(revstack));
                     return false;
                 }
             }
@@ -120,16 +120,16 @@ namespace LTL {
         const auto h = hash(stateid);
         _cstack.emplace_back(ctop, stateid, _chash[h]);
         _chash[h] = ctop;
-        _dstack.push(DEntry{ctop});
-        if (this->successorGenerator->isAccepting(state)) {
+        _dstack.push(dentry_t{ctop});
+        if (this->_successorGenerator->is_accepting(state)) {
             _astack.push(ctop);
-            if (this->successorGenerator->has_invariant_self_loop(state)){
+            if (this->_successorGenerator->has_invariant_self_loop(state)){
                 _violation = true;
                 _invariant_loop = true;
             }
         }
         if constexpr (_is_spooling) {
-            this->successorGenerator->push();
+            this->_successorGenerator->push();
         }
     }
 
@@ -143,10 +143,10 @@ namespace LTL {
             while (_cstack.size() > p) {
                 popCStack();
             }
-        } else if (this->is_weak) {
-            State state = this->_factory.newState();
+        } else if (this->_is_weak) {
+            State state = this->_factory.new_state();
             _seen.decode(state, _cstack[p]._stateid);
-            if (!this->successorGenerator->isAccepting(state)) {
+            if (!this->_successorGenerator->is_accepting(state)) {
                 popCStack();
             }
         }
@@ -156,7 +156,7 @@ namespace LTL {
         if (!_dstack.empty()) {
             update(p);
             if constexpr (_is_spooling) {
-                this->successorGenerator->pop(_dstack.top()._sucinfo);
+                this->_successorGenerator->pop(_dstack.top()._sucinfo);
             }
         }
     }
@@ -184,7 +184,7 @@ namespace LTL {
             _cstack[from]._lowlink = _cstack[to]._lowlink;
             if constexpr (SaveTrace) {
                 _loop_state = _cstack[to]._stateid;
-                _loop_trans = this->successorGenerator->fired();
+                _loop_trans = this->_successorGenerator->fired();
                 _cstack[from]._lowsource = to;
 
             }
@@ -192,21 +192,22 @@ namespace LTL {
     }
 
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
-    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
+    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::next_trans(State &state, State &parent, TarjanModelChecker::dentry_t &delem)
     {
         _seen.decode(parent, _cstack[delem._pos]._stateid);
-        this->successorGenerator->prepare(&parent, delem._sucinfo);
+        this->_successorGenerator->prepare(&parent, delem._sucinfo);
         // ensure that `state` buffer contains the correct state for Büchi successor generation.
         if (delem._sucinfo.has_prev_state()) {
-            _seen.decode(state, delem._sucinfo.last_state);
+            _seen.decode(state, delem._sucinfo._last_state);
         }
-        auto res = this->successorGenerator->next(state, delem._sucinfo);
+        auto res = this->_successorGenerator->next(state, delem._sucinfo);
         return res;
     }
 
     template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
-    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::print_trace(std::stack<dentry_t> &&dstack, std::ostream &os)
     {
+        /*
         if constexpr (!SaveTrace) {
             return;
         } else {
@@ -254,7 +255,7 @@ namespace LTL {
             }
 
             os << "</trace>" << std::endl;
-        }
+        }*/
     }
 
     template

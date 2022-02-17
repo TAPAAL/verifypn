@@ -19,9 +19,9 @@
 
 namespace LTL {
     template<typename S>
-    bool NestedDepthFirstSearch<S>::isSatisfied()
+    bool NestedDepthFirstSearch<S>::is_satisfied()
     {
-        this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
+        this->_is_weak = this->_successorGenerator->is_weak() && this->_shortcircuitweak;
         dfs();
         return !_violation;
     }
@@ -49,18 +49,18 @@ namespace LTL {
     void NestedDepthFirstSearch<S>::dfs()
     {
 
-        light_deque<StackEntry> todo;
-        light_deque<StackEntry> nested_todo;
+        light_deque<stack_entry_t> todo;
+        light_deque<stack_entry_t> nested_todo;
 
-        State working = this->_factory.newState();
-        State curState = this->_factory.newState();
+        State working = this->_factory.new_state();
+        State curState = this->_factory.new_state();
 
         {
-            std::vector<State> initial_states = this->successorGenerator->makeInitialState();
+            std::vector<State> initial_states = this->_successorGenerator->make_initial_state();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
                 if (res.first) {
-                    todo.push_back(StackEntry{res.second, S::initial_suc_info()});
+                    todo.push_back(stack_entry_t{res.second, S::initial_suc_info()});
                     ++this->_discovered;
                 }
             }
@@ -69,21 +69,18 @@ namespace LTL {
         while (!todo.empty()) {
             auto &top = todo.back();
             _states.decode(curState, top._id);
-            this->successorGenerator->prepare(&curState, top._sucinfo);
+            this->_successorGenerator->prepare(&curState, top._sucinfo);
             if (top._sucinfo.has_prev_state()) {
-                _states.decode(working, top._sucinfo.last_state);
+                _states.decode(working, top._sucinfo._last_state);
             }
-            if (!this->successorGenerator->next(working, top._sucinfo)) {
+            if (!this->_successorGenerator->next(working, top._sucinfo)) {
                 // no successor
                 if (curState.is_accepting()) {
-                    if(this->successorGenerator->has_invariant_self_loop(curState))
+                    if(this->_successorGenerator->has_invariant_self_loop(curState))
                         _violation = true;
                     else
                         ndfs(curState, nested_todo);
                     if (_violation) {
-                        if (_print_trace) {
-                            print_trace(todo, nested_todo);
-                        }
                         return;
                     }
                 }
@@ -93,43 +90,41 @@ namespace LTL {
                 if (stateid == std::numeric_limits<size_t>::max()) {
                     continue;
                 }
-                top._sucinfo.last_state = stateid;
+                top._sucinfo._last_state = stateid;
                 if (is_new) {
                     ++this->_discovered;
-                    if(this->successorGenerator->isAccepting(curState) &&
-                       this->successorGenerator->has_invariant_self_loop(curState))
+                    if(this->_successorGenerator->is_accepting(curState) &&
+                       this->_successorGenerator->has_invariant_self_loop(curState))
                     {
                         _violation = true;
-                        if(_print_trace)
-                            print_trace(todo, nested_todo);
                         return;
                     }
-                    todo.push_back(StackEntry{stateid, S::initial_suc_info()});
+                    todo.push_back(stack_entry_t{stateid, S::initial_suc_info()});
                 }
             }
         }
     }
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::ndfs(const State &state, light_deque<StackEntry>& nested_todo)
+    void NestedDepthFirstSearch<S>::ndfs(const State &state, light_deque<stack_entry_t>& nested_todo)
     {
 
-        State working = this->_factory.newState();
-        State curState = this->_factory.newState();
+        State working = this->_factory.new_state();
+        State curState = this->_factory.new_state();
 
-        nested_todo.push_back(StackEntry{_states.add(state).second, S::initial_suc_info()});
+        nested_todo.push_back(stack_entry_t{_states.add(state).second, S::initial_suc_info()});
 
         while (!nested_todo.empty()) {
             auto &top = nested_todo.back();
             _states.decode(curState, top._id);
-            this->successorGenerator->prepare(&curState, top._sucinfo);
+            this->_successorGenerator->prepare(&curState, top._sucinfo);
             if (top._sucinfo.has_prev_state()) {
-                _states.decode(working, top._sucinfo.last_state);
+                _states.decode(working, top._sucinfo._last_state);
             }
-            if (!this->successorGenerator->next(working, top._sucinfo)) {
+            if (!this->_successorGenerator->next(working, top._sucinfo)) {
                 nested_todo.pop_back();
             } else {
-                if (this->is_weak && !this->successorGenerator->isAccepting(working)) {
+                if (this->_is_weak && !this->_successorGenerator->is_accepting(working)) {
                     continue;
                 }
                 if (working == state) {
@@ -139,15 +134,15 @@ namespace LTL {
                 auto [is_new, stateid] = mark(working, MARKER2);
                 if (stateid == std::numeric_limits<size_t>::max())
                     continue;
-                top._sucinfo.last_state = stateid;
+                top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    nested_todo.push_back(StackEntry{stateid, S::initial_suc_info()});
+                    nested_todo.push_back(stack_entry_t{stateid, S::initial_suc_info()});
                 }
             }
         }
     }
 
-    template<typename S>
+   /* template<typename S>
     void NestedDepthFirstSearch<S>::printStats(std::ostream &os)
     {
         std::cout << "STATS:\n"
@@ -155,13 +150,13 @@ namespace LTL {
                   << "\tmax tokens:                 " << _states.max_tokens() << std::endl
                   << "\texplored states:            " << _mark_count[MARKER1] << std::endl
                   << "\texplored states (nested):   " << _mark_count[MARKER2] << std::endl;
-    }
+    }*/
 
 
     template<typename S>
-    void NestedDepthFirstSearch<S>::print_trace(light_deque<StackEntry>& _todo, light_deque<StackEntry>& _nested_todo, std::ostream &os)
+    void NestedDepthFirstSearch<S>::print_trace(light_deque<stack_entry_t>& _todo, light_deque<stack_entry_t>& _nested_todo, std::ostream &os)
     {
-        os << "<trace>\n";
+        /*os << "<trace>\n";
         if(this->_reducer)
             this->_reducer->initFire(os);
         size_t loop_id = std::numeric_limits<size_t>::max();
@@ -191,7 +186,7 @@ namespace LTL {
                 (*stck).pop_front();
             }
         }
-        os << std::endl << "</trace>" << std::endl;
+        os << std::endl << "</trace>" << std::endl;*/
     }
 
     template

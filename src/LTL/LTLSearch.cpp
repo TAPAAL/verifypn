@@ -1,0 +1,266 @@
+/* Copyright (C) 2020  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>,
+ *                     Peter G. Jensen <root@petergjoel.dk>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "LTL/LTLSearch.h"
+#include "LTL/LTLValidator.h"
+#include "LTL/SuccessorGeneration/Spoolers.h"
+#include "LTL/SuccessorGeneration/Heuristics.h"
+#include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+#include "LTL/Algorithm/NestedDepthFirstSearch.h"
+#include "LTL/Algorithm/TarjanModelChecker.h"
+
+#include "PetriEngine/PQL/PredicateCheckers.h"
+#include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/options.h"
+
+#include <utility>
+
+using namespace PetriEngine::PQL;
+using namespace PetriEngine;
+
+
+namespace LTL {
+
+    struct Result {
+        bool satisfied = false;
+        bool is_weak = true;
+        Algorithm algorithm = Algorithm::Tarjan;
+#ifdef DEBUG_EXPLORED_STATES
+        size_t explored_states = 0;
+#endif
+    };
+
+        /**
+     * Converts a formula on the form A f, E f or f into just f, assuming f is an LTL formula.
+     * In the case E f, not f is returned, and in this case the model checking result should be negated
+     * (indicated by bool in return value)
+     * @param formula - a formula on the form A f, E f or f
+     * @return @code(ltl_formula, should_negate) - ltl_formula is the formula f if it is a valid LTL formula, nullptr otherwise.
+     * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
+     */
+    std::tuple<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
+        LTL::LTLValidator validator;
+        bool should_negate = false;
+        Condition_ptr converted;
+        if (auto _formula = dynamic_cast<ECondition *> (formula.get())) {
+            converted = std::make_shared<NotCondition>((*_formula)[0]);
+            should_negate = true;
+        } else if (auto _formula = dynamic_cast<ACondition *> (formula.get())) {
+            converted = (*_formula)[0];
+        } else {
+            converted = formula;
+        }
+        Visitor::visit(validator, converted);
+        if (validator.bad()) {
+            converted = nullptr;
+        }
+        return std::make_pair(converted, should_negate);
+    }
+
+    template<typename Checker>
+    Result _verify(std::unique_ptr<Checker> checker) {
+        Result result;
+        result.satisfied = checker->is_satisfied();
+        result.is_weak = checker->is_weak();
+        return result;
+    }
+
+    std::unique_ptr<Heuristic> make_heuristic(const PetriNet& net,
+        const Condition_ptr &negated_formula,
+        const Structures::BuchiAutomaton& automaton,
+        const Strategy search_strategy = Strategy::HEUR,
+        const LTLHeuristic heuristics = LTLHeuristic::Automaton,
+        const uint64_t seed = 0) {
+        if (search_strategy == Strategy::RDFS) {
+            return std::make_unique<RandomHeuristic>(seed);
+        }
+        if (search_strategy != Strategy::HEUR && search_strategy != Strategy::DEFAULT) {
+            throw base_error("Unsupported search strategy for LTL engine");
+            return nullptr;
+        }
+        switch (heuristics) {
+            case LTLHeuristic::Distance:
+            default:
+                return std::make_unique<AutomatonHeuristic>(&net, automaton);
+            case LTLHeuristic::Automaton:
+                return std::make_unique<DistanceHeuristic>(&net, negated_formula);
+            case LTLHeuristic::FireCount:
+                return std::make_unique<LogFireCountHeuristic>(net.numberOfTransitions(), 5000);
+        }
+    }
+
+    LTLSearch::LTLSearch(const PetriEngine::PetriNet& net,
+        const PetriEngine::PQL::Condition_ptr &query, const BuchiOptimization optimization, const APCompression compression)
+    : _net(net), _query(query), _compression(compression) {
+        std::tie(_negated_formula, _negated_answer) = to_ltl(query);
+        _buchi = make_buchi_automaton(_negated_formula, optimization, compression);
+    }
+
+    void LTLSearch::print_buchi(std::ostream& out, const BuchiOutType type)
+    {
+        if(_compression != APCompression::None)
+            throw base_error("Printing of Büchi automata only supported with APCompression::None");
+        _buchi.output_buchi(out, type);
+    }
+
+    bool LTLSearch::solve(  const bool trace,
+                            const uint64_t k_bound,
+                            const Algorithm algorithm,
+                            const LTL::LTLPartialOrder por,
+                            const Strategy search_strategy,
+                            const LTLHeuristic heuristics_flag,
+                            const uint64_t seed) {
+        bool is_visible_stub =
+               por == LTLPartialOrder::Visible
+            && !_net.has_inhibitor()
+            && !PetriEngine::PQL::containsNext(_negated_formula);
+        bool is_autreach_stub =
+               por == LTLPartialOrder::Automaton
+            && !_net.has_inhibitor();
+        bool is_buchi_stub =
+               por == LTLPartialOrder::Liebke
+            && !_net.has_inhibitor();
+
+        const bool is_stubborn = por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
+
+        std::unique_ptr<SuccessorSpooler> spooler;
+        std::unique_ptr<Heuristic> heuristic = make_heuristic(_net, _negated_formula, _buchi, search_strategy, heuristics_flag, seed);
+
+        Result result;
+        switch (algorithm) {
+            case Algorithm::NDFS:
+                if (search_strategy != Strategy::DFS) {
+                    SpoolingSuccessorGenerator gen(_net, _negated_formula);
+                    spooler = std::make_unique<EnabledSpooler>(_net, gen);
+                    gen.set_spooler(*spooler);
+                    gen.setHeuristic(heuristic.get());
+                    result = _verify(
+                        std::make_unique<NestedDepthFirstSearch < SpoolingSuccessorGenerator >> (
+                        _net, _negated_formula, _buchi, gen, trace, k_bound));
+
+                } else {
+                    ResumingSuccessorGenerator gen(_net);
+                    result = _verify(
+                        std::make_unique<NestedDepthFirstSearch < ResumingSuccessorGenerator >> (
+                        _net, _negated_formula, _buchi, gen, trace, k_bound));
+                }
+                break;
+
+            case Algorithm::Tarjan:
+                if (search_strategy != Strategy::DFS || is_stubborn) {
+                    // Use spooling successor generator in case of different search strategy or stubborn set method.
+                    // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
+                    SpoolingSuccessorGenerator gen{_net, _negated_formula};
+                    if (is_visible_stub) {
+                        spooler = std::make_unique<VisibleLTLStubbornSet>(_net, _negated_formula);
+                    } else if (is_buchi_stub) {
+                        spooler = std::make_unique<AutomatonStubbornSet>(_net, _buchi);
+                    } else {
+                        spooler = std::make_unique<EnabledSpooler>(_net, gen);
+                    }
+
+                    assert(spooler);
+                    gen.set_spooler(*spooler);
+                    // if search strategy used, set heuristic, otherwise ignore it
+                    // (default is null which is checked elsewhere)
+                    if (search_strategy != Strategy::DFS) {
+                        assert(heuristic != nullptr);
+                        gen.setHeuristic(heuristic.get());
+                    }
+
+                    if (trace) {
+                        if (is_autreach_stub && is_visible_stub) {
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound,
+                                std::make_unique<VisibleLTLStubbornSet>(_net, _negated_formula)));
+                        } else if (is_autreach_stub && !is_visible_stub) {
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound,
+                                std::make_unique<EnabledSpooler>(_net, gen)));
+                        } else {
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound));
+                        }
+                    } else {
+
+                        if (is_autreach_stub && is_visible_stub) {
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound,
+                                std::make_unique<VisibleLTLStubbornSet>(_net, _negated_formula)));
+                        } else if (is_autreach_stub && !is_visible_stub) {
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound,
+                                std::make_unique<EnabledSpooler>(_net, gen)));
+                        } else {
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false >> (
+                                _net,
+                                _negated_formula,
+                                _buchi,
+                                gen,
+                                k_bound));
+                        }
+                    }
+                } else {
+                    ResumingSuccessorGenerator gen{_net};
+
+                    // no spooling needed, thus use resuming successor generation
+                    if (trace) {
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true >> (
+                            _net,
+                            _negated_formula,
+                            _buchi,
+                            gen,
+                            k_bound));
+                    } else {
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false >> (
+                            _net,
+                            _negated_formula,
+                            _buchi,
+                            gen,
+                            k_bound));
+                    }
+                }
+                break;
+            case Algorithm::None:
+                assert(false);
+                std::cerr << "Error: cannot LTL verify with algorithm None";
+        }
+        return result.satisfied;
+    }
+}
