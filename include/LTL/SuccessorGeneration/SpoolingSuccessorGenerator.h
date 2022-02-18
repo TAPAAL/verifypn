@@ -98,7 +98,6 @@ namespace LTL {
                 bool res =
 #endif
                 _spooler->prepare(state);
-                //assert(!res/* || !_net.deadlocked(state->marking())*/);
                 if (!_heuristic || !_heuristic->has_heuristic(*state)) {
                     uint32_t nsuc = 0;
                     // generate list of transitions that generate a successor.
@@ -108,7 +107,7 @@ namespace LTL {
                         assert(nsuc <= _net.numberOfTransitions());
                     }
                     sucinfo._successors = SuccessorQueue(_transbuf.get(), nsuc);
-                    assert((res && !sucinfo._successors.empty()) || !res);
+                    // assert((res && !sucinfo._successors.empty()) || !res); // this is suspected to be out of date
                 } else {
                     // list of (transition, weight)
                     _heuristic->prepare(*state);
