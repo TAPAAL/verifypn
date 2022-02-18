@@ -49,9 +49,9 @@ namespace LTL {
         TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen& successorGen,
-                           uint32_t kbound, bool trace,
+                           uint32_t kbound,
                            std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker(net, cond, buchi, trace),
+                : ModelChecker(net, cond, buchi, SaveTrace),
                   _successorGenerator(
                     std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
                                                                           std::move(spooler)...)),
@@ -65,10 +65,10 @@ namespace LTL {
 
         bool check() override;
 
-        /*void print_stats(std::ostream &os) override
+        void print_stats(std::ostream &os) override
         {
-            //this->_printStats(os, _seen);
-        }*/
+            ModelChecker::print_stats(os, _seen);
+        }
 
     private:
         std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> _successorGenerator;
@@ -78,7 +78,8 @@ namespace LTL {
         static constexpr idx_t _hash_sz = 16777216;
 
 
-        using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
+        using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>,
+                LTL::Structures::BitProductStateSet<>>;
         static constexpr bool _is_spooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
 
         StateSet _seen;

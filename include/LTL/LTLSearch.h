@@ -44,7 +44,7 @@ namespace LTL {
         PetriEngine::PQL::Condition_ptr _negated_formula;
         bool _negated_answer = false;
         APCompression _compression;
-        std::unique_ptr<NestedDepthFirstSearch> _checker;
+        std::unique_ptr<ModelChecker> _checker;
         std::unique_ptr<Heuristic> _heuristic;
         bool _is_visible_stub, _is_autreach_stub, _is_buchi_stub, _is_stubborn;
         bool _result;

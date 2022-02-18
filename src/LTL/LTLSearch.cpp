@@ -216,8 +216,8 @@ namespace LTL {
                 return _negated_answer xor _negated_answer;
                 break;
             }
-            /*case Algorithm::Tarjan:
-                if (search_strategy != Strategy::DFS || is_stubborn) {
+            case Algorithm::Tarjan:
+                /*if (search_strategy != Strategy::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{_net, _negated_formula};
@@ -290,27 +290,27 @@ namespace LTL {
                                 k_bound));
                         }
                     }
-                } else {
+                } else*/ {
                     ResumingSuccessorGenerator gen{_net};
-
-                    // no spooling needed, thus use resuming successor generation
-                    if (trace) {
-                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true >> (
+                    if(trace)
+                    {
+                        _checker = std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true >> (
                             _net,
                             _negated_formula,
                             _buchi,
                             gen,
-                            k_bound));
+                            k_bound);
                     } else {
-                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false >> (
+                        _checker = std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false >> (
                             _net,
                             _negated_formula,
                             _buchi,
                             gen,
-                            k_bound));
+                            k_bound);
                     }
+                    _result = _checker->check();
                 }
-                break;*/
+                break;
             case Algorithm::None:
             default:
                 assert(false);
