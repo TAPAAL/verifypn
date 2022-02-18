@@ -92,7 +92,7 @@ namespace LTL {
                     else
                         ndfs(successor_generator, curState, nested_todo);
                     if (_violation) {
-                        if(_built_trace)
+                        if(_build_trace)
                             build_trace(todo, nested_todo);
                         return;
                     }
@@ -110,7 +110,7 @@ namespace LTL {
                        successor_generator.has_invariant_self_loop(curState))
                     {
                         _violation = true;
-                        if(_built_trace)
+                        if(_build_trace)
                             build_trace(todo, nested_todo);
                         return;
                     }
@@ -157,7 +157,7 @@ namespace LTL {
         }
     }
 
-    void NestedDepthFirstSearch::print_stats(std::ostream &os)
+    void NestedDepthFirstSearch::print_stats(std::ostream &os) const
     {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << _states.discovered() << std::endl

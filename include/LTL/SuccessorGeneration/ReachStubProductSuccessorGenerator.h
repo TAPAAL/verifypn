@@ -26,6 +26,10 @@ namespace LTL {
     template<typename S, typename Spooler>
     class ReachStubProductSuccessorGenerator : public ProductSuccessorGenerator<S> {
     public:
+
+        using successor_info_t = typename S::successor_info_t;
+        static constexpr auto initial_suc_info() { return S::initial_suc_info(); }
+
         ReachStubProductSuccessorGenerator(const PetriEngine::PetriNet& net, const Structures::BuchiAutomaton &buchi,
                                            S& successorGen, std::unique_ptr<Spooler> &&fallbackSpooler)
                 : ProductSuccessorGenerator<S>(net, buchi, successorGen), _fallback_spooler(std::move(fallbackSpooler))

@@ -379,10 +379,10 @@ int main(int argc, const char** argv) {
                         << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
                         << LTL::to_string(options.ltlalgorithm)
                         << (search.is_weak() ? " WEAK_SKIP" : "")
-                        << (search.use_stubborn() ? " STUBBORN" : "")
-                        << (search.use_visible_stubborn() ? " CLASSIC_STUB" : "")
-                        << (search.use_autreach_stubborn() ? " REACH_STUB" : "")
-                        << (search.use_buchi_stubborn() ? " BUCHI_STUB" : "");
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::None ? " STUBBORN" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::Automaton ? " REACH_STUB" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::Liebke ? " BUCHI_STUB" : "");
                     auto heur = search.heuristic_type();
                     if (!heur.empty())
                         std::cout << " HEURISTIC " << heur;

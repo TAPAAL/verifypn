@@ -44,16 +44,12 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, const bool built_trace, uint32_t kbound)
-                : ModelChecker(net, query, buchi, built_trace), _states(net, kbound) {}
-
-        void set_heuristic(Heuristic* heuristic) {
-            _heuristic = heuristic;
-        }
+                               const Structures::BuchiAutomaton &buchi, uint32_t kbound)
+                : ModelChecker(net, query, buchi), _states(net, kbound) {}
 
         virtual bool check();
 
-        void print_stats(std::ostream &os) override;
+        void print_stats(std::ostream &os) const override;
 
     private:
         using State = LTL::Structures::ProductState;
@@ -71,12 +67,6 @@ namespace LTL {
             size_t _id;
             typename T::successor_info_t _sucinfo;
         };
-
-        bool _violation = false;
-
-        //Used for printing the trace
-        std::stack<std::pair<size_t, size_t>> _nested_transitions;
-        Heuristic* _heuristic = nullptr;
 
         template<typename T>
         void dfs(ProductSuccessorGenerator<T>& successor_generator);

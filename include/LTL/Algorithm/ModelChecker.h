@@ -39,14 +39,22 @@ namespace LTL {
 
         ModelChecker(const PetriEngine::PetriNet& net,
                 const PetriEngine::PQL::Condition_ptr &condition,
-                const Structures::BuchiAutomaton &buchi, bool built_trace)
+                const Structures::BuchiAutomaton &buchi)
         : _net(net), _formula(condition),
-          _factory(net, buchi), _buchi(buchi), _built_trace(built_trace) {
+          _factory(net, buchi), _buchi(buchi) {
+        }
+
+        void set_tracing(bool tracing) { _build_trace = tracing; }
+
+        void set_heuristic(Heuristic* heuristic) {
+            _heuristic = heuristic;
         }
 
         void set_utilize_weak(bool b) {
             _shortcircuitweak = b;
         }
+
+        virtual void set_partial_order(LTLPartialOrder) {}
 
         virtual bool check() = 0;
 
@@ -60,7 +68,7 @@ namespace LTL {
             return _explored;
         }
 
-        virtual void print_stats(std::ostream&) = 0;
+        virtual void print_stats(std::ostream&) const = 0;
 
         size_t loop_index() const {
             return _loop;
@@ -68,6 +76,11 @@ namespace LTL {
 
         const std::vector<size_t>& trace() const {
             return _trace;
+        }
+
+
+        virtual LTLPartialOrder used_partial_order() const {
+            return LTLPartialOrder::None;
         }
 
 
@@ -92,10 +105,11 @@ namespace LTL {
         bool _shortcircuitweak;
         bool _weakskip = false;
         bool _is_weak = false;
-        bool _built_trace = false;
-
+        bool _build_trace = false;
+        Heuristic* _heuristic = nullptr;
         size_t _loop = std::numeric_limits<size_t>::max();
         std::vector<size_t> _trace;
+        bool _violation = false;
     };
 }
 

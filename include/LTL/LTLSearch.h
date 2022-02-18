@@ -46,7 +46,6 @@ namespace LTL {
         APCompression _compression;
         std::unique_ptr<ModelChecker> _checker;
         std::unique_ptr<Heuristic> _heuristic;
-        bool _is_visible_stub, _is_autreach_stub, _is_buchi_stub, _is_stubborn;
         bool _result;
 
     public:
@@ -66,20 +65,8 @@ namespace LTL {
         void print_buchi(std::ostream& out, const BuchiOutType type = BuchiOutType::Dot);
         void print_stats(std::ostream& out);
 
-        bool use_visible_stubborn() const {
-            return _is_visible_stub && use_stubborn();
-        }
-
-        bool use_autreach_stubborn() const {
-            return _is_autreach_stub && use_stubborn();
-        }
-
-        bool use_buchi_stubborn() const {
-            return _is_buchi_stub && use_stubborn();
-        }
-
-        bool use_stubborn() const {
-            return _is_stubborn;
+        LTLPartialOrder used_partial_order() const {
+            return _checker->used_partial_order();
         }
 
         bool is_weak() const {
