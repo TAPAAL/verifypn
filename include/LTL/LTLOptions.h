@@ -55,7 +55,8 @@ namespace LTL {
         Distance = 0,
         Automaton = 1,
         FireCount = 2,
-        DFS = 3,
+        DFS = 3, // only used for testing atm
+        RDFS = 4 // only used for testing atm
     };
 
     inline auto to_string(Algorithm alg) {
