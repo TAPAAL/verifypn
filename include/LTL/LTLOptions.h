@@ -39,10 +39,10 @@ namespace LTL {
     };
 
     enum class LTLPartialOrder {
-        None,
-        Visible,
-        Automaton,
-        Liebke
+        None = 0,
+        Visible = 1,
+        Automaton = 2,
+        Liebke = 3
     };
 
     enum class BuchiOptimization {
@@ -52,9 +52,10 @@ namespace LTL {
     };
 
     enum class LTLHeuristic {
-        Distance,
-        Automaton,
-        FireCount,
+        Distance = 0,
+        Automaton = 1,
+        FireCount = 2,
+        DFS = 3,
     };
 
     inline auto to_string(Algorithm alg) {
