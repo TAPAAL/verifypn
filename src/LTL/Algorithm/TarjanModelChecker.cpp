@@ -53,7 +53,7 @@ namespace LTL {
                 spooler = std::make_unique<EnabledSpooler>(_net, gen);
             }
 
-            gen.set_spooler(spooler);
+            gen.set_spooler(*spooler);
 
             if(_heuristic)
                 gen.set_heuristic(_heuristic);
