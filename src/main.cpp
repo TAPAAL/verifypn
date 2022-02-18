@@ -380,9 +380,9 @@ int main(int argc, const char** argv) {
                         << LTL::to_string(options.ltlalgorithm)
                         << (search.is_weak() ? " WEAK_SKIP" : "")
                         << (search.used_partial_order() != LTL::LTLPartialOrder::None ? " STUBBORN" : "")
-                        << (search.used_partial_order() != LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
-                        << (search.used_partial_order() != LTL::LTLPartialOrder::Automaton ? " REACH_STUB" : "")
-                        << (search.used_partial_order() != LTL::LTLPartialOrder::Liebke ? " BUCHI_STUB" : "");
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Automaton ? " REACH_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Liebke ? " BUCHI_STUB" : "");
                     auto heur = search.heuristic_type();
                     if (!heur.empty())
                         std::cout << " HEURISTIC " << heur;
