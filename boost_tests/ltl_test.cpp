@@ -64,6 +64,8 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality) {
                 for(auto por : { LTL::LTLPartialOrder::None, LTL::LTLPartialOrder::Liebke,
                     LTL::LTLPartialOrder::Visible, LTL::LTLPartialOrder::Automaton})
                 {
+                    if(alg == LTL::Algorithm::NDFS && por != LTL::LTLPartialOrder::None)
+                        continue;
                     for(auto heur : { LTL::LTLHeuristic::DFS, LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
                         LTL::LTLHeuristic::FireCount})
                     {
@@ -114,7 +116,9 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability) {
                 for(auto por : { LTL::LTLPartialOrder::None, LTL::LTLPartialOrder::Liebke,
                     LTL::LTLPartialOrder::Visible, LTL::LTLPartialOrder::Automaton})
                 {
-                    for(auto heur : { LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
+                    if(alg == LTL::Algorithm::NDFS && por != LTL::LTLPartialOrder::None)
+                        continue;
+                        for(auto heur : { LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
                         LTL::LTLHeuristic::FireCount, LTL::LTLHeuristic::DFS})
                     {
                         std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace
