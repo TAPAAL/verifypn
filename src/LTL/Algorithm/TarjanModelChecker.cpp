@@ -21,15 +21,21 @@
 namespace LTL {
 
     void TarjanModelChecker::print_stats(std::ostream &os) const {
-
+        ModelChecker::print_stats(os, _discoverd, _max_tokens);
     }
 
     void TarjanModelChecker::set_partial_order(LTLPartialOrder o)
     {
         if(_net.has_inhibitor())
+        {
+            _order = LTLPartialOrder::None;
             return; // no partial order supported
+        }
         if(PetriEngine::PQL::containsNext(_formula) && o == LTLPartialOrder::Visible)
+        {
+            _order = LTLPartialOrder::None;
             return; // also no POR
+        }
         _order = o;
     }
 
@@ -49,36 +55,30 @@ namespace LTL {
             if(_heuristic)
                 gen.set_heuristic(_heuristic);
 
-                if(_order == LTLPartialOrder::Automaton)
-                {
-                    ReachStubProductSuccessorGenerator succ_gen(_net, _buchi, gen, std::make_unique<EnabledSpooler>(_net, gen));
-                    if(_build_trace)
-                        return compute<true,decltype(succ_gen)>(succ_gen);
-                    else
-                        return compute<false,decltype(succ_gen)>(succ_gen);
-                }
-                /*if (is_autreach_stub) {
-                    result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler >> (
-                        _net,
-                        _negated_formula,
-                        _buchi,
-                        gen,
-                        k_bound,
-                        std::make_unique<EnabledSpooler>(_net, gen)));
-                } else {
-                    result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true >> (
-                        _net,
-                        _negated_formula,
-                        _buchi,
-                        gen,
-                        k_bound));
-                }*/
+            if(_order == LTLPartialOrder::Automaton)
+            {
+                ReachStubProductSuccessorGenerator succ_gen(_net, _buchi, gen, std::make_unique<EnabledSpooler>(_net, gen));
+                return select_trace_compute(succ_gen);
+            }
+            else {
+                ProductSuccessorGenerator succ_gen(_net, _buchi, gen);
+                return select_trace_compute(succ_gen);
+            }
         }
         else
         {
-
+            ResumingSuccessorGenerator gen{_net};
+            ProductSuccessorGenerator succ_gen(_net, _buchi, gen);
+            return select_trace_compute(succ_gen);
         }
+    }
 
+    template<typename SuccGen>
+    bool TarjanModelChecker::select_trace_compute(SuccGen& successorGenerator)
+    {
+        return _build_trace ?
+            compute<true, SuccGen>(successorGenerator) :
+            compute<false, SuccGen>(successorGenerator);
     }
 
     template<typename T>
@@ -108,6 +108,7 @@ namespace LTL {
         State working = _factory.new_state();
         State parent = _factory.new_state();
         for (auto &state : initial_states) {
+            if(_violation) break;
             const auto res = seen.add(state);
             if (res.first) {
                 push(cstack, dstack, successorGenerator, state, res.second);
@@ -116,7 +117,7 @@ namespace LTL {
                 auto &dtop = dstack.top();
                 // write next successor state to working.
                 if (!next_trans(seen, cstack, successorGenerator, working, parent, dtop)) {
-                    ++this->_expanded;
+                    ++_expanded;
 #ifndef NDEBUG
                     std::cerr << "backtrack\n";
 #endif
@@ -132,7 +133,7 @@ namespace LTL {
                     std::cerr << "looping\n";
                 }
 #endif
-                ++this->_explored;
+                ++_explored;
                 const auto[isnew, stateid] = seen.add(working);
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
@@ -181,10 +182,11 @@ namespace LTL {
                         dstack.pop();
                     }
                     build_trace(seen, std::move(revstack), cstack);
-                    return false;
                 }
             }
         }
+        _discoverd = seen.discovered();
+        _max_tokens = seen.max_tokens();
         return !_violation;
     }
 

@@ -37,16 +37,7 @@ using namespace PetriEngine;
 
 namespace LTL {
 
-    struct Result {
-        bool satisfied = false;
-        bool is_weak = true;
-        Algorithm algorithm = Algorithm::Tarjan;
-#ifdef DEBUG_EXPLORED_STATES
-        size_t explored_states = 0;
-#endif
-    };
-
-        /**
+    /**
      * Converts a formula on the form A f, E f or f into just f, assuming f is an LTL formula.
      * In the case E f, not f is returned, and in this case the model checking result should be negated
      * (indicated by bool in return value)
@@ -71,14 +62,6 @@ namespace LTL {
             converted = nullptr;
         }
         return std::make_pair(converted, should_negate);
-    }
-
-    template<typename Checker>
-    Result _verify(std::unique_ptr<Checker> checker) {
-        Result result;
-        result.satisfied = checker->is_satisfied();
-        result.is_weak = checker->is_weak();
-        return result;
     }
 
     std::unique_ptr<Heuristic> make_heuristic(const PetriNet& net,
@@ -199,80 +182,6 @@ namespace LTL {
             }
             case Algorithm::Tarjan:
                 _checker = std::make_unique<TarjanModelChecker>(_net, _negated_formula, _buchi, k_bound);
-                /*if (search_strategy != Strategy::DFS || is_stubborn) {
-
-                    if (trace) {
-                        if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound,
-                                std::make_unique<VisibleLTLStubbornSet>(_net, _negated_formula)));
-                        } else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound,
-                                std::make_unique<EnabledSpooler>(_net, gen)));
-                        } else {
-                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound));
-                        }
-                    } else {
-
-                        if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound,
-                                std::make_unique<VisibleLTLStubbornSet>(_net, _negated_formula)));
-                        } else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound,
-                                std::make_unique<EnabledSpooler>(_net, gen)));
-                        } else {
-                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false >> (
-                                _net,
-                                _negated_formula,
-                                _buchi,
-                                gen,
-                                k_bound));
-                        }
-                    }
-                } else {
-                    ResumingSuccessorGenerator gen{_net};
-                    if(trace)
-                    {
-                        _checker = std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true >> (
-                            _net,
-                            _negated_formula,
-                            _buchi,
-                            gen,
-                            k_bound);
-                    } else {
-                        _checker = std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false >> (
-                            _net,
-                            _negated_formula,
-                            _buchi,
-                            gen,
-                            k_bound);
-                    }
-                    _result = _checker->check();
-                }*/
                 break;
             case Algorithm::None:
             default:

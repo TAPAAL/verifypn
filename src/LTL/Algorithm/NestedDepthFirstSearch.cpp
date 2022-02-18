@@ -51,7 +51,6 @@ namespace LTL {
         if(is_new)
         {
             ++_mark_count[MARKER];
-            ++this->_discovered;
         }
         return std::make_pair(is_new, stateid);
     }
@@ -72,7 +71,6 @@ namespace LTL {
                 auto res = _states.add(state);
                 if (res.first) {
                     todo.push_back(stack_entry_t<T>{res.second, T::initial_suc_info()});
-                    ++this->_discovered;
                 }
             }
         }
@@ -105,7 +103,6 @@ namespace LTL {
                 }
                 top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    ++this->_discovered;
                     if(successor_generator.is_accepting(curState) &&
                        successor_generator.has_invariant_self_loop(curState))
                     {

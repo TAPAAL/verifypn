@@ -39,6 +39,9 @@ namespace LTL {
     class ProductSuccessorGenerator {
     public:
 
+        using successor_info_t = typename SuccessorGen::successor_info_t;
+        static constexpr auto initial_suc_info() { return SuccessorGen::initial_suc_info(); }
+
         ProductSuccessorGenerator(const PetriEngine::PetriNet& net,
                                   const Structures::BuchiAutomaton& buchi,
                                   SuccessorGen& successorGen)

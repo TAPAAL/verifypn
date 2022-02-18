@@ -47,8 +47,7 @@ namespace LTL {
         TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            uint32_t kbound)
-                : ModelChecker(net, cond, buchi),
-                        _k_bound(kbound)
+                : ModelChecker(net, cond, buchi), _k_bound(kbound)
         {
             if (buchi.buchi().num_states() > 65535) {
                 throw base_error("Cannot handle Büchi automata larger than 2^16 states");
@@ -66,6 +65,9 @@ namespace LTL {
             return _order;
         }
     private:
+
+        template<typename SuccGen>
+        bool select_trace_compute(SuccGen& successorGenerator);
 
         template<bool TRACE, typename SuccGen>
         bool compute(SuccGen& successorGenerator);
@@ -117,6 +119,8 @@ namespace LTL {
         bool _invariant_loop = true;
         size_t _loop_state = std::numeric_limits<size_t>::max();
         size_t _loop_trans = std::numeric_limits<size_t>::max();
+        size_t _discoverd = std::numeric_limits<size_t>::max();
+        size_t _max_tokens = std::numeric_limits<size_t>::max();
         uint32_t _k_bound;
         LTLPartialOrder _order = LTLPartialOrder::None;
 

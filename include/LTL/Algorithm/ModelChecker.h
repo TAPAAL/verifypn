@@ -88,12 +88,16 @@ namespace LTL {
         size_t _explored = 0;
         size_t _expanded = 0;
 
-        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
+        virtual void print_stats(std::ostream &os, size_t discovered, size_t max_tokens) const {
             std::cout << "STATS:\n"
-                    << "\tdiscovered states: " << stateSet.discovered() << std::endl
+                    << "\tdiscovered states: " << discovered << std::endl
                     << "\texplored states:   " << _explored << std::endl
                     << "\texpanded states:   " << _expanded << std::endl
-                    << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
+                    << "\tmax tokens:        " << max_tokens << std::endl;
+        }
+
+        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) const {
+            print_stats(os, stateSet.discovered(), stateSet.max_tokens());
         }
 
 
@@ -101,7 +105,6 @@ namespace LTL {
         PetriEngine::PQL::Condition_ptr _formula;
         Structures::ProductStateFactory _factory;
         const Structures::BuchiAutomaton& _buchi;
-        size_t _discovered = 0;
         bool _shortcircuitweak;
         bool _weakskip = false;
         bool _is_weak = false;
