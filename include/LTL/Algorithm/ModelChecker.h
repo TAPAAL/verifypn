@@ -61,7 +61,7 @@ namespace LTL {
         virtual ~ModelChecker() = default;
 
         [[nodiscard]] bool is_weak() const {
-            return _is_weak;
+            return _shortcircuitweak;
         }
 
         size_t get_explored() {
@@ -107,7 +107,6 @@ namespace LTL {
         const Structures::BuchiAutomaton& _buchi;
         bool _shortcircuitweak;
         bool _weakskip = false;
-        bool _is_weak = false;
         bool _build_trace = false;
         Heuristic* _heuristic = nullptr;
         size_t _loop = std::numeric_limits<size_t>::max();

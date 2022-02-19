@@ -61,7 +61,6 @@ namespace LTL {
     template<typename T>
     void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator)
     {
-        this->_is_weak = successor_generator.is_weak() && this->_shortcircuitweak;
         light_deque<stack_entry_t<T>> todo;
         light_deque<stack_entry_t<T>> nested_todo;
 
@@ -106,7 +105,8 @@ namespace LTL {
                 }
                 top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    if(successor_generator.is_accepting(curState) &&
+                    if(_shortcircuitweak &&
+                       successor_generator.is_accepting(curState) &&
                        successor_generator.has_invariant_self_loop(curState))
                     {
                         _violation = true;
@@ -139,9 +139,6 @@ namespace LTL {
             if (!successor_generator.next(working, top._sucinfo)) {
                 nested_todo.pop_back();
             } else {
-                if (this->_is_weak && !successor_generator.is_accepting(working)) {
-                    continue;
-                }
                 if (working == state) {
                     _violation = true;
                     return;

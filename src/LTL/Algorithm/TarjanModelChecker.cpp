@@ -106,7 +106,6 @@ namespace LTL {
         // depth-first search stack, contains current search path.
         light_deque<dentry_t<SuccGen>> dstack;
 
-        _is_weak = successorGenerator.is_weak() && _shortcircuitweak;
         auto initial_states = successorGenerator.make_initial_state();
         State working = _factory.new_state();
         State parent = _factory.new_state();
@@ -173,6 +172,14 @@ namespace LTL {
                     continue;
                 }
                 if (!_store.exists(stateid).first) {
+                    auto bstate = seen.get_buchi_state(stateid);
+                    if(_weakskip &&
+                       successorGenerator.is_accepting(bstate) &&
+                       successorGenerator.has_invariant_self_loop(bstate))
+                    {
+                        _violation = true;
+                        break;
+                    }
                     push(cstack, dstack, successorGenerator, working, stateid);
                 }
             }
@@ -224,11 +231,6 @@ namespace LTL {
         cstack[p]._dstack = false;
         if (cstack[p]._lowlink == p) {
             while (cstack.size() > p) {
-                popCStack(cstack);
-            }
-        } else if (this->_is_weak) {
-            auto bstate = seen.get_buchi_state(cstack[p]._stateid);
-            if (!_buchi.buchi().state_is_accepting(bstate)) {
                 popCStack(cstack);
             }
         }
