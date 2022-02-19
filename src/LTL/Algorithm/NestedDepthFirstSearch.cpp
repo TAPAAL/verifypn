@@ -43,12 +43,12 @@ namespace LTL {
         // technically we could decorate the states here instead of
         // maintaining the index twice in the _mark_count.
         // this would also spare us one ptrie lookup.
-        auto[_, stateid] = _states.add(state);
+        auto[_, stateid, data_id] = _states.add(state);
         if (stateid == std::numeric_limits<size_t>::max()) {
             return std::make_pair(false, stateid);
         }
 
-        auto& r = _markers[stateid];
+        auto& r = _states.get_data(data_id);
         const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
@@ -72,8 +72,8 @@ namespace LTL {
             auto initial_states = successor_generator.make_initial_state();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
-                if (res.first) {
-                    todo.push_back(stack_entry_t<T>{res.second, T::initial_suc_info()});
+                if (std::get<0>(res)) {
+                    todo.push_back(stack_entry_t<T>{std::get<1>(res), T::initial_suc_info()});
                 }
             }
         }
@@ -127,7 +127,7 @@ namespace LTL {
         State working = _factory.new_state();
         State curState = _factory.new_state();
 
-        nested_todo.push_back(stack_entry_t<T>{_states.add(state).second, T::initial_suc_info()});
+        nested_todo.push_back(stack_entry_t<T>{std::get<1>(_states.add(state)), T::initial_suc_info()});
 
         while (!nested_todo.empty()) {
             auto &top = nested_todo.back();

@@ -113,8 +113,8 @@ namespace LTL {
         for (auto &state : initial_states) {
             if(_violation) break;
             const auto res = seen.add(state);
-            if (res.first) {
-                push(cstack, dstack, successorGenerator, state, res.second);
+            if (std::get<0>(res)) {
+                push(cstack, dstack, successorGenerator, state, std::get<1>(res));
             }
             while (!dstack.empty() && !_violation) {
                 auto &dtop = dstack.back();
@@ -137,14 +137,14 @@ namespace LTL {
                 }
 #endif
                 ++_explored;
-                const auto[isnew, stateid] = seen.add(working);
+                const auto[isnew, stateid, _] = seen.add(working);
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
                 }
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.setHistory(stateid, successorGenerator.fired());
+                        seen.set_history(stateid, successorGenerator.fired());
                     }
                 }
 
@@ -300,7 +300,7 @@ namespace LTL {
             p = dstack.back()._pos;
             dstack.pop_back();
             auto stateid = cstack[p]._stateid;
-            auto[parent, tid] = seen.getHistory(stateid);
+            auto[parent, tid] = seen.get_history(stateid);
             _trace.emplace_back(tid);
             if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
             {
@@ -316,7 +316,7 @@ namespace LTL {
         {
             p = cstack[p]._lowsource;
             while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
-                auto[parent, tid] = seen.getHistory(cstack[p]._stateid);
+                auto[parent, tid] = seen.get_history(cstack[p]._stateid);
                 _trace.emplace_back(tid);
                 if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
                 {
