@@ -40,6 +40,9 @@ namespace LTL {
 
     std::pair<bool,size_t> NestedDepthFirstSearch::mark(State& state, const uint8_t MARKER)
     {
+        // technically we could decorate the states here instead of
+        // maintaining the index twice in the _mark_count.
+        // this would also spare us one ptrie lookup.
         auto[_, stateid] = _states.add(state);
         if (stateid == std::numeric_limits<size_t>::max()) {
             return std::make_pair(false, stateid);
@@ -49,8 +52,9 @@ namespace LTL {
         const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
+            r = (MARKER | r);
             ++_mark_count[MARKER];
-        } else r = (MARKER | r);
+        }
         return std::make_pair(is_new, stateid);
     }
 
