@@ -227,9 +227,8 @@ namespace LTL {
                 popCStack(cstack);
             }
         } else if (this->_is_weak) {
-            State state = this->_factory.new_state();
-            seen.decode(state, cstack[p]._stateid);
-            if (!successorGenerator.is_accepting(state)) {
+            auto bstate = seen.get_buchi_state(cstack[p]._stateid);
+            if (!_buchi.buchi().state_is_accepting(bstate)) {
                 popCStack(cstack);
             }
         }
