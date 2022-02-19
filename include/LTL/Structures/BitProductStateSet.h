@@ -59,9 +59,9 @@ namespace LTL { namespace Structures {
     /**
      * Bit-hacking product state set for storing pairs (M, q) compactly in 64 bits.
      * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
-     * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 16-bit. Max is 32-bit.
+     * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 20-bit. Max is 32-bit.
      */
-    template<uint8_t nbits = 16>
+    template<uint8_t nbits = 20>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
         explicit BitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
@@ -78,13 +78,13 @@ namespace LTL { namespace Structures {
          * size_t stateID; if error it is UINT64_MAX.
          */
 
-        size_t get_buchi_state(stateid_t id) override { return id >> BUCHI_SHIFT; }
+        size_t get_buchi_state(stateid_t id) override { return id & BUCHI_MASK; }
 
-        size_t get_marking_id(stateid_t id) override { return id & MARKING_MASK; }
+        size_t get_marking_id(stateid_t id) override { return id >> MARKING_SHIFT; }
 
         stateid_t get_product_id(size_t markingId, size_t buchiState) override
         {
-            return (buchiState << BUCHI_SHIFT) | (MARKING_MASK & markingId);
+            return (buchiState & BUCHI_MASK) | (markingId << MARKING_SHIFT);
         }
 
         /**
@@ -100,6 +100,8 @@ namespace LTL { namespace Structures {
                 return res;
             }
             const stateid_t product_id = get_product_id(res.second, state.get_buchi_state());
+            assert(res.second == get_marking_id(product_id));
+            assert(state.get_buchi_state() == get_buchi_state(product_id));
             auto [is_new, _] = _states.insert(product_id);
             return std::make_pair(is_new, product_id);
         }
@@ -125,9 +127,9 @@ namespace LTL { namespace Structures {
         size_t max_tokens() const override { return _markings.maxTokens(); }
 
     protected:
-        static constexpr auto MARKING_MASK = (1LL << (64 - nbits)) - 1;
-        static constexpr auto BUCHI_MASK = std::numeric_limits<size_t>::max() ^ MARKING_MASK;
-        static constexpr auto BUCHI_SHIFT = 64 - nbits;
+
+        static constexpr auto BUCHI_MASK = ~(std::numeric_limits<size_t>::max() << (nbits));
+        static constexpr auto MARKING_SHIFT = nbits;
 
         PetriEngine::Structures::StateSet _markings;
         ptrie::set<stateid_t> _states;
