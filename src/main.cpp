@@ -366,7 +366,7 @@ int main(int argc, const char** argv) {
             if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
                 options.usedltl = true;
 
-                for (auto qid: ltl_ids) {
+                for (auto qid : ltl_ids) {
                     LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
                     auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
                         options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,

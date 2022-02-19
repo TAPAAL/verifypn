@@ -54,7 +54,30 @@ namespace LTL {
             should_negate = true;
         } else if (auto _formula = dynamic_cast<ACondition *> (formula.get())) {
             converted = (*_formula)[0];
-        } else {
+        } else if (auto _formula = dynamic_cast<AGCondition *> (formula.get())) {
+            auto f = std::make_shared<ACondition>(std::make_shared<GCondition>((*_formula)[0]));
+            return to_ltl(f);
+        } else if (auto _formula = dynamic_cast<AFCondition *> (formula.get())) {
+            auto f = std::make_shared<ACondition>(std::make_shared<FCondition>((*_formula)[0]));
+            return to_ltl(f);
+        }
+        else if (auto _formula = dynamic_cast<EFCondition *> (formula.get())) {
+            auto f = std::make_shared<ECondition>(std::make_shared<FCondition>((*_formula)[0]));
+            return to_ltl(f);
+        }
+        else if (auto _formula = dynamic_cast<EGCondition *> (formula.get())) {
+            auto f = std::make_shared<ECondition>(std::make_shared<GCondition>((*_formula)[0]));
+            return to_ltl(f);
+        }
+        else if (auto _formula = dynamic_cast<AUCondition *> (formula.get())) {
+            auto f = std::make_shared<ACondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
+            return to_ltl(f);
+        }
+        else if (auto _formula = dynamic_cast<EUCondition *> (formula.get())) {
+            auto f = std::make_shared<ACondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
+            return to_ltl(f);
+        }
+        else {
             converted = formula;
         }
         Visitor::visit(validator, converted);
