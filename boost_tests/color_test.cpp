@@ -27,13 +27,14 @@
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
+namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
 
-BOOST_AUTO_TEST_CASE(InitialMarkingMismatch) {
+BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(5)) {
 
     std::string model("/models/color_mismatch.pnml");
     std::string query("/models/color_mismatch.xml");
@@ -49,7 +50,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMismatch) {
     BOOST_REQUIRE(saw_exception);
 }
 
-BOOST_AUTO_TEST_CASE(InitialMarkingMatch) {
+BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(5)) {
 
     std::string model("/models/color_match.pnml");
     std::string query("/models/color_match.xml");
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch) {
 }
 
 
-BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03) {
+BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
 
     std::string model("/models/PhilosophersDyn-COL-03/model.pnml");
     std::string query("/models/PhilosophersDyn-COL-03/ReachabilityCardinality.xml");
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(PetersonCOL2) {
+BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(60)) {
 
     std::string model("/models/Peterson-COL-2/model.pnml");
     std::string query("/models/Peterson-COL-2/ReachabilityCardinality.xml");
@@ -188,11 +189,11 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04) {
+BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(60)) {
 
     std::string model("/models/UtilityControlRoom-COL-Z2T3N04/model.pnml");
     std::string query("/models/UtilityControlRoom-COL-Z2T3N04/ReachabilityCardinality.xml");
-    // this model is to large to verify as a test, but unfolding should be ok.
+    // this model is to large too verify as a test, but unfolding should be ok.
     // the unfolding provoked an error in the CFP of colored nets.
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     for(auto partition : {false, true})
@@ -219,11 +220,11 @@ BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(NeoElectionCOL3) {
+BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(60)) {
 
     std::string model("/models/NeoElection-COL-3/model.pnml");
     std::string query("/models/NeoElection-COL-3/ReachabilityCardinality.xml");
-    // this model is to large to verify as a test, but unfolding should be ok.
+    // this model is to large too verify as a test, but unfolding should be ok.
     // the unfolding provoked an error in the CFP of colored nets.
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     for(auto partition : {false, true})
