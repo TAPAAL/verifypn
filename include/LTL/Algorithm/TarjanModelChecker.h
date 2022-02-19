@@ -49,8 +49,8 @@ namespace LTL {
                            uint32_t kbound)
                 : ModelChecker(net, cond, buchi), _k_bound(kbound)
         {
-            if (buchi.buchi().num_states() > 65535) {
-                throw base_error("Cannot handle Büchi automata larger than 2^16 states");
+            if (buchi.buchi().num_states() > 1048576) {
+                throw base_error("Cannot handle Büchi automata larger than 2^20 states");
             }
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
