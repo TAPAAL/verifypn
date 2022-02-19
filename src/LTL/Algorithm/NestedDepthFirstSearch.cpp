@@ -45,13 +45,12 @@ namespace LTL {
             return std::make_pair(false, stateid);
         }
 
-        auto r = _markers[stateid];
-        _markers[stateid] = (MARKER | r);
+        auto& r = _markers[stateid];
         const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
             ++_mark_count[MARKER];
-        }
+        } else r = (MARKER | r);
         return std::make_pair(is_new, stateid);
     }
 
@@ -66,7 +65,7 @@ namespace LTL {
         State curState = this->_factory.new_state();
 
         {
-            std::vector<State> initial_states = successor_generator.make_initial_state();
+            auto initial_states = successor_generator.make_initial_state();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
                 if (res.first) {
