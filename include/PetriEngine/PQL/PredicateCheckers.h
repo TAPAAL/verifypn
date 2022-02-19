@@ -123,6 +123,7 @@ namespace PetriEngine::PQL {
 
 
     bool containsNext(const Condition_ptr& condition);
+    bool containsNext(const Condition* condition);
 
     class ContainsNextVisitor : public AnyVisitor {
         void _accept(const XCondition *condition) override;

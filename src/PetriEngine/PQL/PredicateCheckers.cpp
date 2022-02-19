@@ -252,6 +252,9 @@ namespace PetriEngine::PQL {
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
+        return containsNext(condition.get());
+    }
+    bool containsNext(const Condition* condition) {
         ContainsNextVisitor visitor;
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
