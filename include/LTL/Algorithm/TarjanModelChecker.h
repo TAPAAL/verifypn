@@ -24,10 +24,11 @@
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+#include "utils/structures/light_deque.h"
+
+#include <ptrie/ptrie.h>
 
 #include <limits>
-#include <stack>
-#include <unordered_set>
 
 namespace LTL {
 
@@ -77,7 +78,7 @@ namespace LTL {
         // 64 MB hash table
         static constexpr idx_t _hash_sz = 16777216;
 
-        std::unordered_set<idx_t> _store;
+        ptrie::set<idx_t> _store;
 
         // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
         // corresponding to state. Collisions are resolved using linked list via CEntry::next.
@@ -114,7 +115,7 @@ namespace LTL {
 
 
         // cstack positions of accepting states in current search path, for quick access.
-        std::stack<idx_t> _astack;
+        light_deque<idx_t> _astack;
 
         bool _invariant_loop = true;
         size_t _loop_state = std::numeric_limits<size_t>::max();
@@ -126,22 +127,22 @@ namespace LTL {
 
         // TODO, instead of this template hell, we should really just have a templated state that we shuffle around.
         template<typename T, typename D, typename S>
-        void push(std::vector<T>& cstack, std::stack<D>& dstack, S& successor_generator, State &state, size_t stateid);
+        void push(light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid);
 
         template<typename S, typename T, typename D, typename SuccGen>
-        void pop(S& seen, std::vector<T>& cstack, std::stack<D>& dstack, SuccGen& successorGenerator);
+        void pop(S& seen, light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator);
 
         template<typename T, typename D, typename SuccGen>
-        void update(std::vector<T>& cstack, std::stack<D>& d, SuccGen& successorGenerator, idx_t to);
+        void update(light_deque<T>& cstack, light_deque<D>& d, SuccGen& successorGenerator, idx_t to);
 
         template<typename S, typename T, typename SuccGen, typename D>
-        bool next_trans(S& seen, std::vector<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
+        bool next_trans(S& seen, light_deque<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
 
         template<typename T>
-        void popCStack(std::vector<T>& cstack);
+        void popCStack(light_deque<T>& cstack);
 
         template<typename S, typename D, typename C>
-        void build_trace(S& seen, std::stack<D> &&dstack, std::vector<C>& cstack);
+        void build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack);
     };
 }
 

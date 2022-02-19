@@ -102,9 +102,9 @@ namespace LTL {
 
         StateSet seen(_net, _k_bound);
         // master list of state information.
-        std::vector<centry_t> cstack;
+        light_deque<centry_t> cstack;
         // depth-first search stack, contains current search path.
-        std::stack<dentry_t<SuccGen>> dstack;
+        light_deque<dentry_t<SuccGen>> dstack;
 
         _is_weak = successorGenerator.is_weak() && _shortcircuitweak;
         auto initial_states = successorGenerator.make_initial_state();
@@ -117,7 +117,7 @@ namespace LTL {
                 push(cstack, dstack, successorGenerator, state, res.second);
             }
             while (!dstack.empty() && !_violation) {
-                auto &dtop = dstack.top();
+                auto &dtop = dstack.back();
                 // write next successor state to working.
                 if (!next_trans(seen, cstack, successorGenerator, working, parent, dtop)) {
                     ++_expanded;
@@ -172,17 +172,17 @@ namespace LTL {
                     update(cstack, dstack, successorGenerator, suc_pos);
                     continue;
                 }
-                if (_store.find(stateid) == std::end(_store)) {
+                if (!_store.exists(stateid).first) {
                     push(cstack, dstack, successorGenerator, working, stateid);
                 }
             }
             if constexpr (SaveTrace) {
                 // print counter-example if it exists.
                 if (_violation) {
-                    std::stack<dentry_t<SuccGen>> revstack;
+                    light_deque<dentry_t<SuccGen>> revstack;
                     while (!dstack.empty()) {
-                        revstack.push(std::move(dstack.top()));
-                        dstack.pop();
+                        revstack.push_back(std::move(dstack.back()));
+                        dstack.pop_back();
                     }
                     build_trace(seen, std::move(revstack), cstack);
                 }
@@ -198,14 +198,14 @@ namespace LTL {
      * @param state
      */
     template<typename T, typename D, typename S>
-    void TarjanModelChecker::push(std::vector<T>& cstack, std::stack<D>& dstack, S& successor_generator, State &state, size_t stateid) {
+    void TarjanModelChecker::push(light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
-        cstack.emplace_back(ctop, stateid, _chash[h]);
+        cstack.push_back(T{ctop, stateid, _chash[h]});
         _chash[h] = ctop;
-        dstack.push(D{ctop});
+        dstack.push_back(D{ctop});
         if (successor_generator.is_accepting(state)) {
-            _astack.push(ctop);
+            _astack.push_back(ctop);
             if (successor_generator.has_invariant_self_loop(state)){
                 _violation = true;
                 _invariant_loop = true;
@@ -217,10 +217,10 @@ namespace LTL {
     }
 
     template<typename S, typename T, typename D, typename SuccGen>
-    void TarjanModelChecker::pop(S& seen, std::vector<T>& cstack, std::stack<D>& dstack, SuccGen& successorGenerator)
+    void TarjanModelChecker::pop(S& seen, light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator)
     {
-        const auto p = dstack.top()._pos;
-        dstack.pop();
+        const auto p = dstack.back()._pos;
+        dstack.pop_back();
         cstack[p]._dstack = false;
         if (cstack[p]._lowlink == p) {
             while (cstack.size() > p) {
@@ -233,19 +233,19 @@ namespace LTL {
                 popCStack(cstack);
             }
         }
-        if (!_astack.empty() && p == _astack.top()) {
-            _astack.pop();
+        if (!_astack.empty() && p == _astack.back()) {
+            _astack.pop_back();
         }
         if (!dstack.empty()) {
             update(cstack, dstack, successorGenerator, p);
             if constexpr (is_spooling<SuccGen>()) {
-                successorGenerator.pop(dstack.top()._sucinfo);
+                successorGenerator.pop(dstack.back()._sucinfo);
             }
         }
     }
 
     template<typename T>
-    void TarjanModelChecker::popCStack(std::vector<T>& cstack)
+    void TarjanModelChecker::popCStack(light_deque<T>& cstack)
     {
         auto h = hash(cstack.back()._stateid);
         _store.insert(cstack.back()._stateid);
@@ -255,15 +255,15 @@ namespace LTL {
 
 
     template<typename T, typename D, typename SuccGen>
-    void TarjanModelChecker::update(std::vector<T>& cstack, std::stack<D>& dstack, SuccGen& successorGenerator, idx_t to)
+    void TarjanModelChecker::update(light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator, idx_t to)
     {
-        const auto from = dstack.top()._pos;
+        const auto from = dstack.back()._pos;
         assert(cstack[to]._lowlink != std::numeric_limits<idx_t>::max() && cstack[from]._lowlink != std::numeric_limits<idx_t>::max());
         if (cstack[to]._lowlink <= cstack[from]._lowlink) {
             // we have now found a loop into earlier seen component cstack[to].lowlink.
             // if this earlier component precedes an accepting state,
             // the found loop is accepting and thus a violation.
-            _violation = (!_astack.empty() && to <= _astack.top());
+            _violation = (!_astack.empty() && to <= _astack.back());
             // either way update the component ID of the state we came from.
             cstack[from]._lowlink = cstack[to]._lowlink;
             if constexpr (T::save_trace()) {
@@ -275,7 +275,7 @@ namespace LTL {
     }
 
     template<typename S, typename T, typename SuccGen, typename D>
-    bool TarjanModelChecker::next_trans(S& seen, std::vector<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem)
+    bool TarjanModelChecker::next_trans(S& seen, light_deque<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem)
     {
         seen.decode(parent, cstack[delem._pos]._stateid);
         successorGenerator.prepare(&parent, delem._sucinfo);
@@ -288,18 +288,18 @@ namespace LTL {
     }
 
     template<typename S, typename D, typename C>
-    void TarjanModelChecker::build_trace(S& seen, std::stack<D> &&dstack, std::vector<C>& cstack)
+    void TarjanModelChecker::build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack)
     {
         assert(_violation);
-        if (cstack[dstack.top()._pos]._stateid == _loop_state)
+        if (cstack[dstack.back()._pos]._stateid == _loop_state)
             _loop = _trace.size();
-        dstack.pop();
+        dstack.pop_back();
         unsigned long p;
         bool had_deadlock = false;
         // print (reverted) dstack
         while (!dstack.empty()) {
-            p = dstack.top()._pos;
-            dstack.pop();
+            p = dstack.back()._pos;
+            dstack.pop_back();
             auto stateid = cstack[p]._stateid;
             auto[parent, tid] = seen.getHistory(stateid);
             _trace.emplace_back(tid);

@@ -140,6 +140,14 @@ class light_deque
             return &_data[_back];
         }
 
+        const T& operator[](size_t i) const {
+            return *(begin() + i);
+        }
+
+        T& operator[](size_t i) {
+            return *(begin() + i);
+        }
+
         private:
         void expand() {
             T* ndata = (T*)new uint8_t[_size*2*sizeof(T)];
