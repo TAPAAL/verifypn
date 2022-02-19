@@ -61,7 +61,7 @@ namespace LTL { namespace Structures {
      * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
      * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 20-bit. Max is 32-bit.
      */
-    template<uint8_t nbits = 20>
+    template<uint8_t nbits = 20, typename stateset_type = ptrie::set<ProductStateSetInterface::stateid_t>>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
         explicit BitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
@@ -71,12 +71,6 @@ namespace LTL { namespace Structures {
 
         static_assert(nbits <= 32, "Only up to 2^32 Büchi states supported");
         static_assert(sizeof(size_t) >= 8, "Expecting size_t to be at least 8 bytes");
-        //using stateid_t = size_t;
-
-        /**
-         * bool success
-         * size_t stateID; if error it is UINT64_MAX.
-         */
 
         size_t get_buchi_state(stateid_t id) override { return id & BUCHI_MASK; }
 
@@ -132,46 +126,41 @@ namespace LTL { namespace Structures {
         static constexpr auto MARKING_SHIFT = nbits;
 
         PetriEngine::Structures::StateSet _markings;
-        ptrie::set<stateid_t> _states;
+        stateset_type _states;
         static constexpr auto _err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
 
         size_t _discovered = 0;
     };
 
-    template<uint8_t NBYTES = 16>
-    class TraceableBitProductStateSet : public BitProductStateSet<NBYTES> {
-        using stateid_t = typename BitProductStateSet<NBYTES>::stateid_t;
+    template<uint8_t nbits = 20>
+    class TraceableBitProductStateSet : public BitProductStateSet<nbits,ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>> {
+        using stateid_t = typename BitProductStateSet<nbits,ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>>::stateid_t;
     public:
         explicit TraceableBitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
-                : BitProductStateSet<NBYTES>(net, kbound)
+                : BitProductStateSet<nbits,ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>>(net, kbound)
         {
         }
 
         void decode(ProductState &state, stateid_t id) override
         {
             _parent = id;
-            BitProductStateSet<NBYTES>::decode(state, id);
+            BitProductStateSet<nbits,ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>>::decode(state, id);
         }
 
         void setHistory(stateid_t id, size_t transition) override
         {
-            _history[id] = {_parent, transition};
+            assert(this->_states.exists(id).first);
+            this->_states[id] = {_parent, transition};
         }
 
         std::pair<size_t, size_t> getHistory(stateid_t stateid) override
         {
-            auto[parent, trans] = _history.at(stateid);
-            return std::make_pair(parent, trans);
+            assert(this->_states.exists(stateid).first);
+            return this->_states[stateid];
         }
 
     private:
-        struct history_t {
-            size_t _parent;
-            size_t _trans;
-        };
         stateid_t _parent = 0;
-        // product ID to parent ID
-        std::unordered_map<size_t, history_t> _history;
     };
 } }
 
