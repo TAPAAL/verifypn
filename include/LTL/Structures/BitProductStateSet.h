@@ -20,9 +20,9 @@
 
 #include "PetriEngine/Structures/StateSet.h"
 #include "LTL/Structures/ProductState.h"
+
+#include <ptrie/ptrie.h>
 #include <cstdint>
-#include <unordered_set>
-#include <unordered_map>
 
 namespace LTL { namespace Structures {
 
@@ -39,7 +39,7 @@ namespace LTL { namespace Structures {
 
         virtual result_t add(const LTL::Structures::ProductState &state) = 0;
 
-        virtual bool decode(LTL::Structures::ProductState &state, stateid_t id) = 0;
+        virtual void decode(LTL::Structures::ProductState &state, stateid_t id) = 0;
 
         virtual void setHistory(stateid_t id, size_t transition) {}
 
@@ -100,9 +100,7 @@ namespace LTL { namespace Structures {
                 return res;
             }
             const stateid_t product_id = get_product_id(res.second, state.get_buchi_state());
-
-            const auto[iter, is_new] = _states.insert(product_id);
-            assert(iter != std::end(_states));
+            auto [is_new, _] = _states.insert(product_id);
             return std::make_pair(is_new, product_id);
         }
 
@@ -112,17 +110,13 @@ namespace LTL { namespace Structures {
          * @param state Output parameter to write product state to.
          * @return true if the state was successfully retrieved, false otherwise.
          */
-        bool decode(LTL::Structures::ProductState &state, stateid_t id) override
+        void decode(LTL::Structures::ProductState &state, stateid_t id) override
         {
-            const auto it = _states.find(id);
-            if (it == std::cend(_states)) {
-                return false;
-            }
-            auto marking_id = get_marking_id(*it);
-            auto buchi_state = get_buchi_state(*it);
+            assert(_states.exists(id).first);
+            auto marking_id = get_marking_id(id);
+            auto buchi_state = get_buchi_state(id);
             _markings.decode(state, marking_id);
             state.set_buchi_state(buchi_state);
-            return true;
         }
 
         //size_t size() { return states.size(); }
@@ -136,7 +130,7 @@ namespace LTL { namespace Structures {
         static constexpr auto BUCHI_SHIFT = 64 - nbits;
 
         PetriEngine::Structures::StateSet _markings;
-        std::unordered_set<stateid_t> _states;
+        ptrie::set<stateid_t> _states;
         static constexpr auto _err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
 
         size_t _discovered = 0;
@@ -151,10 +145,10 @@ namespace LTL { namespace Structures {
         {
         }
 
-        bool decode(ProductState &state, stateid_t id) override
+        void decode(ProductState &state, stateid_t id) override
         {
             _parent = id;
-            return BitProductStateSet<NBYTES>::decode(state, id);
+            BitProductStateSet<NBYTES>::decode(state, id);
         }
 
         void setHistory(stateid_t id, size_t transition) override
