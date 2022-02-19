@@ -74,7 +74,7 @@ namespace LTL {
             return to_ltl(f);
         }
         else if (auto _formula = dynamic_cast<EUCondition *> (formula.get())) {
-            auto f = std::make_shared<ACondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
+            auto f = std::make_shared<ECondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
             return to_ltl(f);
         }
         else {
