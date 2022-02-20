@@ -85,9 +85,9 @@ namespace LTL {
         std::array<idx_t, _hash_sz> _chash;
         static_assert(sizeof(_chash) == (1U << 27U));
 
-        static inline idx_t hash(idx_t id)
+        static inline idx_t hash(idx_t buchi_state, idx_t marking_id)
         {
-            return id % _hash_sz;
+            return (buchi_state xor marking_id) % _hash_sz;
         }
 
         struct plain_centry_t {
@@ -126,8 +126,8 @@ namespace LTL {
         LTLPartialOrder _order = LTLPartialOrder::None;
 
         // TODO, instead of this template hell, we should really just have a templated state that we shuffle around.
-        template<typename T, typename D, typename S>
-        void push(light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid);
+        template<typename StateSet, typename T, typename D, typename S>
+        void push(StateSet& s, light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid);
 
         template<typename S, typename T, typename D, typename SuccGen>
         void pop(S& seen, light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator);
@@ -138,8 +138,8 @@ namespace LTL {
         template<typename S, typename T, typename SuccGen, typename D>
         bool next_trans(S& seen, light_deque<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
 
-        template<typename T>
-        void popCStack(light_deque<T>& cstack);
+        template<typename StateSet, typename T>
+        void popCStack(StateSet& s, light_deque<T>& cstack);
 
         template<typename S, typename D, typename C>
         void build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack);

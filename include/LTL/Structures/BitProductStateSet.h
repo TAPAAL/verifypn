@@ -31,12 +31,6 @@ namespace LTL { namespace Structures {
         using stateid_t = size_t;
         using result_t = std::tuple<bool, stateid_t, size_t>;
 
-        virtual size_t get_buchi_state(stateid_t id) = 0;
-
-        virtual size_t get_marking_id(stateid_t id) = 0;
-
-        virtual stateid_t get_product_id(size_t markingId, size_t buchiState) = 0;
-
         virtual result_t add(const LTL::Structures::ProductState &state) = 0;
 
         virtual void decode(LTL::Structures::ProductState &state, stateid_t id) = 0;
@@ -72,11 +66,11 @@ namespace LTL { namespace Structures {
         static_assert(nbits <= 32, "Only up to 2^32 Büchi states supported");
         static_assert(sizeof(size_t) >= 8, "Expecting size_t to be at least 8 bytes");
 
-        size_t get_buchi_state(stateid_t id) override { return id & BUCHI_MASK; }
+        static size_t get_buchi_state(stateid_t id) { return id & BUCHI_MASK; }
 
-        size_t get_marking_id(stateid_t id) override { return id >> MARKING_SHIFT; }
+        static size_t get_marking_id(stateid_t id) { return id >> MARKING_SHIFT; }
 
-        stateid_t get_product_id(size_t markingId, size_t buchiState) override
+        static stateid_t get_product_id(size_t markingId, size_t buchiState)
         {
             return (buchiState & BUCHI_MASK) | (markingId << MARKING_SHIFT);
         }

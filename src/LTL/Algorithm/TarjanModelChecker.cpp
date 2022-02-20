@@ -84,11 +84,6 @@ namespace LTL {
             compute<false, SuccGen>(successorGenerator);
     }
 
-    template<typename T>
-    constexpr bool is_spooling() {
-        return std::is_same_v<T, SpoolingSuccessorGenerator>;
-    }
-
 
     template<bool SaveTrace, typename SuccGen>
     bool TarjanModelChecker::compute(SuccGen& successorGenerator)
@@ -113,7 +108,7 @@ namespace LTL {
             if(_violation) break;
             const auto res = seen.add(state);
             if (std::get<0>(res)) {
-                push(cstack, dstack, successorGenerator, state, std::get<1>(res));
+                push(seen, cstack, dstack, successorGenerator, state, std::get<1>(res));
             }
             while (!dstack.empty() && !_violation) {
                 auto &dtop = dstack.back();
@@ -150,20 +145,20 @@ namespace LTL {
                 dtop._sucinfo._last_state = stateid;
 
                 // lookup successor in 'hash' table
-                auto suc_pos = _chash[hash(stateid)];
-                auto marking = seen.get_marking_id(stateid);
+                auto marking = StateSet::get_marking_id(stateid);
+                auto suc_pos = _chash[hash(marking, StateSet::get_buchi_state(stateid))];
                 while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos]._stateid != stateid) {
-                    if constexpr (is_spooling<SuccGen>()) {
-                        if (cstack[suc_pos]._dstack && seen.get_marking_id(cstack[suc_pos]._stateid) == marking) {
+                    if constexpr (std::is_same<SuccGen, SpoolingSuccessorGenerator>::value) {
+                        if (cstack[suc_pos]._dstack && StateSet::get_marking_id(cstack[suc_pos]._stateid) == marking) {
                             successorGenerator->generate_all(&parent, dtop._sucinfo);
                         }
                     }
                     suc_pos = cstack[suc_pos]._next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
-                    if constexpr (is_spooling<SuccGen>()) {
+                    if constexpr (std::is_same<SuccGen, SpoolingSuccessorGenerator>::value) {
                         if (cstack[suc_pos]._dstack) {
-                            successorGenerator->generate_all(&parent, dtop._sucinfo);
+                            successorGenerator.generate_all(&parent, dtop._sucinfo);
                         }
                     }
                     // we found the successor, i.e. there's a loop!
@@ -172,7 +167,7 @@ namespace LTL {
                     continue;
                 }
                 if (!_store.exists(stateid).first) {
-                    auto bstate = seen.get_buchi_state(stateid);
+                    auto bstate = StateSet::get_buchi_state(stateid);
                     if(_weakskip &&
                        successorGenerator.is_accepting(bstate) &&
                        successorGenerator.has_invariant_self_loop(bstate))
@@ -180,7 +175,7 @@ namespace LTL {
                         _violation = true;
                         break;
                     }
-                    push(cstack, dstack, successorGenerator, working, stateid);
+                    push(seen, cstack, dstack, successorGenerator, working, stateid);
                 }
             }
             if constexpr (SaveTrace) {
@@ -204,10 +199,10 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<typename T, typename D, typename S>
-    void TarjanModelChecker::push(light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid) {
+    template<typename StateSet, typename T, typename D, typename S>
+    void TarjanModelChecker::push(StateSet& s, light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
-        const auto h = hash(stateid);
+        const auto h = hash(StateSet::get_marking_id(stateid), StateSet::get_buchi_state(stateid));
         cstack.push_back(T{ctop, stateid, _chash[h]});
         _chash[h] = ctop;
         dstack.push_back(D{ctop});
@@ -218,7 +213,7 @@ namespace LTL {
                 _invariant_loop = true;
             }
         }
-        if constexpr (is_spooling<S>()) {
+        if constexpr (std::is_same<S, SpoolingSuccessorGenerator>::value) {
             successor_generator.push();
         }
     }
@@ -231,7 +226,7 @@ namespace LTL {
         cstack[p]._dstack = false;
         if (cstack[p]._lowlink == p) {
             while (cstack.size() > p) {
-                popCStack(cstack);
+                popCStack(seen, cstack);
             }
         }
         if (!_astack.empty() && p == _astack.back()) {
@@ -239,16 +234,16 @@ namespace LTL {
         }
         if (!dstack.empty()) {
             update(cstack, dstack, successorGenerator, p);
-            if constexpr (is_spooling<SuccGen>()) {
+            if constexpr (std::is_same<SuccGen, SuccGen>::value) {
                 successorGenerator.pop(dstack.back()._sucinfo);
             }
         }
     }
 
-    template<typename T>
-    void TarjanModelChecker::popCStack(light_deque<T>& cstack)
+    template<typename StateSet, typename T>
+    void TarjanModelChecker::popCStack(StateSet& s, light_deque<T>& cstack)
     {
-        auto h = hash(cstack.back()._stateid);
+        auto h = hash(StateSet::get_marking_id(cstack.back()._stateid), StateSet::get_buchi_state(cstack.back()._stateid));
         _store.insert(cstack.back()._stateid);
         _chash[h] = cstack.back()._next;
         cstack.pop_back();
