@@ -78,7 +78,7 @@ namespace LTL {
         // 64 MB hash table
         static constexpr idx_t _hash_sz = 16777216;
 
-        ptrie::set<idx_t> _store;
+        ptrie::set<idx_t,17,32,8> _store;
 
         // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
         // corresponding to state. Collisions are resolved using linked list via CEntry::next.

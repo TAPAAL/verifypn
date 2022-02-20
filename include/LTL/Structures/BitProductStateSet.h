@@ -55,7 +55,7 @@ namespace LTL { namespace Structures {
      * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
      * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 20-bit. Max is 32-bit.
      */
-    template<typename stateset_type = ptrie::set<ProductStateSetInterface::stateid_t>, uint8_t nbits = 20>
+    template<typename stateset_type = ptrie::set<ProductStateSetInterface::stateid_t,17,32,8>, uint8_t nbits = 20>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
         explicit BitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
