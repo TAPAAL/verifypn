@@ -192,7 +192,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
             places.push_back(place);
         }
         auto bnds = std::make_shared<UpperBoundsCondition>(places);
-        return std::make_shared<EFCondition>(bnds);
+        return std::make_shared<ECondition>(std::make_shared<FCondition>(bnds));
     } else if ((cond = parseBooleanFormula(child)) != nullptr) {
         return cond;
     } else {
@@ -219,13 +219,13 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     //TODO: Break invariant, impossibility, and possibility into their own nodes. What is the corresponding semantics of these nodes?
     if (elementName == "invariant") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<NotCondition>(std::make_shared<EFCondition>(std::make_shared<NotCondition>(cond)));
+            return std::make_shared<NotCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<NotCondition>(cond))));
     } else if (elementName == "impossibility") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<NotCondition>(std::make_shared<EFCondition>(cond));
+            return std::make_shared<NotCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(cond)));
     } else if (elementName == "possibility") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<EFCondition>(cond);
+            return std::make_shared<ECondition>(std::make_shared<FCondition>(cond));
     } else if (elementName == "control") {
         if (getChildCount(element) != 1) {
             assert(false);

@@ -187,27 +187,27 @@ Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vec
             if (q == Quantifier::EMPTY)
                 return std::make_shared<XCondition>(cond1);
             else if(q == Quantifier::A)
-                return std::make_shared<AXCondition>(cond1);
+                return std::make_shared<ACondition>(std::make_shared<XCondition>(cond1));
             else
-                return std::make_shared<EXCondition>(cond1);
+                return std::make_shared<ECondition>(std::make_shared<XCondition>(cond1));
         }
         else if(p == Path::F)
         {
             if (q == Quantifier::EMPTY)
                 return std::make_shared<FCondition>(cond1);
             else if(q == Quantifier::A)
-                return std::make_shared<AFCondition>(cond1);
+                return std::make_shared<ACondition>(std::make_shared<FCondition>(cond1));
             else
-                return std::make_shared<EFCondition>(cond1);
+                return std::make_shared<ECondition>(std::make_shared<FCondition>(cond1));
         }
         else if(p == Path::G)
         {
             if (q == Quantifier::EMPTY)
                 return std::make_shared<GCondition>(cond1);
             else if(q == Quantifier::A)
-                return std::make_shared<AGCondition>(cond1);
+                return std::make_shared<ACondition>(std::make_shared<GCondition>(cond1));
             else
-                return std::make_shared<EGCondition>(cond1);
+                return std::make_shared<ECondition>(std::make_shared<GCondition>(cond1));
         }
         else if(p == Path::U)
         {
@@ -220,9 +220,9 @@ Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vec
             if (q == Quantifier::EMPTY)
                 return std::make_shared<UntilCondition>(cond1, cond2);
             else if(q == Quantifier::A)
-                return std::make_shared<AUCondition>(cond1, cond2);
+                return std::make_shared<ACondition>(std::make_shared<UntilCondition>(cond1, cond2));
             else
-                return std::make_shared<EUCondition>(cond1, cond2);
+                return std::make_shared<ECondition>(std::make_shared<UntilCondition>(cond1, cond2));
         }
         else if(p == Path::PControl)
         {

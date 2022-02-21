@@ -63,27 +63,7 @@ namespace LTL {
         _formula = spot::formula::X(_formula);
     }
 
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EXCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::X(_formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AXCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::X(_formula);
-    }
-
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::F(_formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EFCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::F(_formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AFCondition *element) {
         Visitor::visit(this, (*element)[0]);
         _formula = spot::formula::F(_formula);
     }
@@ -93,31 +73,7 @@ namespace LTL {
         _formula = spot::formula::G(_formula);
     }
 
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::G(_formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::G(_formula);
-    }
-
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UntilCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        auto lhs = _formula;
-        Visitor::visit(this, (*element)[1]);
-        _formula = spot::formula::U(lhs, _formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AUCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        auto lhs = _formula;
-        Visitor::visit(this, (*element)[1]);
-        _formula = spot::formula::U(lhs, _formula);
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EUCondition *element) {
         Visitor::visit(this, (*element)[0]);
         auto lhs = _formula;
         Visitor::visit(this, (*element)[1]);

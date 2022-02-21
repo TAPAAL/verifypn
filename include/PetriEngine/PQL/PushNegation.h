@@ -110,6 +110,22 @@ namespace PetriEngine::PQL {
         void _accept(QuasiLivenessCondition* element) override;
 
         void _accept(StableMarkingCondition* element) override;
+
+        Condition_ptr pushneg_EG(GCondition *element);
+
+        Condition_ptr pushneg_AG(GCondition *element);
+
+        Condition_ptr pushneg_EX(XCondition *element);
+
+        Condition_ptr pushneg_AX(XCondition *element);
+
+        Condition_ptr pushneg_EF(FCondition *element);
+
+        Condition_ptr pushneg_AU(UntilCondition *element);
+
+        Condition_ptr pushneg_AF(FCondition *element);
+
+        Condition_ptr pushneg_EU(UntilCondition *element);
     };
 }
 

@@ -72,15 +72,7 @@ namespace PetriEngine { namespace PQL {
     private:
         void _accept(SimpleQuantifierCondition *element) override;
 
-        void _accept(EGCondition *element) override;
-
-        void _accept(AGCondition *element) override;
-
         void _accept(ControlCondition *element) override;
-
-        void _accept(EFCondition *element) override;
-
-        void _accept(AFCondition *element) override;
 
         void _accept(ACondition *element) override;
 
@@ -132,14 +124,6 @@ namespace PetriEngine { namespace PQL {
         void _accept(GCondition *element) override;
 
         void _accept(FCondition *element) override;
-
-        void _accept(EGCondition *element) override;
-
-        void _accept(AGCondition *element) override;
-
-        void _accept(EFCondition *element) override;
-
-        void _accept(AFCondition *element) override;
 
         void _accept(UntilCondition *element) override;
 

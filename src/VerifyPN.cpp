@@ -452,10 +452,20 @@ void simplify_queries(  const MarkVal* marking,
 #endif
                         continue;
                     }
+
+                    PetriEngine::PQL::IsCTLVisitor isCtlVisitor;
+                    Visitor::visit(isCtlVisitor, queries[i]);
+                    std::cout << isCtlVisitor.isCTL << std::endl;
+                    queries[i]->toString(std::cout); std::cout << std::endl;
                     queries[i] = pushNegation(initialMarkingRW([&]() {
                         return queries[i]; }, stats, context, false, false, true),
                         stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
+
+                    PetriEngine::PQL::IsCTLVisitor isCtlVisitor2;
+                    Visitor::visit(isCtlVisitor2, queries[i]);
+                    std::cout << isCtlVisitor2.isCTL << std::endl;
+                    queries[i]->toString(std::cout); std::cout << std::endl;
 
                     if (options.queryReductionTimeout > 0 && options.printstatistics) {
                         out << "RWSTATS PRE:";
@@ -469,8 +479,13 @@ void simplify_queries(  const MarkVal* marking,
                             options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
-                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
+                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);;
+                            queries[i]->toString(std::cout); std::cout << std::endl;
                             queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
+                            PetriEngine::PQL::IsCTLVisitor isCtlVisitor3;
+                            Visitor::visit(isCtlVisitor3, queries[i]);
+                            std::cout << (isCtlVisitor3.isCTL? "": "NO LONGER CTL!") << std::endl;
+                            queries[i]->toString(std::cout); std::cout << std::endl;
                             wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
                             if (options.printstatistics) {
                                 out << "RWSTATS POST:";

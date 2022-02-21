@@ -426,11 +426,8 @@ namespace PetriEngine {
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::pError; }
-            uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); throw base_error("TODO implement");
-            }
+            Path getPath() const override             { return _cond->getPath(); }
+            uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
@@ -440,11 +437,8 @@ namespace PetriEngine {
 
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::pError; }
-            uint32_t distance(DistanceContext& context) const override {
-                uint32_t retval = _cond->distance(context);
-                return retval;
-            }
+            Path getPath() const override { return _cond->getPath(); }
+            uint32_t distance(DistanceContext& context) const override;
 
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
       };

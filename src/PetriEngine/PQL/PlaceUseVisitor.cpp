@@ -107,24 +107,18 @@ namespace PQL {
             _in_use[p._place] = true;
     }
 
-    void PlaceUseVisitor::_accept(const EUCondition* el)
+    void PlaceUseVisitor::_accept(const UntilCondition* element)
     {
-        Visitor::visit(this, (*el)[0]);
-        Visitor::visit(this, (*el)[1]);
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
     }
 
-    void PlaceUseVisitor::_accept(const AUCondition* el)
+
+    void PlaceUseVisitor::_accept(const SimpleQuantifierCondition* element)
     {
-        Visitor::visit(this, (*el)[0]);
-        Visitor::visit(this, (*el)[1]);
+        Visitor::visit(this, (*element)[0]);
     }
 
-    void PlaceUseVisitor::_accept(const EFCondition* el) { Visitor::visit(this, (*el)[0]); }
-    void PlaceUseVisitor::_accept(const EGCondition* el) { Visitor::visit(this, (*el)[0]); }
-    void PlaceUseVisitor::_accept(const AGCondition* el) { Visitor::visit(this, (*el)[0]); }
-    void PlaceUseVisitor::_accept(const AFCondition* el) { Visitor::visit(this, (*el)[0]); }
-    void PlaceUseVisitor::_accept(const EXCondition* el) { Visitor::visit(this, (*el)[0]); }
-    void PlaceUseVisitor::_accept(const AXCondition* el) { Visitor::visit(this, (*el)[0]); }
 
     // shallow elements, neither of these should exist in a compiled expression
     void PlaceUseVisitor::_accept(const LiteralExpr* element) {}

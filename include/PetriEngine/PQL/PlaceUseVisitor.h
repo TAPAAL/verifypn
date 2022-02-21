@@ -49,6 +49,8 @@ namespace PQL {
         virtual void _accept(const DeadlockCondition* element) override;
         virtual void _accept(const CompareConjunction* element) override;
         virtual void _accept(const UnfoldedUpperBoundsCondition* element) override;
+        virtual void _accept(const SimpleQuantifierCondition *element) override;
+        virtual void _accept(const UntilCondition *element) override;
 
     private:
         void visitCommutativeExpr(const CommutativeExpr* element);

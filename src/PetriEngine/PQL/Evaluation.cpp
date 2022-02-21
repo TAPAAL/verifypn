@@ -124,13 +124,21 @@ namespace PetriEngine { namespace PQL {
     }
 
     void EvaluateVisitor::_accept(ACondition *element) {
-        Visitor::visit(this, (*element)[0]);
+        auto cond = (*element)[0];
+        Visitor::visit(this, cond);
+        if (cond->type() == type_id<UntilCondition>() || cond->type() == type_id<FCondition>() || cond->type() == type_id<GCondition>())
+            return;
+
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
         else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(ECondition *element) {
-        Visitor::visit(this, (*element)[0]);
+        auto cond = (*element)[0];
+        Visitor::visit(this, cond);
+        if (cond->type() == type_id<UntilCondition>() || cond->type() == type_id<FCondition>() || cond->type() == type_id<GCondition>())
+            return;
+
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
         else _return_value = {Condition::RUNKNOWN};
     }
@@ -146,7 +154,6 @@ namespace PetriEngine { namespace PQL {
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
         else _return_value = {Condition::RUNKNOWN};
     }
-
 
     void EvaluateVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);

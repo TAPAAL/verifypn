@@ -22,6 +22,7 @@
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/Evaluation.h"
+#include "PetriEngine/PQL/CTLVisitor.h"
 
 
 // Macro to ensure that returns are done correctly
@@ -43,8 +44,9 @@ namespace PetriEngine::PQL {
             {
                 if(res->getQuantifier() == E && res->getPath() == F)
                 {
-                    auto ef = static_cast<EFCondition*>(res.get());
-                    if(dynamic_cast<UnfoldedUpperBoundsCondition*>((*ef)[0].get()))
+                    auto e = static_cast<ECondition*>(res.get());
+                    auto f = static_cast<FCondition*>((*e)[0].get());
+                    if((*f)[0]->type() == type_id<UnfoldedUpperBoundsCondition>())
                     {
                         return res;
                     }
@@ -107,24 +109,24 @@ namespace PetriEngine::PQL {
         return_value = std::make_shared<ControlCondition>(res);
     }
 
-    void PushNegationVisitor::_accept(EGCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_EG(GCondition *element) {
         ++stats[0];
-        auto af_cond = AFCondition(std::make_shared<NotCondition>(element->getCond()));
-        RETURN(subvisit(&af_cond, nested, !negated))
+        auto af_cond = std::make_shared<ACondition>(std::make_shared<FCondition>(std::make_shared<NotCondition>(element->getCond())));
+        return subvisit(af_cond, nested, !negated);
     }
 
-    void PushNegationVisitor::_accept(AGCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_AG(GCondition *element) {
         ++stats[1];
-        auto ef_cond = EFCondition(std::make_shared<NotCondition>(element->getCond()));
-        RETURN(subvisit(&ef_cond, nested, !negated))
+        auto ef_cond = std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<NotCondition>(element->getCond())));
+        return subvisit(ef_cond, nested, !negated);
     }
 
-    void PushNegationVisitor::_accept(EXCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_EX(XCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, negated);
             if (negated) {
                 ++stats[2];
-                return subvisit(std::make_unique<AXCondition>(a), nested, false);
+                return subvisit(std::make_shared<ACondition>(std::make_shared<XCondition>(a)), nested, false);
             } else {
                 if (a == BooleanCondition::FALSE_CONSTANT) {
                     ++stats[3];
@@ -134,19 +136,19 @@ namespace PetriEngine::PQL {
                     ++stats[4];
                     return std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK);
                 }
-                a = std::make_shared<EXCondition>(a);
+                a = std::make_shared<ECondition>(std::make_shared<XCondition>(a));
             }
             return a;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
-    void PushNegationVisitor::_accept(AXCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_AX(XCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, negated);
             if (negated) {
                 ++stats[5];
-                return subvisit(std::make_shared<EXCondition>(a), nested, false);
+                return subvisit(std::make_shared<ECondition>(std::make_shared<XCondition>(a)), nested, false);
             } else {
                 if (a == BooleanCondition::TRUE_CONSTANT) {
                     ++stats[6];
@@ -156,94 +158,124 @@ namespace PetriEngine::PQL {
                     ++stats[7];
                     return DeadlockCondition::DEADLOCK;
                 }
-                a = std::make_shared<AXCondition>(a);
+                a = std::make_shared<ACondition>(std::make_shared<XCondition>(a));
             }
             return a;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
 
-    void PushNegationVisitor::_accept(EFCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_EF(FCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, false);
 
-            if (auto cond = dynamic_cast<NotCondition *>(a.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+            if (a->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(a.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[8];
                     return subvisit(a, nested, negated);
                 }
             }
 
             if (!isTemporal(a)) {
-                auto res = std::make_shared<EFCondition>(a);
+                auto res = std::make_shared<ECondition>(std::make_shared<FCondition>(a));
                 if (negated) return std::make_shared<NotCondition>(res);
                 return res;
             }
 
-            if (dynamic_cast<EFCondition *>(a.get())) {
-                ++stats[9];
-                if (negated) a = std::make_shared<NotCondition>(a);
-                return a;
-            } else if (auto cond = dynamic_cast<AFCondition *>(a.get())) {
-                ++stats[10];
-                a = subvisit(std::make_shared<EFCondition>((*cond)[0]), nested, negated);
-                return a;
-            } else if (auto cond = dynamic_cast<EUCondition *>(a.get())) {
-                ++stats[11];
-                a = subvisit(std::make_shared<EFCondition>((*cond)[1]), nested, negated);
-                return a;
-            } else if (auto cond = dynamic_cast<AUCondition *>(a.get())) {
-                ++stats[12];
-                a = subvisit(std::make_shared<EFCondition>((*cond)[1]), nested, negated);
-                return a;
-            } else if (auto cond = dynamic_cast<OrCondition *>(a.get())) {
-                if (!isTemporal(cond)) {
-                    Condition_ptr b = std::make_shared<EFCondition>(a);
+            if (a->type() == type_id<ECondition>()) {
+                auto econd = static_cast<ECondition*>(a.get());
+
+                if (econd->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[9];
+                    if (negated) a = std::make_shared<NotCondition>(a);
+                    return a;
+                } else if (econd->getCond()->type() == type_id<UntilCondition>()) {
+                    ++stats[11];
+                    auto ucond = static_cast<UntilCondition*>(econd->getCond().get());
+                    a = subvisit(std::make_shared<ECondition>(std::make_shared<FCondition>((*ucond)[1])), nested, negated);
+                    return a;
+                }
+            } else if (a->type() == type_id<ACondition>()) {
+                auto acond = static_cast<ACondition*>(a.get());
+
+                if (acond->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[10];
+                    auto fcond = static_cast<FCondition*>(acond->getCond().get());
+                    a = subvisit(std::make_shared<ECondition>(std::make_shared<FCondition>((*fcond)[0])), nested, negated);
+                    return a;
+                } else if (acond->getCond()->type() == type_id<UntilCondition>()) {
+                    ++stats[12];
+                    auto ucond = static_cast<UntilCondition*>(acond->getCond().get());
+                    a = subvisit(std::make_shared<ECondition>(std::make_shared<FCondition>((*ucond)[1])), nested, negated);
+                    return a;
+                }
+            } else if (a->type() == type_id<OrCondition>()) {
+                auto orcond = static_cast<OrCondition*>(a.get());
+                if (!isTemporal(orcond)) {
+                    Condition_ptr b = std::make_shared<ECondition>(std::make_shared<FCondition>(a));
                     if (negated) b = std::make_shared<NotCondition>(b);
                     return b;
                 }
                 ++stats[13];
                 std::vector<Condition_ptr> pef, atomic;
-                for (auto &i: *cond) {
-                    pef.push_back(std::make_shared<EFCondition>(i));
+                for (auto &i: *orcond) {
+                    pef.push_back(std::make_shared<ECondition>(std::make_shared<FCondition>(i)));
                 }
                 a = subvisit(makeOr(pef), nested, negated);
                 return a;
-            } else {
-                Condition_ptr b = std::make_shared<EFCondition>(a);
-                if (negated) b = std::make_shared<NotCondition>(b);
-                return b;
             }
+
+            Condition_ptr b = std::make_shared<ECondition>(std::make_shared<FCondition>(a));
+            if (negated) b = std::make_shared<NotCondition>(b);
+            return b;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
 
-    void PushNegationVisitor::_accept(AFCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_AF(FCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto a = subvisit(element->getCond(), true, false);
-            if (auto cond = dynamic_cast<NotCondition *>(a.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+
+            if (a->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(a.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[14];
                     return subvisit(a, nested, negated);
                 }
             }
 
-            if (dynamic_cast<AFCondition *>(a.get())) {
-                ++stats[15];
-                if (negated) return std::make_shared<NotCondition>(a);
-                return a;
+            if (a->type() == type_id<ACondition>()) {
+                auto acond = static_cast<ACondition*>(a.get());
 
-            } else if (dynamic_cast<EFCondition *>(a.get())) {
-                ++stats[16];
-                if (negated) return std::make_shared<NotCondition>(a);
-                return a;
-            } else if (auto cond = dynamic_cast<OrCondition *>(a.get())) {
+                if (acond->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[15];
+                    if (negated) return std::make_shared<NotCondition>(a);
+                    return a;
+                } else if (acond->getCond()->type() == type_id<UntilCondition>()) {
+                    ++stats[18];
+                    auto ucond = static_cast<UntilCondition*>(acond->getCond().get());
+                    return subvisit(std::make_shared<ACondition>(std::make_shared<FCondition>((*ucond)[1])), nested, negated);
+                }
+            }
+
+            if (a->type() == type_id<ECondition>()) {
+                auto econd = static_cast<ECondition*>(a.get());
+                if (econd->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[16];
+                    if (negated) return std::make_shared<NotCondition>(a);
+                    return a;
+                }
+            }
+
+            if (a->type() == type_id<OrCondition>()) {
+                auto cond = static_cast<OrCondition*>(a.get());
 
                 std::vector<Condition_ptr> pef, npef;
                 for (auto &i: *cond) {
-                    if (dynamic_cast<EFCondition *>(i.get())) {
+                    if (i->type() == type_id<ECondition>() && static_cast<ECondition*>(i.get())->getCond()->type() == type_id<FCondition>()) {
                         pef.push_back(i);
                     } else {
                         npef.push_back(i);
@@ -251,50 +283,58 @@ namespace PetriEngine::PQL {
                 }
                 if (pef.size() > 0) {
                     stats[17] += pef.size();
-                    pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
+                    pef.push_back(std::make_shared<ACondition>(std::make_shared<FCondition>(makeOr(npef))));
                     return subvisit(makeOr(pef), nested, negated);
                 }
-            } else if (auto cond = dynamic_cast<AUCondition *>(a.get())) {
-                ++stats[18];
-                return subvisit(std::make_shared<AFCondition>((*cond)[1]), nested, negated);
             }
-            auto b = std::make_shared<AFCondition>(a);
+
+            auto b = std::make_shared<ACondition>(std::make_shared<FCondition>(a));
             if (negated) return std::make_shared<NotCondition>(b);
             return b;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
-    void PushNegationVisitor::_accept(AUCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_AU(UntilCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto b = subvisit(element->getCond2(), true, false);
             auto a = subvisit(element->getCond1(), true, false);
-            if (auto cond = dynamic_cast<NotCondition *>(b.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+
+            if (b->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(b.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[19];
                     return subvisit(b, nested, negated);
                 }
             } else if (a == DeadlockCondition::DEADLOCK) {
                 ++stats[20];
                 return subvisit(b, nested, negated);
-            } else if (auto cond = dynamic_cast<NotCondition *>(a.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+            } else if (a->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(a.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[21];
-                    return subvisit(std::make_shared<AFCondition>(b), nested, negated);
+                    return subvisit(std::make_shared<ACondition>(std::make_shared<FCondition>(b)), nested, negated);
                 }
             }
 
-            if (auto cond = dynamic_cast<AFCondition *>(b.get())) {
-                ++stats[22];
-                return subvisit(cond, nested, negated);
-            } else if (dynamic_cast<EFCondition *>(b.get())) {
-                ++stats[23];
-                if (negated) return std::make_shared<NotCondition>(b);
-                return b;
-            } else if (auto cond = dynamic_cast<OrCondition *>(b.get())) {
+            if (b->type() == type_id<ACondition>()) {
+                auto acond = static_cast<ACondition*>(b.get());
+                if (acond->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[22];
+                    return subvisit(acond, nested, negated);
+                }
+            } else if (b->type() == type_id<ECondition>()) {
+                auto econd = static_cast<ECondition*>(b.get());
+                if (econd->getCond()->type() == type_id<FCondition>()) {
+                    ++stats[23];
+                    if (negated) return std::make_shared<NotCondition>(b);
+                    return b;
+                }
+            } else if (b->type() == type_id<OrCondition>()) {
+                auto orcond = static_cast<OrCondition*>(b.get());
                 std::vector<Condition_ptr> pef, npef;
-                for (auto &i: *cond) {
-                    if (dynamic_cast<EFCondition *>(i.get())) {
+                for (auto &i: *orcond) {
+                    if (i->type() == type_id<ECondition>() && static_cast<ECondition*>(i.get())->getCond()->type() == type_id<FCondition>()) {
                         pef.push_back(i);
                     } else {
                         npef.push_back(i);
@@ -303,7 +343,7 @@ namespace PetriEngine::PQL {
                 if (pef.size() > 0) {
                     stats[24] += pef.size();
                     if (npef.size() != 0) {
-                        pef.push_back(std::make_shared<AUCondition>(element->getCond1(), makeOr(npef)));
+                        pef.push_back(std::make_shared<ACondition>(std::make_shared<UntilCondition>(element->getCond1(), makeOr(npef))));
                     } else {
                         ++stats[23];
                         --stats[24];
@@ -312,42 +352,44 @@ namespace PetriEngine::PQL {
                 }
             }
 
-            auto c = std::make_shared<AUCondition>(a, b);
+            auto c = std::make_shared<ACondition>(std::make_shared<UntilCondition>(a, b));
             if (negated) return std::make_shared<NotCondition>(c);
             return c;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
 
-    void PushNegationVisitor::_accept(EUCondition *element) {
+    Condition_ptr PushNegationVisitor::pushneg_EU(UntilCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             auto b = subvisit(element->getCond2(), true, false);
             auto a = subvisit(element->getCond1(), true, false);
 
-            if (auto cond = dynamic_cast<NotCondition *>(b.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+            if (b->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(b.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[25];
                     return subvisit(b, nested, negated);
                 }
             } else if (a == DeadlockCondition::DEADLOCK) {
                 ++stats[26];
                 return subvisit(b, nested, negated);
-            } else if (auto cond = dynamic_cast<NotCondition *>(a.get())) {
-                if ((*cond)[0] == DeadlockCondition::DEADLOCK) {
+            } else if (a->type() == type_id<NotCondition>()) {
+                auto notcond = static_cast<NotCondition*>(a.get());
+                if ((*notcond)[0] == DeadlockCondition::DEADLOCK) {
                     ++stats[27];
-                    return subvisit(std::make_shared<EFCondition>(b), nested, negated);
+                    return subvisit(std::make_shared<ECondition>(std::make_shared<FCondition>(b)), nested, negated);
                 }
             }
 
-            if (dynamic_cast<EFCondition *>(b.get())) {
+            if (b->type() == type_id<ECondition>() && static_cast<ECondition*>(b.get())->getCond()->type() == type_id<FCondition>()) {
                 ++stats[28];
                 if (negated) return std::make_shared<NotCondition>(b);
                 return b;
             } else if (auto cond = dynamic_cast<OrCondition *>(b.get())) {
                 std::vector<Condition_ptr> pef, npef;
                 for (auto &i: *cond) {
-                    if (dynamic_cast<EFCondition *>(i.get())) {
+                    if (i->type() == type_id<ECondition>() && static_cast<ECondition*>(i.get())->getCond()->type() == type_id<FCondition>()) {
                         pef.push_back(i);
                     } else {
                         npef.push_back(i);
@@ -356,18 +398,18 @@ namespace PetriEngine::PQL {
                 if (pef.size() > 0) {
                     stats[29] += pef.size();
                     if (npef.size() != 0) {
-                        pef.push_back(std::make_shared<EUCondition>(element->getCond1(), makeOr(npef)));
+                        pef.push_back(std::make_shared<ECondition>(std::make_shared<UntilCondition>(element->getCond1(), makeOr(npef))));
                         ++stats[28];
                         --stats[29];
                     }
                     return subvisit(makeOr(pef), nested, negated);
                 }
             }
-            auto c = std::make_shared<EUCondition>(a, b);
+            auto c = std::make_shared<ECondition>(std::make_shared<UntilCondition>(a, b));
             if (negated) return std::make_shared<NotCondition>(c);
             return c;
         }, stats, context, nested, negated, initrw);
-        RETURN(cond)
+        return cond;
     }
 
 /*LTL negation push*/
@@ -440,16 +482,36 @@ namespace PetriEngine::PQL {
     }
 
     void PushNegationVisitor::_accept(ACondition *element) {
-        auto e_cond = ECondition(std::make_shared<NotCondition>(element->getCond()));
-        RETURN(subvisit(&e_cond, nested, !negated))
+        if ((*element)[0]->type() == type_id<FCondition>()) {
+            RETURN(pushneg_AF(static_cast<FCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<GCondition>()) {
+            RETURN(pushneg_AG(static_cast<GCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<XCondition>()) {
+            RETURN(pushneg_AX(static_cast<XCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<UntilCondition>()) {
+            RETURN(pushneg_AU(static_cast<UntilCondition*>((*element)[0].get())));
+        } else {
+            auto e_cond = ECondition(std::make_shared<NotCondition>(element->getCond()));
+            RETURN(subvisit(&e_cond, nested, !negated))
+        }
     }
 
 
     void PushNegationVisitor::_accept(ECondition *element) {
-        // we forward the negated flag, we flip the outer quantifier later!
-        auto _sub = subvisit(element->getCond(), nested, negated);
-        if (negated) RETURN(std::make_shared<ACondition>(_sub))
-        else RETURN(std::make_shared<ECondition>(_sub))
+        if ((*element)[0]->type() == type_id<FCondition>()) {
+            RETURN(pushneg_EF(static_cast<FCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<GCondition>()) {
+            RETURN(pushneg_EG(static_cast<GCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<XCondition>()) {
+            RETURN(pushneg_EX(static_cast<XCondition*>((*element)[0].get())));
+        } else if ((*element)[0]->type() == type_id<UntilCondition>()) {
+            RETURN(pushneg_EU(static_cast<UntilCondition*>((*element)[0].get())));
+        } else {
+            // we forward the negated flag, we flip the outer quantifier later!
+            auto _sub = subvisit(element->getCond(), nested, negated);
+            if (negated) RETURN(std::make_shared<ACondition>(_sub))
+            else RETURN(std::make_shared<ECondition>(_sub))
+        }
     }
 
     void PushNegationVisitor::_accept(GCondition *element) {
@@ -464,9 +526,12 @@ namespace PetriEngine::PQL {
             auto n = subvisit(c, _nested, negate_children);
             if (n->isTriviallyFalse()) return n;
             if (n->isTriviallyTrue()) continue;
-            if (auto neg = dynamic_cast<NotCondition *>(n.get())) {
-                if (auto ef = dynamic_cast<EFCondition *>((*neg)[0].get())) {
-                    nef.push_back((*ef)[0]);
+            if (n->type() == type_id<NotCondition>()) {
+                auto neg = static_cast<NotCondition*>(n.get());
+                if (neg->getCond()->type() == type_id<ECondition>() && static_cast<ECondition*>(neg->getCond().get())->getCond()->type() == type_id<FCondition>()) {
+                    auto econd = static_cast<ECondition*>(neg->getCond().get());
+                    auto fcond = static_cast<FCondition*>(econd->getCond().get());
+                    nef.push_back(fcond->getCond());
                 } else {
                     other.emplace_back(n);
                 }
@@ -479,13 +544,14 @@ namespace PetriEngine::PQL {
         if (nef.size() + other.size() == 1) {
             return nef.size() == 0 ?
                    other[0] :
-                   std::make_shared<NotCondition>(std::make_shared<EFCondition>(nef[0]));
+                   std::make_shared<NotCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(nef[0])));
         }
         if (nef.size() != 0)
             other.push_back(
                     std::make_shared<NotCondition>(
-                            std::make_shared<EFCondition>(
-                                    makeOr(nef))));
+                            std::make_shared<ECondition>(
+                                    std::make_shared<FCondition>(
+                                        makeOr(nef)))));
         if (other.size() == 1) return other[0];
         auto res = makeAnd(other);
         return res;
@@ -499,8 +565,10 @@ namespace PetriEngine::PQL {
                 return n;
             }
             if (n->isTriviallyFalse()) continue;
-            if (auto ef = dynamic_cast<EFCondition *>(n.get())) {
-                nef.push_back((*ef)[0]);
+            if (n->type() == type_id<ECondition>() && static_cast<ECondition*>(n.get())->getCond()->type() == type_id<FCondition>()) {
+                auto econd = static_cast<ECondition*>(n.get());
+                auto fcond = static_cast<FCondition*>(econd->getCond().get());
+                nef.push_back((*fcond)[0]);
             } else {
                 other.emplace_back(n);
             }
@@ -508,12 +576,13 @@ namespace PetriEngine::PQL {
         if (nef.size() + other.size() == 0)
             return BooleanCondition::FALSE_CONSTANT;
         if (nef.size() + other.size() == 1) {
-            return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);
+            return nef.size() == 0 ? other[0] : std::make_shared<ECondition>(std::make_shared<FCondition>(nef[0]));
         }
         if (nef.size() != 0)
             other.push_back(
-                    std::make_shared<EFCondition>(
-                            makeOr(nef)));
+                    std::make_shared<ECondition>(
+                            std::make_shared<FCondition>(
+                                makeOr(nef))));
         if (other.size() == 1) return other[0];
         return makeOr(other);
     }
@@ -688,7 +757,21 @@ namespace PetriEngine::PQL {
             nested = _nested;
             negated = _negated;
 
+//            if (condition->type() == type_id<ECondition>())
+//                if ((*static_cast<ECondition*>(condition))[0]->type() == type_id<NotCondition>())
+//                    std::cout << "E!" << std::endl;
+
+//            condition->toString(std::cout); std::cout << " IN GO " << std::endl;
             Visitor::visit(this, condition);
+
+//        if (return_value->type() == type_id<NotCondition>())
+//                if ((*static_cast<ECondition*>(condition))[0]->type() == type_id<NotCondition>())
+//            std::cout << "HERE" << std::endl;
+
+//            PetriEngine::PQL::IsCTLVisitor isCtlVisitor3;
+//            Visitor::visit(isCtlVisitor3, return_value);
+//            std::cout << isCtlVisitor3.isCTL << std::endl;
+//            return_value->toString(std::cout); std::cout << std::endl;
 #ifndef NDEBUG
             assert(has_returned); // Subvisit should return value
             has_returned = false;
