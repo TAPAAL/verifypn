@@ -349,29 +349,34 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(UpperBoundsCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
-
-        auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
-        if(coloredContext != nullptr && coloredContext->isColored())
+        if (element->getCompiled())
         {
-            std::vector<std::string> uplaces;
-            for(auto& p : element->getPlaces())
-            {
-                std::unordered_map<uint32_t,std::string> names;
-                if (!coloredContext->resolvePlace(p, names)) {
-                    throw base_error("Unable to resolve colored identifier \"", p, "\"");
-                }
-
-                for(auto& id : names)
-                {
-                    uplaces.push_back(names[id.first]);
-                }
-            }
-            element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
-        } else {
-            element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(element->getPlaces());
+            Visitor::visit(this, element->getCompiled());
         }
-        Visitor::visit(this, element->_compiled);
+        else
+        {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                std::vector<std::string> uplaces;
+                for(auto& p : element->getPlaces())
+                {
+                    std::unordered_map<uint32_t,std::string> names;
+                    if (!coloredContext->resolvePlace(p, names)) {
+                        throw base_error("Unable to resolve colored identifier \"", p, "\"");
+                    }
+
+                    for(auto& id : names)
+                    {
+                        uplaces.push_back(names[id.first]);
+                    }
+                }
+                element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
+            } else {
+                element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(element->getPlaces());
+            }
+            Visitor::visit(this, element->_compiled);
+        }
     }
 
     void AnalyzeVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
