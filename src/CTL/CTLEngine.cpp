@@ -327,7 +327,10 @@ ReturnValue CTLMain(PetriNet* net,
         result.duration = 0;
         if(!solved)
         {
-            result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
+            if(options.strategy == Strategy::BFS || options.strategy == Strategy::RDFS)
+                result.result = singleSolve(result.query, net, algorithmtype, options.strategy, options.stubbornreduction, result);
+            else
+                result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
         result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }
