@@ -112,6 +112,8 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(DeadlockCondition *element) override;
 
+        void _accept(UpperBoundsCondition *element) override;
+
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(ShallowCondition *element) override;

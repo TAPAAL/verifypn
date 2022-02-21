@@ -643,7 +643,10 @@ namespace PetriEngine::PQL {
         if (negated) {
             throw base_error("UPPER BOUNDS CANNOT BE NEGATED!");
         }
-        RETURN(element->clone())
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+            RETURN(element->clone())
     }
 
     void PushNegationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
