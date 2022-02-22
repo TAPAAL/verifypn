@@ -33,6 +33,14 @@ namespace PetriEngine {
         Visitor::visit(this, element->getCond2());
     }
 
+    void InterestingTransitionVisitor::_accept(const PQL::ReleaseCondition *element)
+    {
+        Visitor::visit(this, element->getCond2());
+        negate();
+        Visitor::visit(this, element->getCond2());
+        negate();
+        Visitor::visit(this, element->getCond1());
+    }
 
     void InterestingTransitionVisitor::_accept(const PQL::AndCondition *element)
     {

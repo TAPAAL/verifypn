@@ -528,7 +528,7 @@ namespace PetriEngine {
             [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
             [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
 
-            uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
+            uint32_t distance(DistanceContext& context) const override { return (*this)[0]->distance(context); }
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:

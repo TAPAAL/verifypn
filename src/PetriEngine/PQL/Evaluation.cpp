@@ -172,14 +172,15 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(ReleaseCondition *element) {
         Visitor::visit(this, (*element)[1]);
-        if (_return_value != Condition::RFALSE)
-        {
-            // retain return, either true or unknown.
-            return;
-        }
+        if (_return_value == Condition::RFALSE)
+            return; // Retain false
+
+        auto r2 = _return_value;
+        Visitor::visit(this, (*element)[0]);
+        if (r2 == Condition::RTRUE && _return_value == Condition::RTRUE)
+            return; // Retain true
+
         _return_value = Condition::RUNKNOWN;
-//        TODO: Don't know how to handle this
-//        Visitor::visit(this, (*element)[0]);
     }
 
     void EvaluateVisitor::_accept(AndCondition *element) {
@@ -306,12 +307,15 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateAndSetVisitor::_accept(ReleaseCondition *element) {
         Visitor::visit(this, (*element)[1]);
-        if (_return_value != Condition::RFALSE)
-            return;
+        if (_return_value == Condition::RFALSE)
+            return; // Retain false
+
+        auto r2 = _return_value;
+        Visitor::visit(this, (*element)[0]);
+        if (r2 == Condition::RTRUE && _return_value == Condition::RTRUE)
+            return; // Retain true
 
         _return_value = Condition::RUNKNOWN;
-        // TODO: Don't know how to handle this
-        //Visitor::visit(this, (*element)[0]);
     }
 
     void EvaluateAndSetVisitor::_accept(AndCondition *element) {
