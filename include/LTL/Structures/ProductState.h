@@ -19,6 +19,7 @@
 #define VERIFYPN_PRODUCTSTATE_H
 
 #include "PetriEngine/Structures/State.h"
+#include "LTL/Structures/BuchiAutomaton.h"
 
 namespace LTL {
     template <class SuccessorGen>
@@ -32,7 +33,7 @@ namespace LTL::Structures {
      */
     class ProductState : public PetriEngine::Structures::State {
     public:
-        ProductState() : PetriEngine::Structures::State() {}
+        explicit ProductState(const BuchiAutomaton* aut = nullptr) : PetriEngine::Structures::State(), _aut(aut) {}
 
         void setMarking(PetriEngine::MarkVal* marking, size_t nplaces)
         {
@@ -74,10 +75,17 @@ namespace LTL::Structures {
         bool operator!=(const ProductState &rhs) const {
             return !(rhs == *this);
         }
+
+        [[nodiscard]] bool is_accepting() const {
+            assert(_aut);
+            return _aut->_buchi->state_is_accepting(getBuchiState());
+        }
+
     private:
         template <typename T>
         friend class LTL::ProductSuccessorGenerator;
         size_t buchi_state_idx;
+        const LTL::Structures::BuchiAutomaton *_aut = nullptr;
     };
 }
 

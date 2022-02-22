@@ -21,16 +21,16 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::SimpleQuantifierCondition *element)
     {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::UntilCondition *element)
     {
-        element->getCond1()->visit(*this);
+        Visitor::visit(this, element->getCond1());
         negate();
-        element->getCond1()->visit(*this);
+        Visitor::visit(this, element->getCond1());
         negate();
-        element->getCond2()->visit(*this);
+        Visitor::visit(this, element->getCond2());
     }
 
 
@@ -39,23 +39,23 @@ namespace PetriEngine {
         if (!negated) {               // and
             for (auto &c : *element) {
                 if (!c->isSatisfied()) {
-                    c->visit(*this);
+                    Visitor::visit(this, c);
                     break;
                 }
             }
         } else {                    // or
-            for (auto &c : *element) c->visit(*this);
+            for (auto &c : *element) Visitor::visit(this, c);
         }
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::OrCondition *element)
     {
         if (!negated) {               // or
-            for (auto &c : *element) c->visit(*this);
+            for (auto &c : *element) Visitor::visit(this, c);
         } else {                    // and
             for (auto &c : *element) {
                 if (c->isSatisfied()) {
-                    c->visit(*this);
+                    Visitor::visit(this, c);
                     break;
                 }
             }
@@ -129,18 +129,18 @@ namespace PetriEngine {
         if (!negated) {               // equal
             if (element->getExpr1()->getEval() == element->getExpr2()->getEval()) { return; }
             if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) {
-                element->getExpr1()->visit(decr);
-                element->getExpr2()->visit(incr);
+                Visitor::visit(decr, element->getExpr1());
+                Visitor::visit(incr, element->getExpr2());
             } else {
-                element->getExpr1()->visit(incr);
-                element->getExpr2()->visit(decr);
+                Visitor::visit(incr, element->getExpr1());
+                Visitor::visit(decr, element->getExpr2());
             }
         } else {                    // not equal
             if (element->getExpr1()->getEval() != element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-            element->getExpr2()->visit(decr);
+            Visitor::visit(incr, element->getExpr1());
+            Visitor::visit(decr, element->getExpr1());
+            Visitor::visit(incr, element->getExpr2());
+            Visitor::visit(decr, element->getExpr2());
         }
     }
 
@@ -148,18 +148,18 @@ namespace PetriEngine {
     {
         if (!negated) {               // not equal
             if (element->getExpr1()->getEval() != element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-            element->getExpr2()->visit(decr);
+            Visitor::visit(incr, element->getExpr1());
+            Visitor::visit(decr, element->getExpr1());
+            Visitor::visit(incr, element->getExpr2());
+            Visitor::visit(decr, element->getExpr2());
         } else {                    // equal
             if (element->getExpr1()->getEval() == element->getExpr2()->getEval()) { return; }
             if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) {
-                element->getExpr1()->visit(decr);
-                element->getExpr2()->visit(incr);
+                Visitor::visit(decr, element->getExpr1());
+                Visitor::visit(incr, element->getExpr2());
             } else {
-                element->getExpr1()->visit(incr);
-                element->getExpr2()->visit(decr);
+                Visitor::visit(incr, element->getExpr1());
+                Visitor::visit(decr, element->getExpr2());
             }
         }
     }
@@ -168,12 +168,12 @@ namespace PetriEngine {
     {
         if (!negated) {               // less than
             if (element->getExpr1()->getEval() < element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
+            Visitor::visit(decr, element->getExpr1());
+            Visitor::visit(incr, element->getExpr2());
         } else {                    // greater than or equal
             if (element->getExpr1()->getEval() >= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
+            Visitor::visit(incr, element->getExpr1());
+            Visitor::visit(decr, element->getExpr2());
         }
     }
 
@@ -181,19 +181,19 @@ namespace PetriEngine {
     {
         if (!negated) {               // less than or equal
             if (element->getExpr1()->getEval() <= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
+            Visitor::visit(decr, element->getExpr1());
+            Visitor::visit(incr, element->getExpr2());
         } else {                    // greater than
             if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
+            Visitor::visit(incr, element->getExpr1());
+            Visitor::visit(decr, element->getExpr2());
         }
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element)
     {
         negate();
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         negate();
     }
 
@@ -220,13 +220,13 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::_accept(const PQL::GCondition *element)
     {
         negate();
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         negate();
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::FCondition *element)
     {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::EFCondition *condition) {
@@ -276,13 +276,13 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element)
     {
         for (auto &i : element->places()) _stubborn.presetOf(i.first, closure);
-        for (auto &e : element->expressions()) e->visit(*this);
+        for (auto &e : element->expressions()) Visitor::visit(this, e);
     }
 
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::PlusExpr *element)
     {
         for (auto &i : element->places()) _stubborn.postsetOf(i.first, closure);
-        for (auto &e : element->expressions()) e->visit(*this);
+        for (auto &e : element->expressions()) Visitor::visit(this, e);
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::SubtractExpr *element)
@@ -290,9 +290,9 @@ namespace PetriEngine {
         bool first = true;
         for (auto &e : element->expressions()) {
             if (first)
-                e->visit(*this);
+                Visitor::visit(this, e);
             else
-                e->visit(*decr);
+                Visitor::visit(decr, e);
             first = false;
         }
     }
@@ -302,9 +302,9 @@ namespace PetriEngine {
         bool first = true;
         for (auto &e : element->expressions()) {
             if (first)
-                e->visit(*this);
+                Visitor::visit(this, e);
             else
-                e->visit(*incr);
+                Visitor::visit(incr,e);
             first = false;
         }
     }
@@ -313,15 +313,15 @@ namespace PetriEngine {
     {
         if ((element->places().size() + element->expressions().size()) == 1) {
             for (auto &i : element->places()) _stubborn.presetOf(i.first, closure);
-            for (auto &e : element->expressions()) e->visit(*this);
+            for (auto &e : element->expressions()) Visitor::visit(this, e);
         } else {
             for (auto &i : element->places()) {
                 _stubborn.presetOf(i.first, closure);
                 _stubborn.postsetOf(i.first, closure);
             }
             for (auto &e : element->expressions()) {
-                e->visit(*this);
-                e->visit(*decr);
+                Visitor::visit(this, e);
+                Visitor::visit(decr, e);
             }
         }
     }
@@ -330,9 +330,9 @@ namespace PetriEngine {
     {
         if ((element->places().size() + element->expressions().size()) == 1) {
             for (auto &i : element->places()) _stubborn.postsetOf(i.first, closure);
-            for (auto &e : element->expressions()) e->visit(*this);
+            for (auto &e : element->expressions()) Visitor::visit(this, e);
         } else
-            element->visit(*incr);
+            Visitor::visit(incr, element);
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MinusExpr *element)
@@ -387,7 +387,29 @@ namespace PetriEngine {
 
     void InterestingLTLTransitionVisitor::_accept(const PQL::CompareConjunction *element)
     {
-        negate_if_satisfied<PQL::CompareConjunction>(element);
+        auto neg = negated != element->isNegated();
+        for (auto &c : *element) {
+            if (!neg) {
+                if (c._lower != 0 && !_stubborn.seenPre(c._place)) {
+                    // c < p becomes satisfied by preset of p.
+                    _stubborn.presetOf(c._place, closure);
+                }
+                if (c._upper != std::numeric_limits<uint32_t>::max() && !_stubborn.seenPost(c._place)) {
+                    // p < c becomes satisfied by postset of p.
+                    _stubborn.postsetOf(c._place, closure);
+                }
+            }
+            else {
+                if (c._lower != 0 && !_stubborn.seenPost(c._place)) {
+                    // !(p < c) becomes satisfied by preset of p.
+                    _stubborn.postsetOf(c._place, closure);
+                }
+                if (c._upper != std::numeric_limits<uint32_t>::max() && !_stubborn.seenPre(c._place)) {
+                    // !(c < p) becomes satisfied by postset of p.
+                    _stubborn.presetOf(c._place, closure);
+                }
+            }
+        }
     }
 
     template<typename Condition>

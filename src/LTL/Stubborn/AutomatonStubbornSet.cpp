@@ -17,7 +17,7 @@
 
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
-#include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "LTL/Stubborn/LTLEvalAndSetVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 using namespace PetriEngine;
@@ -28,11 +28,11 @@ namespace LTL {
     public:
         NondeterministicConjunctionVisitor(AutomatonStubbornSet &stubbornSet) :
                 InterestingLTLTransitionVisitor(stubbornSet, false),
-                _stubborn(stubbornSet), _net(stubbornSet._net) {}
+                _net(stubbornSet._net), _stubborn(stubbornSet){}
 
     protected:
-        static constexpr auto PresetBad = StubbornSet::PresetBad;
-        static constexpr auto PostsetBad = StubbornSet::PostsetBad;
+        static constexpr auto PresetBad = 8;
+        static constexpr auto PostsetBad = 16;
 
         void _accept(const PQL::CompareConjunction *element) override
         {
@@ -146,7 +146,6 @@ namespace LTL {
         reset();
         _parent = state;
         _gen.prepare(state);
-        memset(_places_seen.get(), 0, sizeof(uint8_t) * _net.numberOfPlaces());
         constructEnabled();
         if (_ordering.empty())
             return false;
@@ -191,11 +190,11 @@ namespace LTL {
 
         //Interesting on each progressing formula gives NLG.
         for (auto &q : buchi_state.progressing) {
-            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q.condition->visit(evalAndSetVisitor);
+            LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q.condition);
 
             NondeterministicConjunctionVisitor interesting{*this};
-            q.condition->visit(interesting);
+            PetriEngine::PQL::Visitor::visit(interesting, q.condition);
             if (_done) return true;
             else {
                 assert(!_track_changes);

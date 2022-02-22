@@ -3,20 +3,21 @@
 #include "CTL/PetriNets/OnTheFlyDG.h"
 #include "CTL/CTLResult.h"
 
-
 #include "CTL/Algorithm/CertainZeroFPA.h"
 #include "CTL/Algorithm/LocalFPA.h"
 
-
-#include "CTL/Stopwatch.h"
+#include "utils/stopwatch.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include "PetriEngine/TAR/TARReachability.h"
 
+#include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/PrepareForReachability.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include <PetriEngine/PQL/Expressions.h>
 
 using namespace CTL;
 using namespace PetriEngine;
@@ -25,7 +26,7 @@ using namespace PetriEngine::Reachability;
 using namespace PetriNets;
 
 ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algorithm,
-                         CTLAlgorithmType algorithmtype, Reachability::Strategy search)
+                         CTLAlgorithmType algorithmtype, Strategy search)
 {
     switch(algorithmtype)
     {
@@ -36,57 +37,30 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
             algorithm = std::make_shared<Algorithm::CertainZeroFPA>(search);
             break;
         default:
-            cerr << "Error: Unknown or unsupported algorithm" << endl;
-            return ErrorCode;
+            throw base_error("Unknown or unsupported algorithm");
     }
-    return ContinueCode;
+    return ReturnValue::ContinueCode;
 }
 
-void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats, size_t index, options_t& options){
-    const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STATE_COMPRESSION SAT_SMT ";
-
-    if(!only_stats)
-    {
-        cout << endl;
-        cout << "FORMULA "
-             << qname
-             << " " << (result.result ? "TRUE" : "FALSE") << " "
-             << techniques
-             << (options.isCPN ? "UNFOLDING_TO_PT " : "")
-             << (options.stubbornreduction ? "STUBBORN_SETS " : "")
-             << (options.ctlalgorithm == CTL::CZero ? "CTL_CZERO " : "")
-             << (options.ctlalgorithm == CTL::Local ? "CTL_LOCAL " : "")
-                << endl << endl;
-        std::cout << "Query index " << index << " was solved" << std::endl;
-        cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
-
-        cout << endl;
-    }
-    if(statisticslevel){
-        cout << "STATS:" << endl;
-        cout << "	Time (seconds)    : " << setprecision(4) << result.duration / 1000 << endl;
-        cout << "	Configurations    : " << result.numberOfConfigurations << endl;
-        cout << "	Markings          : " << result.numberOfMarkings << endl;
-        cout << "	Edges             : " << result.numberOfEdges << endl;
-        cout << "	Processed Edges   : " << result.processedEdges << endl;
-        cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
-        cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
-        std::cout << endl;
-    }
-}
+bool singleSolve(Condition* query, PetriNet* net,
+                 CTLAlgorithmType algorithmtype,
+                 Strategy strategytype, bool partial_order, CTLResult& result);
 
 bool singleSolve(const Condition_ptr& query, PetriNet* net,
+                 CTLAlgorithmType algorithmtype,
+                 Strategy strategytype, bool partial_order, CTLResult& result)
+{
+    return singleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
+}
+
+bool singleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
     OnTheFlyDG graph(net, partial_order);
     graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
-    if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
-    {
-        assert(false);
-        throw std::exception();
-    }
+    getAlgorithm(alg, algorithmtype,  strategytype);
 
     stopwatch timer;
     timer.start();
@@ -115,17 +89,17 @@ class ResultHandler : public AbstractHandler {
         ResultHandler(bool is_conj, const std::vector<int8_t>& lstate)
         : _is_conj(is_conj), _lstate(lstate)
         {}
-        
+
         std::pair<AbstractHandler::Result, bool> handle(
                 size_t index,
-                PQL::Condition* query, 
+                PQL::Condition* query,
                 AbstractHandler::Result result,
                 const std::vector<uint32_t>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                int maxTokens,                
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) override
+                int maxTokens,
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) override
         {
             if(result == ResultPrinter::Satisfied)
             {
@@ -136,23 +110,23 @@ class ResultHandler : public AbstractHandler {
                 result = _lstate[index] < 0 ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
             }
             bool terminate = _is_conj ? (result == ResultPrinter::NotSatisfied) : (result == ResultPrinter::Satisfied);
-            return std::make_pair(result, terminate);            
+            return std::make_pair(result, terminate);
         }
 };
 
 bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                            CTLAlgorithmType algorithmtype,
-                           Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+                           Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
     std::vector<int8_t> state(query->size(), 0);
     std::vector<int8_t> lstate;
     std::vector<Condition_ptr> queries;
     for(size_t i = 0; i < query->size(); ++i)
     {
-        if((*query)[i]->isReachability())
+        if(PetriEngine::PQL::isReachability((*query)[i]))
         {
             state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? -1 : 1;
-            queries.emplace_back((*query)[i]->prepareForReachability());
+            queries.emplace_back(prepareForReachability((*query)[i]));
             lstate.emplace_back(state[i]);
         }
     }
@@ -211,38 +185,49 @@ class SimpleResultHandler : public AbstractHandler
 public:
     std::pair<AbstractHandler::Result, bool> handle(
                 size_t index,
-                PQL::Condition* query, 
+                PQL::Condition* query,
                 AbstractHandler::Result result,
                 const std::vector<uint32_t>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                int maxTokens,                
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking) {
+                int maxTokens,
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
         return std::make_pair(result, false);
     }
 };
 
+bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
+
 bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
-                    PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+                    Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
-    if(auto q = dynamic_cast<NotCondition*>(query.get()))
+    return recursiveSolve(query.get(), net, algorithmtype, strategytype, partial_order, result, options);
+}
+
+bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+{
+    if(auto q = dynamic_cast<NotCondition*>(query))
     {
         return ! recursiveSolve((*q)[0], net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(auto q = dynamic_cast<AndCondition*>(query.get()))
+    else if(auto q = dynamic_cast<AndCondition*>(query))
     {
         return solveLogicalCondition(q, true, net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(auto q = dynamic_cast<OrCondition*>(query.get()))
+    else if(auto q = dynamic_cast<OrCondition*>(query))
     {
         return solveLogicalCondition(q, false, net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(query->isReachability())
+    else if(PetriEngine::PQL::isReachability(query))
     {
         SimpleResultHandler handler;
-        std::vector<Condition_ptr> queries{query->prepareForReachability()};
+        std::vector<Condition_ptr> queries{prepareForReachability(query)};
         std::vector<AbstractHandler::Result> res;
         res.emplace_back(AbstractHandler::Unknown);
         if(options.tar)
@@ -273,9 +258,7 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
 ReturnValue CTLMain(PetriNet* net,
                     CTLAlgorithmType algorithmtype,
                     Strategy strategytype,
-                    bool gamemode,
                     bool printstatistics,
-                    bool mccoutput,
                     bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
@@ -314,8 +297,8 @@ ReturnValue CTLMain(PetriNet* net,
         {
             result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
-        printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum, options);
+        result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }
-    return SuccessCode;
+    return ReturnValue::SuccessCode;
 }
 

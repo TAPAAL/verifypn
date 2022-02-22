@@ -1,32 +1,27 @@
 name: Build Windows (Cross)
-
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [ main ]
+    types: [synchronize, opened, reopened, ready_for_review]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+concurrency: 
+  group: build-Win-${{ github.head_ref }}
+  cancel-in-progress: true
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+jobs:
+  build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
       - name: Install Packages
         run: |
-          sudo apt-get install build-essential cmake flex git make #bison
+          sudo apt-get update
+          sudo apt-get install flex
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
 
           wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz
@@ -50,5 +45,5 @@ jobs:
       - name: Upload artifacts 
         uses: actions/upload-artifact@v2
         with:
-          name: verifytapn-win64.exe
-          path: '${{runner.workspace}}/build/bin/verifypn-win64.exe'
+          name: verifypn-win64
+          path: '${{runner.workspace}}/build/verifypn/bin/verifypn-win64.exe'

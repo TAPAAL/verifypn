@@ -17,7 +17,7 @@
 
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "PetriEngine/Structures/State.h"
-#include "PetriEngine/errorcodes.h"
+#include "utils/errors.h"
 
 #include <cassert>
 
@@ -34,13 +34,13 @@ namespace LTL {
     }
 
 
-    void ResumingSuccessorGenerator::prepare(const Structures::State* state, const successor_info &sucinfo) {
+    void ResumingSuccessorGenerator::prepare(const Structures::State* state, const successor_info_t &sucinfo) {
         SuccessorGenerator::prepare(state);
         _suc_pcounter = sucinfo.pcounter;
         _suc_tcounter = sucinfo.tcounter;
     }
 
-    void ResumingSuccessorGenerator::getSuccInfo(successor_info &sucinfo) const {
+    void ResumingSuccessorGenerator::get_succ_info(successor_info_t &sucinfo) const {
         sucinfo.pcounter = _suc_pcounter;
         sucinfo.tcounter = _suc_tcounter;
     }

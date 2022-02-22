@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>Always six tokens in state</id>
+    <description>Always six tokens in state</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <integer-eq>
+            <tokens-count>
+              <place>TokenRing_dash_COL_dash_005_state</place>
+            </tokens-count>
+            <integer-constant>6</integer-constant>
+          </integer-eq>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

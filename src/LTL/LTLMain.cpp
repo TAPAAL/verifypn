@@ -22,7 +22,8 @@
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
-#include "LTL/SuccessorGeneration/HeuristicParser.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
+//#include "LTL/SuccessorGeneration/HeuristicParser.h"
 
 #include <utility>
 
@@ -63,7 +64,7 @@ namespace LTL {
         } else {
             converted = formula;
         }
-        converted->visit(validator);
+        Visitor::visit(validator, converted);
         if (validator.bad()) {
             converted = nullptr;
         }
@@ -71,9 +72,7 @@ namespace LTL {
     }
 
     template<typename Checker>
-    Result _verify(const PetriNet *net,
-                   Condition_ptr &negatedQuery,
-                   std::unique_ptr<Checker> checker,
+    Result _verify(std::unique_ptr<Checker> checker,
                    const options_t &options)
     {
         Result result;
@@ -93,31 +92,33 @@ namespace LTL {
                                               const Condition_ptr &negated_formula,
                                               const Structures::BuchiAutomaton& automaton,
                                               options_t &options) {
-        if (options.strategy == Reachability::Strategy::RDFS) {
+        if (options.strategy == Strategy::RDFS) {
             return std::make_unique<RandomHeuristic>(options.seed());
         }
-        if (options.strategy != Reachability::Strategy::HEUR && options.strategy != Reachability::Strategy::DEFAULT) {
+        if (options.strategy != Strategy::HEUR && options.strategy != Strategy::DEFAULT) {
             return nullptr;
         }
-        auto heur = ParseHeuristic(net, automaton, negated_formula, options.ltlHeuristic);
-        if (heur == nullptr) {
-            std::cerr << "Invalid heuristic specification, terminating.\n";
-            exit(1);
+        switch(options.ltlHeuristic) {
+            case LTLHeuristic::Distance:
+            default:
+                return std::make_unique<AutomatonHeuristic>(net, automaton);
+            case LTLHeuristic::Automaton:
+                return std::make_unique<DistanceHeuristic>(net, negated_formula);
+            case LTLHeuristic::FireCount:
+                return std::make_unique<LogFireCountHeuristic>(net, 5000);
         }
-        else return heur;
     }
 
     bool LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        options_t &options)
+                        options_t &options, const Reducer* reducer)
     {
-        auto res = to_ltl(query);
-        Condition_ptr negated_formula = res.first;
-        bool negate_answer = res.second;
 
         // force AP compress off for Büchi prints
         options.ltl_compress_aps = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
+
+        auto [negated_formula, negate_answer] = to_ltl(query);
 
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, options);
         if (!options.buchi_out_file.empty()) {
@@ -125,15 +126,14 @@ namespace LTL {
         }
 
         bool is_visible_stub = options.stubbornreduction
-                               && (options.ltl_por == LTLPartialOrder::Visible || options.ltl_por == LTLPartialOrder::VisibleReach)
+                               && options.ltl_por == LTLPartialOrder::Visible
                                && !net->has_inhibitor()
-                                 && !negated_formula->containsNext();
+                               && !PetriEngine::PQL::containsNext(negated_formula);
         bool is_autreach_stub = options.stubbornreduction
-                && (options.ltl_por == LTLPartialOrder::AutomatonReach ||
-                    options.ltl_por == LTLPartialOrder::VisibleReach)
+                && options.ltl_por == LTLPartialOrder::Automaton
                 && !net->has_inhibitor();
         bool is_buchi_stub = options.stubbornreduction
-                && options.ltl_por == LTLPartialOrder::FullAutomaton
+                && options.ltl_por == LTLPartialOrder::Liebke
                 && !net->has_inhibitor();
 
         bool is_stubborn = options.ltl_por != LTLPartialOrder::None && (is_visible_stub || is_autreach_stub || is_buchi_stub);
@@ -144,54 +144,31 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.strategy != PetriEngine::Reachability::DFS) {
+                if (options.strategy != Strategy::DFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
+                    result = _verify(
+                            std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator>>(
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound, reducer),
+                            options);
 
-                    if (options.trace != TraceLevel::None) {
-                        result = _verify(
-                                net, negated_formula,
-                                std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<> >>(
-                                        net, negated_formula, automaton, &gen,
-                                        options.kbound),
-                                options);
-                    } else {
-                        result = _verify(
-                                net, negated_formula,
-                                std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, LTL::Structures::BitProductStateSet<> >>(
-                                        net, negated_formula, automaton, &gen,
-                                        options.kbound),
-                                options);
-                    }
                 } else {
                     ResumingSuccessorGenerator gen{net};
-                    if (options.trace != TraceLevel::None) {
-                        result = _verify(
-                                net, negated_formula,
-                                std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, LTL::Structures::TraceableBitProductStateSet<> >>(
-                                        net, negated_formula, automaton, &gen,
-                                        options.kbound),
-                                options);
-                    } else {
-                        result = _verify(
-                                net, negated_formula,
-                                std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, LTL::Structures::BitProductStateSet<> >>(
-                                        net, negated_formula, automaton, &gen,
-                                        options.kbound),
-                                options);
-                    }
+                    result = _verify(
+                            std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator>>(
+                                    net, negated_formula, automaton, &gen, options.trace != TraceLevel::None, options.kbound, reducer),
+                            options);
                 }
                 break;
 
             case Algorithm::Tarjan:
-                if (options.strategy != PetriEngine::Reachability::DFS || is_stubborn) {
+                if (options.strategy != Strategy::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     if (is_visible_stub) {
-                        std::cout << "Running stubborn version!" << std::endl;
                         spooler = std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula);
                     } else if (is_buchi_stub) {
                         spooler = std::make_unique<AutomatonStubbornSet>(*net, automaton);
@@ -204,75 +181,69 @@ namespace LTL {
                     gen.setSpooler(spooler.get());
                     // if search strategy used, set heuristic, otherwise ignore it
                     // (default is null which is checked elsewhere)
-                    if (options.strategy != PetriEngine::Reachability::DFS) {
+                    if (options.strategy != Strategy::DFS) {
                         assert(heuristic != nullptr);
                         gen.setHeuristic(heuristic.get());
                     }
 
                     if (options.trace != TraceLevel::None) {
                         if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         }
                         else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true, EnabledSpooler>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
                         else {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, true>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound),
+                                                     options.kbound, reducer),
                                              options);
                         }
                     } else {
 
                         if (is_autreach_stub && is_visible_stub) {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula)),
                                              options);
                         } else if (is_autreach_stub && !is_visible_stub) {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false, EnabledSpooler>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound,
+                                                     options.kbound, reducer,
                                                      std::make_unique<EnabledSpooler>(net, gen)),
                                              options);
                         }
                         else {
-                            result = _verify(net, negated_formula,
-                                             std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false>>(
+                            result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, SpoolingSuccessorGenerator, false>>(
                                                      net,
                                                      negated_formula,
                                                      automaton,
                                                      &gen,
-                                                     options.kbound),
+                                                     options.kbound, reducer),
                                              options);
                         }
                     }
@@ -281,22 +252,20 @@ namespace LTL {
 
                     // no spooling needed, thus use resuming successor generation
                     if (options.trace != TraceLevel::None) {
-                        result = _verify(net, negated_formula,
-                                         std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true>>(
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, true>>(
                                                  net,
                                                  negated_formula,
                                                  automaton,
                                                  &gen,
-                                                 options.kbound),
+                                                 options.kbound, reducer),
                                          options);
                     } else {
-                        result = _verify(net, negated_formula,
-                                         std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>>(
+                        result = _verify(std::make_unique<TarjanModelChecker<ProductSuccessorGenerator, ResumingSuccessorGenerator, false>>(
                                                  net,
                                                  negated_formula,
                                                  automaton,
                                                  &gen,
-                                                 options.kbound),
+                                                 options.kbound, reducer),
                                          options);
                     }
                 }

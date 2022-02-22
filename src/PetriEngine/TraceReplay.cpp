@@ -39,10 +39,10 @@ namespace PetriEngine {
         places.clear();
         transitions.clear();
         // preallocate reverse lookup for transition and place names. Assume this is always called with the same Petri net.
-        for (int i = 0; i < net->placeNames().size(); ++i) {
+        for (size_t i = 0; i < net->placeNames().size(); ++i) {
             places[net->placeNames()[i]] = i;
         }
-        for (int i = 0; i < net->transitionNames().size(); ++i) {
+        for (size_t i = 0; i < net->transitionNames().size(); ++i) {
             transitions[net->transitionNames()[i]] = i;
         }
         transitions[DEADLOCK_TRANS] = -1;
@@ -57,32 +57,28 @@ namespace PetriEngine {
         if (root) {
             parseRoot(root);
         } else {
-            std::cerr << "Error getting root node." << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Could not get root node.");
         }
 
     }
 
     void TraceReplay::parseRoot(const rapidxml::xml_node<> *pNode) {
         if (std::strcmp(pNode->name(), "trace") != 0) {
-            std::cerr << "Error: Expected trace node. Got: " << pNode->name() << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Expected trace node. Got: ", pNode->name());
         }
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
             if (std::strcmp(it->name(), "loop") == 0) loop_idx = trace.size();
             else if (std::strcmp(it->name(), "transition") == 0 || std::strcmp(it->name(), "deadlock") == 0) {
                 trace.push_back(parseTransition(it));
             } else {
-                std::cerr << "Error: Expected transition or loop node. Got: " << it->name() << std::endl;
                 assert(false);
-                exit(1);
+                throw base_error("Expected transition or loop node. Got: ", it->name());
             }
         }
         if (loop_idx == std::numeric_limits<size_t>::max() && options.logic == TemporalLogic::LTL) {
-            std::cerr << "Error: Missing <loop/> statement in trace\n";
-            exit(1);
+            throw base_error("Missing <loop/> statement in trace");
         }
     }
 
@@ -102,9 +98,8 @@ namespace PetriEngine {
             id = DEADLOCK_TRANS;
         }
         if (id.empty()) {
-            std::cerr << "Error: Transition has no id attribute" << std::endl;
             assert(false);
-            exit(1);
+            throw base_error("Transition has no id attribute");
         }
 
         Transition transition(id, buchi);
@@ -156,7 +151,7 @@ namespace PetriEngine {
         bool looping = false;
         state.setMarking(net->makeInitialMarking());
         loopstate.setMarking(net->makeInitialMarking());
-        for (int i = 0; i < trace.size(); ++i) {
+        for (size_t i = 0; i < trace.size(); ++i) {
             const Transition &transition = trace[i];
             // looping part should end up at the state _before_ the <loop/> tag,
             // hence copy state from previous iteration.
@@ -167,9 +162,8 @@ namespace PetriEngine {
             successorGenerator.prepare(&state);
             auto it = transitions.find(transition.id);
             if (it == std::end(transitions)) {
-                std::cerr << "Unrecognized transition name " << transition.id << std::endl;
                 assert(false);
-                exit(1);
+                throw base_error("Unrecognized transition name ", transition.id);
             }
             int tid = it->second;
 
@@ -219,7 +213,7 @@ namespace PetriEngine {
 
         bool err = false;
         if (looping) {
-            for (int i = 0; i < net->numberOfPlaces(); ++i) {
+            for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                 if (state.marking()[i] != loopstate.marking()[i]) {
                     if (!err) {
                         std::cerr << "ERROR end state not equal to expected loop state.\n";

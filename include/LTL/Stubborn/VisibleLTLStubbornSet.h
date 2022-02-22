@@ -40,7 +40,7 @@ namespace LTL {
             memset(_visible.get(), 0, sizeof(bool) * net.numberOfPlaces());
             VisibleTransitionVisitor visible{_visible};
             for (auto &q : queries) {
-                q->visit(visible);
+                PetriEngine::PQL::Visitor::visit(visible, q);
             }
         }
 
@@ -52,7 +52,7 @@ namespace LTL {
             memset(places.get(), 0, sizeof(bool) * net.numberOfPlaces());
             memset(_visible.get(), 0, sizeof(bool) * net.numberOfTransitions());
             VisibleTransitionVisitor visible{places};
-            query->visit(visible);
+            PetriEngine::PQL::Visitor::visit(visible, query);
 
             memset(_places_seen.get(), 0, _net.numberOfPlaces());
             for (uint32_t p = 0; p < net.numberOfPlaces(); ++p) {
@@ -67,11 +67,11 @@ namespace LTL {
             if (_places_seen[place] > 0) return;
             _places_seen[place] = 1;
             for (uint32_t t = _places[place].pre; t < _places[place].post; ++t) {
-                auto tr = _transitions[t];
+                auto tr = _arcs[t];
                 _visible[tr.index] = true;
             }
             for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-                auto tr = _transitions[t];
+                auto tr = _arcs[t];
                 if (tr.direction < 0)
                     _visible[tr.index] = true;
             }
