@@ -123,6 +123,7 @@ namespace PetriEngine {
                 }
             };
 
+            void _accept(const ReleaseCondition *element);
         };
     }
 }

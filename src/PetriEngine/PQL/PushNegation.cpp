@@ -297,8 +297,9 @@ namespace PetriEngine::PQL {
 
     Condition_ptr PushNegationVisitor::pushneg_AU(UntilCondition *element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            auto b = subvisit(element->getCond2(), true, false);
-            auto a = subvisit(element->getCond1(), true, false);
+            // We push negation and convert this to a ReleaseCondition if it is negated
+            auto b = subvisit(element->getCond2(), true, negated);
+            auto a = subvisit(element->getCond1(), true, negated);
 
             if (b->type() == type_id<NotCondition>()) {
                 auto notcond = static_cast<NotCondition*>(b.get());
@@ -352,9 +353,10 @@ namespace PetriEngine::PQL {
                 }
             }
 
-            auto c = std::make_shared<ACondition>(std::make_shared<UntilCondition>(a, b));
-            if (negated) return std::make_shared<NotCondition>(c);
-            return c;
+            if (negated)
+                return std::make_shared<ECondition>(std::make_shared<ReleaseCondition>(a, b));
+            else 
+                return std::make_shared<ACondition>(std::make_shared<UntilCondition>(a, b));
         }, stats, context, nested, negated, initrw);
         return cond;
     }
@@ -405,9 +407,10 @@ namespace PetriEngine::PQL {
                     return subvisit(makeOr(pef), nested, negated);
                 }
             }
-            auto c = std::make_shared<ECondition>(std::make_shared<UntilCondition>(a, b));
-            if (negated) return std::make_shared<NotCondition>(c);
-            return c;
+            if (negated)
+                return std::make_shared<ACondition>(std::make_shared<ReleaseCondition>(a, b));
+            else
+                return std::make_shared<ECondition>(std::make_shared<UntilCondition>(a, b));
         }, stats, context, nested, negated, initrw);
         return cond;
     }
@@ -415,20 +418,40 @@ namespace PetriEngine::PQL {
 /*LTL negation push*/
     void PushNegationVisitor::_accept(UntilCondition* element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
-            auto b = subvisit(element->getCond2(), true, false);
-            auto a = subvisit(element->getCond1(), true, false);
+            // Push negation and convert this to a Release if it is negated
+            auto b = subvisit(element->getCond2(), true, negated);
+            auto a = subvisit(element->getCond1(), true, negated);
 
             if (auto cond = std::dynamic_pointer_cast<FCondition>(b)) {
                 static_assert(negstat_t::nrules >= 35);
                 ++stats[34];
-                if (negated)
-                    return std::make_shared<NotCondition>(b);
                 return b;
             }
 
-            auto c = std::make_shared<UntilCondition>(a, b);
-            if (negated) return std::make_shared<NotCondition>(c);
-            return c;
+            if (negated)
+                return std::make_shared<ReleaseCondition>(a, b);
+            else
+                return std::make_shared<UntilCondition>(a, b);
+        }, stats, context, nested, negated, initrw);
+        RETURN(cond)
+    }
+
+    void PushNegationVisitor::_accept(ReleaseCondition* element) {
+        auto cond = initialMarkingRW([&]() -> Condition_ptr {
+            // Push negation and convert this to a UntilCondition if it is negated
+            auto b = subvisit(element->getCond2(), true, negated);
+            auto a = subvisit(element->getCond1(), true, negated);
+
+            if (auto cond = std::dynamic_pointer_cast<FCondition>(b)) {
+                static_assert(negstat_t::nrules >= 35);
+                ++stats[34];
+                return b;
+            }
+
+            if (negated)
+                return std::make_shared<UntilCondition>(a, b);
+            else
+                return std::make_shared<ReleaseCondition>(a, b);
         }, stats, context, nested, negated, initrw);
         RETURN(cond)
     }

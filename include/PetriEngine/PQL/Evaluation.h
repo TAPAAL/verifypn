@@ -107,6 +107,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(ShallowCondition *element) override;
+
+        void _accept(ReleaseCondition *element);
     };
 
     Condition::Result evaluateAndSet(Condition *element, const EvaluationContext &context);
@@ -150,6 +152,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(ShallowCondition *element) override;
+
+        void _accept(ReleaseCondition *element) override;
     };
 } }
 

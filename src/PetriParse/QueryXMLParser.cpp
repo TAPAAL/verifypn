@@ -282,6 +282,25 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
                 return std::make_shared<UntilCondition>(cond, cond2);
             }
         }
+    } else if (elementName == "release") {
+        if (getChildCount(element) != 2)
+        {
+            assert(false);
+            return nullptr;
+        }
+        auto reach = element->first_node();
+        auto before = reach->next_sibling();
+        if (getChildCount(reach) != 1 || getChildCount(before) != 1 ||
+            strcmp(reach->name(), "reach") != 0 || strcmp(before->name(), "before") != 0)
+        {
+            assert(false);
+            return nullptr;
+        }
+        if ((cond = parseBooleanFormula(reach->first_node())) != nullptr) {
+            if ((cond2 = parseBooleanFormula(before->first_node())) != nullptr) {
+                return std::make_shared<ReleaseCondition>(cond, cond2);
+            }
+        }
     } else if (elementName == "all-paths") {
         if (getChildCount(element) != 1)
         {

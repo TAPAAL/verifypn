@@ -163,6 +163,9 @@ namespace PetriEngine {
                             case type_id<UntilCondition>():
                                 visitor->accept(static_cast<UntilCondition*> (c));
                                 break;
+                            case type_id<ReleaseCondition>():
+                                visitor->accept(static_cast<ReleaseCondition*>(c));
+                                break;
                             case type_id<XCondition>():
                                 visitor->accept(static_cast<XCondition*> (c));
                                 break;
@@ -264,13 +267,15 @@ namespace PetriEngine {
                 _accept(static_cast<const Condition*>(element));
             }
 
+            // Quantifiers
+
             virtual void _accept(const UntilCondition *element) {
-                _accept(static_cast<const Condition*>(element));
+                _accept(static_cast<const QuantifierCondition*>(element));
             }
 
-
-            // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
-            // default behaviour is error
+            virtual void _accept(const ReleaseCondition *element) {
+                _accept(static_cast<const QuantifierCondition*>(element));
+            }
 
             virtual void _accept(const ControlCondition *condition) {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));

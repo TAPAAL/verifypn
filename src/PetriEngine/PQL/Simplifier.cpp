@@ -709,6 +709,48 @@ namespace PetriEngine::PQL {
         }
     }
 
+    void Simplifier::_accept(const ReleaseCondition *condition) {
+        bool neg = _context.negated();
+        _context.setNegate(false);
+
+        Visitor::visit(this, condition->getCond2());
+        Retval r2 = std::move(_return_value);
+        if (r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(_context)) {
+            _context.setNegate(neg);
+            RETURN(neg ?
+                   Retval(BooleanCondition::FALSE_CONSTANT) :
+                   Retval(BooleanCondition::TRUE_CONSTANT))
+        } else if (r2.formula->isTriviallyFalse() || !r2.lps->satisfiable(_context)) {
+            _context.setNegate(neg);
+            RETURN(neg ?
+                   Retval(BooleanCondition::TRUE_CONSTANT) :
+                   Retval(BooleanCondition::FALSE_CONSTANT))
+        }
+        Visitor::visit(this, condition->getCond1());
+        Retval r1 = std::move(_return_value);
+
+        _context.setNegate(neg);
+
+        if (_context.negated()) {
+            if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context)) {
+                RETURN(Retval(std::make_shared<NotCondition>(r2.formula)))
+            } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context)) {
+                RETURN(Retval(std::make_shared<NotCondition>(std::make_shared<GCondition>(r2.formula))))
+            } else {
+                RETURN(Retval(std::make_shared<NotCondition>(
+                        std::make_shared<ReleaseCondition>(r1.formula, r2.formula))))
+            }
+        } else {
+            if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context)) {
+                RETURN(std::move(r2))
+            } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context)) {
+                RETURN(Retval(std::make_shared<GCondition>(r2.formula)))
+            } else {
+                RETURN(Retval(std::make_shared<ReleaseCondition>(r1.formula, r2.formula)))
+            }
+        }
+    }
+
     void Simplifier::_accept(const ECondition *condition) {
         if (const std::shared_ptr<XCondition> xcond = std::dynamic_pointer_cast<XCondition>((*condition)[0])) {
             Visitor::visit(*this, (*xcond)[0]);

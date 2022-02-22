@@ -82,6 +82,8 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const BooleanCondition *element) override;
+
+        void _accept(const ReleaseCondition *condition);
     };
 
     Member constraint(const Expr *element, const SimplificationContext &context);

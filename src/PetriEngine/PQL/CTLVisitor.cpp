@@ -125,6 +125,16 @@ namespace PetriEngine::PQL {
         _cur_type = CTLSyntaxType::PATH;
     }
 
+    void IsCTLVisitor::_accept(const ReleaseCondition *condition) {
+        Visitor::visit(this, (*condition)[0]);
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
+            isCTL = false;
+        Visitor::visit(this, (*condition)[1]);
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
+            isCTL = false;
+        _cur_type = CTLSyntaxType::PATH;
+    }
+
     void IsCTLVisitor::_accept(const UnfoldedFireableCondition *element) {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }

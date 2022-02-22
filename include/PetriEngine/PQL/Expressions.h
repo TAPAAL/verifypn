@@ -101,9 +101,13 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<UntilCondition>() { return type_id<GCondition>() + 1; }
 
+        class ReleaseCondition;
+        template<>
+        constexpr type_id_t type_id<ReleaseCondition>() { return type_id<UntilCondition>() + 1; }
+
         class XCondition;
         template<>
-        constexpr type_id_t type_id<XCondition>() { return type_id<UntilCondition>() + 1; }
+        constexpr type_id_t type_id<XCondition>() { return type_id<ReleaseCondition>() + 1; }
 
         class ControlCondition;
         template<>
@@ -508,7 +512,28 @@ namespace PetriEngine {
         protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
+        };
 
+        class ReleaseCondition : public QuantifierCondition {
+        public:
+            ReleaseCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
+                _cond1 = cond1;
+                _cond2 = cond2;
+            }
+
+            [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
+            { if(i == 0) return _cond1; return _cond2;}
+            Path getPath() const override { return Path::R; }
+
+            [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
+            [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
+
+            uint32_t distance(DistanceContext& context) const override { return (*this)[1]->distance(context); }
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        protected:
+            Condition_ptr _cond1;
+            Condition_ptr _cond2;
         };
 
         /******************** CONDITIONS ********************/

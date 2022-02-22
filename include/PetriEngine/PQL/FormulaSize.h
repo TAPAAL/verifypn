@@ -74,6 +74,8 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const LogicalCondition *condition) override;
+
+        void _accept(const ReleaseCondition *condition);
     };
 
 }

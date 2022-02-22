@@ -226,6 +226,11 @@ namespace PetriEngine::PQL {
         Visitor::visit(this, (*element)[1]);
     }
 
+    void AnalyzeVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
+    }
+
     void AnalyzeVisitor::_accept(SimpleQuantifierCondition *element) {
         Visitor::visit(this, (*element)[0]);
     }

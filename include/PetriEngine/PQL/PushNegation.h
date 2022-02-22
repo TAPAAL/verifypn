@@ -126,6 +126,8 @@ namespace PetriEngine::PQL {
         Condition_ptr pushneg_AF(FCondition *element);
 
         Condition_ptr pushneg_EU(UntilCondition *element);
+
+        void _accept(ReleaseCondition *element);
     };
 }
 

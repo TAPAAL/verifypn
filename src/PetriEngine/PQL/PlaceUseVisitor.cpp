@@ -113,6 +113,12 @@ namespace PQL {
         Visitor::visit(this, (*element)[1]);
     }
 
+    void PlaceUseVisitor::_accept(const ReleaseCondition* element)
+    {
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
+    }
+
 
     void PlaceUseVisitor::_accept(const SimpleQuantifierCondition* element)
     {

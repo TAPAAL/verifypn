@@ -170,6 +170,17 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
+    void EvaluateVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[1]);
+        if (_return_value != Condition::RFALSE)
+        {
+            // retain return, either true or unknown.
+            return;
+        }
+        _return_value = Condition::RUNKNOWN;
+//        TODO: Don't know how to handle this
+//        Visitor::visit(this, (*element)[0]);
+    }
 
     void EvaluateVisitor::_accept(AndCondition *element) {
         auto res = Condition::RTRUE;
@@ -291,6 +302,16 @@ namespace PetriEngine { namespace PQL {
         if (_return_value == Condition::RFALSE)
             return;
         _return_value = {Condition::RUNKNOWN};
+    }
+
+    void EvaluateAndSetVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[1]);
+        if (_return_value != Condition::RFALSE)
+            return;
+
+        _return_value = Condition::RUNKNOWN;
+        // TODO: Don't know how to handle this
+        //Visitor::visit(this, (*element)[0]);
     }
 
     void EvaluateAndSetVisitor::_accept(AndCondition *element) {

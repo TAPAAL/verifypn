@@ -137,6 +137,14 @@ namespace PetriEngine {
             os << ")";
         }
 
+        void QueryPrinter::_accept(const ReleaseCondition *condition) {
+            os << "(";
+            Visitor::visit(this, condition->getCond1());
+            os << " R ";
+            Visitor::visit(this, condition->getCond2());
+            os << ")";
+        }
+
         void QueryPrinter::_accept(const UnfoldedFireableCondition *element) {
             os << "is-fireable(" << element->getName() << ")";
         }

@@ -100,6 +100,10 @@ namespace PetriEngine {
                 _accept(static_cast<QuantifierCondition*>(element));
             }
 
+            virtual void _accept(ReleaseCondition *element) {
+                _accept(static_cast<QuantifierCondition*>(element));
+            }
+
             virtual void _accept(ControlCondition *condition) {
                 _accept(static_cast<SimpleQuantifierCondition*>(condition));
             };

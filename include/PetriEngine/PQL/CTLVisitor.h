@@ -82,6 +82,8 @@ namespace PetriEngine::PQL {
         void _accept(const LogicalCondition *element);
 
         void _accept(const CompareCondition *element);
+
+        void _accept(const ReleaseCondition *condition);
     };
 }
 

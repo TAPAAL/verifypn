@@ -216,6 +216,20 @@ namespace PetriEngine {
             }
         }
 
+        void XMLPrinter::_accept(const ReleaseCondition *condition) {
+            Tag R(this, "release");
+            {
+                {
+                    Tag r(this, "reach");
+                    Visitor::visit(this, (*condition)[1]);
+                }
+                {
+                    Tag b(this, "before");
+                    Visitor::visit(this, (*condition)[0]);
+                }
+            }
+        }
+
         void XMLPrinter::_accept(const UnfoldedFireableCondition *element) {
             outputLine("<is-fireable><transition>", element->getName(), "</transition></is-fireable>");
         }

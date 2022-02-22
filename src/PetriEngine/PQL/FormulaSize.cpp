@@ -112,6 +112,10 @@ void FormulaSizeVisitor::_accept(const UntilCondition *condition) {
     RETURN(subvisit(condition->getCond1()) + subvisit(condition->getCond2()) + 1)
 }
 
+void FormulaSizeVisitor::_accept(const ReleaseCondition *condition) {
+    RETURN(subvisit(condition->getCond1()) + subvisit(condition->getCond2()) + 1)
+}
+
 void FormulaSizeVisitor::_accept(const LogicalCondition *condition) {
     size_t i = 1;
     for(auto& c : *condition)
