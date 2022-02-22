@@ -479,7 +479,7 @@ namespace PetriEngine {
             {
                 PetriEngine::PQL::analyze(queries[i], placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
-                all_ltl &= results[i] == Reachability::ResultPrinter::LTL;
+                all_ltl &= results[i] != Reachability::ResultPrinter::CTL;
                 remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.

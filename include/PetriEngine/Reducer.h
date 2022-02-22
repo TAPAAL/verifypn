@@ -88,7 +88,7 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool all_ltl, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
 
         size_t numberOfSkippedTransitions() const {
             return _skippedTransitions.size();
