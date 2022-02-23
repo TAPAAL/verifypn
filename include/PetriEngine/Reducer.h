@@ -154,7 +154,7 @@ namespace PetriEngine {
         bool ReducebyRuleJ(uint32_t* placeInQuery);
         bool ReducebyRuleK(uint32_t* placeInQuery, bool remove_consumers);
         bool ReducebyRuleL(uint32_t* placeInQuery);
-        bool ReducebyRuleM(uint32_t* placeInQuery);
+        bool ReducebyRuleEFMNOP(uint32_t* placeInQuery);
         bool ReducebyRuleQ(uint32_t* placeInQuery);
         bool ReducebyRuleR(uint32_t* placeInQuery);
 
