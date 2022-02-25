@@ -263,6 +263,8 @@ int main(int argc, const char** argv) {
 
         //--------------------- Apply Net Reduction ---------------//
 
+        builder.freezeOriginalSize();
+
         if (options.enablereduction > 0) {
             // Compute how many times each place appears in the query
             builder.startTimer();

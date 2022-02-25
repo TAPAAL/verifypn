@@ -237,6 +237,7 @@ namespace PetriEngine {
     bool Reducer::consistent()
     {
 #ifndef NDEBUG
+        size_t strans = 0;
         for(size_t i = 0; i < parent->numberOfTransitions(); ++i)
         {
             Transition& t = parent->_transitions[i];
@@ -244,6 +245,7 @@ namespace PetriEngine {
             assert(std::is_sorted(t.pre.begin(), t.pre.end()));
             assert(std::is_sorted(t.post.end(), t.post.end()));
             assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
+            if (t.skip) strans++;
             for(Arc& a : t.pre)
             {
                 assert(a.weight > 0);
@@ -260,7 +262,7 @@ namespace PetriEngine {
             }
         }
 
-        assert(strans == _removedTransitions);
+        assert(strans == _skippedTransitions.size());
 
         size_t splaces = 0;
         for(size_t i = 0; i < parent->numberOfPlaces(); ++i)
