@@ -1036,6 +1036,65 @@ namespace PetriEngine {
         return reduced;
     }
 
+    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
+        bool continueReductions = false;
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for(uint32_t p = 0; p < numberofplaces; ++p)
+        {
+            if(hasTimedout()) return false;
+            Place& place = parent->_places[p];
+            if(place.skip) continue;
+            if(place.inhib) continue;
+            if(place.producers.size() < place.consumers.size()) continue;
+            if(placeInQuery[p] != 0) continue;
+
+            bool ok = true;
+            for(uint32_t cons : place.consumers)
+            {
+                Transition& t = getTransition(cons);
+                auto w = getInArc(p, t)->weight;
+                if(w > parent->initialMarking[p])
+                {
+                    ok = false;
+                    break;
+                }
+                else
+                {
+                    auto it = getOutArc(t, p);
+                    if(it == t.post.end() ||
+                       it->place != p     ||
+                       it->weight < w)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+
+            if(!ok) continue;
+
+            ++_ruleF;
+
+            if((numberofplaces - _skippedPlaces) > 1)
+            {
+                if(reconstructTrace)
+                {
+                    for(auto t : place.consumers)
+                    {
+                        std::string tname = getTransitionName(t);
+                        const ArcIter arc = getInArc(p, getTransition(t));
+                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                    }
+                }
+                skipPlace(p);
+                continueReductions = true;
+            }
+
+        }
+        assert(consistent());
+        return continueReductions;
+    }
+
     bool Reducer::ReducebyRuleFNO(uint32_t* placeInQuery) {
         // Redundant arc (and place) removal.
         // If a place p never disables a transition, we can remove its arc to the
@@ -1742,6 +1801,145 @@ else if (inhibArcs == 0)
         return continueReductions;
     }
 
+    bool Reducer::ReducebyRuleM(uint32_t* placeInQuery) {
+        // Dead places and transitions
+        if (hasTimedout()) return false;
+
+        // Use pflags and bits to keep track of places that can increase or decrease their number of tokens
+        const uint8_t CAN_INC = 0b01;
+        const uint8_t CAN_DEC = 0b10;
+        _pflags.resize(parent->_places.size(), 0);
+        std::fill(_pflags.begin(), _pflags.end(), 0);
+
+        // Use tflags to mark processed fireable transitions
+        _tflags.resize(parent->_transitions.size(), 0);
+        std::fill(_tflags.begin(), _tflags.end(), 0);
+
+        // Queue of potentially fireable transitions to process
+        std::queue<uint32_t> queue;
+
+        auto processIncPlace = [&](uint32_t p) {
+            if ((_pflags[p] & CAN_INC) == 0) {
+                _pflags[p] |= CAN_INC;
+                Place place = parent->_places[p];
+                for (uint32_t t : place.consumers) {
+                    if (_tflags[t] == 0)
+                        queue.push(t);
+                }
+            }
+        };
+
+        auto processDecPlace = [&](uint32_t p) {
+            if ((_pflags[p] & CAN_DEC) == 0) {
+                _pflags[p] |= CAN_DEC;
+                Place place = parent->_places[p];
+                for (uint32_t t : place.consumers) {
+                    if (_tflags[t] == 0)
+                        queue.push(t);
+                }
+            }
+        };
+
+        auto processEnabled = [&](uint32_t t) {
+            _tflags[t] = 1;
+            Transition& tran = parent->_transitions[t];
+            // Find and process negative preset and positive postset
+            uint32_t i = 0, j = 0;
+            while (i < tran.pre.size() && j < tran.post.size())
+            {
+                if (tran.pre[i].place < tran.post[j].place) {
+                    if (!tran.pre[i].inhib)
+                        processDecPlace(tran.pre[i].place);
+                    i++;
+                } else if (tran.pre[i].place > tran.post[j].place) {
+                    processIncPlace(tran.post[j].place);
+                    j++;
+                } else {
+                    if (tran.pre[i].inhib) {
+                        processIncPlace(tran.post[j].place);
+                    } else {
+                        // There are both an in and an out arc to this place. Is the effect non-zero?
+                        if (tran.pre[i].weight > tran.post[j].weight) {
+                            processDecPlace(tran.pre[i].place);
+                        } else if (tran.pre[i].weight < tran.post[j].weight) {
+                            processIncPlace(tran.post[j].place);
+                        }
+                    }
+
+                    i++; j++;
+                }
+            }
+            for ( ; i < tran.pre.size(); i++) {
+                if (!tran.pre[i].inhib)
+                    processDecPlace(tran.pre[i].place);
+            }
+            for ( ; j < tran.post.size(); j++) {
+                processIncPlace(tran.post[j].place);
+            }
+        };
+
+        // Process initially enabled transitions
+        for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
+            Transition& tran = parent->_transitions[t];
+            if (tran.skip)
+                continue;
+            bool enabled = true;
+            for (Arc& prearc : tran.pre) {
+                if (prearc.inhib != (prearc.weight > parent->initialMarking[prearc.place])) {
+                    enabled = false;
+                    break;
+                }
+            }
+            if (enabled) {
+                processEnabled(t);
+            }
+        }
+
+        // Now we find the fixed point of S_cant_inc, S_cant_dec, and _tflags iteratively
+
+        while (!queue.empty()) {
+            if (hasTimedout()) return false;
+
+            uint32_t t = queue.front();
+            queue.pop();
+            if (_tflags[t] == 1) continue;
+
+            // Is t enabled?
+            bool enabled = true;
+            for (Arc prearc : parent->_transitions[t].pre) {
+                bool notInhibited = !prearc.inhib || prearc.weight > parent->initialMarking[prearc.place] || (_pflags[prearc.place] & CAN_DEC) > 0;
+                bool enoughTokens = prearc.inhib || prearc.weight <= parent->initialMarking[prearc.place] || (_pflags[prearc.place] & CAN_INC) > 0;
+                if (!notInhibited || !enoughTokens) {
+                    enabled = false;
+                    break;
+                }
+            }
+            if (enabled) {
+                processEnabled(t);
+            }
+        }
+
+        // Remove places that cannot increase nor decrease as well as unfireable transitions
+        bool anyRemoved = false;
+        for (uint32_t p = 0; p < parent->_places.size(); ++p) {
+            if (!parent->_places[p].skip && placeInQuery[p] == 0 && _pflags[p] == 0) {
+                skipPlace(p);
+                anyRemoved = true;
+            }
+        }
+        for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
+            if (!parent->_transitions[t].skip && _tflags[t] == 0) {
+                skipTransition(t);
+                anyRemoved = true;
+            }
+        }
+        if (anyRemoved) {
+            _ruleM++;
+            return true;
+        }
+        return false;
+    }
+
     bool Reducer::ReducebyRuleEFMNOP(uint32_t* placeInQuery) {
         // Removes dead and redundant places, transitions, and arcs.
         // Using fixed-point iteration find an over-approximation of which places will never gain or lose tokens,
@@ -2353,7 +2551,7 @@ else if (inhibArcs == 0)
                                 while(ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 5:
-                                while(ReducebyRuleFNO(context.getQueryPlaceCount())) changed = true;
+                                while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 6:
                                 while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -2374,10 +2572,14 @@ else if (inhibArcs == 0)
                                 if (ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 12:
+                                if (ReducebyRuleM(context.getQueryPlaceCount())) changed = true;
+                                break;
                             case 13:
                             case 14:
+                                if (ReducebyRuleFNO(context.getQueryPlaceCount())) changed = true;
+                                break;
                             case 15:
-                                if (ReducebyRuleEFMNOP(context.getQueryPlaceCount())) changed = true;
+                                if (ReducebyRuleEP(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 16:
                                 if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
