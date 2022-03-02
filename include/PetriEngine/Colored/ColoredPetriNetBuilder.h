@@ -28,9 +28,14 @@
 #include "../PetriNetBuilder.h"
 
 namespace PetriEngine {
+    namespace Colored::Reduction {
+        class ColoredReducer;
+    }
 
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
+        friend class Colored::Reduction::ColoredReducer;
+
         ColoredPetriNetBuilder();
         ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig);
         virtual ~ColoredPetriNetBuilder();
@@ -60,7 +65,7 @@ namespace PetriEngine {
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool inhibitor, int weight) override;
+                int inhib_weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight) override;
@@ -128,7 +133,7 @@ namespace PetriEngine {
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool input, bool inhibitor, int weight);
+                bool input, int inhib_weight);
     };
 
     enum ExpressionType {

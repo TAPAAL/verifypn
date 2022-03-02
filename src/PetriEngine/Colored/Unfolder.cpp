@@ -15,10 +15,12 @@ namespace PetriEngine {
             PetriNetBuilder pnBuilder;
             if (_builder.isColored()) {
                 for (auto& place : _builder.places()) {
+                    if (place.skipped) continue;
                     pnBuilder.addPlace(place.name, place.marking.size(), place._x, place._y);
                 }
 
                 for (auto& transition : _builder.transitions()) {
+                    if (transition.skipped) continue;
                     pnBuilder.addTransition(transition.name, transition._player, transition._x, transition._y);
                     for (const auto& arc : transition.input_arcs) {
                         try {
@@ -46,7 +48,7 @@ namespace PetriEngine {
                     }
                     for (const auto& arc : _builder.inhibitors()) {
                         pnBuilder.addInputArc(_builder.places()[arc.place].name, _builder.transitions()[arc.transition].name, true,
-                            arc.weight);
+                            arc.inhib_weight);
                     }
                 }
             }
@@ -69,6 +71,7 @@ namespace PetriEngine {
 
                 const auto& unfoldedPlaceMap = ptBuilder.getPlaceNames();
                 for (auto& place : _builder.places()) {
+                    if (place.skipped) continue;
                     handleOrphanPlace(ptBuilder, place, unfoldedPlaceMap);
                 }
 
@@ -203,7 +206,7 @@ namespace PetriEngine {
                         }
                         _sumPlacesNames[inhibArc.place] = std::move(sumPlaceName);
                     }
-                    ptBuilder.addInputArc(placeName, newname, true, inhibArc.weight);
+                    ptBuilder.addInputArc(placeName, newname, true, inhibArc.inhib_weight);
                 }
             }
         }

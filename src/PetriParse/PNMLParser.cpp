@@ -104,7 +104,7 @@ void PNMLParser::parse(std::istream& xml,
             if (!isColored) {
                 builder->addInputArc(source.id, target.id, arc.inhib, arc.weight);
             } else {
-                builder->addInputArc(source.id, target.id, arc.expr, arc.inhib, arc.weight);
+                builder->addInputArc(source.id, target.id, arc.expr, arc.inhib ? arc.weight : 0);
             }
 
         } else if (!source.isPlace && target.isPlace) {

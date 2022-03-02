@@ -87,8 +87,9 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool inhibitor, int weight) {
-        addArc(place, transition, expr, true, inhibitor, weight);
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, int inhib_weight) {
+        assert((expr == nullptr) != (inhib_weight == 0));
+        addArc(place, transition, expr, true, inhib_weight);
     }
 
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
@@ -98,10 +99,10 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
-        addArc(place, transition, expr, false, false, 1);
+        addArc(place, transition, expr, false, 0);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, int inhib_weight) {
         if(_transitionnames.count(transition) == 0)
             throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
@@ -115,21 +116,22 @@ namespace PetriEngine {
         if(input) _places[p]._post.emplace_back(t);
         else      _places[p]._pre.emplace_back(t);
 
+        if (!input) assert(expr != nullptr);
+        assert((expr == nullptr) != (inhib_weight == 0));
+
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
-        _places[p].inhibitor |= inhibitor;
-        if(!inhibitor)
-            assert(expr != nullptr);
+        _places[p].inhibitor |= inhib_weight > 0;
+        _transitions[t].inhibited |= inhib_weight > 0;
         arc.expr = std::move(expr);
         arc.input = input;
-        arc.weight = weight;
-        if(inhibitor){
+        arc.inhib_weight = inhib_weight;
+        if(inhib_weight > 0){
             _inhibitorArcs.push_back(std::move(arc));
         } else {
             input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
         }
-
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {

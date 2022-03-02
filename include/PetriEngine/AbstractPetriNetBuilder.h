@@ -73,7 +73,7 @@ namespace PetriEngine {
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool inhibitor, int weight)
+                int inhib_weight)
         {
             throw base_error("Colored input arcs are not supported in standard P/T nets");
         }

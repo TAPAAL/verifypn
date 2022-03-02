@@ -133,6 +133,9 @@ int main(int argc, const char** argv) {
 
         std::stringstream ss;
         std::ostream& out = options.printstatistics ? std::cout : ss;
+
+        reduceColored(cpnBuilder, queries, 30, out);
+
         auto [builder, transition_names, place_names] = unfold(cpnBuilder,
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,

@@ -46,6 +46,9 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "PetriEngine/PQL/ContainsVisitor.h"
+#include "PetriEngine/Colored/Reduction/ColoredReducer.h"
+#include "PetriEngine/PQL/ColoredPlaceUseVisitor.h"
 
 #include <mutex>
 
@@ -53,6 +56,40 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
+
+bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
+                   uint32_t timeout, std::ostream &out) {
+    if (!cpnBuilder.isColored()) return false;
+
+    ColoredPlaceUseVisitor placeUseVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount());
+    ContainsVisitor<DeadlockCondition> containsDeadlockVisitor; // FIXME This is not the only reason to preserve deadlocks
+
+    for (auto &q: queries) {
+        PQL::Visitor::visit(placeUseVisitor, q);
+        PQL::Visitor::visit(containsDeadlockVisitor, q);
+    }
+
+    Colored::Reduction::ColoredReducer reducer(cpnBuilder);
+    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), containsDeadlockVisitor.does_contain());
+
+    auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
+    auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();
+    double placePercentage = 100 * (double)removedPlacesCount / reducer.origPlaceCount();
+    double transitionPercentage = 100 * (double)removedTransitionsCount / reducer.origTransitionCount();
+
+    out << "\nColored structural reductions computed in " << reducer.time() << " seconds" << std::endl;
+    out << "Reduced from " << reducer.origPlaceCount() << " to " << reducer.unskippedPlacesCount() << " places " <<
+        "(" << removedPlacesCount << ", " << placePercentage << "%)" << std::endl;
+    out << "Reduced from " << reducer.origTransitionCount() << " to " << reducer.unskippedTransitionsCount() << " transitions " <<
+        "(" << removedTransitionsCount << ", " << transitionPercentage << "%)" << std::endl;
+
+    auto summary = reducer.createApplicationSummary();
+    for (auto& rule : summary) {
+        out << "Applications of rule " << rule.name << ": " << rule.applications;
+    }
+
+    return anyReduction;
+}
 
 std::tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,

@@ -20,6 +20,7 @@ namespace PetriEngine {
                 auto& transitions = _builder.transitions();
                 for (uint32_t transitionId = 0; transitionId < transitions.size(); transitionId++) {
                     const Colored::Transition &transition = transitions[transitionId];
+                    if (transition.skipped) continue;
                     if (transition.guard) {
                         continue;
                         //the variables cannot appear on the guard
