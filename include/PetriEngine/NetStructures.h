@@ -47,10 +47,20 @@ namespace PetriEngine {
         void addPreArc(const Arc& arc)
         {
             auto lb = std::lower_bound(pre.begin(), pre.end(), arc);
-            if(lb != pre.end() && lb->place == arc.place)
-                lb->weight += arc.weight;
-            else
+            if(lb != pre.end() && lb->place == arc.place){
+                assert(lb->inhib == arc.inhib);
+                if (lb->inhib){
+                    lb->weight = std::min(lb->weight, arc.weight);
+                } else {
+                    lb->weight += arc.weight;
+                }
+            }
+            else {
                 lb = pre.insert(lb, arc);
+                if (lb->inhib)
+                    inhib = true;
+            }
+
             assert(lb->weight > 0);
         }
 
@@ -76,12 +86,12 @@ namespace PetriEngine {
         void addConsumer(uint32_t id)
         {
             auto lb = std::lower_bound(consumers.begin(), consumers.end(), id);
-            if(lb == consumers.end() || *lb != id)
+            if(lb == consumers.end() || *lb != id){
                 consumers.insert(lb, id);
+            }
         }
 
-        void addProducer(uint32_t id)
-        {
+        void addProducer(uint32_t id){
             auto lb = std::lower_bound(producers.begin(), producers.end(), id);
             if(lb == producers.end() || *lb != id)
                 producers.insert(lb, id);
