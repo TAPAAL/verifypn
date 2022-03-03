@@ -19,7 +19,7 @@ namespace PetriEngine::Colored::Reduction {
         return res;
     }
 
-    bool ColoredReducer::reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks, int reductiontype, std::vector<uint32_t>& reductions) {
+    bool ColoredReducer::reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks) {
 
         _startTime = std::chrono::high_resolution_clock::now();
         if (timeout <= 0) return false;
@@ -27,39 +27,18 @@ namespace PetriEngine::Colored::Reduction {
 
         bool any = false;
         bool changed;
+        do {
+            changed = false;
 
-        if (reductiontype == 2) {
-            do {
-                changed = false;
+            for (auto &rule: _reductions) {
+                if (rule->canBeAppliedRepeatedly())
+                    while (rule->apply(*this, inQuery, preserveDeadlocks)) changed = true;
+                else
+                    changed |= rule->apply(*this, inQuery, preserveDeadlocks);
+            }
 
-                // TODO should probably handle skipping rules better, by not having unused rules in _reductions in the first place
-                uint32_t i = 0;
-                for (auto &rule: _reductions) {
-                    if(std::find(reductions.begin(), reductions.end(), i) != reductions.end()) {
-                        if (rule->canBeAppliedRepeatedly())
-                            while (rule->apply(*this, inQuery, preserveDeadlocks)) changed = true;
-                        else
-                            changed |= rule->apply(*this, inQuery, preserveDeadlocks);
-                    }
-                    ++i;
-                }
-
-                any |= changed;
-            } while (changed && hasTimedOut());
-        } else {
-            do {
-                changed = false;
-
-                for (auto &rule: _reductions) {
-                        if (rule->canBeAppliedRepeatedly())
-                            while (rule->apply(*this, inQuery, preserveDeadlocks)) changed = true;
-                        else
-                            changed |= rule->apply(*this, inQuery, preserveDeadlocks);
-                }
-
-                any |= changed;
-            } while (changed && hasTimedOut());
-        }
+            any |= changed;
+        } while (changed && hasTimedOut());
 
         auto now = std::chrono::high_resolution_clock::now();
         _timeSpent = (std::chrono::duration_cast<std::chrono::microseconds>(now - _startTime).count()) * 0.000001;
