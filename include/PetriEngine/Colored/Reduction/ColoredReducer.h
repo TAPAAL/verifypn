@@ -49,7 +49,7 @@ namespace PetriEngine::Colored {
 
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
-            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks);
+            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks, int reductiontype, std::vector<uint32_t>& reductions);
 
             double time() const {
                 return _timeSpent;

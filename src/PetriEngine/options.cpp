@@ -129,6 +129,10 @@ void printHelp() {
         "                                       - 1  aggressive reduction (default)\n"
         "                                       - 2  reduction preserving k-boundedness\n"
         "                                       - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
+        "  -b, --color-reduction <type>         Change structural colored net reduction:\n"
+        "                                       - 0  disabled\n"
+        "                                       - 1  aggressive reduction (default)\n"
+        "                                       - 2  user defined reduction sequence, eg -b 2 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
         "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
         "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
         "                                       write -q 0 to disable query reduction\n"
@@ -324,6 +328,24 @@ bool options_t::parse(int argc, const char** argv) {
                         throw base_error("Error in reduction rule choice ", std::quoted(qn));
                     } else {
                         reductions.push_back(n);
+                    }
+                }
+            }
+        } else if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--colored-reduction") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &enablecolreduction) != 1 || enablecolreduction < 0 || enablecolreduction > 2) {
+                throw base_error("Argument Error: Invalid colored reduction argument ", std::quoted(argv[i]));
+            }
+            if (enablecolreduction == 2) {
+                std::vector<std::string> q = explode(argv[++i]);
+                for (auto& qn : q) {
+                    int32_t n;
+                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 1) {
+                        throw base_error("Error in colored reduction rule choice ", std::quoted(qn));
+                    } else {
+                        colreductions.push_back(n);
                     }
                 }
             }
