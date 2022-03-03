@@ -60,6 +60,7 @@ namespace PetriEngine {
             (*e)[0]->visit(*this);
             auto lhs = _cres;
             (*e)[1]->visit(*this);
+            if (lhs->isTuple() || _cres->isTuple()) throw base_error("Tuple-tuple comparison are not allowed: Unknown semantics");
             _bres = lhs < _cres;
         }
 
@@ -67,6 +68,7 @@ namespace PetriEngine {
             (*e)[0]->visit(*this);
             auto lhs = _cres;
             (*e)[1]->visit(*this);
+            if (lhs->isTuple() || _cres->isTuple()) throw base_error("Tuple-tuple comparison are not allowed: Unknown semantics");
             _bres = lhs <= _cres;
         }
 
@@ -74,6 +76,7 @@ namespace PetriEngine {
             (*e)[0]->visit(*this);
             auto lhs = _cres;
             (*e)[1]->visit(*this);
+            if (lhs->isTuple() || _cres->isTuple()) throw base_error("Tuple-tuple comparison are not allowed: Unknown semantics");
             _bres = lhs == _cres;
         }
 
@@ -81,6 +84,7 @@ namespace PetriEngine {
             (*e)[0]->visit(*this);
             auto lhs = _cres;
             (*e)[1]->visit(*this);
+            if (lhs->isTuple() || _cres->isTuple()) throw base_error("Tuple-tuple comparison are not allowed: Unknown semantics");
             _bres = lhs != _cres;
         }
 
