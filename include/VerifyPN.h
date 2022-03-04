@@ -111,7 +111,7 @@ using namespace PetriEngine::Reachability;
 
 
 bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                   uint32_t timeout, std::ostream &out);
+                   uint32_t timeout, std::ostream &out, int reductiontype,std::vector<uint32_t>& reductions);
 
 std::tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,

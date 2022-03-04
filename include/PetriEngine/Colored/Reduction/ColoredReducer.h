@@ -49,7 +49,7 @@ namespace PetriEngine::Colored {
 
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
-            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks);
+            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, bool preserveDeadlocks,int reductiontype,std::vector<uint32_t>& reductions);
 
             double time() const {
                 return _timeSpent;
@@ -96,7 +96,6 @@ namespace PetriEngine::Colored {
 
             void skipTransition(uint32_t tid);
 
-
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
             std::chrono::system_clock::time_point _startTime;
@@ -106,6 +105,14 @@ namespace PetriEngine::Colored {
             uint32_t _origTransitionCount;
             std::vector<uint32_t> _skippedPlaces;
             std::vector<uint32_t> _skippedTransitions;
+
+            std::vector<ReductionRule *> buildApplicationSequence(std::vector<uint32_t>& reductions) {
+                std::vector<ReductionRule *> specifiedReductions;
+                for (auto &rule: reductions) {
+                    specifiedReductions.push_back(_reductions[rule]);
+                }
+                return specifiedReductions;
+            }
 
             // Reduction rules
             RedRuleIdentity _reduceFirstPlace;

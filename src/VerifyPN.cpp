@@ -58,7 +58,7 @@ using namespace PetriEngine::Reachability;
 
 
 bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                   uint32_t timeout, std::ostream &out) {
+                   uint32_t timeout, std::ostream &out, int reductiontype, std::vector<uint32_t>& reductions) {
     if (!cpnBuilder.isColored()) return false;
 
     ColoredPlaceUseVisitor placeUseVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount());
@@ -70,7 +70,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
     }
 
     Colored::Reduction::ColoredReducer reducer(cpnBuilder);
-    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), containsDeadlockVisitor.does_contain());
+    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), containsDeadlockVisitor.does_contain(), reductiontype, reductions);
 
     auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
     auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();
@@ -85,7 +85,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
 
     auto summary = reducer.createApplicationSummary();
     for (auto& rule : summary) {
-        out << "Applications of rule " << rule.name << ": " << rule.applications;
+        out << "Applications of rule " << rule.name << ": " << rule.applications << std::endl;
     }
 
     return anyReduction;
