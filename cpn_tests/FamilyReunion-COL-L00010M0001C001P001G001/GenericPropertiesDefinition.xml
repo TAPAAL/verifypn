@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolspecific tool="genericpropertiesdefinition" version="2.0">
+  <properties>
+    <property name="CONNECTED" value="Optional-Boolean">
+      <description>There is an undirected path between every two nodes (places or transitions).</description>
+    </property>
+    <property name="CONSERVATIVE" value="Optional-Boolean">
+      <description>For each transition, the sum of valuations (i.e., "inscriptions" in PNML terminology) 
+        for all input arcs equals the sum of valuations for all output arcs.
+        Note : if there are no "multiple" arcs, the valuation of each arc is equal to one.
+      </description>
+    </property>
+    <property name="DEAD_PLACES" value="Optional-Boolean">
+      <description>One or more place(s) have no token in any reachable marking.</description>
+    </property>
+    <property name="DEAD_TRANSITIONS" value="Optional-Boolean">
+      <description>One or more transition(s) cannot fire from any reachable marking.</description>
+    </property>
+    <property name="DEADLOCK" value="Optional-Boolean">
+      <description>There exists a reachable marking from which no transition can be fired.</description>
+    </property>
+    <property name="EXTENDED_FREE_CHOICE" value="Optional-Boolean">
+      <description>All transitions sharing a common input place have the same input places.</description>
+    </property>
+    <property name="LIVE" value="Optional-Boolean">
+      <description>For every transition, from every reachable marking, one can reach a marking in which the transition can fire.</description>
+    </property>
+    <property name="LOOP_FREE" value="Optional-Boolean">
+      <description>No transition has an input place that is also an output place.</description>
+    </property>
+    <property name="MARKED_GRAPH" value="Optional-Boolean">
+      <description>Every place has exactly one input transition and exactly one output.</description>
+    </property>
+    <property name="NESTED_UNITS" value="Optional-Boolean">
+      <description>Places are structured into hierarchically nested sequential units.
+        The definition of Nested-Unit Petri Nets (NUPN) is available from http://mcc.lip6.fr/nupn.php</description>
+    </property>
+    <property name="ORDINARY" value="Optional-Boolean">
+      <description>All arcs have multiplicity one (i.e., are unity weighted).</description>
+    </property>
+    <property name="REVERSIBLE" value="Optional-Boolean">
+      <description>From every reachable marking, there is a transition path going back to the initial marking.</description>
+    </property>
+    <property name="SAFE" value="Optional-Boolean">
+      <description>In every reachable marking, there is no more than one token on each place.</description>
+    </property>
+    <property name="SIMPLE_FREE_CHOICE" value="Optional-Boolean">
+      <description>All transitions sharing a common input place have no other input place.</description>
+    </property>
+    <property name="SINK_PLACE" value="Optional-Boolean">
+      <description>One or more places have no output transitions.</description>
+    </property>
+    <property name="SINK_TRANSITION" value="Optional-Boolean">
+      <description>One or more transitions have no output places.</description>
+    </property>
+    <property name="SOURCE_PLACE" value="Optional-Boolean">
+      <description>One or more places have no input transitions.</description>
+    </property>
+    <property name="SOURCE_TRANSITION" value="Optional-Boolean">
+      <description>One or more transitions have no input places.</description>
+    </property>
+    <property name="STATE_MACHINE" value="Optional-Boolean">
+      <description>Every transition has exactly one input place and exactly one output place.</description>
+    </property>
+    <property name="STRONGLY_CONNECTED" value="Optional-Boolean">
+      <description>There is a directed path between every two nodes (places or transitions).</description>
+    </property>
+    <property name="SUBCONSERVATIVE" value="Optional-Boolean">
+      <description>For each transition, the sum of valuations for all input arcs equals or exceeds the sum of valuations for all output arcs.</description>
+    </property>
+  </properties>
+</toolspecific>
