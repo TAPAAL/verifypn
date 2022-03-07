@@ -272,4 +272,13 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
+    bool containsUpperBounds(const Condition_ptr& condition) {
+        return containsUpperBounds(condition.get());
+    }
+
+    bool containsUpperBounds(const Condition* condition) {
+        ContainsUpperBoundsVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
 }

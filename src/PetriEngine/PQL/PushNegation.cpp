@@ -31,7 +31,7 @@
 #define RETURN(x) {return_value = x; return;}
 #endif
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr initialMarkingRW(const std::function<Condition_ptr()>& func, negstat_t& stats, const EvaluationContext& context, bool _nested, bool _negated, bool initrw)
     {
@@ -703,4 +703,4 @@ namespace PetriEngine::PQL {
             return return_value;
         }
     }
-}
+} }

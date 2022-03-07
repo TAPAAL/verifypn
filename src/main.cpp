@@ -177,6 +177,7 @@ int main(int argc, const char** argv) {
                     ContainsFireabilityVisitor has_fireability;
                     Visitor::visit(has_fireability, queries[i]);
                     if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
+                    if(containsUpperBounds(queries[i])) continue;
                     auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
