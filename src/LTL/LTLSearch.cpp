@@ -79,11 +79,12 @@ namespace LTL {
         switch (heuristics) {
             case LTLHeuristic::Distance:
                 return std::make_unique<DistanceHeuristic>(&net, negated_formula);
-            default:
             case LTLHeuristic::Automaton:
                 return std::make_unique<AutomatonHeuristic>(&net, automaton);
             case LTLHeuristic::FireCount:
                 return std::make_unique<LogFireCountHeuristic>(net.numberOfTransitions(), 5000);
+            default:
+                throw base_error("Unknown LTL heuristics: ", to_underlying(heuristics));
         }
     }
 
