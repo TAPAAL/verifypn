@@ -119,14 +119,14 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability) {
                     if(alg == LTL::Algorithm::NDFS && por != LTL::LTLPartialOrder::None)
                         continue;
                         for(auto heur : { LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
-                        LTL::LTLHeuristic::FireCount, LTL::LTLHeuristic::DFS, LTL::LTLHeuristic::DFS})
+                        LTL::LTLHeuristic::FireCount, LTL::LTLHeuristic::DFS, LTL::LTLHeuristic::RDFS})
                     {
                         std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace
                             << " por=" << to_underlying(por) << " heur=" << to_underlying(heur) << std::endl;
                         Strategy strategy = Strategy::HEUR;
                         if(heur == LTL::LTLHeuristic::DFS)
-                            strategy = Strategy::HEUR;
-                        if(heur == LTL::LTLHeuristic::DFS)
+                            strategy = Strategy::DFS;
+                        if(heur == LTL::LTLHeuristic::RDFS)
                             strategy = Strategy::RDFS;
                         LTL::LTLSearch search(*pn, conditions[i], LTL::BuchiOptimization::Low, LTL::APCompression::None);
                         auto r = search.solve(trace, 0, alg, por, strategy, heur, true);
