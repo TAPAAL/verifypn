@@ -234,7 +234,7 @@ namespace LTL {
         }
         if (!dstack.empty()) {
             update(cstack, dstack, successorGenerator, p);
-            if constexpr (std::is_same<SuccGen, SuccGen>::value) {
+            if constexpr (std::is_same<SuccGen, SpoolingSuccessorGenerator>::value) {
                 successorGenerator.pop(dstack.back()._sucinfo);
             }
         }
