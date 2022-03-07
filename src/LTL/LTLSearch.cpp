@@ -70,7 +70,7 @@ namespace LTL {
         const Strategy search_strategy = Strategy::HEUR,
         const LTLHeuristic heuristics = LTLHeuristic::Automaton,
         const uint64_t seed = 0) {
-        if (search_strategy == Strategy::RDFS) {
+        if (search_strategy == Strategy::RDFS || heuristics == LTLHeuristic::RDFS) {
             return std::make_unique<RandomHeuristic>(seed);
         }
         if (search_strategy != Strategy::HEUR && search_strategy != Strategy::DEFAULT) {
@@ -83,6 +83,9 @@ namespace LTL {
                 return std::make_unique<AutomatonHeuristic>(&net, automaton);
             case LTLHeuristic::FireCount:
                 return std::make_unique<LogFireCountHeuristic>(net.numberOfTransitions(), 5000);
+            case LTLHeuristic::DFS:
+            case LTLHeuristic::RDFS:
+                return nullptr;
             default:
                 throw base_error("Unknown LTL heuristics: ", to_underlying(heuristics));
         }
