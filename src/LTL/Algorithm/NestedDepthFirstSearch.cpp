@@ -156,11 +156,7 @@ namespace LTL {
 
     void NestedDepthFirstSearch::print_stats(std::ostream &os) const
     {
-        std::cout << "STATS:\n"
-                  << "\tdiscovered states:          " << _states.discovered() << std::endl
-                  << "\tmax tokens:                 " << _states.max_tokens() << std::endl
-                  << "\texplored states:            " << _mark_count[MARKER1] << std::endl
-                  << "\texplored states (nested):   " << _mark_count[MARKER2] << std::endl;
+        ModelChecker::print_stats(os, _states.discovered(), _states.max_tokens());
     }
 
 

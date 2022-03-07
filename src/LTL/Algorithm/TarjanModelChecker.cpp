@@ -168,7 +168,7 @@ namespace LTL {
                 }
                 if (!_store.exists(stateid).first) {
                     auto bstate = StateSet::get_buchi_state(stateid);
-                    if(_weakskip &&
+                    if(_shortcircuitweak &&
                        successorGenerator.is_accepting(bstate) &&
                        successorGenerator.has_invariant_self_loop(bstate))
                     {

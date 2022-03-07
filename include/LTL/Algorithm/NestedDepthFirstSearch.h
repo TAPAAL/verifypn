@@ -57,7 +57,7 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
         std::pair<bool,size_t> mark(State& state, uint8_t);
 
-        LTL::Structures::BitProductStateSet<ptrie::map<Structures::ProductStateSetInterface::stateid_t, uint8_t>> _states;
+        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> _states;
 
         ptrie::map<size_t, uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;

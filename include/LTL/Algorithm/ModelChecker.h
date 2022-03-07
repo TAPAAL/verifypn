@@ -96,17 +96,11 @@ namespace LTL {
                     << "\tmax tokens:        " << max_tokens << std::endl;
         }
 
-        virtual void print_stats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) const {
-            print_stats(os, stateSet.discovered(), stateSet.max_tokens());
-        }
-
-
         const PetriEngine::PetriNet& _net;
         PetriEngine::PQL::Condition_ptr _formula;
         Structures::ProductStateFactory _factory;
         const Structures::BuchiAutomaton& _buchi;
         bool _shortcircuitweak;
-        bool _weakskip = false;
         bool _build_trace = false;
         Heuristic* _heuristic = nullptr;
         size_t _loop = std::numeric_limits<size_t>::max();

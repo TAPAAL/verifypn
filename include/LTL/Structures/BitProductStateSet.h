@@ -26,38 +26,19 @@
 
 namespace LTL { namespace Structures {
 
-    class ProductStateSetInterface {
-    public:
-        using stateid_t = size_t;
-        using result_t = std::tuple<bool, stateid_t, size_t>;
-
-        virtual result_t add(const LTL::Structures::ProductState &state) = 0;
-
-        virtual void decode(LTL::Structures::ProductState &state, stateid_t id) = 0;
-
-        virtual void set_history(stateid_t id, size_t transition) {}
-
-        virtual std::pair<size_t, size_t> get_history(stateid_t stateid)
-        {
-            return std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
-        }
-
-        virtual size_t discovered() const = 0;
-
-        virtual size_t max_tokens() const = 0;
-
-        virtual ~ProductStateSetInterface() = default;
-
-    };
 
     /**
      * Bit-hacking product state set for storing pairs (M, q) compactly in 64 bits.
      * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
      * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 20-bit. Max is 32-bit.
      */
-    template<typename stateset_type = ptrie::set<ProductStateSetInterface::stateid_t,17,32,8>, uint8_t nbits = 20>
-    class BitProductStateSet : public ProductStateSetInterface {
+    using stateid_t = size_t;
+    using result_t = std::tuple<bool, stateid_t, size_t>;
+
+    template<typename stateset_type = ptrie::set<stateid_t,17,32,8>, uint8_t nbits = 20>
+    class BitProductStateSet {
     public:
+
         explicit BitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
                 : _markings(net, kbound, net.numberOfPlaces())
         {
@@ -78,9 +59,10 @@ namespace LTL { namespace Structures {
         /**
          * Insert a product state into the state set.
          * @param state the product state to insert.
-         * @return pair of [success, ID]
+         * @return tripple of [success, ID, data_id] where data_id can be used
+         *         for quick-access via get_data (constant-time lookup).
          */
-        result_t add(const LTL::Structures::ProductState &state) override
+        result_t add(const LTL::Structures::ProductState &state)
         {
             ++_discovered;
             const auto res = _markings.add(state);
@@ -94,7 +76,11 @@ namespace LTL { namespace Structures {
             return {is_new, product_id, data_id};
         }
 
-
+        /**
+         * Gets the associated data of a data_id, constants-time
+         * @param data_id
+         * @return the data-object pointed to by data_id (obtained by the add() method).
+         */
         auto& get_data(size_t data_id) {
             return _states.get_data(data_id);
         }
@@ -105,7 +91,7 @@ namespace LTL { namespace Structures {
          * @param state Output parameter to write product state to.
          * @return true if the state was successfully retrieved, false otherwise.
          */
-        void decode(LTL::Structures::ProductState &state, stateid_t id) override
+        virtual void decode(LTL::Structures::ProductState &state, stateid_t id)
         {
             assert(_states.exists(id).first);
             auto marking_id = get_marking_id(id);
@@ -114,9 +100,9 @@ namespace LTL { namespace Structures {
             state.set_buchi_state(buchi_state);
         }
 
-        size_t discovered() const override { return _discovered; }
+        size_t discovered() const { return _discovered; }
 
-        size_t max_tokens() const override { return _markings.maxTokens(); }
+        size_t max_tokens() const { return _markings.maxTokens(); }
 
     protected:
 
@@ -131,27 +117,26 @@ namespace LTL { namespace Structures {
     };
 
     template<uint8_t nbits = 20>
-    class TraceableBitProductStateSet : public BitProductStateSet<ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>, nbits> {
-        using stateid_t = typename BitProductStateSet<ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>, nbits>::stateid_t;
+    class TraceableBitProductStateSet : public BitProductStateSet<ptrie::map<stateid_t,std::pair<size_t,size_t>>, nbits> {
     public:
         explicit TraceableBitProductStateSet(const PetriEngine::PetriNet& net, uint32_t kbound = 0)
-                : BitProductStateSet<ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>,nbits>(net, kbound)
+                : BitProductStateSet<ptrie::map<stateid_t,std::pair<size_t,size_t>>,nbits>(net, kbound)
         {
         }
 
         void decode(ProductState &state, stateid_t id) override
         {
             _parent = id;
-            BitProductStateSet<ptrie::map<ProductStateSetInterface::stateid_t,std::pair<size_t,size_t>>,nbits>::decode(state, id);
+            BitProductStateSet<ptrie::map<stateid_t,std::pair<size_t,size_t>>,nbits>::decode(state, id);
         }
 
-        void set_history(stateid_t id, size_t transition) override
+        void set_history(stateid_t id, size_t transition)
         {
             assert(this->_states.exists(id).first);
             this->_states[id] = {_parent, transition};
         }
 
-        std::pair<size_t, size_t> get_history(stateid_t stateid) override
+        std::pair<size_t, size_t> get_history(stateid_t stateid)
         {
             assert(this->_states.exists(stateid).first);
             return this->_states[stateid];
