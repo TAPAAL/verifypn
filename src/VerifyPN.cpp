@@ -46,6 +46,8 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "LTL/LTLValidator.h"
+#include "LTL/Simplification/SpotToPQL.h"
 
 #include <mutex>
 
@@ -326,7 +328,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond, options);
+        cond = LTL::simplify(cond, options.buchiOptimization, options.ltl_compress_aps);
     }
     negstat_t stats;
 
@@ -353,7 +355,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
             std::scoped_lock scopedLock{spot_mutex};
 #endif
-            return LTL::simplify(r, options);
+            return LTL::simplify(r, options.buchiOptimization, options.ltl_compress_aps);
         }
     }, stats, evalContext, false, false, true);
 

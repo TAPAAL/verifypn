@@ -19,7 +19,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     /** Count size of the entire formula in number of nodes */
     int formulaSize(const Condition_constptr & condition);
     int formulaSize(const Expr_ptr& element);
@@ -75,7 +75,5 @@ namespace PetriEngine::PQL {
 
         void _accept(const LogicalCondition *condition) override;
     };
-
-}
-
+} }
 #endif //VERIFYPN_FORMULASIZE_H

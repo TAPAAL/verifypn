@@ -18,8 +18,8 @@
 #ifndef VERIFYPN_SPOTTOPQL_H
 #define VERIFYPN_SPOTTOPQL_H
 
-#include "PetriEngine/PQL/Expressions.h"
 #include "LTL/LTLToBuchi.h"
+#include "PetriEngine/PQL/Expressions.h"
 #include <spot/tl/formula.hh>
 
 namespace LTL {
@@ -36,7 +36,7 @@ namespace LTL {
      * @param formula The formula to simplify.
      * @return the simplified formula.
      */
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, const options_t &options);
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, BuchiOptimization optimization = BuchiOptimization::High, APCompression compression = APCompression::None);
 }
 
 #endif // VERIFYPN_SPOTTOPQL_H

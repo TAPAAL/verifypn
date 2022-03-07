@@ -19,39 +19,58 @@
 #define VERIFYPN_BUCHIAUTOMATON_H
 
 #include "LTL/LTLToBuchi.h"
-#include "LTL/AlgorithmTypes.h"
+#include "LTL/LTLOptions.h"
 #include "PetriEngine/PQL/Evaluation.h"
-#include <spot/twa/twagraph.hh>
-#include <unordered_map>
 
+#include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/neverclaim.hh>
 
-namespace LTL::Structures {
-    struct BuchiAutomaton {
+#include <unordered_map>
+
+namespace LTL { namespace Structures {
+    class BuchiAutomaton {
+    private:
+        spot::twa_graph_ptr _buchi = nullptr;
+        std::unordered_map<int, AtomicProposition> _ap_info;
+
+    public:
         BuchiAutomaton(spot::twa_graph_ptr buchi, std::unordered_map<int, AtomicProposition> apInfo)
-                : _buchi(std::move(buchi)), ap_info(std::move(apInfo)) {
-            dict = _buchi->get_dict();
+                : _buchi(std::move(buchi)), _ap_info(std::move(apInfo)) {
         }
 
-        spot::twa_graph_ptr _buchi;
-        const std::unordered_map<int, AtomicProposition> ap_info;
-        spot::bdd_dict_ptr dict;
+        BuchiAutomaton() {};
 
+        BuchiAutomaton(BuchiAutomaton&&) = default;
+        BuchiAutomaton& operator=(BuchiAutomaton&& other) = default;
 
-        void output_buchi(const std::string& file, BuchiOutType type)
+        BuchiAutomaton(const BuchiAutomaton&) = default;
+        BuchiAutomaton& operator=(const BuchiAutomaton&) = default;
+
+        const spot::twa_graph& buchi() const {
+            return *_buchi;
+        }
+
+        const spot::twa_graph_ptr& buchi_ptr() const {
+            return _buchi;
+        }
+
+        const std::unordered_map<int, AtomicProposition>& ap_info() const {
+            return _ap_info;
+        }
+
+        void output_buchi(std::ostream& os, BuchiOutType type)
         {
-            std::ofstream fs(file);
             switch (type) {
                 case BuchiOutType::Dot:
-                    spot::print_dot(fs, _buchi);
+                    spot::print_dot(os, _buchi);
                     break;
                 case BuchiOutType::HOA:
-                    spot::print_hoa(fs, _buchi, "s");
+                    spot::print_hoa(os, _buchi, "s");
                     break;
                 case BuchiOutType::Spin:
-                    spot::print_never_claim(fs, _buchi);
+                    spot::print_never_claim(os, _buchi);
                     break;
             }
         }
@@ -67,7 +86,7 @@ namespace LTL::Structures {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
                 using PetriEngine::PQL::Condition;
-                Condition::Result res = PetriEngine::PQL::evaluate(ap_info.at(var).expression.get(), ctx);
+                Condition::Result res = PetriEngine::PQL::evaluate(_ap_info.at(var)._expression.get(), ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:
                         assert(false);
@@ -84,6 +103,6 @@ namespace LTL::Structures {
             return bdd == bddtrue;
         }
     };
-}
+} }
 
 #endif //VERIFYPN_BUCHIAUTOMATON_H

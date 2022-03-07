@@ -26,34 +26,30 @@ namespace LTL {
     template<typename S, typename Spooler>
     class ReachStubProductSuccessorGenerator : public ProductSuccessorGenerator<S> {
     public:
-        ReachStubProductSuccessorGenerator(const PetriEngine::PetriNet *net, const Structures::BuchiAutomaton &buchi,
-                                           S *successorGen, std::unique_ptr<Spooler> &&fallbackSpooler)
+
+        using successor_info_t = typename S::successor_info_t;
+        static constexpr auto initial_suc_info() { return S::initial_suc_info(); }
+
+        ReachStubProductSuccessorGenerator(const PetriEngine::PetriNet& net, const Structures::BuchiAutomaton &buchi,
+                                           S& successorGen, std::unique_ptr<Spooler> &&fallbackSpooler)
                 : ProductSuccessorGenerator<S>(net, buchi, successorGen), _fallback_spooler(std::move(fallbackSpooler))
         {
-            //_fallback_spooler = std::make_unique<Spooler>(fallbackSpooler);
-/*            if constexpr (std::is_same_v<Spooler, EnabledSpooler>) {
-                _fallback_spooler = std::make_unique<Spooler>(net, static_cast<PetriEngine::SuccessorGenerator&>(this->_successor_generator));
-            }
-            else {
-                _fallback_spooler = std::make_unique<Spooler>(net);
-            }*/
-            // Create the set of büchi states from which we can use reachability stubborn sets.
             calc_safe_reach_states(buchi);
-            _reach = std::make_unique<SafeAutStubbornSet>(*net, _progressing_formulae);
-
+            _reach = std::make_unique<SafeAutStubbornSet>(net, _progressing_formulae);
         }
 
         void calc_safe_reach_states(const Structures::BuchiAutomaton &buchi) {
             assert(_reach_states.empty());
-            std::vector<AtomicProposition> aps(buchi.ap_info.size());
-            std::transform(std::begin(buchi.ap_info), std::end(buchi.ap_info), std::begin(aps),
-                           [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-            for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
+            std::vector<AtomicProposition> aps;
+            aps.reserve(buchi.ap_info().size());
+            for(auto& [id, ap] : buchi.ap_info())
+                aps.emplace_back(ap);
+            for (unsigned state = 0; state < buchi.buchi().num_states(); ++state) {
                 //if (buchi._buchi->state_is_accepting(state)) continue;
 
                 bdd retarding = bddfalse;
                 bdd progressing = bddfalse;
-                for (auto &e : buchi._buchi->out(state)) {
+                for (auto &e : buchi.buchi().out(state)) {
                     if (e.dst == state) {
                         retarding = e.cond;
                     }
@@ -62,8 +58,8 @@ namespace LTL {
                     }
                 }
                 bdd sink_prop = bdd_not(retarding | progressing);
-                auto prog_cond = toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps);
-                auto ret_cond = toPQL(spot::bdd_to_formula(retarding, buchi.dict), aps);
+                auto prog_cond = toPQL(spot::bdd_to_formula(progressing, buchi.buchi().get_dict()), aps);
+                auto ret_cond = toPQL(spot::bdd_to_formula(retarding, buchi.buchi().get_dict()), aps);
                 auto sink_cond = sink_prop == bdd_false()
                                  ? PetriEngine::PQL::BooleanCondition::FALSE_CONSTANT
                                  : std::make_shared<PetriEngine::PQL::NotCondition>(
@@ -71,7 +67,7 @@ namespace LTL {
                         );
                 _reach_states.insert(std::make_pair(
                         state,
-                        BuchiEdge{progressing | sink_prop,
+                        buchi_edge_t{progressing | sink_prop,
                                   ret_cond,
                                   prog_cond,
                                   sink_cond}));
@@ -80,42 +76,41 @@ namespace LTL {
 
         void prepare(const LTL::Structures::ProductState *state, typename S::successor_info_t &sucinfo) override
         {
-            auto suc = _reach_states.find(state->getBuchiState());
+            auto suc = _reach_states.find(state->get_buchi_state());
             // assert valid since all states are reducible when considering
             // the sink progressing formula and key transitions in accepting states.
             assert(suc != std::end(_reach_states));
-            if (suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
-                //_reach->setQuery(suc->second.prog_cond.get());
-                _reach->set_buchi_conds(suc->second.ret_cond, suc->second.prog_cond, suc->second.pseudo_sink_cond);
-                set_spooler(_reach.get());
+            if (suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second._bddCond)) {
+                _reach->set_buchi_conds(suc->second._ret_cond, suc->second._prog_cond, suc->second._pseudo_sink_cond);
+                set_spooler(*_reach);
             }
             else {
-                set_spooler(_fallback_spooler.get());
+                set_spooler(*_fallback_spooler);
             }
             ProductSuccessorGenerator<S>::prepare(state, sucinfo);
         }
 
     private:
-        void set_spooler(SuccessorSpooler *spooler)
+        void set_spooler(SuccessorSpooler& spooler)
         {
             if constexpr (std::is_same_v<S, LTL::SpoolingSuccessorGenerator>)
-                this->_successor_generator->setSpooler(spooler);
+                this->_successor_generator.set_spooler(spooler);
             else {
                 assert(false);
                 throw base_error("Fatal error");
             }
         }
 
-        struct BuchiEdge{
-            bdd bddCond;
-            PetriEngine::PQL::Condition_ptr ret_cond;
-            PetriEngine::PQL::Condition_ptr prog_cond;
-            PetriEngine::PQL::Condition_ptr pseudo_sink_cond;
+        struct buchi_edge_t{
+            bdd _bddCond;
+            PetriEngine::PQL::Condition_ptr _ret_cond;
+            PetriEngine::PQL::Condition_ptr _prog_cond;
+            PetriEngine::PQL::Condition_ptr _pseudo_sink_cond;
         };
 
         std::unique_ptr<Spooler> _fallback_spooler;
         std::unique_ptr<LTL::SafeAutStubbornSet> _reach;
-        std::unordered_map<size_t, BuchiEdge> _reach_states;
+        std::unordered_map<size_t, buchi_edge_t> _reach_states;
         std::vector<PetriEngine::PQL::Condition_ptr> _progressing_formulae;
 
     };

@@ -16,8 +16,8 @@
  */
 
 #include "LTL/LTLToBuchi.h"
-#include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
-#include "PetriEngine/options.h"
+#include "LTL/Structures/BuchiAutomaton.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
@@ -194,23 +194,42 @@ namespace LTL {
         Visitor::visit(this, (*condition)[0]);
     }
 
+    spot::formula FormulaToSpotSyntax::make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element) {
+        auto cond =
+                const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
+        std::stringstream ss;
+        bool choice = _compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
+        if (_compress == APCompression::Full || choice) {
+            // FIXME Very naive; this completely removes APs being in multiple places in the query,
+            // leading to some query not being answered as is. The net gain is large in the firebaility category,
+            // but ideally it would be possible to make a smarter approach that looks at previously stored APs
+            // and efficiently checks for repeat APs such that we can reuse APs.
+            ss << _ap_info.size();
+        } else {
+            PetriEngine::PQL::QueryPrinter _printer{ss};
+            Visitor::visit(_printer, cond);
+        }
+        _ap_info.push_back(AtomicProposition{cond, ss.str()});
+        return spot::formula::ap(_ap_info.back()._text);
+    }
+
     std::pair<spot::formula, APInfo>
-    to_spot_formula (const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
-        FormulaToSpotSyntax spotConverter{options.ltl_compress_aps};
+    to_spot_formula (const PetriEngine::PQL::Condition_ptr &query, APCompression compression) {
+        FormulaToSpotSyntax spotConverter{compression};
         Visitor::visit(spotConverter, query);
         auto spot_formula = spotConverter.formula();
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, const options_t &options) {
-        auto [formula, apinfo] = to_spot_formula(query, options);
+    Structures::BuchiAutomaton make_buchi_automaton(const PetriEngine::PQL::Condition_ptr &query, BuchiOptimization optimization, APCompression compression) {
+        auto [formula, apinfo] = to_spot_formula(query, compression);
         formula = spot::formula::Not(formula);
         spot::translator translator;
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
         spot::postprocessor::optimization_level level;
-        switch(options.buchiOptimization) {
+        switch(optimization) {
             case BuchiOptimization::Low:
                 level = spot::postprocessor::Low;
                 break;
@@ -227,15 +246,11 @@ namespace LTL {
         // bind PQL expressions to the atomic proposition IDs used by spot.
         // the resulting map can be indexed using variables mentioned on edges of the created Büchi automaton.
         for (const auto &info : apinfo) {
-            int varnum = automaton->register_ap(info.text);
+            int varnum = automaton->register_ap(info._text);
             ap_map[varnum] = info;
         }
 
-        return Structures::BuchiAutomaton{automaton, ap_map};
-    }
-
-    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, const options_t &options) {
-        return BuchiSuccessorGenerator{makeBuchiAutomaton(query, options)};
+        return Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)};
     }
 
 }

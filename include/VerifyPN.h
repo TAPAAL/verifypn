@@ -94,8 +94,6 @@
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/Unfolder.h"
-#include "LTL/LTL.h"
-#include "LTL/LTLMain.h"
 
 #include "PetriEngine/TraceReplay.h"
 

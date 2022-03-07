@@ -98,7 +98,7 @@ namespace PetriEngine::PQL {
     }
 
     uint32_t
-    CompareCondition::_distance(DistanceContext &c, std::function<uint32_t(uint32_t, uint32_t, bool)> d) const {
+    CompareCondition::_distance(DistanceContext &c, std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const {
         return d(evaluate(_expr1.get(), c), evaluate(_expr2.get(), c), c.negated());
     }
 

@@ -47,6 +47,8 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
+#include "LTL/LTLSearch.h"
+#include "PetriEngine/PQL/PQL.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -365,11 +367,35 @@ int main(int argc, const char** argv) {
                 options.usedltl = true;
 
                 for (auto qid: ltl_ids) {
-                    auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
+                    LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
+                    auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
+                        options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
+                        options.strategy, options.ltlHeuristic, options.seed_offset);
+
+                    if(options.printstatistics)
+                        search.print_stats(std::cout);
+
+                    std::cout << "FORMULA " << querynames[qid]
+                        << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                        << LTL::to_string(options.ltlalgorithm)
+                        << (search.is_weak() ? " WEAK_SKIP" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::None ? " STUBBORN" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Automaton ? " AUT_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Liebke ? " LIEBKE_STUB" : "");
+                    auto heur = search.heuristic_type();
+                    if (!heur.empty())
+                        std::cout << " HEURISTIC " << heur;
+                    std::cout << " OPTIM-" << to_underlying(options.buchiOptimization) << std::endl;
+
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
+                    if(options.trace != TraceLevel::None)
+                        search.print_trace(std::cerr, *builder.getReducer());
+
                 }
+
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
                     return to_underlying(ReturnValue::SuccessCode);
                 }
