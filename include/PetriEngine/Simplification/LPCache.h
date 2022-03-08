@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   LPFactory.h
  * Author: Peter G. Jensen
  *
@@ -25,7 +25,7 @@ namespace PetriEngine {
         public:
             LPCache();
             virtual ~LPCache();
-            Vector* createAndCache(const std::vector<int>& data)
+            Vector* createAndCache(const std::vector<int64_t>& data)
             {
                 auto res = vectors.insert(Vector(data));
                 Vector& v = const_cast<Vector&>(*res.first);
@@ -34,14 +34,14 @@ namespace PetriEngine {
                // assert(v.refs() > 0);
                 return &v;
             }
-            
+
             void invalidate(const Vector& vector)
             {
              //   vectors.erase(vector);
              //   assert(vector.refs() == 0);
             }
 
-            
+
         private:
             // unordered_map does not invalidate on insert, only erase
             std::unordered_set<Vector> vectors;
