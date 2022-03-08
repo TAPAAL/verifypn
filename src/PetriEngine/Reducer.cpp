@@ -1,8 +1,13 @@
 /*
  * File:   Reducer.cpp
- * Author: srba
+ * Authors:
+ *      Jiri Srba
+ *      Jesper Adriaan van Diepen
+ *      Nicolaj Østerby Jensen
+ *      Masthias Mehl Sørensen
  *
  * Created on 15 February 2014, 10:50
+ * Updated 7 March 2022
  */
 
 #include "PetriEngine/Reducer.h"
@@ -2333,6 +2338,7 @@ else if (inhibArcs == 0)
                     continue;
                 }
 
+                // TODO Build all full combinations in one go, instead of appending one consumer at a time
                 // Combine producer with the consumers
                 for (auto con_id : place.consumers)
                 {
@@ -2723,7 +2729,7 @@ else if (inhibArcs == 0)
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
                 }
-                if (!(all_ltl || all_reach) && reduction[i] == 17) {
+                if (!(all_ltl || all_reach) && (reduction[i] == 17 || reduction[i] == 18)) {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is not LTL" << std::endl;
                     reduction.erase(reduction.begin() + i);
                 }
