@@ -2671,44 +2671,45 @@ else if (inhibArcs == 0)
                 }
             }
         }
-        else if (enablereduction == 1) { // in the aggressive reduction all six rules are used as long as they remove something
-            bool changed = false;
-            do
-            {
-                if(remove_loops && !next_safe)
-                    if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                do{
-                    do { // start by rules that do not move tokens
-                        changed = false;
-                        if (ReducebyRuleEFMNOP(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe)
-                        {
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            if(!remove_loops)
-                                if (ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
-                            //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
-                        }
-                    } while(changed && !hasTimedout());
-                    if(!next_safe)
-                    { // then apply tokens moving rules
-                        //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true; // For cleanup
-                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                        while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                        if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
-                        while(all_ltl && ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
-                    }
-                } while(changed && !hasTimedout());
-                if(!next_safe && !changed)
-                {
-                    // Only try RuleH last. It can reduce applicability of other rules.
-                    while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
-                }
-            } while(!hasTimedout() && changed);
+        else if (enablereduction == 1) {
+            if (!all_ltl) {
+                // A good rule application sequence for CTL
+                bool changed = false;
+                do {
+                    changed = false;
+                    while (!next_safe && ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                    while (!next_safe && ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    if (ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    if (ReducebyRuleEFMNOP(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    if (!next_safe && ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                } while (!hasTimedout() && changed);
 
+            } else {
+                // A good rule application sequence of LTL
+                bool changed = false;
+                uint32_t explosion_limit = 2;
+                do {
+                    changed = false;
+                    if (!next_safe && ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    while (!next_safe && ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                    while (!next_safe && ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    if (ReducebyRuleEFMNOP(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && all_ltl && ReducebyRuleS(context.getQueryPlaceCount(), remove_consumers, remove_loops, explosion_limit)) changed = true;
+                    if (ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    if (!next_safe && ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    if (!next_safe && ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+
+                    explosion_limit *= 2;
+
+                } while(!hasTimedout() && changed);
+
+                if (!next_safe) ReducebyRuleQ(context.getQueryPlaceCount());
+                if (!next_safe && all_ltl) ReducebyRuleR(context.getQueryPlaceCount());
+            }
         }
         else
         {
