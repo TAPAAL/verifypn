@@ -115,7 +115,7 @@ namespace PetriEngine {
             bool operator==(const Member& m) const {
                 size_t min = std::min(_variables.size(), m.size());
                 size_t max = std::max(_variables.size(), m.size());
-                if(memcmp(_variables.data(), m._variables.data(), sizeof(int)*min) != 0)
+                if(!std::equal(_variables.begin(), _variables.begin() + min, m._variables.begin()))
                 {
                     return false;
                 }
