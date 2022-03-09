@@ -226,14 +226,6 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
-    void ContainsNextVisitor::_accept(const EXCondition* condition) {
-        setConditionFound();
-    }
-
-    void ContainsNextVisitor::_accept(const AXCondition* condition) {
-        setConditionFound();
-    }
-
     bool containsUpperBounds(const Condition_ptr& condition) {
         return containsUpperBounds(condition.get());
     }

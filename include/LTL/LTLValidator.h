@@ -27,15 +27,20 @@ namespace LTL {
 
         operator bool() const { return !bad(); }
 
-        bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
-            std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
-                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
-                Visitor::visit(this, (*quantifierCondition)[0]);
+        static inline bool isLTL(const PetriEngine::PQL::Condition_ptr& condition)
+        {
+            return isLTL(condition.get());
+        }
+        static inline bool isLTL(const PetriEngine::PQL::Condition* condition) {
+            LTLValidator v;
+            const PetriEngine::PQL::SimpleQuantifierCondition* quantifierCondition;
+            if ((quantifierCondition = dynamic_cast<const PetriEngine::PQL::ACondition*>(condition)) != nullptr ||
+                (quantifierCondition = dynamic_cast<const PetriEngine::PQL::ECondition*>(condition)) != nullptr ){
+                Visitor::visit(&v, (*quantifierCondition)[0]);
             } else {
-                Visitor::visit(this, condition);
+                Visitor::visit(&v, condition);
             }
-            return !bad();
+            return !v.bad();
         }
 
     protected:

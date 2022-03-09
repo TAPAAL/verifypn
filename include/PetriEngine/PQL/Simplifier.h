@@ -47,6 +47,13 @@ namespace PetriEngine::PQL {
         template <typename Quantifier>
         Retval simplify_simple_quantifier(Retval &r);
 
+        void simplify_until(const Condition_ptr& cond1, const Condition_ptr& cond2);
+        void simplify_equal(const Expr_ptr& e1, const Expr_ptr& e2);
+        void simplify_less(const Expr_ptr& e1, const Expr_ptr& e2);
+
+        void simplify_finally(const Condition_ptr& cond);
+        void simplify_exists(const Condition_ptr& cond);
+
         void _accept(const NotCondition *element) override;
 
         void _accept(const AndCondition *element) override;

@@ -195,7 +195,7 @@ namespace PetriEngine {
                 _negated = !_negated;
             }
 
-            bool negated() const {
+            [[nodiscard]] bool negated() const {
                 return _negated;
             }
 
