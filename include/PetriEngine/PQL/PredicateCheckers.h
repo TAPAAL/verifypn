@@ -109,6 +109,7 @@ namespace PetriEngine::PQL {
 
 
     bool containsNext(const Condition_ptr& condition);
+    bool containsNext(const Condition* condition);
 
     class ContainsNextVisitor : public AnyVisitor {
         void _accept(const XCondition *condition) override;
@@ -125,6 +126,21 @@ namespace PetriEngine::PQL {
             setConditionFound();
         }
     };
+
+    class ContainsUpperBoundsVisitor : public AnyVisitor {
+        void _accept(const UpperBoundsCondition* c) override
+        {
+            setConditionFound();
+        }
+
+        void _accept(const UnfoldedUpperBoundsCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
+    bool containsUpperBounds(const Condition* condition);
+    bool containsUpperBounds(const Condition_ptr& condition);
 }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

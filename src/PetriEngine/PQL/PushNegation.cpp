@@ -32,7 +32,7 @@
 #define RETURN(x) {return_value = x; return;}
 #endif
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr initialMarkingRW(const std::function<Condition_ptr()>& func, negstat_t& stats, const EvaluationContext& context, bool _nested, bool _negated, bool initrw)
     {
@@ -100,7 +100,7 @@ namespace PetriEngine::PQL {
     }
 
     uint32_t
-    CompareCondition::_distance(DistanceContext &c, std::function<uint32_t(uint32_t, uint32_t, bool)> d) const {
+    CompareCondition::_distance(DistanceContext &c, std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const {
         return d(evaluate(_expr1.get(), c), evaluate(_expr2.get(), c), c.negated());
     }
 
@@ -735,7 +735,10 @@ namespace PetriEngine::PQL {
         if (negated) {
             throw base_error("UPPER BOUNDS CANNOT BE NEGATED!");
         }
-        RETURN(element->clone())
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+            RETURN(element->clone())
     }
 
     void PushNegationVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
@@ -806,4 +809,4 @@ namespace PetriEngine::PQL {
             return return_value;
         }
     }
-}
+} }

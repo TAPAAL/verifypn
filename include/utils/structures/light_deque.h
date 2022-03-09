@@ -49,7 +49,7 @@ class light_deque
             _data = nullptr;
         }
 
-        void push_back(const T& element)
+        inline void push_back(const T& element)
         {
             new (&_data[_back]) T(element);
             ++_back;
@@ -59,7 +59,7 @@ class light_deque
             }
         }
 
-        void push_back(T&& element)
+        inline void push_back(T&& element)
         {
             new (&_data[_back]) T(std::move(element));
             ++_back;
@@ -68,35 +68,35 @@ class light_deque
             }
         }
 
-        bool empty() const
+        inline bool empty() const
         {
             return _front == _back;
         }
 
-        size_t size() const
+        inline size_t size() const
         {
             return _back - _front;
         }
 
-        const T& front() const
+        inline const T& front() const
         {
             return _data[_front];
         }
 
-        T& front() {
+        inline T& front() {
             return _data[_front];
         }
 
-        const T& back() const
+        inline const T& back() const
         {
             return _data[_back - 1];
         }
 
-        T& back() {
+        inline T& back() {
             return _data[_back - 1];
         }
 
-        void pop_front()
+        inline void pop_front()
         {
             _data[_front].~T();
             ++_front;
@@ -106,7 +106,7 @@ class light_deque
             }
         }
 
-        void pop_back()
+        inline void pop_back()
         {
             if(_back > _front)
             {
@@ -117,27 +117,35 @@ class light_deque
                 clear();
         }
 
-        void clear()
+        inline void clear()
         {
             for(auto& e : *this)
                 e.~T();
             _front = _back = 0;
         }
 
-        T* begin() {
+        inline T* begin() {
             return &front();
         }
 
-        T* end() {
+        inline T* end() {
             return &_data[_back];
         }
 
-        const T* begin() const {
+        inline const T* begin() const {
             return &front();
         }
 
-        const T* end() const {
+        inline const T* end() const {
             return &_data[_back];
+        }
+
+        inline const T& operator[](size_t i) const {
+            return *(begin() + i);
+        }
+
+        inline T& operator[](size_t i) {
+            return *(begin() + i);
         }
 
         private:

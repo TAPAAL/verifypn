@@ -1,4 +1,7 @@
 #include "PetriEngine/Colored/PartitionBuilder.h"
+#include "PetriEngine/Colored/OutputIntervalVisitor.h"
+#include "PetriEngine/Colored/RestrictVisitor.h"
+#include "PetriEngine/Colored/ArcIntervalVisitor.h"
 #include <numeric>
 #include <chrono>
 
@@ -11,25 +14,12 @@ namespace PetriEngine {
         : PartitionBuilder(transitions, places, nullptr){
         }
 
-        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places, const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
-        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size()) {
+        PartitionBuilder::PartitionBuilder(const std::vector<Transition> &transitions, const std::vector<Place> &places,
+            const std::vector<Colored::ColorFixpoint> *placeColorFixpoints)
+        : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size())
+        , _fixed_point(placeColorFixpoints) {
 
-            //Instantiate partitions
-            for(uint32_t i = 0; i < _places.size(); i++){
-                const PetriEngine::Colored::Place& place = _places[i];
-                EquivalenceClass fullClass = EquivalenceClass(++_eq_id_counter, place.type);
-                if(placeColorFixpoints != nullptr){
-                    fullClass.setIntervalVector(placeColorFixpoints->operator[](i).constraints);
-                } else {
-                    fullClass.addInterval(place.type->getFullInterval());
-                }
-                _partition[i].push_back_Eqclass(fullClass);
-                for(uint32_t j = 0; j < place.type->productSize(); j++){
-                    _partition[i].push_back_diagonalTuplePos(false);
-                }
-                _placeQueue.push_back(i);
-                _inQueue[i] = true;
-            }
+
         }
 
         void PartitionBuilder::printPartion() const {
@@ -49,8 +39,28 @@ namespace PetriEngine {
             }
         }
 
-        bool PartitionBuilder::partitionNet(int32_t timeout) {
+        void PartitionBuilder::init() {
+            //Instantiate partitions
+            for(uint32_t i = 0; i < _places.size(); i++){
+                const PetriEngine::Colored::Place& place = _places[i];
+                EquivalenceClass fullClass = EquivalenceClass(++_eq_id_counter, place.type);
+                if(_fixed_point != nullptr){
+                    fullClass.setIntervalVector((*_fixed_point)[i].constraints);
+                } else {
+                    fullClass.addInterval(place.type->getFullInterval());
+                }
+                _partition[i].push_back_Eqclass(fullClass);
+                for(uint32_t j = 0; j < place.type->productSize(); j++){
+                    _partition[i].push_back_diagonalTuplePos(false);
+                }
+                _placeQueue.push_back(i);
+                _inQueue[i] = true;
+            }
+        }
+
+        bool PartitionBuilder::compute(int32_t timeout) {
             const auto start = std::chrono::high_resolution_clock::now();
+            init();
             handleLeafTransitions();
             auto end = std::chrono::high_resolution_clock::now();
 
@@ -76,6 +86,15 @@ namespace PetriEngine {
                 }
                 end = std::chrono::high_resolution_clock::now();
             }
+            if(_placeQueue.empty())
+            {
+                end = std::chrono::high_resolution_clock::now();
+                _computed = true;
+                _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+                assignColorMap(_partition);
+            }
+            else
+                _computed = false;
             return _placeQueue.empty();
         }
 
@@ -96,11 +115,11 @@ namespace PetriEngine {
 
         void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
             const PetriEngine::Colored::Transition &transition = _transitions[transitionId];
-            Arc postArc;
+            const Arc* postArc;
             bool arcFound = false;
             for(const auto& outArc : transition.output_arcs){
                 if(outArc.place == postPlaceId){
-                    postArc = outArc;
+                    postArc = &outArc;
                     arcFound = true;
                     break;
                 }
@@ -110,7 +129,7 @@ namespace PetriEngine {
                 return;
             }
 
-            handleTransition(transition, postPlaceId, &postArc);
+            handleTransition(transition, postPlaceId, postArc);
         }
 
         //Check if a variable appears more than once on the output arc
@@ -241,7 +260,7 @@ namespace PetriEngine {
         void PartitionBuilder::applyNewIntervals(const Arc &inArc, const std::vector<PetriEngine::Colored::VariableIntervalMap> &varMaps){
             //Retrieve the intervals for the current place,
             //based on the intervals from the postPlace, the postArc, preArc and guard
-            auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
+            auto outIntervals = OutputIntervalVisitor::intervals(*inArc.expr, varMaps);
             EquivalenceVec newEqVec;
             for(auto& intervalTuple : outIntervals){
                 intervalTuple.simplify();
@@ -264,12 +283,12 @@ namespace PetriEngine {
             std::set<const PetriEngine::Colored::Variable *> guardVars;
             std::set<const Colored::Variable*> diagonalVars;
 
-            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap, true);
+            Colored::VariableVisitor::get_variables(*postArc->expr, postArcVars, varPositionMap, varModifierMap, true);
 
             checkVarOnArc(varModifierMap, diagonalVars, postPlaceId, false);
 
             if(transition.guard != nullptr){
-                transition.guard->getVariables(guardVars);
+                Colored::VariableVisitor::get_variables(*transition.guard, guardVars);
             }
             // we have to copy here, the following loop has the *potential* to modify _partition[postPlaceId]
             const std::vector<Colored::EquivalenceClass> placePartition = _partition[postPlaceId].getEquivalenceClasses();
@@ -288,7 +307,7 @@ namespace PetriEngine {
                     }
                 }
                 if(transition.guard != nullptr){
-                    transition.guard->restrictVars(varMaps, diagonalVars);
+                    Colored::RestrictVisitor::restrict(*transition.guard, varMaps, diagonalVars);
                 }
 
                 handleInArcs(transition, diagonalVars, varPositionMap, varMaps, postPlaceId);
@@ -309,7 +328,7 @@ namespace PetriEngine {
                 VariableModifierMap preVarModifierMap;
                 PositionVariableMap preVarPositionMap;
                 std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
+                Colored::VariableVisitor::get_variables(*inArc.expr, preArcVars, preVarPositionMap, preVarModifierMap, true);
                 checkVarOnInputArcs(placeVariableMap, preVarPositionMap, diagonalVars, inArc.place);
                 placeVariableMap[inArc.place] = preVarPositionMap;
                 if(checkDiagonal(inArc.place)) continue;
@@ -405,10 +424,9 @@ namespace PetriEngine {
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
             postPlaceFixpoint.constraints = eqClass.intervals();
-            ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
-            uint32_t index = 0;
+            ArcIntervals newArcInterval(varModifierMap);
 
-            arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, index, 0);
+            ArcIntervalVisitor::intervals(*arc->expr, newArcInterval, postPlaceFixpoint);
             placeArcIntervals[placeId] = std::move(newArcInterval);
             _interval_generator.getVarIntervals(varMaps, placeArcIntervals);
 

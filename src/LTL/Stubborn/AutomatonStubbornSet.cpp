@@ -158,12 +158,12 @@ namespace LTL {
         }
 
 
-        GuardInfo buchi_state = _state_guards[state->getBuchiState()];
+        guard_info_t buchi_state = _state_guards[state->get_buchi_state()];
 
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
 
         // Check if retarding is satisfied for condition 3.
-        _retarding_satisfied = _aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram);
+        _retarding_satisfied = _aut.guard_valid(evaluationContext, buchi_state._retarding._bdd);
         /*
         if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
             set_all_stubborn();
@@ -172,7 +172,7 @@ namespace LTL {
         }*/
 
         // Calculate retarding subborn set to ensure S-INV.
-        auto negated_retarding = std::make_unique<NotCondition>(buchi_state.retarding.condition);
+        auto negated_retarding = std::make_unique<NotCondition>(buchi_state._retarding._condition);
         _retarding_stubborn_set.setQuery(negated_retarding.get());
         _retarding_stubborn_set.prepare(state);
 
@@ -180,8 +180,8 @@ namespace LTL {
         _nenabled = _ordering.size();
 
         // If a progressing formula satisfies the guard St=T is the only way to ensure NLG.
-        for (auto &q : buchi_state.progressing) {
-            if (_aut.guard_valid(evaluationContext, q.decision_diagram)) {
+        for (auto &q : buchi_state._progressing) {
+            if (_aut.guard_valid(evaluationContext, q._bdd)) {
                 set_all_stubborn();
                 __print_debug();
                 return true;
@@ -189,12 +189,12 @@ namespace LTL {
         }
 
         //Interesting on each progressing formula gives NLG.
-        for (auto &q : buchi_state.progressing) {
+        for (auto &q : buchi_state._progressing) {
             LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q.condition);
+            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q._condition);
 
             NondeterministicConjunctionVisitor interesting{*this};
-            PetriEngine::PQL::Visitor::visit(interesting, q.condition);
+            PetriEngine::PQL::Visitor::visit(interesting, q._condition);
             if (_done) return true;
             else {
                 assert(!_track_changes);
@@ -222,7 +222,7 @@ namespace LTL {
         }*/
 
         // Ensure we have a key transition in accepting buchi states.
-        if (!_has_enabled_stubborn && buchi_state.is_accepting) {
+        if (!_has_enabled_stubborn && buchi_state._is_accepting) {
             for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 if (!_stubborn[i] && _enabled[i]) {
                     addToStub(i);
@@ -318,7 +318,7 @@ namespace LTL {
             _gen.consumePreset(_markbuf, t);
             _gen.producePostset(_markbuf, t);
             return _aut.guard_valid(ctx,
-                                    _state_guards[static_cast<const LTL::Structures::ProductState *>(_parent)->getBuchiState()].retarding.decision_diagram);
+                                    _state_guards[static_cast<const LTL::Structures::ProductState *>(_parent)->get_buchi_state()]._retarding._bdd);
         }
     }
 

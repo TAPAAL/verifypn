@@ -214,6 +214,9 @@ namespace PetriEngine::PQL {
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
+        return containsNext(condition.get());
+    }
+    bool containsNext(const Condition* condition) {
         ContainsNextVisitor visitor;
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
@@ -223,4 +226,21 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
+    void ContainsNextVisitor::_accept(const EXCondition* condition) {
+        setConditionFound();
+    }
+
+    void ContainsNextVisitor::_accept(const AXCondition* condition) {
+        setConditionFound();
+    }
+
+    bool containsUpperBounds(const Condition_ptr& condition) {
+        return containsUpperBounds(condition.get());
+    }
+
+    bool containsUpperBounds(const Condition* condition) {
+        ContainsUpperBoundsVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
 }

@@ -2,6 +2,10 @@
 #include "EquivalenceVec.h"
 #include "IntervalGenerator.h"
 
+#ifndef PARTITIONBUILDER_H
+#define PARTITIONBUILDER_H
+
+
 namespace PetriEngine {
     namespace Colored {
         class PartitionBuilder {
@@ -18,12 +22,20 @@ namespace PetriEngine {
                 ~PartitionBuilder() {}
 
                 //void initPartition();
-                bool partitionNet(int32_t timeout);
+                bool compute(int32_t timeout);
                 void printPartion() const;
                 void assignColorMap(std::vector<EquivalenceVec> &partition) const;
 
-                const std::vector<EquivalenceVec>& getPartition() const{
+                const std::vector<EquivalenceVec>& partition() const{
                     return _partition;
+                }
+
+                bool computed() const {
+                    return _computed;
+                }
+
+                double time() const {
+                    return _time;
                 }
 
             private:
@@ -33,6 +45,11 @@ namespace PetriEngine {
                 std::vector<EquivalenceVec> _partition;
                 const PetriEngine::Colored::IntervalGenerator _interval_generator = IntervalGenerator();
                 std::vector<uint32_t> _placeQueue;
+                bool _computed = false;
+                double _time = 0;
+                const std::vector<Colored::ColorFixpoint> *_fixed_point = nullptr;
+
+                void init();
 
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 
@@ -68,3 +85,5 @@ namespace PetriEngine {
         };
     }
 }
+
+#endif

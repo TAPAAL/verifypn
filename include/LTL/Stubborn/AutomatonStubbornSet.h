@@ -31,7 +31,7 @@ namespace LTL {
     public:
         explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net, const Structures::BuchiAutomaton &aut)
         : PetriEngine::StubbornSet(net), _retarding_stubborn_set(net,false),
-            _state_guards(std::move(GuardInfo::from_automaton(aut))),
+            _state_guards(std::move(guard_info_t::from_automaton(aut))),
             _aut(aut),
             _place_checkpoint(new bool[net.numberOfPlaces()]),
             _gen(_net)
@@ -65,7 +65,7 @@ namespace LTL {
     private:
 
         PetriEngine::ReachabilityStubbornSet _retarding_stubborn_set;
-        const std::vector<GuardInfo> _state_guards;
+        const std::vector<guard_info_t> _state_guards;
         const Structures::BuchiAutomaton &_aut;
         std::unique_ptr<bool[]> _place_checkpoint;
         PetriEngine::SuccessorGenerator _gen;

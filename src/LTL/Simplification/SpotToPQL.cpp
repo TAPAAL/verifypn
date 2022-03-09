@@ -37,13 +37,13 @@ namespace LTL {
             case spot::op::ap: {
                 auto it = std::find_if(std::begin(apinfo), std::end(apinfo),
                                        [&](const AtomicProposition &info) {
-                                           auto ap = std::string_view(info.text);
+                                           auto ap = std::string_view(info._text);
                                            return ap == std::string_view(formula.ap_name());
                                        });
                 if (it == std::end(apinfo)) {
                     throw base_error("Expected to find ", formula.ap_name(), " in APInfo.\n");
                 } else {
-                    return it->expression;
+                    return it->_expression;
                 }
 
             }
@@ -121,15 +121,15 @@ namespace LTL {
         }
     }
 
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, const options_t &options) {
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, BuchiOptimization optimization, APCompression compression) {
         using namespace PetriEngine::PQL;
-        if (auto e = std::dynamic_pointer_cast<ECondition>(formula); e != nullptr) {
-            return std::make_shared<ECondition>(simplify((*e)[0], options));
-        } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
-            return std::make_shared<ACondition>(simplify((*a)[0], options));
+        if (auto e = std::dynamic_pointer_cast<ECondition>(formula)) {
+            return std::make_shared<ECondition>(simplify((*e)[0], optimization, compression));
+        } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula)) {
+            return std::make_shared<ACondition>(simplify((*a)[0], optimization, compression));
         }
-        auto[f, apinfo] = LTL::to_spot_formula(formula, options);
-        spot::tl_simplifier simplifier{static_cast<int>(options.buchiOptimization)};
+        auto[f, apinfo] = LTL::to_spot_formula(formula, compression);
+        spot::tl_simplifier simplifier{static_cast<int>(optimization)};
         f = simplifier.simplify(f);
         // spot simplifies using unsupported operators R, W, and M, which we now remove.
         f = spot::unabbreviate(f, "RWM");

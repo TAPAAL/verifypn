@@ -4,11 +4,11 @@
 
 #include "PetriEngine/PQL/Contexts.h"
 
-
+#include <iostream>
 
 namespace PetriEngine {
     namespace PQL {
-       
+
         bool ColoredAnalysisContext::resolvePlace(const std::string& place, std::unordered_map<uint32_t, std::string>& out)
         {
             auto it = _coloredPlaceNames.find(place);
@@ -16,9 +16,15 @@ namespace PetriEngine {
                 out = it->second;
                 return true;
             }
+            std::cerr << "{";
+            for(auto& c : _coloredPlaceNames)
+            {
+                std::cerr << c.first << std::endl;
+            }
+            std::cerr << "}" << std::endl;
             return false;
         }
-        
+
         bool ColoredAnalysisContext::resolveTransition(const std::string& transition, std::vector<std::string>& out)
         {
             auto it = _coloredTransitionNames.find(transition);
@@ -29,7 +35,7 @@ namespace PetriEngine {
             return false;
         }
 
-       
+
         AnalysisContext::ResolutionResult AnalysisContext::resolve(const std::string& identifier, bool place)
         {
             ResolutionResult result;
@@ -56,7 +62,7 @@ namespace PetriEngine {
             auto end = std::chrono::high_resolution_clock::now();
             return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
         }
-        
+
         glp_prob* SimplificationContext::makeBaseLP() const
         {
             if (_base_lp == nullptr)
@@ -67,7 +73,7 @@ namespace PetriEngine {
             glp_copy_prob(tmp_lp, _base_lp, GLP_OFF);
             return tmp_lp;
         }
-        
+
         glp_prob* SimplificationContext::buildBase() const
         {
             constexpr auto infty = std::numeric_limits<double>::infinity();

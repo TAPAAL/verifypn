@@ -26,11 +26,6 @@ namespace PetriEngine {
         Multiset::Multiset() : _set(), _type(nullptr) {
         }
 
-        Multiset::Multiset(const Multiset& orig) {
-            _set = orig._set;
-            _type = orig._type;
-        }
-
         Multiset::Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors)
                 : _set(), _type(nullptr)
         {

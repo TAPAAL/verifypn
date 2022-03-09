@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   LPFactory.h
  * Author: Peter G. Jensen
  *
@@ -19,7 +19,7 @@
 
 namespace PetriEngine {
     namespace Simplification {
-        enum op_t 
+        enum op_t
         {
             OP_EQ,
             OP_LE,
@@ -32,31 +32,31 @@ namespace PetriEngine {
         class Vector {
         public:
             friend LPCache;
-                        
+
             void free();
-            
+
             void inc();
-            
+
             size_t data_size() const;
 
             bool operator ==(const Vector& other) const
             {
                 return  _data == other._data;
             }
-            
-            
-            
+
+
+
             const void* raw() const
             {
                 return _data.data();
             }
-            
+
             size_t refs() const { return ref; }
-            
+
             std::ostream& print(std::ostream& ss) const
             {
                 int index = 0;
-                for(const std::pair<int,int>& el : _data)
+                for(const auto& el : _data)
                 {
                     while(index < el.first) { ss << "0 "; ++index; }
                     ss << el.second << " ";
@@ -64,12 +64,12 @@ namespace PetriEngine {
                 }
                 return ss;
             }
-            
+
             void write(std::vector<double>& dest) const
             {
                 memset(dest.data(), 0, sizeof (double) * dest.size());
-                
-                for(const std::pair<int,int>& el : _data)
+
+                for(const auto& el : _data)
                 {
                     dest[el.first + 1] = el.second;
                 }
@@ -78,7 +78,7 @@ namespace PetriEngine {
             size_t write_indir(std::vector<double>& dest, std::vector<int32_t>& indir) const
             {
                 size_t l = 1;
-                for(const std::pair<int,int>& el : _data)
+                for(const auto& el : _data)
                 {
                     dest[l] = el.second;
                     if(dest[l] != 0)
@@ -89,10 +89,10 @@ namespace PetriEngine {
                 }
                 return l;
             }
-            
-            
+
+
         private:
-            Vector(const std::vector<int>& data)
+            Vector(const std::vector<int64_t>& data)
             {
                 for(size_t i = 0; i < data.size(); ++i)
                 {
@@ -100,11 +100,11 @@ namespace PetriEngine {
                     {
                         _data.emplace_back(i, data[i]);
                     }
-                }                
+                }
             }
 
-            std::vector<std::pair<int,int>> _data;
-            LPCache* factory = NULL;
+            std::vector<std::pair<int64_t,int64_t>> _data;
+            LPCache* factory = nullptr;
             size_t ref = 0;
         };
     }
@@ -113,14 +113,14 @@ namespace PetriEngine {
 namespace std
 {
     using namespace PetriEngine::Simplification;
-    
+
     template <>
     struct hash<Vector>
     {
         size_t operator()(const Vector& k) const
         {
-            return MurmurHash64A(k.raw(), 
-                    k.data_size(), 
+            return MurmurHash64A(k.raw(),
+                    k.data_size(),
                     1337);
         }
     };

@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/Analyze.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void analyze(Condition *condition, AnalysisContext& context) {
         AnalyzeVisitor visitor(context);
         Visitor::visit(visitor, condition);
@@ -50,9 +50,7 @@ namespace PetriEngine::PQL {
             if (result.success) {
                 i.first = result.offset;
             } else {
-                ExprError error("Unable to resolve identifier \"" + i.second + "\"",
-                                i.second.length());
-                _context.reportError(error);
+                throw base_error("Unable to resolve identifier \"", i.second, "\"");
             }
         }
         for(auto& e : element->expressions())
@@ -84,9 +82,7 @@ namespace PetriEngine::PQL {
         if (result.success) {
             return result.offset;
         } else {
-            ExprError error("Unable to resolve identifier \"" + name + "\"",
-                            name.length());
-            context.reportError(error);
+            throw base_error("Unable to resolve identifier \"", name, "\"");
         }
         return -1;
     }
@@ -107,8 +103,7 @@ namespace PetriEngine::PQL {
         {
             std::unordered_map<uint32_t,std::string> names;
             if (!coloredContext->resolvePlace(element->name(), names)) {
-                ExprError error("Unable to resolve colored identifier \"" + element->name() + "\"", element->name().length());
-                coloredContext->reportError(error);
+                throw base_error("Unable to resolve colored identifier \"", element->name(), "\"");
             }
 
             if (names.size() == 1) {
@@ -132,20 +127,22 @@ namespace PetriEngine::PQL {
         if (result.success) {
             element->_offsetInMarking = result.offset;
         } else {
-            ExprError error("Unable to resolve identifier \"" + element->name() + "\"", element->name().length());
-            _context.reportError(error);
+            throw base_error("Unable to resolve identifier \"", element->name(), "\"");
         }
     }
 
     void AnalyzeVisitor::_accept(UnfoldedFireableCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled())
+        {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         std::vector<Condition_ptr> conds;
         AnalysisContext::ResolutionResult result = _context.resolve(element->getName(), false);
         if (!result.success)
         {
-            ExprError error("Unable to resolve identifier \"" + element->getName() + "\"", element->getName().length());
-            _context.reportError(error);
+            throw base_error("Unable to resolve identifier \"", element->getName(), "\"");
             return;
         }
 
@@ -167,24 +164,27 @@ namespace PetriEngine::PQL {
                 conds.emplace_back(std::make_shared<LessThanCondition>(id, lit));
             }
         }
-        if(conds.size() == 1) element->_compiled = conds[0];
+        if(conds.size() == 1)
+            element->_compiled = conds[0];
         else if (conds.empty()) {
             element->_compiled = BooleanCondition::TRUE_CONSTANT;
         }
-        else element->_compiled = std::make_shared<AndCondition>(conds);
+        else
+            element->_compiled = std::make_shared<AndCondition>(conds);
         Visitor::visit(this, element->_compiled);
     }
 
     void AnalyzeVisitor::_accept(FireableCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled()) {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored()) {
             std::vector<std::string> names;
             if (!coloredContext->resolveTransition(element->getName(), names)) {
-                ExprError error("Unable to resolve colored identifier \"" + element->getName() + "\"", element->getName().length());
-                coloredContext->reportError(error);
-                return;
+                throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
             }
             if(names.size() < 1){
                 //If the transition points to empty vector we know that it has
@@ -248,7 +248,11 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(KSafeCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled())
+        {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> k_safe;
@@ -272,7 +276,11 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(QuasiLivenessCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled())
+        {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> quasi;
@@ -298,7 +306,11 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(LivenessCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled())
+        {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> liveness;
@@ -324,7 +336,11 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(StableMarkingCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
+        if (element->getCompiled())
+        {
+            Visitor::visit(this, element->getCompiled());
+            return;
+        }
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         std::vector<Condition_ptr> stable_check;
@@ -363,30 +379,34 @@ namespace PetriEngine::PQL {
     }
 
     void AnalyzeVisitor::_accept(UpperBoundsCondition *element) {
-        if (element->getCompiled()) Visitor::visit(this, element->getCompiled());
-
-        auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
-        if(coloredContext != nullptr && coloredContext->isColored())
+        if (element->getCompiled())
         {
-            std::vector<std::string> uplaces;
-            for(auto& p : element->getPlaces())
-            {
-                std::unordered_map<uint32_t,std::string> names;
-                if (!coloredContext->resolvePlace(p, names)) {
-                    ExprError error("Unable to resolve colored identifier \"" + p + "\"", p.length());
-                    coloredContext->reportError(error);
-                }
-
-                for(auto& id : names)
-                {
-                    uplaces.push_back(names[id.first]);
-                }
-            }
-            element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
-        } else {
-            element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(element->getPlaces());
+            Visitor::visit(this, element->getCompiled());
         }
-        Visitor::visit(this, element->_compiled);
+        else
+        {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                std::vector<std::string> uplaces;
+                for(auto& p : element->getPlaces())
+                {
+                    std::unordered_map<uint32_t,std::string> names;
+                    if (!coloredContext->resolvePlace(p, names)) {
+                        throw base_error("Unable to resolve colored identifier \"", p, "\"");
+                    }
+
+                    for(auto& id : names)
+                    {
+                        uplaces.push_back(names[id.first]);
+                    }
+                }
+                element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
+            } else {
+                element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(element->getPlaces());
+            }
+            Visitor::visit(this, element->_compiled);
+        }
     }
 
     void AnalyzeVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
@@ -395,11 +415,9 @@ namespace PetriEngine::PQL {
             if (result.success) {
                 p._place = result.offset;
             } else {
-                ExprError error("Unable to resolve identifier \"" + p._name + "\"",
-                                p._name.length());
-                _context.reportError(error);
+                throw base_error("Unable to resolve identifier \"", p._name, "\"");
             }
         }
         std::sort(element->_places.begin(), element->_places.end());
     }
-}
+} }

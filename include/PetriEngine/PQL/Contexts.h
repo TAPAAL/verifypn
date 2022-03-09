@@ -3,17 +3,17 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -40,8 +40,7 @@ namespace PetriEngine {
         protected:
             const std::unordered_map<std::string, uint32_t>& _placeNames;
             const std::unordered_map<std::string, uint32_t>& _transitionNames;
-            const PetriNet* _net;
-            std::vector<ExprError> _errors;
+            const PetriNet* _net = nullptr;
         public:
 
             /** A resolution result */
@@ -56,26 +55,17 @@ namespace PetriEngine {
             : _placeNames(places), _transitionNames(tnames), _net(net) {
 
             }
-            
+
             virtual void setHasDeadlock(){};
-            
+
             const PetriNet* net() const
             {
                 return _net;
             }
-            
+
             /** Resolve an identifier */
             virtual ResolutionResult resolve(const std::string& identifier, bool place = true);
 
-            /** Report error */
-            void reportError(const ExprError& error) {
-                _errors.push_back(error);
-            }
-
-            /** Get list of errors */
-            const std::vector<ExprError>& errors() const {
-                return _errors;
-            }
             auto& allPlaceNames() const { return _placeNames; }
             auto& allTransitionNames() const { return _transitionNames; }
 
@@ -122,13 +112,13 @@ namespace PetriEngine {
                 _marking = marking;
                 _net = net;
             }
-            
+
             EvaluationContext() {};
 
             const MarkVal* marking() const {
                 return _marking;
             }
-            
+
             void setMarking(MarkVal* marking) {
                 _marking = marking;
             }
@@ -185,7 +175,7 @@ namespace PetriEngine {
                 _start = std::chrono::high_resolution_clock::now();
                 _cache = cache;
             }
-                    
+
             virtual ~SimplificationContext() {
                 if(_base_lp != nullptr)
                     glp_delete_prob(_base_lp);
@@ -208,27 +198,27 @@ namespace PetriEngine {
             bool negated() const {
                 return _negated;
             }
-            
+
             void setNegate(bool b){
                 _negated = b;
             }
-            
+
             double getReductionTime();
-            
+
             bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
                 return (diff.count() >= _queryTimeout);
             }
-            
+
             uint32_t getLpTimeout() const;
 
             Simplification::LPCache* cache() const
             {
                 return _cache;
             }
-            
-            
+
+
             glp_prob* makeBaseLP() const;
 
         private:

@@ -736,7 +736,7 @@ namespace PetriEngine {
 
         protected:
             uint32_t _distance(DistanceContext& c,
-                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const;
+                    std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const;
         protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
