@@ -335,7 +335,7 @@ namespace PetriEngine {
             if (cond->type() == type_id<UntilCondition>()) {
                 auto ucond = static_cast<UntilCondition*>(cond);
                 context.negate();
-                res = (*ucond)[0]->distance(context) + (*ucond)[0]->distance(context);
+                res = (*ucond)[0]->distance(context) + (*ucond)[1]->distance(context);
                 context.negate();
             } else if (cond->type() == type_id<FCondition>()) {
                 context.negate();
