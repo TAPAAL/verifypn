@@ -337,6 +337,9 @@ namespace PetriEngine {
                 context.negate();
                 res = (*ucond)[0]->distance(context) + (*ucond)[1]->distance(context);
                 context.negate();
+            } else if (cond->type() == type_id<ReleaseCondition>()) {
+                auto ucond = static_cast<ReleaseCondition*>(cond);
+                res = (*ucond)[0]->distance(context) + (*ucond)[1]->distance(context);
             } else if (cond->type() == type_id<FCondition>()) {
                 context.negate();
                 res = static_cast<FCondition*>(cond)->distance(context);

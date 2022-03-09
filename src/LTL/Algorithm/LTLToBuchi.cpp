@@ -80,6 +80,13 @@ namespace LTL {
         _formula = spot::formula::U(lhs, _formula);
     }
 
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        auto lhs = _formula;
+        Visitor::visit(this, (*element)[1]);
+        _formula = spot::formula::R(lhs, _formula);
+    }
+
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
         _formula = make_atomic_prop(std::make_shared<LessThanCondition>(*element));
     }

@@ -224,6 +224,21 @@ Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vec
             else
                 return std::make_shared<ECondition>(std::make_shared<UntilCondition>(cond1, cond2));
         }
+        else if(p == Path::R)
+        {
+            auto cond2 = parseQuery(binary, names);
+            if(cond2 == nullptr)
+            {
+                assert(false);
+                return nullptr;
+            }
+            if (q == Quantifier::EMPTY)
+                return std::make_shared<ReleaseCondition>(cond1, cond2);
+            else if(q == Quantifier::A)
+                return std::make_shared<ACondition>(std::make_shared<ReleaseCondition>(cond1, cond2));
+            else
+                return std::make_shared<ECondition>(std::make_shared<ReleaseCondition>(cond1, cond2));
+        }
         else if(p == Path::PControl)
         {
             return std::make_shared<ControlCondition>(cond1);

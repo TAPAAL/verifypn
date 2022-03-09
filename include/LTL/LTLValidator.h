@@ -119,6 +119,10 @@ namespace LTL {
             Visitor::visit(this, (*condition)[0]);
         }
 
+        void _accept(const PetriEngine::PQL::ReleaseCondition *condition) override {
+            Visitor::visit(this, (*condition)[0]);
+        }
+
         void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override {
         }
 

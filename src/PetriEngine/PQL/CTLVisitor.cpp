@@ -18,7 +18,7 @@
 
 #include <memory>
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void IsCTLVisitor::_accept(const NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
@@ -194,4 +194,4 @@ namespace PetriEngine::PQL {
     void IsCTLVisitor::_accept(const IdentifierExpr *element) {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
-}
+} }

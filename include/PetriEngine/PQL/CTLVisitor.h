@@ -46,6 +46,12 @@ namespace PetriEngine::PQL {
 
         void _accept(const UntilCondition *condition) override;
 
+        void _accept(const ReleaseCondition *condition);
+        
+        void _accept(const LogicalCondition *element);
+
+        void _accept(const CompareCondition *element);
+
         void _accept(const UnfoldedFireableCondition *element) override;
 
         void _accept(const FireableCondition *element) override;
@@ -79,11 +85,6 @@ namespace PetriEngine::PQL {
     private:
         CTLSyntaxType _cur_type;
 
-        void _accept(const LogicalCondition *element);
-
-        void _accept(const CompareCondition *element);
-
-        void _accept(const ReleaseCondition *condition);
     };
 }
 

@@ -126,7 +126,10 @@ namespace PetriEngine { namespace PQL {
     void EvaluateVisitor::_accept(ACondition *element) {
         auto cond = (*element)[0];
         Visitor::visit(this, cond);
-        if (cond->type() == type_id<UntilCondition>() || cond->type() == type_id<FCondition>() || cond->type() == type_id<GCondition>())
+        if (cond->type() == type_id<UntilCondition>() ||
+            cond->type() == type_id<ReleaseCondition>() ||
+            cond->type() == type_id<FCondition>() ||
+            cond->type() == type_id<GCondition>())
             return;
 
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
@@ -136,7 +139,10 @@ namespace PetriEngine { namespace PQL {
     void EvaluateVisitor::_accept(ECondition *element) {
         auto cond = (*element)[0];
         Visitor::visit(this, cond);
-        if (cond->type() == type_id<UntilCondition>() || cond->type() == type_id<FCondition>() || cond->type() == type_id<GCondition>())
+        if (cond->type() == type_id<UntilCondition>() ||
+            cond->type() == type_id<ReleaseCondition>() ||
+            cond->type() == type_id<FCondition>() ||
+            cond->type() == type_id<GCondition>())
             return;
 
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};

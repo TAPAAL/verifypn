@@ -484,6 +484,11 @@ namespace PetriEngine {
                 visit(this, (*condition)[1]);
             }
 
+            void _accept(const ReleaseCondition *condition) override {
+                visit(this, (*condition)[0]);
+                visit(this, (*condition)[1]);
+            }
+
             void _accept(const ShallowCondition *element) override {
                 if (const auto &compiled = element->getCompiled())
                     visit(this, compiled);

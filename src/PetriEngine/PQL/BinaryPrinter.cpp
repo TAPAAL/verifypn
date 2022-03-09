@@ -16,7 +16,7 @@
 
 #include "PetriEngine/PQL/BinaryPrinter.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void BinaryPrinter::_accept(const LiteralExpr *element){
         os.write("l", sizeof(char));
         int temp = element->value();
@@ -70,6 +70,15 @@ namespace PetriEngine::PQL {
     }
 
     void BinaryPrinter::_accept(const UntilCondition *condition){
+        auto path = condition->getPath();
+        auto quant = condition->getQuantifier();
+        os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+        os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+        Visitor::visit(this, (*condition)[0]);
+        Visitor::visit(this, (*condition)[1]);
+    }
+
+    void BinaryPrinter::_accept(const ReleaseCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
@@ -166,4 +175,4 @@ namespace PetriEngine::PQL {
     void BinaryPrinter::_accept(const ShallowCondition *condition) {
         Visitor::visit(this, condition->getCompiled());
     }
-}
+} }

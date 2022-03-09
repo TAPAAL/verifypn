@@ -48,6 +48,7 @@ letter        [a-zA-Z_]
 "F"						{return TOKEN(F);}
 "G"						{return TOKEN(G);}
 "U"						{return TOKEN(U);}
+"R"						{return TOKEN(R);}
 "control"				{return TOKEN(CONTROL);}
 "NOT" {return TOKEN(NOT);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}

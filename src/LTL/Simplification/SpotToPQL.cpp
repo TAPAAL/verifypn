@@ -58,6 +58,9 @@ namespace LTL {
             case spot::op::U:
                 return std::make_shared<UntilCondition>(
                         toPQL(formula[0], apinfo), toPQL(formula[1], apinfo));
+            case spot::op::R:
+                return std::make_shared<ReleaseCondition>(
+                        toPQL(formula[0], apinfo), toPQL(formula[1], apinfo));
             case spot::op::Or: {
                 std::vector<Condition_ptr> conds;
                 std::transform(std::begin(formula), std::end(formula), std::back_insert_iterator(conds),
@@ -70,8 +73,6 @@ namespace LTL {
                                [&](auto f) { return toPQL(f, apinfo); });
                 return std::make_shared<AndCondition>(conds);
             }
-            case spot::op::R:
-                throw base_error("R not implemented");
             case spot::op::W:
                 throw base_error("W not implemented");
             case spot::op::M:
@@ -132,7 +133,7 @@ namespace LTL {
         spot::tl_simplifier simplifier{static_cast<int>(optimization)};
         f = simplifier.simplify(f);
         // spot simplifies using unsupported operators R, W, and M, which we now remove.
-        f = spot::unabbreviate(f, "RWM");
+        f = spot::unabbreviate(f, "WM");
         return toPQL(f, apinfo);
     }
 } // namespace LTL

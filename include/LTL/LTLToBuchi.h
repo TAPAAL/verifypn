@@ -95,6 +95,8 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
 
+        void _accept(const PetriEngine::PQL::ReleaseCondition *condition) override;
+
     public:
 
         explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose)

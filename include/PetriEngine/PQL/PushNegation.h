@@ -95,6 +95,8 @@ namespace PetriEngine::PQL {
 
         void _accept(UntilCondition *condition) override;
 
+        void _accept(ReleaseCondition *condition) override;
+
         void _accept(UnfoldedFireableCondition *element) override;
 
         void _accept(BooleanCondition *element) override;
@@ -127,7 +129,6 @@ namespace PetriEngine::PQL {
 
         Condition_ptr pushneg_EU(UntilCondition *element);
 
-        void _accept(ReleaseCondition *element);
     };
 }
 

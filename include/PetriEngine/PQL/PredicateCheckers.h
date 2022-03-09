@@ -47,6 +47,8 @@ namespace PetriEngine::PQL {
         void _accept(const SimpleQuantifierCondition *condition) override;
 
         void _accept(const UntilCondition *condition) override;
+        void _accept(const ReleaseCondition *condition) override;
+
     };
 
 
@@ -87,6 +89,8 @@ namespace PetriEngine::PQL {
         void _accept(const ShallowCondition *element) override;
 
         void _accept(const UntilCondition *element) override;
+
+        void _accept(const ReleaseCondition *element) override;
 
         void _accept(const CompareConjunction *element) override;
     };

@@ -27,7 +27,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 /* Terminal type definition */
 %token <string> ID INT
 
-%token <token> A E X F G U EF EG AF AG EX AX CONTROL
+%token <token> A E X F G U R EF EG AF AG EX AX CONTROL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
@@ -91,6 +91,8 @@ atomic_formula : TRUE				            	{ $$ = new BooleanCondition(true);}
 path_formula : X state_formula                    { $$ = new XCondition(Condition_ptr($2)); }
              | F state_formula                    { $$ = new FCondition(Condition_ptr($2)); }
              | G state_formula                    { $$ = new GCondition(Condition_ptr($2)); }
+             | LPAREN state_formula RPAREN R LPAREN state_formula RPAREN
+               { $$ = new ReleaseCondition(Condition_ptr($2), Condition_ptr($6)); };
              | LPAREN state_formula RPAREN U LPAREN state_formula RPAREN
                { $$ = new UntilCondition(Condition_ptr($2), Condition_ptr($6)); };
              ;

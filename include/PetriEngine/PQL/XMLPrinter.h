@@ -85,6 +85,8 @@ namespace PetriEngine {
 
             void _accept(const UntilCondition *condition) override;
 
+            void _accept(const ReleaseCondition *condition) override;
+
             void _accept(const UnfoldedFireableCondition *element) override;
 
             void _accept(const BooleanCondition *element) override;
@@ -122,8 +124,6 @@ namespace PetriEngine {
                     _printer->closeXmlTag(_tag);
                 }
             };
-
-            void _accept(const ReleaseCondition *element);
         };
     }
 }
