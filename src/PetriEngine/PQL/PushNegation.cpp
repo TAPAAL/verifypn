@@ -355,7 +355,7 @@ namespace PetriEngine { namespace PQL {
 
             if (negated)
                 return std::make_shared<ECondition>(std::make_shared<ReleaseCondition>(a, b));
-            else 
+            else
                 return std::make_shared<ACondition>(std::make_shared<UntilCondition>(a, b));
         }, stats, context, nested, negated, initrw);
         return cond;
@@ -439,8 +439,8 @@ namespace PetriEngine { namespace PQL {
     void PushNegationVisitor::_accept(ReleaseCondition* element) {
         auto cond = initialMarkingRW([&]() -> Condition_ptr {
             // Push negation and convert this to a UntilCondition if it is negated
-            auto b = subvisit(element->getCond2(), true, negated);
-            auto a = subvisit(element->getCond1(), true, negated);
+            auto b = subvisit(element->getCond2(), true, !negated);
+            auto a = subvisit(element->getCond1(), true, !negated);
 
             if (auto cond = std::dynamic_pointer_cast<FCondition>(b)) {
                 static_assert(negstat_t::nrules >= 35);
