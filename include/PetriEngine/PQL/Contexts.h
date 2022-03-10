@@ -40,7 +40,7 @@ namespace PetriEngine {
         protected:
             const std::unordered_map<std::string, uint32_t>& _placeNames;
             const std::unordered_map<std::string, uint32_t>& _transitionNames;
-            const PetriNet* _net;
+            const PetriNet* _net = nullptr;
         public:
 
             /** A resolution result */

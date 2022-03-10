@@ -177,6 +177,7 @@ int main(int argc, const char** argv) {
                     ContainsFireabilityVisitor has_fireability;
                     Visitor::visit(has_fireability, queries[i]);
                     if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
+                    if(containsUpperBounds(queries[i])) continue;
                     auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
@@ -366,7 +367,7 @@ int main(int argc, const char** argv) {
             if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
                 options.usedltl = true;
 
-                for (auto qid: ltl_ids) {
+                for (auto qid : ltl_ids) {
                     LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
                     auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
                         options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,

@@ -14,6 +14,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/PrepareForReachability.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "LTL/LTLSearch.h"
 
 #include <iostream>
 #include <iomanip>
@@ -248,7 +249,38 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
-    else
+    else if(!containsNext(query)) {
+        // there are probably many more cases w. nested quantifiers we can do
+        // one instance is E[ non_temp U [E non_temp U ...]] in a chain
+        // also, this should go into some *neat* visitor to do the check.
+        auto q = query->shared_from_this();
+        bool ok = false;
+        if(auto* af = dynamic_cast<AFCondition*>(query))
+        {
+            if(!isTemporal((*af)[0]))
+                ok = true;
+        }
+        else if(auto* eg = dynamic_cast<EGCondition*>(query))
+        {
+            if(!isTemporal((*eg)[0]))
+                ok = true;
+        }
+        else if(auto* au = dynamic_cast<AUCondition*>(query)) {
+            if(!isTemporal((*au)[0]) && !isTemporal((*au)[1]))
+                ok = true;
+        }
+        else if(auto* eu = dynamic_cast<EUCondition*>(query)) {
+            if(!isTemporal((*eu)[0]) && !isTemporal((*eu)[1]))
+                ok = true;
+        }
+        if(ok)
+        {
+            LTL::LTLSearch search(*net, q, options.buchiOptimization, options.ltl_compress_aps);
+            return search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
+                            options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
+        }
+    }
+    //else
     {
         return singleSolve(query, net, algorithmtype, strategytype, partial_order, result);
     }
@@ -295,7 +327,10 @@ ReturnValue CTLMain(PetriNet* net,
         result.duration = 0;
         if(!solved)
         {
-            result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
+            if(options.strategy == Strategy::BFS || options.strategy == Strategy::RDFS)
+                result.result = singleSolve(result.query, net, algorithmtype, options.strategy, options.stubbornreduction, result);
+            else
+                result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
         result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }

@@ -3,24 +3,24 @@
 #include "LinearProgram.h"
 #include "../PQL/Contexts.h"
 #include "../PetriNet.h"
-        
+
 #include <set>
 
 namespace PetriEngine {
     namespace Simplification {
-        
+
         class AbstractProgramCollection
         {
             protected:
                 enum result_t { UNKNOWN, IMPOSSIBLE, POSSIBLE };
                 result_t _result = result_t::UNKNOWN;
-                
+
                 virtual void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) = 0;
                 bool has_empty = false;
             public:
                 virtual ~AbstractProgramCollection() {};
                 bool empty() { return has_empty; }
-                
+
                 virtual bool satisfiable(const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max())
                 {
                     reset();
@@ -36,12 +36,12 @@ namespace PetriEngine {
                     assert(_result != UNKNOWN);
                     return _result == POSSIBLE;
                 }
-                
+
                 bool known_sat() { return _result == POSSIBLE; };
                 bool known_unsat() { return _result == IMPOSSIBLE; };
-                
+
                 virtual void clear() = 0;
-                
+
                 virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) = 0;
                 virtual void reset() = 0;
                 virtual size_t size() const = 0;
@@ -55,7 +55,7 @@ namespace PetriEngine {
             std::vector<AbstractProgramCollection_ptr> lps;
             size_t current = 0;
             size_t _size = 0;
-            
+
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime)
             {
                 for(int i = lps.size() - 1; i >= 0; --i)
@@ -76,13 +76,13 @@ namespace PetriEngine {
 
         public:
             UnionCollection(std::vector<AbstractProgramCollection_ptr>&& programs) :
-            AbstractProgramCollection(), lps(std::move(programs)) 
+            AbstractProgramCollection(), lps(std::move(programs))
             {
                 for(auto& p : lps) _size += p->size();
             }
-            
+
             UnionCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B) :
-            AbstractProgramCollection(), lps({A,B}) 
+            AbstractProgramCollection(), lps({A,B})
             {
                 has_empty = false;
                 for(auto& lp : lps)
@@ -99,7 +99,7 @@ namespace PetriEngine {
                 lps.clear();
                 current = 0;
             };
-            
+
             virtual void reset()
             {
                 lps[0]->reset();
@@ -108,18 +108,18 @@ namespace PetriEngine {
 
             virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {
-                
-                if(current >= lps.size()) 
+
+                if(current >= lps.size())
                 {
                     current = 0;
                 }
-                
+
                 if(!lps[current]->merge(has_empty, program, dry_run))
                 {
                     ++current;
                     if(current < lps.size()) lps[current]->reset();
                 }
-                
+
                 return current < lps.size();
             }
             virtual size_t size() const
@@ -128,7 +128,7 @@ namespace PetriEngine {
             }
 
         };
-        
+
         class MergeCollection : public AbstractProgramCollection
         {
         protected:
@@ -152,7 +152,7 @@ namespace PetriEngine {
                     LinearProgram prog;
                     bool has_empty = false;
                     hasmore = merge(has_empty, prog);
-                    if(has_empty) 
+                    if(has_empty)
                     {
                         _result = POSSIBLE;
                         return;
@@ -186,15 +186,15 @@ namespace PetriEngine {
             virtual void reset()
             {
                 if(right)  right->reset();
-                
+
                 merge_right = true;
                 more_right  = true;
                 rempty = false;
-                
+
                 tmp_prog = LinearProgram();
                 curr = 0;
             }
-            
+
             void clear()
             {
                 left = nullptr;
@@ -202,7 +202,7 @@ namespace PetriEngine {
             };
 
             virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
-            {               
+            {
                 if(program.knownImpossible()) return false;
                 bool lempty = false;
                 bool more_left;
@@ -243,9 +243,9 @@ namespace PetriEngine {
                 return _size - nsat;
             }
 
-            
+
         };
-        
+
         class SingleProgram : public AbstractProgramCollection {
         private:
             LinearProgram program;
@@ -257,7 +257,7 @@ namespace PetriEngine {
                 {
                     _result = POSSIBLE;
                 }
-                else 
+                else
                 {
                     _result = IMPOSSIBLE;
                 }
@@ -270,20 +270,20 @@ namespace PetriEngine {
             {
                 has_empty = true;
             }
-            
-            SingleProgram(LPCache* factory, const Member& lh, int constant, op_t op)
+
+            SingleProgram(LPCache* factory, const Member& lh, int64_t constant, op_t op)
             :   AbstractProgramCollection(),
                 program(factory->createAndCache(lh.variables()), constant, op, factory)
             {
                 has_empty = program.size() == 0;
                 assert(!has_empty);
             }
-            
+
             virtual ~SingleProgram(){
             }
-            
+
             virtual void reset() {}
-            
+
             virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {
                 if(dry_run) return false;
@@ -291,17 +291,17 @@ namespace PetriEngine {
                 has_empty = this->program.equations().size() == 0;
                 assert(has_empty == this->has_empty);
                 return false;
-            }            
-            
+            }
+
             void clear()
             {
             }
-            
+
             virtual size_t size() const
             {
                 return 1;
             }
-            
+
         };
     }
 }

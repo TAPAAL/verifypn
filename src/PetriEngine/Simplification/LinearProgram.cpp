@@ -45,7 +45,7 @@ namespace PetriEngine {
         }
 
         constexpr auto infty = std::numeric_limits<REAL>::infinity();
-        
+
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
@@ -72,12 +72,12 @@ namespace PetriEngine {
             auto lp = context.makeBaseLP();
             if(lp == nullptr)
                 return false;
-            
+
             int rowno = 1 + net->numberOfPlaces();
             glp_add_rows(lp, _equations.size());
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
-                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));                
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
                 glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 if(!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
@@ -107,7 +107,7 @@ namespace PetriEngine {
                     return false;
                 }
             }
-            
+
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
                 glp_set_obj_coef(lp, i, 0);
@@ -217,7 +217,8 @@ namespace PetriEngine {
                     p0 = m0[tp];
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
-                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);
+                        row[1 + t] = net->outArc(t, tp);
+                        row[1 + t] -= net->inArc(tp, t);
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
                     }
@@ -227,8 +228,10 @@ namespace PetriEngine {
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
                         double cnt = 0;
-                        for(auto tp : places)
-                            cnt += net->outArc(t, tp) - net->inArc(tp, t);
+                        for(auto tp : places) {
+                            cnt += net->outArc(t, tp);
+                            cnt -= net->inArc(tp, t);
+                        }
                         row[1 + t] = cnt;
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
@@ -253,7 +256,7 @@ namespace PetriEngine {
                 auto tmp_lp = context.makeBaseLP();
                 if(tmp_lp == nullptr)
                     return result;
-            
+
                 // Max the objective
                 glp_set_obj_dir(tmp_lp, GLP_MAX);
 
