@@ -26,6 +26,7 @@
 
 using namespace PetriEngine;
 using namespace PetriEngine::Synthesis;
+namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
@@ -56,7 +57,7 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
 }
 
 
-BOOST_AUTO_TEST_CASE(Algorithm1Counterexample) {
+BOOST_AUTO_TEST_CASE(Algorithm1Counterexample, * utf::timeout(5)) {
     std::cerr << "Q1" << std::endl;
     test_single_game("algorithm 1 counterexample", Reachability::ResultPrinter::NotSatisfied, 0);
     std::cerr << "Q2" << std::endl;
@@ -67,43 +68,43 @@ BOOST_AUTO_TEST_CASE(Algorithm1Counterexample) {
     test_single_game("algorithm 1 counterexample", Reachability::ResultPrinter::Satisfied, 3);
 }
 
-BOOST_AUTO_TEST_CASE(Algorithm1Counterexample2) {
+BOOST_AUTO_TEST_CASE(Algorithm1Counterexample2, * utf::timeout(5)) {
     test_single_game("algorithm 1 counterexample 2", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(CycleTestFalse) {
+BOOST_AUTO_TEST_CASE(CycleTestFalse, * utf::timeout(5)) {
     test_single_game("cycle test false", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(CycleTestTrue2) {
+BOOST_AUTO_TEST_CASE(CycleTestTrue2, * utf::timeout(5)) {
     test_single_game("cycle test true 2", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(CycleTestTrue3) {
+BOOST_AUTO_TEST_CASE(CycleTestTrue3, * utf::timeout(5)) {
     test_single_game("cycle test true 3", Reachability::ResultPrinter::Satisfied);
 }
 
 
-BOOST_AUTO_TEST_CASE(Player2LessReduction) {
+BOOST_AUTO_TEST_CASE(Player2LessReduction, * utf::timeout(5)) {
     test_single_game("player 2 less reduction", Reachability::ResultPrinter::NotSatisfied);
 }
 
-BOOST_AUTO_TEST_CASE(Player2) {
+BOOST_AUTO_TEST_CASE(Player2, * utf::timeout(5)) {
     test_single_game("player 2", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(SafeTest) {
+BOOST_AUTO_TEST_CASE(SafeTest, * utf::timeout(5)) {
     test_single_game("safe test", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(UnsafeTest) {
+BOOST_AUTO_TEST_CASE(UnsafeTest, * utf::timeout(5)) {
     test_single_game("unsafe test", Reachability::ResultPrinter::Satisfied);
 }
 
-BOOST_AUTO_TEST_CASE(AGPorFail) {
+BOOST_AUTO_TEST_CASE(AGPorFail, * utf::timeout(5)) {
     test_single_game("AG_por_fail", Reachability::ResultPrinter::NotSatisfied);
 }
 
-BOOST_AUTO_TEST_CASE(GenModel0PorSuccFail) {
+BOOST_AUTO_TEST_CASE(GenModel0PorSuccFail, * utf::timeout(5)) {
     test_single_game("gen_model_0", Reachability::ResultPrinter::NotSatisfied);
 }

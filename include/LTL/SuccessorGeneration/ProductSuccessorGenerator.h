@@ -83,6 +83,11 @@ namespace LTL {
             }
         }
 
+        bool is_accepting(size_t b_state)
+        {
+            return _buchi_succ_gen.is_accepting(b_state);
+        }
+
         bool is_accepting(const LTL::Structures::ProductState &state)
         {
             return _buchi_succ_gen.is_accepting(state.get_buchi_state());
@@ -235,7 +240,9 @@ namespace LTL {
             return _buchi_succ_gen.has_invariant_self_loop(state.get_buchi_state());
         }
 
-
+        bool has_invariant_self_loop(size_t bstate) {
+            return _buchi_succ_gen.has_invariant_self_loop(bstate);
+        }
 
         virtual ~ProductSuccessorGenerator() = default;
 

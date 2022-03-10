@@ -24,10 +24,11 @@
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+#include "utils/structures/light_deque.h"
+
+#include <ptrie/ptrie.h>
 
 #include <limits>
-#include <stack>
-#include <unordered_set>
 
 namespace LTL {
 
@@ -49,8 +50,8 @@ namespace LTL {
                            uint32_t kbound)
                 : ModelChecker(net, cond, buchi), _k_bound(kbound)
         {
-            if (buchi.buchi().num_states() > 65535) {
-                throw base_error("Cannot handle Büchi automata larger than 2^16 states");
+            if (buchi.buchi().num_states() > 1048576) {
+                throw base_error("Cannot handle Büchi automata larger than 2^20 states");
             }
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
@@ -77,16 +78,16 @@ namespace LTL {
         // 64 MB hash table
         static constexpr idx_t _hash_sz = 16777216;
 
-        std::unordered_set<idx_t> _store;
+        ptrie::set<idx_t,17,32,8> _store;
 
         // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
         // corresponding to state. Collisions are resolved using linked list via CEntry::next.
         std::array<idx_t, _hash_sz> _chash;
         static_assert(sizeof(_chash) == (1U << 27U));
 
-        static inline idx_t hash(idx_t id)
+        static inline idx_t hash(idx_t buchi_state, idx_t marking_id)
         {
-            return id % _hash_sz;
+            return (buchi_state xor marking_id) % _hash_sz;
         }
 
         struct plain_centry_t {
@@ -114,7 +115,7 @@ namespace LTL {
 
 
         // cstack positions of accepting states in current search path, for quick access.
-        std::stack<idx_t> _astack;
+        light_deque<idx_t> _astack;
 
         bool _invariant_loop = true;
         size_t _loop_state = std::numeric_limits<size_t>::max();
@@ -125,23 +126,23 @@ namespace LTL {
         LTLPartialOrder _order = LTLPartialOrder::None;
 
         // TODO, instead of this template hell, we should really just have a templated state that we shuffle around.
-        template<typename T, typename D, typename S>
-        void push(std::vector<T>& cstack, std::stack<D>& dstack, S& successor_generator, State &state, size_t stateid);
+        template<typename StateSet, typename T, typename D, typename S>
+        void push(StateSet& s, light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid);
 
         template<typename S, typename T, typename D, typename SuccGen>
-        void pop(S& seen, std::vector<T>& cstack, std::stack<D>& dstack, SuccGen& successorGenerator);
+        void pop(S& seen, light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator);
 
         template<typename T, typename D, typename SuccGen>
-        void update(std::vector<T>& cstack, std::stack<D>& d, SuccGen& successorGenerator, idx_t to);
+        void update(light_deque<T>& cstack, light_deque<D>& d, SuccGen& successorGenerator, idx_t to);
 
         template<typename S, typename T, typename SuccGen, typename D>
-        bool next_trans(S& seen, std::vector<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
+        bool next_trans(S& seen, light_deque<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
 
-        template<typename T>
-        void popCStack(std::vector<T>& cstack);
+        template<typename StateSet, typename T>
+        void popCStack(StateSet& s, light_deque<T>& cstack);
 
         template<typename S, typename D, typename C>
-        void build_trace(S& seen, std::stack<D> &&dstack, std::vector<C>& cstack);
+        void build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack);
     };
 }
 

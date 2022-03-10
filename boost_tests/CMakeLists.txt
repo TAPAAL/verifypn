@@ -30,7 +30,7 @@ add_test(NAME XMLPrinterTests COMMAND XMLPrinterTests)
 add_test(NAME PQLParserTests COMMAND PQLParserTests)
 add_test(NAME PredicateCheckerTests COMMAND PredicateCheckerTests)
 add_test(NAME reachability COMMAND reachability)
-add_test(NAME ltl COMMAND reachability)
+add_test(NAME ltl COMMAND ltl)
 add_test(NAME games COMMAND games)
 add_test(NAME color COMMAND color)
 

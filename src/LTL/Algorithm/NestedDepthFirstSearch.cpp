@@ -40,16 +40,19 @@ namespace LTL {
 
     std::pair<bool,size_t> NestedDepthFirstSearch::mark(State& state, const uint8_t MARKER)
     {
-        auto[_, stateid] = _states.add(state);
+        // technically we could decorate the states here instead of
+        // maintaining the index twice in the _mark_count.
+        // this would also spare us one ptrie lookup.
+        auto[_, stateid, data_id] = _states.add(state);
         if (stateid == std::numeric_limits<size_t>::max()) {
             return std::make_pair(false, stateid);
         }
 
-        auto r = _markers[stateid];
-        _markers[stateid] = (MARKER | r);
+        auto& r = _states.get_data(data_id);
         const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
+            r = (MARKER | r);
             ++_mark_count[MARKER];
         }
         return std::make_pair(is_new, stateid);
@@ -58,7 +61,6 @@ namespace LTL {
     template<typename T>
     void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator)
     {
-        this->_is_weak = successor_generator.is_weak() && this->_shortcircuitweak;
         light_deque<stack_entry_t<T>> todo;
         light_deque<stack_entry_t<T>> nested_todo;
 
@@ -66,11 +68,11 @@ namespace LTL {
         State curState = this->_factory.new_state();
 
         {
-            std::vector<State> initial_states = successor_generator.make_initial_state();
+            auto initial_states = successor_generator.make_initial_state();
             for (auto &state : initial_states) {
                 auto res = _states.add(state);
-                if (res.first) {
-                    todo.push_back(stack_entry_t<T>{res.second, T::initial_suc_info()});
+                if (std::get<0>(res)) {
+                    todo.push_back(stack_entry_t<T>{std::get<1>(res), T::initial_suc_info()});
                 }
             }
         }
@@ -103,7 +105,8 @@ namespace LTL {
                 }
                 top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    if(successor_generator.is_accepting(curState) &&
+                    if(_shortcircuitweak &&
+                       successor_generator.is_accepting(curState) &&
                        successor_generator.has_invariant_self_loop(curState))
                     {
                         _violation = true;
@@ -124,7 +127,7 @@ namespace LTL {
         State working = _factory.new_state();
         State curState = _factory.new_state();
 
-        nested_todo.push_back(stack_entry_t<T>{_states.add(state).second, T::initial_suc_info()});
+        nested_todo.push_back(stack_entry_t<T>{std::get<1>(_states.add(state)), T::initial_suc_info()});
 
         while (!nested_todo.empty()) {
             auto &top = nested_todo.back();
@@ -136,9 +139,6 @@ namespace LTL {
             if (!successor_generator.next(working, top._sucinfo)) {
                 nested_todo.pop_back();
             } else {
-                if (this->_is_weak && !successor_generator.is_accepting(working)) {
-                    continue;
-                }
                 if (working == state) {
                     _violation = true;
                     return;
@@ -156,11 +156,7 @@ namespace LTL {
 
     void NestedDepthFirstSearch::print_stats(std::ostream &os) const
     {
-        std::cout << "STATS:\n"
-                  << "\tdiscovered states:          " << _states.discovered() << std::endl
-                  << "\tmax tokens:                 " << _states.max_tokens() << std::endl
-                  << "\texplored states:            " << _mark_count[MARKER1] << std::endl
-                  << "\texplored states (nested):   " << _mark_count[MARKER2] << std::endl;
+        ModelChecker::print_stats(os, _states.discovered(), _states.max_tokens());
     }
 
 

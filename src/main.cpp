@@ -370,7 +370,7 @@ int main(int argc, const char** argv) {
                     LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
                     auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
                         options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
-                        options.strategy, options.ltlHeuristic, options.seed_offset);
+                        options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
 
                     if(options.printstatistics)
                         search.print_stats(std::cout);

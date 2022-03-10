@@ -25,6 +25,8 @@
 #include "utils/structures/light_deque.h"
 #include "LTL/Structures/ProductStateFactory.h"
 
+#include <ptrie/ptrie_map.h>
+
 namespace LTL {
 
     /**
@@ -55,9 +57,9 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
         std::pair<bool,size_t> mark(State& state, uint8_t);
 
-        LTL::Structures::BitProductStateSet<> _states;
+        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> _states;
 
-        std::unordered_map<size_t, uint8_t> _markers;
+        ptrie::map<size_t, uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
