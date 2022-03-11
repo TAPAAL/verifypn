@@ -116,7 +116,7 @@ namespace PetriEngine {
             EvaluationContext() {};
 
             const MarkVal* marking() const {
-                return _marking;
+                return &_marking[_offset];
             }
 
             void setMarking(MarkVal* marking) {
@@ -126,9 +126,15 @@ namespace PetriEngine {
             const PetriNet* net() const {
                 return _net;
             }
+
+            void set_offset(size_t i) {
+                _offset = i;
+            }
+
         private:
             const MarkVal* _marking = nullptr;
             const PetriNet* _net = nullptr;
+            size_t _offset = 0;
         };
 
         /** Context for distance computation */

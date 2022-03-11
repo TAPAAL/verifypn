@@ -106,7 +106,7 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
         | cond_named
 		;
 
-cond_named  : ID DOT sub_cond { $$ = $3; }
+cond_named  : ID DOT sub_cond { $$ = new PathSelectCondition(*$1, Condition_ptr($3)); delete $1; }
             | sub_cond { $$ = $1; }
             ;
 
@@ -144,7 +144,7 @@ factor	: LPAREN expr RPAREN	{ $$ = $2; }
         | named         { $$ = $1; }
 		;
 
-named   : ID DOT sub_named { $$ = $3; }
+named   : ID DOT sub_named { $$ = new PathSelectExpr(*$1, Expr_ptr($3)); delete $1; }
         | sub_named { $$ = $1; }
         ;
 

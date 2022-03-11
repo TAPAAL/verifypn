@@ -295,6 +295,18 @@ namespace PetriEngine {
             std::string op() const override;
         };
 
+        class PathSelectExpr : public Expr {
+        private:
+            std::string _name;
+            size_t _offset;
+            Expr_ptr _child;
+        public:
+            PathSelectExpr(std::string name, Expr_ptr child)
+            : _name(name), _child(child) {};
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
+            [[nodiscard]] virtual bool placeFree() const { return _child->placeFree(); };
+        };
+
         /** Unary minus expression*/
         class MinusExpr : public Expr {
         public:
@@ -435,8 +447,10 @@ namespace PetriEngine {
             Path getPath() const override { return pError; }
             CTLType getQueryType() const override { return TYPE_ERROR; }
             uint32_t distance(DistanceContext& context) const override {
-                assert(false);
-                return 0;
+                if(_child)
+                    return _child->distance(context);
+                else
+                    return 0;
             }
         };
 
@@ -449,6 +463,32 @@ namespace PetriEngine {
         class ExistPath : public PathQuant {
         public:
             using PathQuant::PathQuant;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        };
+
+        class PathSelectCondition : public Condition {
+        private:
+            std::string _name;
+            size_t _offset;
+            Condition_ptr _child;
+        public:
+            PathSelectCondition(std::string name, Condition_ptr child )
+            : _name(name), _child(child) {}
+            Quantifier getQuantifier() const override { return EMPTY; }
+            Path getPath() const override { return pError; }
+            CTLType getQueryType() const override { return TYPE_ERROR; }
+            uint32_t distance(DistanceContext& context) const override {
+                context.set_offset(_offset);
+                auto fn = [this](auto& context) -> uint32_t {
+                if(_child)
+                    return _child->distance(context);
+                else
+                    return 0;
+                };
+                auto r = fn(context);
+                context.set_offset(0);
+                return r;
+            }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
