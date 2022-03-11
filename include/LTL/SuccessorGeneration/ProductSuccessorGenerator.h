@@ -92,16 +92,16 @@ namespace LTL {
         std::vector<LTL::Structures::ProductState> make_initial_state()
         {
             std::vector<LTL::Structures::ProductState> states;
-            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
-            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = _buchi_succ_gen.initial_state_number();
+            auto buf = new PetriEngine::MarkVal[_successor_generator.state_size() + 1];
+            _successor_generator.initialize(buf);
+            buf[_successor_generator.state_size()] = _buchi_succ_gen.initial_state_number();
             LTL::Structures::ProductState state{&_buchi_succ_gen.automaton()};
-            state.setMarking(buf, _net.numberOfPlaces());
+            state.setMarking(buf, _successor_generator.state_size());
             _buchi_succ_gen.prepare(state.get_buchi_state());
             while (next_buchi_succ(state)) {
                 states.emplace_back(&_buchi_succ_gen.automaton());
-                states.back().setMarking(new PetriEngine::MarkVal[_net.numberOfPlaces() + 1], _net.numberOfPlaces());
-                std::copy(state.marking(), state.marking() + _net.numberOfPlaces(), states.back().marking());
+                states.back().setMarking(new PetriEngine::MarkVal[_successor_generator.state_size() + 1], _successor_generator.state_size());
+                std::copy(state.marking(), state.marking() + _successor_generator.state_size(), states.back().marking());
                 states.back().set_buchi_state(state.get_buchi_state());
             }
             return states;
@@ -179,8 +179,6 @@ namespace LTL {
                 _successor_generator.generate_all(parent, sucinfo);
             }
         }
-
-
 
         bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
             return _buchi_succ_gen.has_invariant_self_loop(state.get_buchi_state());

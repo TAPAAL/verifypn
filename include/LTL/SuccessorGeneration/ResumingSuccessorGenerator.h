@@ -93,6 +93,14 @@ namespace LTL {
 
         ~ResumingSuccessorGenerator() override = default;
 
+        size_t state_size() const {
+            return _net.numberOfPlaces();
+        }
+
+        void initialize(PetriEngine::MarkVal* marking) const {
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), marking);
+        }
+
         void prepare(const PetriEngine::Structures::State *state, const successor_info_t &sucinfo);
 
         bool next(PetriEngine::Structures::State &write, successor_info_t &sucinfo) {

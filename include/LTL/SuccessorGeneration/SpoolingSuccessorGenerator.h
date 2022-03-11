@@ -36,6 +36,14 @@ namespace LTL {
 
         using SuccessorGenerator::getParent;
 
+        size_t state_size() const {
+            return _net.numberOfPlaces();
+        }
+
+        void initialize(PetriEngine::MarkVal* marking) const {
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), marking);
+        }
+
         struct successor_info_t {
             SuccessorQueue<> _successors;
             size_t _buchi_state;
