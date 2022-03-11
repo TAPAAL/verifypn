@@ -51,10 +51,6 @@ namespace LTL {
 
         }
 
-        const PetriEngine::PetriNet& net() const { return _net; }
-
-        [[nodiscard]] size_t initial_buchi_state() const { return _buchi_succ_gen.initial_state_number(); };
-
         bool next(LTL::Structures::ProductState &state)
         {
             if (_fresh_marking) {
@@ -98,7 +94,7 @@ namespace LTL {
             std::vector<LTL::Structures::ProductState> states;
             auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
             std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = initial_buchi_state();
+            buf[_net.numberOfPlaces()] = _buchi_succ_gen.initial_state_number();
             LTL::Structures::ProductState state{&_buchi_succ_gen.automaton()};
             state.setMarking(buf, _net.numberOfPlaces());
             //state.setBuchiState(initial_buchi_state());
@@ -110,11 +106,6 @@ namespace LTL {
                 states.back().set_buchi_state(state.get_buchi_state());
             }
             return states;
-        }
-
-        [[nodiscard]] bool is_initial_state(const LTL::Structures::ProductState &state) const
-        {
-            return state.markingEqual(_net.initial());
         }
 
         /**
@@ -181,12 +172,6 @@ namespace LTL {
             }
         }
 
-
-        [[nodiscard]] bool is_weak() const
-        {
-            return _buchi_succ_gen.is_weak();
-        }
-
         size_t last_transition() const { return _successor_generator.last_transition(); }
 
         size_t fired() const { return _successor_generator.fired(); }
@@ -221,8 +206,6 @@ namespace LTL {
             }
             return nullptr;
         };
-
-        size_t buchi_states() { return _buchi_succ_gen.buchi_states(); }
 
         void push() {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
