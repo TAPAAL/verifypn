@@ -201,17 +201,6 @@ namespace LTL {
             }
         }
 
-        void push() {
-            // No transitions have been fired yet. We must be in the initial marking.
-            if (!_heuristic || _last == std::numeric_limits<uint32_t>::max()) return;
-            _heuristic->push(_last);
-        }
-
-        void pop(const successor_info_t &sc) {
-            if (_heuristic && sc._successors.has_consumed())
-                _heuristic->pop(sc._successors.last_pop());
-        }
-
     private:
         SuccessorSpooler* _spooler = nullptr;
         Heuristic* _heuristic = nullptr;
