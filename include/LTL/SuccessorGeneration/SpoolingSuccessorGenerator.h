@@ -26,13 +26,15 @@
 #include "LTL/SuccessorGeneration/Heuristics.h"
 
 namespace LTL {
-    class SpoolingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
+    class SpoolingSuccessorGenerator : protected PetriEngine::SuccessorGenerator {
     public:
         SpoolingSuccessorGenerator(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &)
                 : SuccessorGenerator(net), _transbuf(new uint32_t[net.numberOfTransitions()])
         {
             _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces() + 1], net.numberOfPlaces());
         }
+
+        using SuccessorGenerator::getParent;
 
         struct successor_info_t {
             SuccessorQueue<> _successors;

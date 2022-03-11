@@ -26,7 +26,7 @@
 
 namespace LTL {
 
-    class ResumingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
+    class ResumingSuccessorGenerator : private PetriEngine::SuccessorGenerator {
     public:
 
         struct successor_info_t {
@@ -100,6 +100,8 @@ namespace LTL {
             get_succ_info(sucinfo);
             return has_suc;
         }
+
+        using SuccessorGenerator::getParent;
 
         uint32_t fired() const {
             return _suc_tcounter - 1;

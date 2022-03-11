@@ -24,7 +24,7 @@
 namespace LTL {
     class EnabledSpooler : public SuccessorSpooler {
     public:
-        EnabledSpooler(const PetriEngine::PetriNet& net, PetriEngine::SuccessorGenerator &sucGen)
+        EnabledSpooler(const PetriEngine::PetriNet& net, SpoolingSuccessorGenerator& sucGen)
                 : _successorGenerator(sucGen)
         {
             _marking.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces()]);
@@ -47,7 +47,7 @@ namespace LTL {
         }
 
     private:
-        PetriEngine::SuccessorGenerator &_successorGenerator;
+        SpoolingSuccessorGenerator& _successorGenerator;
         PetriEngine::Structures::State _marking;
     };
 }
