@@ -97,7 +97,6 @@ namespace LTL {
             buf[_net.numberOfPlaces()] = _buchi_succ_gen.initial_state_number();
             LTL::Structures::ProductState state{&_buchi_succ_gen.automaton()};
             state.setMarking(buf, _net.numberOfPlaces());
-            //state.setBuchiState(initial_buchi_state());
             _buchi_succ_gen.prepare(state.get_buchi_state());
             while (next_buchi_succ(state)) {
                 states.emplace_back(&_buchi_succ_gen.automaton());
@@ -181,17 +180,7 @@ namespace LTL {
             }
         }
 
-        void push() {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.push();
-            }
-        }
 
-        void pop(const typename SuccessorGen::successor_info_t &sucinfo) {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.pop(sucinfo);
-            }
-        }
 
         bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
             return _buchi_succ_gen.has_invariant_self_loop(state.get_buchi_state());
