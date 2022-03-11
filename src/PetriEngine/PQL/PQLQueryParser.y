@@ -103,7 +103,7 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
 		| expr LESSEQUAL expr 		{ $$ = new LessThanOrEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		| expr GREATER expr			{ $$ = new LessThanCondition(Expr_ptr($3), Expr_ptr($1)); }
 		| expr GREATEREQUAL expr	{ $$ = new LessThanOrEqualCondition(Expr_ptr($3), Expr_ptr($1)); }
-        | cond_named
+        | cond_named                { $$ = $1; }
 		;
 
 cond_named  : ID DOT sub_cond { $$ = new PathSelectCondition(*$1, Condition_ptr($3)); delete $1; }

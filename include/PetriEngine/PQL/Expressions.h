@@ -305,6 +305,9 @@ namespace PetriEngine {
             : _name(name), _child(child) {};
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             [[nodiscard]] virtual bool placeFree() const { return _child->placeFree(); };
+            const Expr_ptr& child() const { return _child; }
+            const std::string& name() const { return _name; }
+            size_t offset() const { return _offset; }
         };
 
         /** Unary minus expression*/
@@ -452,6 +455,9 @@ namespace PetriEngine {
                 else
                     return 0;
             }
+            const Condition_ptr& child() const { return _child; }
+            const std::string& name() const { return _id; }
+            size_t offset() const { return _offset; }
         };
 
         class AllPaths : public PathQuant {
@@ -490,6 +496,9 @@ namespace PetriEngine {
                 return r;
             }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+            const Condition_ptr& child() const { return _child; }
+            const std::string& name() const { return _name; }
+            size_t offset() const { return _offset; }
         };
 
         class QuantifierCondition : public Condition
@@ -1137,10 +1146,6 @@ namespace PetriEngine {
             double _max = std::numeric_limits<double>::infinity();
             double _offset = 0;
         };
-
     }
 }
-
-
-
 #endif // EXPRESSIONS_H

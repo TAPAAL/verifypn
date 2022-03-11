@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/PredicateCheckers.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     /*** Nested Deadlock ***/
 
@@ -57,6 +57,10 @@ namespace PetriEngine::PQL {
         IsTemporalVisitor visitor;
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
+    }
+
+    void IsTemporalVisitor::_accept(const PathQuant *condition) {
+        setConditionFound();
     }
 
     void IsTemporalVisitor::_accept(const SimpleQuantifierCondition *condition) {
@@ -199,6 +203,18 @@ namespace PetriEngine::PQL {
         if (!_is_nested) setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectCondition *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectExpr *element) {
+        setConditionFound();
+    }
+
 
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
@@ -249,6 +265,10 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
+    void IsLoopSensitiveVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
@@ -272,6 +292,10 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
+    void ContainsNextVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
     bool containsUpperBounds(const Condition_ptr& condition) {
         return containsUpperBounds(condition.get());
     }
@@ -281,4 +305,4 @@ namespace PetriEngine::PQL {
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
-}
+} }

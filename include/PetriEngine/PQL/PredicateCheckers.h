@@ -23,7 +23,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     bool hasNestedDeadlock(const Condition* condition);
     bool hasNestedDeadlock(const Condition_ptr& condition);
@@ -43,6 +43,8 @@ namespace PetriEngine::PQL {
     bool isTemporal(const Condition *condition);
 
     class IsTemporalVisitor : public AnyVisitor {
+
+        void _accept(const PathQuant* condition) override;
 
         void _accept(const SimpleQuantifierCondition *condition) override;
 
@@ -93,6 +95,12 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *element) override;
 
         void _accept(const CompareConjunction *element) override;
+
+        void _accept(const PathQuant *element) override;
+
+        void _accept(const PathSelectCondition *element) override;
+
+        void _accept(const PathSelectExpr *element) override;
     };
 
 
@@ -119,6 +127,8 @@ namespace PetriEngine::PQL {
         void _accept(const AFCondition *condition) override;
 
         void _accept(const DeadlockCondition *condition) override;
+
+        void _accept(const PathQuant *element) override;
     };
 
 
@@ -131,6 +141,8 @@ namespace PetriEngine::PQL {
         void _accept(const EXCondition *condition) override;
 
         void _accept(const AXCondition *condition) override;
+
+        void _accept(const PathQuant *element) override;
     };
 
     class ContainsFireabilityVisitor : public AnyVisitor {
@@ -159,6 +171,6 @@ namespace PetriEngine::PQL {
 
     bool containsUpperBounds(const Condition* condition);
     bool containsUpperBounds(const Condition_ptr& condition);
-}
+} }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

@@ -3,7 +3,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     enum CTLSyntaxType {BOOLEAN, PATH, ERROR = -1};
 
@@ -91,6 +91,12 @@ namespace PetriEngine::PQL {
         void _accept(const SubtractExpr *element) override;
 
         void _accept(const IdentifierExpr *element) override;
+
+        void _accept(const PathQuant *element) override;
+
+        void _accept(const PathSelectCondition *element) override;
+
+        void _accept(const PathSelectExpr *element) override;
 
     private:
         CTLSyntaxType _cur_type;
@@ -198,6 +204,6 @@ namespace PetriEngine::PQL {
         template<typename T>
         std::shared_ptr<T> copy_compare_condition(const T *element);
     };
-}
+} }
 
 #endif //VERIFYPN_CTLVISITOR_H

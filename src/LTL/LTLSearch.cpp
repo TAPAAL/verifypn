@@ -45,37 +45,54 @@ namespace LTL {
      * @return @code(ltl_formula, should_negate) - ltl_formula is the formula f if it is a valid LTL formula, nullptr otherwise.
      * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
      */
-    std::tuple<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
+    std::tuple<Condition_ptr, bool> to_ltl(const Condition_ptr &formula, std::vector<std::string>& hyper_traces) {
         LTL::LTLValidator validator;
         bool should_negate = false;
         Condition_ptr converted;
-        if (auto _formula = dynamic_cast<ECondition *> (formula.get())) {
+        if (auto _formula = dynamic_cast<PathQuant *> (formula.get())) {
+            auto old = _formula;
+            bool exists = false;
+            bool all = false;
+            {
+                old = _formula;
+                all |= _formula->type() == type_id<AllPaths>();
+                exists |= _formula->type() == type_id<ExistPath>();
+                if(all && exists)
+                    return {nullptr, false};
+                hyper_traces.emplace_back(_formula->name());
+            } while(_formula = dynamic_cast<PathQuant*>(_formula->child().get()));
+            if(exists)
+                converted = std::make_shared<NotCondition>(old->child());
+            else
+                converted = old->child();
+            should_negate = exists;
+        } else if (auto _formula = dynamic_cast<ECondition *> (formula.get())) {
             converted = std::make_shared<NotCondition>((*_formula)[0]);
             should_negate = true;
         } else if (auto _formula = dynamic_cast<ACondition *> (formula.get())) {
             converted = (*_formula)[0];
         } else if (auto _formula = dynamic_cast<AGCondition *> (formula.get())) {
             auto f = std::make_shared<ACondition>(std::make_shared<GCondition>((*_formula)[0]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         } else if (auto _formula = dynamic_cast<AFCondition *> (formula.get())) {
             auto f = std::make_shared<ACondition>(std::make_shared<FCondition>((*_formula)[0]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         }
         else if (auto _formula = dynamic_cast<EFCondition *> (formula.get())) {
             auto f = std::make_shared<ECondition>(std::make_shared<FCondition>((*_formula)[0]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         }
         else if (auto _formula = dynamic_cast<EGCondition *> (formula.get())) {
             auto f = std::make_shared<ECondition>(std::make_shared<GCondition>((*_formula)[0]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         }
         else if (auto _formula = dynamic_cast<AUCondition *> (formula.get())) {
             auto f = std::make_shared<ACondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         }
         else if (auto _formula = dynamic_cast<EUCondition *> (formula.get())) {
             auto f = std::make_shared<ECondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
-            return to_ltl(f);
+            return to_ltl(f, hyper_traces);
         }
         else {
             converted = formula;
@@ -117,7 +134,14 @@ namespace LTL {
     LTLSearch::LTLSearch(const PetriEngine::PetriNet& net,
         const PetriEngine::PQL::Condition_ptr &query, const BuchiOptimization optimization, const APCompression compression)
     : _net(net), _query(query), _compression(compression) {
-        std::tie(_negated_formula, _negated_answer) = to_ltl(query);
+        if(!LTLValidator().isLTL(query))
+        {
+            std::stringstream ss;
+            query->toString(ss);
+            throw base_error("Formula is not in supported LTL or HyperLTL fragment: ", ss.str());
+        }
+
+        std::tie(_negated_formula, _negated_answer) = to_ltl(query, _traces);
         _buchi = make_buchi_automaton(_negated_formula, optimization, compression);
     }
 

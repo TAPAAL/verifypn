@@ -303,6 +303,28 @@ namespace PetriEngine {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));
             };
 
+            virtual void _accept(const PathQuant *element) {
+                visit(this, element->child());
+            }
+
+            virtual void _accept(const ExistPath *element) {
+                _accept(static_cast<const PathQuant*>(element));
+            }
+
+            virtual void _accept(const AllPaths *element) {
+                _accept(static_cast<const PathQuant*>(element));
+            }
+
+            virtual void _accept(const PathSelectCondition *element) {
+                visit(this, element->child());
+            }
+
+            virtual void _accept(const PathSelectExpr *element)
+            {
+                visit(this, element->child());
+            }
+
+
             virtual void _accept(const EFCondition *condition) {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));
             };

@@ -41,6 +41,7 @@ namespace LTL {
         const PetriEngine::PetriNet& _net;
         const PetriEngine::PQL::Condition_ptr _query;
         Structures::BuchiAutomaton _buchi;
+        std::vector<std::string> _traces;
         PetriEngine::PQL::Condition_ptr _negated_formula;
         bool _negated_answer = false;
         APCompression _compression;

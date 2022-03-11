@@ -124,28 +124,33 @@ namespace LTL {
         _formula = spot::formula::U(lhs, _formula);
     }
 
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::PathSelectCondition *element)
+    {
+        _formula = make_atomic_prop(element->shared_from_this());
+    }
+
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<LessThanCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<FireableCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<EqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::CompareConjunction *element) {
@@ -195,8 +200,8 @@ namespace LTL {
     }
 
     spot::formula FormulaToSpotSyntax::make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element) {
-        auto cond =
-                const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
+        auto* cond =
+                const_cast<PetriEngine::PQL::Condition *>(element.get());
         std::stringstream ss;
         bool choice = _compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
         if (_compress == APCompression::Full || choice) {
@@ -209,7 +214,7 @@ namespace LTL {
             PetriEngine::PQL::QueryPrinter _printer{ss};
             Visitor::visit(_printer, cond);
         }
-        _ap_info.push_back(AtomicProposition{cond, ss.str()});
+        _ap_info.push_back(AtomicProposition{cond->shared_from_this(), ss.str()});
         return spot::formula::ap(_ap_info.back()._text);
     }
 
@@ -252,5 +257,4 @@ namespace LTL {
 
         return Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)};
     }
-
 }

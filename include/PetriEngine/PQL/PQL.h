@@ -71,7 +71,7 @@ namespace PetriEngine {
         class SimplificationContext;
 
         /** Representation of an expression */
-        class Expr {
+        class Expr : public std::enable_shared_from_this<Expr>{
             int _eval = 0;
         public:
             /** Virtual destructor, an expression should know it subexpressions */

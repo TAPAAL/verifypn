@@ -85,6 +85,8 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
 
+        void _accept(const PetriEngine::PQL::PathSelectCondition *element) override;
+
         void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
 
         void _accept(const PetriEngine::PQL::EFCondition *condition) override;
