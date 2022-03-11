@@ -49,6 +49,9 @@ letter        [a-zA-Z_]
 "G"						{return TOKEN(G);}
 "U"						{return TOKEN(U);}
 "control"				{return TOKEN(CONTROL);}
+"exists"				{return TOKEN(EXISTS);}
+"forall"				{return TOKEN(FORALL);}
+"."                     {return TOKEN(DOT);}
 "NOT" {return TOKEN(NOT);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}

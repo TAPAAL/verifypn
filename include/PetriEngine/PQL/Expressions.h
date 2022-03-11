@@ -169,6 +169,13 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<EGCondition>() { return type_id<AFCondition>() + 1; }
 
+        class AllPaths;
+        template<>
+        constexpr type_id_t type_id<AllPaths>() { return type_id<EGCondition>() + 1; }
+
+        class ExistPath;
+        template<>
+        constexpr type_id_t type_id<ExistPath>() { return type_id<AllPaths>() + 1; }
 
         class PlusExpr;
         template<>
@@ -415,6 +422,35 @@ namespace PetriEngine {
 
 
         /******************** TEMPORAL OPERATORS ********************/
+
+        class PathQuant : public Condition {
+        private:
+            std::string _id;
+            size_t _offset;
+            Condition_ptr _child;
+        public:
+            PathQuant(std::string id, std::shared_ptr<Condition> child)
+                    : _id(id), _child(child) {}
+            Quantifier getQuantifier() const override { return EMPTY; }
+            Path getPath() const override { return pError; }
+            CTLType getQueryType() const override { return TYPE_ERROR; }
+            uint32_t distance(DistanceContext& context) const override {
+                assert(false);
+                return 0;
+            }
+        };
+
+        class AllPaths : public PathQuant {
+        public:
+            using PathQuant::PathQuant;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        };
+
+        class ExistPath : public PathQuant {
+        public:
+            using PathQuant::PathQuant;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        };
 
         class QuantifierCondition : public Condition
         {

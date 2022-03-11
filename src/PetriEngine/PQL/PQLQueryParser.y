@@ -27,18 +27,18 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 /* Terminal type definition */
 %token <string> ID INT
 
-%token <token> A E X F G U EF EG AF AG EX AX CONTROL
+%token <token> A E X F G U EF EG AF AG EX AX CONTROL EXISTS FORALL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
 %token <token> EQUAL NEQUAL LESS LESSEQUAL GREATER GREATEREQUAL
 %token <token> PLUS MINUS MULTIPLY
-%token <token> COMMA COLON
+%token <token> COMMA COLON DOT
 %token <token> TOKENCOUNT QUESTIONMARK FIREABLE
 
 /* Terminal associativity */
 %left AND OR  EF EG AF AG EX AX F G A E
-%right NOT
+%right NOT EXISTS FORALL
 
 /* Nonterminal type definition */
 %type <expr> expr term factor
@@ -53,7 +53,9 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition(Condition_ptr($3))); }
+query   : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition(Condition_ptr($3))); }
+        | EXISTS ID DOT query { query = Condition_ptr(new ExistPath(*$2, query)); }
+        | FORALL ID DOT query { query = Condition_ptr(new AllPaths(*$2, query)); }
         | state_formula { query = Condition_ptr($1); }
         ;
 
