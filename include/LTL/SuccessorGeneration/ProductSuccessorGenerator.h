@@ -172,8 +172,6 @@ namespace LTL {
             }
         }
 
-        size_t last_transition() const { return _successor_generator.last_transition(); }
-
         size_t fired() const { return _successor_generator.fired(); }
 
         void generate_all(LTL::Structures::ProductState *parent, typename SuccessorGen::successor_info_t &sucinfo)
@@ -182,30 +180,6 @@ namespace LTL {
                 _successor_generator.generate_all(parent, sucinfo);
             }
         }
-
-        size_t number_enabled()
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.number_enabled();
-            }
-            return -1;
-        }
-
-        const bool *enabled() const
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.enabled();
-            }
-            return nullptr;
-        };
-
-        const bool *stubborn() const
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.stubborn();
-            }
-            return nullptr;
-        };
 
         void push() {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
