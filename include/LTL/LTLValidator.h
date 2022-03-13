@@ -28,18 +28,18 @@ namespace LTL {
         operator bool() const { return !bad(); }
 
         bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
-            std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
-                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
-                Visitor::visit(this, (*quantifierCondition)[0]);
+            if (condition->is<PetriEngine::PQL::ACondition>() ||
+                condition->is<PetriEngine::PQL::ECondition>()) {
+                auto sq = std::static_pointer_cast<PetriEngine::PQL::SimpleQuantifierCondition>(condition);
+                Visitor::visit(this, (*sq)[0]);
             } else if(auto path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(condition)) {
                 bool is_exists = false;
                 bool is_all = false;
                 auto last = path;
                 do {
                     last = path;
-                    is_all |= dynamic_cast<const PetriEngine::PQL::AllPaths*>(path.get()) != nullptr;
-                    is_exists |= dynamic_cast<const PetriEngine::PQL::ExistPath*>(path.get()) != nullptr;
+                    is_all |= path->is<PetriEngine::PQL::AllPaths>();
+                    is_exists |= path->is<PetriEngine::PQL::ExistPath>();
                     if(is_all && is_exists)
                         return false;
                 } while(path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(path->child()));
