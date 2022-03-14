@@ -58,19 +58,27 @@ using namespace PetriEngine::Reachability;
 
 
 bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                   uint32_t timeout, std::ostream &out, int reductiontype, std::vector<uint32_t>& reductions) {
+                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reductiontype,
+                   std::vector<uint32_t>& reductions) {
     if (!cpnBuilder.isColored()) return false;
 
     ColoredPlaceUseVisitor placeUseVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount());
-    ContainsVisitor<DeadlockCondition> containsDeadlockVisitor; // FIXME This is not the only reason to preserve deadlocks
+    bool preserveLoops = false;
+    bool preserveStutter = false;
+    bool allReach = true;
 
     for (auto &q: queries) {
         PQL::Visitor::visit(placeUseVisitor, q);
-        PQL::Visitor::visit(containsDeadlockVisitor, q);
+        preserveLoops |= PetriEngine::PQL::isLoopSensitive(q);
+        preserveStutter |= PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
+        allReach &= PetriEngine::PQL::isReachability(q);
     }
 
+    Colored::Reduction::QueryType queryType = allReach ? Colored::Reduction::QueryType::Reach :
+            (logic == TemporalLogic::CTL ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
+
     Colored::Reduction::ColoredReducer reducer(cpnBuilder);
-    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), containsDeadlockVisitor.does_contain(), reductiontype, reductions);
+    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), queryType, preserveLoops, preserveStutter, reductiontype, reductions);
 
     auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
     auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();
