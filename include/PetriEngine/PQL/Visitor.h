@@ -304,7 +304,8 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const PathQuant *element) {
-                visit(this, element->child());
+                assert(false);
+                throw base_error("No accept for PathQuant (may be called from subclass)");
             }
 
             virtual void _accept(const ExistPath *element) {
@@ -316,12 +317,14 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const PathSelectCondition *element) {
-                visit(this, element->child());
+                assert(false);
+                throw base_error("No accept for PathSelectCondition");
             }
 
             virtual void _accept(const PathSelectExpr *element)
             {
-                visit(this, element->child());
+                assert(false);
+                throw base_error("No accept for PathSelectExpr");
             }
 
 
