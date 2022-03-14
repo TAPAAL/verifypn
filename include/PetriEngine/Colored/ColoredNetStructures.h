@@ -38,6 +38,13 @@ namespace PetriEngine {
             uint32_t inhib_weight; // inhibitor arc if >0
         };
 
+        struct {
+            bool operator()(const Arc &a, const Arc &b) const
+            {
+                return a.place < b.place;
+            }
+        } ArcLessThanByPlace;
+
         struct Transition {
             std::string name;
             GuardExpression_ptr guard;
