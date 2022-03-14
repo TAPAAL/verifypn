@@ -10,6 +10,38 @@
 
 namespace PetriEngine::Colored::Reduction {
 
+    ColoredReducer::ColoredReducer(PetriEngine::ColoredPetriNetBuilder &b) : _builder(b),
+                                                                             _origPlaceCount(b.getPlaceCount()),
+                                                                             _origTransitionCount(
+                                                                                     b.getTransitionCount()) {
+        // Sort place/transition references to ease reduction
+        for (Place &place : _builder._places) {
+            std::sort(place._pre.begin(), place._pre.end());
+            std::sort(place._post.begin(), place._post.end());
+        }
+        for (Transition &tran : _builder._transitions) {
+            std::sort(tran.input_arcs.begin(), tran.input_arcs.end(), [](Arc &a, Arc &b) {
+                return a.place < b.place;
+            });
+            std::sort(tran.output_arcs.begin(), tran.output_arcs.end(), [](Arc &a, Arc &b) {
+                return a.place < b.place;
+            });
+        }
+        std::sort(_builder._inhibitorArcs.begin(), _builder._inhibitorArcs.end(), [](Arc &a, Arc &b) {
+            return a.place < b.place;
+        });
+
+#ifndef NDEBUG
+        // All rule names must be unique
+        std::set<std::string> names;
+        for (auto &rule : _reductions) {
+            assert(names.find(rule->name()) == names.end());
+            names.insert(rule->name());
+        }
+        consistent();
+#endif
+    }
+
     std::vector<ApplicationSummary> ColoredReducer::createApplicationSummary() const {
         std::vector<ApplicationSummary> res;
         for (auto &rule : _reductions) {
@@ -112,5 +144,99 @@ namespace PetriEngine::Colored::Reduction {
                      inhibs.end());
         tran.input_arcs.clear();
         tran.output_arcs.clear();
+    }
+
+    void ColoredReducer::consistent() {
+#ifndef NDEBUG
+        uint32_t skippedPlaces = 0;
+        for (uint32_t p = 0; p < _builder._places.size(); p++) {
+            const Place &place = _builder._places[p];
+            if (place.skipped) {
+                skippedPlaces++;
+                assert(std::find(_skippedPlaces.begin(), _skippedPlaces.end(), p) != _skippedPlaces.end());
+                assert(place._pre.empty());
+                assert(place._post.empty());
+            }
+            if (place.inhibitor) {
+                bool found = false;
+                for (const Arc &arc : _builder._inhibitorArcs) {
+                    if (arc.place == p) {
+                        found = true;
+                        break;
+                    }
+                }
+                assert(found);
+            }
+            //assert(std::is_sorted(place._pre.begin(), place._pre.end()));
+            //assert(std::is_sorted(place._post.begin(), place._post.end()));
+
+            for (uint32_t t : place._pre) {
+                Transition &tran = _builder._transitions[t];
+                assert(!tran.skipped);
+                auto arc = getOutArc(tran, p);
+                assert(arc != tran.output_arcs.end());
+                assert(arc->place == p);
+            }
+
+            for (uint32_t t : place._post) {
+                Transition &tran = _builder._transitions[t];
+                assert(!tran.skipped);
+                auto arc = getInArc(p, tran);
+                assert(arc != tran.input_arcs.end());
+                assert(arc->place == p);
+            }
+        }
+        assert(skippedPlaces == _skippedPlaces.size());
+
+        uint32_t skippedTransitions = 0;
+        for (uint32_t t = 0; t < _builder._transitions.size(); t++) {
+            const Transition &tran = _builder._transitions[t];
+            if (tran.skipped) {
+                skippedTransitions++;
+                assert(std::find(_skippedTransitions.begin(), _skippedTransitions.end(), t) != _skippedTransitions.end());
+                assert(tran.input_arcs.empty());
+                assert(tran.output_arcs.empty());
+            }
+            if (tran.inhibited) {
+                bool found = false;
+                for (const Arc &arc : _builder._inhibitorArcs) {
+                    if (arc.transition == t) {
+                        found = true;
+                        break;
+                    }
+                }
+                assert(found);
+            }
+
+            int32_t prevPlace = -1;
+            for (const Arc &arc : tran.input_arcs) {
+                assert((int32_t)arc.place > prevPlace);
+                prevPlace = arc.place;
+                Place &place = _builder._places[arc.place];
+                assert(!place.skipped);
+                assert(arc.expr != nullptr);
+                assert(arc.inhib_weight == 0);
+                assert(std::find(place._post.begin(), place._post.end(), t) != place._post.end());
+            }
+            prevPlace = -1;
+            for (const Arc &arc : tran.output_arcs) {
+                assert((int32_t)arc.place > prevPlace);
+                prevPlace = arc.place;
+                Place &place = _builder._places[arc.place];
+                assert(!place.skipped);
+                assert(arc.expr != nullptr);
+                assert(arc.inhib_weight == 0);
+                assert(std::find(place._pre.begin(), place._pre.end(), t) != place._pre.end());
+            }
+        }
+        assert(skippedTransitions == _skippedTransitions.size());
+
+        for (const Arc &arc : _builder._inhibitorArcs) {
+            assert(arc.inhib_weight > 0);
+            assert(arc.expr == nullptr);
+            assert(_builder._places[arc.place].inhibitor);
+            assert(_builder._transitions[arc.transition].inhibited);
+        }
+#endif
     }
 }

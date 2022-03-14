@@ -33,19 +33,7 @@ namespace PetriEngine::Colored {
 
         class ColoredReducer {
         public:
-            ColoredReducer(PetriEngine::ColoredPetriNetBuilder &b) : _builder(b),
-                                                                     _origPlaceCount(b.getPlaceCount()),
-                                                                     _origTransitionCount(
-                                                                             b.getTransitionCount()) {
-#ifndef NDEBUG
-                // All rule names must be unique
-                std::set<std::string> names;
-                for (auto &rule : _reductions) {
-                    assert(names.find(rule->name()) == names.end());
-                    names.insert(rule->name());
-                }
-#endif
-            }
+            ColoredReducer(PetriEngine::ColoredPetriNetBuilder &b);
 
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
@@ -120,6 +108,8 @@ namespace PetriEngine::Colored {
                     // TODO Actually useful reductions. This is just a test rule to guide implementation
                     &_reduceFirstPlace
             };
+
+            void consistent();
         };
     }
 }
