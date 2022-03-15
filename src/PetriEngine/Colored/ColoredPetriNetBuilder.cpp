@@ -139,5 +139,14 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::sort() {
+        for (Colored::Place &place : _places) {
+            std::sort(place._pre.begin(), place._pre.end());
+            std::sort(place._post.begin(), place._post.end());
+        }
+        for (Colored::Transition &tran : _transitions) {
+            std::sort(tran.input_arcs.begin(), tran.input_arcs.end(), Colored::ArcLessThanByPlace);
+            std::sort(tran.output_arcs.begin(), tran.output_arcs.end(), Colored::ArcLessThanByPlace);
+        }
+        std::sort(_inhibitorArcs.begin(), _inhibitorArcs.end(), Colored::ArcLessThanByPlace);
     }
 }

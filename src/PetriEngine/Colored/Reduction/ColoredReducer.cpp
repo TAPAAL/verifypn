@@ -14,22 +14,7 @@ namespace PetriEngine::Colored::Reduction {
                                                                              _origPlaceCount(b.getPlaceCount()),
                                                                              _origTransitionCount(
                                                                                      b.getTransitionCount()) {
-        // Sort place/transition references to ease reduction
-        for (Place &place : _builder._places) {
-            std::sort(place._pre.begin(), place._pre.end());
-            std::sort(place._post.begin(), place._post.end());
-        }
-        for (Transition &tran : _builder._transitions) {
-            std::sort(tran.input_arcs.begin(), tran.input_arcs.end(), [](Arc &a, Arc &b) {
-                return a.place < b.place;
-            });
-            std::sort(tran.output_arcs.begin(), tran.output_arcs.end(), [](Arc &a, Arc &b) {
-                return a.place < b.place;
-            });
-        }
-        std::sort(_builder._inhibitorArcs.begin(), _builder._inhibitorArcs.end(), [](Arc &a, Arc &b) {
-            return a.place < b.place;
-        });
+        b.sort();
 
 #ifndef NDEBUG
         // All rule names must be unique
@@ -168,8 +153,8 @@ namespace PetriEngine::Colored::Reduction {
                 }
                 assert(found);
             }
-            //assert(std::is_sorted(place._pre.begin(), place._pre.end()));
-            //assert(std::is_sorted(place._post.begin(), place._post.end()));
+            assert(std::is_sorted(place._pre.begin(), place._pre.end()));
+            assert(std::is_sorted(place._post.begin(), place._post.end()));
 
             for (uint32_t t : place._pre) {
                 Transition &tran = _builder._transitions[t];
