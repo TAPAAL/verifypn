@@ -86,14 +86,14 @@ namespace PetriEngine::Colored::Reduction {
         return any;
     }
 
-    CArcIter ColoredReducer::getInArc(uint32_t pid, Colored::Transition &tran) const {
+    CArcIter ColoredReducer::getInArc(uint32_t pid, const Colored::Transition &tran) const {
         return std::find_if(tran.input_arcs.begin(), tran.input_arcs.end(),
-                            [&pid](Colored::Arc &arc) { return arc.place == pid; });
+                            [&pid](const Colored::Arc &arc) { return arc.place == pid; });
     }
 
-    CArcIter ColoredReducer::getOutArc(Colored::Transition &tran, uint32_t pid) const {
+    CArcIter ColoredReducer::getOutArc(const Colored::Transition &tran, uint32_t pid) const {
         return std::find_if(tran.output_arcs.begin(), tran.output_arcs.end(),
-                            [&pid](Colored::Arc &arc) { return arc.place == pid; });
+                            [&pid](const Colored::Arc &arc) { return arc.place == pid; });
     }
 
     void ColoredReducer::skipPlace(uint32_t pid) {
