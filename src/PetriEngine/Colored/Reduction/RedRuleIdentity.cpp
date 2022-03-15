@@ -10,7 +10,7 @@
 
 namespace PetriEngine::Colored::Reduction {
     bool RedRuleIdentity::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
-                                bool preserveDeadlocks) {
+                                QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         // Do nothing
         _applications = 1;
