@@ -54,6 +54,11 @@ namespace PetriEngine::Colored::Reduction {
         } else {
             reductionsToUse = _reductions;
         }
+        for (int i = reductionsToUse.size() - 1; i >= 0; i--) {
+            if (!reductionsToUse[i]->isApplicable(queryType, preserveLoops, preserveStutter))
+                reductionsToUse.erase(reductionsToUse.begin() + i);
+        }
+
         do {
             changed = false;
 

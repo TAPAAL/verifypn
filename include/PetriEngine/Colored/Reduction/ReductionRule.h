@@ -24,6 +24,7 @@ namespace PetriEngine::Colored::Reduction {
         virtual std::string name() = 0;
 
         virtual bool canBeAppliedRepeatedly() = 0;
+        virtual bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const = 0;
 
         uint32_t applications() {
             return _applications;
