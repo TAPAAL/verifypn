@@ -16,6 +16,7 @@ namespace PetriEngine::Colored::Reduction {
         std::string name() override { return "Identity"; }
 
         bool canBeAppliedRepeatedly() override { return false; }
+        bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override { return true; }
 
         bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
     };
