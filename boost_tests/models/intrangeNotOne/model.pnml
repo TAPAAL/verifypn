@@ -58,23 +58,6 @@
                     </structure>
                 </hlinitialMarking>
             </place>
-            <place id="P1">
-                <name>
-                    <text>P1</text>
-                    <graphics>
-                        <offset x="0" y="0"/>
-                    </graphics>
-                </name>
-                <graphics>
-                    <position x="225" y="135"/>
-                </graphics>
-                <type>
-                    <text>dot</text>
-                    <structure>
-                        <usersort declaration="dot"/>
-                    </structure>
-                </type>
-            </place>
             <place id="P2">
                 <name>
                     <text>P2</text>
@@ -109,32 +92,6 @@
                     </structure>
                 </type>
             </place>
-            <transition id="T0">
-                <name>
-                    <graphics>
-                        <offset x="0" y="0"/>
-                    </graphics>
-                    <text>T0</text>
-                </name>
-                <graphics>
-                    <position x="165" y="165"/>
-                </graphics>
-                <condition>
-                    <text>v lt 2</text>
-                    <structure>
-                        <lessthan>
-                            <subterm>
-                                <variable refvariable="Varv"/>
-                            </subterm>
-                            <subterm>
-                                <finiteintrangeconstant value="2">
-                                    <finiteintrange end="3" start="2"/>
-                                </finiteintrangeconstant>
-                            </subterm>
-                        </lessthan>
-                    </structure>
-                </condition>
-            </transition>
             <transition id="T1">
                 <name>
                     <graphics>
@@ -187,23 +144,6 @@
                     </structure>
                 </condition>
             </transition>
-            <arc id="P0_to_T0" source="P0" target="T0" type="normal">
-                <hlinscription>
-                    <text>1'v</text>
-                    <structure>
-                        <numberof>
-                            <subterm>
-                                <numberconstant value="1">
-                                    <positive/>
-                                </numberconstant>
-                            </subterm>
-                            <subterm>
-                                <variable refvariable="Varv"/>
-                            </subterm>
-                        </numberof>
-                    </structure>
-                </hlinscription>
-            </arc>
             <arc id="P0_to_T2" source="P0" target="T2" type="normal">
                 <hlinscription>
                     <text>1'v</text>
@@ -233,23 +173,6 @@
                             </subterm>
                             <subterm>
                                 <variable refvariable="Varv"/>
-                            </subterm>
-                        </numberof>
-                    </structure>
-                </hlinscription>
-            </arc>
-            <arc id="T0_to_P1" source="T0" target="P1" type="normal">
-                <hlinscription>
-                    <text>1'dot</text>
-                    <structure>
-                        <numberof>
-                            <subterm>
-                                <numberconstant value="1">
-                                    <positive/>
-                                </numberconstant>
-                            </subterm>
-                            <subterm>
-                                <useroperator declaration="dot"/>
                             </subterm>
                         </numberof>
                     </structure>
