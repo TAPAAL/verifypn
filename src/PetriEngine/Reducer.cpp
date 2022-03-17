@@ -592,13 +592,15 @@ namespace PetriEngine {
             if(_pflags[pouter] > 0) continue;
             _pflags[pouter] = 1;
             if(hasTimedout()) return false;
-            if(parent->_places[pouter].skip) continue;
+            const Place &pout = parent->_places[pouter];
+            if(pout.skip) continue;
 
             // C4. No inhib
-            if(parent->_places[pouter].inhib) continue;
+            if(pout.inhib) continue;
 
             for (size_t inner = outer + 1; inner < parent->_transitions[touter].post.size(); ++inner)
             {
+                if (pout.skip) break;
                 auto pinner = parent->_transitions[touter].post[inner].place;
                 if(parent->_places[pinner].skip) continue;
 
@@ -708,6 +710,12 @@ namespace PetriEngine {
                     // UC1. Remove p2
                     skipPlace(p2);
                     _pflags[pouter] = 0;
+
+                    // p2 has now been removed from touter.post, so update indexes to not miss any
+                    if (p2 == pouter) {
+                        outer--;
+                        inner--;
+                    } else if (p2 == pinner) inner--;
                     break;
                 }
             }
@@ -751,17 +759,16 @@ namespace PetriEngine {
             if (tout.inhib) continue;
 
             for(size_t inner = outer + 1; inner < op.consumers.size(); ++inner) {
+                if (tout.skip) break;
                 auto tinner = op.consumers[inner];
                 Transition& tin = getTransition(tinner);
-                if (tin.skip || tout.skip) continue;
+                if (tin.skip) continue;
 
                 // D2. No inhibitors
                 if (tin.inhib) continue;
 
                 for (size_t swp = 0; swp < 2; ++swp) {
                     if(hasTimedout()) return false;
-
-                    if (tin.skip || tout.skip) break;
 
                     uint t1 = touter;
                     uint t2 = tinner;
@@ -834,6 +841,12 @@ namespace PetriEngine {
                     _ruleD++;
                     skipTransition(t2);
                     _tflags[touter] = 0;
+
+                    // t2 has now been removed from op.consumers, so update indexes to not miss any
+                    if (t2 == touter) {
+                        outer--;
+                        inner--;
+                    } else if (t2 == tinner) inner--;
                     break; // break the swap loop
                 }
             }
