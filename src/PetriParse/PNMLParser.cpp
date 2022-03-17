@@ -209,10 +209,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
             auto ct = new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
             if (strcmp(type->name(), "finiteintrange") == 0) {
 
-                uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
-                uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
-
-                for (uint32_t i = start; i<=end;i++) {
+                int64_t start = atoll(type->first_attribute("start")->value());
+                int64_t end = atoll(type->first_attribute("end")->value());
+                for (uint32_t i = start; i <= end; ++i) {
                     ct->addColor(std::to_string(i).c_str());
                 }
                 fct = ct;
@@ -355,9 +354,9 @@ void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector
         std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
 		auto value = element->first_attribute("value")->value();
 		auto intRangeElement = element->first_node("finiteintrange");
-		uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
-		uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
-		expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end)));
+		const char* start = intRangeElement->first_attribute("start")->value();
+		const char* end = intRangeElement->first_attribute("end")->value();
+		expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start, end)));
         collectedColors.push_back(expressionsToAdd);
 	} else if (strcmp(element->name(), "useroperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0
 					|| strcmp(element->name(), "successor") == 0 || strcmp(element->name(), "predecessor") == 0) {
@@ -479,10 +478,10 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
     } else if (strcmp(element->name(), "predecessor") == 0) {
         return std::make_shared<PetriEngine::Colored::PredecessorExpression>(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "finiteintrangeconstant") == 0){
-		auto value = element->first_attribute("value")->value();
-		auto intRangeElement = element->first_node("finiteintrange");
-		uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
-		uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
+		const char* value = element->first_attribute("value")->value();
+		auto* intRangeElement = element->first_node("finiteintrange");
+		const char* start = intRangeElement->first_attribute("start")->value();
+		const char* end = intRangeElement->first_attribute("end")->value();
 		return std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end));
 
 	} else if (strcmp(element->name(), "tuple") == 0) {
@@ -856,13 +855,16 @@ std::vector<PetriEngine::Colored::ColorExpression_ptr> PNMLParser::findPartition
     return colorExpressions;
 }
 
-const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, uint32_t start, uint32_t end) const{
+const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, const char* start, const char* end) const{
 	for (const auto& elem : colorTypes) {
-		auto col = (*elem.second)[value];
-		if (col){
-			if((*elem.second).operator[](0).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
-				return col;
-		}
+        // lets just hope that nobody decides to make a color that starts with fn and ends
+        // with ln but is not an int-range.
+        const std::string& fn = (*elem.second)[size_t{0}].getColorName();
+        const std::string& ln = (*elem.second)[(*elem.second).size()-1].getColorName();
+        if(fn.compare(start) == 0 && ln.compare(end) == 0)
+        {
+            return &(*elem.second)[atoll(value) - atoll(start)];
+        }
 	}
 	throw base_error("Could not find color: ", value, "\nCANNOT_COMPUTE\n");
 }

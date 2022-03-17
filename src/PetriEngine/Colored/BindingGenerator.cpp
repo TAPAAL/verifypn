@@ -65,7 +65,7 @@ namespace PetriEngine {
             Colored::VariableVisitor::get_variables(*arc.expr, variables);
         }
         for (const auto& var : variables) {
-            _bindings[var] = &var->colorType->operator[](0);
+            _bindings[var] = &var->colorType->operator[](size_t{0});
         }
 
         if (!eval())
