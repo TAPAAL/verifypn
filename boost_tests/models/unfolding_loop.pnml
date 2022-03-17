@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="rag" name="rag">
+                        <finiteintrange end="3" start="2"/>
+                    </namedsort>
+                    <variabledecl id="Varx" name="x">
+                        <usersort declaration="rag"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="P0">
+                <name>
+                    <text>P0</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="180" y="225"/>
+                </graphics>
+                <type>
+                    <text>rag</text>
+                    <structure>
+                        <usersort declaration="rag"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'2)</text>
+                    <structure>
+                        <add>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <finiteintrangeconstant value="2">
+                                            <finiteintrange end="3" start="2"/>
+                                        </finiteintrangeconstant>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </add>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <place id="P1">
+                <name>
+                    <text>P1</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="540" y="225"/>
+                </graphics>
+                <type>
+                    <text>dot</text>
+                    <structure>
+                        <usersort declaration="dot"/>
+                    </structure>
+                </type>
+            </place>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="405" y="225"/>
+                </graphics>
+                <condition>
+                    <text>x lt 2</text>
+                    <structure>
+                        <lessthan>
+                            <subterm>
+                                <variable refvariable="Varx"/>
+                            </subterm>
+                            <subterm>
+                                <finiteintrangeconstant value="2">
+                                    <finiteintrange end="3" start="2"/>
+                                </finiteintrangeconstant>
+                            </subterm>
+                        </lessthan>
+                    </structure>
+                </condition>
+            </transition>
+            <arc id="P0_to_T0" source="P0" target="T0" type="normal">
+                <hlinscription>
+                    <text>1'x</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="Varx"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="T0_to_P1" source="T0" target="P1" type="normal">
+                <hlinscription>
+                    <text>1'dot</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <useroperator declaration="dot"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+    </net>
+</pnml>
