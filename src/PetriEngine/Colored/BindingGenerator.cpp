@@ -70,6 +70,7 @@ namespace PetriEngine {
 
         if (!eval())
             nextBinding();
+        _empty = !eval(); // should capture non-satisfiable
     }
 
     bool NaiveBindingGenerator::eval() const {
@@ -111,6 +112,8 @@ namespace PetriEngine {
     }
 
     NaiveBindingGenerator::Iterator NaiveBindingGenerator::begin() {
+        if(_empty)
+            return {nullptr};
         return {this};
     }
 

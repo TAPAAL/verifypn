@@ -307,7 +307,6 @@ BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(1)) {
                     try {
                         auto [pn, conditions, qstrings] = load_pn(model.c_str(),
                             query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        BOOST_REQUIRE(pn->numberOfTransitions() > 0);
                         BOOST_REQUIRE(pn->numberOfPlaces() > 0);
                         auto c2 = prepareForReachability(conditions[0]);
                         ReachabilitySearch strategy(*pn, handler, 0);
