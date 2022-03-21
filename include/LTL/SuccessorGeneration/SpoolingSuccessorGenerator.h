@@ -35,6 +35,7 @@ namespace LTL {
         }
 
         using SuccessorGenerator::getParent;
+        using SuccessorGenerator::fired;
 
         size_t state_size() const {
             return _net.numberOfPlaces();

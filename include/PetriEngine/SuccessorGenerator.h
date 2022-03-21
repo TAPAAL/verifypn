@@ -91,11 +91,7 @@ protected:
 
                     if (!checkPreset(_suc_tcounter)) continue;
                     if (!predicate(_suc_tcounter)) continue;
-                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
-                    consumePreset(write, _suc_tcounter);
-                    producePostset(write, _suc_tcounter);
-
-                    ++_suc_tcounter;
+                    _fire(write, _suc_tcounter); // <-- also updated _suc_tcounter
                     return true;
                 }
                 _suc_tcounter = std::numeric_limits<uint32_t>::max();

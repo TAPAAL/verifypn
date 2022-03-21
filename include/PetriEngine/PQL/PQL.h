@@ -90,8 +90,9 @@ namespace PetriEngine {
             }
 
             template<typename T>
-            bool is() {
-                return std::is_base_of<Expr,T>::value && type_id<T>() == type();
+            bool is() const {
+                static_assert(std::is_base_of<Expr,T>::value);
+                return type_id<T>() == type();
             }
         };
 /******************* NEGATION PUSH STATS  *******************/
@@ -209,8 +210,9 @@ namespace PetriEngine {
             void toString(std::ostream& os = std::cout);
             virtual type_id_t type() const = 0;
             template<typename T>
-            bool is() {
-                return std::is_base_of<Condition,T>::value && type_id<T>() == type();
+            bool is() const {
+                static_assert(std::is_base_of<Condition,T>::value);
+                return type_id<T>() == type();
             }
         protected:
             //Value for checking if condition is trivially true or false.

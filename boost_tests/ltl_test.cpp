@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality, * utf::timeout(300)) {
                         LTL::LTLHeuristic::FireCount})
                     {
                         std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace
-                            << " por=" << to_underlying(por) << " heur=" << to_underlying(heur) << std::endl;
+                            << " por=" << to_underlying(por) << " alg=" << to_underlying(alg) << " heur=" << to_underlying(heur) << std::endl;
                             Strategy strategy = Strategy::HEUR;
                         if(heur == LTL::LTLHeuristic::DFS)
                             strategy = Strategy::HEUR;

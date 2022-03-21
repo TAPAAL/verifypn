@@ -115,10 +115,6 @@ namespace LTL {
             return _suc_tcounter - 1;
         }
 
-        const PetriEngine::MarkVal *get_parent() const {
-            return _parent->marking();
-        }
-
         size_t last_transition() const {
             return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() :
                     _suc_tcounter - 1;
