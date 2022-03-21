@@ -141,8 +141,6 @@ namespace LTL {
             return true;
         }
 
-        [[nodiscard]] uint32_t fired() const { return _last; }
-
         void generate_all(LTL::Structures::ProductState *parent, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
@@ -205,8 +203,8 @@ namespace LTL {
 
         void push() {
             // No transitions have been fired yet. We must be in the initial marking.
-            if (!_heuristic || fired() == std::numeric_limits<uint32_t>::max()) return;
-            _heuristic->push(fired());
+            if (!_heuristic || _last == std::numeric_limits<uint32_t>::max()) return;
+            _heuristic->push(_last);
         }
 
         void pop(const successor_info_t &sc) {
