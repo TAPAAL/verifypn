@@ -16,7 +16,8 @@ EvaluationVisitor.cpp
 StablePlaceFinder.cpp
 ForwardFixedPoint.cpp
 VariableSymmetry.cpp
-Unfolder.cpp)
+Unfolder.cpp
+VarMultiset.cpp)
 
 target_link_libraries(Colored ColoredReduction)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)
