@@ -21,11 +21,12 @@
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/PetriNet.h"
 #include "PetriEngine/Structures/State.h"
-#include <memory>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 
-namespace LTL {
+#include <memory>
 
+namespace LTL {
+    // this class def. should NOT inherit from SuccessorGenerator, it should encapsulate it.
     class ResumingSuccessorGenerator : private PetriEngine::SuccessorGenerator {
     public:
 
@@ -115,25 +116,18 @@ namespace LTL {
             return _suc_tcounter - 1;
         }
 
-        size_t last_transition() const {
-            return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() :
-                    _suc_tcounter - 1;
-        }
-
         static constexpr successor_info_t _initial_suc_info{
             successor_info_t::NoPCounter,
             successor_info_t::NoTCounter,
             successor_info_t::NoBuchiState,
             successor_info_t::NoLastState};
 
-        static constexpr auto initial_suc_info() {
+        auto initial_suc_info() {
             return _initial_suc_info;
         }
 
     private:
         void get_succ_info(successor_info_t &sucinfo) const;
-
-        //friend class ReducingSuccessorGenerator;
     };
 }
 

@@ -17,22 +17,45 @@
 
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 #include "LTL/SuccessorGeneration/Spoolers.h"
+#include "LTL/SuccessorGeneration/CompoundGenerator.h"
 
 namespace LTL {
 
     bool NestedDepthFirstSearch::check()
     {
-        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
         if(_heuristic)
         {
+            if(_hyper_traces > 1)
+                throw base_error("Hyper-LTL with heuristics or partial order reduction not yet enabled.");
             SpoolingSuccessorGenerator gen(_net, _formula);
             EnabledSpooler spooler(_net, gen);
             gen.set_spooler(spooler);
             gen.set_heuristic(_heuristic);
+            return check_with_generator(gen);
+        } else {
+            if(_hyper_traces <= 1)
+            {
+                ResumingSuccessorGenerator gen(_net);
+                return check_with_generator(gen);
+            }
+            else
+            {
+                CompoundGenerator gen(_net, _hyper_traces);
+                return check_with_generator(gen);
+            }
+        }
+    }
+
+    template<typename G>
+    bool NestedDepthFirstSearch::check_with_generator(G& gen) {
+        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
+        if(_heuristic) // could check on type of generator
+        {
             ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
             dfs(prod_gen, states);
-        } else {
-            ResumingSuccessorGenerator gen(_net);
+        }
+        else
+        {
             ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
             dfs(prod_gen, states);
         }
@@ -74,7 +97,7 @@ namespace LTL {
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 if (std::get<0>(res)) {
-                    todo.push_back(stack_entry_t<T>{std::get<1>(res), T::initial_suc_info()});
+                    todo.push_back(stack_entry_t<T>{std::get<1>(res), successor_generator.initial_suc_info()});
                 }
             }
         }
@@ -120,7 +143,7 @@ namespace LTL {
                         _max_tokens = states.max_tokens();
                         return;
                     }
-                    todo.push_back(stack_entry_t<T>{stateid, T::initial_suc_info()});
+                    todo.push_back(stack_entry_t<T>{stateid, successor_generator.initial_suc_info()});
                 }
             }
         }
@@ -135,7 +158,7 @@ namespace LTL {
         State working = _factory.new_state();
         State curState = _factory.new_state();
 
-        nested_todo.push_back(stack_entry_t<T>{std::get<1>(states.add(state)), T::initial_suc_info()});
+        nested_todo.push_back(stack_entry_t<T>{std::get<1>(states.add(state)), successor_generator.initial_suc_info()});
 
         while (!nested_todo.empty()) {
             auto &top = nested_todo.back();
@@ -156,7 +179,7 @@ namespace LTL {
                     continue;
                 top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    nested_todo.push_back(stack_entry_t<T>{stateid, T::initial_suc_info()});
+                    nested_todo.push_back(stack_entry_t<T>{stateid, successor_generator.initial_suc_info()});
                 }
             }
         }

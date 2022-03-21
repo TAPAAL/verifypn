@@ -47,12 +47,14 @@ namespace LTL {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
-                           uint32_t kbound)
-                : ModelChecker(net, cond, buchi), _k_bound(kbound)
+                           uint32_t kbound, uint32_t hyper_traces)
+                : ModelChecker(net, cond, buchi), _k_bound(kbound), _hyper_traces(hyper_traces)
         {
             if (buchi.buchi().num_states() > 1048576) {
                 throw base_error("Cannot handle Büchi automata larger than 2^20 states");
             }
+            if(_hyper_traces > 1)
+                throw base_error("Hyper-LTL not supported for Tarjans algorithm (yet).");
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -110,7 +112,8 @@ namespace LTL {
         struct dentry_t {
             idx_t _pos; // position in cstack.
             typename T::successor_info_t _sucinfo;
-            explicit dentry_t(idx_t pos) : _pos(pos), _sucinfo(T::initial_suc_info()) {}
+            explicit dentry_t(idx_t pos, typename T::successor_info_t&& info)
+            : _pos(pos), _sucinfo(std::move(info)) {}
         };
 
 
@@ -122,7 +125,8 @@ namespace LTL {
         size_t _loop_trans = std::numeric_limits<size_t>::max();
         size_t _discoverd = std::numeric_limits<size_t>::max();
         size_t _max_tokens = std::numeric_limits<size_t>::max();
-        uint32_t _k_bound;
+        const uint32_t _k_bound = 0;
+        const uint32_t _hyper_traces = 0;
         LTLPartialOrder _order = LTLPartialOrder::None;
 
         // TODO, instead of this template hell, we should really just have a templated state that we shuffle around.

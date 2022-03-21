@@ -28,8 +28,15 @@ public:
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
+
     virtual bool prepare(const Structures::State& state) { return prepare(&state); }
-    virtual bool prepare(const Structures::State* state);
+    virtual bool prepare(const Structures::State* state) { return prepare(state, 0); }
+    // these two should really accept an internal state instead
+    bool prepare(const Structures::State& state, uint32_t pcounter, uint32_t tcounter = std::numeric_limits<uint32_t>::max()) { return prepare(&state, pcounter, tcounter); }
+    bool prepare(const Structures::State* state, uint32_t pcounter, uint32_t tcounter = std::numeric_limits<uint32_t>::max()) ;
+    std::tuple<uint32_t,uint32_t> state() const {
+        return {_suc_pcounter, _suc_tcounter};
+    }
     virtual bool next(Structures::State& write)
     {
         return _next(write, [](size_t){ return true; });

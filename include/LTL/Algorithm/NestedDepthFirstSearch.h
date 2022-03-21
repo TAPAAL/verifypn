@@ -46,8 +46,8 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, uint32_t kbound)
-                : ModelChecker(net, query, buchi), _kbound(kbound) {}
+                               const Structures::BuchiAutomaton &buchi, uint32_t kbound, uint32_t _hyper_traces)
+                : ModelChecker(net, query, buchi), _kbound(kbound), _hyper_traces(_hyper_traces) {}
 
         virtual bool check();
 
@@ -61,6 +61,7 @@ namespace LTL {
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
         const uint32_t _kbound = 0;
+        const uint32_t _hyper_traces = 0;
         size_t _discovered = 0;
         size_t _max_tokens = 0;
 
@@ -72,6 +73,9 @@ namespace LTL {
 
         template<typename S>
         std::pair<bool,size_t> mark(S& states, State& state, uint8_t);
+
+        template<typename G>
+        bool check_with_generator(G& gen);
 
         template<typename T, typename S>
         void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states);

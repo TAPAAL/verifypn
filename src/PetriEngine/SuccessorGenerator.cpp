@@ -32,9 +32,10 @@ namespace PetriEngine {
     SuccessorGenerator::~SuccessorGenerator() {
     }
 
-    bool SuccessorGenerator::prepare(const Structures::State* state) {
+    bool SuccessorGenerator::prepare(const Structures::State* state, uint32_t pcounter, uint32_t tcounter) {
         _parent = state;
-        reset();
+        _suc_pcounter = pcounter;
+        _suc_tcounter = tcounter;
         return true;
     }
 

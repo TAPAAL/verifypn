@@ -82,7 +82,7 @@ namespace LTL {
             _heuristic = heuristic;
         }
 
-        [[nodiscard]] static successor_info_t initial_suc_info()
+        [[nodiscard]] successor_info_t initial_suc_info()
         {
             return successor_info_t{successor_info_t::NoBuchiState, successor_info_t::NoLastState};
         }

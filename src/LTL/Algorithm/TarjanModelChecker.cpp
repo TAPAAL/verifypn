@@ -205,7 +205,7 @@ namespace LTL {
         const auto h = hash(StateSet::get_marking_id(stateid), StateSet::get_buchi_state(stateid));
         cstack.push_back(T{ctop, stateid, _chash[h]});
         _chash[h] = ctop;
-        dstack.push_back(D{ctop});
+        dstack.push_back(D{ctop, successor_generator.initial_suc_info()});
         if (successor_generator.is_accepting(state)) {
             _astack.push_back(ctop);
             if (successor_generator.has_invariant_self_loop(state)){
