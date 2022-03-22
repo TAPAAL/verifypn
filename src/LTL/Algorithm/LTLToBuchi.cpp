@@ -199,6 +199,14 @@ namespace LTL {
         Visitor::visit(this, (*condition)[0]);
     }
 
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ExistPath *condition) {
+        Visitor::visit(this, condition->child());
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AllPaths *condition) {
+        Visitor::visit(this, condition->child());
+    }
+
     spot::formula FormulaToSpotSyntax::make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element) {
         auto* cond =
                 const_cast<PetriEngine::PQL::Condition *>(element.get());

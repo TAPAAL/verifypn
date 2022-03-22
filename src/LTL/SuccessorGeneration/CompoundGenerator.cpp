@@ -52,15 +52,16 @@ namespace LTL {
             PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(_parent->marking()) + (i * _generator.net().numberOfPlaces()));
             _generator.prepare(working, sucinfo._pcounter[i], sucinfo._tcounter[i]);
             PetriEngine::Structures::State tmp(write.marking() + i * _generator.net().numberOfPlaces());
-            if (_generator.next(tmp)) // TODO, add specialized has_next to succgen
+            bool has_next = _generator.next(tmp);
+            tmp.release();
+            working.release();
+            if (has_next) // TODO, add specialized has_next to succgen
             {
-                tmp.release();
                 std::tie(sucinfo._pcounter[i], sucinfo._tcounter[i]) = _generator.state();
                 has_succ = true;
                 if(!initial)
                     break;
             } else {
-                tmp.release();
                 if (i == _hyper_traces - 1) {
                     // done w. iteration, no more!
                     if(!has_succ)

@@ -50,21 +50,19 @@ namespace LTL {
         bool should_negate = false;
         Condition_ptr converted;
         if (auto _formula = dynamic_cast<PathQuant *> (formula.get())) {
-            auto old = _formula;
             bool exists = false;
             bool all = false;
-            {
-                old = _formula;
+            do {
                 all |= _formula->type() == type_id<AllPaths>();
                 exists |= _formula->type() == type_id<ExistPath>();
                 if(all && exists)
                     return {nullptr, false};
                 hyper_traces.emplace_back(_formula->name());
-            } while(_formula = dynamic_cast<PathQuant*>(_formula->child().get()));
+                converted = static_cast<PathQuant*>(_formula)->child();
+                _formula = dynamic_cast<PathQuant*>(converted.get());
+            } while(_formula);
             if(exists)
-                converted = std::make_shared<NotCondition>(old->child());
-            else
-                converted = old->child();
+                converted = std::make_shared<NotCondition>(converted);
             should_negate = exists;
         } else if (auto _formula = dynamic_cast<ECondition *> (formula.get())) {
             converted = std::make_shared<NotCondition>((*_formula)[0]);

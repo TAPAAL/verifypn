@@ -51,7 +51,11 @@ namespace LTL {
     protected:
         void _accept(const PetriEngine::PQL::ACondition *condition) override;
 
+        void _accept(const PetriEngine::PQL::AllPaths *condition) override;
+
         void _accept(const PetriEngine::PQL::ECondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::ExistPath *condition) override;
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
 

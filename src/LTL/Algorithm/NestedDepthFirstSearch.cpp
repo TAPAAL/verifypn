@@ -89,8 +89,8 @@ namespace LTL {
         light_deque<stack_entry_t<T>> todo;
         light_deque<stack_entry_t<T>> nested_todo;
 
-        State working = this->_factory.new_state();
-        State curState = this->_factory.new_state();
+        State working = this->_factory.new_state(_hyper_traces);
+        State curState = this->_factory.new_state(_hyper_traces);
 
         {
             auto initial_states = successor_generator.make_initial_state();
@@ -155,8 +155,8 @@ namespace LTL {
     void NestedDepthFirstSearch::ndfs(ProductSuccessorGenerator<T>& successor_generator, S& states, const State &state, light_deque<stack_entry_t<T>>& nested_todo)
     {
 
-        State working = _factory.new_state();
-        State curState = _factory.new_state();
+        State working = _factory.new_state(_hyper_traces);
+        State curState = _factory.new_state(_hyper_traces);
 
         nested_todo.push_back(stack_entry_t<T>{std::get<1>(states.add(state)), successor_generator.initial_suc_info()});
 
