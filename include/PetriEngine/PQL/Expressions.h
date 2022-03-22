@@ -177,6 +177,10 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<ExistPath>() { return type_id<AllPaths>() + 1; }
 
+        class PathSelectCondition;
+        template<>
+        constexpr type_id_t type_id<PathSelectCondition>() { return type_id<ExistPath>() + 1; }
+
         class PlusExpr;
         template<>
         constexpr type_id_t type_id<PlusExpr>() { return 0; }
@@ -205,6 +209,9 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<UnfoldedIdentifierExpr>() { return type_id<LiteralExpr>() + 1; }
 
+        class PathSelectExpr;
+        template<>
+        constexpr type_id_t type_id<PathSelectExpr>() { return type_id<UnfoldedIdentifierExpr>() + 1; }
 
         Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr);
         Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b);
@@ -308,6 +315,7 @@ namespace PetriEngine {
             const Expr_ptr& child() const { return _child; }
             const std::string& name() const { return _name; }
             size_t offset() const { return _offset; }
+            void set_offset(size_t offset) { _offset = offset; }
         };
 
         /** Unary minus expression*/
@@ -444,8 +452,7 @@ namespace PetriEngine {
             size_t _offset;
             Condition_ptr _child;
         public:
-            PathQuant(std::string id, std::shared_ptr<Condition> child)
-                    : _id(id), _child(child) {}
+            PathQuant(std::string id, std::shared_ptr<Condition> child);
             Quantifier getQuantifier() const override { return EMPTY; }
             Path getPath() const override { return pError; }
             CTLType getQueryType() const override { return TYPE_ERROR; }
@@ -499,6 +506,7 @@ namespace PetriEngine {
             const Condition_ptr& child() const { return _child; }
             const std::string& name() const { return _name; }
             size_t offset() const { return _offset; }
+            void set_offset(size_t offset) { _offset = offset; }
         };
 
         class QuantifierCondition : public Condition

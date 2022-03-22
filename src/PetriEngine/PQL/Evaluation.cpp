@@ -113,6 +113,13 @@ namespace PetriEngine { namespace PQL {
         _value = {element->value()};
     }
 
+    void ExprEvalVisitor::_accept(const PathSelectExpr *element) {
+        auto old = _offset;
+        _offset = element->offset();
+        Visitor::visit(this, element->child());
+        _offset = old;
+    }
+
 /******************** Evaluation ********************/
 
     void EvaluateVisitor::_accept(SimpleQuantifierCondition *element) {

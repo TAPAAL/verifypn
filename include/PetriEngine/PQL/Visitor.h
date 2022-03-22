@@ -96,6 +96,9 @@ namespace PetriEngine {
                         case type_id<UnfoldedIdentifierExpr>():
                             visitor->accept(static_cast<UnfoldedIdentifierExpr*> (c));
                             break;
+                        case type_id<PathSelectExpr>():
+                            visitor->accept(static_cast<PathSelectExpr*> (c));
+                            break;
                         default:
                             __builtin_unreachable(); // <-- helps the compiler optimize
                     }
@@ -213,6 +216,15 @@ namespace PetriEngine {
                                 break;
                             case type_id<EGCondition>():
                                 visitor->accept(static_cast<EGCondition*> (c));
+                                break;
+                            case type_id<AllPaths>():
+                                visitor->accept(static_cast<AllPaths*> (c));
+                                break;
+                            case type_id<ExistPath>():
+                                visitor->accept(static_cast<ExistPath*> (c));
+                                break;
+                            case type_id<PathSelectCondition>():
+                                visitor->accept(static_cast<PathSelectCondition*> (c));
                                 break;
                             default:
                                 __builtin_unreachable(); // <-- helps the compiler optimize
@@ -597,6 +609,18 @@ namespace PetriEngine {
                 if (const auto& compiled = element->compiled())
                     visit(this, compiled);
                 // no-op
+            }
+
+            void _accept(const PathSelectExpr* element) override {
+                visit(this, element->child());
+            }
+
+            void _accept(const PathSelectCondition* cond) override {
+                visit(this, cond->child());
+            }
+
+            void _accept(const PathQuant* cond) override {
+                visit(this, cond->child());
             }
         };
 

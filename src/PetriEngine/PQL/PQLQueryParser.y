@@ -7,7 +7,7 @@
 
 using namespace PetriEngine::PQL;
 
-std::shared_ptr<PetriEngine::PQL::Condition> query;
+PetriEngine::PQL::Condition* query;
 extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
@@ -53,10 +53,10 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query   : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition(Condition_ptr($3))); }
-        | EXISTS ID DOT query { query = Condition_ptr(new ExistPath(*$2, query)); }
-        | FORALL ID DOT query { query = Condition_ptr(new AllPaths(*$2, query)); }
-        | state_formula { query = Condition_ptr($1); }
+query   : CONTROL COLON state_formula { query = new ControlCondition(Condition_ptr($3)); }
+        | EXISTS ID DOT query { query = new ExistPath(*$2, Condition_ptr(query)); delete $2; }
+        | FORALL ID DOT query { query = new AllPaths(*$2, Condition_ptr(query)); delete $2; }
+        | state_formula { query = $1; }
         ;
 
 state_formula : LPAREN state_formula RPAREN	{ $$ = $2; }

@@ -61,6 +61,12 @@ namespace PetriEngine {
 
             void _accept(const AFCondition *condition) override;
 
+            void _accept(const AllPaths* condition) override;
+
+            void _accept(const ExistPath* condition) override;
+
+            void _accept(const PathSelectCondition* condition) override;
+
             void _accept(const EXCondition *condition) override;
 
             void _accept(const AXCondition *condition) override;
@@ -110,6 +116,8 @@ namespace PetriEngine {
             void _accept(const SubtractExpr *element) override;
 
             void _accept(const IdentifierExpr *element) override;
+
+            void _accept(const PathSelectExpr* element) override;
 
 
         protected:

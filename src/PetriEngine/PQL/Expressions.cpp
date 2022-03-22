@@ -169,6 +169,10 @@ namespace PetriEngine {
             }
         }
 
+        PathQuant::PathQuant(std::string id, std::shared_ptr<Condition> child)
+        : _id(id), _child(std::move(child)) {
+        }
+
         /******************** opTAPAAL ********************/
 
         std::string EqualCondition::opTAPAAL() const {

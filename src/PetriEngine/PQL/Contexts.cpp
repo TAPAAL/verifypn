@@ -9,6 +9,17 @@
 namespace PetriEngine {
     namespace PQL {
 
+        uint32_t AnalysisContext::resolve_trace_name(const std::string& s, bool create)
+        {
+            uint32_t id = _trace_names.size();
+            auto [it, inserted] = _trace_names.emplace(std::make_pair(s,id));
+            if(!inserted && create)
+                throw base_error("Trace identifier ", s, " already existed.");
+            if(inserted && !create)
+                throw base_error("Trace identifier ", s, " does not exist, but is used as a prefix in the query.");
+            return it->second;
+        }
+
         bool ColoredAnalysisContext::resolvePlace(const std::string& place, std::unordered_map<uint32_t, std::string>& out)
         {
             auto it = _coloredPlaceNames.find(place);

@@ -20,10 +20,13 @@
 #ifndef CONTEXTS_H
 #define CONTEXTS_H
 
+#include "PQL.h"
+
 #include "../PetriNet.h"
 #include "../Simplification/LPCache.h"
-#include "PQL.h"
 #include "../NetStructures.h"
+
+#include "utils/errors.h"
 
 #include <string>
 #include <vector>
@@ -41,6 +44,7 @@ namespace PetriEngine {
             const std::unordered_map<std::string, uint32_t>& _placeNames;
             const std::unordered_map<std::string, uint32_t>& _transitionNames;
             const PetriNet* _net = nullptr;
+            std::unordered_map<std::string, uint32_t> _trace_names;
         public:
 
             /** A resolution result */
@@ -65,6 +69,8 @@ namespace PetriEngine {
 
             /** Resolve an identifier */
             virtual ResolutionResult resolve(const std::string& identifier, bool place = true);
+
+            uint32_t resolve_trace_name(const std::string& s, bool create);
 
             auto& allPlaceNames() const { return _placeNames; }
             auto& allTransitionNames() const { return _transitionNames; }

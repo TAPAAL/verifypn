@@ -43,9 +43,13 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(LiteralExpr *element) override;
 
+        void _accept(PathSelectExpr* element) override;
+
         void _accept(IdentifierExpr *element) override;
 
         void _accept(UnfoldedIdentifierExpr *element) override;
+
+        void _accept(PathSelectCondition* element) override;
 
         void _accept(FireableCondition *element) override;
 
@@ -78,6 +82,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(UntilCondition *element) override;
 
         void _accept(SimpleQuantifierCondition *element) override;
+
+        void _accept(PathQuant* element) override;
     };
 } }
 

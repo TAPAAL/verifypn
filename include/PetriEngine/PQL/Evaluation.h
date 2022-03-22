@@ -44,10 +44,13 @@ namespace PetriEngine { namespace PQL {
 
         virtual void _accept(const LiteralExpr *element) override final;
 
+        virtual void _accept(const PathSelectExpr *element) override final;
+
         int64_t value() const { return _value; }
     protected:
         const EvaluationContext& _context;
         int64_t _value;
+        size_t _offset;
     };
 
     class BaseEvaluationVisitor : public MutatingVisitor {
@@ -56,9 +59,20 @@ namespace PetriEngine { namespace PQL {
         const EvaluationContext& context() const { return _context; }
     protected:
         explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
+        void _accept(PathSelectCondition *element) override
+        {
+            auto old = _offset;
+            _offset = element->offset();
+            Visitor::visit(this, element->child());
+            _offset = old;
+        }
+        void _accept(PathQuant* element) override {
+            Visitor::visit(this, element->child());
+        }
     protected:
         const EvaluationContext& _context;
         Condition::Result _return_value = Condition::RUNKNOWN;
+        size_t _offset;
     };
 
     int64_t evaluate(Expr *element, const EvaluationContext& context);

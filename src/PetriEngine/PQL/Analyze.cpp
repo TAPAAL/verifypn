@@ -43,6 +43,16 @@ namespace PetriEngine { namespace PQL {
         // Do nothing
     }
 
+    void AnalyzeVisitor::_accept(PathSelectExpr* element) {
+        element->set_offset(_context.resolve_trace_name(element->name(), false));
+        Visitor::visit(this, element->child());
+    }
+
+    void AnalyzeVisitor::_accept(PathSelectCondition* element) {
+        element->set_offset(_context.resolve_trace_name(element->name(), false));
+        Visitor::visit(this, element->child());
+    }
+
     void AnalyzeVisitor::_accept(CommutativeExpr *element) {
         for(auto& i : element->_ids)
         {
@@ -222,6 +232,12 @@ namespace PetriEngine { namespace PQL {
 
     void AnalyzeVisitor::_accept(SimpleQuantifierCondition *element) {
         Visitor::visit(this, (*element)[0]);
+    }
+
+    void AnalyzeVisitor::_accept(PathQuant* element)
+    {
+        auto id = _context.resolve_trace_name(element->name(), true);
+        Visitor::visit(this, element->child());
     }
 
     void AnalyzeVisitor::_accept(NotCondition *element) {

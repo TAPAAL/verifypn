@@ -118,3 +118,19 @@ void FormulaSizeVisitor::_accept(const LogicalCondition *condition) {
         i += subvisit(c);
     RETURN(i)
 }
+
+
+void FormulaSizeVisitor::_accept(const PathSelectCondition* c)
+{
+    RETURN(subvisit(c->child()) + 1)
+}
+
+void FormulaSizeVisitor::_accept(const PathQuant* c)
+{
+    RETURN(subvisit(c->child()) + 1)
+}
+
+void FormulaSizeVisitor::_accept(const PathSelectExpr* e)
+{
+    RETURN(subvisit(e->child()) + 1)
+}

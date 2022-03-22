@@ -70,6 +70,22 @@ namespace PetriEngine {
                 _accept(static_cast<NaryExpr*>(element));
             }
 
+            virtual void _accept(AllPaths *element) {
+                _accept(static_cast<PathQuant*>(element));
+            }
+
+            virtual void _accept(ExistPath *element) {
+                _accept(static_cast<PathQuant*>(element));
+            }
+
+            virtual void _accept(PathQuant *element) {
+                throw base_error("No accept for PathQuant (may be called from subclass)");
+            }
+
+            virtual void _accept(PathSelectCondition* element) {
+                throw base_error("No accept for PathSelectCondition");
+            }
+
             virtual void _accept(SimpleQuantifierCondition *element) {
                 throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
             }
@@ -221,6 +237,10 @@ namespace PetriEngine {
             virtual void _accept(IdentifierExpr *element) {
                 throw base_error("No accept for IdentifierExpr");
             };
+
+            virtual void _accept(PathSelectExpr* element) {
+                throw base_error("No accept for PathSelectExpr");
+            }
         };
     }
 }
