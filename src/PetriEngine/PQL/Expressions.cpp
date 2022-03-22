@@ -639,7 +639,7 @@ namespace PetriEngine {
             }
         }
 
-        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk) : CommutativeExpr(0), tk(tk)
+        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(0)
         {
             init(std::move(exprs));
         }

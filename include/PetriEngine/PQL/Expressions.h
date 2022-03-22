@@ -252,12 +252,8 @@ namespace PetriEngine {
         /** Binary plus expression */
         class PlusExpr : public CommutativeExpr {
         public:
-
-            PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
-
+            PlusExpr(std::vector<Expr_ptr>&& exprs);
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            bool tk = false;
-
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a + b; }
             std::string op() const override;

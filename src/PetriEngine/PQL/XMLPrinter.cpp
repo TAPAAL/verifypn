@@ -303,14 +303,8 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const UnfoldedIdentifierExpr *element) {
-            if (token_count) {
-                outputLine("<place>", element->name(), "</place>");
-            }
-            else
-            {
-                Tag tc(this, "tokens-count");
-                outputLine("<place>", element->name(), "</place>");
-            }
+            Tag tc(this, "tokens-count");
+            outputLine("<place>", element->name(), "</place>");
         }
 
         void XMLPrinter::_accept(const LiteralExpr *element) {
@@ -318,20 +312,6 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const PlusExpr *element) {
-            if (token_count) {
-                for(auto& e : element->expressions())
-                    Visitor::visit(this, e);
-                return;
-            }
-
-            if(element->tk) {
-                Tag t(this, "tokens-count");
-                for(auto& e : element->places())
-                    outputLine("<place>", e.second, "</place>");
-                for(auto& e : element->expressions())
-                    Visitor::visit(this, e);
-                return;
-            }
             {
                 Tag t(this, "integer-sum");
                 outputLine("<integer-constant>", element->constant(), "</integer-constant>");

@@ -142,7 +142,7 @@ factor	: LPAREN expr RPAREN	{ $$ = $2; }
                     for (auto& name : *ids) {
                         a.push_back(std::make_shared<IdentifierExpr>(name));
                     }
-                    $$ = new PlusExpr(std::move(a), true);
+                    $$ = new PlusExpr(std::move(a));
                 }
             }
 		;

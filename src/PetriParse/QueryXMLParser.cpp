@@ -469,7 +469,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         }
         if (ids.size() == 1) return ids[0];
 
-        return std::make_shared<PlusExpr>(std::move(ids), true);
+        return std::make_shared<PlusExpr>(std::move(ids));
     } else if (elementName == "integer-sum" || elementName == "integer-product") {
         auto children = element->first_node();
         bool isMult = false;
