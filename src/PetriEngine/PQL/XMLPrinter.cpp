@@ -314,11 +314,14 @@ namespace PetriEngine {
         void XMLPrinter::_accept(const PlusExpr *element) {
             {
                 Tag t(this, "integer-sum");
-                outputLine("<integer-constant>", element->constant(), "</integer-constant>");
-                for(auto& i : element->places())
-                {
+                if(element->constant() != 0)
+                    outputLine("<integer-constant>", element->constant(), "</integer-constant>");
+                if(!element->places().empty()) {
                     Tag tc(this, "tokens-count");
-                    outputLine("<place>", i.second, "</place>");
+                    for(auto& i : element->places())
+                    {
+                        outputLine("<place>", i.second, "</place>");
+                    }
                 }
                 for(auto& e : element->expressions())
                     Visitor::visit(this, e);
@@ -327,6 +330,15 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const MultiplyExpr *element) {
             Tag i(this, "integer-product");
+            if(element->constant() != 1)
+                outputLine("<integer-constant>", element->constant(), "</integer-constant>");
+            if(!element->places().empty()) {
+                for(auto& i : element->places())
+                {
+                    Tag tc(this, "tokens-count");
+                    outputLine("<place>", i.second, "</place>");
+                }
+            }
             for(auto& e : element->expressions())
                 Visitor::visit(this, e);
         }
