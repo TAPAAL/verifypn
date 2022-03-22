@@ -53,27 +53,21 @@ namespace PetriEngine { namespace PQL {
                 throw base_error("Unable to resolve identifier \"", i.second, "\"");
             }
         }
-        for(auto& e : element->expressions())
+        std::vector<Expr_ptr> old_exprs;
+        std::swap(element->_exprs, old_exprs);
+        for(auto& e : old_exprs)
+        {
             Visitor::visit(this, e);
-        std::sort(element->_exprs.begin(), element->_exprs.end(), [](auto& a, auto& b)
-        {
-            auto ida = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
-            auto idb = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
-            if(ida == nullptr) return false;
-            if(ida && !idb) return true;
-            return ida->offset() < idb->offset();
-        });
-
-        size_t i = 0;
-        for(; i < element->_exprs.size(); ++i)
-        {
-            auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(element->_exprs[i]);
-            if(!id) break;
-            element->_ids.emplace_back(id->offset(), id->name());
         }
-        element->_ids.erase(element->_ids.begin(), element->_ids.begin() + i);
-        std::sort(element->_ids.begin(), element->_ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
-
+        if(element->type() == type_id<PlusExpr>())
+            element->init(static_cast<PlusExpr*>(element), std::move(old_exprs));
+        else if(element->type() == type_id<MultiplyExpr>())
+            element->init(static_cast<MultiplyExpr*>(element), std::move(old_exprs));
+        else
+        {
+            assert(false);
+            throw base_error("Unexpected commutative expression.");
+        }
     }
 
     uint32_t getPlace(AnalysisContext& context, const std::string& name)
