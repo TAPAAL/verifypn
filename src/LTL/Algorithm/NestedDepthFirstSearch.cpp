@@ -18,6 +18,7 @@
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/CompoundGenerator.h"
+#include "LTL/Structures/CompoundStateSet.h"
 
 namespace LTL {
 
@@ -48,15 +49,14 @@ namespace LTL {
 
     template<typename G>
     bool NestedDepthFirstSearch::check_with_generator(G& gen) {
-        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
-        if(_heuristic) // could check on type of generator
-        {
-            ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
+        ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
+        if constexpr (std::is_same<G,CompoundGenerator>::value) {
+            LTL::Structures::CompoundStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _hyper_traces, _kbound);
             dfs(prod_gen, states);
         }
         else
         {
-            ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
+            LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
             dfs(prod_gen, states);
         }
         return !_violation;
