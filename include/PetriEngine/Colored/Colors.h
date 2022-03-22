@@ -174,6 +174,10 @@ namespace PetriEngine {
             std::vector<Color>::const_iterator end() const {
                 return _colors.end();
             }
+
+            virtual bool isProduct() const {
+                return false;
+            }
         };
 
         class ProductType : public ColorType {
@@ -264,6 +268,10 @@ namespace PetriEngine {
             const Color& operator[](size_t index) const override;
             const Color* operator[](const char* index) const override;
             const Color* operator[](const std::string& index) const override;
+
+            virtual bool isProduct() const {
+                return true;
+            }
         };
 
         struct Variable {
