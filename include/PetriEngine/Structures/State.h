@@ -100,14 +100,6 @@ namespace PetriEngine {
                 return os;
             }
 
-            bool operator==(const State &rhs) const {
-                return _marking == rhs._marking;
-            }
-
-            bool operator!=(const State &rhs) const {
-                return !(rhs == *this);
-            }
-
             MarkVal operator[](size_t i) const { return _marking[i]; }
 
         private:

@@ -170,7 +170,9 @@ namespace LTL {
             if (!successor_generator.next(working, top._sucinfo)) {
                 nested_todo.pop_back();
             } else {
-                if (working == state) {
+                if(working.get_buchi_state() == state.get_buchi_state() &&
+                   std::equal(working.marking(), working.marking() + _net.numberOfPlaces()*_hyper_traces,
+                              state.marking())) {
                     _violation = true;
                     return;
                 }

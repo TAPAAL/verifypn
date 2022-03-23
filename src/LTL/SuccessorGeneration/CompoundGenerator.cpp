@@ -26,7 +26,7 @@ namespace LTL {
     using namespace PetriEngine;
 
     CompoundGenerator::CompoundGenerator(const PetriNet& net, size_t hyper_traces)
-    : _generator(net), _hyper_traces(hyper_traces) {
+    : _generator(net), _hyper_traces(hyper_traces == 0 ? 1 : hyper_traces) {
     }
 
     void CompoundGenerator::prepare(const Structures::State* state, const successor_info_t &sucinfo) {

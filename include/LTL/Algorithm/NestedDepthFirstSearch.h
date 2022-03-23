@@ -46,8 +46,8 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, uint32_t kbound, uint32_t _hyper_traces)
-                : ModelChecker(net, query, buchi), _kbound(kbound), _hyper_traces(_hyper_traces) {}
+                               const Structures::BuchiAutomaton &buchi, uint32_t kbound, uint32_t hyper_traces)
+                : ModelChecker(net, query, buchi), _kbound(kbound), _hyper_traces(hyper_traces == 0 ? 1 : hyper_traces) {}
 
         virtual bool check();
 
