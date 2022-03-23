@@ -49,8 +49,8 @@ namespace PetriEngine { namespace PQL {
         int64_t value() const { return _value; }
     protected:
         const EvaluationContext& _context;
-        int64_t _value;
-        size_t _offset;
+        int64_t _value = 0;
+        size_t _offset =  0;
     };
 
     class BaseEvaluationVisitor : public MutatingVisitor {

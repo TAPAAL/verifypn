@@ -111,9 +111,10 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
 
 ReturnValue contextAnalysis(bool colored, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
     //Context analysis
-    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
-        place_names, transition_names, colored);
+
     for (auto& q : queries) {
+        ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
+            place_names, transition_names, colored);
         PetriEngine::PQL::analyze(q, context);
     }
     return ReturnValue::ContinueCode;
