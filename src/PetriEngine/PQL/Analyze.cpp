@@ -60,9 +60,9 @@ namespace PetriEngine { namespace PQL {
             Visitor::visit(this, e);
         }
         if(element->type() == type_id<PlusExpr>())
-            element->init(static_cast<PlusExpr*>(element), std::move(old_exprs));
+            element->init(std::move(old_exprs));
         else if(element->type() == type_id<MultiplyExpr>())
-            element->init(static_cast<MultiplyExpr*>(element), std::move(old_exprs));
+            element->init(std::move(old_exprs));
         else
         {
             assert(false);

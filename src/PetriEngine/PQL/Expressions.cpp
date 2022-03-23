@@ -611,15 +611,15 @@ namespace PetriEngine {
                 }
             }
         }
-        template<typename T>
-        void CommutativeExpr::handle(T* ptr, const Expr_ptr& e)
+
+        void CommutativeExpr::handle(const Expr_ptr& e)
         {
             if (e->placeFree()) {
                 EvaluationContext c;
                 _constant = apply(_constant, evaluate(e.get(), c));
             } else if (auto id = std::dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
                 if (id->compiled()) {
-                    handle(ptr, id->compiled());
+                    handle(id->compiled());
                 }
                 else
                 {
@@ -633,7 +633,7 @@ namespace PetriEngine {
                 // when the child only has a single non-const element.
                 if (c->_ids.size() == 0 && c->_exprs.size() == 0) {
                     _constant = apply(_constant, c->_constant);
-                } else if (c->type() == type_id<T>()) {
+                } else if (c->type() == type()) {
                     _constant = apply(_constant, c->_constant);
                     _exprs.insert(_exprs.end(), c->_exprs.begin(), c->_exprs.end());
                     _ids.insert(_ids.end(), c->_ids.begin(), c->_ids.end());
@@ -647,23 +647,22 @@ namespace PetriEngine {
             }
         }
 
-        template<typename T>
-        void CommutativeExpr::init(T* ptr,std::vector<Expr_ptr>&& exprs)
+        void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
         {
             for (auto& e : exprs) {
-                handle(ptr, e);
+                handle(e);
             }
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
         }
 
         PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(0)
         {
-            init(this, std::move(exprs));
+            init(std::move(exprs));
         }
 
         MultiplyExpr::MultiplyExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(1)
         {
-            init(this, std::move(exprs));
+            init(std::move(exprs));
         }
     } // PQL
 } // PetriEngine

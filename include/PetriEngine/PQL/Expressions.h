@@ -242,10 +242,9 @@ namespace PetriEngine {
 
         protected:
             CommutativeExpr(int64_t constant): _constant(constant) {};
-            template<typename T>
-            void init(T*,std::vector<Expr_ptr>&& exprs);
-            template<typename T>
-            void handle(T*, const Expr_ptr& e);
+
+            void init(std::vector<Expr_ptr>&& exprs);
+            void handle(const Expr_ptr& e);
             virtual int64_t apply(int64_t, int64_t) const = 0;
             int64_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
