@@ -305,45 +305,43 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
             return std::make_shared<NotCondition>(cond);
     } else if (elementName == "conjunction" || elementName == "and") {
-        auto children = element->first_node();
-        if (getChildCount(element) < 2)
-        {
-            assert(false);
-            return nullptr;
-        }
-        auto it = children;
-        cond = parseBooleanFormula(it);
-        // skip a sibling
-        for (it = it->next_sibling(); it; it = it->next_sibling()) {
+        std::vector<Condition_ptr> res;
+        for (auto it = element->first_node(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
             if(child == nullptr || cond == nullptr)
             {
                 assert(false);
                 return nullptr;
             }
-            cond = std::make_shared<AndCondition>(cond, child);
+            res.emplace_back(child);
         }
-        return cond;
+        if (res.empty())
+        {
+            throw base_error("Found `", elementName, "` without any children in XML, cannot parse.");
+        }
+        else if(res.size() == 1)
+            return res.back();
+        else
+            return std::make_shared<AndCondition>(std::move(res));
     } else if (elementName == "disjunction" || elementName == "or") {
-        auto children = element->first_node();
-        if (getChildCount(element) < 2)
-        {
-            assert(false);
-            return nullptr;
-        }
-        auto it = children;
-        cond = parseBooleanFormula(it);
-        // skip a sibling
-        for (it = it->next_sibling(); it; it = it->next_sibling()) {
+        std::vector<Condition_ptr> res;
+        for (auto it = element->first_node(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
             if(child == nullptr || cond == nullptr)
             {
                 assert(false);
                 return nullptr;
             }
-            cond = std::make_shared<OrCondition>(cond, child);
+            res.emplace_back(child);
         }
-        return cond;
+        if (res.empty())
+        {
+            throw base_error("Found `", elementName, "` without any children in XML, cannot parse.");
+        }
+        else if(res.size() == 1)
+            return res.back();
+        else
+            return std::make_shared<OrCondition>(std::move(res));
     } else if (elementName == "exclusive-disjunction") {
         auto children = element->first_node();
         if (getChildCount(element) != 2)
