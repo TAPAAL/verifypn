@@ -17,20 +17,19 @@ namespace PetriEngine::Colored {
     private:
         class Iterator;
 
-        typedef std::vector<std::pair<const Variable *, uint32_t>> Internal;
+        typedef std::vector<const Variable *> VarTuple;
+        typedef std::vector<std::pair<VarTuple, uint32_t>> Internal;
 
         Internal _set;
-        const ColorType *_type;
+        std::vector<const ColorType *> _types;
     public:
-        VarMultiset() : _set(), _type(nullptr) {};
+        VarMultiset() : _set(), _types() {};
 
-        VarMultiset(const ColorType *type) : _set(), _type(type) {};
+        VarMultiset(std::vector<const ColorType *> &types) : _set(), _types(types) {};
 
         VarMultiset(const VarMultiset &) = default;
 
         VarMultiset(VarMultiset &&) = default;
-
-        VarMultiset(const Variable *, uint32_t);
 
         ~VarMultiset() = default;
 
@@ -54,9 +53,9 @@ namespace PetriEngine::Colored {
 
         void operator*=(uint32_t scalar);
 
-        uint32_t operator[](const Variable *color) const;
+        uint32_t operator[](const VarTuple &vt) const;
 
-        uint32_t &operator[](const Variable *color);
+        uint32_t &operator[](const VarTuple &vt);
 
         bool isSubsetOf(const VarMultiset &other) const;
 
@@ -70,9 +69,18 @@ namespace PetriEngine::Colored {
             return _set.size();
         }
 
+        size_t tupleSize() const {
+            return _types.size();
+        }
+
         std::string toString() const;
 
     private:
+
+        bool matchesType(const VarTuple &vt) const;
+
+        std::vector<const ColorType *> inferTypes(const VarTuple &vt);
+
         class Iterator {
         private:
             const VarMultiset *_ms;
@@ -88,9 +96,9 @@ namespace PetriEngine::Colored {
 
             Iterator &operator++();
 
-            std::pair<const Variable *, const uint32_t &> operator++(int);
+            std::pair<const std::vector<const Variable *>, const uint32_t &> operator++(int);
 
-            std::pair<const Variable *, const uint32_t &> operator*();
+            std::pair<const std::vector<const Variable *>, const uint32_t &> operator*();
         };
     };
 }

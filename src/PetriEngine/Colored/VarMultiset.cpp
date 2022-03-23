@@ -8,11 +8,6 @@
 #include "PetriEngine/Colored/VarMultiset.h"
 
 namespace PetriEngine::Colored {
-    VarMultiset::VarMultiset(const PetriEngine::Colored::Variable *v, const uint32_t multiplicity)
-            : _set(), _type(v->colorType) {
-        _set.emplace_back(v, multiplicity);
-    }
-
     VarMultiset::Iterator VarMultiset::begin() const {
         return Iterator(this, 0);
     }
@@ -40,19 +35,19 @@ namespace PetriEngine::Colored {
     }
 
     void VarMultiset::operator+=(const VarMultiset &other) {
-        if (_type == nullptr) _type = other._type;
-        if (_type != other._type)
+        if (_types.empty()) _types = other._types;
+        if (_types != other._types)
             throw base_error("You cannot compare variable multisets of different types");
-        for (auto pair: other._set) {
+        for (auto &pair: other._set) {
             (*this)[pair.first] += pair.second;
         }
     }
 
     void VarMultiset::operator-=(const VarMultiset &other) {
-        if (_type == nullptr) _type = other._type;
-        if (other._type != nullptr && _type != other._type)
+        if (_types.empty()) _types = other._types;
+        if (!other._types.empty() && _types != other._types)
             throw base_error("You cannot add multisets over different sets");
-        for (auto pair: _set) {
+        for (auto &pair: _set) {
             (*this)[pair.first] = std::min<uint32_t>(pair.second - other[pair.first], 0); // min because underflow
         }
     }
@@ -63,30 +58,28 @@ namespace PetriEngine::Colored {
         }
     }
 
-    uint32_t VarMultiset::operator[](const Variable *var) const {
-        if (_type == nullptr || _type == var->colorType) {
-            for (auto pair: _set) {
-                if (pair.first == var) return pair.second;
-            }
+    uint32_t VarMultiset::operator[](const VarTuple &vt) const {
+        if (_types.empty()) return 0;
+        assert(matchesType(vt));
+        for (auto &pair: _set) {
+            if (pair.first == vt) return pair.second;
         }
         return 0;
     }
 
-    uint32_t &VarMultiset::operator[](const Variable *var) {
-        if (_type == nullptr) _type = var->colorType;
-        if (_type != var->colorType) {
-            throw base_error("You cannot access a multiset with a variable from a different color type");
+    uint32_t &VarMultiset::operator[](const VarTuple &vt) {
+        if (_types.empty()) _types = inferTypes(vt);
+        assert(matchesType(vt));
+        for (auto &pair: _set) {
+            if (pair.first == vt) return pair.second;
         }
-        for (auto &i: _set) {
-            if (i.first == var) return i.second;
-        }
-        _set.emplace_back(var, 0);
+        _set.emplace_back(vt, 0);
         return _set.back().second;
     }
 
     size_t VarMultiset::size() const {
         size_t res = 0;
-        for (auto pair: _set) {
+        for (auto &pair: _set) {
             res += pair.second;
         }
         return res;
@@ -109,6 +102,29 @@ namespace PetriEngine::Colored {
             }
         }
         return oss.str();
+    }
+
+    bool VarMultiset::matchesType(const std::vector<const Variable *> &vartuple) const {
+#ifndef NDEBUG
+        if (_ptype != nullptr) {
+            assert(vartuple.size() == _ptype->productSize());
+            for (int i = 0; i < vartuple.size(); ++i) {
+
+            }
+            return true;
+        }
+        assert(vartuple.size() == 1);
+        assert(vartuple[0]->colorType == _type);
+#endif
+        return true;
+    }
+
+    std::vector<const ColorType *> VarMultiset::inferTypes(const VarTuple &vt) {
+        std::vector<const ColorType *> types;
+        for (auto v : vt) {
+            types.emplace_back(v->colorType);
+        }
+        return types;
     }
 
     bool VarMultiset::Iterator::operator==(VarMultiset::Iterator &other) {
