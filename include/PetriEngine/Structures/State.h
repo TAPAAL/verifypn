@@ -95,7 +95,7 @@ namespace PetriEngine {
 
             std::ostream &printShort(const PetriNet &net, std::ostream &os) {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
-                        os << _marking[i];
+                    os << _marking[i] << ",";
                 }
                 return os;
             }

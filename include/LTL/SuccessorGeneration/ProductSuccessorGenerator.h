@@ -92,15 +92,15 @@ namespace LTL {
         std::vector<LTL::Structures::ProductState> make_initial_state()
         {
             std::vector<LTL::Structures::ProductState> states;
-            auto buf = new PetriEngine::MarkVal[_successor_generator.state_size() + 1];
+            auto buf = new PetriEngine::MarkVal[_successor_generator.state_size()];
             _successor_generator.initialize(buf);
-            buf[_successor_generator.state_size()] = _buchi_succ_gen.initial_state_number();
             LTL::Structures::ProductState state{&_buchi_succ_gen.automaton()};
-            state.setMarking(buf, _successor_generator.state_size());
+            state.setMarking(buf);
+            state.set_buchi_state(_buchi_succ_gen.initial_state_number());
             _buchi_succ_gen.prepare(state.get_buchi_state());
             while (next_buchi_succ(state)) {
                 states.emplace_back(&_buchi_succ_gen.automaton());
-                states.back().setMarking(new PetriEngine::MarkVal[_successor_generator.state_size() + 1], _successor_generator.state_size());
+                states.back().setMarking(new PetriEngine::MarkVal[_successor_generator.state_size()]);
                 std::copy(state.marking(), state.marking() + _successor_generator.state_size(), states.back().marking());
                 states.back().set_buchi_state(state.get_buchi_state());
             }

@@ -101,7 +101,7 @@ namespace PetriEngine { namespace PQL {
 
     void ExprEvalVisitor::_accept(const UnfoldedIdentifierExpr *element) {
         assert(element->offset() != -1);
-        _value = (int64_t) _context.marking()[element->offset()];
+        _value = (int64_t) _context.marking()[element->offset() + _offset*_context.net()->numberOfPlaces()];
     }
 
     void ExprEvalVisitor::_accept(const IdentifierExpr *element) {

@@ -29,12 +29,11 @@ namespace LTL { namespace Structures {
             : _net(net), _aut(aut) {}
 
         ProductState new_state(size_t hyper_traces = 1) {
-            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces()*hyper_traces+1];
+            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces()*hyper_traces];
             for(size_t i = 0; i < hyper_traces; ++i)
                 std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf + i * _net.numberOfPlaces());
-            buf[_net.numberOfPlaces()*hyper_traces] = 0;
             ProductState state{&_aut};
-            state.setMarking(buf, _net.numberOfPlaces()*hyper_traces);
+            state.setMarking(buf);
             state.set_buchi_state(_aut.buchi().get_init_state_number());
             return state;
         }

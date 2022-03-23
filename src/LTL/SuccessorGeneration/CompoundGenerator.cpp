@@ -49,7 +49,8 @@ namespace LTL {
     bool CompoundGenerator::increment(PetriEngine::Structures::State &write, successor_info_t &sucinfo, bool initial) {
         bool has_succ = false;
         for (size_t i = 0; i < _hyper_traces; ++i) {
-            PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(_parent->marking()) + (i * _generator.net().numberOfPlaces()));
+            PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(_parent->marking()) +
+                                                    (i * _generator.net().numberOfPlaces()));
             _generator.prepare(working, sucinfo._pcounter[i], sucinfo._tcounter[i]);
             PetriEngine::Structures::State tmp(write.marking() + i * _generator.net().numberOfPlaces());
             bool has_next = _generator.next(tmp);
@@ -78,6 +79,5 @@ namespace LTL {
         }
         return has_succ;
     }
-
 }
 

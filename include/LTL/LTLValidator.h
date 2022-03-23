@@ -103,6 +103,10 @@ namespace LTL {
             std::cerr << "found nested HyperLTL path quantifier" << std::endl;
         }
 
+        void _accept(const PetriEngine::PQL::PathSelectCondition* condition) override {
+            Visitor::visit(this, condition->child());
+        }
+
         void _accept(const PetriEngine::PQL::ACondition *condition) override {
             setBad();
         }
@@ -207,6 +211,8 @@ namespace LTL {
         void _accept(const PetriEngine::PQL::SubtractExpr *element) override {}
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override {}
+
+        void _accept(const PetriEngine::PQL::PathSelectExpr *element) override {}
 
     private:
         bool _bad = false;

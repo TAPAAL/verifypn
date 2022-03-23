@@ -96,8 +96,9 @@ namespace LTL {
         void initialize(PetriEngine::MarkVal* marking) const {
             for(size_t i = 0; i < _hyper_traces; ++i)
             {
-                std::copy(_generator.net().initial() + (i*_generator.net().numberOfPlaces()),
-                        _generator.net().initial() + ((i+1)*_generator.net().numberOfPlaces()), marking);
+                std::copy(  _generator.net().initial(),
+                            _generator.net().initial() + _generator.net().numberOfPlaces(),
+                            marking + _generator.net().numberOfPlaces()*i);
             }
         }
 

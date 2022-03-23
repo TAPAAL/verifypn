@@ -31,7 +31,7 @@ namespace LTL {
         SpoolingSuccessorGenerator(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &)
                 : SuccessorGenerator(net), _transbuf(new uint32_t[net.numberOfTransitions()])
         {
-            _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces() + 1], net.numberOfPlaces());
+            _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces()]);
         }
 
         using SuccessorGenerator::getParent;
