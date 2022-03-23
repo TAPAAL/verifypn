@@ -312,8 +312,7 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const PlusExpr *element) {
-            {
-                Tag t(this, "integer-sum");
+            auto printer = [this](auto* element) {
                 if(element->constant() != 0)
                     outputLine("<integer-constant>", element->constant(), "</integer-constant>");
                 if(!element->places().empty()) {
@@ -325,22 +324,44 @@ namespace PetriEngine {
                 }
                 for(auto& e : element->expressions())
                     Visitor::visit(this, e);
+            };
+            auto nconst = (element->constant() != 0 ? 1 : 0);
+            auto ntoken_count = (element->places().empty() ? 0 : 1);
+            if(element->expressions().size() + ntoken_count + nconst >= 2){
+                Tag t(this, "integer-sum");
+                printer(element);
+            }
+            else
+            {
+                printer(element);
             }
         }
 
         void XMLPrinter::_accept(const MultiplyExpr *element) {
-            Tag i(this, "integer-product");
-            if(element->constant() != 1)
+            auto printer = [this](auto* element) {
+                if(element->constant() != 1)
                 outputLine("<integer-constant>", element->constant(), "</integer-constant>");
-            if(!element->places().empty()) {
-                for(auto& i : element->places())
-                {
-                    Tag tc(this, "tokens-count");
-                    outputLine("<place>", i.second, "</place>");
+                if(!element->places().empty()) {
+                    for(auto& i : element->places())
+                    {
+                        Tag tc(this, "tokens-count");
+                        outputLine("<place>", i.second, "</place>");
+                    }
                 }
+                for(auto& e : element->expressions())
+                    Visitor::visit(this, e);
+            };
+
+            auto nconst = (element->constant() != 1 ? 1 : 0);
+            if(nconst + element->expressions().size() + element->places().size() >= 2)
+            {
+                Tag i(this, "integer-product");
+                printer(element);
             }
-            for(auto& e : element->expressions())
-                Visitor::visit(this, e);
+            else
+            {
+                printer(element);
+            }
         }
 
         void XMLPrinter::_accept(const MinusExpr *element) {

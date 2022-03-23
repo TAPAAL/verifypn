@@ -490,8 +490,11 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
 
         if (els.size() < 2)
         {
-            assert(false);
-            return nullptr;
+            if(els.size() == 0)
+            {
+                throw base_error("`", elementName, "` found without any children in XML-file");
+            }
+            return els[0];
         }
 
         return  isMult ?
