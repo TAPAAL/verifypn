@@ -308,7 +308,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         std::vector<Condition_ptr> res;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
-            if(child == nullptr || cond == nullptr)
+            if(child == nullptr)
             {
                 assert(false);
                 return nullptr;
@@ -327,7 +327,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         std::vector<Condition_ptr> res;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
-            if(child == nullptr || cond == nullptr)
+            if(child == nullptr)
             {
                 assert(false);
                 return nullptr;
