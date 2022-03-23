@@ -96,7 +96,15 @@ namespace PetriEngine::Colored {
     std::string VarMultiset::toString() const {
         std::ostringstream oss;
         for (size_t i = 0; i < _set.size(); ++i) {
-            oss << _set[i].second << "'" << _set[i].first->name;
+            auto &entry = _set[i];
+            oss << _set[i].second << "'(";
+            for (int j = 0; j < entry.first.size(); ++j) {
+                oss << entry.first[j]->name;
+                if (j < entry.first.size() - 1) {
+                    oss << ", ";
+                }
+            }
+            oss << ")";
             if (i < _set.size() - 1) {
                 oss << " + ";
             }
@@ -104,18 +112,11 @@ namespace PetriEngine::Colored {
         return oss.str();
     }
 
-    bool VarMultiset::matchesType(const std::vector<const Variable *> &vartuple) const {
-#ifndef NDEBUG
-        if (_ptype != nullptr) {
-            assert(vartuple.size() == _ptype->productSize());
-            for (int i = 0; i < vartuple.size(); ++i) {
-
-            }
-            return true;
+    bool VarMultiset::matchesType(const VarTuple &vt) const {
+        if (_types.size() != vt.size()) return false;
+        for (int i = 0; i < _types.size(); ++i) {
+            if (_types[i] != vt[i]->colorType) return false;
         }
-        assert(vartuple.size() == 1);
-        assert(vartuple[0]->colorType == _type);
-#endif
         return true;
     }
 
@@ -140,7 +141,7 @@ namespace PetriEngine::Colored {
         return *this;
     }
 
-    std::pair<const Variable *, const uint32_t &> VarMultiset::Iterator::operator*() {
+    std::pair<const std::vector<const Variable *>, const uint32_t &> VarMultiset::Iterator::operator*() {
         return _ms->_set[_index];
     }
 }

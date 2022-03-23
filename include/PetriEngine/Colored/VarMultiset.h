@@ -79,7 +79,7 @@ namespace PetriEngine::Colored {
 
         bool matchesType(const VarTuple &vt) const;
 
-        std::vector<const ColorType *> inferTypes(const VarTuple &vt);
+        static std::vector<const ColorType *> inferTypes(const VarTuple &vt);
 
         class Iterator {
         private:
@@ -94,11 +94,9 @@ namespace PetriEngine::Colored {
 
             bool operator!=(Iterator &other);
 
-            Iterator &operator++();
+            Iterator &operator++();;
 
-            std::pair<const std::vector<const Variable *>, const uint32_t &> operator++(int);
-
-            std::pair<const std::vector<const Variable *>, const uint32_t &> operator*();
+            std::pair<const VarTuple, const uint32_t &> operator*();
         };
     };
 }
