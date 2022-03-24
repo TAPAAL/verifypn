@@ -8,6 +8,10 @@
 #include "PetriEngine/Colored/VarMultiset.h"
 
 namespace PetriEngine::Colored {
+    VarMultiset::VarMultiset(const VarMultiset::VarTuple &vars, uint32_t multiplicity) : _set(), _types(inferTypes(vars)) {
+        (*this)[vars] = multiplicity;
+    }
+
     VarMultiset::Iterator VarMultiset::begin() const {
         return Iterator(this, 0);
     }

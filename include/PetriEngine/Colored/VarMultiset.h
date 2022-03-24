@@ -27,6 +27,8 @@ namespace PetriEngine::Colored {
 
         VarMultiset(std::vector<const ColorType *> &types) : _set(), _types(types) {};
 
+        VarMultiset(const VarTuple &vars, uint32_t multiplicity);
+
         VarMultiset(const VarMultiset &) = default;
 
         VarMultiset(VarMultiset &&) = default;

@@ -16,7 +16,7 @@
 namespace PetriEngine::Colored {
     class ArcVarMultisetVisitor : ColorExpressionVisitor {
     public:
-        ArcVarMultisetVisitor() : _mres() {}
+        ArcVarMultisetVisitor() : _msRes(), _tupRes(), _varRes {};
 
         void accept(const DotConstantExpression *) override {
             _ok = false;
@@ -84,7 +84,10 @@ namespace PetriEngine::Colored {
 
     private:
         bool _ok = true; // False if the arc expression could not be converted to multiset of variables
-        VarMultiset _mres;
+        VarMultiset _msRes;
+        bool _inTuple = false;
+        std::vector<const Variable *> _tupRes;
+        const Variable * _varRes;
     };
 }
 
