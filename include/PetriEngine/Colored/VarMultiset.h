@@ -43,6 +43,8 @@ namespace PetriEngine::Colored {
 
         VarMultiset &operator=(VarMultiset &&) = default;
 
+        bool operator==(const VarMultiset &other) const;
+
         VarMultiset operator+(const VarMultiset &other) const;
 
         VarMultiset operator-(const VarMultiset &other) const;
@@ -60,6 +62,8 @@ namespace PetriEngine::Colored {
         uint32_t &operator[](const VarTuple &vt);
 
         bool isSubsetOf(const VarMultiset &other) const;
+
+        bool isSubsetOrEqTo(const VarMultiset &other) const;
 
         bool empty() const {
             return size() == 0;
