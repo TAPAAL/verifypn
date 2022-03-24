@@ -34,50 +34,63 @@ namespace LTL {
     }
 
     bool CompoundGenerator::next(PetriEngine::Structures::State &write, successor_info_t &sucinfo) {
+        auto fire = [this](PetriEngine::Structures::State& write, successor_info_t& sucinfo) {
+            for(size_t i = 0; i < _hyper_traces; ++i)
+            {
+                if(!sucinfo._enabled[i].empty())
+                {
+                    PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(write.marking()) +
+                                            (i * _generator.net().numberOfPlaces()));
+                    auto t = sucinfo._enabled[i][sucinfo._enabled_it[i]];
+                    _generator.consumePreset(working, t);
+                    _generator.producePostset(working, t);
+                    working.release();
+                }
+            }
+        };
+        std::copy(_parent->marking(), _parent->marking() + _generator.net().numberOfPlaces()*_hyper_traces, write.marking());
         if (sucinfo.fresh()) {
             // after this call, everything will be primed!
-            sucinfo._pcounter.resize(_hyper_traces, 0);
-            sucinfo._tcounter.resize(_hyper_traces, std::numeric_limits<uint32_t>::max());
-            return increment(write, sucinfo, true);
+            bool any = false;
+            for(size_t i = 0; i < _hyper_traces; ++i)
+            {
+                sucinfo._enabled.resize(_hyper_traces);
+                sucinfo._enabled_it.resize(_hyper_traces, 0);
+                PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(_parent->marking()) +
+                                                        (i * _generator.net().numberOfPlaces()));
+                _generator.prepare(working);
+                while(_generator.next(write))
+                {
+                    any = true;
+                    sucinfo._enabled[i].emplace_back(_generator.fired());
+                }
+                working.release();
+            }
+            std::copy(_parent->marking(), _parent->marking() + _generator.net().numberOfPlaces(), write.marking());
+            if(any)
+                fire(write, sucinfo);
+            return any;
         }
         else
         {
-            return increment(write, sucinfo, false);
+            bool any = false;
+            for(size_t i = 0; i < _hyper_traces; ++i)
+            {
+                if(sucinfo._enabled_it[i] + 1 < sucinfo._enabled[i].size())
+                {
+                    ++sucinfo._enabled_it[i];
+                    // reset backwards
+                    for(size_t j = 0; j < i; ++j)
+                        sucinfo._enabled_it[j] = 0;
+                    any = true;
+                    break;
+                }
+            }
+            if(any)
+                fire(write, sucinfo);
+            return any;
         }
     }
 
-    bool CompoundGenerator::increment(PetriEngine::Structures::State &write, successor_info_t &sucinfo, bool initial) {
-        bool has_succ = false;
-        for (size_t i = 0; i < _hyper_traces; ++i) {
-            PetriEngine::Structures::State working(const_cast<PetriEngine::MarkVal*>(_parent->marking()) +
-                                                    (i * _generator.net().numberOfPlaces()));
-            _generator.prepare(working, sucinfo._pcounter[i], sucinfo._tcounter[i]);
-            PetriEngine::Structures::State tmp(write.marking() + i * _generator.net().numberOfPlaces());
-            bool has_next = _generator.next(tmp);
-            tmp.release();
-            working.release();
-            if (has_next) // TODO, add specialized has_next to succgen
-            {
-                std::tie(sucinfo._pcounter[i], sucinfo._tcounter[i]) = _generator.state();
-                has_succ = true;
-                if(!initial)
-                    break;
-            } else {
-                if (i == _hyper_traces - 1) {
-                    // done w. iteration, no more!
-                    if(!has_succ)
-                    {
-                        for (size_t j = 0; j < _hyper_traces; ++j)
-                            sucinfo._pcounter[i] = _generator.net().numberOfPlaces();
-                        break;
-                    }
-                } else {
-                    sucinfo._pcounter[i] = 0; // reset counter!
-                    sucinfo._tcounter[i] = std::numeric_limits<uint32_t>::max();
-                }
-            }
-        }
-        return has_succ;
-    }
 }
 

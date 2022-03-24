@@ -85,7 +85,7 @@ namespace PetriEngine {
                 std::swap(_marking, other._marking);
             }
 
-            void print(const PetriNet& net, std::ostream &os = std::cout) {
+            void print(const PetriNet& net, std::ostream &os = std::cout) const {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
                     if(_marking[i])
                         os << net.placeNames()[i] << ": " << _marking[i] << std::endl;
@@ -93,7 +93,7 @@ namespace PetriEngine {
                 os << std::endl;
             }
 
-            std::ostream &printShort(const PetriNet &net, std::ostream &os) {
+            std::ostream &printShort(const PetriNet &net, std::ostream &os) const {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
                     os << _marking[i] << ",";
                 }

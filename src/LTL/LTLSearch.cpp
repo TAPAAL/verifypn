@@ -176,34 +176,60 @@ namespace LTL {
     }
 
     std::ostream &
-    LTLSearch::print_transition(size_t transition, const PetriEngine::Reducer& reducer, std::ostream &os) const {
-        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-            os << _indent << "<deadlock/>";
-            return os;
+    LTLSearch::print_transition(const std::vector<uint32_t>& compound, const PetriEngine::Reducer& reducer, std::ostream &os) const {
+        const size_t ntraces = std::max(_traces.size(), size_t{1});
+        std::string lindent = _indent;
+        std::string tindent = _tokenIndent;
+        if(compound.size() != ntraces)
+            throw base_error("Trace-transition cardinality does not match cardinality of (Hyper-)ltl quantifiers");
+
+        if(ntraces > 1)
+        {
+            os << _indent << "<compound>\n";
+            lindent += "    ";
+            tindent += "    ";
         }
-        os << _indent << "<transition id="
-                // field width stuff obsolete without büchi state printing.
-                << std::quoted(_net.transitionNames()[transition]);
-        os << ">";
-        reducer.extraConsume(os, _net.transitionNames()[transition]);
-        os << std::endl;
-        auto [fpre, lpre] = _net.preset(transition);
-        for (; fpre < lpre; ++fpre) {
-            if (fpre->inhibitor) {
-                continue;
+        for(size_t tid = 0; tid < ntraces; ++tid)
+        {
+            auto transition = compound[tid];
+            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+                os << lindent << "<";
+                if(ntraces > 1)
+                    os << _traces[tid] << ".";
+                os << "deadlock/>";
+                return os;
             }
-            for (size_t i = 0; i < fpre->tokens; ++i) {
-                os << _tokenIndent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
+            os << lindent << "<transition id="
+                    << '"';
+            if(ntraces > 1)
+                os << _traces[tid] << ".";
+            os << _net.transitionNames()[transition];
+            os << "\">";
+            reducer.extraConsume(os, _net.transitionNames()[transition]);
+            // TODO ^^^ this should be fixed for hyper-ltl (not issue now as reductions are disabled)
+            os << std::endl;
+            auto [fpre, lpre] = _net.preset(transition);
+            for (; fpre < lpre; ++fpre) {
+                if (fpre->inhibitor) {
+                    continue;
+                }
+                for (size_t i = 0; i < fpre->tokens; ++i) {
+                    os << tindent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
+                }
             }
+            os << lindent << "</transition>\n";
+            reducer.postFire(os, _net.transitionNames()[transition]);
         }
-        os << _indent << "</transition>\n";
-        reducer.postFire(os, _net.transitionNames()[transition]);
+        if(ntraces > 1)
+        {
+            os << _indent << "</compound>\n";
+        }
         return os;
     }
 
     bool LTLSearch::print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const
     {
-        if(_result)
+        if(!_result)
         {
             _print_trace(reducer, out);
             return true;
@@ -240,6 +266,7 @@ namespace LTL {
         _checker->set_utilize_weak(utilize_weak);
         _checker->set_heuristic(_heuristic.get());
         _checker->set_partial_order(por);
+        _checker->set_tracing(trace);
         _result = _checker->check();
         return _result xor _negated_answer;
     }

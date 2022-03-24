@@ -74,7 +74,7 @@ namespace LTL {
             return _loop;
         }
 
-        const std::vector<size_t>& trace() const {
+        const std::vector<std::vector<uint32_t>>& trace() const {
             return _trace;
         }
 
@@ -104,7 +104,7 @@ namespace LTL {
         bool _build_trace = false;
         Heuristic* _heuristic = nullptr;
         size_t _loop = std::numeric_limits<size_t>::max();
-        std::vector<size_t> _trace;
+        std::vector<std::vector<uint32_t>> _trace;
         bool _violation = false;
     };
 }

@@ -81,8 +81,6 @@ public:
 protected:
     const PetriNet& _net;
 
-    bool next(Structures::State &write, uint32_t &tindex);
-
     void _fire(Structures::State &write, uint32_t tid);
 
     template<typename T>

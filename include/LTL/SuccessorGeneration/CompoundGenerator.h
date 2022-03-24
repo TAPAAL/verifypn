@@ -41,35 +41,31 @@ namespace LTL {
     public:
 
         struct successor_info_t {
-            std::vector<uint32_t> _pcounter;
-            std::vector<uint32_t> _tcounter;
-            size_t _buchi_state;
             size_t _last_state;
-
-            friend bool operator==(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return lhs._pcounter == rhs._pcounter &&
-                        lhs._tcounter == rhs._tcounter &&
-                        lhs._buchi_state == rhs._buchi_state &&
-                        lhs._last_state == rhs._last_state;
-            }
-
-            friend bool operator!=(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return !(rhs == lhs);
-            }
-
+            
             bool has_prev_state() const {
                 return _last_state != NoLastState;
             }
 
-            size_t transition() const {
-                return _tcounter.empty() ? NoTCounter : _tcounter[0]; // just first element of trace for now.
+            std::vector<uint32_t> transition() const {
+                std::vector<uint32_t> compound(_enabled.size(), std::numeric_limits<uint32_t>::max());
+                for(size_t id = 0; id < _enabled.size(); ++id)
+                {
+                    if(!_enabled[id].empty())
+                        compound[id] = _enabled[id][_enabled_it[id]];
+                }
+                return compound;
             }
 
             [[nodiscard]] bool fresh() const {
-                return _pcounter.empty() && _tcounter.empty();
+                return _enabled_it.empty();
             }
+            size_t _buchi_state;
 
         private:
+            // wasting of memory, but good enough for now
+            std::vector<std::vector<uint32_t>> _enabled;
+            std::vector<uint32_t> _enabled_it;
             successor_info_t() {
                 _buchi_state = NoBuchiState;
                 _last_state = NoLastState;
@@ -119,7 +115,6 @@ namespace LTL {
         }
 
     private:
-        bool increment(PetriEngine::Structures::State &write, successor_info_t &sucinfo, bool initial);
         const size_t _hyper_traces;
         PetriEngine::SuccessorGenerator _generator;
         const PetriEngine::Structures::State* _parent;
