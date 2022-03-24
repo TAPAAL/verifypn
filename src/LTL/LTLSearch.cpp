@@ -155,75 +155,57 @@ namespace LTL {
         _checker->print_stats(out);
     }
 
-    static constexpr auto _indent = "  ";
-    static constexpr auto _tokenIndent = "    ";
-
-    void print_loop(std::ostream &os) {
-        os << _indent << "<loop/>\n";
-    }
-
     // TODO refactor this into a trace-printer, this does not belong in the solver.
     void LTLSearch::_print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const {
-        os << "<trace>\n";
-        reducer.initFire(os);
+
         auto& trace = _checker->trace();
-        for (size_t i = 0; i < trace.size(); ++i) {
-            if (i == _checker->loop_index())
-                print_loop(os);
-            print_transition(trace[i], reducer, os);
+        const size_t ntraces = std::max(_traces.size(), size_t{1});
+        if(!_traces.empty() && _traces.back().size() != ntraces)
+            throw base_error("Trace-transition cardinality does not match cardinality of (Hyper-)ltl quantifiers");
+        std::string tindent = ntraces <= 1 ? "" : "  ";
+        std::string indent = tindent + "  ";
+        std::string token_indent = indent + "  ";
+        if(ntraces > 1)
+            os << "<trace-list>\n";
+        for(size_t j = 0; j < ntraces; ++j)
+        {
+            os << tindent << "<trace";
+            if(ntraces > 1)
+                os << " name=\"" << _traces[j] << "\"";
+            os << ">\n";
+            reducer.initFire(os);
+            for (size_t i = 0; i < trace.size(); ++i) {
+                if (i == _checker->loop_index())
+                    os << indent << "<loop/>\n";
+                print_transition(trace[i][j], reducer, os, indent, token_indent);
+            }
+            os << std::endl << tindent << "</trace>" << std::endl;
         }
-        os << std::endl << "</trace>" << std::endl;
+        if(ntraces > 1)
+            os << "</trace-list>\n";
     }
 
     std::ostream &
-    LTLSearch::print_transition(const std::vector<uint32_t>& compound, const PetriEngine::Reducer& reducer, std::ostream &os) const {
-        const size_t ntraces = std::max(_traces.size(), size_t{1});
-        std::string lindent = _indent;
-        std::string tindent = _tokenIndent;
-        if(compound.size() != ntraces)
-            throw base_error("Trace-transition cardinality does not match cardinality of (Hyper-)ltl quantifiers");
-
-        if(ntraces > 1)
-        {
-            os << _indent << "<compound>\n";
-            lindent += "    ";
-            tindent += "    ";
+    LTLSearch::print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indent, const std::string& _token_indent) const {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << _indent << "<deadlock/>";
+            return os;
         }
-        for(size_t tid = 0; tid < ntraces; ++tid)
-        {
-            auto transition = compound[tid];
-            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-                os << lindent << "<";
-                if(ntraces > 1)
-                    os << _traces[tid] << ".";
-                os << "deadlock/>";
-                return os;
+        os << _indent << "<transition id=" << std::quoted(_net.transitionNames()[transition]);
+        os << "\">";
+        reducer.extraConsume(os, _net.transitionNames()[transition]);
+        os << std::endl;
+        auto [fpre, lpre] = _net.preset(transition);
+        for (; fpre < lpre; ++fpre) {
+            if (fpre->inhibitor) {
+                continue;
             }
-            os << lindent << "<transition id="
-                    << '"';
-            if(ntraces > 1)
-                os << _traces[tid] << ".";
-            os << _net.transitionNames()[transition];
-            os << "\">";
-            reducer.extraConsume(os, _net.transitionNames()[transition]);
-            // TODO ^^^ this should be fixed for hyper-ltl (not issue now as reductions are disabled)
-            os << std::endl;
-            auto [fpre, lpre] = _net.preset(transition);
-            for (; fpre < lpre; ++fpre) {
-                if (fpre->inhibitor) {
-                    continue;
-                }
-                for (size_t i = 0; i < fpre->tokens; ++i) {
-                    os << tindent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
-                }
+            for (size_t i = 0; i < fpre->tokens; ++i) {
+                os << _token_indent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
             }
-            os << lindent << "</transition>\n";
-            reducer.postFire(os, _net.transitionNames()[transition]);
         }
-        if(ntraces > 1)
-        {
-            os << _indent << "</compound>\n";
-        }
+        os << _indent << "</transition>\n";
+        reducer.postFire(os, _net.transitionNames()[transition]);
         return os;
     }
 
