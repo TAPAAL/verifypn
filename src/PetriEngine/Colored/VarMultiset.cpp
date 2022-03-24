@@ -20,6 +20,14 @@ namespace PetriEngine::Colored {
         return Iterator(this, _set.size());
     }
 
+    bool VarMultiset::operator==(const VarMultiset &other) const {
+        VarMultiset thisMinusOther(*this);
+        thisMinusOther -= other;
+        VarMultiset otherMinusThis(other);
+        otherMinusThis -= *this;
+        return thisMinusOther.empty() && otherMinusThis.empty();
+    }
+
     VarMultiset VarMultiset::operator+(const VarMultiset &other) const {
         VarMultiset ms(*this);
         ms += other;
@@ -95,6 +103,12 @@ namespace PetriEngine::Colored {
         VarMultiset otherMinusThis(other);
         otherMinusThis -= *this;
         return thisMinusOther.empty() && !otherMinusThis.empty();
+    }
+
+    bool VarMultiset::isSubsetOrEqTo(const VarMultiset &other) const {
+        VarMultiset thisMinusOther(*this);
+        thisMinusOther -= other;
+        return thisMinusOther.empty();
     }
 
     std::string VarMultiset::toString() const {
