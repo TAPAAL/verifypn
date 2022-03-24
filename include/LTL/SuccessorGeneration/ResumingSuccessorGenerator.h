@@ -36,35 +36,8 @@ namespace LTL {
             size_t _buchi_state;
             size_t _last_state;
 
-            friend bool operator==(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return  lhs._pcounter ==    rhs._pcounter &&
-                        lhs._tcounter ==    rhs._tcounter &&
-                        lhs._buchi_state == rhs._buchi_state &&
-                        lhs._last_state ==  rhs._last_state;
-            }
-
-            friend bool operator!=(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return !(rhs == lhs);
-            }
-
-            bool has_pcounter() const {
-                return _pcounter != NoPCounter;
-            }
-
-            bool has_tcounter() const {
-                return _tcounter != NoTCounter;
-            }
-
-            bool has_buchistate() const {
-                return _buchi_state != NoBuchiState;
-            }
-
             bool has_prev_state() const {
                 return _last_state != NoLastState;
-            }
-
-            size_t state() const {
-                return _last_state;
             }
 
             size_t transition() const {

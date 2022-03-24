@@ -58,10 +58,6 @@ namespace LTL {
                 return _last_state != NoLastState;
             }
 
-            size_t state() const {
-                return _last_state;
-            }
-
             size_t transition() const {
                 return _transition;
             }
