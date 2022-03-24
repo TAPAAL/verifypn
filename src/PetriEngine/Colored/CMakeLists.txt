@@ -17,8 +17,11 @@ StablePlaceFinder.cpp
 ForwardFixedPoint.cpp
 VariableSymmetry.cpp
 Unfolder.cpp
+PnmlWriter.cpp
+PnmlWriterColorExprVisitor.cpp
 VarMultiset.cpp
 ArcVarMultisetVisitor.cpp)
+
 
 target_link_libraries(Colored ColoredReduction)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

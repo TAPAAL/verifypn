@@ -105,6 +105,7 @@ struct options_t {
 
     std::string query_out_file;
     std::string model_out_file;
+    std::string model_col_out_file;
     std::string unfolded_out_file;
     std::string unfold_query_out_file;
     bool keep_solved = false;

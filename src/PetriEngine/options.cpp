@@ -196,6 +196,7 @@ void printHelp() {
         "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
         "  --keep-solved                        Keeps queries reduced to TRUE and FALSE in the output (--write-simplified, --write-unfolded-queries)\n"
         "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+        "  --write-col-reduced <filename>       Outputs the model to the given file after colored structural reduction\n"
         "  --write-unfolded-net <filename>      Outputs the model to the given file before structural reduction but after unfolding\n"
         "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
         "                                       - 0 MCC XML format for Input and Output\n"
@@ -417,6 +418,8 @@ bool options_t::parse(int argc, const char** argv) {
             }
         } else if (std::strcmp(argv[i], "--write-reduced") == 0) {
             model_out_file = std::string(argv[++i]);
+        } else if (std::strcmp(argv[i], "--write-col-reduced") == 0) {
+            model_col_out_file = std::string(argv[++i]);
         } else if (std::strcmp(argv[i], "--write-unfolded-net") == 0) {
             unfolded_out_file = std::string(argv[++i]);
         } else if (std::strcmp(argv[i], "--write-unfolded-queries") == 0) {

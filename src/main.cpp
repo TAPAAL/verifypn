@@ -45,6 +45,7 @@
  */
 
 
+#include <PetriEngine/Colored/PnmlWriter.h>
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 
@@ -136,6 +137,13 @@ int main(int argc, const char** argv) {
 
         if (options.enablecolreduction > 0) {
             reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
+        }
+
+        if (options.model_col_out_file.size() > 0) {
+            std::fstream file;
+            file.open(options.model_col_out_file, std::ios::out);
+            PetriEngine::Colored::PnmlWriter writer(cpnBuilder, file);
+            writer.toColPNML();
         }
 
         auto [builder, transition_names, place_names] = unfold(cpnBuilder,

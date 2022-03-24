@@ -48,6 +48,10 @@ namespace PetriEngine {
         }
     }
 
+    void ColoredPetriNetBuilder::addVariable(PetriEngine::Colored::Variable& variable) {
+        _variables.push_back(variable);
+    }
+
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {

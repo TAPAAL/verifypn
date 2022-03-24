@@ -142,6 +142,7 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
                 parseUserSort(it)
             };
             variables[it->first_attribute("id")->value()] = var;
+            builder->addVariable(*var);
         } else if (strcmp(it->name(), "partition") == 0) {
             parsePartitions(it);
         } else {
@@ -211,7 +212,6 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
 
                 uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
                 uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
-
                 for (uint32_t i = start; i<=end;i++) {
                     ct->addColor(std::to_string(i).c_str());
                 }
@@ -219,8 +219,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
             } else {
                 for (auto it = type->first_node(); it; it = it->next_sibling()) {
                     auto id = it->first_attribute("id");
+                    auto name = it->first_attribute("name");
                     assert(id != nullptr);
-                    ct->addColor(id->value());
+                    ct->addColor(id->value(), name->value());
                 }
             }
             fct = ct;

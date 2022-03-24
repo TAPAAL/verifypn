@@ -95,6 +95,11 @@ namespace PetriEngine {
             throw base_error("Color types are not supported in standard P/T nets");
         }
 
+        virtual void addVariable(PetriEngine::Colored::Variable& variable)
+        {
+            throw base_error("Variables are not supported in standard P/T nets");
+        }
+
         virtual void enableColors() {
             _isColored = true;
         }
