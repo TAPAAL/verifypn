@@ -308,8 +308,8 @@ namespace PetriEngine {
             size_t _offset;
             Expr_ptr _child;
         public:
-            PathSelectExpr(std::string name, Expr_ptr child)
-            : _name(name), _child(child) {};
+            PathSelectExpr(std::string name, Expr_ptr child, size_t offset = 0)
+            : _name(name), _child(child), _offset(offset) {};
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             [[nodiscard]] virtual bool placeFree() const { return _child->placeFree(); };
             const Expr_ptr& child() const { return _child; }
@@ -452,7 +452,7 @@ namespace PetriEngine {
             size_t _offset;
             Condition_ptr _child;
         public:
-            PathQuant(std::string id, std::shared_ptr<Condition> child);
+            PathQuant(std::string id, std::shared_ptr<Condition> child, size_t offset = 0);
             Quantifier getQuantifier() const override { return EMPTY; }
             Path getPath() const override { return pError; }
             CTLType getQueryType() const override { return TYPE_ERROR; }
@@ -485,8 +485,8 @@ namespace PetriEngine {
             size_t _offset;
             Condition_ptr _child;
         public:
-            PathSelectCondition(std::string name, Condition_ptr child )
-            : _name(name), _child(child) {}
+            PathSelectCondition(std::string name, Condition_ptr child, size_t offset = 0)
+            : _name(name), _child(child), _offset(offset) {}
             Quantifier getQuantifier() const override { return EMPTY; }
             Path getPath() const override { return pError; }
             CTLType getQueryType() const override { return TYPE_ERROR; }
