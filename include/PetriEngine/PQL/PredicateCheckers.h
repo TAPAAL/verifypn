@@ -23,7 +23,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     bool hasNestedDeadlock(const Condition* condition);
     bool hasNestedDeadlock(const Condition_ptr& condition);
@@ -159,6 +159,6 @@ namespace PetriEngine::PQL {
 
     bool containsUpperBounds(const Condition* condition);
     bool containsUpperBounds(const Condition_ptr& condition);
-}
+} }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

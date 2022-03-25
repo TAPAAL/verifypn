@@ -89,7 +89,7 @@ struct options_t {
     bool symmetricVariables = true;
     bool isCPN = false;
     uint32_t seed_offset = 0;
-    int max_intervals = 250; //0 disabled
+    int max_intervals = 500; //0 disabled
     int max_intervals_reduced = 5;
 
     std::string strategy_output;

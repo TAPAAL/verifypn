@@ -18,6 +18,7 @@
 #include "LTL/LTLToBuchi.h"
 #include "LTL/Structures/BuchiAutomaton.h"
 #include "PetriEngine/PQL/QueryPrinter.h"
+#include "PetriEngine/PQL/PredicateCheckers.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
@@ -30,32 +31,90 @@ using namespace PetriEngine::PQL;
 namespace LTL {
 
 
+    bool is_spot_too_many_children(const std::runtime_error& err)
+    {
+        // I wish spot would have better exceptions.
+        // I also wish that we would too.
+        return std::strcmp(err.what(), "too many children for formula") == 0;
+    }
+
     /**
      * Formula serializer to SPOT-compatible syntax.
      */
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        _formula = spot::formula::Not(_formula);
+        try {
+            Visitor::visit(this, (*element)[0]);
+            _formula = spot::formula::Not(_formula);
+        }
+        catch(std::runtime_error& err)
+        {
+            if(is_spot_too_many_children(err) && !PetriEngine::PQL::isTemporal(element))
+            {
+                make_atomic_prop(element->shared_from_this());
+            } else throw;
+        }
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AndCondition *element) {
-        std::vector<spot::formula> ops;
+        std::vector<spot::formula> temp_ops;
+        std::vector<Condition_ptr> non_temp;
         for(auto& e : *element)
         {
-            Visitor::visit(this, e);
-            ops.emplace_back(_formula);
+            if(isTemporal(e))
+            {
+                Visitor::visit(this, e);
+                temp_ops.emplace_back(_formula);
+            }
+            else non_temp.emplace_back(e);
         }
-        _formula = spot::formula::And(std::move(ops));
+        if(!non_temp.empty())
+        {
+            std::vector<spot::formula> non_temp_ops;
+            for(auto& e : non_temp)
+            {
+                Visitor::visit(this, e);
+                non_temp_ops.emplace_back(_formula);
+            }
+            try {
+                temp_ops.emplace_back(spot::formula::And(non_temp_ops));
+            }
+            catch(std::runtime_error& error)
+            {
+                temp_ops.emplace_back(make_atomic_prop(std::make_shared<AndCondition>(non_temp)));
+            }
+        }
+        _formula = spot::formula::And(std::move(temp_ops));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::OrCondition *element) {
-        std::vector<spot::formula> ops;
+        std::vector<spot::formula> temp_ops;
+        std::vector<Condition_ptr> non_temp;
         for(auto& e : *element)
         {
-            Visitor::visit(this, e);
-            ops.emplace_back(_formula);
+            if(isTemporal(e))
+            {
+                Visitor::visit(this, e);
+                temp_ops.emplace_back(_formula);
+            }
+            else non_temp.emplace_back(e);
         }
-        _formula = spot::formula::Or(std::move(ops));
+        if(!non_temp.empty())
+        {
+            std::vector<spot::formula> non_temp_ops;
+            for(auto& e : non_temp)
+            {
+                Visitor::visit(this, e);
+                non_temp_ops.emplace_back(_formula);
+            }
+            try {
+                temp_ops.emplace_back(spot::formula::Or(non_temp_ops));
+            }
+            catch(std::runtime_error& error)
+            {
+                temp_ops.emplace_back(make_atomic_prop(std::make_shared<OrCondition>(non_temp)));
+            }
+        }
+        _formula = spot::formula::Or(std::move(temp_ops));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::XCondition *element) {
