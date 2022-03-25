@@ -140,9 +140,9 @@ namespace PetriEngine {
 
         void PnmlWriter::handleVariables() {
             _out << getTabs() << "<!-- Declaration of user-defined color variables -->\n";
-            for (auto &variable: _builder._variables) {
-                _out << getTabs() << "<variabledecl id=\"" << variable.name << "\" name=\"" << variable.name << "\">\n";
-                _out << increaseTabs() << "<usersort declaration=\"" << variable.colorType->getName() << "\"/>\n";
+            for (auto variable: _builder._variables) {
+                _out << getTabs() << "<variabledecl id=\"" << variable->name << "\" name=\"" << variable->name << "\">\n";
+                _out << increaseTabs() << "<usersort declaration=\"" << variable->colorType->getName() << "\"/>\n";
                 _out << decreaseTabs() << "</variabledecl>\n";
             }
         }

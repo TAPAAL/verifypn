@@ -48,7 +48,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addVariable(PetriEngine::Colored::Variable& variable) {
+    void ColoredPetriNetBuilder::addVariable(const PetriEngine::Colored::Variable* variable) {
         _variables.push_back(variable);
     }
 

@@ -29,6 +29,4 @@ namespace PetriEngine {
         parser.parse(model, this);
     }
 
-    void AbstractPetriNetBuilder::addVariable(Colored::Variable &variable) {}
-
 }

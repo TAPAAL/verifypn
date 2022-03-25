@@ -139,7 +139,7 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool input, int inhib_weight);
 
-        void addVariable(Colored::Variable& variable);
+        void addVariable(const Colored::Variable* variable) override;
     };
 
     enum ExpressionType {
