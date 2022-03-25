@@ -135,9 +135,7 @@ int main(int argc, const char** argv) {
         std::stringstream ss;
         std::ostream& out = options.printstatistics ? std::cout : ss;
 
-        if (options.enablecolreduction > 0) {
-            reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
-        }
+        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
 
         if (options.model_col_out_file.size() > 0) {
             std::fstream file;

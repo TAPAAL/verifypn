@@ -62,6 +62,12 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
                    std::vector<uint32_t>& reductions) {
     if (!cpnBuilder.isColored()) return false;
 
+    if (reductiontype == 0) {
+        out << "\nSkipping colored structural reductions (-R 0)" << std::endl;
+        out << "Net consists of " << cpnBuilder.getPlaceCount() << " places and " << cpnBuilder.getTransitionCount() << " transitions" << std::endl;
+        return false;
+    }
+
     ColoredPlaceUseVisitor placeUseVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount());
     bool preserveLoops = false;
     bool preserveStutter = false;
