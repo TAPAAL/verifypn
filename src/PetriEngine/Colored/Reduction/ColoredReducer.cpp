@@ -251,7 +251,7 @@ namespace PetriEngine::Colored::Reduction {
         {
             id = _skippedTransitions.back();
             _skippedTransitions.pop_back();
-            PetriEngine::Colored::Transition tran = _builder._transitions[id];
+            PetriEngine::Colored::Transition& tran = _builder._transitions[id];
             tran.skipped = false;
             tran.inhibited = false;
             _builder._transitionnames.erase(tran.name);
@@ -268,10 +268,12 @@ namespace PetriEngine::Colored::Reduction {
     void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){
         _builder.addInputArc(_builder._places[pid].name, _builder._transitions[tid].name, expr, inhib_weight);
         std::sort(_builder._places[pid]._post.begin(), _builder._places[pid]._post.end());
+        std::sort(_builder._transitions[tid].input_arcs.begin(), _builder._transitions[tid].input_arcs.end(), ArcLessThanByPlace);
     }
     void ColoredReducer::addOutputArc(uint32_t tid, uint32_t pid, ArcExpression_ptr expr){
         _builder.addOutputArc(_builder._transitions[tid].name, _builder._places[pid].name, expr);
         std::sort(_builder._places[pid]._pre.begin(), _builder._places[pid]._pre.end());
+        std::sort(_builder._transitions[tid].output_arcs.begin(), _builder._transitions[tid].output_arcs.end(), ArcLessThanByPlace);
     }
 
 }
