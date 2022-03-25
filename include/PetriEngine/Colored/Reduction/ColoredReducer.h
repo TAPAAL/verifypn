@@ -14,6 +14,7 @@
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "ReductionRule.h"
 #include "RedRulePreAgglomeration.h"
+#include "RedRuleParallelTransitions.h"
 
 
 namespace PetriEngine::Colored {
@@ -100,6 +101,8 @@ namespace PetriEngine::Colored {
 
             void consistent();
 
+            std::vector<uint8_t> _tflags;
+
 
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
@@ -122,8 +125,10 @@ namespace PetriEngine::Colored {
 
             // Reduction rules
             RedRulePreAgglomeration _preAgglomeration;
+            RedRuleParallelTransitions _redRuleParallelTransitions;
             std::vector<ReductionRule *> _reductions{
-                    &_preAgglomeration
+                    &_preAgglomeration,
+                    &_redRuleParallelTransitions,
             };
         };
     }
