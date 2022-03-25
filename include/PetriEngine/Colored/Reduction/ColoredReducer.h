@@ -15,9 +15,11 @@
 #include "ReductionRule.h"
 #include "RedRulePreAgglomeration.h"
 #include "RedRuleParallelTransitions.h"
+#include "RedRuleParallelPlaces.h"
 
 
 namespace PetriEngine::Colored {
+
     using CArcIter = __gnu_cxx::__normal_iterator<const Arc *, std::vector<Arc>>;
 
     namespace Reduction {
@@ -103,6 +105,7 @@ namespace PetriEngine::Colored {
 
             std::vector<uint8_t> _tflags;
 
+            std::vector<uint8_t> _pflags;
 
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
@@ -126,9 +129,11 @@ namespace PetriEngine::Colored {
             // Reduction rules
             RedRulePreAgglomeration _preAgglomeration;
             RedRuleParallelTransitions _redRuleParallelTransitions;
+            RedRuleParallelPlaces _redRuleParallelPlaces;
             std::vector<ReductionRule *> _reductions{
                     &_preAgglomeration,
                     &_redRuleParallelTransitions,
+                    &_redRuleParallelPlaces,
             };
         };
     }

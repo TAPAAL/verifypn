@@ -122,17 +122,25 @@ namespace PetriEngine {
             return _set.back().second;
         }
 
-        bool Multiset::empty() const {
-            return _set.empty();
+        bool Multiset::isSubsetOf(const Multiset &other) const {
+            Multiset thisMinusOther(*this);
+            thisMinusOther -= other;
+            Multiset otherMinusThis(other);
+            otherMinusThis -= *this;
+            return thisMinusOther.empty() && !otherMinusThis.empty();
         }
 
-        void Multiset::clean() {
-            if (std::find_if(_set.begin(), _set.end(), [&](auto elem) { return elem.second == 0; }) == _set.end())
-                return;
+        bool Multiset::isSubsetOrEqTo(const Multiset &other) const {
+            Multiset thisMinusOther(*this);
+            thisMinusOther -= other;
+            return thisMinusOther.empty();
+        }
 
-            _set.erase(std::remove_if(_set.begin(), _set.end(), [&](auto elem) {
-                return elem.second == 0;
-            }));
+        bool Multiset::empty() const {
+            for (auto & e : _set) {
+                if (e.second > 0) return false;
+            }
+            return true;
         }
 
         const Multiset::Iterator Multiset::begin() const {
