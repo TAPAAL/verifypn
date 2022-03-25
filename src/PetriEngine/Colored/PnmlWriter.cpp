@@ -97,28 +97,28 @@ namespace PetriEngine {
         }
 
         void PnmlWriter::handleCyclicEnumeration(std::vector<const ColorType *> types) {
-            _out << increaseTabs() << "<cyclicenumeration>\n";
+                _out << increaseTabs() << "<cyclicenumeration>\n";
 
-            for (auto &type: types) {
-                if (type->productSize() > 1) {
-                    throw base_error("Nested products, aborting writing PNML");
-                }
-                if (type->getName() == "dot" || type->getName() == "Dot") {
-                    _out << increaseTabs() << "<dot/>\n";
-                    break;
-                }
-                bool first = true;
+                for (auto &type: types) {
+                    if (type->productSize() > 1) {
+                        throw base_error("Nested products, aborting writing PNML");
+                    }
+                    if (type->getName() == "dot" || type->getName() == "Dot") {
+                        _out << increaseTabs() << "<dot/>\n";
+                        break;
+                    }
+                    bool first = true;
 
-                for (uint32_t i = 0; i < type->size(); i++) {
-                    auto nestedType = type->operator[](i);
+                    for (uint32_t i = 0; i < type->size(); i++) {
+                        auto nestedType = type->operator[](i);
 
-                    _out << (first ? increaseTabs() : getTabs()) << "<feconstant id=\"" << nestedType.getColorName()
-                         << "\" name=\"" << nestedType.getDisplayName() << "\"/>" << "\n";
-                    first = false;
+                        _out << (first ? increaseTabs() : getTabs()) << "<feconstant id=\"" << nestedType.getColorName()
+                             << "\" name=\"" << nestedType.getDisplayName() << "\"/>" << "\n";
+                        first = false;
+                    }
                 }
+                _out << decreaseTabs() << "</cyclicenumeration>\n";
             }
-            _out << decreaseTabs() << "</cyclicenumeration>\n";
-        }
 
         void PnmlWriter::handleProductSort(std::vector<const ColorType *> types) {
             _out << increaseTabs() << "<productsort>\n";
@@ -136,6 +136,12 @@ namespace PetriEngine {
                 first = false;
             }
             _out << decreaseTabs() << "</productsort>\n";
+        }
+
+        bool is_number(const std::string &s) {
+            std::string::const_iterator it = s.begin();
+            while (it != s.end() && std::isdigit(*it)) ++it;
+            return !s.empty() && it == s.end();
         }
 
         void PnmlWriter::handleVariables() {

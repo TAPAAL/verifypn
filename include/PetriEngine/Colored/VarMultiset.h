@@ -100,7 +100,7 @@ namespace PetriEngine::Colored {
 
             bool operator!=(Iterator &other);
 
-            Iterator &operator++();;
+            Iterator &operator++();
 
             std::pair<const VarTuple, const uint32_t &> operator*();
         };

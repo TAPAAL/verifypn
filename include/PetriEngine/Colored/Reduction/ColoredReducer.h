@@ -13,7 +13,7 @@
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "ReductionRule.h"
-#include "RedRuleIdentity.h"
+#include "RedRulePreAgglomeration.h"
 
 
 namespace PetriEngine::Colored {
@@ -37,7 +37,7 @@ namespace PetriEngine::Colored {
 
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
-            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter, int reductiontype,std::vector<uint32_t>& reductions);
+            bool reduce(uint32_t timeout, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t reductiontype,std::vector<uint32_t>& reductions);
 
             double time() const {
                 return _timeSpent;
@@ -46,6 +46,14 @@ namespace PetriEngine::Colored {
             bool hasTimedOut() const {
                 auto now = std::chrono::high_resolution_clock::now();
                 return std::chrono::duration_cast<std::chrono::seconds>(now - _startTime).count() >= _timeout;
+            }
+
+            uint32_t placeCount() const {
+                return _builder.getPlaceCount();
+            }
+
+            uint32_t transitionCount() const {
+                return _builder.getTransitionCount();
             }
 
             uint32_t origPlaceCount() const {
@@ -76,13 +84,22 @@ namespace PetriEngine::Colored {
                 return _builder.inhibitors();
             }
 
-            CArcIter getInArc(uint32_t pid, const Colored::Transition &tran) const;
+            void addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight);
+            void addOutputArc(uint32_t tid, uint32_t pid, ArcExpression_ptr expr);
 
+            CArcIter getInArc(uint32_t pid, const Colored::Transition &tran) const;
             CArcIter getOutArc(const Colored::Transition &tran, uint32_t pid) const;
 
             void skipPlace(uint32_t pid);
 
             void skipTransition(uint32_t tid);
+
+            std::string newTransitionName();
+
+            uint32_t newTransition(const Colored::GuardExpression_ptr& guard);
+
+            void consistent();
+
 
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
@@ -91,6 +108,7 @@ namespace PetriEngine::Colored {
             double _timeSpent = 0;
             uint32_t _origPlaceCount;
             uint32_t _origTransitionCount;
+            uint32_t _tnameid = 1;
             std::vector<uint32_t> _skippedPlaces;
             std::vector<uint32_t> _skippedTransitions;
 
@@ -103,13 +121,10 @@ namespace PetriEngine::Colored {
             }
 
             // Reduction rules
-            RedRuleIdentity _reduceFirstPlace;
+            RedRulePreAgglomeration _preAgglomeration;
             std::vector<ReductionRule *> _reductions{
-                    // TODO Actually useful reductions. This is just a test rule to guide implementation
-                    &_reduceFirstPlace
+                    &_preAgglomeration
             };
-
-            void consistent();
         };
     }
 }

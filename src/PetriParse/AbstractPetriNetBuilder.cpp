@@ -28,5 +28,4 @@ namespace PetriEngine {
         PNMLParser parser;
         parser.parse(model, this);
     }
-
 }

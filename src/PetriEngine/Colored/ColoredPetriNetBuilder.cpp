@@ -85,18 +85,18 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, int inhib_weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {
         assert((expr == nullptr) != (inhib_weight == 0));
         addArc(place, transition, expr, true, inhib_weight);
     }
 
-    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }
@@ -106,7 +106,7 @@ namespace PetriEngine {
         addArc(place, transition, expr, false, 0);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, int inhib_weight) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, uint32_t inhib_weight) {
         if(_transitionnames.count(transition) == 0)
             throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(place) == 0)
@@ -117,8 +117,13 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        if(input) _places[p]._post.emplace_back(t);
-        else      _places[p]._pre.emplace_back(t);
+        if(input) {
+            _places[p]._post.emplace_back(t);
+        }
+        else {
+            _places[p]._pre.emplace_back(t);
+            std::sort(_places[p]._pre.begin(), _places[p]._pre.end());
+        }
 
         if (!input) assert(expr != nullptr);
         assert((expr == nullptr) != (inhib_weight == 0));
@@ -133,8 +138,10 @@ namespace PetriEngine {
         arc.inhib_weight = inhib_weight;
         if(inhib_weight > 0){
             _inhibitorArcs.push_back(std::move(arc));
+        } else if (input) {
+            _transitions[t].input_arcs.push_back(std::move(arc));
         } else {
-            input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
+            _transitions[t].output_arcs.push_back(std::move(arc));
         }
     }
 

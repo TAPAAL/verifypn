@@ -39,7 +39,7 @@ namespace PetriEngine {
 
             bool operator == (const Arc& other) const
             {
-                return place == other.place && transition == other.transition && inhib_weight == other.inhib_weight && to_string(*expr) == to_string(*other.expr) && input == other.input;
+                return place == other.place && transition == other.transition && input == other.input && inhib_weight == other.inhib_weight && (inhib_weight > 0 || to_string(*expr) == to_string(*other.expr));
             }
         };
 
@@ -57,8 +57,8 @@ namespace PetriEngine {
             double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            bool inhibited;
-            bool skipped;
+            bool inhibited = false;
+            bool skipped = false;
         };
 
         struct Place {
@@ -69,7 +69,7 @@ namespace PetriEngine {
             bool inhibitor;
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
-            bool skipped;
+            bool skipped = false;
         };
     }
 }

@@ -65,14 +65,14 @@ namespace PetriEngine {
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int) override;
+                uint32_t weight) override;
         void addInputArc(const std::string& place,
-                const std::string& transition,
-                const Colored::ArcExpression_ptr& expr,
-                int inhib_weight) override;
+                         const std::string& transition,
+                         const Colored::ArcExpression_ptr &expr,
+                         uint32_t inhib_weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight) override;
+                uint32_t weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr) override;
@@ -126,6 +126,10 @@ namespace PetriEngine {
             return _placenames;
         }
 
+        auto& colored_transitionnames() const {
+            return _transitionnames;
+        }
+
         auto& inhibitors() const {
             return _inhibitorArcs;
         }
@@ -153,7 +157,7 @@ namespace PetriEngine {
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool input, int inhib_weight);
+                bool input, uint32_t inhib_weight);
 
         void addVariable(const Colored::Variable* variable) override;
     };

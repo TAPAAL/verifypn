@@ -30,7 +30,7 @@ namespace PetriEngine::Colored::Reduction {
             return _applications;
         }
 
-        virtual bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) = 0;
+        virtual bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t explosion_limiter) = 0;
 
     protected:
         uint32_t _applications = 0;

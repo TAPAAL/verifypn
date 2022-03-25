@@ -68,19 +68,19 @@ namespace PetriEngine {
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int) = 0;
+                uint32_t weight) = 0;
         /** Add colored input arc with given arc expression */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                int inhib_weight)
+                uint32_t inhib_weight)
         {
             throw base_error("Colored input arcs are not supported in standard P/T nets");
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight) = 0;
+                uint32_t weight) = 0;
         /** Add output arc with given arc expression */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,

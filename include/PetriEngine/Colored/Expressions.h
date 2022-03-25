@@ -274,7 +274,9 @@ namespace PetriEngine {
             ArcExpression() {}
             virtual ~ArcExpression() {}
 
+            virtual void visit(ColorExpressionVisitor& visitor) const = 0;
             virtual uint32_t weight() const = 0;
+            virtual bool is_single_color() const = 0;
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
@@ -370,6 +372,10 @@ namespace PetriEngine {
                 return res;
             }
 
+            bool is_single_color() const {
+                return _constituents.size() == 1 && _constituents[0]->is_single_color();
+            }
+
             size_t size() const {
                 return _constituents.size();
             }
@@ -412,6 +418,10 @@ namespace PetriEngine {
                 return _left->weight() - val;
             }
 
+            bool is_single_color() const {
+                return false;
+            }
+
             size_t size() const {
                 return 2;
             }
@@ -436,6 +446,10 @@ namespace PetriEngine {
 
             uint32_t weight() const override {
                 return _scalar * _expr->weight();
+            }
+
+            bool is_single_color() const {
+                return _expr->is_single_color();
             }
 
             auto scalar() const {
