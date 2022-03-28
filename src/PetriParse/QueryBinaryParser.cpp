@@ -33,7 +33,7 @@ bool QueryBinaryParser::parse(std::istream& bin, const std::set<size_t>& parse_o
         bin.read(reinterpret_cast<char*>(&id), sizeof(uint32_t));
         std::string tmp;
         std::getline(bin, tmp, '\0');
-        names[id] = std::make_shared<const_string>(tmp);
+        names[id] = *_string_set.emplace(std::make_shared<const_string>(tmp)).first;
     }
 
     bool parsingOK = true;

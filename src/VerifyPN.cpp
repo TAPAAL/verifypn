@@ -129,7 +129,7 @@ parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstring
     std::vector<QueryItem> queries;
     std::vector<Condition_ptr> conditions;
     if (binary) {
-        QueryBinaryParser parser;
+        QueryBinaryParser parser(string_set);
         if (!parser.parse(qfile, qnums)) {
             fprintf(stderr, "Error: Failed parsing binary query file\n");
             fprintf(stdout, "DO_NOT_COMPETE\n");
