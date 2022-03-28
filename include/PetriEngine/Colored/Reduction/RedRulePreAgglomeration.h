@@ -13,7 +13,7 @@
 namespace PetriEngine::Colored::Reduction {
     class RedRulePreAgglomeration : public ReductionRule {
     public:
-        std::string name() override { return "Atomic Pre-Agglomeration"; }
+        std::string name() override { return "AtomicPreAgglomeration"; }
 
         bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override;
 
