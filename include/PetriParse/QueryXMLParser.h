@@ -36,7 +36,7 @@ using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
 public:
-    QueryXMLParser();
+    QueryXMLParser(shared_string_set& string_set);
     ~QueryXMLParser();
 
     std::vector<QueryItem>  queries;
@@ -54,7 +54,7 @@ private:
     Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
     shared_const_string parsePlace(rapidxml::xml_node<>*  element);
     void fatal_error(const std::string& token);
-    shared_string_set _string_set;
+    shared_string_set& _string_set;
 };
 
 #endif /* QUERYXMLPARSER_H */

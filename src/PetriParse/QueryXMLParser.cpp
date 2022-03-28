@@ -36,7 +36,8 @@ int getChildCount(rapidxml::xml_node<> *n)
   return c;
 }
 
-QueryXMLParser::QueryXMLParser() = default;
+QueryXMLParser::QueryXMLParser(shared_string_set& string_set)
+: _string_set(string_set) { }
 
 QueryXMLParser::~QueryXMLParser() = default;
 

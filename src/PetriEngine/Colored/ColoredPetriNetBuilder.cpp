@@ -23,12 +23,13 @@
 #include <tuple>
 using std::get;
 namespace PetriEngine {
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder(){
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder(shared_string_set& string_set)
+    : _ptBuilder(string_set), _string_set(string_set) {
     }
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig)
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
-       _places(orig._places), _transitions(orig._transitions)
+       _places(orig._places), _transitions(orig._transitions), _ptBuilder(orig._string_set), _string_set(orig._string_set)
     {
     }
 
@@ -50,6 +51,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
         auto tmp = std::make_shared<const_string>(name);
+        tmp = *_string_set.insert(tmp).first;
         if(_placenames.count(tmp) == 0)
         {
             uint32_t next = _placenames.size();
@@ -75,6 +77,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
         auto tmp = std::make_shared<const_string>(name);
+        tmp = *_string_set.insert(tmp).first;
         if(_transitionnames.count(tmp) == 0)
         {
             uint32_t next = _transitionnames.size();

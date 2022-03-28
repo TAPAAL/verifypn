@@ -36,7 +36,7 @@ namespace PetriEngine {
         friend class Reducer;
 
     public:
-        PetriNetBuilder();
+        PetriNetBuilder(shared_string_set& string_set);
         PetriNetBuilder(const PetriNetBuilder& other);
         PetriNetBuilder(PetriNetBuilder&&);
         void addPlace(const std::string& name, uint32_t tokens, double x, double y) override;
@@ -154,6 +154,7 @@ namespace PetriEngine {
 
         std::vector<MarkVal> initialMarking;
         Reducer reducer;
+        shared_string_set& _string_set;
     };
 
 }

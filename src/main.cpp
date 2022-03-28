@@ -55,6 +55,7 @@ using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 int main(int argc, const char** argv) {
+    shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
         options_t options;
         if (options.parse(argc, argv)) // if options were --help or --version
@@ -69,7 +70,7 @@ int main(int argc, const char** argv) {
         }
         options.print();
 
-        ColoredPetriNetBuilder cpnBuilder;
+        ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
@@ -88,7 +89,7 @@ int main(int argc, const char** argv) {
 
         //----------------------- Parse Query -----------------------//
         std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(options, querynames);
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
         auto queries = options.logic == TemporalLogic::CTL
                        ? getCTLQueries(ctlStarQueries)
                        : getLTLQueries(ctlStarQueries);

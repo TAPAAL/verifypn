@@ -12,7 +12,7 @@ namespace PetriEngine {
         }
 
         PetriNetBuilder Unfolder::strip_colors() {
-            PetriNetBuilder pnBuilder;
+            PetriNetBuilder pnBuilder(_builder.string_set());
             if (_builder.isColored()) {
                 for (auto& place : _builder.places()) {
                     pnBuilder.addPlace(place.name, place.marking.size(), place._x, place._y);
@@ -55,7 +55,7 @@ namespace PetriEngine {
         }
 
         PetriNetBuilder Unfolder::unfold() {
-            PetriNetBuilder ptBuilder;
+            PetriNetBuilder ptBuilder(_builder.string_set());
             if (_builder.isColored()) {
                 auto start = std::chrono::high_resolution_clock::now();
 

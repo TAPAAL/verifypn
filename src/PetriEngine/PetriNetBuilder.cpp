@@ -34,14 +34,14 @@
 
 namespace PetriEngine {
 
-    PetriNetBuilder::PetriNetBuilder() : AbstractPetriNetBuilder(),
-    reducer(this){
+    PetriNetBuilder::PetriNetBuilder(shared_string_set& string_set) : AbstractPetriNetBuilder(),
+    reducer(this), _string_set(string_set) {
     }
     PetriNetBuilder::PetriNetBuilder(const PetriNetBuilder& other)
     : _placenames(other._placenames), _transitionnames(other._transitionnames),
        _placelocations(other._placelocations), _transitionlocations(other._transitionlocations),
        _transitions(other._transitions), _places(other._places),
-       initialMarking(other.initialMarking), reducer(this)
+       initialMarking(other.initialMarking), reducer(this), _string_set(other._string_set)
     {
 
     }
@@ -50,7 +50,7 @@ namespace PetriEngine {
     : _placenames(std::move(other._placenames)), _transitionnames(std::move(other._transitionnames)),
        _placelocations(std::move(other._placelocations)), _transitionlocations(std::move(other._transitionlocations)),
        _transitions(std::move(other._transitions)), _places(std::move(other._places)),
-       initialMarking(std::move(other.initialMarking)), reducer(this) {}
+       initialMarking(std::move(other.initialMarking)), reducer(this), _string_set(other._string_set) {}
 
     void PetriNetBuilder::addPlace(const std::string &name, uint32_t tokens, double x, double y)
     {
@@ -58,7 +58,8 @@ namespace PetriEngine {
         return addPlace(spn, tokens, x, y);
     }
 
-    void PetriNetBuilder::addPlace(const shared_const_string &name, uint32_t tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const shared_const_string &_name, uint32_t tokens, double x, double y) {
+        auto name = *_string_set.insert(_name).first;
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
@@ -79,8 +80,9 @@ namespace PetriEngine {
         return addTransition(stn, player, x, y);
     }
 
-    void PetriNetBuilder::addTransition(const shared_const_string &name,
+    void PetriNetBuilder::addTransition(const shared_const_string &_name,
             int32_t player, double x, double y) {
+        auto name = *_string_set.insert(_name).first;
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();

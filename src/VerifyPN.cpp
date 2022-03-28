@@ -125,7 +125,7 @@ ReturnValue contextAnalysis(bool colored, const shared_name_name_map& transition
 }
 
 std::vector<Condition_ptr>
-parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary) {
+parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary) {
     std::vector<QueryItem> queries;
     std::vector<Condition_ptr> conditions;
     if (binary) {
@@ -138,7 +138,7 @@ parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const s
         }
         queries = std::move(parser.queries);
     } else {
-        QueryXMLParser parser;
+        QueryXMLParser parser(string_set);
         if (!parser.parse(qfile, qnums)) {
             fprintf(stderr, "Error: Failed parsing XML query file\n");
             fprintf(stdout, "DO_NOT_COMPETE\n");
@@ -177,7 +177,7 @@ parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const s
 }
 
 std::vector<Condition_ptr >
-readQueries(options_t& options, std::vector<std::string>& qstrings) {
+readQueries(shared_string_set& string_set, options_t& options, std::vector<std::string>& qstrings) {
 
     std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
@@ -202,7 +202,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
                 throw base_error("Error parsing: ", qstrings.back());
             conditions.emplace_back(q);
         } else {
-            conditions = parseXMLQueries(qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
+            conditions = parseXMLQueries(string_set, qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
         }
         qfile.close();
         return conditions;
