@@ -15,11 +15,9 @@ namespace PetriEngine::Colored::Reduction {
     public:
         std::string name() override { return "ParallelPlaces"; }
 
-        bool canBeAppliedRepeatedly() override { return false; }
-
         bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override { return true; }
 
-        bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t explosion_limiter) override;
+        bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
     };
 }
 

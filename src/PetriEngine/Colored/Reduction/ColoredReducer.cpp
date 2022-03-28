@@ -62,15 +62,9 @@ namespace PetriEngine::Colored::Reduction {
 
         do {
             changed = false;
-
             for (auto &rule: reductionsToUse) {
-                if (rule->canBeAppliedRepeatedly())
-                    while (rule->apply(*this, inQuery, queryType, preserveLoops, preserveStutter, explosion_limiter)) changed = true;
-                else
-                    changed |= rule->apply(*this, inQuery, queryType, preserveLoops, preserveStutter, explosion_limiter);
+                changed |= rule->apply(*this, inQuery, queryType, preserveLoops, preserveStutter);
             }
-
-            explosion_limiter *= 2;
             any |= changed;
         } while (changed && hasTimedOut());
 
