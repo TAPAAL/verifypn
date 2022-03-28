@@ -8,6 +8,7 @@
 #ifndef VERIFYPN_REDRULEPARALLELTRANSITIONS_H
 #define VERIFYPN_REDRULEPARALLELTRANSITIONS_H
 
+#include <PetriEngine/Colored/Expressions.h>
 #include "ReductionRule.h"
 
 namespace PetriEngine::Colored::Reduction {
@@ -20,6 +21,9 @@ namespace PetriEngine::Colored::Reduction {
         }
 
         bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
+
+    private:
+        static void checkMult(uint32_t &fail, uint32_t &mult, const ArcExpression &small, const ArcExpression &big);
     };
 }
 

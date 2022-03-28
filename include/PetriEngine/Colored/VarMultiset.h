@@ -65,6 +65,11 @@ namespace PetriEngine::Colored {
 
         bool isSubsetOrEqTo(const VarMultiset &other) const;
 
+        /** Returns the greatest number k, such that `this * k subseteq other` */
+        uint32_t numberOfTimesThisFitsInto(const VarMultiset &other) const;
+
+        bool divides(const VarMultiset &other) const;
+
         bool empty() const {
             return size() == 0;
         };

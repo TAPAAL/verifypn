@@ -60,7 +60,7 @@ namespace PetriEngine::Colored {
         if (!other._types.empty() && _types != other._types)
             throw base_error("You cannot add multisets over different sets");
         for (auto &pair: _set) {
-            (*this)[pair.first] = std::min<uint32_t>(pair.second - other[pair.first], 0); // min because underflow
+            (*this)[pair.first] = pair.second < other[pair.first] ? 0 : pair.second - other[pair.first];
         }
     }
 
@@ -109,6 +109,27 @@ namespace PetriEngine::Colored {
         VarMultiset thisMinusOther(*this);
         thisMinusOther -= other;
         return thisMinusOther.empty();
+    }
+
+    uint32_t VarMultiset::numberOfTimesThisFitsInto(const VarMultiset &other) const {
+        if (_types.empty())
+            return std::numeric_limits<uint32_t>::max();
+        if (_types != other._types)
+            throw base_error("You cannot compare variable multisets of different types");
+        if (!this->isSubsetOrEqTo(other)) return 0;
+        uint32_t k = std::numeric_limits<uint32_t>::max();
+        for (const auto &pair : other) {
+            if ((*this)[pair.first] != 0) {
+                k = std::min(k, pair.second / (*this)[pair.first]);
+            }
+        }
+        return k;
+    }
+
+    bool VarMultiset::divides(const VarMultiset &other) const {
+        VarMultiset ms(*this);
+        auto k = ms.numberOfTimesThisFitsInto(other);
+        return (other - (*this) * k).empty();
     }
 
     std::string VarMultiset::toString() const {
