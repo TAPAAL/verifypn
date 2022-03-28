@@ -60,7 +60,7 @@ namespace PetriEngine {
         }
     }
 
-    std::shared_ptr<std::string> Reducer::getTransitionName(uint32_t transition)
+    shared_const_string Reducer::getTransitionName(uint32_t transition)
     {
         for(auto t : parent->_transitionnames)
         {
@@ -69,20 +69,20 @@ namespace PetriEngine {
         throw base_error("Unknown transition_id=", transition);
     }
 
-    std::shared_ptr<std::string> Reducer::newTransName()
+    shared_const_string Reducer::newTransName()
     {
         auto prefix = "CT";
-        auto tmp = std::make_shared<std::string>(prefix + std::to_string(_tnameid));
+        auto tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         while(parent->_transitionnames.count(tmp) >= 1)
         {
             ++_tnameid;
-            tmp = std::make_shared<std::string>(prefix + std::to_string(_tnameid));
+            tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         }
         ++_tnameid;
         return tmp;
     }
 
-    std::shared_ptr<std::string> Reducer::getPlaceName(uint32_t place)
+    shared_const_string Reducer::getPlaceName(uint32_t place)
     {
         for(auto& t : parent->_placenames)
         {

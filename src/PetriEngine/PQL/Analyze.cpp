@@ -70,7 +70,7 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    uint32_t getPlace(AnalysisContext& context, const std::shared_ptr<std::string>& name)
+    uint32_t getPlace(AnalysisContext& context, const shared_const_string& name)
     {
         AnalysisContext::ResolutionResult result = context.resolve(name);
         if (result.success) {
@@ -81,7 +81,7 @@ namespace PetriEngine { namespace PQL {
         return -1;
     }
 
-    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, const std::shared_ptr<std::string>& name) {
+    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, const shared_const_string& name) {
         return std::make_shared<UnfoldedIdentifierExpr>(name, getPlace(context, name));
     }
 
@@ -94,7 +94,7 @@ namespace PetriEngine { namespace PQL {
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored())
         {
-            std::vector<std::shared_ptr<std::string>> names;
+            std::vector<shared_const_string> names;
             if (!coloredContext->resolvePlace(element->name(), [&](auto& n){
                 names.emplace_back(n);
             })) {
@@ -177,8 +177,8 @@ namespace PetriEngine { namespace PQL {
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored()) {
-            std::vector<std::shared_ptr<std::string>> names;
-            if (!coloredContext->resolveTransition(element->getName(), [&](const std::shared_ptr<std::string>& tname) {
+            std::vector<shared_const_string> names;
+            if (!coloredContext->resolveTransition(element->getName(), [&](const shared_const_string& tname) {
                 names.emplace_back(tname);
             })) {
                 throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
@@ -380,7 +380,7 @@ namespace PetriEngine { namespace PQL {
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
             if(coloredContext != nullptr && coloredContext->isColored())
             {
-                std::vector<std::shared_ptr<std::string>> uplaces;
+                std::vector<shared_const_string> uplaces;
                 for(auto& p : element->getPlaces())
                 {
                     if (!coloredContext->resolvePlace(p, [&](auto& pn){

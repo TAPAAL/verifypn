@@ -38,9 +38,9 @@ namespace PetriEngine {
         };
 
         struct Transition {
-            explicit Transition(std::shared_ptr<std::string> id, int buchi) : id(std::move(id)), buchi_state(buchi) {}
+            explicit Transition(shared_const_string id, int buchi) : id(std::move(id)), buchi_state(buchi) {}
 
-            std::shared_ptr<std::string> id;
+            shared_const_string id;
             int buchi_state;
             std::unordered_map<uint32_t, uint32_t> tokens;
         };
@@ -52,7 +52,7 @@ namespace PetriEngine {
         std::vector<Transition> trace;
     private:
 
-        static const std::shared_ptr<std::string> DEADLOCK_TRANS;
+        static const shared_const_string DEADLOCK_TRANS;
         void parseRoot(const rapidxml::xml_node<> *pNode);
 
         Transition parseTransition(const rapidxml::xml_node<char> *pNode);

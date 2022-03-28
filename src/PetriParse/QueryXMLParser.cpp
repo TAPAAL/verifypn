@@ -176,7 +176,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
         return std::make_shared<LivenessCondition>();
     }
     else if (childName == "place-bound") {
-        std::vector<std::shared_ptr<std::string>> places;
+        std::vector<shared_const_string> places;
         for (auto it = child->first_node(); it ; it = it->next_sibling()) {
             if (strcmp(it->name(), "place") != 0)
             {
@@ -423,7 +423,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
                 assert(false);
                 return nullptr;
             }
-            auto name = std::make_shared<std::string>(it->value());
+            auto name = std::make_shared<const_string>(it->value());
             conds.emplace_back(std::make_shared<FireableCondition>(*_string_set.insert(name).first));
         }
         return std::make_shared<OrCondition>(conds);
@@ -514,12 +514,12 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
     return nullptr;
 }
 
-std::shared_ptr<std::string> QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
+shared_const_string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
     if (strcmp(element->name(), "place") != 0)
-        return std::make_shared<std::string>(""); // missing place tag
-    auto placeName = std::make_shared<std::string>(element->value());
-    placeName->erase(std::remove_if(placeName->begin(), placeName->end(), ::isspace), placeName->end());
-    return placeName;
+        return std::make_shared<const_string>(""); // missing place tag
+    std::string tmp{element->value()};
+    tmp.erase(std::remove_if(tmp.begin(), tmp.end(), ::isspace), tmp.end());
+    return std::make_shared<const_string>(std::move(tmp));
 }
 
 void QueryXMLParser::printQueries(size_t i) {

@@ -49,15 +49,15 @@ namespace PetriEngine {
             void unfoldTransition(PetriNetBuilder& builder, uint32_t transitionId);
             void handleOrphanPlace(PetriNetBuilder& ptBuilder, const Colored::Place& place, const shared_name_index_map& unfoldedPlaceMap);
             void createPartionVarmaps();
-            void unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const std::shared_ptr<std::string> &oldname, const std::shared_ptr<std::string> &newname);
+            void unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const shared_const_string &oldname, const shared_const_string &newname);
             std::string arc_to_string(const Colored::Arc& arc) const;
-            void unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const std::shared_ptr<std::string>& name);
+            void unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const shared_const_string& name);
             Colored::StablePlaceFinder _stable;
             double _time = 0;
             shared_place_color_map _ptplacenames;
             shared_name_name_map _pttransitionnames;
             uint32_t _nptarcs = 0;
-            std::vector<std::shared_ptr<std::string>> _sumPlacesNames;
+            std::vector<shared_const_string> _sumPlacesNames;
             const VariableSymmetry& _symmetry;
             const PartitionBuilder& _partition;
             const ForwardFixedPoint& _fixed_point;

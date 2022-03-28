@@ -30,7 +30,7 @@
 
 namespace PetriEngine {
 
-    const std::shared_ptr<std::string> TraceReplay::DEADLOCK_TRANS{std::make_shared<std::string>("##deadlock")};
+    const shared_const_string TraceReplay::DEADLOCK_TRANS{std::make_shared<const_string>("##deadlock")};
 
     TraceReplay::TraceReplay(std::istream &is, const PetriEngine::PetriNet *net, const options_t &options)
         : options(options) {
@@ -85,11 +85,11 @@ namespace PetriEngine {
     }
 
     TraceReplay::Transition TraceReplay::parseTransition(const rapidxml::xml_node<char> *pNode) {
-        std::shared_ptr<std::string> id;
+        shared_const_string id;
         int buchi = -1;
         for (auto it = pNode->first_attribute(); it; it = it->next_attribute()) {
             if (std::strcmp(it->name(), "id") == 0) {
-                id = std::make_shared<std::string>(it->value());
+                id = std::make_shared<const_string>(it->value());
             }
             if (std::strstr(it->name(), "buchi") != nullptr) {
                 // buchi field is sometimes spelled slightly differently, but will always contain 'buchi'
@@ -122,7 +122,7 @@ namespace PetriEngine {
                             std::unordered_map<uint32_t, uint32_t> &current_marking) {
         for (auto it = pNode->first_attribute(); it; it = it->next_attribute()) {
             if (std::strcmp(it->name(), "place") == 0) {
-                auto val = std::make_shared<std::string>(it->value());
+                auto val = std::make_shared<const_string>(it->value());
                 if (current_marking.find(places.at(val)) == current_marking.end()) {
                     current_marking[places.at(val)] = 1;
                 } else {

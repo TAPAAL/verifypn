@@ -66,7 +66,7 @@ namespace PetriEngine {
             }
 
             /** Resolve an identifier */
-            virtual ResolutionResult resolve(const std::shared_ptr<std::string>& identifier, bool place = true);
+            virtual ResolutionResult resolve(const shared_const_string& identifier, bool place = true);
 
             auto& allPlaceNames() const { return _placeNames; }
             auto& allTransitionNames() const { return _transitionNames; }
@@ -93,9 +93,9 @@ namespace PetriEngine {
                       _colored(colored)
             {}
 
-            bool resolvePlace(const std::shared_ptr<std::string>& place, std::function<void(const std::shared_ptr<std::string>&)>&& fn);
+            bool resolvePlace(const shared_const_string& place, std::function<void(const shared_const_string&)>&& fn);
 
-            bool resolveTransition(const std::shared_ptr<std::string>& transition, std::function<void(const std::shared_ptr<std::string>)>&& fn);
+            bool resolveTransition(const shared_const_string& transition, std::function<void(const shared_const_string)>&& fn);
 
             bool isColored() const {
                 return _colored;

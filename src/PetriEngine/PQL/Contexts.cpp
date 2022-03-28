@@ -9,7 +9,7 @@
 namespace PetriEngine {
     namespace PQL {
 
-        bool ColoredAnalysisContext::resolvePlace(const std::shared_ptr<std::string>& place, std::function<void(const std::shared_ptr<std::string>&)>&& fn)
+        bool ColoredAnalysisContext::resolvePlace(const shared_const_string& place, std::function<void(const shared_const_string&)>&& fn)
         {
             auto it = _coloredPlaceNames.find(place);
             if (it != _coloredPlaceNames.end()) {
@@ -20,7 +20,7 @@ namespace PetriEngine {
             return false;
         }
 
-        bool ColoredAnalysisContext::resolveTransition(const std::shared_ptr<std::string>& transition, std::function<void(const std::shared_ptr<std::string>)>&& fn)
+        bool ColoredAnalysisContext::resolveTransition(const shared_const_string& transition, std::function<void(const shared_const_string)>&& fn)
         {
             auto it = _coloredTransitionNames.find(transition);
             if (it != _coloredTransitionNames.end()) {
@@ -32,7 +32,7 @@ namespace PetriEngine {
         }
 
 
-        AnalysisContext::ResolutionResult AnalysisContext::resolve(const std::shared_ptr<std::string>& identifier, bool place)
+        AnalysisContext::ResolutionResult AnalysisContext::resolve(const shared_const_string& identifier, bool place)
         {
             ResolutionResult result;
             result.offset = -1;

@@ -49,7 +49,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
-        auto tmp = std::make_shared<std::string>(name);
+        auto tmp = std::make_shared<const_string>(name);
         if(_placenames.count(tmp) == 0)
         {
             uint32_t next = _placenames.size();
@@ -74,7 +74,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
-        auto tmp = std::make_shared<std::string>(name);
+        auto tmp = std::make_shared<const_string>(name);
         if(_transitionnames.count(tmp) == 0)
         {
             uint32_t next = _transitionnames.size();
@@ -104,8 +104,8 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
-        auto stn = std::make_shared<std::string>(transition);
-        auto spn = std::make_shared<std::string>(place);
+        auto stn = std::make_shared<const_string>(transition);
+        auto spn = std::make_shared<const_string>(place);
         if(_transitionnames.count(stn) == 0)
             throw base_error("Transition '", transition, "' not found. ");
         if(_placenames.count(spn) == 0)

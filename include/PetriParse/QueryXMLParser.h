@@ -52,9 +52,9 @@ private:
     Condition_ptr parseFormula(rapidxml::xml_node<>*  element);
     Condition_ptr parseBooleanFormula(rapidxml::xml_node<>*  element);
     Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
-    std::shared_ptr<std::string> parsePlace(rapidxml::xml_node<>*  element);
+    shared_const_string parsePlace(rapidxml::xml_node<>*  element);
     void fatal_error(const std::string& token);
-    std::unordered_set<std::shared_ptr<std::string>, shared_string_ops, shared_string_ops> _string_set;
+    shared_string_set _string_set;
 };
 
 #endif /* QUERYXMLPARSER_H */

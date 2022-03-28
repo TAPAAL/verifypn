@@ -36,8 +36,8 @@ public:
     bool parse(std::istream& binary, const std::set<size_t>& );
 
 private:
-    Condition_ptr parseQuery(std::istream& binary, const std::vector<std::shared_ptr<std::string>>& names);
-    Expr_ptr parseExpr(std::istream& binary, const std::vector<std::shared_ptr<std::string>>& names);
+    Condition_ptr parseQuery(std::istream& binary, const std::vector<shared_const_string>& names);
+    Expr_ptr parseExpr(std::istream& binary, const std::vector<shared_const_string>& names);
 
 };
 

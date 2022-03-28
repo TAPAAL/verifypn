@@ -40,21 +40,21 @@ namespace PetriEngine {
         PetriNetBuilder(const PetriNetBuilder& other);
         PetriNetBuilder(PetriNetBuilder&&);
         void addPlace(const std::string& name, uint32_t tokens, double x, double y) override;
-        void addPlace(const std::shared_ptr<std::string>& name, uint32_t tokens, double x, double y);
+        void addPlace(const shared_const_string& name, uint32_t tokens, double x, double y);
         void addTransition(const std::string& name,
                 int32_t player,
                 double x,
                 double y) override;
-        void addTransition(const std::shared_ptr<std::string>& name,
+        void addTransition(const shared_const_string& name,
                 int32_t player,
                 double x,
                 double y);
 
-        void addInputArc(const std::shared_ptr<std::string>& place,
-                const std::shared_ptr<std::string>& transition,
+        void addInputArc(const shared_const_string& place,
+                const shared_const_string& transition,
                 bool inhibitor,
                 int weight);
-        void addOutputArc(const std::shared_ptr<std::string>& transition, const std::shared_ptr<std::string>& place, int weight);
+        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, int weight);
 
         void addInputArc(const std::string& place,
                 const std::string& transition,
@@ -113,7 +113,7 @@ namespace PetriEngine {
 
         Reducer* getReducer() { return &reducer; }
 
-        /*std::vector<std::pair<std::shared_ptr<std::string>, uint32_t>> orphanPlaces() const {
+        /*std::vector<std::pair<shared_const_string, uint32_t>> orphanPlaces() const {
             std::vector<std::pair<std::string, uint32_t>> res;
             for(uint32_t p = 0; p < _places.size(); p++) {
                 if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {

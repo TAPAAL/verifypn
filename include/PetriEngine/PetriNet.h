@@ -27,6 +27,8 @@
 #include <memory>
 #include <iostream>
 
+#include "utils/structures/shared_string.h"
+
 namespace PetriEngine {
 
     namespace PQL {
@@ -84,12 +86,12 @@ namespace PetriEngine {
         }
 
 
-        const std::vector<std::shared_ptr<std::string>>& transitionNames() const
+        const std::vector<shared_const_string>& transitionNames() const
         {
             return _transitionnames;
         }
 
-        const std::vector<std::shared_ptr<std::string>>& placeNames() const
+        const std::vector<shared_const_string>& placeNames() const
         {
             return _placenames;
         }
@@ -136,8 +138,8 @@ namespace PetriEngine {
         std::vector<bool> _controllable;
         MarkVal* _initialMarking;
 
-        std::vector<std::shared_ptr<std::string>> _transitionnames;
-        std::vector<std::shared_ptr<std::string>> _placenames;
+        std::vector<shared_const_string> _transitionnames;
+        std::vector<shared_const_string> _placenames;
 
         std::vector< std::tuple<double, double> > _placelocations;
         std::vector< std::tuple<double, double> > _transitionlocations;
