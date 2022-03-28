@@ -5,6 +5,7 @@
  *      Mathias Mehl Sørensen
  */
 
+#include <PetriEngine/Colored/ArcVarMultisetVisitor.h>
 #include "PetriEngine/Colored/Reduction/RedRuleParallelPlaces.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 
@@ -65,16 +66,16 @@ namespace PetriEngine::Colored::Reduction {
 
                         if (place2.inhibitor) continue; // TODO can be generalized, also with k scaling
 
-                        // TODO Check if p2 is k times p1 once we have variable multisets
+                        double mult = 1.0;
 
-                        bool ok = true;
+                        int fail = 0;
                         size_t j = 0;
                         for (size_t i = 0; i < place2._post.size(); i++) {
 
                             // place1 may have consumers that place2 does not
                             while (j < place1._post.size() && place1._post[j] < place2._post[i]) j++;
                             if (place1._post.size() <= j || place1._post[j] != place2._post[i]) {
-                                ok = false;
+                                fail = 2;
                                 break;
                             }
 
@@ -83,16 +84,25 @@ namespace PetriEngine::Colored::Reduction {
                             auto a2 = red.getInArc(p2, trans);
                             assert(a1 != trans.input_arcs.end());
                             assert(a2 != trans.input_arcs.end());
-                            // TODO Check if subseteq instead of equal
-                            if (to_string(*a1->expr) != to_string(*a2->expr)) {
-                                ok = false;
-                                break;
+
+                            if (to_string(*a1->expr) == to_string(*a2->expr)) {
+                                continue; // mult is already at least 1
+                            } else if (auto ms1 = ArcVarMultisetVisitor::extract(*a1->expr)) {
+                                if (auto ms2 = ArcVarMultisetVisitor::extract(*a2->expr)) {
+                                    if (auto k = ms1->scaleRequiredToCover(*ms2)) {
+                                        mult = std::max(mult, *k);
+                                        continue;
+                                    }
+                                }
                             }
+                            fail = 2;
+                            break;
                         }
 
-                        if (!ok) break;
+                        if (fail == 2) break;
 
-                        if (!place1.marking.isSubsetOrEqTo(place2.marking)) continue; // TODO k-scaling
+                        // TODO Could be more precise with fuzzy multisets
+                        if (!(place1.marking * (uint32_t)std::ceil(mult)).isSubsetOrEqTo(place2.marking)) continue;
 
                         j = 0;
                         for (size_t i = 0; i < place1._pre.size(); i++) {
@@ -100,7 +110,7 @@ namespace PetriEngine::Colored::Reduction {
                             // place2 may have producers that place1 does not
                             while (j < place2._pre.size() && place2._pre[j] < place1._pre[i]) j++;
                             if (j == place2._pre.size() || place1._pre[j] != place2._pre[i]) {
-                                ok = false;
+                                fail = 2;
                                 break;
                             }
 
@@ -109,14 +119,23 @@ namespace PetriEngine::Colored::Reduction {
                             auto a2 = red.getOutArc(trans, p2);
                             assert(a1 != trans.output_arcs.end());
                             assert(a2 != trans.output_arcs.end());
-                            // TODO Check if subseteq instead of equal
-                            if (to_string(*a1->expr) != to_string(*a2->expr)) {
-                                ok = false;
-                                break;
+
+                            if (mult == 1.0 && to_string(*a1->expr) == to_string(*a2->expr)) {
+                                continue;
+                            } else if (auto ms1 = ArcVarMultisetVisitor::extract(*a1->expr)) {
+                                if (auto ms2 = ArcVarMultisetVisitor::extract(*a2->expr)) {
+                                    // TODO Could be more precise with fuzzy multisets
+                                    if ((*ms1 * (uint32_t)std::ceil(mult)).isSubsetOrEqTo(*ms2)) {
+                                        continue;
+                                    }
+                                }
                             }
+                            fail = 1;
+                            break;
                         }
 
-                        if (!ok) break;
+                        if (fail == 2) break;
+                        else if (fail == 1) continue;
 
                         // Remove p2
                         _applications++;
