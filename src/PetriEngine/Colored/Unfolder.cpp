@@ -195,14 +195,14 @@ namespace PetriEngine {
                     if (_sumPlacesNames.size() < inhibArc.place) _sumPlacesNames.resize(inhibArc.place + 1);
                     auto placeName = _sumPlacesNames[inhibArc.place];
 
-                    if (placeName->empty()) {
+                    if (placeName == nullptr || placeName->empty()) {
                         const PetriEngine::Colored::Place& place = _builder.places()[inhibArc.place];
                         auto sumPlaceName = std::make_shared<const_string>(*place.name + "Sum");
                         ptBuilder.addPlace(sumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
                         if (_ptplacenames.count(place.name) <= 0) {
                             _ptplacenames[place.name][0] = sumPlaceName;
                         }
-                        _sumPlacesNames[inhibArc.place] = std::move(sumPlaceName);
+                        placeName = _sumPlacesNames[inhibArc.place] = std::move(sumPlaceName);
                     }
                     ptBuilder.addInputArc(placeName, newname, true, inhibArc.weight);
                 }
@@ -250,8 +250,9 @@ namespace PetriEngine {
                 }
                 auto pName = _ptplacenames[place.name][id];
 
-                if (pName->empty()) {
+                if (pName == nullptr || pName->empty()) {
                     unfoldPlace(ptBuilder, &place, newColor, arc.place, id);
+                    pName = _ptplacenames[place.name][id];
                 }
 
                 if (arc.input) {
@@ -265,10 +266,10 @@ namespace PetriEngine {
             if (place.inhibitor) {
                 if (_sumPlacesNames.size() < arc.place) _sumPlacesNames.resize(arc.place + 1);
                 auto sumPlaceName = _sumPlacesNames[arc.place];
-                if (sumPlaceName->empty()) {
+                if (sumPlaceName == nullptr || sumPlaceName->empty()) {
                     auto newSumPlaceName = std::make_shared<const_string>(*place.name + "Sum");
                     ptBuilder.addPlace(newSumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
-                    _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
+                    sumPlaceName = _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
                 }
 
 

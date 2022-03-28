@@ -60,18 +60,17 @@ namespace PetriEngine {
 
     void PetriNetBuilder::addPlace(const shared_const_string &_name, uint32_t tokens, double x, double y) {
         auto name = *_string_set.insert(_name).first;
-        if(_placenames.count(name) == 0)
+        size_t size = _placenames.size();
+        auto [it, inserted] = _placenames.insert(std::make_pair(name, size));
+        if(inserted)
         {
-            uint32_t next = _placenames.size();
             _places.emplace_back();
-            _placenames[name] = next;
             _placelocations.push_back(std::tuple<double, double>(x,y));
         }
 
-        uint32_t id = _placenames[name];
-
-        while(initialMarking.size() <= id) initialMarking.emplace_back();
-        initialMarking[id] = tokens;
+        if(initialMarking.size() <= it->second)
+            initialMarking.resize(initialMarking.size() + 1, 0);
+        initialMarking[it->second] = tokens;
     }
 
     void PetriNetBuilder::addTransition(const std::string &name,
@@ -83,13 +82,13 @@ namespace PetriEngine {
     void PetriNetBuilder::addTransition(const shared_const_string &_name,
             int32_t player, double x, double y) {
         auto name = *_string_set.insert(_name).first;
-        if(_transitionnames.count(name) == 0)
+        size_t size = _transitionnames.size();
+        auto [it, inserted] = _transitionnames.insert(std::make_pair(name, size));
+        if(inserted)
         {
-            uint32_t next = _transitionnames.size();
             _transitions.emplace_back();
-            _transitionnames[name] = next;
-            _transitionlocations.push_back(std::tuple<double, double>(x,y));
             _transitions.back()._player = player;
+            _transitionlocations.push_back(std::tuple<double, double>(x,y));
         }
     }
 
@@ -121,6 +120,7 @@ namespace PetriEngine {
         assert(p < _places.size());
         _transitions[t].pre.push_back(arc);
         _transitions[t].inhib |= inhibitor;
+        assert(std::find(_places[p].consumers.begin(), _places[p].consumers.end(), t) == std::end(_places[p].consumers));
         _places[p].consumers.push_back(t);
         _places[p].inhib |= inhibitor;
     }
@@ -142,7 +142,6 @@ namespace PetriEngine {
         }
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
-
         assert(t < _transitions.size());
         assert(p < _places.size());
 
@@ -150,6 +149,8 @@ namespace PetriEngine {
         arc.place = p;
         arc.weight = weight;
         arc.skip = false;
+        assert(std::find(_places[p].producers.begin(), _places[p].producers.end(), t) == std::end(_places[p].producers));
+
         _transitions[t].post.push_back(arc);
         _places[p].producers.push_back(t);
     }
@@ -214,15 +215,51 @@ namespace PetriEngine {
             {
                 place_cons_count[i] = _places[i].consumers.size();
                 place_prod_count[i] = _places[i].producers.size();
+#ifndef NDEBUG
+                size_t cons = 0;
+                size_t prod = 0;
+                for(auto& t : _transitions)
+                {
+                    size_t pr = 0;
+                    size_t po = 0;
+                    for(auto& a : t.pre)
+                        pr += (i == a.place ? 1 : 0);
+                    for(auto& a : t.post)
+                        po += (i == a.place ? 1 : 0);
+                    assert(pr <= 1);
+                    assert(po <= 1);
+                    cons += pr;
+                    prod += po;
+                }
+                assert(cons == place_cons_count[i]);
+                assert(prod == place_prod_count[i]);
+#endif
                 invariants += _places[i].consumers.size() + _places[i].producers.size();
             }
         }
 
+#ifndef NDEBUG
+        std::vector<size_t> plpcount(_places.size(), 0);
+        std::vector<size_t> plccount(_places.size(), 0);
+#endif
+
         for(uint32_t i = 0; i < _transitions.size(); ++i)
         {
             trans_idmap[i] = std::numeric_limits<uint32_t>::max();
+#ifndef NDEBUG
+            for(auto& a : _transitions[i].pre)
+                plccount[a.place] += 1;
+            for(auto& a : _transitions[i].post)
+                plpcount[a.place] += 1;
+#endif
         }
-
+#ifndef NDEBUG
+        for(uint32_t i = 0; i < _places.size(); ++i)
+        {
+            assert(place_cons_count[i] == plccount[i]);
+            assert(place_prod_count[i] == plpcount[i]);
+        }
+#endif
 
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
 
@@ -245,7 +282,7 @@ namespace PetriEngine {
                 net->_transitions[freetrans].inputs = freeinv;
 
                 // add inhibitors
-                for(auto pre : trans.pre)
+                for(const auto& pre : trans.pre)
                 {
                     Invariant& iv = net->_invariants[freeinv];
                     iv.place = pre.place;
@@ -259,7 +296,7 @@ namespace PetriEngine {
 
                 net->_transitions[freetrans].outputs = freeinv;
 
-                for(auto post : trans.post)
+                for(const auto& post : trans.post)
                 {
                     assert(freeinv < net->_ninvariants);
                     net->_invariants[freeinv].place = post.place;
@@ -327,7 +364,7 @@ namespace PetriEngine {
                 trans_idmap[t] = freeinv;
 
                 // everything is good, change state!.
-                for(auto pre : trans.pre)
+                for(const auto& pre : trans.pre)
                 {
                     Invariant& iv = net->_invariants[freeinv];
                     iv.place = pre.place;
@@ -339,7 +376,7 @@ namespace PetriEngine {
                 }
 
                 net->_transitions[freetrans].outputs = freeinv;
-                for(auto post : trans.post)
+                for(const auto& post : trans.post)
                 {
                     assert(freeinv < net->_ninvariants);
                     auto& post_inv = net->_invariants[freeinv];
