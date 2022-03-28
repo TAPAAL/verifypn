@@ -7,8 +7,8 @@ namespace PetriEngine {
     namespace Colored {
 
         std::string Unfolder::arc_to_string(const Colored::Arc& arc) const {
-            return !arc.input ? "(" + _builder.transitions()[arc.transition].name + ", " + _builder.places()[arc.place].name + ")" :
-                "(" + _builder.places()[arc.place].name + ", " + _builder.transitions()[arc.transition].name + ")";
+            return !arc.input ? "(" + *_builder.transitions()[arc.transition].name + ", " + *_builder.places()[arc.place].name + ")" :
+                "(" + *_builder.places()[arc.place].name + ", " + *_builder.transitions()[arc.transition].name + ")";
         }
 
         PetriNetBuilder Unfolder::strip_colors() {
@@ -83,9 +83,10 @@ namespace PetriEngine {
         //so we make a placeholder place which just has tokens equal to the number of colored tokens
         //Ideally, orphan places should just be translated to a constant in the query
 
-        void Unfolder::handleOrphanPlace(PetriNetBuilder& ptBuilder, const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
+        void Unfolder::handleOrphanPlace(PetriNetBuilder& ptBuilder, const Colored::Place& place,
+            const shared_name_index_map& unfoldedPlaceMap) {
             if (_ptplacenames.count(place.name) <= 0 && place.marking.size() > 0) {
-                const std::string &name = place.name + "_orphan";
+                auto name = std::make_shared<std::string>(*place.name + "_orphan");
                 ptBuilder.addPlace(name, place.marking.size(), place._x, place._y);
                 _ptplacenames[place.name][0] = std::move(name);
             } else {
@@ -98,7 +99,7 @@ namespace PetriEngine {
                 }
 
                 if (place.marking.size() > usedTokens || !any) {
-                    const std::string &name = place.name + "_orphan";
+                    auto name = std::make_shared<std::string>(*place.name + "_orphan");
                     ptBuilder.addPlace(name, place.marking.size() - usedTokens, place._x, place._y);
                     _ptplacenames[place.name][std::numeric_limits<uint32_t>::max()] = std::move(name);
                 }
@@ -131,7 +132,7 @@ namespace PetriEngine {
                     }
                 }
             }
-            const std::string &name = place->name + "_" + std::to_string(color->getId());
+            auto name = std::make_shared<std::string>(*place->name + "_" + std::to_string(color->getId()));
 
             ptBuilder.addPlace(name, tokenSize, place->_x, place->_y + (15 * color->getId()));
             _ptplacenames[place->name][id] = std::move(name);
@@ -148,7 +149,7 @@ namespace PetriEngine {
                 size_t i = 0;
                 bool hasBindings = false;
                 for (const auto &b : gen) {
-                    const std::string name = transition.name + "_" + std::to_string(i++);
+                    auto name = std::make_shared<std::string>(*transition.name + "_" + std::to_string(i++));
 
                     hasBindings = true;
                     ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
@@ -161,17 +162,17 @@ namespace PetriEngine {
                         unfoldArc(ptBuilder, arc, b, name);
                     }
 
-                    _pttransitionnames[transition.name].push_back(std::move(name));
+                    _pttransitionnames[transition.name].push_back(name);
                     unfoldInhibitorArc(ptBuilder, transition.name, name);
                 }
                 if (!hasBindings) {
-                    _pttransitionnames[transition.name] = std::vector<std::string>();
+                    _pttransitionnames[transition.name] = std::vector<std::shared_ptr<std::string>>();
                 }
             } else {
                 NaiveBindingGenerator gen(transition, _builder.colors());
                 size_t i = 0;
                 for (const auto &b : gen) {
-                    const std::string &name = transition.name + "_" + std::to_string(i++);
+                    auto name = std::make_shared<std::string>(*transition.name + "_" + std::to_string(i++));
                     ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                     offset += 15;
 
@@ -181,22 +182,22 @@ namespace PetriEngine {
                     for (const auto& arc : transition.output_arcs) {
                         unfoldArc(ptBuilder, arc, b, name);
                     }
-                    _pttransitionnames[transition.name].push_back(std::move(name));
+                    _pttransitionnames[transition.name].push_back(name);
                     unfoldInhibitorArc(ptBuilder, transition.name, name);
                 }
             }
         }
 
-        void Unfolder::unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const std::string &oldname, const std::string &newname) {
+        void Unfolder::unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const std::shared_ptr<std::string> &oldname, const std::shared_ptr<std::string> &newname) {
             for (uint32_t i = 0; i < _builder.inhibitors().size(); ++i) {
-                if (_builder.transitions()[_builder.inhibitors()[i].transition].name.compare(oldname) == 0) {
+                if (*_builder.transitions()[_builder.inhibitors()[i].transition].name == *oldname) {
                     const Colored::Arc &inhibArc = _builder.inhibitors()[i];
                     if (_sumPlacesNames.size() < inhibArc.place) _sumPlacesNames.resize(inhibArc.place + 1);
-                    const std::string& placeName = _sumPlacesNames[inhibArc.place];
+                    auto placeName = _sumPlacesNames[inhibArc.place];
 
-                    if (placeName.empty()) {
+                    if (placeName->empty()) {
                         const PetriEngine::Colored::Place& place = _builder.places()[inhibArc.place];
-                        const std::string sumPlaceName = place.name + "Sum";
+                        auto sumPlaceName = std::make_shared<std::string>(*place.name + "Sum");
                         ptBuilder.addPlace(sumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
                         if (_ptplacenames.count(place.name) <= 0) {
                             _ptplacenames[place.name][0] = sumPlaceName;
@@ -208,7 +209,7 @@ namespace PetriEngine {
             }
         }
 
-        void Unfolder::unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const std::string& tName) {
+        void Unfolder::unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const std::shared_ptr<std::string>& tName) {
             const PetriEngine::Colored::Place& place = _builder.places()[arc.place];
             //If the place is stable, the arc does not need to be unfolded.
             //This exploits the fact that since the transition is being unfolded with this binding
@@ -247,9 +248,9 @@ namespace PetriEngine {
                 } else {
                     id = _partition.partition()[arc.place].getUniqueIdForColor(newColor);
                 }
-                const std::string& pName = _ptplacenames[place.name][id];
+                auto pName = _ptplacenames[place.name][id];
 
-                if (pName.empty()) {
+                if (pName->empty()) {
                     unfoldPlace(ptBuilder, &place, newColor, arc.place, id);
                 }
 
@@ -263,9 +264,9 @@ namespace PetriEngine {
 
             if (place.inhibitor) {
                 if (_sumPlacesNames.size() < arc.place) _sumPlacesNames.resize(arc.place + 1);
-                const std::string sumPlaceName = _sumPlacesNames[arc.place];
-                if (sumPlaceName.empty()) {
-                    const std::string &newSumPlaceName = place.name + "Sum";
+                auto sumPlaceName = _sumPlacesNames[arc.place];
+                if (sumPlaceName->empty()) {
+                    auto newSumPlaceName = std::make_shared<std::string>(*place.name + "Sum");
                     ptBuilder.addPlace(newSumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
                     _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
                 }

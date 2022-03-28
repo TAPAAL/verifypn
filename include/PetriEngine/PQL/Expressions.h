@@ -247,7 +247,7 @@ namespace PetriEngine {
             void handle(const Expr_ptr& e);
             virtual int64_t apply(int64_t, int64_t) const = 0;
             int64_t _constant;
-            std::vector<std::pair<uint32_t,std::string>> _ids;
+            std::vector<std::pair<uint32_t,std::shared_ptr<std::string>>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
         };
 
@@ -324,7 +324,7 @@ namespace PetriEngine {
         class IdentifierExpr : public Expr {
             friend class AnalyzeVisitor;
         public:
-            IdentifierExpr(const std::string& name) : _name(name) {}
+            IdentifierExpr(std::shared_ptr<std::string> name) : _name(name) {}
             IdentifierExpr(const IdentifierExpr&) = default;
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
 
@@ -333,7 +333,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            [[nodiscard]] const std::string &name() const {
+            [[nodiscard]] const std::shared_ptr<std::string> &name() const {
                 return _name;
             }
 
@@ -342,7 +342,7 @@ namespace PetriEngine {
             }
 
         private:
-            std::string _name;
+            std::shared_ptr<std::string> _name;
             Expr_ptr _compiled;
         };
 
@@ -350,11 +350,11 @@ namespace PetriEngine {
         class UnfoldedIdentifierExpr : public Expr {
             friend class AnalyzeVisitor;
         public:
-            UnfoldedIdentifierExpr(const std::string& name, int offest)
+            UnfoldedIdentifierExpr(std::shared_ptr<std::string> name, int offest)
             : _offsetInMarking(offest), _name(name) {
             }
 
-            UnfoldedIdentifierExpr(const std::string& name) : UnfoldedIdentifierExpr(name, -1) {
+            UnfoldedIdentifierExpr(std::shared_ptr<std::string> name) : UnfoldedIdentifierExpr(name, -1) {
             }
 
             UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
@@ -364,16 +364,18 @@ namespace PetriEngine {
             int offset() const {
                 return _offsetInMarking;
             }
-            const std::string& name() const
+
+            const std::shared_ptr<std::string>& name() const
             {
                 return _name;
             }
+
             bool placeFree() const override { return false; }
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
             /** Identifier text */
-            std::string _name;
+            std::shared_ptr<std::string> _name;
         };
 
         class ShallowCondition : public Condition
@@ -631,31 +633,29 @@ namespace PetriEngine {
         class UnfoldedFireableCondition : public ShallowCondition {
             friend class AnalyzeVisitor;
         public:
-            UnfoldedFireableCondition(const std::string& tname) : ShallowCondition(), _name(tname) {};
-            std::string getName() const {
+            UnfoldedFireableCondition(std::shared_ptr<std::string> tname) : ShallowCondition(), _name(tname) {};
+            const std::shared_ptr<std::string>& getName() const {
                 return _name;
             }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<UnfoldedFireableCondition>(_name); }
-        public:
-
         private:
-            const std::string _name;
+            std::shared_ptr<std::string> _name;
         };
 
         class FireableCondition : public ShallowCondition {
             friend class AnalyzeVisitor;
         public:
-            FireableCondition(const std::string& tname) : _name(tname) {};
-            std::string getName() const {
+            FireableCondition(std::shared_ptr<std::string> tname) : _name(tname) {};
+            const std::shared_ptr<std::string>& getName() const {
                 return _name;
             }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
         private:
-            const std::string _name;
+            std::shared_ptr<std::string> _name;
         };
 
         /* Logical conditon */
@@ -726,7 +726,7 @@ namespace PetriEngine {
                 uint32_t _place = std::numeric_limits<uint32_t>::max();
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
-                std::string _name;
+                std::shared_ptr<std::string> _name;
                 bool operator<(const cons_t& other) const
                 {
                     return _place < other._place;
@@ -984,9 +984,9 @@ namespace PetriEngine {
         {
             friend class AnalyzeVisitor;
         public:
-            UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
+            UpperBoundsCondition(const std::vector<std::shared_ptr<std::string>>& places) : _places(places)
             {}
-            const std::vector<std::string> &getPlaces() const {
+            const std::vector<std::shared_ptr<std::string>> &getPlaces() const {
                 return _places;
             }
 
@@ -997,7 +997,7 @@ namespace PetriEngine {
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
 
         private:
-            std::vector<std::string> _places;
+            std::vector<std::shared_ptr<std::string>> _places;
         };
 
 
@@ -1006,11 +1006,11 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             struct place_t {
-                std::string _name;
+                std::shared_ptr<std::string> _name;
                 uint32_t _place = 0;
                 double _max = std::numeric_limits<double>::infinity();
                 bool _maxed_out = false;
-                place_t(const std::string& name)
+                place_t(const std::shared_ptr<std::string>& name)
                 {
                     _name = name;
                 }
@@ -1025,9 +1025,11 @@ namespace PetriEngine {
                 }
             };
 
-            UnfoldedUpperBoundsCondition(const std::vector<std::string>& places)
+            UnfoldedUpperBoundsCondition(const std::vector<std::shared_ptr<std::string>>& places)
             {
-                for(auto& s : places) _places.push_back(s);
+                _places.reserve(places.size());
+                for(auto& s : places)
+                    _places.emplace_back(s);
             }
             UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, double max, double offset)
                     : _places(places), _max(max), _offset(offset) {

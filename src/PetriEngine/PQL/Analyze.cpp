@@ -70,7 +70,7 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    uint32_t getPlace(AnalysisContext& context, const std::string& name)
+    uint32_t getPlace(AnalysisContext& context, const std::shared_ptr<std::string>& name)
     {
         AnalysisContext::ResolutionResult result = context.resolve(name);
         if (result.success) {
@@ -81,9 +81,8 @@ namespace PetriEngine { namespace PQL {
         return -1;
     }
 
-    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, std::unordered_map<uint32_t,std::string>& names, uint32_t colorIndex) {
-        std::string& place = names[colorIndex];
-        return std::make_shared<UnfoldedIdentifierExpr>(place, getPlace(context, place));
+    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, const std::shared_ptr<std::string>& name) {
+        return std::make_shared<UnfoldedIdentifierExpr>(name, getPlace(context, name));
     }
 
     void AnalyzeVisitor::_accept(IdentifierExpr *element) {
@@ -95,18 +94,20 @@ namespace PetriEngine { namespace PQL {
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored())
         {
-            std::unordered_map<uint32_t,std::string> names;
-            if (!coloredContext->resolvePlace(element->name(), names)) {
+            std::vector<std::shared_ptr<std::string>> names;
+            if (!coloredContext->resolvePlace(element->name(), [&](auto& n){
+                names.emplace_back(n);
+            })) {
                 throw base_error("Unable to resolve colored identifier \"", element->name(), "\"");
             }
 
             if (names.size() == 1) {
-                element->_compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, names.begin()->first);
+                element->_compiled = generateUnfoldedIdentifierExpr(*coloredContext, names.back());
             } else {
                 std::vector<Expr_ptr> identifiers;
                 identifiers.reserve(names.size());
                 for (auto& unfoldedName : names) {
-                    identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext,names,unfoldedName.first));
+                    identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext, unfoldedName));
                 }
                 element->_compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
             }
@@ -140,7 +141,7 @@ namespace PetriEngine { namespace PQL {
             return;
         }
 
-        assert(element->getName().compare(_context.net()->transitionNames()[result.offset]) == 0);
+        assert(*element->getName() == *_context.net()->transitionNames()[result.offset]);
         auto preset = _context.net()->preset(result.offset);
         for(; preset.first != preset.second; ++preset.first)
         {
@@ -176,8 +177,10 @@ namespace PetriEngine { namespace PQL {
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored()) {
-            std::vector<std::string> names;
-            if (!coloredContext->resolveTransition(element->getName(), names)) {
+            std::vector<std::shared_ptr<std::string>> names;
+            if (!coloredContext->resolveTransition(element->getName(), [&](const std::shared_ptr<std::string>& tname) {
+                names.emplace_back(tname);
+            })) {
                 throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
             }
             if(names.size() < 1){
@@ -339,9 +342,9 @@ namespace PetriEngine { namespace PQL {
             {
                 std::vector<Expr_ptr> sum;
                 MarkVal init_marking = 0;
-                for(auto& pn : cpn.second)
+                for(auto& [_, pn] : cpn.second)
                 {
-                    auto id = std::make_shared<UnfoldedIdentifierExpr>(pn.second);
+                    auto id = std::make_shared<UnfoldedIdentifierExpr>(pn);
                     Visitor::visit(this, id);
                     init_marking += _context.net()->initial(id->offset());
                     sum.emplace_back(std::move(id));
@@ -377,17 +380,13 @@ namespace PetriEngine { namespace PQL {
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
             if(coloredContext != nullptr && coloredContext->isColored())
             {
-                std::vector<std::string> uplaces;
+                std::vector<std::shared_ptr<std::string>> uplaces;
                 for(auto& p : element->getPlaces())
                 {
-                    std::unordered_map<uint32_t,std::string> names;
-                    if (!coloredContext->resolvePlace(p, names)) {
+                    if (!coloredContext->resolvePlace(p, [&](auto& pn){
+                        uplaces.emplace_back(pn);
+                    })) {
                         throw base_error("Unable to resolve colored identifier \"", p, "\"");
-                    }
-
-                    for(auto& id : names)
-                    {
-                        uplaces.push_back(names[id.first]);
                     }
                 }
                 element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);

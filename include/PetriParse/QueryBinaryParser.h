@@ -20,6 +20,7 @@
 #include <set>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "PNMLParser.h"
 #include "QueryParser.h"
@@ -35,8 +36,8 @@ public:
     bool parse(std::istream& binary, const std::set<size_t>& );
 
 private:
-    Condition_ptr parseQuery(std::istream& binary, const std::vector<std::string>& names);
-    Expr_ptr parseExpr(std::istream& binary, const std::vector<std::string>& names);
+    Condition_ptr parseQuery(std::istream& binary, const std::vector<std::shared_ptr<std::string>>& names);
+    Expr_ptr parseExpr(std::istream& binary, const std::vector<std::shared_ptr<std::string>>& names);
 
 };
 

@@ -115,8 +115,8 @@ namespace PetriEngine {
         }
 
     private:
-        std::unordered_map<std::string,uint32_t> _placenames;
-        std::unordered_map<std::string,uint32_t> _transitionnames;
+        shared_name_index_map _placenames;
+        shared_name_index_map _transitionnames;
 
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;

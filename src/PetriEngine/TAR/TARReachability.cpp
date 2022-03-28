@@ -421,8 +421,8 @@ namespace PetriEngine {
             for(auto& t : stack)
             {
                 if(t.get_edge_cnt() == 0) break;
-                std::string tname = _net.transitionNames()[t.get_edge_cnt() - 1];
-                std::cerr << "\t<transition id=\"" << tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
+                auto& tname = _net.transitionNames()[t.get_edge_cnt() - 1];
+                std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
 
                 // well, yeah, we are not really efficient in constructing the trace.
                 // feel free to improve
@@ -435,13 +435,13 @@ namespace PetriEngine {
                     }
                 }
 
-                if(_reducer != NULL)
-                    _reducer->extraConsume(std::cerr, tname);
+                if(_reducer != nullptr)
+                    _reducer->extraConsume(std::cerr, *tname);
 
                 std::cerr << "\t</transition>\n";
 
-                if(_reducer != NULL)
-                    _reducer->postFire(std::cerr, tname);
+                if(_reducer != nullptr)
+                    _reducer->postFire(std::cerr, *tname);
 
             }
 

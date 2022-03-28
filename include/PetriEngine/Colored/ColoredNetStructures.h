@@ -39,7 +39,7 @@ namespace PetriEngine {
         };
 
         struct Transition {
-            std::string name;
+            std::shared_ptr<std::string> name;
             GuardExpression_ptr guard;
             int32_t _player;
             double _x = 0, _y = 0;
@@ -48,7 +48,7 @@ namespace PetriEngine {
         };
 
         struct Place {
-            std::string name;
+            std::shared_ptr<std::string> name;
             const ColorType* type;
             Multiset marking;
             double _x = 0, _y = 0;
