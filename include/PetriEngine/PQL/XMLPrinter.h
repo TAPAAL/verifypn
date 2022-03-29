@@ -157,7 +157,7 @@ namespace PetriEngine {
             public:
                 template<typename ...Args>
                 Tag(XMLPrinter& printer, const char* tag, Args ...args)
-                : Tag(&printer, tag, std::forward<Args>(args)...) {};
+                : Tag(&printer, tag, std::forward<Args>(args)...) {}
 
 
                 template<typename ...Args>
