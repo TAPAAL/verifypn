@@ -165,7 +165,7 @@ namespace PetriEngine::Colored {
 
     bool VarMultiset::matchesType(const VarTuple &vt) const {
         if (_types.size() != vt.size()) return false;
-        for (int i = 0; i < _types.size(); ++i) {
+        for (size_t i = 0; i < _types.size(); ++i) {
             if (_types[i] != vt[i]->colorType) return false;
         }
         return true;
