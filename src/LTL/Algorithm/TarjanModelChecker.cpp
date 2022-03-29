@@ -122,10 +122,7 @@ namespace LTL {
                     continue;
                 }
 #ifndef NDEBUG
-                auto fired =
-#endif
-                successorGenerator.fired();
-#ifndef NDEBUG
+                auto fired = successorGenerator.fired();
                 if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
                     std::cerr << "looping\n";
                 }
@@ -138,7 +135,7 @@ namespace LTL {
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.set_history(stateid, fired);
+                        seen.set_history(stateid, successorGenerator.fired());
                     }
                 }
 

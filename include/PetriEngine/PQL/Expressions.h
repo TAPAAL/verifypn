@@ -309,7 +309,7 @@ namespace PetriEngine {
             Expr_ptr _child;
         public:
             PathSelectExpr(std::string name, Expr_ptr child, size_t offset = 0)
-            : _name(name), _child(child), _offset(offset) {};
+            : _name(name), _offset(offset), _child(child) {};
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
             [[nodiscard]] virtual bool placeFree() const { return _child->placeFree(); };
             const Expr_ptr& child() const { return _child; }
@@ -486,7 +486,7 @@ namespace PetriEngine {
             Condition_ptr _child;
         public:
             PathSelectCondition(std::string name, Condition_ptr child, size_t offset = 0)
-            : _name(name), _child(child), _offset(offset) {}
+            : _name(name), _offset(offset), _child(child) {}
             Quantifier getQuantifier() const override { return EMPTY; }
             Path getPath() const override { return pError; }
             CTLType getQueryType() const override { return TYPE_ERROR; }

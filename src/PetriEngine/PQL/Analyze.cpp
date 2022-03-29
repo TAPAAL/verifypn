@@ -236,7 +236,6 @@ namespace PetriEngine { namespace PQL {
 
     void AnalyzeVisitor::_accept(PathQuant* element)
     {
-        auto id = _context.resolve_trace_name(element->name(), true);
         Visitor::visit(this, element->child());
     }
 
