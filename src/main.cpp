@@ -144,6 +144,10 @@ int main(int argc, const char** argv) {
             writer.toColPNML();
         }
 
+        if (!options.doUnfolding) {
+            return 0;
+        }
+
         auto [builder, transition_names, place_names] = unfold(cpnBuilder,
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,

@@ -79,6 +79,7 @@ struct options_t {
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
     bool doVerification = true;
+    bool doUnfolding = true;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
