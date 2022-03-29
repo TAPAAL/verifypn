@@ -50,9 +50,13 @@ namespace PetriEngine::Colored {
         _msRes *= e->scalar();
     }
 
-    std::optional<VarMultiset> ArcVarMultisetVisitor::extract(const ArcExpression &e) {
+    std::optional<VarMultiset> ArcVarMultisetVisitor::getResult() const {
+        return _ok ? std::optional { _msRes } : std::nullopt;
+    }
+
+    std::optional<VarMultiset> extractVarMultiset(const ArcExpression &e) {
         ArcVarMultisetVisitor v;
         e.visit(v);
-        return v._ok ? std::optional { v._msRes } : std::nullopt;
+        return v.getResult();
     }
 }

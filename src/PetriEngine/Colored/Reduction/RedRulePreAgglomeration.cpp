@@ -181,7 +181,6 @@ namespace PetriEngine::Colored::Reduction {
                             // Re-fetch the transition pointers as it might be invalidated, I think that's the issue?
                             const Transition &producerPrime = red.transitions()[prod];
                             const Transition &consumerPrime = red.transitions()[originalConsumers[n]];
-                            const Transition& newtran = red.transitions()[tid];
 
                             // Arcs from consumer
                             for (const auto& arc : consumerPrime.output_arcs) {

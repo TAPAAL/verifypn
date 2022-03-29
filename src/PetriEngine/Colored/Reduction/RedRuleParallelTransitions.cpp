@@ -5,9 +5,9 @@
  *      Mathias Mehl Sørensen
  */
 
-#include "PetriEngine/Colored/ArcVarMultisetVisitor.h"
 #include "PetriEngine/Colored/Reduction/RedRuleParallelTransitions.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
+#include "PetriEngine/Colored/ArcVarMultisetVisitor.h"
 
 namespace PetriEngine::Colored::Reduction {
     bool RedRuleParallelTransitions::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
@@ -136,8 +136,8 @@ namespace PetriEngine::Colored::Reduction {
                 return;
             }
 
-            if (auto sms = ArcVarMultisetVisitor::extract(small)) {
-                if (auto bms = ArcVarMultisetVisitor::extract(big)) {
+            if (auto sms = PetriEngine::Colored::extractVarMultiset(small)) {
+                if (auto bms = PetriEngine::Colored::extractVarMultiset(big)) {
                     if (sms->divides(*bms)) {
                         mult = sms->numberOfTimesThisFitsInto(*bms);
                         return;
@@ -152,8 +152,8 @@ namespace PetriEngine::Colored::Reduction {
         if (mult == 1 && to_string(small) == to_string(big))
             return;
 
-        if (auto ms1 = ArcVarMultisetVisitor::extract(small)) {
-            if (auto ms2 = ArcVarMultisetVisitor::extract(big)) {
+        if (auto ms1 = PetriEngine::Colored::extractVarMultiset(small)) {
+            if (auto ms2 = PetriEngine::Colored::extractVarMultiset(big)) {
                 if (*ms1 * mult == ms2) {
                     return;
                 }

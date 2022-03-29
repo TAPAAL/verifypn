@@ -17,7 +17,7 @@ StablePlaceFinder.cpp
 ForwardFixedPoint.cpp
 VariableSymmetry.cpp
 Unfolder.cpp
-        PnmlWriter.cpp
+PnmlWriter.cpp
 PnmlWriterColorExprVisitor.cpp
 VarMultiset.cpp
 ArcVarMultisetVisitor.cpp)

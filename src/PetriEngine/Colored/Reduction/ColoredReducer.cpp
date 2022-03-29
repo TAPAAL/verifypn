@@ -46,7 +46,6 @@ namespace PetriEngine::Colored::Reduction {
 
         bool any = false;
         bool changed;
-        uint32_t explosion_limiter = 2;
 
         std::vector<ReductionRule *> reductionsToUse;
 

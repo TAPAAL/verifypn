@@ -43,6 +43,7 @@ namespace PetriEngine {
             }
         };
 
+        [[maybe_unused]]
         struct {
             bool operator()(const Arc &a, const Arc &b) const
             {
