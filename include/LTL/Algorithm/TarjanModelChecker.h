@@ -122,7 +122,7 @@ namespace LTL {
 
         bool _invariant_loop = true;
         size_t _loop_state = std::numeric_limits<size_t>::max();
-        size_t _loop_trans = std::numeric_limits<size_t>::max();
+        uint32_t _loop_trans = std::numeric_limits<uint32_t>::max();
         size_t _discoverd = std::numeric_limits<size_t>::max();
         size_t _max_tokens = std::numeric_limits<size_t>::max();
         const uint32_t _k_bound = 0;

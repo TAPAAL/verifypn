@@ -26,7 +26,7 @@
 #include "LTL/SuccessorGeneration/Heuristics.h"
 
 namespace LTL {
-    class SpoolingSuccessorGenerator : protected PetriEngine::SuccessorGenerator {
+    class SpoolingSuccessorGenerator : private PetriEngine::SuccessorGenerator {
     public:
         SpoolingSuccessorGenerator(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &)
                 : SuccessorGenerator(net), _transbuf(new uint32_t[net.numberOfTransitions()])
@@ -35,7 +35,6 @@ namespace LTL {
         }
 
         using SuccessorGenerator::getParent;
-        using SuccessorGenerator::fired;
 
         size_t state_size() const {
             return _net.numberOfPlaces();
@@ -94,6 +93,11 @@ namespace LTL {
         }
 
 
+        uint32_t fired() const {
+            return _last;
+        }
+
+
         void prepare(const Structures::ProductState *state, successor_info_t &sucinfo)
         {
             assert(_spooler != nullptr);
@@ -132,6 +136,7 @@ namespace LTL {
                 }
             }
         }
+
         bool next(Structures::ProductState &state, successor_info_t &sucinfo)
         {
             assert(sucinfo._successors != nullptr);

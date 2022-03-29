@@ -138,7 +138,7 @@ namespace LTL {
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.set_history(stateid, successorGenerator.fired());
+                        seen.set_history(stateid, fired);
                     }
                 }
 
@@ -290,7 +290,7 @@ namespace LTL {
         if (cstack[dstack.back()._pos]._stateid == _loop_state)
             _loop = _trace.size();
         dstack.pop_back();
-        unsigned long p;
+        size_t p = 0;
         bool had_deadlock = false;
         // print (reverted) dstack
         while (!dstack.empty()) {
@@ -298,8 +298,7 @@ namespace LTL {
             dstack.pop_back();
             auto stateid = cstack[p]._stateid;
             auto[parent, tid] = seen.get_history(stateid);
-            assert(tid < _net.numberOfTransitions());
-            _trace.push_back({uint32_t{tid}});
+            _trace.push_back({(uint32_t)tid});
             if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
             {
                 had_deadlock = true;
@@ -316,7 +315,7 @@ namespace LTL {
             while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.get_history(cstack[p]._stateid);
                 assert(tid < _net.numberOfTransitions());
-                _trace.push_back({uint32_t{tid}});
+                _trace.push_back({(uint32_t)tid});
                 if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
                 {
                     had_deadlock = true;
@@ -327,10 +326,10 @@ namespace LTL {
                 assert(cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p]._lowsource;
             }
-            if(!had_deadlock && _loop_trans != std::numeric_limits<size_t>::max())
+            if(!had_deadlock)
             {
                 assert(_loop_trans < _net.numberOfTransitions());
-                _trace.push_back({uint32_t{_loop_trans}});
+                _trace.push_back({_loop_trans});
             }
         }
     }

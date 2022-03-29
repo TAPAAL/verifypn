@@ -163,7 +163,6 @@ namespace LTL {
                     // reset buchi successors
                     _buchi_succ_gen.prepare(_buchi_parent);
                     if (next_buchi_succ(state)) {
-                        //_successor_generator->getSuccInfo(sucinfo);
                         sucinfo._buchi_state = state.get_buchi_state();
                         return true;
                     }
