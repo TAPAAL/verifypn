@@ -111,6 +111,18 @@ namespace PetriEngine::Colored {
         return thisMinusOther.empty();
     }
 
+    std::optional<double> VarMultiset::scaleRequiredToCover(const VarMultiset &other) const {
+        double mult = 0;
+        VarMultiset combined = *this + other;
+        for (const auto &pair : combined) {
+            double a = (*this)[pair.first];
+            double b = other[pair.first];
+            if (a == 0 && b != 0) return std::nullopt;
+            mult = std::max(mult, b / a);
+        }
+        return std::optional(mult);
+    }
+
     uint32_t VarMultiset::numberOfTimesThisFitsInto(const VarMultiset &other) const {
         if (_types.empty())
             return std::numeric_limits<uint32_t>::max();
@@ -137,7 +149,7 @@ namespace PetriEngine::Colored {
         for (size_t i = 0; i < _set.size(); ++i) {
             auto &entry = _set[i];
             oss << _set[i].second << "'(";
-            for (int j = 0; j < entry.first.size(); ++j) {
+            for (size_t j = 0; j < entry.first.size(); ++j) {
                 oss << entry.first[j]->name;
                 if (j < entry.first.size() - 1) {
                     oss << ", ";
@@ -153,7 +165,7 @@ namespace PetriEngine::Colored {
 
     bool VarMultiset::matchesType(const VarTuple &vt) const {
         if (_types.size() != vt.size()) return false;
-        for (int i = 0; i < _types.size(); ++i) {
+        for (size_t i = 0; i < _types.size(); ++i) {
             if (_types[i] != vt[i]->colorType) return false;
         }
         return true;
@@ -165,6 +177,14 @@ namespace PetriEngine::Colored {
             types.emplace_back(v->colorType);
         }
         return types;
+    }
+
+    size_t VarMultiset::distinctSize() const {
+        size_t size = 0;
+        for (auto &pair : _set) {
+            if (pair.second > 0) size++;
+        }
+        return size;
     }
 
     bool VarMultiset::Iterator::operator==(VarMultiset::Iterator &other) {

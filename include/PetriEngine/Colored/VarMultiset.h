@@ -65,8 +65,11 @@ namespace PetriEngine::Colored {
 
         bool isSubsetOrEqTo(const VarMultiset &other) const;
 
-        /** Returns the greatest number k, such that `this * k subseteq other` */
+        /** Returns the greatest number k, such that `this * k subseteq other`, but at most uint32_t::max */
         uint32_t numberOfTimesThisFitsInto(const VarMultiset &other) const;
+
+        /** Returns the smallest number k, such that `other subseteq this * k`, if possible */
+        std::optional<double> scaleRequiredToCover(const VarMultiset &other) const;
 
         bool divides(const VarMultiset &other) const;
 
@@ -76,9 +79,7 @@ namespace PetriEngine::Colored {
 
         size_t size() const;
 
-        size_t distinctSize() const {
-            return _set.size();
-        }
+        size_t distinctSize() const;
 
         size_t tupleSize() const {
             return _types.size();
