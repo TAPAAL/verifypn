@@ -149,7 +149,7 @@ namespace PetriEngine::Colored {
         for (size_t i = 0; i < _set.size(); ++i) {
             auto &entry = _set[i];
             oss << _set[i].second << "'(";
-            for (int j = 0; j < entry.first.size(); ++j) {
+            for (size_t j = 0; j < entry.first.size(); ++j) {
                 oss << entry.first[j]->name;
                 if (j < entry.first.size() - 1) {
                     oss << ", ";
