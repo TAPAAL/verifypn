@@ -85,7 +85,6 @@ namespace PetriEngine::Colored::Reduction {
 
     void ColoredReducer::skipPlace(uint32_t pid) {
         Place &place = _builder._places[pid];
-        printf("-> Skipping place %s\n", place.name.c_str());
         assert(!place.skipped);
         place.skipped = true;
         _skippedPlaces.push_back(pid);
