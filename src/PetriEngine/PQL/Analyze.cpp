@@ -145,6 +145,7 @@ namespace PetriEngine { namespace PQL {
         assert(*element->getName() == *_context.net()->transitionNames()[result.offset]);
         auto preset = _context.net()->preset(result.offset);
         std::vector<CompareConjunction::cons_t> constraints;
+        constraints.reserve(preset.second - preset.first);
         for(; preset.first != preset.second; ++preset.first)
         {
             assert(preset.first->place != std::numeric_limits<uint32_t>::max());
@@ -272,6 +273,9 @@ namespace PetriEngine { namespace PQL {
             Visitor::visit(this, cond);
             while(auto* shallow = dynamic_cast<ShallowCondition*>(cond.get()))
             {
+                // need to retain Fireability to check in case of CPN-approx
+                if(shallow->type() == type_id<FireableCondition>())
+                    break;
                 if(shallow->getCompiled())
                     cond = shallow->getCompiled();
             }
