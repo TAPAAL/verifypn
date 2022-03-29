@@ -58,7 +58,7 @@ namespace LTL {
                 return _last_state != NoLastState;
             }
 
-            size_t transition() const {
+            uint32_t transition() const {
                 return _transition;
             }
 

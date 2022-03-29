@@ -177,6 +177,7 @@ namespace LTL {
             for (size_t i = 0; i < trace.size(); ++i) {
                 if (i == _checker->loop_index())
                     os << indent << "<loop/>\n";
+                assert(trace[i].size() == ntraces);
                 print_transition(trace[i][j], reducer, os, indent, token_indent);
             }
             os << std::endl << tindent << "</trace>" << std::endl;

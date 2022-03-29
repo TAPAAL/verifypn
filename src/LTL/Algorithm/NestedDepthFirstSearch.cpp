@@ -219,7 +219,11 @@ namespace LTL {
                     _loop = _trace.size();
                     loop_id = std::numeric_limits<size_t>::max();
                 }
-                _trace.emplace_back(top._sucinfo.transition());
+                auto res = top._sucinfo.transition();
+                if constexpr (std::is_same<decltype(res),std::vector<uint32_t>>::value)
+                    _trace.emplace_back(top._sucinfo.transition());
+                else
+                    _trace.push_back({top._sucinfo.transition()});
                 (*stck).pop_front();
             }
         }
