@@ -59,7 +59,7 @@ namespace PetriEngine {
                      << "\">\n";
 
                 //this is a hack, better way to find if a color is a finite int range?
-                if (is_number(types[0]->operator[](0).getDisplayName())) {
+                if (is_number(types[0]->operator[](0).getColorName())) {
                     handleFiniteRange(types);
                 } else {
                     if (types[0]->getName() == "dot") {
