@@ -255,6 +255,13 @@ namespace PetriEngine {
         class PlusExpr : public CommutativeExpr {
         public:
             PlusExpr(std::vector<Expr_ptr>&& exprs);
+            PlusExpr(std::vector<shared_const_string>&& places)
+            : CommutativeExpr(int64_t{0})
+            {
+                _ids.reserve(places.size());
+                for(auto& p : places)
+                    _ids.emplace_back(0,std::move(p));
+            }
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a + b; }
@@ -686,6 +693,7 @@ namespace PetriEngine {
 
         protected:
             std::vector<Condition_ptr> _conds;
+            friend class AnalyzeVisitor;
         };
 
         /* Conjunctive and condition */
