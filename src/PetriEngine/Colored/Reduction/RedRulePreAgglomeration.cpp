@@ -74,7 +74,7 @@ namespace PetriEngine::Colored::Reduction {
                 for (const auto& prod : place._pre){
                     const Transition& producer = red.transitions()[prod];
                     // X8.1, X6
-                    if(producer.inhibited || producer.input_arcs.size() != 1){
+                    if(producer.inhibited || producer.output_arcs.size() != 1){
                         ok = false;
                         break;
                     }
