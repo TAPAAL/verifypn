@@ -73,6 +73,8 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
 
+        void _accept(const PetriEngine::PQL::DeadlockCondition *element) override;
+
         void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
 
         void _accept(const PetriEngine::PQL::PlusExpr *element) override;

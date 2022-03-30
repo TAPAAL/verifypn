@@ -205,6 +205,10 @@ namespace LTL {
         _formula = make_atomic_prop(element->shared_from_this());
     }
 
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::DeadlockCondition *element) {
+        _formula = make_atomic_prop(element->shared_from_this());
+    }
+
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::BooleanCondition *element) {
         _formula = (element->value ? spot::formula::tt() : spot::formula::ff());
     }
