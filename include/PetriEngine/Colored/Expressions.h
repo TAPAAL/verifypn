@@ -405,17 +405,7 @@ namespace PetriEngine {
 
         public:
             uint32_t weight() const override {
-                auto* left = dynamic_cast<NumberOfExpression*>(_left.get());
-                if (!left || !left->is_all()) {
-                    throw base_error("Left constituent of subtract is not an all expression!");
-                }
-                auto* right = dynamic_cast<NumberOfExpression*>(_right.get());
-                if (!right || !right->is_single_color()) {
-                    throw base_error("Right constituent of subtract is not a single color number of expression!");
-                }
-
-                uint32_t val = std::min(left->number(), right->number());
-                return _left->weight() - val;
+                return _left->weight() - _right->weight();
             }
 
             bool is_single_color() const {
