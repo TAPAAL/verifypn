@@ -261,7 +261,7 @@ namespace PetriEngine {
                          << "\"/>\n";
                     _out << decreaseTabs() << "</finiteintrangeconstant>\n";
                 } else {
-                    _out << increaseTabs() << "<usersort declaration=\"" << color->getColorName() << "\"/>\n";
+                    _out << increaseTabs() << "<useroperator declaration=\"" << color->getColorName() << "\"/>\n";
                 }
                 _out << decreaseTabs() << "</subterm>" << "\n";
                 firstTuple = false;
