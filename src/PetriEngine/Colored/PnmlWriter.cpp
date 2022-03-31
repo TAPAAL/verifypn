@@ -60,6 +60,7 @@ namespace PetriEngine {
 
                 //this is a hack, better way to find if a color is a finite int range?
                 if (is_number(types[0]->operator[](0).getColorName())) {
+                    _namedSortTypes.insert(std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
                     handleFiniteRange(types);
                 } else {
                     if (types[0]->getName() == "dot") {
@@ -75,7 +76,6 @@ namespace PetriEngine {
         }
 
         void PnmlWriter::handleFiniteRange(const std::vector<const ColorType *> &types) {
-            Colored::interval_t interval = types[0]->getFullInterval();
             for (auto type: types) {
                 std::string start = type->operator[](0).getColorName();
                 std::string end = type->operator[](type->size() - 1).getColorName();
@@ -270,8 +270,16 @@ namespace PetriEngine {
         }
 
         void PnmlWriter::handleOtherColor(const PetriEngine::Colored::Color *const c) {
+            std::string thePnmlColorType = _namedSortTypes.find(c->getColorType()->getName())->second;
             if (c->getColorName() == "Dot" || c->getColorName() == "dot") {
                 _out << increaseTabs() << "<dotconstant/>\n";
+            } else if (thePnmlColorType == "finite range") {
+                std::string start = c->getColorType()->operator[](0).getColorName();
+                std::string end = c->getColorType()->operator[](
+                        c->getColorType()->size() - 1).getColorName();
+                _out << increaseTabs() << "<finiteintrangeconstant value=\"" <<  c->getColorName() << "\">\n>";
+                _out << increaseTabs() << "<finiteintrange start=\"" << start << "\" end=\"" << end << "\"/>\n";
+                _out << decreaseTabs() << "</finiteintrangeconstant>\n";
             } else {
                 _out << increaseTabs() << "<useroperator declaration=\"" << c->getColorName() << "\"/>\n";
             }
