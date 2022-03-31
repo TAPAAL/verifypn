@@ -143,6 +143,8 @@ namespace PetriEngine {
             (*sub)[0]->visit(*this);
             auto lhs = _mres;
             (*sub)[1]->visit(*this);
+            if (!_mres.isSubsetOf(lhs))
+                throw base_error("RHS of subtraction is not a subset of LHS");
             _mres = lhs - _mres;
         }
 
