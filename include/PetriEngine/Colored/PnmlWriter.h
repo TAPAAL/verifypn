@@ -20,6 +20,7 @@ namespace PetriEngine::Colored {
         std::ostream &_out;
         std::uint32_t _tabsCount;
         std::vector<Arc> _arcs;
+        std::map<std::string, std::string> _namedSortTypes;
 
         uint32_t getTabsCount() {
             return _tabsCount;
