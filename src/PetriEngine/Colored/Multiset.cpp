@@ -59,7 +59,7 @@ namespace PetriEngine {
                 _type = other._type;
             }
             if (other._type != nullptr && _type != other._type) {
-                throw "You cannot add Multisets over different sets";
+                throw base_error("You cannot add Multisets over different sets");
             }
             for (auto c : other._set) {
                 const Color* color = &(*ColorType::dotInstance()->begin());
@@ -74,7 +74,7 @@ namespace PetriEngine {
                 _type = other._type;
             }
             if (other._type != nullptr && _type != other._type) {
-                throw "You cannot add Multisets over different sets";
+                throw base_error("You cannot add Multisets over different sets");
             }
             for (auto c : _set) {
                 const Color* color = &(*ColorType::dotInstance()->begin());
@@ -111,7 +111,7 @@ namespace PetriEngine {
                 _type = color->getColorType();
             }
             if (color->getColorType() != nullptr && _type != color->getColorType()) {
-                throw "You cannot access a Multiset with a color from a different color type";
+                throw base_error("You cannot access a Multiset with a color from a different color type");
             }
             for (auto & i : _set) {
                 if (i.first == color->getId())
