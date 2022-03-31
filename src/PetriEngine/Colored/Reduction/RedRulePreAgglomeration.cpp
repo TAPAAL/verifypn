@@ -73,8 +73,8 @@ namespace PetriEngine::Colored::Reduction {
 
                 for (const auto& prod : place._pre){
                     const Transition& producer = red.transitions()[prod];
-                    // X8.1, X6
-                    if(producer.inhibited || producer.output_arcs.size() != 1){
+                    // X8.1, X6, X12
+                    if(producer.inhibited || producer.output_arcs.size() != 1 || producer.guard != nullptr){
                         ok = false;
                         break;
                     }
@@ -91,10 +91,11 @@ namespace PetriEngine::Colored::Reduction {
                     }
 
                     for (uint32_t n = 0; n < place._post.size(); n++) {
-                        const CArcIter& consArc = red.getInArc(pid, red.transitions()[place._post[n]]);
+                        const PetriEngine::Colored::Transition& consumer = red.transitions()[place._post[n]];
+                        const CArcIter& consArc = red.getInArc(pid, consumer);
                         uint32_t w = consArc->expr->weight();
-                        // X9, (X5)
-                        if (!consArc->expr->is_single_color() || kw % w != 0) {
+                        // X9, (X5), X13
+                        if (!consArc->expr->is_single_color() || kw % w != 0 || consumer.guard != nullptr) {
                             todo[n] = false;
                             todoAllGood = false;
                         } else if (kw != w) {

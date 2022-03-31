@@ -245,6 +245,7 @@ namespace PetriEngine::Colored::Reduction {
             id = _skippedTransitions.back();
             _skippedTransitions.pop_back();
             PetriEngine::Colored::Transition& tran = _builder._transitions[id];
+            tran.guard = nullptr;
             tran.skipped = false;
             tran.inhibited = false;
             _builder._transitionnames.erase(tran.name);
