@@ -27,7 +27,7 @@ namespace PetriEngine {
         bool _deadlock;
     public:
 
-        QueryPlaceAnalysisContext(const std::unordered_map<std::string, uint32_t>& pnames, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net)
+        QueryPlaceAnalysisContext(const shared_name_index_map& pnames, const shared_name_index_map& tnames, const PetriNet* net)
         : PQL::AnalysisContext(pnames, tnames, net) {
             _placeInQuery.resize(_placeNames.size(), 0);
             _deadlock = false;
@@ -47,7 +47,7 @@ namespace PetriEngine {
             _deadlock = true;
         };
 
-        ResolutionResult resolve(const std::string& identifier, bool place) override {
+        ResolutionResult resolve(const shared_const_string& identifier, bool place) override {
             if(!place) return PQL::AnalysisContext::resolve(identifier, false);
             ResolutionResult result;
             result.offset = -1;
@@ -69,17 +69,17 @@ namespace PetriEngine {
 
    struct ExpandedArc
    {
-       ExpandedArc(std::string place, size_t weight) : place(place), weight(weight) {}
+       ExpandedArc(shared_const_string place, size_t weight) : place(place), weight(weight) {}
 
         friend std::ostream& operator<<(std::ostream& os, ExpandedArc const & ea) {
             for(size_t i = 0; i < ea.weight; ++i)
             {
-                os << "\t\t<token place=\"" << ea.place << "\" age=\"0\"/>\n";
+                os << "\t\t<token place=\"" << *ea.place << "\" age=\"0\"/>\n";
             }
             return os;
         }
 
-        std::string place;
+        shared_const_string place;
         size_t weight;
    };
 
@@ -144,8 +144,8 @@ namespace PetriEngine {
         std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
         bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);
 
-        std::string getTransitionName(uint32_t transition);
-        std::string getPlaceName(uint32_t place);
+        shared_const_string getTransitionName(uint32_t transition);
+        shared_const_string getPlaceName(uint32_t place);
 
         PetriEngine::Transition& getTransition(uint32_t transition);
         ArcIter getOutArc(PetriEngine::Transition&, uint32_t place);
@@ -153,7 +153,7 @@ namespace PetriEngine {
         void eraseTransition(std::vector<uint32_t>&, uint32_t);
         void skipTransition(uint32_t);
         void skipPlace(uint32_t);
-        std::string newTransName();
+        shared_const_string newTransName();
 
         bool consistent();
         bool hasTimedout() const {
@@ -162,8 +162,8 @@ namespace PetriEngine {
             return (diff.count() >= _timeout);
         }
 
-        std::vector<std::string> _initfire;
-        std::unordered_map<std::string, std::vector<std::string>> _postfire;
+        std::vector<shared_const_string> _initfire;
+        std::unordered_map<std::string, std::vector<shared_const_string>> _postfire;
         std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
         std::vector<uint8_t> _tflags;
         std::vector<uint8_t> _pflags;

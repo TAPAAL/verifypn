@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/PredicateCheckers.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     /*** Nested Deadlock ***/
 
@@ -281,4 +281,4 @@ namespace PetriEngine::PQL {
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
-}
+} }

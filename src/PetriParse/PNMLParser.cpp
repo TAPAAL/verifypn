@@ -859,6 +859,7 @@ const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* 
 	for (const auto& elem : colorTypes) {
         // lets just hope that nobody decides to make a color that starts with fn and ends
         // with ln but is not an int-range.
+        if(elem.second->isProduct()) continue;
         const std::string& fn = (*elem.second)[size_t{0}].getColorName();
         const std::string& ln = (*elem.second)[(*elem.second).size()-1].getColorName();
         if(fn.compare(start) == 0 && ln.compare(end) == 0)

@@ -60,37 +60,35 @@ namespace PetriEngine {
         }
     }
 
-    std::string Reducer::getTransitionName(uint32_t transition)
+    shared_const_string Reducer::getTransitionName(uint32_t transition)
     {
         for(auto t : parent->_transitionnames)
         {
             if(t.second == transition) return t.first;
         }
-        assert(false);
-        return "";
+        throw base_error("Unknown transition_id=", transition);
     }
 
-    std::string Reducer::newTransName()
+    shared_const_string Reducer::newTransName()
     {
         auto prefix = "CT";
-        auto tmp = prefix + std::to_string(_tnameid);
+        auto tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         while(parent->_transitionnames.count(tmp) >= 1)
         {
             ++_tnameid;
-            tmp = prefix + std::to_string(_tnameid);
+            tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         }
         ++_tnameid;
         return tmp;
     }
 
-    std::string Reducer::getPlaceName(uint32_t place)
+    shared_const_string Reducer::getPlaceName(uint32_t place)
     {
-        for(auto t : parent->_placenames)
+        for(auto& t : parent->_placenames)
         {
             if(t.second == place) return t.first;
         }
-        assert(false);
-        return "";
+        throw base_error("Unknown placeid=", place);
     }
 
     Transition& Reducer::getTransition(uint32_t transition)
@@ -302,13 +300,13 @@ namespace PetriEngine {
             // transition with an output in P is fired), t is fired instantly!.
             if(reconstructTrace) {
                 Place& pre = parent->_places[pPre];
-                std::string tname = getTransitionName(t);
+                auto tname = getTransitionName(t);
                 for(size_t pp : pre.producers)
                 {
-                    std::string prefire = getTransitionName(pp);
-                    _postfire[prefire].push_back(tname);
+                    auto prefire = getTransitionName(pp);
+                    _postfire[*prefire].push_back(tname);
                 }
-                _extraconsume[tname].emplace_back(getPlaceName(pPre), w);
+                _extraconsume[*tname].emplace_back(getPlaceName(pPre), w);
                 for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
                 {
                     _initfire.push_back(tname);
@@ -481,18 +479,18 @@ namespace PetriEngine {
                 if(reconstructTrace)
                 {
                     // remember reduction for recreation of trace
-                    std::string toutname    = getTransitionName(tOut);
-                    std::string tinname     = getTransitionName(tIn);
-                    std::string pname       = getPlaceName(p);
+                    auto toutname    = getTransitionName(tOut);
+                    auto tinname     = getTransitionName(tIn);
+                    auto pname       = getPlaceName(p);
                     Arc& a = *getInArc(p, in);
                     if(!added_tIn_extra)
                     {
                         added_tIn_extra = true;
-                        _extraconsume[tinname].emplace_back(pname, a.weight);
+                        _extraconsume[*tinname].emplace_back(pname, a.weight);
                     }
                     for(size_t i = 0; i < multiplier; ++i)
                     {
-                        _postfire[toutname].push_back(tinname);
+                        _postfire[*toutname].push_back(tinname);
                     }
 
                     for(size_t i = 0; initm > 0 && i < initm / inArc->weight; ++i )
@@ -699,9 +697,9 @@ namespace PetriEngine {
                     {
                         for(auto t : place2.consumers)
                         {
-                            std::string tname = getTransitionName(t);
+                            auto tname = getTransitionName(t);
                             const ArcIter arc = getInArc(p2, getTransition(t));
-                            _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                            _extraconsume[*tname].emplace_back(getPlaceName(p2), arc->weight);
                         }
                     }
 
@@ -1032,9 +1030,9 @@ namespace PetriEngine {
                 {
                     for(auto t : place.consumers)
                     {
-                        std::string tname = getTransitionName(t);
+                        auto tname = getTransitionName(t);
                         const ArcIter arc = getInArc(p, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                        _extraconsume[*tname].emplace_back(getPlaceName(p), arc->weight);
                     }
                 }
                 skipPlace(p);
@@ -1784,7 +1782,8 @@ namespace PetriEngine {
                     auto end = std::chrono::high_resolution_clock::now();
                     auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - c);
                     std::cout << "SPEND " << diff.count()  << " ON " << rnames[r] << std::endl;
-                    std::cout << "REM " << ((int)_removedPlaces-(int)op) << " " << ((int)_removedTransitions-(int)ot) << std::endl;
+                    std::cout << "REM " << ((int64_t)_removedPlaces-(int64_t)op) << " "
+                        << ((int64_t)_removedTransitions-(int64_t)ot) << std::endl;
 #endif
                     if(hasTimedout())
                         break;
@@ -1793,21 +1792,6 @@ namespace PetriEngine {
         }
 
         return;
-        std::vector<std::string> names(parent->numberOfTransitions());
-        for (auto &entry : parent->_transitionnames) {
-            names[entry.second] = entry.first;
-        }
-        for (size_t i = 0; i < parent->numberOfTransitions(); i++) {
-            auto tName = names[i];
-            if (std::find(std::begin(tnames), std::end(tnames), tName) == std::end(tnames)) {
-                if (!getTransition(i).skip)
-                    skipTransition(i);
-            }
-            else {
-                std::cerr << "Including " << tName << std::endl;
-            }
-        }
-
     }
 
     void Reducer::postFire(std::ostream& out, const std::string& transition) const
@@ -1819,9 +1803,9 @@ namespace PetriEngine {
             for(const auto& el : it->second)
             {
                 out << "\t<transition id=\"" << el << "\">\n";
-                extraConsume(out, el);
+                extraConsume(out, *el);
                 out << "\t</transition>\n";
-                postFire(out, el);
+                postFire(out, *el);
             }
         }
     }
@@ -1830,10 +1814,10 @@ namespace PetriEngine {
     {
         for(const auto& init : _initfire)
         {
-            out << "\t<transition id=\"" << init << "\">\n";
-            extraConsume(out, init);
+            out << "\t<transition id=\"" << *init << "\">\n";
+            extraConsume(out, *init);
             out << "\t</transition>\n";
-            postFire(out, init);
+            postFire(out, *init);
         }
     }
 

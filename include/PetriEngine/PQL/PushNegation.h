@@ -55,7 +55,7 @@ namespace PetriEngine::PQL {
         Condition_ptr pushOr(const std::vector<Condition_ptr> &_conds, bool nested, bool negate_children);
 
         template<typename T>
-        Condition_ptr pushFireableNegation(const std::string &name, const Condition_ptr &compiled);
+        Condition_ptr pushFireableNegation(const shared_const_string &name, const Condition_ptr &compiled);
 
         Condition_ptr pushEqual(CompareCondition *org, bool _negated, bool noteq);
 

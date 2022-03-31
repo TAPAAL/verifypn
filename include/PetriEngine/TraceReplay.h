@@ -22,6 +22,7 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/SuccessorGenerator.h"
+#include "PQL/Contexts.h"
 
 #include <iostream>
 #include <utility>
@@ -37,9 +38,9 @@ namespace PetriEngine {
         };
 
         struct Transition {
-            explicit Transition(std::string id, int buchi) : id(std::move(id)), buchi_state(buchi) {}
+            explicit Transition(shared_const_string id, int buchi) : id(std::move(id)), buchi_state(buchi) {}
 
-            std::string id;
+            shared_const_string id;
             int buchi_state;
             std::unordered_map<uint32_t, uint32_t> tokens;
         };
@@ -51,7 +52,7 @@ namespace PetriEngine {
         std::vector<Transition> trace;
     private:
 
-        static constexpr auto DEADLOCK_TRANS = "##deadlock";
+        static const shared_const_string DEADLOCK_TRANS;
         void parseRoot(const rapidxml::xml_node<> *pNode);
 
         Transition parseTransition(const rapidxml::xml_node<char> *pNode);
@@ -59,8 +60,8 @@ namespace PetriEngine {
         void parseToken(const rapidxml::xml_node<char> *pNode, std::unordered_map<uint32_t, uint32_t> &current_marking);
 
         size_t loop_idx = std::numeric_limits<size_t>::max();
-        std::unordered_map<std::string, int> transitions;
-        std::unordered_map<std::string, int> places;
+        shared_name_index_map transitions;
+        shared_name_index_map places;
         bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator);
         const options_t &options;
     };

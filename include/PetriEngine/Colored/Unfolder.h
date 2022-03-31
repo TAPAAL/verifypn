@@ -40,9 +40,6 @@
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
     namespace Colored {
-        typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
-        typedef std::unordered_map<std::string, std::vector<std::string>> PTTransitionMap;
-
         class Unfolder {
         private:
             const ColoredPetriNetBuilder& _builder;
@@ -50,17 +47,17 @@ namespace PetriEngine {
 
             void unfoldPlace(PetriNetBuilder& ptBuilder, const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t unfoldPlace, uint32_t id);
             void unfoldTransition(PetriNetBuilder& builder, uint32_t transitionId);
-            void handleOrphanPlace(PetriNetBuilder& ptBuilder, const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
+            void handleOrphanPlace(PetriNetBuilder& ptBuilder, const Colored::Place& place, const shared_name_index_map& unfoldedPlaceMap);
             void createPartionVarmaps();
-            void unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const std::string &oldname, const std::string &newname);
+            void unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const shared_const_string &oldname, const shared_const_string &newname);
             std::string arc_to_string(const Colored::Arc& arc) const;
-            void unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const std::string& name);
+            void unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const shared_const_string& name);
             Colored::StablePlaceFinder _stable;
             double _time = 0;
-            PTPlaceMap _ptplacenames;
-            PTTransitionMap _pttransitionnames;
+            shared_place_color_map _ptplacenames;
+            shared_name_name_map _pttransitionnames;
             uint32_t _nptarcs = 0;
-            std::vector<std::string> _sumPlacesNames;
+            std::vector<shared_const_string> _sumPlacesNames;
             const VariableSymmetry& _symmetry;
             const PartitionBuilder& _partition;
             const ForwardFixedPoint& _fixed_point;
@@ -78,11 +75,11 @@ namespace PetriEngine {
 
             size_t number_of_arcs() const { return _nptarcs; }
 
-            Colored::PTPlaceMap place_names() const {
+            const shared_place_color_map& place_names() const {
                 return _ptplacenames;
             }
 
-            Colored::PTTransitionMap transition_names() const {
+            const shared_name_name_map& transition_names() const {
                 return _pttransitionnames;
             }
 
