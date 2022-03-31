@@ -42,7 +42,7 @@ namespace PetriEngine::Colored::Reduction {
                     if (places[pinner].skipped) continue;
 
                     if (pouter == pinner) continue;
-                    if (places[inner].type != places[outer].type) continue;
+                    if (places[pinner].type != places[pouter].type) continue;
 
                     for (size_t swp = 0; swp < 2; swp++) {
 
