@@ -100,16 +100,16 @@ namespace PetriEngine {
 
         uint32_t unskippedPlacesCount() const {
             uint32_t count = 0;
-            for (auto &t : _transitions) {
-                if (!t.skipped) count++;
+            for (auto &p : _places) {
+                if (!p.skipped) count++;
             }
             return count;
         }
 
         uint32_t unskippedTransitionsCount() const {
             uint32_t count = 0;
-            for (auto &p : _places) {
-                if (!p.skipped) count++;
+            for (auto &t : _transitions) {
+                if (!t.skipped) count++;
             }
             return count;
         }
