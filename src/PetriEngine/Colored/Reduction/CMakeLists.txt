@@ -4,6 +4,7 @@ add_library(ColoredReduction ${HEADER_FILES}
         ColoredReducer.cpp
         RedRulePreAgglomeration.cpp
         RedRuleParallelTransitions.cpp
-        RedRuleParallelPlaces.cpp)
+        RedRuleParallelPlaces.cpp
+        RedRuleRelevance.cpp)
 
 target_link_libraries(ColoredReduction Colored)

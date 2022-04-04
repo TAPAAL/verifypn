@@ -5,23 +5,22 @@
  *      Mathias Mehl Sørensen
  */
 
-#ifndef VERIFYPN_REDRULEPREAGGLOMERATION_H
-#define VERIFYPN_REDRULEPREAGGLOMERATION_H
+#ifndef VERIFYPN_REDRULERELEVANCE_H
+#define VERIFYPN_REDRULERELEVANCE_H
 
 #include "ReductionRule.h"
 
 namespace PetriEngine::Colored::Reduction {
-    class RedRulePreAgglomeration : public ReductionRule {
+    class RedRuleRelevance : public ReductionRule {
     public:
-        std::string name() override { return "AtomicPreAgglomeration"; }
+        std::string name() override { return "Relevance"; }
 
         bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override;
 
         bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
 
     private:
-        uint32_t explosion_limiter = 1;
     };
 }
 
-#endif //VERIFYPN_REDRULEPREAGGLOMERATION_H
+#endif //VERIFYPN_REDRULERELEVANCE_H
