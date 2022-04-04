@@ -548,6 +548,9 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
+            printf("                        Mathias Mehl Sørensen <mathiasmehlsoerensen@gmail.com>\n");
+            printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
         } else if (modelfile == nullptr) {
