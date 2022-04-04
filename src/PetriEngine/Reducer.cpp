@@ -2427,7 +2427,7 @@ else if (inhibArcs == 0)
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleS(uint32_t* placeInQuery, bool remove_consumers, bool remove_loops, uint32_t explosion_limiter) {
+    bool Reducer::ReducebyRuleS(uint32_t* placeInQuery, bool remove_consumers, bool remove_loops, bool allReach, uint32_t explosion_limiter) {
         bool continueReductions = false;
 
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++) {
@@ -2470,10 +2470,10 @@ else if (inhibArcs == 0)
             if (!ok) continue;
 
             // S2
-            std::vector<bool> todo (place.consumers.size(), true);
+            std::vector<bool> todo (postsize, true);
             bool todoAllGood = true;
             // S10-11; Do we need to check?
-            std::vector<bool> kIsAlwaysOne (place.consumers.size(), true);
+            std::vector<bool> kIsAlwaysOne (postsize, true);
 
             for (const auto& prod : place.producers){
                 Transition& producer = getTransition(prod);
@@ -2508,8 +2508,9 @@ else if (inhibArcs == 0)
                     if (preplace.inhib || placeInQuery[prearc.place] > 0){
                         ok = false;
                         break;
-                    } else if (!remove_loops) {
+                    } else if (!remove_loops || !allReach) {
                         // If we can remove loops, that means we are not doing deadlock, so we can do free agglomeration which avoids this condition
+                        // If this check is safe for LTL to ignore is not checked yet.
 
                         // S7
                         for(const auto& precons : preplace.consumers){
@@ -2541,22 +2542,28 @@ else if (inhibArcs == 0)
                     continue;
 
                 ok = true;
-                Transition consumer = getTransition(originalConsumers[n]);
+                Transition &consumer = getTransition(originalConsumers[n]);
                 // (S8 || S11)
                 if ((!remove_loops || !kIsAlwaysOne[n]) && consumer.pre.size() != 1) {
                     continue;
                 }
                 // S10
-                if (consumer.inhib) {
-                    // This is disallowed for performance, so we don't need another full pass of place.producers to ensure we don't mix consumers with inhibitors.
-                    // If support for inhibitors and consumers between the same (Transition->Place) is ever added, this rule will work with "&& k[n] > 1".
-                    ok = false;
+                if (!kIsAlwaysOne[n] || !remove_loops) {
+                    for (const auto& conspost : consumer.post) {
+                        if (!kIsAlwaysOne[n] && parent->_places[conspost.place].inhib){
+                            ok = false;
+                            break;
+                        } else if (!remove_loops && placeInQuery[conspost.place] > 0){
+                            ok = false;
+                            break;
+                        }
+                    }
                 }
 
                 if (!ok) continue;
                 // Update
                 for (const auto& prod : originalProducers){
-                    Transition producer = getTransition(prod);
+                    Transition &producer = getTransition(prod);
                     // w is never used unless (kIsAlwaysOne[n]) = true, so no need to initialize it to an actual value.
                     uint32_t k = 1, w = 1;
                     if (!kIsAlwaysOne[n]){
@@ -2581,19 +2588,19 @@ else if (inhibArcs == 0)
                         }
 
                         // Re-fetch the transition pointers as it might be invalidated, I think that's the issue?
-                        //producer = getTransition(prod);
-                        //consumer = getTransition(originalConsumers[n]);
+                        Transition &producerPrime = getTransition(prod);
+                        Transition &consumerPrime = getTransition(originalConsumers[n]);
                         Transition& newtran = parent->_transitions[id];
                         newtran.skip = false;
                         newtran.inhib = false;
 
                         // Arcs from consumer
-                        for (const auto& arc : consumer.post) {
+                        for (const auto& arc : consumerPrime.post) {
                             Arc newarc = arc;
                             newarc.weight = newarc.weight * k_i;
                             newtran.addPostArc(newarc);
                         }
-                        for (const auto& arc : consumer.pre){
+                        for (const auto& arc : consumerPrime.pre){
                             if (arc.place != pid){
                                 Arc newarc = arc;
                                 newarc.weight = newarc.weight * k_i;
@@ -2601,12 +2608,12 @@ else if (inhibArcs == 0)
                             }
                         }
 
-                        for (const auto& arc : producer.pre){
+                        for (const auto& arc : producerPrime.pre){
                             newtran.addPreArc(arc);
                         }
 
                         if (k_i != k){
-                            Arc newarc = producer.post[0];
+                            Arc newarc = producerPrime.post[0];
                             newarc.weight = (k-k_i)*w;
                             newtran.addPostArc(newarc);
                         }
@@ -2711,7 +2718,7 @@ else if (inhibArcs == 0)
                     while (!next_safe && ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     while (!next_safe && ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                     if (ReducebyRuleEFMNOP(context.getQueryPlaceCount())) changed = true;
-                    if (!next_safe && all_ltl && ReducebyRuleS(context.getQueryPlaceCount(), remove_consumers, remove_loops, explosion_limit)) changed = true;
+                    if (!next_safe && all_ltl && ReducebyRuleS(context.getQueryPlaceCount(), remove_consumers, remove_loops, all_reach, explosion_limit)) changed = true;
                     if (ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                     if (!next_safe && ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
                     if (!next_safe && ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -2821,7 +2828,7 @@ else if (inhibArcs == 0)
                                 while (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
                                 break;
                             case 18:
-                                if (ReducebyRuleS(context.getQueryPlaceCount(), remove_consumers, remove_loops, explosion_limiter)) changed = true;
+                                if (ReducebyRuleS(context.getQueryPlaceCount(), remove_consumers, remove_loops, all_reach, explosion_limiter)) changed = true;
                                 break;
                         }
     #ifndef NDEBUG
