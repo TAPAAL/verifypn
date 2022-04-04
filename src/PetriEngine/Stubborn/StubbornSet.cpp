@@ -66,7 +66,7 @@ namespace PetriEngine {
         if ((_places_seen[place] & PresetSeen) != 0) return;
         _places_seen[place] = _places_seen[place] | PresetSeen;
         for (uint32_t t = _places[place].pre; t < _places[place].post; t++) {
-            auto &tr = _arcs[t];
+            const auto &tr = _arcs[t];
             addToStub(tr.index);
         }
         if (make_closure) closure();
@@ -76,7 +76,7 @@ namespace PetriEngine {
         if ((_places_seen[place] & PostsetSeen) != 0) return;
         _places_seen[place] = _places_seen[place] | PostsetSeen;
         for (uint32_t t = _places[place].post; t < _places[place + 1].pre; t++) {
-            auto tr = _arcs[t];
+            const auto& tr = _arcs[t];
             if (tr.direction < 0)
                 addToStub(tr.index);
         }

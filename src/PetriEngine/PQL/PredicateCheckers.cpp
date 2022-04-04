@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/PredicateCheckers.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     /*** Nested Deadlock ***/
 
@@ -252,6 +252,9 @@ namespace PetriEngine::PQL {
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
+        return containsNext(condition.get());
+    }
+    bool containsNext(const Condition* condition) {
         ContainsNextVisitor visitor;
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
@@ -269,4 +272,13 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
-}
+    bool containsUpperBounds(const Condition_ptr& condition) {
+        return containsUpperBounds(condition.get());
+    }
+
+    bool containsUpperBounds(const Condition* condition) {
+        ContainsUpperBoundsVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
+} }

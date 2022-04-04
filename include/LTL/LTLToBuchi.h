@@ -18,10 +18,9 @@
 #ifndef VERIFYPN_LTLTOBUCHI_H
 #define VERIFYPN_LTLTOBUCHI_H
 
-#include "PetriParse/QueryParser.h"
-#include "PetriEngine/PQL/QueryPrinter.h"
+#include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/PQL/FormulaSize.h"
-#include "PetriEngine/options.h"
+#include "LTLOptions.h"
 
 #include <iostream>
 #include <string>
@@ -30,30 +29,23 @@
 
 namespace LTL {
     struct AtomicProposition {
-        PetriEngine::PQL::Condition_ptr expression;
-        std::string text;
+        PetriEngine::PQL::Condition_ptr _expression;
+        std::string _text;
     };
 
     using APInfo = std::vector<AtomicProposition>;
 
-    std::string toSpotFormat(const QueryItem &query);
-
-    void toSpotFormat(const QueryItem &query, std::ostream &os);
-
     std::pair<spot::formula, APInfo>
-    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
+    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, APCompression compression);
 
     class BuchiSuccessorGenerator;
     namespace Structures {
         class BuchiAutomaton;
     }
 
-    Structures::BuchiAutomaton makeBuchiAutomaton(
+    Structures::BuchiAutomaton make_buchi_automaton(
             const PetriEngine::PQL::Condition_ptr &query,
-            const options_t &options);
-
-    BuchiSuccessorGenerator
-    makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
+            BuchiOptimization optimization, APCompression compression);
 
     class FormulaToSpotSyntax : public PetriEngine::PQL::Visitor {
     protected:
@@ -80,6 +72,8 @@ namespace LTL {
         void _accept(const PetriEngine::PQL::FireableCondition *element) override;
 
         void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
+
+        void _accept(const PetriEngine::PQL::DeadlockCondition *element) override;
 
         void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
 
@@ -121,49 +115,31 @@ namespace LTL {
 
     public:
 
-        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose)
-                : compress(compress_aps) {}
+        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose, bool expand = true)
+                : _compress(compress_aps), _expand(expand) {}
 
 
         auto begin() const
         {
-            return std::begin(ap_info);
+            return std::begin(_ap_info);
         }
 
         auto end() const
         {
-            return std::end(ap_info);
+            return std::end(_ap_info);
         }
 
         const APInfo &apInfo() const
         {
-            return ap_info;
+            return _ap_info;
         }
         spot::formula& formula() { return _formula; }
     private:
-        APInfo ap_info;
-        bool is_quoted = false;
-        APCompression compress;
+        APInfo _ap_info;
+        APCompression _compress;
         spot::formula _formula;
-        spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
-        {
-            auto cond =
-                    const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
-            std::stringstream ss;
-            bool choice = compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
-            if (compress == APCompression::Full || choice) {
-                // FIXME Very naive; this completely removes APs being in multiple places in the query,
-                // leading to some query not being answered as is. The net gain is large in the firebaility category,
-                // but ideally it would be possible to make a smarter approach that looks at previously stored APs
-                // and efficiently checks for repeat APs such that we can reuse APs.
-                ss << ap_info.size();
-            } else {
-                PetriEngine::PQL::QueryPrinter _printer{ss};
-                Visitor::visit(_printer, cond);
-            }
-            ap_info.push_back(AtomicProposition{cond, ss.str()});
-            return spot::formula::ap(ap_info.back().text);
-        }
+        const bool _expand;
+        spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element);
     };
 
 }

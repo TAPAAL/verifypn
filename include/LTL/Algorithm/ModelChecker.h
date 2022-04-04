@@ -33,115 +33,79 @@
 #include <algorithm>
 
 namespace LTL {
-    template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, typename... Spooler>
+
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet *net,
-                     const PetriEngine::PQL::Condition_ptr &condition,
-                     const Structures::BuchiAutomaton &buchi,
-                     SuccessorGen *successorGen, const PetriEngine::Reducer* reducer,
-                     std::unique_ptr<Spooler> &&...spooler)
-                : net(net), formula(condition), _reducer(reducer), successorGenerator(
-                std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen,
-                                                                          std::move(spooler)...)),
-                  _factory(net, buchi, this->successorGenerator->initial_buchi_state())
-        {
-//            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen, Spooler...>>(net, buchi, successorGen, std::move(spooler)...);
+
+        ModelChecker(const PetriEngine::PetriNet& net,
+                const PetriEngine::PQL::Condition_ptr &condition,
+                const Structures::BuchiAutomaton &buchi)
+        : _net(net), _formula(condition),
+          _factory(net, buchi), _buchi(buchi) {
         }
 
-        void setOptions(const options_t &options) {
-            traceLevel = options.trace;
-            shortcircuitweak = options.ltluseweak;
-            if (traceLevel != TraceLevel::None) {
-                maxTransName = 0;
-                for (const auto &transname : net->transitionNames()) {
-                    maxTransName = std::max(transname.size(), maxTransName);
-                }
-            }
+        void set_tracing(bool tracing) { _build_trace = tracing; }
+
+        void set_heuristic(Heuristic* heuristic) {
+            _heuristic = heuristic;
         }
 
-        virtual bool isSatisfied() = 0;
+        void set_utilize_weak(bool b) {
+            _shortcircuitweak = b;
+        }
+
+        virtual void set_partial_order(LTLPartialOrder) {}
+
+        virtual bool check() = 0;
 
         virtual ~ModelChecker() = default;
 
-        virtual void printStats(std::ostream &os) = 0;
+        [[nodiscard]] bool is_weak() const {
+            return _shortcircuitweak;
+        }
 
-        [[nodiscard]] bool isweak() const { return is_weak; }
+        size_t get_explored() {
+            return _explored;
+        }
 
-        size_t get_explored() { return stats.explored; }
+        virtual void print_stats(std::ostream&) const = 0;
+
+        size_t loop_index() const {
+            return _loop;
+        }
+
+        const std::vector<size_t>& trace() const {
+            return _trace;
+        }
+
+
+        virtual LTLPartialOrder used_partial_order() const {
+            return LTLPartialOrder::None;
+        }
+
 
     protected:
-        struct stats_t {
-            size_t explored = 0, expanded = 0;
-        };
+        size_t _explored = 0;
+        size_t _expanded = 0;
 
-        stats_t stats;
-
-        virtual void _printStats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
-        {
+        virtual void print_stats(std::ostream &os, size_t discovered, size_t max_tokens) const {
             std::cout << "STATS:\n"
-                      << "\tdiscovered states: " << stateSet.discovered() << std::endl
-                      << "\texplored states:   " << stats.explored << std::endl
-                      << "\texpanded states:   " << stats.expanded << std::endl
-                      << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
+                    << "\tdiscovered states: " << discovered << std::endl
+                    << "\texplored states:   " << _explored << std::endl
+                    << "\texpanded states:   " << _expanded << std::endl
+                    << "\tmax tokens:        " << max_tokens << std::endl;
         }
 
-
-        const PetriEngine::PetriNet *net;
-        PetriEngine::PQL::Condition_ptr formula;
-        const PetriEngine::Reducer* _reducer;
-        std::unique_ptr<ProductSucGen<SuccessorGen, Spooler...>> successorGenerator;
-        //const Structures::BuchiAutomaton *_aut;
-        TraceLevel traceLevel;
-        LTL::Structures::ProductStateFactory _factory;
-
-        size_t _discovered = 0;
-        bool shortcircuitweak;
-        bool weakskip = false;
-        bool is_weak = false;
-        size_t maxTransName;
-
-        static constexpr auto indent = "  ";
-        static constexpr auto tokenIndent = "    ";
-
-        void printLoop(std::ostream &os)
-        {
-            os << indent << "<loop/>\n";
-        }
-
-        std::ostream &
-        printTransition(size_t transition, std::ostream &os, const LTL::Structures::ProductState* state = nullptr)
-        {
-            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-                os << indent << "<deadlock/>";
-                return os;
-            }
-            os << indent << "<transition id="
-                // field width stuff obsolete without büchi state printing.
-                << std::quoted(net->transitionNames()[transition]);
-            os << ">";
-            if(_reducer) {
-                _reducer->extraConsume(os, net->transitionNames()[transition]);
-            }
-            os << std::endl;
-            auto [fpre, lpre] = net->preset(transition);
-            for(; fpre < lpre; ++fpre) {
-                if (fpre->inhibitor) {
-                    assert(state == nullptr || state->marking()[fpre->place] < fpre->tokens);
-                    continue;
-                }
-                for (size_t i = 0; i < fpre->tokens; ++i) {
-                    assert(state == nullptr || state->marking()[fpre->place] >= fpre->tokens);
-                    os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[fpre->place] << "\"/>\n";
-                }
-            }
-            os << indent << "</transition>\n";
-            if(_reducer)
-            {
-                _reducer->postFire(os, net->transitionNames()[transition]);
-            }
-           return os;
-        }
+        const PetriEngine::PetriNet& _net;
+        PetriEngine::PQL::Condition_ptr _formula;
+        Structures::ProductStateFactory _factory;
+        const Structures::BuchiAutomaton& _buchi;
+        bool _shortcircuitweak;
+        bool _build_trace = false;
+        Heuristic* _heuristic = nullptr;
+        size_t _loop = std::numeric_limits<size_t>::max();
+        std::vector<size_t> _trace;
+        bool _violation = false;
     };
 }
 

@@ -46,6 +46,8 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "LTL/LTLValidator.h"
+#include "LTL/Simplification/SpotToPQL.h"
 
 #include <mutex>
 
@@ -54,7 +56,7 @@ using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 
-std::tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
+std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
     std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx) {
     Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
@@ -79,8 +81,10 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
     if(over_approx)
     {
         auto r = unfolder.strip_colors();
-        return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
-            (std::move(r),unfolder.transition_names(),unfolder.place_names());
+        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
+            (std::move(r),
+            shared_name_name_map{unfolder.transition_names()},
+            shared_place_color_map{unfolder.place_names()});
     }
     else
     {
@@ -102,12 +106,15 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         if (compute_partiton) {
             out << "Partitioned in " << partition.time() << " seconds" << std::endl;
         }
-        return std::make_tuple<PetriNetBuilder, Colored::PTTransitionMap, Colored::PTPlaceMap>
-            (std::move(r),unfolder.transition_names(),unfolder.place_names());
+        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
+            (std::move(r),
+            shared_name_name_map{unfolder.transition_names()},
+            shared_place_color_map{unfolder.place_names()});
     }
 }
 
-ReturnValue contextAnalysis(bool colored, const Colored::PTTransitionMap& transition_names, const Colored::PTPlaceMap& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
+ReturnValue contextAnalysis(bool colored, const shared_name_name_map& transition_names, const shared_place_color_map& place_names,
+    PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries) {
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
         place_names, transition_names, colored);
@@ -118,11 +125,11 @@ ReturnValue contextAnalysis(bool colored, const Colored::PTTransitionMap& transi
 }
 
 std::vector<Condition_ptr>
-parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary) {
+parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary) {
     std::vector<QueryItem> queries;
     std::vector<Condition_ptr> conditions;
     if (binary) {
-        QueryBinaryParser parser;
+        QueryBinaryParser parser(string_set);
         if (!parser.parse(qfile, qnums)) {
             fprintf(stderr, "Error: Failed parsing binary query file\n");
             fprintf(stdout, "DO_NOT_COMPETE\n");
@@ -131,7 +138,7 @@ parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const s
         }
         queries = std::move(parser.queries);
     } else {
-        QueryXMLParser parser;
+        QueryXMLParser parser(string_set);
         if (!parser.parse(qfile, qnums)) {
             fprintf(stderr, "Error: Failed parsing XML query file\n");
             fprintf(stdout, "DO_NOT_COMPETE\n");
@@ -170,7 +177,7 @@ parseXMLQueries(std::vector<std::string>& qstrings, std::istream& qfile, const s
 }
 
 std::vector<Condition_ptr >
-readQueries(options_t& options, std::vector<std::string>& qstrings) {
+readQueries(shared_string_set& string_set, options_t& options, std::vector<std::string>& qstrings) {
 
     std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
@@ -195,7 +202,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings) {
                 throw base_error("Error parsing: ", qstrings.back());
             conditions.emplace_back(q);
         } else {
-            conditions = parseXMLQueries(qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
+            conditions = parseXMLQueries(string_set, qstrings, qfile, options.querynumbers, options.binary_query_io & 1);
         }
         qfile.close();
         return conditions;
@@ -226,8 +233,9 @@ void printStats(PetriNetBuilder& builder, options_t& options) {
 }
 
 
-void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names, bool keep_solved, bool compact) {
+void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::vector<std::string>& querynames,
+    std::vector<uint32_t>& order,
+    std::string& filename, bool binary, const shared_name_index_map& place_names, bool keep_solved, bool compact) {
     std::fstream out;
 
     if (binary) {
@@ -242,7 +250,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>&queries, std::ve
         out.write(reinterpret_cast<const char *> (&cnt), sizeof (uint32_t));
         for (auto& kv : place_names) {
             out.write(reinterpret_cast<const char *> (&kv.second), sizeof (uint32_t));
-            out.write(kv.first.data(), kv.first.size());
+            out.write(kv.first->data(), kv.first->size());
             out.write("\0", sizeof (char));
         }
     } else {
@@ -326,7 +334,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond, options);
+        cond = LTL::simplify(cond, options.buchiOptimization, options.ltl_compress_aps);
     }
     negstat_t stats;
 
@@ -353,7 +361,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
             std::scoped_lock scopedLock{spot_mutex};
 #endif
-            return LTL::simplify(r, options);
+            return LTL::simplify(r, options.buchiOptimization, options.ltl_compress_aps);
         }
     }, stats, evalContext, false, false, true);
 

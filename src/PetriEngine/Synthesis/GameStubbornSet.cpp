@@ -162,7 +162,7 @@ namespace PetriEngine {
                 // place loop
                 uint64_t sum = 0;
                 for (auto ti = _places[p].pre; ti != _places[p].post; ++ti) {
-                    trans_t& arc = _arcs[ti];
+                    const auto& arc = _arcs[ti];
                     if (arc.direction <= 0 ||
                         _fireing_bounds[arc.index] == 0)
                         continue;
@@ -200,7 +200,7 @@ namespace PetriEngine {
             for (size_t p = 0; p < _net.numberOfPlaces(); ++p) {
                 uint32_t ub = (*_parent)[p];
                 for (auto ti = _places[p].pre; ti != _places[p].post; ++ti) {
-                    trans_t& arc = _arcs[ti];
+                    const auto& arc = _arcs[ti];
                     if (arc.direction <= 0 || !_future_enabled[arc.index])
                         continue;
                     ub = std::numeric_limits<uint32_t>::max();

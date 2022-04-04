@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace LTL {
-    class GuardInfo;
+    class guard_info_t;
 }
 namespace PetriEngine {
 

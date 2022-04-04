@@ -47,12 +47,15 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
+#include "LTL/LTLSearch.h"
+#include "PetriEngine/PQL/PQL.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 int main(int argc, const char** argv) {
+    shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
         options_t options;
         if (options.parse(argc, argv)) // if options were --help or --version
@@ -67,7 +70,7 @@ int main(int argc, const char** argv) {
         }
         options.print();
 
-        ColoredPetriNetBuilder cpnBuilder;
+        ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
@@ -86,7 +89,7 @@ int main(int argc, const char** argv) {
 
         //----------------------- Parse Query -----------------------//
         std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(options, querynames);
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
         auto queries = options.logic == TemporalLogic::CTL
                        ? getCTLQueries(ctlStarQueries)
                        : getLTLQueries(ctlStarQueries);
@@ -175,6 +178,7 @@ int main(int argc, const char** argv) {
                     ContainsFireabilityVisitor has_fireability;
                     Visitor::visit(has_fireability, queries[i]);
                     if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
+                    if(containsUpperBounds(queries[i])) continue;
                     auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
@@ -264,9 +268,8 @@ int main(int argc, const char** argv) {
         //--------------------- Apply Net Reduction ---------------//
 
         builder.freezeOriginalSize();
-
         if (options.enablereduction > 0) {
-            // Compute how many times each place appears in the query
+            // Compute structural reductions
             builder.startTimer();
             builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr,
                            options.reductionTimeout, options.reductions, options.secondaryreductions);
@@ -306,14 +309,6 @@ int main(int argc, const char** argv) {
         }
 
         if (options.doVerification) {
-
-            auto verifStart = std::chrono::high_resolution_clock::now();
-            // When this ptr goes out of scope it will print the time spent during verification
-            std::shared_ptr<void> defer (nullptr, [&verifStart](...){
-                auto verifEnd = std::chrono::high_resolution_clock::now();
-                auto diff = std::chrono::duration_cast<std::chrono::microseconds>(verifEnd - verifStart).count() / 1000000.0;
-                std::cout << std::setprecision(6) << "Spent " << diff << " on verification" << std::endl;
-            });
 
             //----------------------- Verify CTL queries -----------------------//
             std::vector<size_t> ctl_ids;
@@ -374,12 +369,36 @@ int main(int argc, const char** argv) {
             if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
                 options.usedltl = true;
 
-                for (auto qid: ltl_ids) {
-                    auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
+                for (auto qid : ltl_ids) {
+                    LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
+                    auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
+                        options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
+                        options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
+
+                    if(options.printstatistics)
+                        search.print_stats(std::cout);
+
+                    std::cout << "FORMULA " << querynames[qid]
+                        << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                        << LTL::to_string(options.ltlalgorithm)
+                        << (search.is_weak() ? " WEAK_SKIP" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::None ? " STUBBORN" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Automaton ? " AUT_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Liebke ? " LIEBKE_STUB" : "");
+                    auto heur = search.heuristic_type();
+                    if (!heur.empty())
+                        std::cout << " HEURISTIC " << heur;
+                    std::cout << " OPTIM-" << to_underlying(options.buchiOptimization) << std::endl;
+
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
+                    if(options.trace != TraceLevel::None)
+                        search.print_trace(std::cerr, *builder.getReducer());
+
                 }
+
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
                     return to_underlying(ReturnValue::SuccessCode);
                 }

@@ -25,6 +25,7 @@
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/PQL/Evaluation.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 #include <sstream>
 #include <assert.h>
@@ -605,41 +606,56 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    assert(id->name().compare(lb->_name) == 0);
+                    assert(*id->name() == *lb->_name);
                     lb->intersect(next);
                 }
+            }
+        }
+
+        void CommutativeExpr::handle(const Expr_ptr& e)
+        {
+            if (e->placeFree()) {
+                EvaluationContext c;
+                _constant = apply(_constant, evaluate(e.get(), c));
+            } else if (auto id = std::dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
+                if (id->compiled()) {
+                    handle(id->compiled());
+                }
+                else
+                {
+                    _exprs.emplace_back(std::move(e));
+                }
+            } else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
+                _ids.emplace_back(id->offset(), id->name());
+            } else if (e->type() == type_id<MultiplyExpr>() || e->type() == type_id<PlusExpr>()) {
+                auto* c = static_cast<CommutativeExpr*> (e.get());
+                // TODO, we can do more arithmetic rewrites here, in particular
+                // when the child only has a single non-const element.
+                if (c->_ids.size() == 0 && c->_exprs.size() == 0) {
+                    _constant = apply(_constant, c->_constant);
+                } else if (c->type() == type()) {
+                    _constant = apply(_constant, c->_constant);
+                    _exprs.insert(_exprs.end(), c->_exprs.begin(), c->_exprs.end());
+                    _ids.insert(_ids.end(), c->_ids.begin(), c->_ids.end());
+                } else {
+                    assert(e->type() != type_id<PlusExpr>());
+                    _exprs.emplace_back(e);
+                }
+            } else {
+                assert(e->type() != type_id<PlusExpr>());
+                _exprs.emplace_back(e);
             }
         }
 
         void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
         {
             for (auto& e : exprs) {
-                if (e->placeFree())
-                {
-                    EvaluationContext c;
-                    _constant = apply(_constant, evaluate(e.get(), c));
-                }
-                else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
-                    _ids.emplace_back(id->offset(), id->name());
-                }
-                else if(auto c = std::dynamic_pointer_cast<CommutativeExpr>(e))
-                {
-                    // we should move up plus/multiply here when possible;
-                    if(c->_ids.size() == 0 && c->_exprs.size() == 0)
-                    {
-                        _constant = apply(_constant, c->_constant);
-                    }
-                    else
-                    {
-                        _exprs.emplace_back(std::move(e));
-                    }
-                } else {
-                    _exprs.emplace_back(std::move(e));
-                }
+                handle(e);
             }
+            std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
         }
 
-        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk) : CommutativeExpr(0), tk(tk)
+        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(0)
         {
             init(std::move(exprs));
         }

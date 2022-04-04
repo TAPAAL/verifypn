@@ -36,14 +36,26 @@ namespace PetriEngine {
         friend class Reducer;
 
     public:
-        PetriNetBuilder();
+        PetriNetBuilder(shared_string_set& string_set);
         PetriNetBuilder(const PetriNetBuilder& other);
         PetriNetBuilder(PetriNetBuilder&&);
         void addPlace(const std::string& name, uint32_t tokens, double x, double y) override;
+        void addPlace(const shared_const_string& name, uint32_t tokens, double x, double y);
         void addTransition(const std::string& name,
                 int32_t player,
                 double x,
                 double y) override;
+        void addTransition(const shared_const_string& name,
+                int32_t player,
+                double x,
+                double y);
+
+        void addInputArc(const shared_const_string& place,
+                const shared_const_string& transition,
+                bool inhibitor,
+                int weight);
+        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, int weight);
+
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
@@ -106,19 +118,21 @@ namespace PetriEngine {
             _originalNumberOfPlaces = numberOfUnskippedPlaces();
             _originalNumberOfTransitions = numberOfUnskippedTransitions();
         }
-        const std::unordered_map<std::string, uint32_t>& getPlaceNames() const
+
+        const shared_name_index_map& getPlaceNames() const
         {
             return _placenames;
         }
 
-        const std::unordered_map<std::string, uint32_t>& getTransitionNames() const
+        const shared_name_index_map& getTransitionNames() const
         {
             return _transitionnames;
         }
 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query,
                     std::vector<Reachability::ResultPrinter::Result>& results,
-                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
+                    std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
 
         void printStats(std::ostream& out)
         {
@@ -127,12 +141,12 @@ namespace PetriEngine {
 
         Reducer* getReducer() { return &reducer; }
 
-        std::vector<std::pair<std::string, uint32_t>> orphanPlaces() const {
+        /*std::vector<std::pair<shared_const_string, uint32_t>> orphanPlaces() const {
             std::vector<std::pair<std::string, uint32_t>> res;
             for(uint32_t p = 0; p < _places.size(); p++) {
                 if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {
                     for(auto &n : _placenames) {
-                        if(n.second == p) {
+                        if(*n.second == *p) {
                             res.push_back(std::make_pair(n.first, initialMarking[p]));
                             break;
                         }
@@ -140,7 +154,7 @@ namespace PetriEngine {
                 }
             }
             return res;
-        }
+        }*/
 
         double getReductionTime() const {
             // duration in seconds
@@ -157,8 +171,8 @@ namespace PetriEngine {
         std::chrono::high_resolution_clock::time_point _start;
 
     protected:
-        std::unordered_map<std::string, uint32_t> _placenames;
-        std::unordered_map<std::string, uint32_t> _transitionnames;
+        shared_name_index_map _placenames;
+        shared_name_index_map _transitionnames;
 
         std::vector< std::tuple<double, double> > _placelocations;
         std::vector< std::tuple<double, double> > _transitionlocations;
@@ -170,6 +184,7 @@ namespace PetriEngine {
         uint32_t _originalNumberOfTransitions;
         std::vector<MarkVal> initialMarking;
         Reducer reducer;
+        shared_string_set& _string_set;
     };
 
 }

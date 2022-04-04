@@ -241,23 +241,28 @@ namespace PetriEngine {
             auto& places() const { return _ids; }
 
         protected:
-            CommutativeExpr(int constant): _constant(constant) {};
+            CommutativeExpr(int64_t constant): _constant(constant) {};
+
             void init(std::vector<Expr_ptr>&& exprs);
+            void handle(const Expr_ptr& e);
             virtual int64_t apply(int64_t, int64_t) const = 0;
             int64_t _constant;
-            std::vector<std::pair<uint32_t,std::string>> _ids;
+            std::vector<std::pair<uint32_t,shared_const_string>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
         };
 
         /** Binary plus expression */
         class PlusExpr : public CommutativeExpr {
         public:
-
-            PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
-
+            PlusExpr(std::vector<Expr_ptr>&& exprs);
+            PlusExpr(std::vector<shared_const_string>&& places)
+            : CommutativeExpr(int64_t{0})
+            {
+                _ids.reserve(places.size());
+                for(auto& p : places)
+                    _ids.emplace_back(0,std::move(p));
+            }
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
-            bool tk = false;
-
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a + b; }
             std::string op() const override;
@@ -326,7 +331,7 @@ namespace PetriEngine {
         class IdentifierExpr : public Expr {
             friend class AnalyzeVisitor;
         public:
-            IdentifierExpr(const std::string& name) : _name(name) {}
+            IdentifierExpr(shared_const_string name) : _name(name) {}
             IdentifierExpr(const IdentifierExpr&) = default;
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
 
@@ -335,7 +340,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            [[nodiscard]] const std::string &name() const {
+            [[nodiscard]] const shared_const_string &name() const {
                 return _name;
             }
 
@@ -344,7 +349,7 @@ namespace PetriEngine {
             }
 
         private:
-            std::string _name;
+            shared_const_string _name;
             Expr_ptr _compiled;
         };
 
@@ -352,11 +357,11 @@ namespace PetriEngine {
         class UnfoldedIdentifierExpr : public Expr {
             friend class AnalyzeVisitor;
         public:
-            UnfoldedIdentifierExpr(const std::string& name, int offest)
+            UnfoldedIdentifierExpr(shared_const_string name, int offest)
             : _offsetInMarking(offest), _name(name) {
             }
 
-            UnfoldedIdentifierExpr(const std::string& name) : UnfoldedIdentifierExpr(name, -1) {
+            UnfoldedIdentifierExpr(shared_const_string name) : UnfoldedIdentifierExpr(name, -1) {
             }
 
             UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
@@ -366,16 +371,18 @@ namespace PetriEngine {
             int offset() const {
                 return _offsetInMarking;
             }
-            const std::string& name() const
+
+            const shared_const_string& name() const
             {
                 return _name;
             }
+
             bool placeFree() const override { return false; }
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
             /** Identifier text */
-            std::string _name;
+            shared_const_string _name;
         };
 
         class ShallowCondition : public Condition
@@ -633,31 +640,29 @@ namespace PetriEngine {
         class UnfoldedFireableCondition : public ShallowCondition {
             friend class AnalyzeVisitor;
         public:
-            UnfoldedFireableCondition(const std::string& tname) : ShallowCondition(), _name(tname) {};
-            std::string getName() const {
+            UnfoldedFireableCondition(shared_const_string tname) : ShallowCondition(), _name(tname) {};
+            const shared_const_string& getName() const {
                 return _name;
             }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<UnfoldedFireableCondition>(_name); }
-        public:
-
         private:
-            const std::string _name;
+            shared_const_string _name;
         };
 
         class FireableCondition : public ShallowCondition {
             friend class AnalyzeVisitor;
         public:
-            FireableCondition(const std::string& tname) : _name(tname) {};
-            std::string getName() const {
+            FireableCondition(shared_const_string tname) : _name(tname) {};
+            const shared_const_string& getName() const {
                 return _name;
             }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         protected:
             Condition_ptr clone() { return std::make_shared<FireableCondition>(_name); }
         private:
-            const std::string _name;
+            shared_const_string _name;
         };
 
         /* Logical conditon */
@@ -688,6 +693,7 @@ namespace PetriEngine {
 
         protected:
             std::vector<Condition_ptr> _conds;
+            friend class AnalyzeVisitor;
         };
 
         /* Conjunctive and condition */
@@ -728,7 +734,7 @@ namespace PetriEngine {
                 uint32_t _place = std::numeric_limits<uint32_t>::max();
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
-                std::string _name;
+                shared_const_string _name;
                 bool operator<(const cons_t& other) const
                 {
                     return _place < other._place;
@@ -828,7 +834,7 @@ namespace PetriEngine {
 
         protected:
             uint32_t _distance(DistanceContext& c,
-                    std::function<uint32_t(uint32_t, uint32_t, bool)> d) const;
+                    std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const;
         protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
@@ -986,9 +992,9 @@ namespace PetriEngine {
         {
             friend class AnalyzeVisitor;
         public:
-            UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
+            UpperBoundsCondition(const std::vector<shared_const_string>& places) : _places(places)
             {}
-            const std::vector<std::string> &getPlaces() const {
+            const std::vector<shared_const_string> &getPlaces() const {
                 return _places;
             }
 
@@ -999,7 +1005,7 @@ namespace PetriEngine {
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
 
         private:
-            std::vector<std::string> _places;
+            std::vector<shared_const_string> _places;
         };
 
 
@@ -1008,11 +1014,11 @@ namespace PetriEngine {
             friend class AnalyzeVisitor;
         public:
             struct place_t {
-                std::string _name;
+                shared_const_string _name;
                 uint32_t _place = 0;
                 double _max = std::numeric_limits<double>::infinity();
                 bool _maxed_out = false;
-                place_t(const std::string& name)
+                place_t(const shared_const_string& name)
                 {
                     _name = name;
                 }
@@ -1027,9 +1033,11 @@ namespace PetriEngine {
                 }
             };
 
-            UnfoldedUpperBoundsCondition(const std::vector<std::string>& places)
+            UnfoldedUpperBoundsCondition(const std::vector<shared_const_string>& places)
             {
-                for(auto& s : places) _places.push_back(s);
+                _places.reserve(places.size());
+                for(auto& s : places)
+                    _places.emplace_back(s);
             }
             UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, double max, double offset)
                     : _places(places), _max(max), _offset(offset) {

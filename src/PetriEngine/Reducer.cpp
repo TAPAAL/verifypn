@@ -88,37 +88,35 @@ namespace PetriEngine {
         return (int32_t)parent->_originalNumberOfPlaces - (int32_t)numberOfUnskippedPlaces();
     }
 
-    std::string Reducer::getTransitionName(uint32_t transition)
+    shared_const_string Reducer::getTransitionName(uint32_t transition)
     {
         for(auto t : parent->_transitionnames)
         {
             if(t.second == transition) return t.first;
         }
-        assert(false);
-        return "";
+        throw base_error("Unknown transition_id=", transition);
     }
 
-    std::string Reducer::newTransName()
+    shared_const_string Reducer::newTransName()
     {
         auto prefix = "CT";
-        auto tmp = prefix + std::to_string(_tnameid);
+        auto tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         while(parent->_transitionnames.count(tmp) >= 1)
         {
             ++_tnameid;
-            tmp = prefix + std::to_string(_tnameid);
+            tmp = std::make_shared<const_string>(prefix + std::to_string(_tnameid));
         }
         ++_tnameid;
         return tmp;
     }
 
-    std::string Reducer::getPlaceName(uint32_t place)
+    shared_const_string Reducer::getPlaceName(uint32_t place)
     {
-        for(auto t : parent->_placenames)
+        for(auto& t : parent->_placenames)
         {
             if(t.second == place) return t.first;
         }
-        assert(false);
-        return "";
+        throw base_error("Unknown placeid=", place);
     }
 
     Transition& Reducer::getTransition(uint32_t transition)
@@ -359,13 +357,13 @@ namespace PetriEngine {
             // transition with an output in P is fired), t is fired instantly!.
             if(reconstructTrace) {
                 Place& pre = parent->_places[pPre];
-                std::string tname = getTransitionName(t);
+                auto tname = getTransitionName(t);
                 for(size_t pp : pre.producers)
                 {
-                    std::string prefire = getTransitionName(pp);
-                    _postfire[prefire].push_back(tname);
+                    auto prefire = getTransitionName(pp);
+                    _postfire[*prefire].push_back(tname);
                 }
-                _extraconsume[tname].emplace_back(getPlaceName(pPre), w);
+                _extraconsume[*tname].emplace_back(getPlaceName(pPre), w);
                 for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
                 {
                     _initfire.push_back(tname);
@@ -473,6 +471,7 @@ namespace PetriEngine {
 
                 auto inArc = getInArc(p, in);
                 auto outArc = getOutArc(out, p);
+
                 // B3. Output is a multiple of input and nonzero.
                 if(outArc->weight < inArc->weight)
                     continue;
@@ -537,18 +536,18 @@ namespace PetriEngine {
                 if(reconstructTrace)
                 {
                     // remember reduction for recreation of trace
-                    std::string toutname    = getTransitionName(tOut);
-                    std::string tinname     = getTransitionName(tIn);
-                    std::string pname       = getPlaceName(p);
+                    auto toutname    = getTransitionName(tOut);
+                    auto tinname     = getTransitionName(tIn);
+                    auto pname       = getPlaceName(p);
                     Arc& a = *getInArc(p, in);
                     if(!added_tIn_extra)
                     {
                         added_tIn_extra = true;
-                        _extraconsume[tinname].emplace_back(pname, a.weight);
+                        _extraconsume[*tinname].emplace_back(pname, a.weight);
                     }
                     for(size_t i = 0; i < multiplier; ++i)
                     {
-                        _postfire[toutname].push_back(tinname);
+                        _postfire[*toutname].push_back(tinname);
                     }
 
                     for(size_t i = 0; initm > 0 && i < initm / inArc->weight; ++i )
@@ -648,13 +647,15 @@ namespace PetriEngine {
             if(_pflags[pouter] > 0) continue;
             _pflags[pouter] = 1;
             if(hasTimedout()) return false;
-            if(parent->_places[pouter].skip) continue;
+            const Place &pout = parent->_places[pouter];
+            if(pout.skip) continue;
 
             // C4. No inhib
-            if(parent->_places[pouter].inhib) continue;
+            if(pout.inhib) continue;
 
             for (size_t inner = outer + 1; inner < parent->_transitions[touter].post.size(); ++inner)
             {
+                if (pout.skip) break;
                 auto pinner = parent->_transitions[touter].post[inner].place;
                 if(parent->_places[pinner].skip) continue;
 
@@ -753,9 +754,9 @@ namespace PetriEngine {
                     {
                         for(auto t : place2.consumers)
                         {
-                            std::string tname = getTransitionName(t);
+                            auto tname = getTransitionName(t);
                             const ArcIter arc = getInArc(p2, getTransition(t));
-                            _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                            _extraconsume[*tname].emplace_back(getPlaceName(p2), arc->weight);
                         }
                     }
 
@@ -764,6 +765,12 @@ namespace PetriEngine {
                     // UC1. Remove p2
                     skipPlace(p2);
                     _pflags[pouter] = 0;
+
+                    // p2 has now been removed from touter.post, so update indexes to not miss any
+                    if (p2 == pouter) {
+                        outer--;
+                        inner--;
+                    } else if (p2 == pinner) inner--;
                     break;
                 }
             }
@@ -807,9 +814,10 @@ namespace PetriEngine {
             if (tout.inhib) continue;
 
             for(size_t inner = outer + 1; inner < op.consumers.size(); ++inner) {
+                if (tout.skip) break;
                 auto tinner = op.consumers[inner];
                 Transition& tin = getTransition(tinner);
-                if (tin.skip || tout.skip) continue;
+                if (tin.skip) continue;
 
                 // D2. No inhibitors
                 if (tin.inhib) continue;
@@ -890,6 +898,12 @@ namespace PetriEngine {
                     _ruleD++;
                     skipTransition(t2);
                     _tflags[touter] = 0;
+
+                    // t2 has now been removed from op.consumers, so update indexes to not miss any
+                    if (t2 == touter) {
+                        outer--;
+                        inner--;
+                    } else if (t2 == tinner) inner--;
                     break; // break the swap loop
                 }
             }
@@ -911,6 +925,7 @@ namespace PetriEngine {
             if(place.producers.size() > place.consumers.size()) continue;
 
             bool ok = true;
+
             // Check for producers without matching consumers first
             for(uint prod : place.producers)
             {
@@ -1086,9 +1101,9 @@ namespace PetriEngine {
                 {
                     for(auto t : place.consumers)
                     {
-                        std::string tname = getTransitionName(t);
+                        auto tname = getTransitionName(t);
                         const ArcIter arc = getInArc(p, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                        _extraconsume[*tname].emplace_back(getPlaceName(p), arc->weight);
                     }
                 }
                 skipPlace(p);
@@ -1224,9 +1239,9 @@ namespace PetriEngine {
                 {
                     for(const auto & t : place.consumers)
                     {
-                        const std::string & tname = getTransitionName(t);
+                        shared_const_string tname = getTransitionName(t);
                         const auto & arc = getInArc(p, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                        _extraconsume[*tname].emplace_back(getPlaceName(p), arc->weight);
                     }
                 }
                 skipPlace(p);
@@ -1241,7 +1256,6 @@ else if (inhibArcs == 0)
         assert(consistent());
         return continueReductions;
     }
-
 
     bool Reducer::ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
         if(!remove_loops) return false;
@@ -2838,21 +2852,6 @@ else if (inhibArcs == 0)
         }
 
         return;
-        std::vector<std::string> names(parent->numberOfTransitions());
-        for (auto &entry : parent->_transitionnames) {
-            names[entry.second] = entry.first;
-        }
-        for (size_t i = 0; i < parent->numberOfTransitions(); i++) {
-            auto tName = names[i];
-            if (std::find(std::begin(tnames), std::end(tnames), tName) == std::end(tnames)) {
-                if (!getTransition(i).skip)
-                    skipTransition(i);
-            }
-            else {
-                std::cerr << "Including " << tName << std::endl;
-            }
-        }
-
     }
 
     void Reducer::postFire(std::ostream& out, const std::string& transition) const
@@ -2864,9 +2863,9 @@ else if (inhibArcs == 0)
             for(const auto& el : it->second)
             {
                 out << "\t<transition id=\"" << el << "\">\n";
-                extraConsume(out, el);
+                extraConsume(out, *el);
                 out << "\t</transition>\n";
-                postFire(out, el);
+                postFire(out, *el);
             }
         }
     }
@@ -2875,10 +2874,10 @@ else if (inhibArcs == 0)
     {
         for(const auto& init : _initfire)
         {
-            out << "\t<transition id=\"" << init << "\">\n";
-            extraConsume(out, init);
+            out << "\t<transition id=\"" << *init << "\">\n";
+            extraConsume(out, *init);
             out << "\t</transition>\n";
-            postFire(out, init);
+            postFire(out, *init);
         }
     }
 
