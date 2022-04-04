@@ -4,7 +4,7 @@
  *      Jiri Srba
  *      Jesper Adriaan van Diepen
  *      Nicolaj Østerby Jensen
- *      Masthias Mehl Sørensen
+ *      Mathias Mehl Sørensen
  *
  * Created on 15 February 2014, 10:50
  * Updated 7 March 2022
