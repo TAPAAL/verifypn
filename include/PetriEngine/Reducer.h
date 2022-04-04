@@ -1,8 +1,13 @@
 /*
- * File:   Reducer.h
- * Author: srba
+ * File:   Reducer.cpp
+ * Authors:
+ *      Jiri Srba
+ *      Jesper Adriaan van Diepen
+ *      Nicolaj Østerby Jensen
+ *      Masthias Mehl Sørensen
  *
  * Created on 15 February 2014, 10:50
+ * Updated 7 March 2022
  */
 
 #ifndef REDUCER_H
