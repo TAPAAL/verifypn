@@ -118,9 +118,27 @@ namespace PetriEngine {
         assert(p < _places.size());
 
         if(input) {
+            for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
+                if (arc.place == p){
+                    std::vector<Colored::ArcExpression_ptr> addDuplicates;
+                    addDuplicates.emplace_back(arc.expr);
+                    addDuplicates.emplace_back(expr);
+                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(addDuplicates));
+                    return;
+                }
+            }
             _places[p]._post.emplace_back(t);
         }
         else {
+            for (PetriEngine::Colored::Arc& arc : _transitions[t].output_arcs){
+                if (arc.place == p){
+                    std::vector<Colored::ArcExpression_ptr> addDuplicates;
+                    addDuplicates.emplace_back(arc.expr);
+                    addDuplicates.emplace_back(expr);
+                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(addDuplicates));
+                    return;
+                }
+            }
             _places[p]._pre.emplace_back(t);
         }
 
@@ -132,7 +150,7 @@ namespace PetriEngine {
         arc.transition = t;
         _places[p].inhibitor |= inhib_weight > 0;
         _transitions[t].inhibited |= inhib_weight > 0;
-        arc.expr = std::move(expr);
+        arc.expr = expr;
         arc.input = input;
         arc.inhib_weight = inhib_weight;
         if(inhib_weight > 0){
