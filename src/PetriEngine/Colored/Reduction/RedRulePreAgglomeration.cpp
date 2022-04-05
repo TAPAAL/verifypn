@@ -56,7 +56,7 @@ namespace PetriEngine::Colored::Reduction {
                 while (i < presize && j < postsize) {
                     if (place._pre[i] < place._post[j])
                         i++;
-                    else if (place._pre[j] < place._post[i])
+                    else if (place._post[j] < place._pre[i])
                         j++;
                     else {
                         ok = false;
