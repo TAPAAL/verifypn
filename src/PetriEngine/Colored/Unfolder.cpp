@@ -143,6 +143,7 @@ namespace PetriEngine {
         void Unfolder::unfoldTransition(PetriNetBuilder& ptBuilder, uint32_t transitionId) {
             double offset = 0;
             const Colored::Transition &transition = _builder.transitions()[transitionId];
+            if (transition.skipped) return;
             if (_fixed_point.computed() || _partition.computed()) {
                 assert(_fixed_point.variable_map().size() > transitionId);
                 assert(_symmetry.symmetries().size() > transitionId);
