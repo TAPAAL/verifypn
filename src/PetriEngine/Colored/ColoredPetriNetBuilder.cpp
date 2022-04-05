@@ -119,12 +119,16 @@ namespace PetriEngine {
 
         if(input) {
             for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
-                if (arc.place == p){
+                if (arc.place == p && inhib_weight == 0){
+                    assert((arc.inhib_weight == 0) == (inhib_weight == 0));
                     std::vector<Colored::ArcExpression_ptr> addDuplicates;
                     addDuplicates.emplace_back(arc.expr);
                     addDuplicates.emplace_back(expr);
                     arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(addDuplicates));
                     return;
+                } else if (arc.place == p && inhib_weight > 0){
+                    assert((arc.inhib_weight == 0) == (inhib_weight == 0));
+                    arc.inhib_weight = std::min(arc.inhib_weight, inhib_weight);
                 }
             }
             _places[p]._post.emplace_back(t);
