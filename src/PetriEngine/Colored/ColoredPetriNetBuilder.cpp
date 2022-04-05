@@ -117,9 +117,6 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        Colored::ArcExpression_ptr newexpr = expr;
-        bool duplicateArc = false;
-
         if(input) {
             for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
                 if (arc.place == p){
@@ -153,7 +150,7 @@ namespace PetriEngine {
         arc.transition = t;
         _places[p].inhibitor |= inhib_weight > 0;
         _transitions[t].inhibited |= inhib_weight > 0;
-        arc.expr = std::move(newexpr);
+        arc.expr = expr;
         arc.input = input;
         arc.inhib_weight = inhib_weight;
         if(inhib_weight > 0){
