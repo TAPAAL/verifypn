@@ -7,6 +7,7 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
+#include "PetriEngine/Colored/Multiset.h"
 
 namespace PetriEngine::Colored::Reduction {
 
@@ -65,7 +66,7 @@ namespace PetriEngine::Colored::Reduction {
                 changed |= rule->apply(*this, inQuery, queryType, preserveLoops, preserveStutter);
             }
             any |= changed;
-        } while (changed && hasTimedOut());
+        } while (changed && !hasTimedOut());
 
         auto now = std::chrono::high_resolution_clock::now();
         _timeSpent = (std::chrono::duration_cast<std::chrono::microseconds>(now - _startTime).count()) * 0.000001;
@@ -274,6 +275,10 @@ namespace PetriEngine::Colored::Reduction {
             _builder.addTransition(newTransitionName(), guard, 0,0,0);
         }
         return id;
+    }
+
+    void ColoredReducer::addDummyPlace(){
+        _builder.addPlace("Dummy", ColorType::dotInstance(), Multiset(), 0, 0);
     }
 
     void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){
