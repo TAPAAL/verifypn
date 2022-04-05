@@ -65,7 +65,7 @@ namespace PetriEngine::Colored::Reduction {
                 changed |= rule->apply(*this, inQuery, queryType, preserveLoops, preserveStutter);
             }
             any |= changed;
-        } while (changed && hasTimedOut());
+        } while (changed && !hasTimedOut());
 
         auto now = std::chrono::high_resolution_clock::now();
         _timeSpent = (std::chrono::duration_cast<std::chrono::microseconds>(now - _startTime).count()) * 0.000001;
