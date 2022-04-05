@@ -392,7 +392,7 @@ namespace PetriEngine {
                 return _constituents.end();
             }
 
-            AddExpression(std::vector<ArcExpression_ptr>&& constituents)
+            AddExpression(std::vector<ArcExpression_ptr> &&constituents)
                     : _constituents(std::move(constituents)) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
