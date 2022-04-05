@@ -7,6 +7,7 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
+#include "PetriEngine/Colored/Multiset.h"
 
 namespace PetriEngine::Colored::Reduction {
 
@@ -274,6 +275,10 @@ namespace PetriEngine::Colored::Reduction {
             _builder.addTransition(newTransitionName(), guard, 0,0,0);
         }
         return id;
+    }
+
+    void ColoredReducer::addDummyPlace(){
+        _builder.addPlace("Dummy", ColorType::dotInstance(), Multiset(), 0, 0);
     }
 
     void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){

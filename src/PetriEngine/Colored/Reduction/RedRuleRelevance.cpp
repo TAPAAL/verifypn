@@ -76,7 +76,7 @@ namespace PetriEngine::Colored::Reduction {
                     }
                 }
             }
-            // The inhibitor implementation is not exactly elegant at this point
+            // The inhibitor implementation is not exactly elegant
             const auto& inhibs = red.inhibitorArcs();
             for (const Arc& inhibitor : inhibs){
                 if (inhibitor.transition != t)
@@ -125,6 +125,12 @@ namespace PetriEngine::Colored::Reduction {
                 changed = true;
             }
         }
+
+        // There must be at least one place.
+        if (red.unskippedPlacesCount() == 0) {
+            red.addDummyPlace();
+        }
+
         if (changed) _applications++;
         return changed;
     }
