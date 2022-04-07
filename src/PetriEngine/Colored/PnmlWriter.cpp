@@ -9,6 +9,7 @@
 namespace PetriEngine {
     namespace Colored {
         void PnmlWriter::toColPNML() {
+            //TODO cannot handle nets with partitions
             metaInfo();
             declarations();
             page();
@@ -47,7 +48,6 @@ namespace PetriEngine {
                 std::vector<const ColorType *> types;
                 colortype->getColortypes(types);
                 if (types.size() > 1 && colortype->productSize() == 1) {
-                        std::cout << colortype->getName();
                         throw base_error("types.size was over 1");
                 }
                 if (colortype->productSize() > 1) {
@@ -202,42 +202,58 @@ namespace PetriEngine {
             _out << getTabs() << "<hlinitialMarking>\n";
             _out << increaseTabs() << "<text>" << marking.toString() << "</text>\n";
             _out << getTabs() << "<structure>\n";
-            _out << increaseTabs() << "<add>\n";
-            handleMarking(marking);
-            _out << decreaseTabs() << "</add>\n";
+
+            if (marking.size() > 1) {
+                bool first = true;
+                _out << increaseTabs() << "<add>\n";
+
+                for (const auto &p: marking) {
+                    if (p.second == 0) {
+                        continue;
+                    }
+                    if (first) {
+                        _out << increaseTabs() << "<subterm>\n";
+                    } else {
+                        _out << getTabs() << "<subterm>\n";
+                    }
+                    handleNumberOf(p);
+                    _out << decreaseTabs() << "</subterm>\n";
+                    first = false;
+                }
+                _out << decreaseTabs() << "</add>\n";
+            } else {
+                for (const auto &p: marking) {
+                    if (p.second == 0) {
+                        continue;
+                    }
+                    handleNumberOf(p);
+                }
+            }
+
             _out << decreaseTabs() << "</structure>\n";
             _out << decreaseTabs() << "</hlinitialMarking>\n";
         }
 
-        void PnmlWriter::handleMarking(Multiset marking) {
-            bool first = true;
-            for (const auto &p: marking) {
-                const auto &c = p.first;
-                const auto &m = p.second;
-                if (first) {
-                    _out << increaseTabs() << "<subterm>\n";
-                } else {
-                    _out << getTabs() << "<subterm>\n";
-                }
-                _out << increaseTabs() << "<numberof>\n";
-                _out << increaseTabs() << "<subterm>" << "\n";
-                _out << increaseTabs() << "<numberconstant value=\"" << m << "\">\n";
-                _out << increaseTabs() << "<positive/>\n";
-                _out << decreaseTabs() << "</numberconstant>\n";
+        void PnmlWriter::handleNumberOf(std::pair<const PetriEngine::Colored::Color *const, uint32_t> numberOff) {
+            const auto &c = numberOff.first;
+            const auto &m = numberOff.second;
+
+            _out << increaseTabs() << "<numberof>\n";
+            _out << increaseTabs() << "<subterm>" << "\n";
+            _out << increaseTabs() << "<numberconstant value=\"" << m << "\">\n";
+            _out << increaseTabs() << "<positive/>\n";
+            _out << decreaseTabs() << "</numberconstant>\n";
+            _out << decreaseTabs() << "</subterm>" << "\n";
+            if (c->isTuple()) {
+                _out << getTabs() << "<subterm>" << "\n";
+                handleTuple(c);
                 _out << decreaseTabs() << "</subterm>" << "\n";
-                if (c->isTuple()) {
-                    _out << getTabs() << "<subterm>" << "\n";
-                    handleTuple(c);
-                    _out << decreaseTabs() << "</subterm>" << "\n";
-                } else {
-                    _out << getTabs() << "<subterm>\n";
-                    handleOtherColor(c);
-                    _out << decreaseTabs() << "</subterm>\n";
-                }
-                _out << decreaseTabs() << "</numberof>\n";
+            } else {
+                _out << getTabs() << "<subterm>\n";
+                handleOtherColor(c);
                 _out << decreaseTabs() << "</subterm>\n";
-                first = false;
             }
+            _out << decreaseTabs() << "</numberof>\n";
         }
 
         void PnmlWriter::handleTuple(const PetriEngine::Colored::Color *const c) {

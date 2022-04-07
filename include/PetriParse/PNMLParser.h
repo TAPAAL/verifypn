@@ -112,6 +112,8 @@ private:
     ColorTypeMap colorTypes;
     VariableMap variables;
     bool isColored;
+    std::string placeTypeContext;
+    bool hasPartition;
     std::vector<Query> queries;
     std::vector<PetriEngine::Colored::ColorTypePartition> partitions;
     std::vector<std::pair<char *, PetriEngine::Colored::ProductType*>> missingCTs;

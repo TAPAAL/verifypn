@@ -76,6 +76,11 @@ int main(int argc, const char** argv) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
         }
 
+        if (!options.model_col_out_file.empty() && cpnBuilder.hasPartition()) {
+            std::cerr << "Cannot write colored PNML as the original net has partitions. Not supported (yet)" << std::endl;
+            return to_underlying(ReturnValue::UnknownCode);
+        }
+
         if (options.cpnOverApprox && !cpnBuilder.isColored()) {
             std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
             return to_underlying(ReturnValue::UnknownCode);

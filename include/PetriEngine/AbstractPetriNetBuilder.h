@@ -31,6 +31,7 @@ namespace PetriEngine {
     class AbstractPetriNetBuilder {
     protected:
         bool _isColored = false;
+        bool _hasPartition = false;
 
     public:
         void parse_model(const std::string&& model);
@@ -106,6 +107,14 @@ namespace PetriEngine {
 
         virtual bool isColored() const {
             return _isColored;
+        }
+
+        virtual void enablePartition() {
+            _hasPartition = true;
+        }
+
+        virtual bool hasPartition() const {
+            return _hasPartition;
         }
 
         virtual void sort() = 0;
