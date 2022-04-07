@@ -129,6 +129,7 @@ namespace PetriEngine {
                 } else if (arc.place == p && inhib_weight > 0){
                     assert((arc.inhib_weight == 0) == (inhib_weight == 0));
                     arc.inhib_weight = std::min(arc.inhib_weight, inhib_weight);
+                    return;
                 }
             }
             _places[p]._post.emplace_back(t);
