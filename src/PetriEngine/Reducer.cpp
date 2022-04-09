@@ -783,6 +783,8 @@ namespace PetriEngine {
 
                     int ok = 0;
                     uint mult = std::numeric_limits<uint>::max();
+                    bool in_q_pre = false;
+                    bool in_q_post = false;
                     // D4. postsets must match
                     for (int i = trans1.post.size() - 1; i >= 0; --i) {
                         Arc& arc = trans1.post[i];
@@ -791,6 +793,7 @@ namespace PetriEngine {
                             ok = 2;
                             break;
                         }
+                        in_q_post |= (placeInQuery[arc2.place] != 0)|| parent->_places[arc2.place].inhib;
 
                         if (mult == std::numeric_limits<uint>::max()) {
                             if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
@@ -805,6 +808,7 @@ namespace PetriEngine {
                         }
                     }
 
+                    if(in_q_post && mult != 1) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
 
@@ -816,7 +820,7 @@ namespace PetriEngine {
                             ok = 2;
                             break;
                         }
-
+                        in_q_pre |= (placeInQuery[arc2.place] != 0) || parent->_places[arc2.place].inhib;
                         if (mult == std::numeric_limits<uint>::max()) {
                             if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
                                 ok = 1;
@@ -830,6 +834,7 @@ namespace PetriEngine {
                         }
                     }
 
+                    if(in_q_pre && mult != 1) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
 
@@ -916,7 +921,7 @@ namespace PetriEngine {
 
             _ruleE++;
             continueReductions = true;
-            
+
         }
         assert(consistent());
         return continueReductions;
