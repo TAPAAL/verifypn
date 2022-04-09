@@ -787,7 +787,7 @@ namespace PetriEngine {
                     bool post_equal = true;
 
                     // D3. Presets must match
-                    for (int i = 0; i < trans1.pre.size(); ++i) {
+                    for (size_t i = 0; i < trans1.pre.size(); ++i) {
                         Arc& arc = trans1.pre[i];
                         size_t j = 0;
                         for(; j < trans2.pre.size(); ++j)
@@ -820,7 +820,7 @@ namespace PetriEngine {
 
 
                     // D4. postsets must match
-                    for (int i = 0; i < trans2.post.size(); ++i) {
+                    for (size_t i = 0; i < trans2.post.size(); ++i) {
                         Arc& arc2 = trans2.post[i];
                         size_t j = 0;
                         for(; j < trans1.post.size(); ++j)
