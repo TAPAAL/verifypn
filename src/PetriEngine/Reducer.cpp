@@ -778,63 +778,73 @@ namespace PetriEngine {
                     Transition& trans2 = getTransition(t2);
 
                     // From D3, and D4 we have that pre and post-sets are the same
-                    if (trans1.post.size() != trans2.post.size()) break;
-                    if (trans1.pre.size() != trans2.pre.size()) break;
+                    if (trans1.post.size() >= trans2.post.size()) break;
+                    if (trans1.pre.size() <= trans2.pre.size()) break;
 
                     int ok = 0;
                     uint mult = std::numeric_limits<uint>::max();
-                    bool in_q_pre = false;
-                    bool in_q_post = false;
-                    // D4. postsets must match
-                    for (int i = trans1.post.size() - 1; i >= 0; --i) {
-                        Arc& arc = trans1.post[i];
-                        Arc& arc2 = trans2.post[i];
+                    bool pre_equal = true;
+                    bool post_equal = true;
+
+                    // D3. Presets must match
+                    for (int i = 0; i < trans1.pre.size(); ++i) {
+                        Arc& arc = trans1.pre[i];
+                        size_t j = 0;
+                        for(; j < trans2.pre.size(); ++j)
+                            if(trans2.pre[j].place == arc.place)
+                                break;
+                        if(j >= trans2.pre.size() || trans2.pre[j].place != arc.place)
+                        {
+                            ok = 1;
+                            break;
+                        }
+
+                        Arc& arc2 = trans2.pre[j];
                         if (arc2.place != arc.place) {
                             ok = 2;
                             break;
                         }
-                        in_q_post |= (placeInQuery[arc2.place] != 0)|| parent->_places[arc2.place].inhib;
-
-                        if (mult == std::numeric_limits<uint>::max()) {
-                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
-                                ok = 1;
-                                break;
-                            } else {
-                                mult = arc2.weight / arc.weight;
-                            }
-                        } else if (arc2.weight != arc.weight * mult) {
-                            ok = 2;
+                        pre_equal = pre_equal && (placeInQuery[arc2.place] == 0 ||
+                                                  arc.weight == arc2.weight);
+                        if (arc2.weight < arc.weight) {
+                            ok = 1;
                             break;
+                        } else {
+                            mult = std::min(arc2.weight / arc.weight, mult);
                         }
                     }
 
-                    if(in_q_post && mult != 1) break;
+                    if(!pre_equal) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
 
-                    // D3. Presets must match
-                    for (int i = trans1.pre.size() - 1; i >= 0; --i) {
-                        Arc& arc = trans1.pre[i];
-                        Arc& arc2 = trans2.pre[i];
+
+                    // D4. postsets must match
+                    for (int i = 0; i < trans2.post.size(); ++i) {
+                        Arc& arc2 = trans2.post[i];
+                        size_t j = 0;
+                        for(; j < trans1.post.size(); ++j)
+                            if(trans1.post[j].place == arc2.place)
+                                break;
+                        if(j >= trans1.post.size() || trans1.post[j].place != arc2.place)
+                        {
+                            ok = 1;
+                            break;
+                        }
+                        Arc& arc = trans1.post[j];
                         if (arc2.place != arc.place) {
                             ok = 2;
                             break;
                         }
-                        in_q_pre |= (placeInQuery[arc2.place] != 0) || parent->_places[arc2.place].inhib;
-                        if (mult == std::numeric_limits<uint>::max()) {
-                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
-                                ok = 1;
-                                break;
-                            } else {
-                                mult = arc2.weight / arc.weight;
-                            }
-                        } else if (arc2.weight != arc.weight * mult) {
+                        post_equal = post_equal && (placeInQuery[arc2.place] == 0 ||
+                                                    arc.weight == arc2.weight);
+                        if (arc2.weight > arc.weight * mult) {
                             ok = 2;
                             break;
                         }
                     }
 
-                    if(in_q_pre && mult != 1) break;
+                    if(post_equal && mult != 1) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
 
