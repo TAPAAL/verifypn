@@ -42,11 +42,10 @@ BOOST_AUTO_TEST_CASE(ruleD, * utf::timeout(60)) {
 
     auto [conditions, builder, qstrings, trans_names, place_names] = load_builder("/models/rule_D.pnml",
         "/models/rule_D.xml", qnums);
-    PetriNetBuilder& bld = builder;
     std::vector<uint32_t> reds;
-    std::unique_ptr<PetriNet> net{bld.makePetriNet(false)};
+    std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
     contextAnalysis(false, trans_names, place_names, builder, net.get(), conditions);
-    bld.reduce(conditions, results, 3, false, net.get(), 10, reds);
+    builder.reduce(conditions, results, 1, false, net.get(), 10, reds);
     net.reset(builder.makePetriNet(false));
     contextAnalysis(false, trans_names, place_names, builder, net.get(), conditions);
 
