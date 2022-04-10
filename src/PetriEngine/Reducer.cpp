@@ -778,14 +778,13 @@ namespace PetriEngine {
                     Transition& trans2 = getTransition(t2);
 
                     // From D3, and D4 we have that pre and post-sets are the same
-                    if (trans1.post.size() >= trans2.post.size()) break;
-                    if (trans1.pre.size() <= trans2.pre.size()) break;
+                    if (trans1.post.size() < trans2.post.size()) break;
+                    if (trans1.pre.size() > trans2.pre.size()) break;
 
                     int ok = 0;
                     uint mult = std::numeric_limits<uint>::max();
                     bool pre_equal = true;
                     bool post_equal = true;
-
                     // D3. Presets must match
                     for (size_t i = 0; i < trans1.pre.size(); ++i) {
                         Arc& arc = trans1.pre[i];
