@@ -276,6 +276,13 @@ namespace PetriEngine { namespace PQL {
         _return_value = {element->getMax() <= element->getBound() ? Condition::RTRUE : Condition::RUNKNOWN};
     }
 
+    void EvaluateVisitor::_accept(UpperBoundsCondition *element) {
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+            _return_value = Condition::RUNKNOWN;
+    }
+
     void EvaluateVisitor::_accept(ShallowCondition *element) {
         Visitor::visit(this, element->getCompiled());
     }

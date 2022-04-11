@@ -440,21 +440,21 @@ bool options_t::parse(int argc, const char** argv) {
             }
         } else if (std::strcmp(argv[i], "--compress-aps") == 0) {
             if (argc <= i + 1 || std::strcmp(argv[i + 1], "1") == 0) {
-                ltl_compress_aps = APCompression::Full;
+                ltl_compress_aps = LTL::APCompression::Full;
                 ++i;
             } else if (std::strcmp(argv[i + 1], "0") == 0) {
-                ltl_compress_aps = APCompression::None;
+                ltl_compress_aps = LTL::APCompression::None;
                 ++i;
             }
         } else if (std::strcmp(argv[i], "--spot-optimization") == 0) {
             if (argc == i + 1) {
                 throw base_error("Missing argument to --spot-optimization");
             } else if (std::strcmp(argv[i + 1], "1") == 0) {
-                buchiOptimization = BuchiOptimization::Low;
+                buchiOptimization = LTL::BuchiOptimization::Low;
             } else if (std::strcmp(argv[i + 1], "2") == 0) {
-                buchiOptimization = BuchiOptimization::Medium;
+                buchiOptimization = LTL::BuchiOptimization::Medium;
             } else if (std::strcmp(argv[i + 1], "3") == 0) {
-                buchiOptimization = BuchiOptimization::High;
+                buchiOptimization = LTL::BuchiOptimization::High;
             } else {
                 throw base_error("Invalid argument ", std::quoted(argv[i]), " to --spot-optimization");
             }
@@ -509,13 +509,13 @@ bool options_t::parse(int argc, const char** argv) {
             if (argc == i + 1) {
                 throw base_error("Missing argument to --ltl-por");
             } else if (std::strcmp(argv[i + 1], "classic") == 0) {
-                ltl_por = LTLPartialOrder::Visible;
+                ltl_por = LTL::LTLPartialOrder::Visible;
             } else if (std::strcmp(argv[i + 1], "automaton") == 0) {
-                ltl_por = LTLPartialOrder::Automaton;
+                ltl_por = LTL::LTLPartialOrder::Automaton;
             } else if (std::strcmp(argv[i + 1], "liebke") == 0) {
-                ltl_por = LTLPartialOrder::Liebke;
+                ltl_por = LTL::LTLPartialOrder::Liebke;
             } else if (std::strcmp(argv[i + 1], "none") == 0) {
-                ltl_por = LTLPartialOrder::None;
+                ltl_por = LTL::LTLPartialOrder::None;
             } else {
                 throw base_error("Unrecognized argument ", std::quoted(argv[i + 1]), " to --ltl-por\n");
             }
@@ -525,11 +525,11 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Missing argument to --ltl-heur");
             }
             if (std::strcmp(argv[i + 1], "aut") == 0) {
-                ltlHeuristic = LTLHeuristic::Automaton;
+                ltlHeuristic = LTL::LTLHeuristic::Automaton;
             } else if (std::strcmp(argv[i + 1], "dist") == 0) {
-                ltlHeuristic = LTLHeuristic::Distance;
+                ltlHeuristic = LTL::LTLHeuristic::Distance;
             } else if (std::strcmp(argv[i + 1], "fire-count") == 0) {
-                ltlHeuristic = LTLHeuristic::FireCount;
+                ltlHeuristic = LTL::LTLHeuristic::FireCount;
             } else {
                 throw base_error("Unknown --ltl-heur value ", std::quoted(argv[i+1]));
             }

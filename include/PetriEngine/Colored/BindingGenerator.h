@@ -44,16 +44,17 @@ namespace PetriEngine {
         Colored::GuardExpression_ptr _expr;
         Colored::BindingMap _bindings;
         const Colored::ColorTypeMap& _colorTypes;
-
+        bool _empty = false;
         bool eval() const;
-
+    protected:
+        const Colored::BindingMap& nextBinding();
+        const Colored::BindingMap& currentBinding() const;
+        bool isInitial() const;
     public:
         NaiveBindingGenerator(const Colored::Transition& transition,
                 const Colored::ColorTypeMap& colorTypes);
 
-        const Colored::BindingMap& nextBinding();
-        const Colored::BindingMap& currentBinding() const;
-        bool isInitial() const;
+
         Iterator begin();
         Iterator end();
     };

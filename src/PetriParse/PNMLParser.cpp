@@ -214,9 +214,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
             auto ct = new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
             if (strcmp(type->name(), "finiteintrange") == 0) {
 
-                uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
-                uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
-                for (uint32_t i = start; i<=end;i++) {
+                int64_t start = atoll(type->first_attribute("start")->value());
+                int64_t end = atoll(type->first_attribute("end")->value());
+                for (uint32_t i = start; i <= end; ++i) {
                     ct->addColor(std::to_string(i).c_str());
                 }
                 fct = ct;
@@ -913,7 +913,7 @@ const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* 
                     }
                     auto col = (*nestedColorType)[value];
                     if (col) {
-                        if ((*nestedColorType).operator[](0).getId() == (start - 1) &&
+                        if ((*nestedColorType).operator[](size_t{0}).getId() == (start - 1) &&
                             (*elem.second).operator[]((*elem.second).size() - 1).getId() == end - 1)
                             return col;
                     }
@@ -925,7 +925,7 @@ const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* 
         }
 		auto col = (*elem.second)[value];
 		if (col){
-			if((*elem.second).operator[](0).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
+			if((*elem.second).operator[](size_t{0}).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
 				return col;
 		}
 	}

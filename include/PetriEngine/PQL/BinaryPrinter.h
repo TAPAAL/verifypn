@@ -19,7 +19,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     class BinaryPrinter : public Visitor {
     public:
         explicit BinaryPrinter(std::ostream& os) :
@@ -59,9 +59,8 @@ namespace PetriEngine::PQL {
         void _accept(const IdentifierExpr *condition) override;
 
         void _accept(const ShallowCondition *condition) override;
-
     };
-}
+} }
 
 
 #endif //VERIFYPN_BINARYPRINTER_H

@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "CTL/Algorithm/AlgorithmTypes.h"
-#include "LTL/AlgorithmTypes.h"
+#include "LTL/LTLOptions.h"
 
 enum class Strategy {
     BFS,
@@ -21,41 +21,16 @@ enum class Strategy {
     DEFAULT
 };
 
-enum class TemporalLogic {
-    CTL, LTL
-};
-
-//TODO can be moved to LTL/AlgorithmTypes.h?
 enum class TraceLevel {
     None,
     Transitions,
     Full
 };
 
-enum class APCompression {
-    Choose,
-    None,
-    Full
+enum class TemporalLogic {
+    CTL, LTL
 };
 
-enum class LTLPartialOrder {
-    None,
-    Visible,
-    Automaton,
-    Liebke
-};
-
-enum class BuchiOptimization {
-    Low = 1,
-    Medium = 2,
-    High = 3
-};
-
-enum class LTLHeuristic {
-    Distance,
-    Automaton,
-    FireCount,
-};
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -95,10 +70,10 @@ struct options_t {
     bool ltluseweak = true;
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
-    APCompression ltl_compress_aps = APCompression::None;
-    LTLPartialOrder ltl_por = LTLPartialOrder::Automaton;
-    BuchiOptimization buchiOptimization = BuchiOptimization::Low;
-    LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
+    LTL::APCompression ltl_compress_aps = LTL::APCompression::None;
+    LTL::LTLPartialOrder ltl_por = LTL::LTLPartialOrder::Automaton;
+    LTL::BuchiOptimization buchiOptimization = LTL::BuchiOptimization::Low;
+    LTL::LTLHeuristic ltlHeuristic = LTL::LTLHeuristic::Automaton;
 
     bool replay_trace = false;
     std::string replay_file;
@@ -119,7 +94,7 @@ struct options_t {
     bool symmetricVariables = true;
     bool isCPN = false;
     uint32_t seed_offset = 0;
-    int max_intervals = 250; //0 disabled
+    int max_intervals = 500; //0 disabled
     int max_intervals_reduced = 5;
 
     std::string strategy_output;

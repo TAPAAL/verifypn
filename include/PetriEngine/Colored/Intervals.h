@@ -407,10 +407,16 @@ namespace PetriEngine {
                 for(uint32_t i = 0; i < _intervals.size(); ++i) {
                     for(uint32_t j = 0; j < values.size(); ++j){
                         if(strict && _intervals[i][j]._lower <= values[j]){
-                            _intervals[i][j]._lower = values[j]+1;
+                            if(_intervals[i][j]._upper <= values[j])
+                                _intervals[i][j].invalidate();
+                            else
+                                _intervals[i][j]._lower = values[j]+1;
                         }
                         else if(!strict && _intervals[i][j]._lower < values[j]){
-                            _intervals[i][j]._lower = values[j];
+                            if(_intervals[i][j]._upper < values[j])
+                                _intervals[i][j].invalidate();
+                            else
+                                _intervals[i][j]._lower = values[j];
                         }
                     }
                 }
@@ -421,10 +427,16 @@ namespace PetriEngine {
                 for(uint32_t i = 0; i < _intervals.size(); ++i) {
                     for(uint32_t j = 0; j < values.size(); ++j){
                         if(strict && _intervals[i][j]._upper >= values[j]){
-                            _intervals[i][j]._upper = values[j]-1;
+                            if(_intervals[i][j]._lower >= values[j])
+                                _intervals[i][j].invalidate();
+                            else
+                                _intervals[i][j]._upper = values[j]-1;
                         }
                         else if(!strict && _intervals[i][j]._upper > values[j]){
-                            _intervals[i][j]._upper = values[j];
+                            if(_intervals[i][j]._lower > values[j])
+                                _intervals[i][j].invalidate();
+                            else
+                                _intervals[i][j]._upper = values[j];
                         }
                     }
                 }

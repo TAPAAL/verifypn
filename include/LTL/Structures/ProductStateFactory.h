@@ -22,26 +22,25 @@
 
 #include <memory>
 
-namespace LTL::Structures{
+namespace LTL { namespace Structures {
     class ProductStateFactory {
     public:
-        ProductStateFactory(const PetriEngine::PetriNet *net, const BuchiAutomaton& aut, size_t initial_buchi_state)
-            : net(net), _aut(aut), buchi_init(initial_buchi_state) {}
+        ProductStateFactory(const PetriEngine::PetriNet& net, const BuchiAutomaton& aut)
+            : _net(net), _aut(aut) {}
 
-        ProductState newState() {
-            auto buf = new PetriEngine::MarkVal[net->numberOfPlaces()+1];
-            std::copy(net->initial(), net->initial() + net->numberOfPlaces(), buf);
-            buf[net->numberOfPlaces()] = 0;
+        ProductState new_state() {
+            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces()+1];
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
+            buf[_net.numberOfPlaces()] = 0;
             ProductState state{&_aut};
-            state.setMarking(buf, net->numberOfPlaces());
-            state.setBuchiState(buchi_init);
+            state.setMarking(buf, _net.numberOfPlaces());
+            state.set_buchi_state(_aut.buchi().get_init_state_number());
             return state;
         }
 
     private:
-        const PetriEngine::PetriNet *net;
-        const LTL::Structures::BuchiAutomaton _aut;
-        const size_t buchi_init;
+        const PetriEngine::PetriNet& _net;
+        const LTL::Structures::BuchiAutomaton& _aut;
     };
-}
+} }
 #endif //VERIFYPN_PRODUCTSTATEFACTORY_H

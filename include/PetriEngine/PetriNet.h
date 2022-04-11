@@ -24,7 +24,10 @@
 #include <vector>
 #include <climits>
 #include <limits>
+#include <memory>
 #include <iostream>
+
+#include "utils/structures/shared_string.h"
 
 namespace PetriEngine {
 
@@ -83,12 +86,12 @@ namespace PetriEngine {
         }
 
 
-        const std::vector<std::string>& transitionNames() const
+        const std::vector<shared_const_string>& transitionNames() const
         {
             return _transitionnames;
         }
 
-        const std::vector<std::string>& placeNames() const
+        const std::vector<shared_const_string>& placeNames() const
         {
             return _placenames;
         }
@@ -99,7 +102,7 @@ namespace PetriEngine {
             {
                 if(val[i] != 0)
                 {
-                    std::cout << _placenames[i] << "(" << i << ")" << " -> " << val[i] << ", ";
+                    std::cout << *_placenames[i] << "(" << i << ")" << " -> " << val[i] << ", ";
                 }
             }
             std::cout << std::endl;
@@ -135,8 +138,8 @@ namespace PetriEngine {
         std::vector<bool> _controllable;
         MarkVal* _initialMarking;
 
-        std::vector<std::string> _transitionnames;
-        std::vector<std::string> _placenames;
+        std::vector<shared_const_string> _transitionnames;
+        std::vector<shared_const_string> _placenames;
 
         std::vector< std::tuple<double, double> > _placelocations;
         std::vector< std::tuple<double, double> > _transitionlocations;

@@ -73,7 +73,7 @@ namespace PetriEngine {
 
         const Color& Color::operator++ () const {
             if (_id >= _colorType->size() - 1) {
-                return (*_colorType)[0];
+                return (*_colorType)[size_t{0}];
             }
             assert(_id + 1 < _colorType->size());
             return (*_colorType)[_id + 1];

@@ -15,7 +15,7 @@
 namespace PetriEngine::PQL {
     class ColoredPlaceUseVisitor : public Visitor {
     public:
-        ColoredPlaceUseVisitor(const std::unordered_map<std::string, uint32_t> &placeNameToIndexMap, size_t places)
+        ColoredPlaceUseVisitor(const shared_name_index_map &placeNameToIndexMap, size_t places)
                 : _placeNameToIndexMap(placeNameToIndexMap), _inUse(places) {
 
         }
@@ -56,7 +56,7 @@ namespace PetriEngine::PQL {
         void _accept(const NaryExpr *element) override;
 
     private:
-        const std::unordered_map<std::string, uint32_t> &_placeNameToIndexMap;
+        const shared_name_index_map &_placeNameToIndexMap;
         std::vector<bool> _inUse;
     };
 }

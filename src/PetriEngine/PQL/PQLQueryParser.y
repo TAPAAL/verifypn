@@ -107,17 +107,17 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
 		        {
 		            auto ids = $3;
 		            if ((*ids).size() == 1) {
-		                $$ = new FireableCondition((*ids)[0]);
+		                $$ = new FireableCondition(std::make_shared<const_string>((*ids)[0]));
 		            } else {
 		                std::vector<Condition_ptr> a;
                         for (auto& name : *ids) {
-                            a.push_back(std::make_shared<FireableCondition>(name));
+                            a.push_back(std::make_shared<FireableCondition>(std::make_shared<const_string>(name)));
                         }
                         $$ = new OrCondition(a);
 		            }
 		        }
 		    }
-		| ID QUESTIONMARK           { $$ = new FireableCondition(*$1); }
+		| ID QUESTIONMARK           { $$ = new FireableCondition(std::make_shared<const_string>(*$1)); }
 		;
 
 expr	: expr PLUS term			{ $$ = new PlusExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
@@ -132,7 +132,7 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_
 
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
 		| INT			{ $$ = new LiteralExpr(atol($1->c_str())); delete $1; }
-		| ID			{ $$ = new IdentifierExpr(*$1); delete $1; }
+		| ID			{ $$ = new IdentifierExpr(std::make_shared<const_string>(*$1)); delete $1; }
         | TOKENCOUNT LPAREN id_list RPAREN
             {
                 $$ = nullptr;
@@ -140,9 +140,9 @@ factor	: LPAREN expr RPAREN	{ $$ = $2; }
                     auto ids = $3;
                     std::vector<Expr_ptr> a;
                     for (auto& name : *ids) {
-                        a.push_back(std::make_shared<IdentifierExpr>(name));
+                        a.push_back(std::make_shared<IdentifierExpr>(std::make_shared<const_string>(name)));
                     }
-                    $$ = new PlusExpr(std::move(a), true);
+                    $$ = new PlusExpr(std::move(a));
                 }
             }
 		;

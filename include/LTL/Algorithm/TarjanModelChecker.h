@@ -24,10 +24,11 @@
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+#include "utils/structures/light_deque.h"
+
+#include <ptrie/ptrie.h>
 
 #include <limits>
-#include <stack>
-#include <unordered_set>
 
 namespace LTL {
 
@@ -41,131 +42,108 @@ namespace LTL {
      *   More efficient on-the-fly LTL verification with Tarjan's algorithm
      *   https://doi.org/10.1016/j.tcs.2005.07.004
      * </p>
-     * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template<template <typename, typename...> typename ProductSucGen, typename SuccessorGen, bool SaveTrace = false, typename... Spooler>
-    class TarjanModelChecker : public ModelChecker<ProductSucGen, SuccessorGen, Spooler...> {
+    class TarjanModelChecker : public ModelChecker {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
+        TarjanModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
-                           SuccessorGen *successorGen,
-                           int kbound, const PetriEngine::Reducer* reducer,
-                           std::unique_ptr<Spooler> &&...spooler)
-                : ModelChecker<ProductSucGen, SuccessorGen, Spooler...>(net, cond, buchi, successorGen, reducer, std::move(spooler)...),
-                  _seen(net, kbound)
+                           uint32_t kbound)
+                : ModelChecker(net, cond, buchi), _k_bound(kbound)
         {
-            if (buchi._buchi->num_states() > 65535) {
-                throw base_error("Fatal error: cannot handle Büchi automata larger than 2^16 states");
+            if (buchi.buchi().num_states() > 1048576) {
+                throw base_error("Cannot handle Büchi automata larger than 2^20 states");
             }
             _chash.fill(std::numeric_limits<idx_t>::max());
         }
 
-        bool isSatisfied() override;
+        bool check() override;
 
-        void printStats(std::ostream &os) override
-        {
-            this->_printStats(os, _seen);
+        void print_stats(std::ostream &os) const override;
+
+        virtual void set_partial_order(LTLPartialOrder);
+
+        LTLPartialOrder used_partial_order() const {
+            return _order;
         }
-
     private:
+
+        template<typename SuccGen>
+        bool select_trace_compute(SuccGen& successorGenerator);
+
+        template<bool TRACE, typename SuccGen>
+        bool compute(SuccGen& successorGenerator);
+
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
         // 64 MB hash table
         static constexpr idx_t _hash_sz = 16777216;
 
-
-        using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
-        static constexpr bool _is_spooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
-
-        StateSet _seen;
-        std::unordered_set<idx_t> _store;
+        ptrie::set<idx_t,17,32,8> _store;
 
         // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
         // corresponding to state. Collisions are resolved using linked list via CEntry::next.
         std::array<idx_t, _hash_sz> _chash;
         static_assert(sizeof(_chash) == (1U << 27U));
 
-        static inline idx_t hash(idx_t id)
+        static inline idx_t hash(idx_t buchi_state, idx_t marking_id)
         {
-            return id % _hash_sz;
+            return (buchi_state xor marking_id) % _hash_sz;
         }
 
-        struct PlainCEntry {
+        struct plain_centry_t {
             idx_t _lowlink;
             idx_t _stateid;
             idx_t _next = std::numeric_limits<idx_t>::max();
             bool _dstack = true;
-
-            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
+            plain_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
+            static constexpr bool save_trace() { return false; }
         };
 
-        struct TracableCEntry : PlainCEntry {
+        struct tracable_centry_t : plain_centry_t {
             idx_t _lowsource = std::numeric_limits<idx_t>::max();
             idx_t _sourcetrans;
-
-            TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
+            tracable_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : plain_centry_t(lowlink, stateid, next) {}
+            static constexpr bool save_trace() { return true; }
         };
 
-        using CEntry = std::conditional_t<SaveTrace,
-                TracableCEntry,
-                PlainCEntry>;
-
-        struct DEntry {
+        template<typename T>
+        struct dentry_t {
             idx_t _pos; // position in cstack.
-
-            typename SuccessorGen::successor_info_t _sucinfo;
-
-            explicit DEntry(idx_t pos) : _pos(pos), _sucinfo(SuccessorGen::initial_suc_info()) {}
+            typename T::successor_info_t _sucinfo;
+            explicit dentry_t(idx_t pos) : _pos(pos), _sucinfo(T::initial_suc_info()) {}
         };
 
-        // master list of state information.
-        std::vector<CEntry> _cstack;
-        // depth-first search stack, contains current search path.
-        std::stack<DEntry> _dstack;
-        // cstack positions of accepting states in current search path, for quick access.
-        std::stack<idx_t> _astack;
 
-        bool _violation = false;
+        // cstack positions of accepting states in current search path, for quick access.
+        light_deque<idx_t> _astack;
+
         bool _invariant_loop = true;
         size_t _loop_state = std::numeric_limits<size_t>::max();
         size_t _loop_trans = std::numeric_limits<size_t>::max();
+        size_t _discoverd = std::numeric_limits<size_t>::max();
+        size_t _max_tokens = std::numeric_limits<size_t>::max();
+        uint32_t _k_bound;
+        LTLPartialOrder _order = LTLPartialOrder::None;
 
-        void push(State &state, size_t stateid);
+        // TODO, instead of this template hell, we should really just have a templated state that we shuffle around.
+        template<typename StateSet, typename T, typename D, typename S>
+        void push(StateSet& s, light_deque<T>& cstack, light_deque<D>& dstack, S& successor_generator, State &state, size_t stateid);
 
-        void pop();
+        template<typename S, typename T, typename D, typename SuccGen>
+        void pop(S& seen, light_deque<T>& cstack, light_deque<D>& dstack, SuccGen& successorGenerator);
 
-        void update(idx_t to);
+        template<typename T, typename D, typename SuccGen>
+        void update(light_deque<T>& cstack, light_deque<D>& d, SuccGen& successorGenerator, idx_t to);
 
-        bool nexttrans(State &state, State &parent, DEntry &delem);
+        template<typename S, typename T, typename SuccGen, typename D>
+        bool next_trans(S& seen, light_deque<T>& cstack, SuccGen& successorGenerator, State &state, State &parent, D &delem);
 
-        void popCStack();
+        template<typename StateSet, typename T>
+        void popCStack(StateSet& s, light_deque<T>& cstack);
 
-        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
+        template<typename S, typename D, typename C>
+        void build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack);
     };
-
-    extern template
-    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, true>;
-
-    extern template
-    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, false>;
-
-    extern template
-    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
-
-    extern template
-    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
-
-    extern template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>;
-
-    extern template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>;
-
-    extern template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, EnabledSpooler>;
-
-    extern template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, EnabledSpooler>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

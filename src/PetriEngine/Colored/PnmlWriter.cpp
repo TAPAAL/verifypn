@@ -59,7 +59,7 @@ namespace PetriEngine {
                      << "\">\n";
 
                 //this is a hack, better way to find if a color is a finite int range?
-                if (is_number(types[0]->operator[](0).getColorName())) {
+                if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
                     _namedSortTypes.insert(std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
                     handleFiniteRange(types);
                 } else {
@@ -77,7 +77,7 @@ namespace PetriEngine {
 
         void PnmlWriter::handleFiniteRange(const std::vector<const ColorType *> &types) {
             for (auto type: types) {
-                std::string start = type->operator[](0).getColorName();
+                std::string start = type->operator[](size_t{0}).getColorName();
                 std::string end = type->operator[](type->size() - 1).getColorName();
                 _out << increaseTabs() << "<finiteintrange start=\"" << start << "\" end=\"" << end << "\"/>\n";
             }
@@ -268,7 +268,7 @@ namespace PetriEngine {
                     _out << getTabs() << "<subterm>" << "\n";
                 }
                 if (is_number(color->toString())) {
-                    std::string start = color->getColorType()->operator[](0).getColorName();
+                    std::string start = color->getColorType()->operator[](size_t{0}).getColorName();
                     std::string end = color->getColorType()->operator[](
                             color->getColorType()->size() - 1).getColorName();
                     _out << increaseTabs() << "<finiteintrangeconstant value=\"" << color->getColorName()
@@ -290,7 +290,7 @@ namespace PetriEngine {
             if (c->getColorName() == "Dot" || c->getColorName() == "dot") {
                 _out << increaseTabs() << "<dotconstant/>\n";
             } else if (thePnmlColorType == "finite range") {
-                std::string start = c->getColorType()->operator[](0).getColorName();
+                std::string start = c->getColorType()->operator[](size_t{0}).getColorName();
                 std::string end = c->getColorType()->operator[](
                         c->getColorType()->size() - 1).getColorName();
                 _out << increaseTabs() << "<finiteintrangeconstant value=\"" <<  c->getColorName() << "\">\n>";
@@ -361,8 +361,8 @@ namespace PetriEngine {
             _out << getTabs() << "<!-- List of arcs -->\n";
             uint32_t index = 0;
             for (auto &arc: _arcs) {
-                std::string source;
-                std::string target;
+                shared_const_string source;
+                shared_const_string target;
                 if (arc.input) {
                     source = _builder._places[arc.place].name;
                     target = _builder._transitions[arc.transition].name;

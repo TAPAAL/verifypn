@@ -23,12 +23,13 @@
 #include <tuple>
 using std::get;
 namespace PetriEngine {
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder(){
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder(shared_string_set& string_set)
+    : _ptBuilder(string_set), _string_set(string_set) {
     }
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig)
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
-       _places(orig._places), _transitions(orig._transitions)
+       _places(orig._places), _transitions(orig._transitions), _ptBuilder(orig._string_set), _string_set(orig._string_set)
     {
     }
 
@@ -53,12 +54,14 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
-        if(_placenames.count(name) == 0)
+        auto tmp = std::make_shared<const_string>(name);
+        tmp = *_string_set.insert(tmp).first;
+        if(_placenames.count(tmp) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(Colored::Place {name, type, std::move(tokens), x, y});
+            _places.emplace_back(Colored::Place {tmp, type, std::move(tokens), x, y});
             auto& place = _places.back();
-            _placenames[name] = next;
+            _placenames[tmp] = next;
             for(const auto& t : place.marking)
             {
                 if(t.first->getColorType() != type)
@@ -77,11 +80,13 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) {
-        if(_transitionnames.count(name) == 0)
+        auto tmp = std::make_shared<const_string>(name);
+        tmp = *_string_set.insert(tmp).first;
+        if(_transitionnames.count(tmp) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(Colored::Transition {name, guard, player, x, y});
-            _transitionnames[name] = next;
+            _transitions.emplace_back(Colored::Transition {tmp, guard, player, x, y});
+            _transitionnames[tmp] = next;
         }
     }
 
@@ -107,12 +112,14 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, uint32_t inhib_weight) {
-        if(_transitionnames.count(transition) == 0)
+        auto stn = std::make_shared<const_string>(transition);
+        auto spn = std::make_shared<const_string>(place);
+        if(_transitionnames.count(stn) == 0)
             throw base_error("Transition '", transition, "' not found. ");
-        if(_placenames.count(place) == 0)
+        if(_placenames.count(spn) == 0)
             throw base_error("Place '", place, "' not found. ");
-        uint32_t p = _placenames[place];
-        uint32_t t = _transitionnames[transition];
+        uint32_t p = _placenames[spn];
+        uint32_t t = _transitionnames[stn];
 
         assert(t < _transitions.size());
         assert(p < _places.size());

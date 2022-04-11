@@ -211,10 +211,11 @@ namespace PetriEngine::PQL {
     }
 
     Member memberForPlace(size_t p, const SimplificationContext &context) {
-        std::vector<int> row(context.net()->numberOfTransitions(), 0);
+        std::vector<int64_t> row(context.net()->numberOfTransitions(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
-            row[t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
+            row[t] = context.net()->outArc(t, p);
+            row[t] -= context.net()->inArc(p, t);
         }
         return Member(std::move(row), context.marking()[p]);
     }

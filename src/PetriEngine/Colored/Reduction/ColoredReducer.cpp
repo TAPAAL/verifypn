@@ -247,7 +247,7 @@ namespace PetriEngine::Colored::Reduction {
     {
         auto prefix = "CCT";
         auto tmp = prefix + std::to_string(_tnameid);
-        while(_builder._transitionnames.count(tmp) >= 1)
+        while (_builder._string_set.count(std::make_shared<const_string>(tmp)) >= 1)
         {
             ++_tnameid;
             tmp = prefix + std::to_string(_tnameid);
@@ -267,8 +267,9 @@ namespace PetriEngine::Colored::Reduction {
             tran.inhibited = false;
             tran.guard = nullptr;
             _builder._transitionnames.erase(tran.name);
-            tran.name = newTransitionName();
+            tran.name = std::make_shared<const_string>(newTransitionName());
             _builder._transitionnames[tran.name] = id;
+            _builder._string_set.insert(tran.name);
         }
         else
         {
@@ -282,14 +283,14 @@ namespace PetriEngine::Colored::Reduction {
     }
 
     void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){
-        _builder.addInputArc(_builder._places[pid].name, _builder._transitions[tid].name, expr, inhib_weight);
+        _builder.addInputArc(*_builder._places[pid].name, *_builder._transitions[tid].name, expr, inhib_weight);
         std::sort(_builder._places[pid]._post.begin(), _builder._places[pid]._post.end());
         std::sort(_builder._transitions[tid].input_arcs.begin(), _builder._transitions[tid].input_arcs.end(), ArcLessThanByPlace);
     }
+
     void ColoredReducer::addOutputArc(uint32_t tid, uint32_t pid, ArcExpression_ptr expr){
-        _builder.addOutputArc(_builder._transitions[tid].name, _builder._places[pid].name, expr);
+        _builder.addOutputArc(*_builder._transitions[tid].name.get(), *_builder._places[pid].name, expr);
         std::sort(_builder._places[pid]._pre.begin(), _builder._places[pid]._pre.end());
         std::sort(_builder._transitions[tid].output_arcs.begin(), _builder._transitions[tid].output_arcs.end(), ArcLessThanByPlace);
     }
-
 }

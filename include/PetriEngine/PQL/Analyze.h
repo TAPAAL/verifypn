@@ -22,7 +22,7 @@
 
 #include "PetriEngine/PQL/MutatingVisitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     void analyze(Condition* condition, AnalysisContext& context);
     void analyze(Condition_ptr condition, AnalysisContext& context);
@@ -79,6 +79,6 @@ namespace PetriEngine::PQL {
 
         void _accept(SimpleQuantifierCondition *element) override;
     };
-}
+} }
 
 #endif //VERIFYPN_ANALYZE_H

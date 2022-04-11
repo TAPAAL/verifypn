@@ -20,12 +20,16 @@
 #ifndef COLOREDNETSTRUCTURES_H
 #define COLOREDNETSTRUCTURES_H
 
-#include <vector>
-#include <set>
-#include <assert.h>
+
 #include "Colors.h"
 #include "Expressions.h"
 #include "Multiset.h"
+
+#include "utils/structures/shared_string.h"
+
+#include <vector>
+#include <set>
+#include <cassert>
 
 namespace PetriEngine {
     namespace Colored {
@@ -52,7 +56,7 @@ namespace PetriEngine {
         } ArcLessThanByPlace;
 
         struct Transition {
-            std::string name;
+            shared_const_string name;
             GuardExpression_ptr guard;
             int32_t _player;
             double _x = 0, _y = 0;
@@ -63,7 +67,7 @@ namespace PetriEngine {
         };
 
         struct Place {
-            std::string name;
+            shared_const_string name;
             const ColorType* type;
             Multiset marking;
             double _x = 0, _y = 0;
