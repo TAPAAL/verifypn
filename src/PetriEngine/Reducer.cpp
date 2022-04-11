@@ -2429,13 +2429,13 @@ else if (inhibArcs == 0)
 
     bool Reducer::ReducebyRuleS(uint32_t* placeInQuery, bool remove_consumers, bool remove_loops, bool allReach, uint32_t explosion_limiter) {
         bool continueReductions = false;
+        bool atomic_viable = allReach && remove_loops;
 
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++) {
             if (hasTimedout())
                 return false;
             if (parent->originalNumberOfTransitions() * 2 < numberOfUnskippedTransitions())
                 return false;
-
 
             const Place &place = parent->_places[pid];
 
@@ -2446,7 +2446,6 @@ else if (inhibArcs == 0)
 
             // Performance consideration
             if (place.producers.size() > explosion_limiter){
-                continueReductions = true;
                 continue;
             }
 
@@ -2472,7 +2471,7 @@ else if (inhibArcs == 0)
             // S2
             std::vector<bool> todo (postsize, true);
             bool todoAllGood = true;
-            // S10-11; Do we need to check?
+            // S10-11
             std::vector<bool> kIsAlwaysOne (postsize, true);
 
             for (const auto& prod : place.producers){
@@ -2486,15 +2485,22 @@ else if (inhibArcs == 0)
                 uint32_t kw = getOutArc(producer, pid)->weight;
                 for (uint32_t n = 0; n < place.consumers.size(); n++) {
                     uint32_t w = getInArc(pid, getTransition(place.consumers[n]))->weight;
-                    // S1, S9
-                    if (parent->initialMarking[pid] >= w || kw % w != 0) {
-                        todo[n] = false;
-                        todoAllGood = false;
-                        continue;
-                    } else if (kw != w) {
-                        kIsAlwaysOne[n] = false;
+                    if (atomic_viable){
+                        // S1, S9
+                        if (parent->initialMarking[pid] >= w || kw % w != 0) {
+                            // Atomic is only valid for reachability without deadlock.
+                            todo[n] = false;
+                            todoAllGood = false;
+                        } else if (kw != w) {
+                            kIsAlwaysOne[n] = false;
+                        }
+                    } else if (parent->initialMarking[pid] >= w || kw != w) {
+                        ok = false;
+                        break;
                     }
                 }
+
+                if (!ok) break;
 
                 // Check if we have any qualifying consumers left
                 if (!todoAllGood && std::lower_bound(todo.begin(), todo.end(), true) == todo.end()){
@@ -2508,10 +2514,8 @@ else if (inhibArcs == 0)
                     if (preplace.inhib || placeInQuery[prearc.place] > 0){
                         ok = false;
                         break;
-                    } else if (!remove_loops || !allReach) {
-                        // If we can remove loops, that means we are not doing deadlock, so we can do free agglomeration which avoids this condition
-                        // If this check is safe for LTL to ignore is not checked yet.
-
+                    } else if (!atomic_viable) {
+                        // For reachability we can do free agglomeration which avoids this condition
                         // S7
                         for(const auto& precons : preplace.consumers){
                             // S7; Transitions in place.producers are exempt from this check
@@ -2519,8 +2523,8 @@ else if (inhibArcs == 0)
                                 continue;
 
                             Transition& preconsumer = getTransition(precons);
-                            // S7; Transitions outside place.producers are not allowed the ability to disable an enabled transition in place.producers
-                            if (getInArc(prearc.place, preconsumer)->weight > getOutArc(preconsumer, prearc.place)->weight){
+                            // S7; Transitions outside place.producers are not allowed the ability to disable a transition in place.producers
+                            if (getOutArc(preconsumer, prearc.place) == preconsumer.post.end() || (getInArc(prearc.place, preconsumer)->weight > getOutArc(preconsumer, prearc.place)->weight)){
                                 ok = false;
                                 break;
                             }
@@ -2564,7 +2568,6 @@ else if (inhibArcs == 0)
                 // Update
                 for (const auto& prod : originalProducers){
                     Transition &producer = getTransition(prod);
-                    // w is never used unless (kIsAlwaysOne[n]) = true, so no need to initialize it to an actual value.
                     uint32_t k = 1, w = 1;
                     if (!kIsAlwaysOne[n]){
                         w = getInArc(pid, consumer)->weight;
@@ -2630,12 +2633,10 @@ else if (inhibArcs == 0)
             }
 
             if (place.consumers.empty()) {
-                if (remove_consumers){
-                    // The producers of place will become purely consuming transitions when it is gone, which can sometimes be removed
-                    auto transitions = place.producers;
-                    for (auto tran_id : transitions)
-                        skipTransition(tran_id);
-                }
+                // The producers of place will become purely consuming transitions when it is gone
+                auto transitions = place.producers;
+                for (uint32_t tran_id : transitions)
+                    skipTransition(tran_id);
                 skipPlace(pid);
             }
 
@@ -2751,7 +2752,7 @@ else if (inhibArcs == 0)
                 }
             }
             bool changed = true;
-            uint32_t explosion_limiter = 2;
+            uint32_t explosion_limiter = 5;
             uint8_t lastChangeRound = 0;
             uint8_t currentRound = 0;
             std::vector<std::vector<uint32_t>> reductionset = {reduction, secondaryreductions};
@@ -2834,8 +2835,6 @@ else if (inhibArcs == 0)
                         if(hasTimedout())
                             break;
                     }
-
-                    explosion_limiter *= 2;
 
                     if (enablereduction == 4){
                         if (changed){
