@@ -236,7 +236,7 @@ namespace PetriEngine {
         trans.post.erase(ait);
         assert(consistent());
     }
-    
+
     bool Reducer::consistent()
     {
 #ifndef NDEBUG
@@ -967,7 +967,7 @@ namespace PetriEngine {
             }
 
             if(!ok || notenabled.empty()) continue;
-            
+
             bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
             bool E_used, P_used = false;
             for(uint cons : notenabled) {
