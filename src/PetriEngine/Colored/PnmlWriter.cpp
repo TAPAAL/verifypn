@@ -182,9 +182,9 @@ namespace PetriEngine {
                 if (place.skipped) {
                     continue;
                 }
-                _out << getTabs() << "<place id=\"" << place.name << "\">\n";
+                _out << getTabs() << "<place id=\"" << *place.name << "\">\n";
                 _out << increaseTabs() << "<name>\n";
-                _out << increaseTabs() << "<text>" << place.name
+                _out << increaseTabs() << "<text>" << *place.name
                      << "</text>\n"; //graphics location of name is not present in the struct, CBA to do it
                 _out << decreaseTabs() << "</name>\n";
                 _out << getTabs() << "<graphics>\n";
@@ -309,9 +309,9 @@ namespace PetriEngine {
                 }
                 add_arcs_from_transition(transition);
 
-                _out << getTabs() << "<transition id=\"" << transition.name << "\">\n";
+                _out << getTabs() << "<transition id=\"" << *transition.name << "\">\n";
                 _out << increaseTabs() << "<name>\n";
-                _out << increaseTabs() << "<text>" << transition.name
+                _out << increaseTabs() << "<text>" << *transition.name
                      << "</text>\n";
                 _out << decreaseTabs() << "</name>\n";
                 _out << getTabs() << "<graphics>\n";
@@ -370,7 +370,7 @@ namespace PetriEngine {
                     source = _builder._transitions[arc.transition].name;
                     target = _builder._places[arc.place].name;
                 }
-                _out << getTabs() << "<arc id=\"arc" << index << "\" source=\"" << source << "\" target=\"" << target
+                _out << getTabs() << "<arc id=\"arc" << index << "\" source=\"" << *source << "\" target=\"" << *target
                      << "\">\n";
                 _out << increaseTabs() << "<name>\n";
                 _out << increaseTabs() << "<text>" << index << "</text>\n";
