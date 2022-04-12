@@ -721,7 +721,7 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool loop_sensitive) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs
         // This does not alter the trace.
         bool continueReductions = false;
@@ -785,6 +785,8 @@ namespace PetriEngine {
                     uint mult = std::numeric_limits<uint>::max();
                     bool pre_equal = true;
                     bool post_equal = true;
+                    bool some_in_query = false;
+                    bool exact = true;
                     // D3. Presets must match
                     for (size_t i = 0; i < trans1.pre.size(); ++i) {
                         Arc& arc = trans1.pre[i];
@@ -803,19 +805,32 @@ namespace PetriEngine {
                             ok = 2;
                             break;
                         }
-                        pre_equal = pre_equal && (placeInQuery[arc2.place] == 0 ||
-                                                  arc.weight == arc2.weight);
                         if (arc2.weight < arc.weight) {
                             ok = 1;
                             break;
                         } else {
+                            auto old = mult;
                             mult = std::min(arc2.weight / arc.weight, mult);
+                            if(old != std::numeric_limits<uint>::max() &&
+                               mult != old &&
+                               some_in_query)
+                            {
+                                pre_equal = false;
+                                exact = false;
+                            }
                         }
+                        some_in_query |= placeInQuery[arc2.place] > 0;
+                        pre_equal = pre_equal && (placeInQuery[arc2.place] == 0 ||
+                                                  arc.weight == arc2.weight*mult);
+                        exact &= arc.weight == arc2.weight*mult;
+                        if(!pre_equal) break;
                     }
 
                     if(!pre_equal) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
+                    if(mult != 1 && !all_reach) break;
+                    if(loop_sensitive && !exact) break;
 
 
                     // D4. postsets must match
@@ -836,16 +851,19 @@ namespace PetriEngine {
                             break;
                         }
                         post_equal = post_equal && (placeInQuery[arc2.place] == 0 ||
-                                                    arc.weight == arc2.weight);
+                                                    arc.weight * mult == arc2.weight);
+                        exact &= arc.weight * mult == arc2.weight;
                         if (arc2.weight > arc.weight * mult) {
                             ok = 2;
                             break;
                         }
+                        if(!post_equal) break;
                     }
 
-                    if(post_equal && mult != 1) break;
+                    if(!post_equal) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
+                    if(loop_sensitive && !exact) break;
 
                     // UD1. Remove transition t2
                     continueReductions = true;
@@ -1666,8 +1684,7 @@ namespace PetriEngine {
             "T-server_process_7"
     };
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
-
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool next_safe, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1681,7 +1698,7 @@ namespace PetriEngine {
                 if(!next_safe)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                    while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             }
@@ -1691,7 +1708,7 @@ namespace PetriEngine {
             do
             {
                 if(remove_loops && !next_safe)
-                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
@@ -1700,17 +1717,17 @@ namespace PetriEngine {
                         while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                         if(!next_safe)
                         {
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             if(!remove_loops)
-                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
                     if(!next_safe)
                     { // then apply tokens moving rules
                         //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     }
                 } while(changed && !hasTimedout());
@@ -1759,13 +1776,13 @@ namespace PetriEngine {
                             while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 1:
-                            while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 2:
                             while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 3:
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
                             break;
                         case 4:
                             while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
@@ -1774,19 +1791,19 @@ namespace PetriEngine {
                             while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 6:
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 7:
                             while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 8:
-                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 9:
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 10:
-                            if (ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers)) changed = true;
+                            if (ReducebyRuleK(context.getQueryPlaceCount(), all_reach)) changed = true;
                             break;
                     }
 #ifndef NDEBUG
