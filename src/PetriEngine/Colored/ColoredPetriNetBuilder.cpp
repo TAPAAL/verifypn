@@ -124,17 +124,28 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        if(input) {
-            for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
-                if (arc.place == p){
-                    std::vector<Colored::ArcExpression_ptr> addDuplicates;
-                    addDuplicates.emplace_back(arc.expr);
-                    addDuplicates.emplace_back(expr);
-                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(addDuplicates));
+        if (!input) assert(expr != nullptr);
+        assert((expr == nullptr) != (inhib_weight == 0));
+
+        // Modify arc if it already exists
+        if (inhib_weight > 0) {
+            for (PetriEngine::Colored::Arc& arc : _inhibitorArcs) {
+                if (arc.place == p && arc.transition == t) {
+                    arc.inhib_weight = std::min(arc.inhib_weight, inhib_weight);
                     return;
                 }
             }
-            _places[p]._post.emplace_back(t);
+        }
+        else if (input) {
+            for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
+                if (arc.place == p){
+                    std::vector<Colored::ArcExpression_ptr> exprsToAdd;
+                    exprsToAdd.emplace_back(arc.expr);
+                    exprsToAdd.emplace_back(expr);
+                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(exprsToAdd));
+                    return;
+                }
+            }
         }
         else {
             for (PetriEngine::Colored::Arc& arc : _transitions[t].output_arcs){
@@ -146,11 +157,7 @@ namespace PetriEngine {
                     return;
                 }
             }
-            _places[p]._pre.emplace_back(t);
         }
-
-        if (!input) assert(expr != nullptr);
-        assert((expr == nullptr) != (inhib_weight == 0));
 
         Colored::Arc arc;
         arc.place = p;
@@ -160,12 +167,15 @@ namespace PetriEngine {
         arc.expr = expr;
         arc.input = input;
         arc.inhib_weight = inhib_weight;
-        if(inhib_weight > 0){
+
+        if (inhib_weight > 0) {
             _inhibitorArcs.push_back(std::move(arc));
         } else if (input) {
             _transitions[t].input_arcs.push_back(std::move(arc));
+            _places[p]._post.emplace_back(t);
         } else {
             _transitions[t].output_arcs.push_back(std::move(arc));
+            _places[p]._pre.emplace_back(t);
         }
     }
 
