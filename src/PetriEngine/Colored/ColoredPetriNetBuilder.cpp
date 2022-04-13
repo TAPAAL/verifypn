@@ -131,7 +131,7 @@ namespace PetriEngine {
         }
         else if (input) {
             for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
-                if (arc.place == p && inhib_weight == 0){
+                if (arc.place == p){
                     std::vector<Colored::ArcExpression_ptr> exprsToAdd;
                     exprsToAdd.emplace_back(arc.expr);
                     exprsToAdd.emplace_back(expr);
