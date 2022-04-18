@@ -54,11 +54,22 @@ namespace PetriEngine::Colored::Reduction {
                 bool ok = true;
                 uint32_t i = 0, j = 0;
                 while (i < presize && j < postsize) {
-                    if (place._pre[i] < place._post[j])
+                    if (place._pre[i] < place._post[j]) {
+                        if (inQuery.isTransitionUsed(place._pre[i])) {
+                            ok = false;
+                            break;
+                        }
                         i++;
+                    }
                     else if (place._post[j] < place._pre[i])
                         j++;
                     else {
+                        ok = false;
+                        break;
+                    }
+                }
+                while (i < presize) {
+                    if (inQuery.isTransitionUsed(place._pre[i])) {
                         ok = false;
                         break;
                     }
@@ -92,6 +103,12 @@ namespace PetriEngine::Colored::Reduction {
 
                     for (uint32_t n = 0; n < place._post.size(); n++) {
                         const PetriEngine::Colored::Transition& consumer = red.transitions()[place._post[n]];
+
+                        if (inQuery.isTransitionUsed(place._post[n])) {
+                            ok = false;
+                            break;
+                        }
+
                         const CArcIter& consArc = red.getInArc(pid, consumer);
                         uint32_t w = consArc->expr->weight();
                         // X9, (X5), X13
@@ -104,7 +121,7 @@ namespace PetriEngine::Colored::Reduction {
                     }
 
                     // Check if we have any qualifying consumers left
-                    if (!todoAllGood && std::lower_bound(todo.begin(), todo.end(), true) == todo.end()){
+                    if (!ok || (!todoAllGood && std::lower_bound(todo.begin(), todo.end(), true) == todo.end())){
                         ok = false;
                         break;
                     }
