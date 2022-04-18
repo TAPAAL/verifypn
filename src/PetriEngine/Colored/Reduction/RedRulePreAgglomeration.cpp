@@ -227,6 +227,7 @@ namespace PetriEngine::Colored::Reduction {
             continueReductions |= changed;
         }
 
+        red.consistent();
         return continueReductions;
     }
 }
