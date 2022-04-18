@@ -61,8 +61,13 @@ namespace PetriEngine::Colored::Reduction {
                         }
                         i++;
                     }
-                    else if (place._post[j] < place._pre[i])
+                    else if (place._post[j] < place._pre[i]) {
+                        if (inQuery.isTransitionUsed(place._post[j])) {
+                            ok = false;
+                            break;
+                        }
                         j++;
+                    }
                     else {
                         ok = false;
                         break;
@@ -70,6 +75,12 @@ namespace PetriEngine::Colored::Reduction {
                 }
                 for ( ; i < presize; i++) {
                     if (inQuery.isTransitionUsed(place._pre[i])) {
+                        ok = false;
+                        break;
+                    }
+                }
+                for ( ; j < postsize; j++) {
+                    if (inQuery.isTransitionUsed(place._post[j])) {
                         ok = false;
                         break;
                     }
@@ -227,8 +238,7 @@ namespace PetriEngine::Colored::Reduction {
                         // The places they consume from aren't allowed to be in the query, but if they were we couldn't reach this point either.
                         // For k > 1 the newly made transitions need to stay, hence originalProducers instead of place._pre
                         for (auto tran_id : originalProducers)
-                            if (!inQuery.isTransitionUsed(tran_id))
-                                red.skipTransition(tran_id);
+                            red.skipTransition(tran_id);
                     }
                     red.skipPlace(pid);
                 }
