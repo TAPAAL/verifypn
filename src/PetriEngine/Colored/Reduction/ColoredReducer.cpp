@@ -37,7 +37,7 @@ namespace PetriEngine::Colored::Reduction {
         return res;
     }
 
-    bool ColoredReducer::reduce(uint32_t timeout, const std::vector<bool> &inQuery, QueryType queryType,
+    bool ColoredReducer::reduce(uint32_t timeout, const ColoredUseVisitor &inQuery, QueryType queryType,
                                 bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
                                 std::vector<uint32_t> &reductions) {
 
