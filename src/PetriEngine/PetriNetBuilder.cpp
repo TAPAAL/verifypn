@@ -111,6 +111,21 @@ namespace PetriEngine {
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
 
+        for (Arc& arc : _transitions[t].pre){
+            if (arc.place == p){
+                if (inhibitor == arc.inhib) {
+                    if (!inhibitor){
+                        arc.weight += weight;
+                    } else {
+                        arc.weight = std::min(arc.weight, weight);
+                    }
+                } else {
+                    throw base_error("Adding an inhibitor and a non-inhibitor arc to the same Place/Transition pair:", place, transition);
+                }
+                return;
+            }
+        }
+
         Arc arc;
         arc.place = p;
         arc.weight = weight;
@@ -144,6 +159,13 @@ namespace PetriEngine {
         uint32_t t = _transitionnames[transition];
         assert(t < _transitions.size());
         assert(p < _places.size());
+
+        for (Arc& arc : _transitions[t].post){
+            if (arc.place == p){
+                arc.weight += weight;
+                return;
+            }
+        }
 
         Arc arc;
         arc.place = p;
