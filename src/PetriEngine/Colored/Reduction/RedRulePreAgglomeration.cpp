@@ -216,7 +216,8 @@ namespace PetriEngine::Colored::Reduction {
                         // The places they consume from aren't allowed to be in the query, but if they were we couldn't reach this point either.
                         // For k > 1 the newly made transitions need to stay, hence originalProducers instead of place._pre
                         for (auto tran_id : originalProducers)
-                            red.skipTransition(tran_id);
+                            if (!inQuery.isTransitionUsed(tran_id))
+                                red.skipTransition(tran_id);
                     }
                     red.skipPlace(pid);
                 }
