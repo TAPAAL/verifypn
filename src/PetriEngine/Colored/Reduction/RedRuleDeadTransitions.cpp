@@ -66,8 +66,11 @@ namespace PetriEngine::Colored::Reduction {
 
             bool skipplace = (notenabled.size() == place._pre.size() && !inQuery.isPlaceUsed(p));
 
-            for(uint cons : notenabled) {
-                red.skipTransition(cons);
+            for(uint32_t cons : notenabled) {
+                if (inQuery.isTransitionUsed(cons))
+                    skipplace = false;
+                else
+                    red.skipTransition(cons);
             }
 
             if(skipplace) {
