@@ -60,6 +60,10 @@ namespace PetriEngine::Colored::Reduction {
                         auto t2 = tinner;
                         if (swp == 1) std::swap(t1, t2);
 
+                        // We will now check if t2 can be removed
+
+                        if (inQuery.isTransitionUsed(t2)) continue;
+
                         const Transition &trans1 = transitions[t1];
                         const Transition &trans2 = transitions[t2];
 
