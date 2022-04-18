@@ -68,7 +68,7 @@ namespace PetriEngine::Colored::Reduction {
                         break;
                     }
                 }
-                while (i < presize) {
+                for ( ; i < presize; i++) {
                     if (inQuery.isTransitionUsed(place._pre[i])) {
                         ok = false;
                         break;
