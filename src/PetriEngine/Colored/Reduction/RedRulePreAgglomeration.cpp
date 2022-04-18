@@ -13,7 +13,7 @@ namespace PetriEngine::Colored::Reduction {
         return queryType != CTL && !preserveStutter;
     }
 
-    bool RedRulePreAgglomeration::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
+    bool RedRulePreAgglomeration::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                         QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         explosion_limiter *= 2;
@@ -43,7 +43,7 @@ namespace PetriEngine::Colored::Reduction {
     //            }
 
                 // X4, X7.1, X1
-                if (place.skipped || place.inhibitor || inQuery[pid] || !place.marking.empty() || place._pre.empty() ||
+                if (place.skipped || place.inhibitor || inQuery.isPlaceUsed(pid) || !place.marking.empty() || place._pre.empty() ||
                     place._post.empty())
                     continue;
 
@@ -112,7 +112,7 @@ namespace PetriEngine::Colored::Reduction {
                     for (const auto& prearc : producer.input_arcs){
                         const Place& preplace = red.places()[prearc.place];
                         // X8.2, X7.2
-                        if (preplace.inhibitor || inQuery[prearc.place]){
+                        if (preplace.inhibitor || inQuery.isPlaceUsed(prearc.place)){
                             ok = false;
                             break;
                         } else if (preserveLoops) {
@@ -155,7 +155,7 @@ namespace PetriEngine::Colored::Reduction {
                     // X14, X16
                     if (!kIsAlwaysOne[n]) {
                         for (const auto& conspost : consumer.output_arcs) {
-                            if (red.places()[conspost.place].inhibitor || (queryType != Reach && inQuery[conspost.place])){
+                            if (red.places()[conspost.place].inhibitor || (queryType != Reach && inQuery.isPlaceUsed(conspost.place))) {
                                 ok = false;
                                 break;
                             }

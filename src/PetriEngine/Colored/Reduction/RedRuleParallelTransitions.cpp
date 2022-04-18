@@ -10,7 +10,7 @@
 #include "PetriEngine/Colored/ArcVarMultisetVisitor.h"
 
 namespace PetriEngine::Colored::Reduction {
-    bool RedRuleParallelTransitions::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
+    bool RedRuleParallelTransitions::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                            QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         // Remove transitions which effect is k times another transitions effect

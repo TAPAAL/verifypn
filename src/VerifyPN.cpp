@@ -70,8 +70,8 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
         return false;
     }
 
-    ColoredUseVisitor useVisitor(cpnBuilder.colored_placenames(), cpnBuilder.colored_transitionnames(),
-                                 cpnBuilder.getPlaceCount(), cpnBuilder.getTransitionCount());
+    ColoredUseVisitor useVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount(),
+                                 cpnBuilder.colored_transitionnames(), cpnBuilder.getTransitionCount());
     bool preserveLoops = false;
     bool preserveStutter = false;
     bool allReach = true;

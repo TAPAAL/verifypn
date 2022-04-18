@@ -22,11 +22,11 @@ namespace PetriEngine::PQL {
 
         }
 
-        bool placeUsed(uint32_t p) const {
+        bool isPlaceUsed(uint32_t p) const {
             return p < _placeInUse.size() && _placeInUse[p];
         }
 
-        bool transitionUsed(uint32_t t) const {
+        bool isTransitionUsed(uint32_t t) const {
             return t < _transitionInUse.size() && _transitionInUse[t];
         }
 
