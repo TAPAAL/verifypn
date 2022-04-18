@@ -103,12 +103,6 @@ namespace PetriEngine::Colored::Reduction {
 
                     for (uint32_t n = 0; n < place._post.size(); n++) {
                         const PetriEngine::Colored::Transition& consumer = red.transitions()[place._post[n]];
-
-                        if (inQuery.isTransitionUsed(place._post[n])) {
-                            ok = false;
-                            break;
-                        }
-
                         const CArcIter& consArc = red.getInArc(pid, consumer);
                         uint32_t w = consArc->expr->weight();
                         // X9, (X5), X13
