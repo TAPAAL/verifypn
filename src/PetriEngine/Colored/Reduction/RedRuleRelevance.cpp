@@ -46,6 +46,13 @@ namespace PetriEngine::Colored::Reduction {
             }
         }
 
+        for (uint32_t tid = 0; tid < red.transitionCount(); tid++) {
+            if (!red._tflags[tid] && inQuery.isTransitionUsed(tid)) {
+                wtrans.push_back(tid);
+                red._tflags[tid] = true;
+            }
+        }
+
         while (!wtrans.empty()) {
             if (red.hasTimedOut()) return false;
             auto t = wtrans.back();
