@@ -63,7 +63,7 @@ namespace PetriEngine::Colored::Reduction {
                 const Arc& outArc = tran.output_arcs[j];
 
                 if (inArc.place < outArc.place) {
-                    processDecPlace(outArc.place);
+                    processDecPlace(inArc.place);
                     i++;
                 } else if (inArc.place > outArc.place) {
                     processIncPlace(outArc.place);
