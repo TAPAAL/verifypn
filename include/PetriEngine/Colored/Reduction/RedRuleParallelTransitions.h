@@ -20,7 +20,8 @@ namespace PetriEngine::Colored::Reduction {
             return !preserveStutter;
         }
 
-        bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
+        bool apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
+                   bool preserveLoops, bool preserveStutter) override;
 
     private:
         static void checkMult(uint32_t &fail, uint32_t &mult, const ArcExpression &small, const ArcExpression &big);

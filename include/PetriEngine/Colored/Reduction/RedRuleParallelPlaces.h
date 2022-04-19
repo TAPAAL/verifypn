@@ -8,6 +8,7 @@
 #ifndef VERIFYPN_REDRULEPARALLELPLACES_H
 #define VERIFYPN_REDRULEPARALLELPLACES_H
 
+#include <PetriEngine/PQL/ColoredUseVisitor.h>
 #include "ReductionRule.h"
 
 namespace PetriEngine::Colored::Reduction {
@@ -17,7 +18,8 @@ namespace PetriEngine::Colored::Reduction {
 
         bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override { return true; }
 
-        bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) override;
+        bool apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
+                   bool preserveLoops, bool preserveStutter) override;
     };
 }
 

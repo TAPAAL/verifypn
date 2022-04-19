@@ -11,6 +11,9 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <PetriEngine/PQL/ColoredUseVisitor.h>
+
+#include "PetriEngine/PQL/ColoredUseVisitor.h"
 
 namespace PetriEngine::Colored::Reduction {
     class ColoredReducer;
@@ -29,7 +32,8 @@ namespace PetriEngine::Colored::Reduction {
             return _applications;
         }
 
-        virtual bool apply(ColoredReducer &red, const std::vector<bool> &inQuery, QueryType queryType, bool preserveLoops, bool preserveStutter) = 0;
+        virtual bool apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
+                           bool preserveLoops, bool preserveStutter) = 0;
 
     protected:
         uint32_t _applications = 0;

@@ -14,8 +14,8 @@ namespace PetriEngine::Colored::Reduction {
         return !preserveStutter;
     }
 
-    bool RedRuleRelevance::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
-                                        QueryType queryType, bool preserveLoops, bool preserveStutter) {
+    bool RedRuleRelevance::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
+                                 QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         bool changed = false;
         std::vector<uint32_t> wtrans;
@@ -28,7 +28,7 @@ namespace PetriEngine::Colored::Reduction {
             if (red.hasTimedOut())
                 return false;
 
-            if (inQuery[pid]){
+            if (inQuery.isPlaceUsed(pid)){
                 red._pflags[pid] = true;
                 const Place &place = red.places()[pid];
                 for (auto t : place._post) {
@@ -43,6 +43,13 @@ namespace PetriEngine::Colored::Reduction {
                         red._tflags[t] = true;
                     }
                 }
+            }
+        }
+
+        for (uint32_t tid = 0; tid < red.transitionCount(); tid++) {
+            if (!red._tflags[tid] && inQuery.isTransitionUsed(tid)) {
+                wtrans.push_back(tid);
+                red._tflags[tid] = true;
             }
         }
 

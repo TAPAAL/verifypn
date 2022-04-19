@@ -10,7 +10,7 @@
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 
 namespace PetriEngine::Colored::Reduction {
-    bool RedRuleDeadTransitions::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
+    bool RedRuleDeadTransitions::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                       QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         bool continueReductions = false;
@@ -64,10 +64,13 @@ namespace PetriEngine::Colored::Reduction {
 
             if(!ok || notenabled.empty()) continue;
 
-            bool skipplace = (notenabled.size() == place._pre.size()) && (inQuery[p] == 0);
+            bool skipplace = (notenabled.size() == place._pre.size() && !inQuery.isPlaceUsed(p));
 
-            for(uint cons : notenabled) {
-                red.skipTransition(cons);
+            for(uint32_t cons : notenabled) {
+                if (inQuery.isTransitionUsed(cons))
+                    skipplace = false;
+                else
+                    red.skipTransition(cons);
             }
 
             if(skipplace) {

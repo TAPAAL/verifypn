@@ -37,16 +37,9 @@ namespace PetriEngine::Colored::Reduction {
         return res;
     }
 
-    bool ColoredReducer::reduce(uint32_t timeout, const std::vector<bool> &inQuery, QueryType queryType,
-                                bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
+    bool ColoredReducer::reduce(uint32_t timeout, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
+                                QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
                                 std::vector<uint32_t> &reductions) {
-
-        _startTime = std::chrono::high_resolution_clock::now();
-        if (timeout <= 0) return false;
-        _timeout = timeout;
-
-        bool any = false;
-        bool changed;
 
         std::vector<ReductionRule *> reductionsToUse;
 
@@ -59,6 +52,13 @@ namespace PetriEngine::Colored::Reduction {
             if (!reductionsToUse[i]->isApplicable(queryType, preserveLoops, preserveStutter))
                 reductionsToUse.erase(reductionsToUse.begin() + i);
         }
+
+        _startTime = std::chrono::high_resolution_clock::now();
+        if (timeout <= 0) return false;
+        _timeout = timeout;
+
+        bool any = false;
+        bool changed;
 
         do {
             changed = false;
@@ -96,8 +96,6 @@ namespace PetriEngine::Colored::Reduction {
             return out;
         }
     }
-
-
 
     void ColoredReducer::skipPlace(uint32_t pid) {
         Place &place = _builder._places[pid];

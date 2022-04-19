@@ -5,27 +5,29 @@
  *      Mathias Mehl Sørensen
  */
 
-#ifndef VERIFYPN_COLOREDPLACEUSEVISITOR_H
-#define VERIFYPN_COLOREDPLACEUSEVISITOR_H
+#ifndef VERIFYPN_COLOREDUSEVISITOR_H
+#define VERIFYPN_COLOREDUSEVISITOR_H
 
 #include "PetriEngine/PQL/Visitor.h"
 
 #include <vector>
 
 namespace PetriEngine::PQL {
-    class ColoredPlaceUseVisitor : public Visitor {
+    class ColoredUseVisitor : public Visitor {
     public:
-        ColoredPlaceUseVisitor(const shared_name_index_map &placeNameToIndexMap, size_t places)
-                : _placeNameToIndexMap(placeNameToIndexMap), _inUse(places) {
+        ColoredUseVisitor(const shared_name_index_map &placeNameToIndexMap, size_t places,
+                          const shared_name_index_map &transitionNameToIndexMap, size_t transitions)
+                : _placeNameToIndexMap(placeNameToIndexMap), _transitionNameToIndexMap(transitionNameToIndexMap),
+                _placeInUse(places), _transitionInUse(transitions) {
 
         }
 
-        bool operator[](size_t id) const {
-            return _inUse[id];
+        bool isPlaceUsed(uint32_t p) const {
+            return p < _placeInUse.size() && _placeInUse[p];
         }
 
-        const std::vector<bool> &in_use() const {
-            return _inUse;
+        bool isTransitionUsed(uint32_t t) const {
+            return t < _transitionInUse.size() && _transitionInUse[t];
         }
 
     protected:
@@ -43,6 +45,8 @@ namespace PetriEngine::PQL {
 
         void _accept(const UntilCondition *element) override;
 
+        void _accept(const FireableCondition *element) override;
+
         void _accept(const ShallowCondition *element) override;
 
         void _accept(const BooleanCondition *element) override;
@@ -57,8 +61,10 @@ namespace PetriEngine::PQL {
 
     private:
         const shared_name_index_map &_placeNameToIndexMap;
-        std::vector<bool> _inUse;
+        const shared_name_index_map &_transitionNameToIndexMap;
+        std::vector<bool> _placeInUse;
+        std::vector<bool> _transitionInUse;
     };
 }
 
-#endif //VERIFYPN_COLOREDPLACEUSEVISITOR_H
+#endif //VERIFYPN_COLOREDUSEVISITOR_H

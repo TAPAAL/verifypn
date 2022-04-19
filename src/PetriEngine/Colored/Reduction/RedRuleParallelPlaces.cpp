@@ -10,7 +10,7 @@
 #include "PetriEngine/Colored/ArcVarMultisetVisitor.h"
 
 namespace PetriEngine::Colored::Reduction {
-    bool RedRuleParallelPlaces::apply(ColoredReducer &red, const std::vector<bool> &inQuery,
+    bool RedRuleParallelPlaces::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                       QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         // Remove places which input and output is k times another place's input and output
@@ -55,7 +55,7 @@ namespace PetriEngine::Colored::Reduction {
 
                         // We will now check if p2 can be removed
 
-                        if (inQuery[p2]) continue;
+                        if (inQuery.isPlaceUsed(p2)) continue;
 
                         const Place &place1 = places[p1];
                         const Place &place2 = places[p2];

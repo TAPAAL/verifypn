@@ -48,7 +48,7 @@
 #include "PetriEngine/PQL/Analyze.h"
 #include "PetriEngine/PQL/ContainsVisitor.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
-#include "PetriEngine/PQL/ColoredPlaceUseVisitor.h"
+#include "PetriEngine/PQL/ColoredUseVisitor.h"
 #include "LTL/LTLValidator.h"
 #include "LTL/Simplification/SpotToPQL.h"
 
@@ -70,13 +70,14 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
         return false;
     }
 
-    ColoredPlaceUseVisitor placeUseVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount());
+    ColoredUseVisitor useVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount(),
+                                 cpnBuilder.colored_transitionnames(), cpnBuilder.getTransitionCount());
     bool preserveLoops = false;
     bool preserveStutter = false;
     bool allReach = true;
 
     for (auto &q: queries) {
-        PQL::Visitor::visit(placeUseVisitor, q);
+        PQL::Visitor::visit(useVisitor, q);
         preserveLoops |= PetriEngine::PQL::isLoopSensitive(q);
         preserveStutter |= PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
         allReach &= PetriEngine::PQL::isReachability(q);
@@ -86,7 +87,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
             (logic == TemporalLogic::CTL ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
 
     Colored::Reduction::ColoredReducer reducer(cpnBuilder);
-    bool anyReduction = reducer.reduce(timeout, placeUseVisitor.in_use(), queryType, preserveLoops, preserveStutter, reductiontype, reductions);
+    bool anyReduction = reducer.reduce(timeout, useVisitor, queryType, preserveLoops, preserveStutter, reductiontype, reductions);
 
     auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
     auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();
