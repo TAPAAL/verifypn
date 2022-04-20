@@ -18,6 +18,7 @@
 #include "RedRuleParallelPlaces.h"
 #include "RedRuleRelevance.h"
 #include "RedRuleDeadTransitions.h"
+#include "RedRuleRedundantPlaces.h"
 
 
 namespace PetriEngine::Colored {
@@ -87,6 +88,10 @@ namespace PetriEngine::Colored {
                 return _builder.transitions();
             }
 
+            const Colored::ColorTypeMap &colors() const {
+                return _builder.colors();
+            }
+
             const std::vector<Colored::Arc> &inhibitorArcs() const {
                 return _builder.inhibitors();
             }
@@ -136,12 +141,16 @@ namespace PetriEngine::Colored {
             RedRuleParallelPlaces _redRuleParallelPlaces;
             RedRuleRelevance _redRuleRelevance;
             RedRuleDeadTransitions _redRuleDeadTransitions;
+            RedRuleRedundantPlaces _redRuleRedundantPlaces;
+
             std::vector<ReductionRule *> _reductions{
                     &_redRuleRelevance,
                     &_preAgglomeration,
                     &_redRuleParallelTransitions,
                     &_redRuleParallelPlaces,
-                    &_redRuleDeadTransitions
+                    &_redRuleDeadTransitions,
+                    &_redRuleRedundantPlaces
+
             };
         };
     }
