@@ -56,14 +56,14 @@ namespace PetriEngine {
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int) override;
+                uint32_t) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool inhibitor, int weight) override;
+                bool inhibitor, uint32_t weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight) override;
+                uint32_t weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr) override;

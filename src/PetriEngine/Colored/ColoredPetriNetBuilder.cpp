@@ -86,17 +86,17 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool inhibitor, uint32_t weight) {
         addArc(place, transition, expr, true, inhibitor, weight);
     }
 
-    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }

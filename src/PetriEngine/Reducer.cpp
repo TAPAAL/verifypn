@@ -2439,7 +2439,7 @@ else if (inhibArcs == 0)
 
             const Place &place = parent->_places[pid];
 
-            // S5.1, S6.1
+            // T8/S8--1, T7/S7--1
             if (place.skip || place.inhib || placeInQuery[pid] > 0 || place.producers.empty() ||
                 place.consumers.empty())
                 continue;
@@ -2450,7 +2450,7 @@ else if (inhibArcs == 0)
             }
 
             // Check that prod and cons are disjoint
-            // S3
+            // T4/S4
             const auto presize = place.producers.size();
             const auto postsize = place.consumers.size();
             bool ok = true;
@@ -2468,15 +2468,15 @@ else if (inhibArcs == 0)
 
             if (!ok) continue;
 
-            // S2
+            // S5
             std::vector<bool> todo (postsize, true);
             bool todoAllGood = true;
-            // S10-11
+            // S10, S11
             std::vector<bool> kIsAlwaysOne (postsize, true);
 
             for (const auto& prod : place.producers){
                 Transition& producer = getTransition(prod);
-                // S4, S6.2
+                // T8/S8--2, T6/S6
                 if(producer.inhib || producer.post.size() != 1){
                     ok = false;
                     break;
@@ -2486,7 +2486,7 @@ else if (inhibArcs == 0)
                 for (uint32_t n = 0; n < place.consumers.size(); n++) {
                     uint32_t w = getInArc(pid, getTransition(place.consumers[n]))->weight;
                     if (atomic_viable){
-                        // S1, S9
+                        // S3, S9
                         if (parent->initialMarking[pid] >= w || kw % w != 0) {
                             // Atomic is only valid for reachability without deadlock.
                             todo[n] = false;
@@ -2494,6 +2494,7 @@ else if (inhibArcs == 0)
                         } else if (kw != w) {
                             kIsAlwaysOne[n] = false;
                         }
+                    // T3, T9
                     } else if (parent->initialMarking[pid] >= w || kw != w) {
                         ok = false;
                         break;
@@ -2510,28 +2511,34 @@ else if (inhibArcs == 0)
 
                 for (const auto& prearc : producer.pre){
                     const auto& preplace = parent->_places[prearc.place];
-                    // S6.3, S5.2
+                    // T8/S8--3, T7/S7--2
                     if (preplace.inhib || placeInQuery[prearc.place] > 0){
                         ok = false;
                         break;
                     } else if (!atomic_viable) {
                         // For reachability we can do free agglomeration which avoids this condition
-                        // S7
-                        for(const auto& precons : preplace.consumers){
-                            // S7; Transitions in place.producers are exempt from this check
-                            if (std::lower_bound(place.producers.begin(), place.producers.end(), precons) != place.producers.end())
-                                continue;
-
-                            Transition& preconsumer = getTransition(precons);
-                            // S7; Transitions outside place.producers are not allowed the ability to disable a transition in place.producers
-                            if (getOutArc(preconsumer, prearc.place) == preconsumer.post.end() || (getInArc(prearc.place, preconsumer)->weight > getOutArc(preconsumer, prearc.place)->weight)){
+                        // T5: Only transitions in place.producers are allowed in preplace.consumers.
+                        // Reuses i and j that are done being used but still in scope.
+                        i = 0;
+                        j = 0;
+                        while (i < preplace.consumers.size() && j < place.producers.size()) {
+                            if (preplace.consumers[i] > place.producers[j])
+                                j++;
+                            else if (preplace.consumers[i] == place.producers[j]){
+                                i++;
+                                j++;
+                            } else {
                                 ok = false;
                                 break;
                             }
                         }
+                        if (i < preplace.consumers.size()){
+                            // In case the while was exited by reaching the end of place.producers 
+                            ok = false;
+                        }
                     }
+                    if (!ok) break;
                 }
-
                 if (!ok) break;
             }
 
@@ -2547,12 +2554,13 @@ else if (inhibArcs == 0)
 
                 ok = true;
                 Transition &consumer = getTransition(originalConsumers[n]);
-                // (S8 || S11)
-                if ((!remove_loops || !kIsAlwaysOne[n]) && consumer.pre.size() != 1) {
-                    continue;
-                }
-                // S10
-                if (!kIsAlwaysOne[n] || !remove_loops) {
+                // S10, S11
+                if (atomic_viable && !kIsAlwaysOne[n]) {
+                    // S11
+                    if (consumer.pre.size() != 1){
+                        continue;
+                    }
+                    // S10
                     for (const auto& conspost : consumer.post) {
                         if (!kIsAlwaysOne[n] && parent->_places[conspost.place].inhib){
                             ok = false;
@@ -2568,15 +2576,74 @@ else if (inhibArcs == 0)
                 // Update
                 for (const auto& prod : originalProducers){
                     Transition &producer = getTransition(prod);
-                    uint32_t k = 1, w = 1;
-                    if (!kIsAlwaysOne[n]){
-                        w = getInArc(pid, consumer)->weight;
-                        k = getOutArc(producer, pid)->weight / w;
-                    }
 
-                    // One for each number of firings of consumer possible after one firing of producer
-                    for (uint32_t k_i = 1; k_i <= k; k_i++){
-                        // Create new transition with effect of firing the producer, and then the consumer k_i times
+                    if (atomic_viable){
+                        // Rule S updates
+
+                        uint32_t k = 1, w = 1;
+                        if (!kIsAlwaysOne[n]) {
+                            w = getInArc(pid, consumer)->weight;
+                            k = getOutArc(producer, pid)->weight / w;
+                        }
+
+                        // One transition for each number of firings of consumer possible after one firing of producer
+                        for (uint32_t k_i = 1; k_i <= k; k_i++){
+                            // Create new transition with effect of firing the producer, and then the consumer k_i times
+                            auto id = parent->_transitions.size();
+                            if (!_skippedTransitions.empty())
+                            {
+                                id = _skippedTransitions.back();
+                                _skippedTransitions.pop_back();
+                            }
+                            else
+                            {
+                                parent->_transitions.emplace_back();
+                                parent->_transitionnames[newTransName()] = id;
+                                parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
+                            }
+
+                            // Re-fetch the transition pointers as it might be invalidated, I think that's the issue?
+                            Transition &producerPrime = getTransition(prod);
+                            Transition &consumerPrime = getTransition(originalConsumers[n]);
+                            Transition& newtran = parent->_transitions[id];
+                            newtran.skip = false;
+                            newtran.inhib = false;
+
+                            // Arcs from consumer
+                            for (const auto& arc : consumerPrime.post) {
+                                Arc newarc = arc;
+                                newarc.weight = newarc.weight * k_i;
+                                newtran.addPostArc(newarc);
+                            }
+                            for (const auto& arc : consumerPrime.pre){
+                                if (arc.place != pid){
+                                    Arc newarc = arc;
+                                    newarc.weight = newarc.weight * k_i;
+                                    newtran.addPreArc(arc);
+                                    newtran.inhib |= arc.inhib;
+                                }
+                            }
+
+                            for (const auto& arc : producerPrime.pre){
+                                newtran.addPreArc(arc);
+                            }
+
+                            if (k_i != k){
+                                Arc newarc = producerPrime.post[0];
+                                newarc.weight = (k-k_i)*w;
+                                newtran.addPostArc(newarc);
+                            }
+
+                            for(const auto& arc : newtran.pre){
+                                parent->_places[arc.place].addConsumer(id);
+                                parent->_places[arc.place].inhib |= arc.inhib;
+                            }
+                            for(const auto& arc : newtran.post)
+                                parent->_places[arc.place].addProducer(id);
+                        }
+                    } else {
+                        // Rule T updates
+                        // Create new transition with effect of firing the producer, and then the consumer
                         auto id = parent->_transitions.size();
                         if (!_skippedTransitions.empty())
                         {
@@ -2598,31 +2665,25 @@ else if (inhibArcs == 0)
                         newtran.inhib = false;
 
                         // Arcs from consumer
-                        for (const auto& arc : consumerPrime.post) {
-                            Arc newarc = arc;
-                            newarc.weight = newarc.weight * k_i;
-                            newtran.addPostArc(newarc);
+                        for (const Arc arc : consumerPrime.post) {
+                            newtran.addPostArc(arc);
                         }
-                        for (const auto& arc : consumerPrime.pre){
+                        for (const Arc arc : consumerPrime.pre){
                             if (arc.place != pid){
-                                Arc newarc = arc;
-                                newarc.weight = newarc.weight * k_i;
                                 newtran.addPreArc(arc);
+                                newtran.inhib |= arc.inhib;
                             }
                         }
 
-                        for (const auto& arc : producerPrime.pre){
+                        for (const Arc arc : producerPrime.pre){
                             newtran.addPreArc(arc);
                         }
 
-                        if (k_i != k){
-                            Arc newarc = producerPrime.post[0];
-                            newarc.weight = (k-k_i)*w;
-                            newtran.addPostArc(newarc);
+                        for(const auto& arc : newtran.pre){
+                            parent->_places[arc.place].addConsumer(id);
+                            parent->_places[arc.place].inhib |= arc.inhib;
                         }
 
-                        for(const auto& arc : newtran.pre)
-                            parent->_places[arc.place].addConsumer(id);
                         for(const auto& arc : newtran.post)
                             parent->_places[arc.place].addProducer(id);
                     }
