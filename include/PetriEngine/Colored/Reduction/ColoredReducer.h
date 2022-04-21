@@ -19,6 +19,7 @@
 #include "RedRuleRelevance.h"
 #include "RedRuleDeadTransitions.h"
 #include "RedRuleRedundantPlaces.h"
+#include "RedRulePreemptiveFiring.h"
 
 
 namespace PetriEngine::Colored {
@@ -142,6 +143,7 @@ namespace PetriEngine::Colored {
             RedRuleRelevance _redRuleRelevance;
             RedRuleDeadTransitions _redRuleDeadTransitions;
             RedRuleRedundantPlaces _redRuleRedundantPlaces;
+            RedRulePreemptiveFiring _redRulePreemptiveFiring;
 
             std::vector<ReductionRule *> _reductions{
                     &_redRuleRelevance,
@@ -149,7 +151,8 @@ namespace PetriEngine::Colored {
                     &_redRuleParallelTransitions,
                     &_redRuleParallelPlaces,
                     &_redRuleDeadTransitions,
-                    &_redRuleRedundantPlaces
+                    &_redRuleRedundantPlaces,
+                    &_redRulePreemptiveFiring
 
             };
         };
