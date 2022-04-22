@@ -119,50 +119,32 @@ namespace PetriEngine { namespace PQL {
         _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluateVisitor::_accept(EGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value == Condition::RFALSE)
-            _return_value = {Condition::RFALSE};
-        else
-            _return_value = {Condition::RUNKNOWN};
-    }
-
-    void EvaluateVisitor::_accept(AGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value == Condition::RFALSE)
-            _return_value = {Condition::RFALSE};
-        else
-            _return_value = {Condition::RUNKNOWN};
-    }
-
     void EvaluateVisitor::_accept(ControlCondition *element) {
         _return_value = {Condition::RUNKNOWN};
     }
 
-    void EvaluateVisitor::_accept(EFCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value == Condition::RTRUE)
-            _return_value = {Condition::RTRUE};
-        else
-            _return_value = {Condition::RUNKNOWN};
-    }
-
-    void EvaluateVisitor::_accept(AFCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value == Condition::RTRUE)
-            _return_value = {Condition::RTRUE};
-        else
-            _return_value = {Condition::RUNKNOWN};
-    }
-
     void EvaluateVisitor::_accept(ACondition *element) {
-        Visitor::visit(this, (*element)[0]);
+        auto cond = (*element)[0];
+        Visitor::visit(this, cond);
+        if (cond->type() == type_id<UntilCondition>() ||
+            cond->type() == type_id<ReleaseCondition>() ||
+            cond->type() == type_id<FCondition>() ||
+            cond->type() == type_id<GCondition>())
+            return;
+
         if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
         else _return_value = {Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(ECondition *element) {
-        Visitor::visit(this, (*element)[0]);
+        auto cond = (*element)[0];
+        Visitor::visit(this, cond);
+        if (cond->type() == type_id<UntilCondition>() ||
+            cond->type() == type_id<ReleaseCondition>() ||
+            cond->type() == type_id<FCondition>() ||
+            cond->type() == type_id<GCondition>())
+            return;
+
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
         else _return_value = {Condition::RUNKNOWN};
     }
@@ -179,7 +161,6 @@ namespace PetriEngine { namespace PQL {
         else _return_value = {Condition::RUNKNOWN};
     }
 
-
     void EvaluateVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
         if (_return_value != Condition::RFALSE)
@@ -195,6 +176,18 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
+    void EvaluateVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[1]);
+        if (_return_value == Condition::RFALSE)
+            return; // Retain false
+
+        auto r2 = _return_value;
+        Visitor::visit(this, (*element)[0]);
+        if (r2 == Condition::RTRUE && _return_value == Condition::RTRUE)
+            return; // Retain true
+
+        _return_value = Condition::RUNKNOWN;
+    }
 
     void EvaluateVisitor::_accept(AndCondition *element) {
         auto res = Condition::RTRUE;
@@ -314,30 +307,6 @@ namespace PetriEngine { namespace PQL {
         element->setSatisfied(_return_value);
     }
 
-    void EvaluateAndSetVisitor::_accept(EGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value);
-    }
-
-    void EvaluateAndSetVisitor::_accept(AGCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value != Condition::RFALSE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value);
-    }
-
-    void EvaluateAndSetVisitor::_accept(EFCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value);
-    }
-
-    void EvaluateAndSetVisitor::_accept(AFCondition *element) {
-        Visitor::visit(this, (*element)[0]);
-        if (_return_value != Condition::RTRUE) _return_value = {Condition::RUNKNOWN};
-        element->setSatisfied(_return_value);
-    }
-
     void EvaluateAndSetVisitor::_accept(UntilCondition *element) {
         Visitor::visit(this, (*element)[1]);
         if (_return_value != Condition::RFALSE)
@@ -347,6 +316,19 @@ namespace PetriEngine { namespace PQL {
         if (_return_value == Condition::RFALSE)
             return;
         _return_value = {Condition::RUNKNOWN};
+    }
+
+    void EvaluateAndSetVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[1]);
+        if (_return_value == Condition::RFALSE)
+            return; // Retain false
+
+        auto r2 = _return_value;
+        Visitor::visit(this, (*element)[0]);
+        if (r2 == Condition::RTRUE && _return_value == Condition::RTRUE)
+            return; // Retain true
+
+        _return_value = Condition::RUNKNOWN;
     }
 
     void EvaluateAndSetVisitor::_accept(AndCondition *element) {

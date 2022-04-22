@@ -89,22 +89,6 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
 
-        void _accept(const PetriEngine::PQL::EFCondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::EGCondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::AGCondition *condition)  override;
-
-        void _accept(const PetriEngine::PQL::AFCondition *condition)  override;
-
-        void _accept(const PetriEngine::PQL::EXCondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::AXCondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::EUCondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::AUCondition *condition) override;
-
         void _accept(const PetriEngine::PQL::GCondition *condition)  override;
 
         void _accept(const PetriEngine::PQL::FCondition *condition) override;
@@ -112,6 +96,8 @@ namespace LTL {
         void _accept(const PetriEngine::PQL::XCondition *condition) override;
 
         void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::ReleaseCondition *condition) override;
 
     public:
 

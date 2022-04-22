@@ -193,7 +193,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
             places.emplace_back(place);
         }
         auto bnds = std::make_shared<UpperBoundsCondition>(places);
-        return std::make_shared<EFCondition>(bnds);
+        return std::make_shared<ECondition>(std::make_shared<FCondition>(bnds));
     } else if ((cond = parseBooleanFormula(child)) != nullptr) {
         return cond;
     } else {
@@ -220,13 +220,13 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     //TODO: Break invariant, impossibility, and possibility into their own nodes. What is the corresponding semantics of these nodes?
     if (elementName == "invariant") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<NotCondition>(std::make_shared<EFCondition>(std::make_shared<NotCondition>(cond)));
+            return std::make_shared<NotCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<NotCondition>(cond))));
     } else if (elementName == "impossibility") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<NotCondition>(std::make_shared<EFCondition>(cond));
+            return std::make_shared<NotCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(cond)));
     } else if (elementName == "possibility") {
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<EFCondition>(cond);
+            return std::make_shared<ECondition>(std::make_shared<FCondition>(cond));
     } else if (elementName == "control") {
         if (getChildCount(element) != 1) {
             assert(false);
@@ -281,6 +281,25 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         if ((cond = parseBooleanFormula(before->first_node())) != nullptr) {
             if ((cond2 = parseBooleanFormula(reach->first_node())) != nullptr) {
                 return std::make_shared<UntilCondition>(cond, cond2);
+            }
+        }
+    } else if (elementName == "release") {
+        if (getChildCount(element) != 2)
+        {
+            assert(false);
+            return nullptr;
+        }
+        auto reach = element->first_node();
+        auto before = reach->next_sibling();
+        if (getChildCount(reach) != 1 || getChildCount(before) != 1 ||
+            strcmp(reach->name(), "reach") != 0 || strcmp(before->name(), "before") != 0)
+        {
+            assert(false);
+            return nullptr;
+        }
+        if ((cond = parseBooleanFormula(reach->first_node())) != nullptr) {
+            if ((cond2 = parseBooleanFormula(before->first_node())) != nullptr) {
+                return std::make_shared<ReleaseCondition>(cond, cond2);
             }
         }
     } else if (elementName == "all-paths") {

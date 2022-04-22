@@ -72,15 +72,7 @@ namespace PetriEngine { namespace PQL {
     private:
         void _accept(SimpleQuantifierCondition *element) override;
 
-        void _accept(EGCondition *element) override;
-
-        void _accept(AGCondition *element) override;
-
         void _accept(ControlCondition *element) override;
-
-        void _accept(EFCondition *element) override;
-
-        void _accept(AFCondition *element) override;
 
         void _accept(ACondition *element) override;
 
@@ -91,6 +83,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(GCondition *element) override;
 
         void _accept(UntilCondition *element) override;
+
+        void _accept(ReleaseCondition *element) override;
 
         void _accept(AndCondition *element) override;
 
@@ -123,24 +117,21 @@ namespace PetriEngine { namespace PQL {
 
     class EvaluateAndSetVisitor : public BaseEvaluationVisitor {
     public:
-        explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context) {}
+        explicit EvaluateAndSetVisitor(const EvaluationContext& context) : BaseEvaluationVisitor(context),
+                                                                           _evaluate_visitor(context) {}
 
     private:
+        EvaluateVisitor _evaluate_visitor;
+
         void _accept(SimpleQuantifierCondition *element) override;
 
         void _accept(GCondition *element) override;
 
         void _accept(FCondition *element) override;
 
-        void _accept(EGCondition *element) override;
-
-        void _accept(AGCondition *element) override;
-
-        void _accept(EFCondition *element) override;
-
-        void _accept(AFCondition *element) override;
-
         void _accept(UntilCondition *element) override;
+
+        void _accept(ReleaseCondition *element) override;
 
         void _accept(AndCondition *element) override;
 
@@ -165,6 +156,7 @@ namespace PetriEngine { namespace PQL {
         void _accept(UnfoldedUpperBoundsCondition *element) override;
 
         void _accept(ShallowCondition *element) override;
+
     };
 } }
 

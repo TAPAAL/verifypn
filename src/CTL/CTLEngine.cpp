@@ -15,6 +15,7 @@
 #include "PetriEngine/PQL/PrepareForReachability.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "LTL/LTLSearch.h"
+#include "LTL/LTLValidator.h"
 
 #include <iostream>
 #include <iomanip>
@@ -253,28 +254,9 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         // there are probably many more cases w. nested quantifiers we can do
         // one instance is E[ non_temp U [E non_temp U ...]] in a chain
         // also, this should go into some *neat* visitor to do the check.
-        auto q = query->shared_from_this();
-        bool ok = false;
-        if(auto* af = dynamic_cast<AFCondition*>(query))
+        if(LTL::LTLValidator::isLTL(query))
         {
-            if(!isTemporal((*af)[0]))
-                ok = true;
-        }
-        else if(auto* eg = dynamic_cast<EGCondition*>(query))
-        {
-            if(!isTemporal((*eg)[0]))
-                ok = true;
-        }
-        else if(auto* au = dynamic_cast<AUCondition*>(query)) {
-            if(!isTemporal((*au)[0]) && !isTemporal((*au)[1]))
-                ok = true;
-        }
-        else if(auto* eu = dynamic_cast<EUCondition*>(query)) {
-            if(!isTemporal((*eu)[0]) && !isTemporal((*eu)[1]))
-                ok = true;
-        }
-        if(ok)
-        {
+            auto q = query->shared_from_this();
             LTL::LTLSearch search(*net, q, options.buchiOptimization, options.ltl_compress_aps);
             return search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
                             options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);

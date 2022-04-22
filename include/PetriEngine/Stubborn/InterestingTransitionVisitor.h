@@ -100,18 +100,6 @@ namespace PetriEngine {
 
         void _accept(const PQL::SimpleQuantifierCondition *element);
 
-        void _accept(const PQL::EFCondition *condition) override;
-
-        void _accept(const PQL::EGCondition *condition) override;
-
-        void _accept(const PQL::AGCondition *condition) override;
-
-        void _accept(const PQL::AFCondition *condition) override;
-
-        void _accept(const PQL::EXCondition *condition) override;
-
-        void _accept(const PQL::AXCondition *condition) override;
-
         void _accept(const PQL::ACondition *condition) override;
 
         void _accept(const PQL::ECondition *condition) override;
@@ -120,17 +108,15 @@ namespace PetriEngine {
 
         void _accept(const PQL::UntilCondition *element) override;
 
+        void _accept(const PQL::ReleaseCondition *element);
+
         void _accept(const PQL::GCondition *condition) override;
 
         void _accept(const PQL::FCondition *condition) override;
 
-        void _accept(const PQL::EUCondition *condition) override;
-
-        void _accept(const PQL::AUCondition *condition) override;
-
         void _accept(const PQL::BooleanCondition *element) override;
-
         bool negated = false;
+
     private:
 
         /*
@@ -195,8 +181,8 @@ namespace PetriEngine {
 
             void _accept(const PQL::SubtractExpr *element) override;
         };
-
         IncrVisitor incr;
+
         DecrVisitor decr;
     };
 

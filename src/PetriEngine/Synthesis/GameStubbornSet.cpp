@@ -372,6 +372,7 @@ namespace PetriEngine {
 
 #ifndef NDEBUG
                     PQL::EvaluationContext context(_parent->marking(), &_net);
+
                     auto r = PQL::evaluate(_queries[0], context);
                     if(iv.result() == IntervalVisitor::TRUE)
                         assert(r != PQL::Condition::RFALSE);

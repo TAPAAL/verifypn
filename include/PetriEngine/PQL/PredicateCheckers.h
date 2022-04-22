@@ -47,6 +47,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(const SimpleQuantifierCondition *condition) override;
 
         void _accept(const UntilCondition *condition) override;
+        void _accept(const ReleaseCondition *condition) override;
+
     };
 
 
@@ -60,11 +62,7 @@ namespace PetriEngine { namespace PQL {
         // If it is currently nested inside an EF or AG quantifier
         bool _is_nested = false;
 
-        void _accept(const EFCondition *element) override;
-
         void _accept(const SimpleQuantifierCondition *element) override;
-
-        void _accept(const AGCondition *element) override;
 
         void _accept(const ECondition *element) override;
 
@@ -92,6 +90,8 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const UntilCondition *element) override;
 
+        void _accept(const ReleaseCondition *element) override;
+
         void _accept(const CompareConjunction *element) override;
     };
 
@@ -108,16 +108,6 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const XCondition *condition) override;
 
-        void _accept(const EXCondition *condition) override;
-
-        void _accept(const EGCondition *condition) override;
-
-        void _accept(const AXCondition *condition) override;
-
-        void _accept(const AUCondition *condition) override;
-
-        void _accept(const AFCondition *condition) override;
-
         void _accept(const DeadlockCondition *condition) override;
     };
 
@@ -127,10 +117,6 @@ namespace PetriEngine { namespace PQL {
 
     class ContainsNextVisitor : public AnyVisitor {
         void _accept(const XCondition *condition) override;
-
-        void _accept(const EXCondition *condition) override;
-
-        void _accept(const AXCondition *condition) override;
     };
 
     class ContainsFireabilityVisitor : public AnyVisitor {

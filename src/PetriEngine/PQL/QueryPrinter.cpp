@@ -104,46 +104,6 @@ namespace PetriEngine {
             Visitor::visit(this, (*condition)[0]);
         }
 
-        void QueryPrinter::_accept(const EFCondition *condition) {
-            os << "EF ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const EGCondition *condition) {
-            os << "EG ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const AGCondition *condition) {
-            os << "AG ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const AFCondition *condition) {
-            os << "AF ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const EXCondition *condition) {
-            os << "AF ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const AXCondition *condition) {
-            os << "AX ";
-            Visitor::visit(this, (*condition)[0]);
-        }
-
-        void QueryPrinter::_accept(const EUCondition *condition) {
-            os << "E ";
-            _accept((UntilCondition*) condition);
-        }
-
-        void QueryPrinter::_accept(const AUCondition *condition) {
-            os << "A ";
-            _accept((UntilCondition*) condition);
-        }
-
         void QueryPrinter::_accept(const ACondition *condition) {
             os << "A ";
             Visitor::visit(this, (*condition)[0]);
@@ -173,6 +133,14 @@ namespace PetriEngine {
             os << "(";
             Visitor::visit(this, condition->getCond1());
             os << " U ";
+            Visitor::visit(this, condition->getCond2());
+            os << ")";
+        }
+
+        void QueryPrinter::_accept(const ReleaseCondition *condition) {
+            os << "(";
+            Visitor::visit(this, condition->getCond1());
+            os << " R ";
             Visitor::visit(this, condition->getCond2());
             os << ")";
         }

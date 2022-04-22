@@ -101,9 +101,13 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<UntilCondition>() { return type_id<GCondition>() + 1; }
 
+        class ReleaseCondition;
+        template<>
+        constexpr type_id_t type_id<ReleaseCondition>() { return type_id<UntilCondition>() + 1; }
+
         class XCondition;
         template<>
-        constexpr type_id_t type_id<XCondition>() { return type_id<UntilCondition>() + 1; }
+        constexpr type_id_t type_id<XCondition>() { return type_id<ReleaseCondition>() + 1; }
 
         class ControlCondition;
         template<>
@@ -136,39 +140,6 @@ namespace PetriEngine {
         class UnfoldedFireableCondition;
         template<>
         constexpr type_id_t type_id<UnfoldedFireableCondition>() { return type_id<FireableCondition>() + 1; }
-
-        class EFCondition;
-        template<>
-        constexpr type_id_t type_id<EFCondition>() { return type_id<UnfoldedFireableCondition>() + 1; }
-
-        class AGCondition;
-        template<>
-        constexpr type_id_t type_id<AGCondition>() { return type_id<EFCondition>() + 1; }
-
-        class AUCondition;
-        template<>
-        constexpr type_id_t type_id<AUCondition>() { return type_id<AGCondition>() + 1; }
-
-        class EUCondition;
-        template<>
-        constexpr type_id_t type_id<EUCondition>() { return type_id<AUCondition>() + 1; }
-
-        class EXCondition;
-        template<>
-        constexpr type_id_t type_id<EXCondition>() { return type_id<EUCondition>() + 1; }
-
-        class AXCondition;
-        template<>
-        constexpr type_id_t type_id<AXCondition>() { return type_id<EXCondition>() + 1; }
-
-        class AFCondition;
-        template<>
-        constexpr type_id_t type_id<AFCondition>() { return type_id<AXCondition>() + 1; }
-
-        class EGCondition;
-        template<>
-        constexpr type_id_t type_id<EGCondition>() { return type_id<AFCondition>() + 1; }
-
 
         class PlusExpr;
         template<>
@@ -466,11 +437,8 @@ namespace PetriEngine {
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
             Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::pError; }
-            uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); throw base_error("TODO implement");
-            }
+            Path getPath() const override             { return _cond->getPath(); }
+            uint32_t distance(DistanceContext& context) const override;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
@@ -480,11 +448,8 @@ namespace PetriEngine {
 
 
             Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::pError; }
-            uint32_t distance(DistanceContext& context) const override {
-                uint32_t retval = _cond->distance(context);
-                return retval;
-            }
+            Path getPath() const override { return _cond->getPath(); }
+            uint32_t distance(DistanceContext& context) const override;
 
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
       };
@@ -534,68 +499,6 @@ namespace PetriEngine {
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
         };
 
-        class EXCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
-        class EGCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::G; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
-        class EFCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::F; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
-        class AXCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::X; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
-        class AGCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::G; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
-        class AFCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            Path getPath() const override             { return Path::F; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
-
         class UntilCondition : public QuantifierCondition {
         public:
             UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
@@ -616,23 +519,28 @@ namespace PetriEngine {
         protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
-
         };
 
-        class EUCondition : public UntilCondition {
+        class ReleaseCondition : public QuantifierCondition {
         public:
-            using UntilCondition::UntilCondition;
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            uint32_t distance(DistanceContext& context) const override;
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
-        };
+            ReleaseCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
+                _cond1 = cond1;
+                _cond2 = cond2;
+            }
 
-        class AUCondition : public UntilCondition {
-        public:
-            using UntilCondition::UntilCondition;
-            Quantifier getQuantifier() const override { return Quantifier::A; }
-            uint32_t distance(DistanceContext& context) const override;
+            [[nodiscard]] virtual const Condition_ptr& operator[] (size_t i) const override
+            { if(i == 0) return _cond1; return _cond2;}
+            Path getPath() const override { return Path::R; }
+
+            [[nodiscard]] const Condition_ptr& getCond1() const { return (*this)[0]; }
+            [[nodiscard]] const Condition_ptr& getCond2() const { return (*this)[1]; }
+
+            uint32_t distance(DistanceContext& context) const override { return (*this)[0]->distance(context); }
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        protected:
+            Condition_ptr _cond1;
+            Condition_ptr _cond2;
         };
 
         /******************** CONDITIONS ********************/

@@ -67,6 +67,9 @@ namespace PetriEngine { namespace PQL {
         setConditionFound();
     }
 
+    void IsTemporalVisitor::_accept(const ReleaseCondition *condition) {
+        setConditionFound();
+    }
 
     /*** Is Reachability ***/
     bool isReachability(const Condition* condition) {
@@ -89,29 +92,14 @@ namespace PetriEngine { namespace PQL {
         setConditionFound();
     }
 
-    void IsNotReachabilityVisitor::_accept(const EFCondition *element) {
-        if (!_is_nested) {
-            _is_nested = true;
-            Visitor::visit(this, element->getCond());
-            _is_nested = false;
-        } else {
-            setConditionFound();
-        }
-    }
-
-    void IsNotReachabilityVisitor ::_accept(const AGCondition *element) {
-        if (!_is_nested) {
-            _is_nested = true;
-            Visitor::visit(this, element->getCond());
-            _is_nested = false;
-        } else {
-            setConditionFound();
-        }
+    void IsNotReachabilityVisitor::_accept(const ReleaseCondition *element) {
+        setConditionFound();
     }
 
     void IsNotReachabilityVisitor::_accept(const ECondition *element) {
         if (!_is_nested) {
-            if (auto cond = dynamic_cast<FCondition*>(element->getCond().get())) {
+            if ((*element)[0]->type() == type_id<FCondition>()) {
+                auto cond = static_cast<FCondition*>(element->getCond().get());
                 _is_nested = true;
                 Visitor::visit(this, cond->getCond());
                 _is_nested = false;
@@ -125,7 +113,8 @@ namespace PetriEngine { namespace PQL {
 
     void IsNotReachabilityVisitor::_accept(const ACondition *element) {
         if (!_is_nested) {
-            if (auto cond = dynamic_cast<GCondition*>(element->getCond().get())) {
+            if ((*element)[0]->type() == type_id<GCondition>()) {
+                auto cond = static_cast<GCondition*>(element->getCond().get());
                 _is_nested = true;
                 Visitor::visit(this, cond->getCond());
                 _is_nested = false;
@@ -225,26 +214,6 @@ namespace PetriEngine { namespace PQL {
         setConditionFound();
     }
 
-    void IsLoopSensitiveVisitor::_accept(const EXCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const EGCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AXCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AFCondition* condition) {
-        setConditionFound();
-    }
-
-    void IsLoopSensitiveVisitor::_accept(const AUCondition* condition) {
-        setConditionFound();
-    }
-
     void IsLoopSensitiveVisitor::_accept(const DeadlockCondition* condition) {
         setConditionFound();
     }
@@ -261,14 +230,6 @@ namespace PetriEngine { namespace PQL {
     }
 
     void ContainsNextVisitor::_accept(const XCondition* condition) {
-        setConditionFound();
-    }
-
-    void ContainsNextVisitor::_accept(const EXCondition* condition) {
-        setConditionFound();
-    }
-
-    void ContainsNextVisitor::_accept(const AXCondition* condition) {
         setConditionFound();
     }
 

@@ -83,22 +83,6 @@ namespace PetriEngine::PQL {
 
         void _accept(ControlCondition *element) override;
 
-        void _accept(EFCondition *condition) override;
-
-        void _accept(EGCondition *condition) override;
-
-        void _accept(AGCondition *condition) override;
-
-        void _accept(AFCondition *condition) override;
-
-        void _accept(EXCondition *condition) override;
-
-        void _accept(AXCondition *condition) override;
-
-        void _accept(EUCondition *condition) override;
-
-        void _accept(AUCondition *condition) override;
-
         void _accept(ACondition *condition) override;
 
         void _accept(ECondition *condition) override;
@@ -110,6 +94,8 @@ namespace PetriEngine::PQL {
         void _accept(XCondition *condition) override;
 
         void _accept(UntilCondition *condition) override;
+
+        void _accept(ReleaseCondition *condition) override;
 
         void _accept(UnfoldedFireableCondition *element) override;
 
@@ -126,6 +112,23 @@ namespace PetriEngine::PQL {
         void _accept(QuasiLivenessCondition* element) override;
 
         void _accept(StableMarkingCondition* element) override;
+
+        Condition_ptr pushneg_EG(GCondition *element);
+
+        Condition_ptr pushneg_AG(GCondition *element);
+
+        Condition_ptr pushneg_EX(XCondition *element);
+
+        Condition_ptr pushneg_AX(XCondition *element);
+
+        Condition_ptr pushneg_EF(FCondition *element);
+
+        Condition_ptr pushneg_AU(UntilCondition *element);
+
+        Condition_ptr pushneg_AF(FCondition *element);
+
+        Condition_ptr pushneg_EU(UntilCondition *element);
+
     };
 }
 

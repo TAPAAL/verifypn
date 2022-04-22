@@ -46,43 +46,21 @@ namespace LTL {
      * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
      */
     std::tuple<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
-        LTL::LTLValidator validator;
         bool should_negate = false;
         Condition_ptr converted;
+        if (!LTLValidator::isLTL(formula)) {
+            converted = nullptr;
+        }
         if (auto _formula = dynamic_cast<ECondition *> (formula.get())) {
             converted = std::make_shared<NotCondition>((*_formula)[0]);
             should_negate = true;
         } else if (auto _formula = dynamic_cast<ACondition *> (formula.get())) {
             converted = (*_formula)[0];
-        } else if (auto _formula = dynamic_cast<AGCondition *> (formula.get())) {
-            auto f = std::make_shared<ACondition>(std::make_shared<GCondition>((*_formula)[0]));
-            return to_ltl(f);
-        } else if (auto _formula = dynamic_cast<AFCondition *> (formula.get())) {
-            auto f = std::make_shared<ACondition>(std::make_shared<FCondition>((*_formula)[0]));
-            return to_ltl(f);
-        }
-        else if (auto _formula = dynamic_cast<EFCondition *> (formula.get())) {
-            auto f = std::make_shared<ECondition>(std::make_shared<FCondition>((*_formula)[0]));
-            return to_ltl(f);
-        }
-        else if (auto _formula = dynamic_cast<EGCondition *> (formula.get())) {
-            auto f = std::make_shared<ECondition>(std::make_shared<GCondition>((*_formula)[0]));
-            return to_ltl(f);
-        }
-        else if (auto _formula = dynamic_cast<AUCondition *> (formula.get())) {
-            auto f = std::make_shared<ACondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
-            return to_ltl(f);
-        }
-        else if (auto _formula = dynamic_cast<EUCondition *> (formula.get())) {
-            auto f = std::make_shared<ECondition>(std::make_shared<UntilCondition>((*_formula)[0], (*_formula)[1]));
-            return to_ltl(f);
         }
         else {
-            converted = formula;
-        }
-        Visitor::visit(validator, converted);
-        if (validator.bad()) {
-            converted = nullptr;
+            std::stringstream ss;
+            formula->toString(ss);
+            throw base_error("Unexpected formula for LTL engine: ", ss.str());
         }
         return std::make_pair(converted, should_negate);
     }

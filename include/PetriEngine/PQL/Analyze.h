@@ -77,7 +77,10 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(UntilCondition *element) override;
 
+        void _accept(ReleaseCondition *element);
+
         void _accept(SimpleQuantifierCondition *element) override;
+
     };
 } }
 

@@ -34,8 +34,14 @@ namespace PetriEngine {
             }
 
         protected:
+            virtual void _accept(Condition* element) {
+                assert(false);
+                throw base_error("No accept for Condition (may be called from subclass)");
+            }
 
-            virtual void _accept(NotCondition* element) = 0;
+            virtual void _accept(NotCondition* element) {
+                _accept(static_cast<Condition*>(element));
+            };
 
             virtual void _accept(AndCondition* element) {
                 _accept(static_cast<LogicalCondition*>(element));
@@ -61,9 +67,17 @@ namespace PetriEngine {
                 _accept(static_cast<CompareCondition*>(element));
             }
 
-            virtual void _accept(DeadlockCondition* element) = 0;
-            virtual void _accept(CompareConjunction* element) = 0;
-            virtual void _accept(UnfoldedUpperBoundsCondition* element) = 0;
+            virtual void _accept(DeadlockCondition* element) {
+                _accept(static_cast<Condition*>(element));
+            }
+
+            virtual void _accept(CompareConjunction* element) {
+                _accept(static_cast<Condition*>(element));
+            }
+
+            virtual void _accept(UnfoldedUpperBoundsCondition* element) {
+                _accept(static_cast<Condition*>(element));
+            }
 
             // Super classes, the default implementation of subclasses is to call these
             virtual void _accept(CommutativeExpr *element) {
@@ -71,55 +85,27 @@ namespace PetriEngine {
             }
 
             virtual void _accept(SimpleQuantifierCondition *element) {
-                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
+                _accept(static_cast<QuantifierCondition*>(element));
             }
 
             virtual void _accept(LogicalCondition *element) {
-                throw base_error("No accept for LogicalCondition (may be called from subclass)");
+                _accept(static_cast<Condition*>(element));
             }
 
             virtual void _accept(CompareCondition *element) {
-                throw base_error("No accept for CompareCondition (may be called from subclass)");
+                _accept(static_cast<Condition*>(element));
             }
 
             virtual void _accept(UntilCondition *element) {
-                throw base_error("No accept for UntilCondition");
+                _accept(static_cast<QuantifierCondition*>(element));
+            }
+
+            virtual void _accept(ReleaseCondition *element) {
+                _accept(static_cast<QuantifierCondition*>(element));
             }
 
             virtual void _accept(ControlCondition *condition) {
                 _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(EFCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(EGCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(AGCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(AFCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(EXCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(AXCondition *condition) {
-                _accept(static_cast<SimpleQuantifierCondition*>(condition));
-            };
-
-            virtual void _accept(EUCondition *condition) {
-                _accept(static_cast<UntilCondition*>(condition));
-            };
-
-            virtual void _accept(AUCondition *condition) {
-                _accept(static_cast<UntilCondition*>(condition));
             };
 
             virtual void _accept(ACondition *condition) {
@@ -180,12 +166,12 @@ namespace PetriEngine {
             };
 
             virtual void _accept(BooleanCondition *element) {
-                throw base_error("No accept for BooleanCondition");
+                _accept(static_cast<Condition*>(element));
             };
 
             // Expression
             virtual void _accept(UnfoldedIdentifierExpr *element) {
-                throw base_error("No accept for UnfoldedIndentifierExpr");
+                _accept(static_cast<Expr*>(element));
             };
 
             virtual void _accept(Expr *element) {
@@ -195,7 +181,6 @@ namespace PetriEngine {
 
             virtual void _accept(LiteralExpr *element) {
                 _accept(static_cast<Expr*>(element));
-                throw base_error("No accept for LiteralExpr");
             };
 
             virtual void _accept(PlusExpr *element) {
@@ -207,19 +192,23 @@ namespace PetriEngine {
             };
 
             virtual void _accept(MinusExpr *element) {
-                throw base_error("No accept for MinusExpr");
+                _accept(static_cast<Expr*>(element));
             };
 
             virtual void _accept(NaryExpr *element) {
-                throw base_error("No accept for NaryExpr (may be called from subclass)");
-            }
+                _accept(static_cast<Expr*>(element));
+            };
 
             virtual void _accept(SubtractExpr *element) {
                 _accept(static_cast<NaryExpr*>(element));
             }
 
             virtual void _accept(IdentifierExpr *element) {
-                throw base_error("No accept for IdentifierExpr");
+                if (element->compiled()) {
+                    Visitor::visit(*this, element->compiled());
+                } else {
+                    _accept(static_cast<Expr*>(element));
+                }
             };
         };
     }

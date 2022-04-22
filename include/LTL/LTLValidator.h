@@ -27,15 +27,20 @@ namespace LTL {
 
         operator bool() const { return !bad(); }
 
-        bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
-            std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
-                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
-                Visitor::visit(this, (*quantifierCondition)[0]);
+        static inline bool isLTL(const PetriEngine::PQL::Condition_ptr& condition)
+        {
+            return isLTL(condition.get());
+        }
+        static inline bool isLTL(const PetriEngine::PQL::Condition* condition) {
+            LTLValidator v;
+            const PetriEngine::PQL::SimpleQuantifierCondition* quantifierCondition;
+            if ((quantifierCondition = dynamic_cast<const PetriEngine::PQL::ACondition*>(condition)) != nullptr ||
+                (quantifierCondition = dynamic_cast<const PetriEngine::PQL::ECondition*>(condition)) != nullptr ){
+                Visitor::visit(&v, (*quantifierCondition)[0]);
             } else {
-                Visitor::visit(this, condition);
+                Visitor::visit(&v, condition);
             }
-            return !bad();
+            return !v.bad();
         }
 
     protected:
@@ -45,46 +50,6 @@ namespace LTL {
                 Visitor::visit(this, cond);
             }
         };
-
-        void _accept(const PetriEngine::PQL::EFCondition *condition) override {
-            setBad();
-            std::cerr << "found EFCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EGCondition *condition) override {
-            setBad();
-            std::cerr << "found EGCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AGCondition *condition) override {
-            setBad();
-            std::cerr << "found AGCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AFCondition *condition) override {
-            setBad();
-            std::cerr << "found AFCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EXCondition *condition) override {
-            setBad();
-            std::cerr << "found EXCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AXCondition *condition) override {
-            setBad();
-            std::cerr << "found AXCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::EUCondition *condition) override {
-            setBad();
-            std::cerr << "found EUCondition" << std::endl;
-        }
-
-        void _accept(const PetriEngine::PQL::AUCondition *condition) override {
-            setBad();
-            std::cerr << "found AUCondition" << std::endl;
-        }
 
         void _accept(const PetriEngine::PQL::ACondition *condition) override {
             setBad();
@@ -151,6 +116,10 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::UntilCondition *condition) override {
+            Visitor::visit(this, (*condition)[0]);
+        }
+
+        void _accept(const PetriEngine::PQL::ReleaseCondition *condition) override {
             Visitor::visit(this, (*condition)[0]);
         }
 

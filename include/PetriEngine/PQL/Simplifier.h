@@ -41,16 +41,18 @@ namespace PetriEngine::PQL {
         Retval simplify_or(const LogicalCondition* element);
         Retval simplify_and(const LogicalCondition *element);
 
-        Retval simplify_AG(Retval &r);
-        Retval simplify_AF(Retval &r);
-        Retval simplify_AX(Retval &r);
-
-        Retval simplify_EG(Retval &r);
-        Retval simplify_EF(Retval &r);
-        Retval simplify_EX(Retval &r);
+        Retval simplifyAX(Retval &r);
+        Retval simplifyEX(Retval &r);
 
         template <typename Quantifier>
         Retval simplify_simple_quantifier(Retval &r);
+
+        void simplify_until(const Condition_ptr& cond1, const Condition_ptr& cond2);
+        void simplify_equal(const Expr_ptr& e1, const Expr_ptr& e2);
+        void simplify_less(const Expr_ptr& e1, const Expr_ptr& e2);
+
+        void simplify_finally(const Condition_ptr& cond);
+        void simplify_exists(const Condition_ptr& cond);
 
         void _accept(const NotCondition *element) override;
 
@@ -74,22 +76,6 @@ namespace PetriEngine::PQL {
 
         void _accept(const ControlCondition *condition) override;
 
-        void _accept(const EFCondition *condition) override;
-
-        void _accept(const EGCondition *condition) override;
-
-        void _accept(const AGCondition *condition) override;
-
-        void _accept(const AFCondition *condition) override;
-
-        void _accept(const EXCondition *condition) override;
-
-        void _accept(const AXCondition *condition) override;
-
-        void _accept(const EUCondition *condition) override;
-
-        void _accept(const AUCondition *condition) override;
-
         void _accept(const ACondition *condition) override;
 
         void _accept(const ECondition *condition) override;
@@ -102,7 +88,10 @@ namespace PetriEngine::PQL {
 
         void _accept(const UntilCondition *condition) override;
 
+        void _accept(const ReleaseCondition *condition) override;
+
         void _accept(const BooleanCondition *element) override;
+
     };
 
     Member constraint(const Expr *element, const SimplificationContext &context);

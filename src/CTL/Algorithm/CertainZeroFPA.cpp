@@ -1,4 +1,6 @@
 #include "CTL/Algorithm/CertainZeroFPA.h"
+#include "CTL/PetriNets/PetriConfig.h"
+#include "PetriEngine/PQL/CTLVisitor.h"
 
 #include <cassert>
 #include <iostream>
@@ -249,6 +251,12 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
             assert(succ->refcnt <= 1);
             if(succ->refcnt > 0)
             {
+//                for (auto& a : succ->targets) {
+//                    auto b = (PetriNets::PetriConfig*) a;
+//                    PetriEngine::PQL::IsCTLVisitor isCtlVisitor;
+//                    PetriEngine::PQL::Visitor::visit(isCtlVisitor, b->query);
+//                    std::cout << isCtlVisitor.isCTL << " "; b->query->toString(std::cout); std::cout << std::endl;
+//                }
                 strategy->pushEdge(succ);
                 --succ->refcnt;
                 if(succ->refcnt == 0) graph->release(succ);

@@ -164,35 +164,6 @@ namespace PetriEngine
             Visitor::visit(this, (*element)[0]);
         }
 
-        virtual void _accept(const EFCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-        virtual void _accept(const EGCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-        virtual void _accept(const AGCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-        virtual void _accept(const AFCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-        virtual void _accept(const EXCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-        virtual void _accept(const AXCondition* el)
-        {   handleSimpleQuantifierCondition(el); }
-
-        virtual void _accept(const EUCondition* el)
-        {
-            if(found_type(el)) return;
-            Visitor::visit(this, (*el)[0]);
-            if(_value) return;
-            Visitor::visit(this, (*el)[1]);
-        }
-
-        virtual void _accept(const AUCondition* el)
-        {
-            if(found_type(el)) return;
-            Visitor::visit(this, (*el)[0]);
-            if(_value) return;
-            Visitor::visit(this, (*el)[1]);
-        }
-
         // shallow elements, neither of these should exist in a compiled expression
         virtual void _accept(const UnfoldedFireableCondition* element)
         {   found_type(element); };

@@ -3,6 +3,7 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/PQL.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -90,9 +91,11 @@ namespace PetriEngine {
 
             //Print result
             auto bound = query;
-            if(auto ef = dynamic_cast<PQL::EFCondition*>(query))
+            if(query->type() == PQL::type_id<PQL::ECondition>() && static_cast<PQL::ECondition*>(query)->getCond()->type() == PQL::type_id<PQL::FCondition>())
             {
-                bound = (*ef)[0].get();
+                auto econd = static_cast<PQL::ECondition*>(query);
+                auto fcond = static_cast<PQL::FCondition*>(econd->getCond().get());
+                bound = (*fcond)[0].get();
             }
             bound = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(bound);
 

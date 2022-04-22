@@ -228,6 +228,11 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, (*element)[1]);
     }
 
+    void AnalyzeVisitor::_accept(ReleaseCondition *element) {
+        Visitor::visit(this, (*element)[0]);
+        Visitor::visit(this, (*element)[1]);
+    }
+
     void AnalyzeVisitor::_accept(SimpleQuantifierCondition *element) {
         Visitor::visit(this, (*element)[0]);
     }
@@ -263,7 +268,7 @@ namespace PetriEngine { namespace PQL {
             for(auto& p : _context.allPlaceNames())
                 k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<UnfoldedIdentifierExpr>(p.first), element->_bound));
         }
-        element->_compiled = std::make_shared<AGCondition>(std::make_shared<AndCondition>(std::move(k_safe)));
+        element->_compiled = std::make_shared<ACondition>(std::make_shared<GCondition>(std::make_shared<AndCondition>(std::move(k_safe))));
         Visitor::visit(this, element->_compiled);
     }
 
@@ -298,14 +303,14 @@ namespace PetriEngine { namespace PQL {
                 std::vector<Condition_ptr> disj;
                 for(auto& tn : n.second)
                     disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
-                quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj))));
+                quasi.emplace_back(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<OrCondition>(std::move(disj)))));
             }
         }
         else
         {
             for(auto& n : _context.allTransitionNames())
             {
-                quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first)));
+                quasi.emplace_back(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))));
             }
         }
         element->_compiled = std::make_shared<AndCondition>(std::move(quasi));
@@ -328,14 +333,14 @@ namespace PetriEngine { namespace PQL {
                 std::vector<Condition_ptr> disj;
                 for(auto& tn : n.second)
                     disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
-                liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj)))));
+                liveness.emplace_back(std::make_shared<ACondition>(std::make_shared<GCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<OrCondition>(std::move(disj)))))));
             }
         }
         else
         {
             for(auto& n : _context.allTransitionNames())
             {
-                liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))));
+                liveness.emplace_back(std::make_shared<ACondition>(std::make_shared<GCondition>(std::make_shared<ECondition>(std::make_shared<FCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))))));
             }
         }
         element->_compiled = std::make_shared<AndCondition>(std::move(liveness));
@@ -365,9 +370,9 @@ namespace PetriEngine { namespace PQL {
                     sum.emplace_back(std::move(id));
 
                 }
-                stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
+                stable_check.emplace_back(std::make_shared<ACondition>(std::make_shared<GCondition>(std::make_shared<EqualCondition>(
                         std::make_shared<PlusExpr>(std::move(sum)),
-                        std::make_shared<LiteralExpr>(init_marking))));
+                        std::make_shared<LiteralExpr>(init_marking)))));
             }
         }
         else
@@ -375,9 +380,9 @@ namespace PetriEngine { namespace PQL {
             size_t i = 0;
             for(auto& p : _context.net()->placeNames())
             {
-                stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
+                stable_check.emplace_back(std::make_shared<ACondition>(std::make_shared<GCondition>(std::make_shared<EqualCondition>(
                         std::make_shared<UnfoldedIdentifierExpr>(p, i),
-                        std::make_shared<LiteralExpr>(_context.net()->initial(i)))));
+                        std::make_shared<LiteralExpr>(_context.net()->initial(i))))));
                 ++i;
             }
         }

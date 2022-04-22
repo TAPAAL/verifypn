@@ -73,6 +73,8 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const UntilCondition *condition) override;
 
+        void _accept(const ReleaseCondition *condition) override;
+
         void _accept(const LogicalCondition *condition) override;
     };
 } }

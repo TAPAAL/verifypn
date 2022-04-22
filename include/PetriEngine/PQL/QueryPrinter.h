@@ -53,22 +53,6 @@ namespace PetriEngine {
 
             void _accept(const ControlCondition *condition) override;
 
-            void _accept(const EFCondition *condition) override;
-
-            void _accept(const EGCondition *condition) override;
-
-            void _accept(const AGCondition *condition) override;
-
-            void _accept(const AFCondition *condition) override;
-
-            void _accept(const EXCondition *condition) override;
-
-            void _accept(const AXCondition *condition) override;
-
-            void _accept(const EUCondition *condition) override;
-
-            void _accept(const AUCondition *condition) override;
-
             void _accept(const ACondition *condition) override;
 
             void _accept(const ECondition *condition) override;
@@ -80,6 +64,8 @@ namespace PetriEngine {
             void _accept(const XCondition *condition) override;
 
             void _accept(const UntilCondition *condition) override;
+
+            void _accept(const ReleaseCondition *condition) override;
 
             void _accept(const UnfoldedFireableCondition *element) override;
 
@@ -109,10 +95,10 @@ namespace PetriEngine {
 
             void _accept(const SubtractExpr *element) override;
 
+
             void _accept(const IdentifierExpr *element) override;
-
-
         protected:
+
             std::ostream &os;
 
             void _accept(const LogicalCondition *element, const std::string &op);

@@ -177,84 +177,6 @@ namespace PetriEngine {
             Visitor::visit(this, (*condition)[0]);
         }
 
-        void XMLPrinter::_accept(const EFCondition *condition) {
-            Tag ep(this, "exists-path");
-            {
-                Tag f(this, "finally");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const EGCondition *condition) {
-            Tag ep(this, "exists-path");
-            {
-                Tag g(this, "globally");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const AGCondition *condition) {
-            Tag a(this, "all-paths");
-            {
-                Tag g(this, "globally");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const AFCondition *condition) {
-            Tag a(this, "all-paths");
-            {
-                Tag f(this, "finally");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const EXCondition *condition) {
-            Tag e(this, "exists-path");
-            {
-                Tag n(this, "next");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const AXCondition *condition) {
-            Tag a(this, "all-paths");
-            {
-                Tag e(this, "next");
-                Visitor::visit(this, condition->getCond());
-            }
-        }
-
-        void XMLPrinter::_accept(const EUCondition *condition) {
-            Tag e(this, "exists-path");
-            {
-                Tag u(this, "until");
-                {
-                    Tag b(this, "before");
-                    Visitor::visit(this, (*condition)[0]);
-                }
-                {
-                    Tag r(this, "reach");
-                    Visitor::visit(this, (*condition)[1]);
-                }
-            }
-        }
-
-        void XMLPrinter::_accept(const AUCondition *condition) {
-            Tag e(this, "all-paths");
-            {
-                Tag u(this, "until");
-                {
-                    Tag b(this, "before");
-                    Visitor::visit(this, (*condition)[0]);
-                }
-                {
-                    Tag r(this, "reach");
-                    Visitor::visit(this, (*condition)[1]);
-                }
-            }
-        }
-
         void XMLPrinter::_accept(const ACondition *condition) {
             Tag a(this, "all-paths");
             Visitor::visit(this, condition->getCond());
@@ -290,6 +212,20 @@ namespace PetriEngine {
                 {
                     Tag r(this, "reach");
                     Visitor::visit(this, (*condition)[1]);
+                }
+            }
+        }
+
+        void XMLPrinter::_accept(const ReleaseCondition *condition) {
+            Tag R(this, "release");
+            {
+                {
+                    Tag r(this, "reach");
+                    Visitor::visit(this, (*condition)[1]);
+                }
+                {
+                    Tag b(this, "before");
+                    Visitor::visit(this, (*condition)[0]);
                 }
             }
         }

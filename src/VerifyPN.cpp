@@ -208,7 +208,7 @@ readQueries(shared_string_set& string_set, options_t& options, std::vector<std::
         return conditions;
     } else { // state-space exploration
         qstrings.push_back("statespace-search");
-        conditions.push_back(std::make_shared<EFCondition>(BooleanCondition::FALSE_CONSTANT));
+        conditions.push_back(std::make_shared<ECondition>(std::make_shared<FCondition>(BooleanCondition::FALSE_CONSTANT)));
         return conditions;
     }
 }
@@ -284,11 +284,9 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
         IsCTLVisitor isCtlVisitor;
         Visitor::visit(isCtlVisitor, ctlStarQuery);
         if (isCtlVisitor.isCTL) {
-            AsCTL asCtl;
-            Visitor::visit(asCtl, ctlStarQuery);
-            ctlQueries.push_back(asCtl._ctl_query);
+            ctlQueries.push_back(ctlStarQuery);
         } else {
-            throw base_error("A query could not be translated from CTL* to CTL.");
+            throw base_error("A CTL* query could not be interpreted as CTL.");
         }
 
     }
@@ -484,10 +482,20 @@ void simplify_queries(  const MarkVal* marking,
 #endif
                         continue;
                     }
+
+                    PetriEngine::PQL::IsCTLVisitor isCtlVisitor;
+                    Visitor::visit(isCtlVisitor, queries[i]);
+                    std::cout << isCtlVisitor.isCTL << std::endl;
+                    queries[i]->toString(std::cout); std::cout << std::endl;
                     queries[i] = pushNegation(initialMarkingRW([&]() {
                         return queries[i]; }, stats, context, false, false, true),
                         stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
+
+                    PetriEngine::PQL::IsCTLVisitor isCtlVisitor2;
+                    Visitor::visit(isCtlVisitor2, queries[i]);
+                    std::cout << isCtlVisitor2.isCTL << std::endl;
+                    queries[i]->toString(std::cout); std::cout << std::endl;
 
                     if (options.queryReductionTimeout > 0 && options.printstatistics) {
                         out << "RWSTATS PRE:";
@@ -501,8 +509,13 @@ void simplify_queries(  const MarkVal* marking,
                             options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
-                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
+                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);;
+                            queries[i]->toString(std::cout); std::cout << std::endl;
                             queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
+                            PetriEngine::PQL::IsCTLVisitor isCtlVisitor3;
+                            Visitor::visit(isCtlVisitor3, queries[i]);
+                            std::cout << (isCtlVisitor3.isCTL? "": "NO LONGER CTL!") << std::endl;
+                            queries[i]->toString(std::cout); std::cout << std::endl;
                             wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
                             if (options.printstatistics) {
                                 out << "RWSTATS POST:";

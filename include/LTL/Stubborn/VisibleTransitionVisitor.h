@@ -73,6 +73,7 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
 
+        void _accept(const PetriEngine::PQL::ReleaseCondition *condition) override;
     private:
         std::unique_ptr<bool[]> &_places;
     };

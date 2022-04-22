@@ -129,4 +129,9 @@ namespace LTL {
         Visitor::visit(this, condition->getCond2());
     }
 
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::ReleaseCondition *condition) {
+        Visitor::visit(this, condition->getCond1());
+        Visitor::visit(this, condition->getCond2());
+    }
+
 }

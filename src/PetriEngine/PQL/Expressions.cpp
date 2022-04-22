@@ -330,49 +330,37 @@ namespace PetriEngine {
             return _max - tmp;
         }
 
-        uint32_t EFCondition::distance(DistanceContext& context) const {
-            return _cond->distance(context);
+        uint32_t ACondition::distance(DistanceContext &context) const {
+            auto cond = (*this)[0].get();
+            uint32_t res;
+            if (cond->type() == type_id<UntilCondition>()) {
+                auto ucond = static_cast<UntilCondition*>(cond);
+                context.negate();
+                res = (*ucond)[0]->distance(context) + (*ucond)[1]->distance(context);
+                context.negate();
+            } else if (cond->type() == type_id<ReleaseCondition>()) {
+                auto ucond = static_cast<ReleaseCondition*>(cond);
+                res = (*ucond)[0]->distance(context) + (*ucond)[1]->distance(context);
+            } else if (cond->type() == type_id<FCondition>()) {
+                context.negate();
+                res = static_cast<FCondition*>(cond)->distance(context);
+                context.negate();
+            } else if (cond->type() == type_id<XCondition>()) {
+                context.negate();
+                res = static_cast<XCondition*>(cond)->distance(context);
+                context.negate();
+            } else if (cond->type() == type_id<GCondition>()) {
+                context.negate();
+                res = static_cast<GCondition*>(cond)->distance(context);
+                context.negate();
+            } else {
+                res = cond->distance(context);
+            }
+            return res;
         }
 
-        uint32_t EGCondition::distance(DistanceContext& context) const {
-            return _cond->distance(context);
-        }
-
-        uint32_t EXCondition::distance(DistanceContext& context) const {
-            return _cond->distance(context);
-        }
-
-        uint32_t EUCondition::distance(DistanceContext& context) const {
-            return _cond2->distance(context);
-        }
-
-        uint32_t AFCondition::distance(DistanceContext& context) const {
-            context.negate();
-            uint32_t retval = _cond->distance(context);
-            context.negate();
-            return retval;
-        }
-
-        uint32_t AXCondition::distance(DistanceContext& context) const {
-            context.negate();
-            uint32_t retval = _cond->distance(context);
-            context.negate();
-            return retval;
-        }
-
-        uint32_t AGCondition::distance(DistanceContext& context) const {
-            context.negate();
-            uint32_t retval = _cond->distance(context);
-            context.negate();
-            return retval;
-        }
-
-        uint32_t AUCondition::distance(DistanceContext& context) const {
-            context.negate();
-            auto r1 = _cond1->distance(context);
-            auto r2 = _cond2->distance(context);
-            context.negate();
-            return r1 + r2;
+        uint32_t ECondition::distance(DistanceContext& context) const {
+            return (*this)[0]->distance(context);
         }
 
         uint32_t CompareConjunction::distance(DistanceContext& context) const {
@@ -436,13 +424,13 @@ namespace PetriEngine {
                 return conjDistance(context, _conds);
         }
 
+
         uint32_t OrCondition::distance(DistanceContext& context) const {
             if(context.negated())
                 return conjDistance(context, _conds);
             else
                 return disjDistance(context, _conds);
         }
-
 
         struct S {
             int d;
@@ -500,12 +488,12 @@ namespace PetriEngine {
             postMerge(_conds);
         }
 
+
         OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
             tryMerge<OrCondition>(_conds, left);
             tryMerge<OrCondition>(_conds, right);
             postMerge(_conds);
         }
-
 
         CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
         {

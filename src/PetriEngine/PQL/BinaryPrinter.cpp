@@ -78,6 +78,15 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, (*condition)[1]);
     }
 
+    void BinaryPrinter::_accept(const ReleaseCondition *condition){
+        auto path = condition->getPath();
+        auto quant = condition->getQuantifier();
+        os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+        os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+        Visitor::visit(this, (*condition)[0]);
+        Visitor::visit(this, (*condition)[1]);
+    }
+
     void BinaryPrinter::_accept(const LogicalCondition *condition){
         auto path = condition->getPath();
         auto quant = condition->getQuantifier();

@@ -163,6 +163,9 @@ namespace PetriEngine {
                             case type_id<UntilCondition>():
                                 visitor->accept(static_cast<UntilCondition*> (c));
                                 break;
+                            case type_id<ReleaseCondition>():
+                                visitor->accept(static_cast<ReleaseCondition*>(c));
+                                break;
                             case type_id<XCondition>():
                                 visitor->accept(static_cast<XCondition*> (c));
                                 break;
@@ -190,30 +193,6 @@ namespace PetriEngine {
                             case type_id<UnfoldedFireableCondition>():
                                 visitor->accept(static_cast<UnfoldedFireableCondition*> (c));
                                 break;
-                            case type_id<EFCondition>():
-                                visitor->accept(static_cast<EFCondition*> (c));
-                                break;
-                            case type_id<AGCondition>():
-                                visitor->accept(static_cast<AGCondition*> (c));
-                                break;
-                            case type_id<AUCondition>():
-                                visitor->accept(static_cast<AUCondition*> (c));
-                                break;
-                            case type_id<EUCondition>():
-                                visitor->accept(static_cast<EUCondition*> (c));
-                                break;
-                            case type_id<EXCondition>():
-                                visitor->accept(static_cast<EXCondition*> (c));
-                                break;
-                            case type_id<AXCondition>():
-                                visitor->accept(static_cast<AXCondition*> (c));
-                                break;
-                            case type_id<AFCondition>():
-                                visitor->accept(static_cast<AFCondition*> (c));
-                                break;
-                            case type_id<EGCondition>():
-                                visitor->accept(static_cast<EGCondition*> (c));
-                                break;
                             default:
                                 __builtin_unreachable(); // <-- helps the compiler optimize
                         }
@@ -225,9 +204,13 @@ namespace PetriEngine {
 
         protected:
 
-            virtual void _accept(const NotCondition* element) {
+            virtual void _accept(const Condition* element) {
                 assert(false);
-                throw base_error("No accept for NotCondition");
+                throw base_error("No accept for Condition (may be called from subclass)");
+            }
+
+            virtual void _accept(const NotCondition* element) {
+                _accept(static_cast<const Condition*>(element));
             };
 
             virtual void _accept(const AndCondition* element) {
@@ -255,18 +238,15 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const DeadlockCondition* element) {
-                assert(false);
-                throw base_error("No accept for DeadlockCondition");
+                _accept(static_cast<const Condition*>(element));
             };
 
             virtual void _accept(const CompareConjunction* element) {
-                assert(false);
-                throw base_error("No accept for CompareConjunction");
+                _accept(static_cast<const Condition*>(element));
             };
 
             virtual void _accept(const UnfoldedUpperBoundsCondition* element) {
-                assert(false);
-                throw base_error("No accept for UndfoldedUpperBoundsCondition (may be called from subclass)");
+                _accept(static_cast<const Condition*>(element));
             };
 
             // Super classes, the default implementation of subclasses is to call these
@@ -276,63 +256,29 @@ namespace PetriEngine {
             }
 
             virtual void _accept(const SimpleQuantifierCondition *element) {
-                assert(false);
-                throw base_error("No accept for SimpleQuantifierCondition (may be called from subclass)");
+                _accept(static_cast<const QuantifierCondition*>(element));
             }
 
             virtual void _accept(const LogicalCondition *element) {
-                assert(false);
-                throw base_error("No accept for LogicalCondition (may be called from subclass)");
+                _accept(static_cast<const Condition*>(element));
             }
 
             virtual void _accept(const CompareCondition *element) {
-                assert(false);
-                throw base_error("No accept for CompareCondition (may be called from subclass)");
+                _accept(static_cast<const Condition*>(element));
             }
+
+            // Quantifiers
 
             virtual void _accept(const UntilCondition *element) {
-                assert(false);
-                throw base_error("No accept for UntilCondition (may be called from subclass)");
+                _accept(static_cast<const QuantifierCondition*>(element));
             }
 
-
-            // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
-            // default behaviour is error
+            virtual void _accept(const ReleaseCondition *element) {
+                _accept(static_cast<const QuantifierCondition*>(element));
+            }
 
             virtual void _accept(const ControlCondition *condition) {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const EFCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const EGCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const AGCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const AFCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const EXCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const AXCondition *condition) {
-                _accept(static_cast<const SimpleQuantifierCondition*> (condition));
-            };
-
-            virtual void _accept(const EUCondition *condition) {
-                _accept(static_cast<const UntilCondition*> (condition));
-            };
-
-            virtual void _accept(const AUCondition *condition) {
-                _accept(static_cast<const UntilCondition*> (condition));
             };
 
             virtual void _accept(const ACondition *condition) {
@@ -359,8 +305,7 @@ namespace PetriEngine {
                 if (element->getCompiled()) {
                     visit(this, element->getCompiled());
                 } else {
-                    assert(false);
-                    throw base_error("No accept for ShallowCondition");
+                    _accept(static_cast<const Condition*>(element));
                 }
             }
 
@@ -395,20 +340,21 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const BooleanCondition *element) {
-                assert(false);
-                throw base_error("No accept for BooleanCondition");
+                _accept(static_cast<const Condition*>(element));
             };
 
             // Expression
+            virtual void _accept(const Expr *element) {
+                assert(false);
+                throw base_error("No accept for Expr (may be called from subclass");
+            }
 
             virtual void _accept(const UnfoldedIdentifierExpr *element) {
-                assert(false);
-                throw base_error("No accept for UnfoldedIdentifierExpr");
+                _accept(static_cast<const Expr*>(element));
             };
 
             virtual void _accept(const LiteralExpr *element) {
-                assert(false);
-                throw base_error("No accept for LiteralExpr");
+                _accept(static_cast<const Expr*>(element));
             };
 
             virtual void _accept(const PlusExpr *element) {
@@ -420,13 +366,11 @@ namespace PetriEngine {
             };
 
             virtual void _accept(const MinusExpr *element) {
-                assert(false);
-                throw base_error("No accept for MinusExpr");
+                _accept(static_cast<const Expr*>(element));
             };
 
             virtual void _accept(const NaryExpr *element) {
-                assert(false);
-                throw base_error("No accept for LivenessCondition");
+                _accept(static_cast<const Expr*>(element));
             }
 
             virtual void _accept(const SubtractExpr *element) {
@@ -440,8 +384,7 @@ namespace PetriEngine {
                     Visitor::visit(this, element->compiled());
                 else
                 {
-                    assert(false);
-                    throw base_error("No accept for IdentifierExpr");
+                    _accept(static_cast<const Expr*>(element));
                 }
             };
         };
@@ -537,6 +480,11 @@ namespace PetriEngine {
             }
 
             void _accept(const UntilCondition *condition) override {
+                visit(this, (*condition)[0]);
+                visit(this, (*condition)[1]);
+            }
+
+            void _accept(const ReleaseCondition *condition) override {
                 visit(this, (*condition)[0]);
                 visit(this, (*condition)[1]);
             }

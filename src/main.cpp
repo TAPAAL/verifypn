@@ -93,6 +93,7 @@ int main(int argc, const char** argv) {
         auto queries = options.logic == TemporalLogic::CTL
                        ? getCTLQueries(ctlStarQueries)
                        : getLTLQueries(ctlStarQueries);
+        ctlStarQueries[0]->toString(std::cout); std::cout << std::endl;
 
         if (options.printstatistics && options.queryReductionTimeout > 0) {
             negstat_t stats;
