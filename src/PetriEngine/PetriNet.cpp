@@ -191,10 +191,10 @@ namespace PetriEngine {
         {
             auto& p = _placenames[i];
             auto& placelocation = _placelocations[i];
-            out << "<place id=\"" << p << "\">\n"
+            out << "<place id=\"" << *p << "\">\n"
                 << "<graphics><position x=\"" << std::get<0>(placelocation)
                 << "\" y=\"" << std::get<1>(placelocation) << "\"/></graphics>\n"
-                << "<name><text>" << p << "</text></name>\n";
+                << "<name><text>" << *p << "</text></name>\n";
             if(_initialMarking[i] > 0)
             {
                 out << "<initialMarking><text>" << _initialMarking[i] << "</text></initialMarking>\n";
@@ -204,9 +204,9 @@ namespace PetriEngine {
         for(size_t i = 0; i < _ntransitions; ++i)
         {
             auto& transitionlocation = _transitionlocations[i];
-            out << "<transition id=\"" << _transitionnames[i] << "\">\n"
+            out << "<transition id=\"" << *_transitionnames[i] << "\">\n"
                 << "<player><value>" << (_controllable[i] ? '0' : '1') << "</value></player>\n"
-                << "<name><text>" << _transitionnames[i] << "</text></name>\n";
+                << "<name><text>" << *_transitionnames[i] << "</text></name>\n";
             out << "<graphics><position x=\"" << std::get<0>(transitionlocation)
                 << "\" y=\"" << std::get<1>(transitionlocation) << "\"/></graphics>\n";
             out << "</transition>\n";
@@ -219,8 +219,8 @@ namespace PetriEngine {
             for(; pre.first != pre.second; ++pre.first)
             {
                 out << "<arc id=\"" << (id++) << "\" source=\""
-                    << _placenames[pre.first->place] << "\" target=\""
-                    << _transitionnames[t]
+                    << *_placenames[pre.first->place] << "\" target=\""
+                    << *_transitionnames[t]
                     << "\" type=\""
                     << (pre.first->inhibitor ? "inhibitor" : "normal")
                     << "\">\n";
@@ -237,8 +237,8 @@ namespace PetriEngine {
             for(; post.first != post.second; ++post.first)
             {
                 out << "<arc id=\"" << (id++) << "\" source=\""
-                    << _transitionnames[t] << "\" target=\""
-                    << _placenames[post.first->place] << "\">\n";
+                    << *_transitionnames[t] << "\" target=\""
+                    << *_placenames[post.first->place] << "\">\n";
 
                 if(post.first->tokens > 1)
                 {

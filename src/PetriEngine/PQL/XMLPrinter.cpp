@@ -136,7 +136,7 @@ namespace PetriEngine {
                     {
                         openXmlTag("integer-ge");
                         openXmlTag("tokens-count");
-                        outputLine("<place>", c._name, "</place>");
+                        outputLine("<place>", *c._name, "</place>");
                         closeXmlTag("tokens-count");
                         outputLine("<integer-constant>", c._lower, "</integer-constant>");
                         closeXmlTag("integer-ge");
@@ -145,7 +145,7 @@ namespace PetriEngine {
                     {
                         openXmlTag("integer-le");
                         openXmlTag("tokens-count");
-                        outputLine("<place>", c._name, "</place>");
+                        outputLine("<place>", *c._name, "</place>");
                         closeXmlTag("tokens-count");
                         outputLine("<integer-constant>", c._upper, "</integer-constant>");
                         closeXmlTag("integer-le");
@@ -162,7 +162,7 @@ namespace PetriEngine {
         void XMLPrinter::_accept(const UnfoldedUpperBoundsCondition *element) {
             Tag t(this, "place-bound");
             for(auto& p : element->places()) {
-                outputLine("<place>", p._name, "</place>");
+                outputLine("<place>", *p._name, "</place>");
             }
         }
 
@@ -299,7 +299,7 @@ namespace PetriEngine {
         }
 
         void XMLPrinter::_accept(const UnfoldedFireableCondition *element) {
-            outputLine("<is-fireable><transition>", element->getName(), "</transition></is-fireable>");
+            outputLine("<is-fireable><transition>", *element->getName(), "</transition></is-fireable>");
         }
 
         void XMLPrinter::_accept(const BooleanCondition *element) {
@@ -313,7 +313,7 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const UnfoldedIdentifierExpr *element) {
             Tag tc(this, "tokens-count");
-            outputLine("<place>", element->name(), "</place>");
+            outputLine("<place>", *element->name(), "</place>");
         }
 
         void XMLPrinter::_accept(const LiteralExpr *element) {
@@ -328,7 +328,7 @@ namespace PetriEngine {
                     Tag tc(this, "tokens-count");
                     for(auto& i : element->places())
                     {
-                        outputLine("<place>", i.second, "</place>");
+                        outputLine("<place>", *i.second, "</place>");
                     }
                 }
                 for(auto& e : element->expressions())
@@ -354,7 +354,7 @@ namespace PetriEngine {
                     for(auto& i : element->places())
                     {
                         Tag tc(this, "tokens-count");
-                        outputLine("<place>", i.second, "</place>");
+                        outputLine("<place>", *i.second, "</place>");
                     }
                 }
                 for(auto& e : element->expressions())

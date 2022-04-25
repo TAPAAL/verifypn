@@ -192,9 +192,12 @@ namespace LTL {
             os << _indent << "<deadlock/>";
             return os;
         }
-        os << _indent << "<transition id=" << std::quoted(_net.transitionNames()[transition]);
-        os << "\">";
-        reducer.extraConsume(os, _net.transitionNames()[transition]);
+
+        os << _indent << "<transition id="
+                // field width stuff obsolete without büchi state printing.
+                << std::quoted(*_net.transitionNames()[transition]);
+        os << ">";
+        reducer.extraConsume(os, *_net.transitionNames()[transition]);
         os << std::endl;
         auto [fpre, lpre] = _net.preset(transition);
         for (; fpre < lpre; ++fpre) {
@@ -202,11 +205,11 @@ namespace LTL {
                 continue;
             }
             for (size_t i = 0; i < fpre->tokens; ++i) {
-                os << _token_indent << R"(<token age="0" place=")" << _net.placeNames()[fpre->place] << "\"/>\n";
+                os << _tokenIndent << R"(<token age="0" place=")" << *_net.placeNames()[fpre->place] << "\"/>\n";
             }
         }
         os << _indent << "</transition>\n";
-        reducer.postFire(os, _net.transitionNames()[transition]);
+        reducer.postFire(os, *_net.transitionNames()[transition]);
         return os;
     }
 

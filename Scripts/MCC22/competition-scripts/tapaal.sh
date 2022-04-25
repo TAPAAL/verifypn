@@ -95,8 +95,6 @@ function time_left {
     echo "Time left:  " $SECONDS
     if [[ "$SECONDS" -le 0 ]] ; then
         echo "Out of time, terminating!"
-        rm $QF
-        rm $MF
         exit
     fi
 }
@@ -106,11 +104,21 @@ time_left
 function verifyparallel {
     # Keep track of time passed (in seconds)
     mkdir -p $TEMPDIR
-    QF=$(mktemp --tmpdir=$TEMPDIR )
-    MF=$(mktemp --tmpdir=$TEMPDIR )
-    echo $TEMPDIR
-    echo $QF
-    echo $MF
+    export QF=$(mktemp --tmpdir=$TEMPDIR )
+    export MF=$(mktemp --tmpdir=$TEMPDIR )
+    if [[ -z "$QF" ]] ; then
+	    echo "ERROR: Could not create temporary query file"
+	    exit
+    fi
+    if [[ -z "$MF" ]] ; then
+	    echo "ERROR: Could not create temporary model file"
+	    exit
+    fi
+
+    echo "TEMPDIR=$TEMPDIR"
+    echo "QF=$QF"
+    echo "MF=$MF"
+    trap "rm $QF $MF ; echo terminated-with-cleanup ; exit" 0 # we trap the to make sure we cleanup
     local NUMBER=`cat $CATEGORY | grep "<property>" | wc -l`
     QUERIES=( $(seq 1 $NUMBER) )
     #MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
@@ -141,7 +149,7 @@ function verifyparallel {
     MULTIQUERY_INPUT=$(echo ${QUERIES[@]} | sed -e "s/ /,/g")
     time_left
 
-    if [ -z "$MULTIQUERY_INPUT" ]; then echo "All queries are solved" ; time_left; rm $QF; rm $MF; exit; fi
+    if [ -z "$MULTIQUERY_INPUT" ]; then echo "All queries are solved" ; time_left; exit; fi
 
     # Step 0: Simplification 
     echo "---------------------------------------------------"
@@ -170,19 +178,29 @@ function verifyparallel {
     local NUMBER=`echo "$NUMBER-$TMP" | bc`
     QUERIES=( $(seq 1 $NUMBER) )
 
-    if [[ $BK_EXAMINATION == "LTL"* && ! -s $QF ]]; then
+    if [[ ! -s $QF ]]; then
         echo "No simplified files created. Constructing non simplified files."
         time_left
-        echo "$VERIFYPN -n -ltl none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
-        $TIMEOUT_CMD $SECONDS $VERIFYPN -n -ltl none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY
+	LTLFLAG=""
+	if [[ $BK_EXAMINATION == "LTL"* ]] ; then
+		LTLFLAG="-ltl"
+	fi
+        echo "$VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
+	TMP=$($TIMEOUT_CMD $SECONDS $VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
+	echo "$TMP"
+    	TMP=$(echo "$TMP" | grep "FORMULA" | wc -l)
+    	for i in $(seq 1 $TMP); do
+      		echo "Solution found by recovery phase (step 0)"
+    	done
+
+    	local NUMBER=`echo "$NUMBER-$TMP" | bc`
+    	QUERIES=( $(seq 1 $NUMBER) )
     fi
 
     time_left
     echo
     if [ ! -s $MF ]; then
       echo "Model file after phase 0 is empty (CPN unfolding failed), exiting ..."
-      rm $QF
-      rm $MF
       exit
     fi
  
@@ -197,7 +215,7 @@ function verifyparallel {
     for Q in ${QUERIES[@]}; do
     
         TIMEOUT_PAR=$(( $TIMEOUT_PAR < $SECONDS ? $TIMEOUT_PAR : $SECONDS))
-        if [[ "$TIMEOUT_PAR" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; rm $QF; rm $MF; exit; fi
+        if [[ "$TIMEOUT_PAR" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi
         echo "------------------- QUERY ${Q} ----------------------"
         # Execute verifypn on all parallel strategies
         # All processes are killed if one process provides an answer 
@@ -227,7 +245,7 @@ function verifyparallel {
     done
 
     # Exit if all queries are answered
-    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; rm $QF; rm $MF; exit; fi
+    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; exit; fi
     
 
     # Step 2: Sequential
@@ -248,7 +266,7 @@ function verifyparallel {
         TIMEOUT_SEQ=$(echo "$SECONDS / $REMAINING_SEQ" | bc)
         if [[ "$TIMEOUT_SEQ_MIN" -gt "$TIMEOUT_SEQ" ]]; then TIMEOUT_SEQ=$TIMEOUT_SEQ_MIN; fi
         if [[ "$TIMEOUT_SEQ" -gt "$SECONDS" ]]; then TIMEOUT_SEQ=$SECONDS; break; fi
-        if [[ "$TIMEOUT_SEQ" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; rm $QF; rm $MF; exit; fi 
+        if [[ "$TIMEOUT_SEQ" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi 
 
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $SECONDS seconds"
@@ -283,7 +301,7 @@ function verifyparallel {
     fi
 
     # Exit if all queries are answered
-    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; rm $QF; rm $MF; exit; fi
+    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; exit; fi
 
   if $run_multi; then 
     # Step 3: Multiquery
@@ -300,7 +318,7 @@ function verifyparallel {
     
     RED=$(echo "$SECONDS/8" | bc)
     RUN_TIME=$(echo "$SECONDS*6/8" | bc)
-    if [[ "$RUN_TIME" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; rm $QF; rm $MF; exit; fi
+    if [[ "$RUN_TIME" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi
     echo "Running multiquery on -x $MULTIQUERY_INPUT for $RUN_TIME seconds" 
     TMP=$($TIME_CMD $TIMEOUT_CMD $RUN_TIME $VERIFYPN -n $STRATEGY_MULTI $OPTIONS -d $RED -q $RED -p $MF $QF --binary-query-io 1 -n -x $MULTIQUERY_INPUT )
 
@@ -318,7 +336,7 @@ function verifyparallel {
 
     for trial in $(seq 0 20); do
         time_left
-        if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; rm $QF; rm $MF; exit; fi
+        if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; exit; fi
         # Step 4: Parallel random search
         echo "---------------------------------------------------"
         echo "            Step 4: Random Parallel processing     "
@@ -333,7 +351,7 @@ function verifyparallel {
             # Execute verifypn on all parallel strategies
             # All processes are killed if one process provides an answer 
             RUN_TIME=$(( $RUN_TIME < $SECONDS ? $RUN_TIME : $SECONDS))
-            if [[ "$RUN_TIME" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; rm $QF; rm $MF; exit; fi
+            if [[ "$RUN_TIME" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi
             step1="$($PAR_CMD --line-buffer --halt now,success=1 --timeout $RUN_TIME --xapply\
                 eval $TIME_CMD $VERIFYPN -n $OPTIONS {} $MF $QF --binary-query-io 1 -x $Q -n \
                 ::: "${STRATEGIES_RAND[@]}" 2>&1)"
@@ -363,8 +381,6 @@ function verifyparallel {
  
     time_left
     echo "End of script."
-    rm $QF
-    rm $MF
 }
 
 function LTL {

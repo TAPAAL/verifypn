@@ -19,6 +19,7 @@
  */
 
 #include "PetriEngine/PQL/Analyze.h"
+#include "PetriEngine/PQL/PushNegation.h"
 
 namespace PetriEngine { namespace PQL {
     void analyze(Condition *condition, AnalysisContext& context) {
@@ -78,6 +79,11 @@ namespace PetriEngine { namespace PQL {
         for(auto& e : old_exprs)
         {
             Visitor::visit(this, e);
+            if(auto* shallow = dynamic_cast<IdentifierExpr*>(e.get()))
+            {
+                if(shallow->compiled())
+                    e = shallow->compiled();
+            }
         }
         if(element->type() == type_id<PlusExpr>())
             element->init(std::move(old_exprs));
@@ -90,7 +96,7 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    uint32_t getPlace(AnalysisContext& context, const std::string& name)
+    uint32_t getPlace(AnalysisContext& context, const shared_const_string& name)
     {
         AnalysisContext::ResolutionResult result = context.resolve(name);
         if (result.success) {
@@ -101,9 +107,8 @@ namespace PetriEngine { namespace PQL {
         return -1;
     }
 
-    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, std::unordered_map<uint32_t,std::string>& names, uint32_t colorIndex) {
-        std::string& place = names[colorIndex];
-        return std::make_shared<UnfoldedIdentifierExpr>(place, getPlace(context, place));
+    Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, const shared_const_string& name) {
+        return std::make_shared<UnfoldedIdentifierExpr>(name, getPlace(context, name));
     }
 
     void AnalyzeVisitor::_accept(IdentifierExpr *element) {
@@ -115,20 +120,17 @@ namespace PetriEngine { namespace PQL {
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored())
         {
-            std::unordered_map<uint32_t,std::string> names;
-            if (!coloredContext->resolvePlace(element->name(), names)) {
+            std::vector<shared_const_string> names;
+            if (!coloredContext->resolvePlace(element->name(), [&](auto& n){
+                names.emplace_back(n);
+            })) {
                 throw base_error("Unable to resolve colored identifier \"", element->name(), "\"");
             }
 
             if (names.size() == 1) {
-                element->_compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, names.begin()->first);
+                element->_compiled = generateUnfoldedIdentifierExpr(*coloredContext, names.back());
             } else {
-                std::vector<Expr_ptr> identifiers;
-                identifiers.reserve(names.size());
-                for (auto& unfoldedName : names) {
-                    identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext,names,unfoldedName.first));
-                }
-                element->_compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
+                element->_compiled = std::make_shared<PQL::PlusExpr>(std::move(names));
             }
         } else {
             element->_compiled = std::make_shared<UnfoldedIdentifierExpr>(element->name(), getPlace(_context, element->name()));
@@ -160,32 +162,31 @@ namespace PetriEngine { namespace PQL {
             return;
         }
 
-        assert(element->getName().compare(_context.net()->transitionNames()[result.offset]) == 0);
+        assert(*element->getName() == *_context.net()->transitionNames()[result.offset]);
         auto preset = _context.net()->preset(result.offset);
+        std::vector<CompareConjunction::cons_t> constraints;
+        constraints.reserve(preset.second - preset.first);
         for(; preset.first != preset.second; ++preset.first)
         {
             assert(preset.first->place != std::numeric_limits<uint32_t>::max());
             assert(preset.first->place != -1);
-            auto id = std::make_shared<UnfoldedIdentifierExpr>(_context.net()->placeNames()[preset.first->place], preset.first->place);
-            auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
-
+            constraints.emplace_back();
+            constraints.back()._place = preset.first->place;
+            constraints.back()._name = _context.net()->placeNames()[preset.first->place];
             if(!preset.first->inhibitor)
             {
-                conds.emplace_back(std::make_shared<LessThanOrEqualCondition>(lit, id));
+                constraints.back()._lower = preset.first->tokens;
             }
             else if(preset.first->tokens > 0)
             {
-                conds.emplace_back(std::make_shared<LessThanCondition>(id, lit));
+                constraints.back()._upper = preset.first->tokens - 1;
             }
         }
-        if(conds.size() == 1)
-            element->_compiled = conds[0];
-        else if (conds.empty()) {
+        if (constraints.empty()) {
             element->_compiled = BooleanCondition::TRUE_CONSTANT;
         }
         else
-            element->_compiled = std::make_shared<AndCondition>(conds);
-        Visitor::visit(this, element->_compiled);
+            element->_compiled = std::make_shared<CompareConjunction>(std::move(constraints), false);
     }
 
     void AnalyzeVisitor::_accept(FireableCondition *element) {
@@ -196,8 +197,10 @@ namespace PetriEngine { namespace PQL {
 
         auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
         if(coloredContext != nullptr && coloredContext->isColored()) {
-            std::vector<std::string> names;
-            if (!coloredContext->resolveTransition(element->getName(), names)) {
+            std::vector<shared_const_string> names;
+            if (!coloredContext->resolveTransition(element->getName(), [&](const shared_const_string& tname) {
+                names.emplace_back(tname);
+            })) {
                 throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
             }
             if(names.size() < 1){
@@ -220,6 +223,11 @@ namespace PetriEngine { namespace PQL {
             element->_compiled = std::make_shared<UnfoldedFireableCondition>(element->getName());
         }
         Visitor::visit(this, element->_compiled);
+        while(auto* shallow = dynamic_cast<ShallowCondition*>(element->getCompiled().get()))
+        {
+            if(shallow->getCompiled())
+                element->_compiled = shallow->getCompiled();
+        }
     }
 
     void AnalyzeVisitor::_accept(CompareConjunction *element) {
@@ -285,8 +293,18 @@ namespace PetriEngine { namespace PQL {
     }
 
     void AnalyzeVisitor::_accept(LogicalCondition *element) {
-        for (auto& cond : element->getOperands())
+        for (auto& cond : element->_conds)
+        {
             Visitor::visit(this, cond);
+            while(auto* shallow = dynamic_cast<ShallowCondition*>(cond.get()))
+            {
+                // need to retain Fireability to check in case of CPN-approx
+                if(shallow->type() == type_id<FireableCondition>())
+                    break;
+                if(shallow->getCompiled())
+                    cond = shallow->getCompiled();
+            }
+        }
     }
 
     void AnalyzeVisitor::_accept(QuasiLivenessCondition *element) {
@@ -364,9 +382,9 @@ namespace PetriEngine { namespace PQL {
             {
                 std::vector<Expr_ptr> sum;
                 MarkVal init_marking = 0;
-                for(auto& pn : cpn.second)
+                for(auto& [_, pn] : cpn.second)
                 {
-                    auto id = std::make_shared<UnfoldedIdentifierExpr>(pn.second);
+                    auto id = std::make_shared<UnfoldedIdentifierExpr>(pn);
                     Visitor::visit(this, id);
                     init_marking += _context.net()->initial(id->offset());
                     sum.emplace_back(std::move(id));
@@ -402,17 +420,13 @@ namespace PetriEngine { namespace PQL {
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&_context);
             if(coloredContext != nullptr && coloredContext->isColored())
             {
-                std::vector<std::string> uplaces;
+                std::vector<shared_const_string> uplaces;
                 for(auto& p : element->getPlaces())
                 {
-                    std::unordered_map<uint32_t,std::string> names;
-                    if (!coloredContext->resolvePlace(p, names)) {
+                    if (!coloredContext->resolvePlace(p, [&](auto& pn){
+                        uplaces.emplace_back(pn);
+                    })) {
                         throw base_error("Unable to resolve colored identifier \"", p, "\"");
-                    }
-
-                    for(auto& id : names)
-                    {
-                        uplaces.push_back(names[id.first]);
                     }
                 }
                 element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);

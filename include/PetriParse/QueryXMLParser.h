@@ -30,11 +30,13 @@
 
 #include "PNMLParser.h"
 #include "QueryParser.h"
+#include "PetriEngine/PQL/Contexts.h"
+
 using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
 public:
-    QueryXMLParser();
+    QueryXMLParser(shared_string_set& string_set);
     ~QueryXMLParser();
 
     std::vector<QueryItem>  queries;
@@ -50,8 +52,9 @@ private:
     Condition_ptr parseFormula(rapidxml::xml_node<>*  element);
     Condition_ptr parseBooleanFormula(rapidxml::xml_node<>*  element);
     Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
-    std::string parsePlace(rapidxml::xml_node<>*  element);
+    shared_const_string parsePlace(rapidxml::xml_node<>*  element);
     void fatal_error(const std::string& token);
+    shared_string_set& _string_set;
 };
 
 #endif /* QUERYXMLPARSER_H */

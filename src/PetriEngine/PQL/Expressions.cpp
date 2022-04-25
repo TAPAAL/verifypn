@@ -610,7 +610,7 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    assert(id->name().compare(lb->_name) == 0);
+                    assert(*id->name() == *lb->_name);
                     lb->intersect(next);
                 }
             }

@@ -31,7 +31,7 @@ namespace PetriEngine {
 
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
-        ColoredPetriNetBuilder();
+        ColoredPetriNetBuilder(shared_string_set& string_set);
         ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig);
         virtual ~ColoredPetriNetBuilder();
 
@@ -114,9 +114,13 @@ namespace PetriEngine {
             return _ptBuilder;
         }
 
+        shared_string_set& string_set() const {
+            return _string_set;
+        }
+
     private:
-        std::unordered_map<std::string,uint32_t> _placenames;
-        std::unordered_map<std::string,uint32_t> _transitionnames;
+        shared_name_index_map _placenames;
+        shared_name_index_map _transitionnames;
 
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
@@ -124,6 +128,7 @@ namespace PetriEngine {
 
         Colored::ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
+        shared_string_set& _string_set;
 
         void addArc(const std::string& place,
                 const std::string& transition,

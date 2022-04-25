@@ -77,6 +77,8 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
 
+        void _accept(const PetriEngine::PQL::DeadlockCondition *element) override;
+
         void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
 
         void _accept(const PetriEngine::PQL::PlusExpr *element) override;
@@ -119,8 +121,8 @@ namespace LTL {
 
     public:
 
-        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose)
-                : _compress(compress_aps) {}
+        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose, bool expand = true)
+                : _compress(compress_aps), _expand(expand) {}
 
 
         auto begin() const
@@ -142,6 +144,7 @@ namespace LTL {
         APInfo _ap_info;
         APCompression _compress;
         spot::formula _formula;
+        const bool _expand;
         spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element);
     };
 

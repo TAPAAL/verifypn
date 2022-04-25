@@ -553,13 +553,13 @@ namespace PetriEngine { namespace PQL {
     }
 
     template<typename T> Condition_ptr
-    PushNegationVisitor::pushFireableNegation(const std::string &name, const Condition_ptr &compiled) {
+    PushNegationVisitor::pushFireableNegation(const shared_const_string &name, const Condition_ptr &compiled) {
+        stats.negated_fireability = stats.negated_fireability || negated;
         if (compiled)
             return subvisit(compiled, nested, negated);
-        if (negated) {
-            stats.negated_fireability = true;
+        if (negated)
             return std::make_shared<NotCondition>(std::make_shared<T>(name));
-        } else
+        else
             return std::make_shared<T>(name);
     }
 

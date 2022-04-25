@@ -25,6 +25,7 @@
 #include "../PetriNet.h"
 #include "../Simplification/LPCache.h"
 #include "../NetStructures.h"
+#include "utils/structures/shared_string.h"
 
 #include "utils/errors.h"
 
@@ -36,13 +37,14 @@
 #include <glpk.h>
 
 namespace PetriEngine {
+
     namespace PQL {
 
         /** Context provided for context analysis */
         class AnalysisContext {
         protected:
-            const std::unordered_map<std::string, uint32_t>& _placeNames;
-            const std::unordered_map<std::string, uint32_t>& _transitionNames;
+            const shared_name_index_map& _placeNames;
+            const shared_name_index_map& _transitionNames;
             const PetriNet* _net = nullptr;
             std::unordered_map<std::string, uint32_t> _trace_names;
         public:
@@ -55,7 +57,7 @@ namespace PetriEngine {
                 bool success;
             };
 
-            AnalysisContext(const std::unordered_map<std::string, uint32_t>& places, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net)
+            AnalysisContext(const shared_name_index_map& places, const shared_name_index_map& tnames, const PetriNet* net)
             : _placeNames(places), _transitionNames(tnames), _net(net) {
 
             }
@@ -68,7 +70,7 @@ namespace PetriEngine {
             }
 
             /** Resolve an identifier */
-            virtual ResolutionResult resolve(const std::string& identifier, bool place = true);
+            virtual ResolutionResult resolve(const shared_const_string& identifier, bool place = true);
 
             uint32_t resolve_trace_name(const std::string& s, bool create);
 
@@ -79,17 +81,17 @@ namespace PetriEngine {
 
         class ColoredAnalysisContext : public AnalysisContext {
         protected:
-            const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& _coloredPlaceNames;
-            const std::unordered_map<std::string, std::vector<std::string>>& _coloredTransitionNames;
+            const shared_place_color_map& _coloredPlaceNames;
+            const shared_name_name_map& _coloredTransitionNames;
 
             bool _colored;
 
         public:
-            ColoredAnalysisContext(const std::unordered_map<std::string, uint32_t>& places,
-                                   const std::unordered_map<std::string, uint32_t>& tnames,
+            ColoredAnalysisContext(const shared_name_index_map& places,
+                                   const shared_name_index_map& tnames,
                                    const PetriNet* net,
-                                   const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& cplaces,
-                                   const std::unordered_map<std::string, std::vector<std::string>>& ctnames,
+                                   const shared_place_color_map& cplaces,
+                                   const shared_name_name_map& ctnames,
                                    bool colored)
                     : AnalysisContext(places, tnames, net),
                       _coloredPlaceNames(cplaces),
@@ -97,9 +99,9 @@ namespace PetriEngine {
                       _colored(colored)
             {}
 
-            bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out);
+            bool resolvePlace(const shared_const_string& place, std::function<void(const shared_const_string&)>&& fn);
 
-            bool resolveTransition(const std::string& transition, std::vector<std::string>& out);
+            bool resolveTransition(const shared_const_string& transition, std::function<void(const shared_const_string)>&& fn);
 
             bool isColored() const {
                 return _colored;
