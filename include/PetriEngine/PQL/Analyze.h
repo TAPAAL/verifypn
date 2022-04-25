@@ -84,6 +84,10 @@ namespace PetriEngine { namespace PQL {
         void _accept(SimpleQuantifierCondition *element) override;
 
         void _accept(PathQuant* element) override;
+
+        void _accept(AllPaths* element) override;
+
+        void _accept(ExistPath* element) override;
     };
 } }
 

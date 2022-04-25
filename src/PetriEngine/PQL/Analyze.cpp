@@ -43,6 +43,16 @@ namespace PetriEngine { namespace PQL {
         // Do nothing
     }
 
+    void AnalyzeVisitor::_accept(AllPaths* element) {
+        _context.resolve_trace_name(element->name(), true);
+        Visitor::visit(this, element->child());
+    }
+
+    void AnalyzeVisitor::_accept(ExistPath* element) {
+        _context.resolve_trace_name(element->name(), true);
+        Visitor::visit(this, element->child());
+    }
+
     void AnalyzeVisitor::_accept(PathSelectExpr* element) {
         element->set_offset(_context.resolve_trace_name(element->name(), false));
         Visitor::visit(this, element->child());
