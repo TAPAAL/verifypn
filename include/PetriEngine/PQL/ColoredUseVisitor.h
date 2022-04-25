@@ -30,6 +30,10 @@ namespace PetriEngine::PQL {
             return t < _transitionInUse.size() && _transitionInUse[t];
         }
 
+        bool anyTransitionUsed() const {
+            return _anyTransitionInUse;
+        }
+
     protected:
         void _accept(const NotCondition *element) override;
 
@@ -64,6 +68,7 @@ namespace PetriEngine::PQL {
         const shared_name_index_map &_transitionNameToIndexMap;
         std::vector<bool> _placeInUse;
         std::vector<bool> _transitionInUse;
+        bool _anyTransitionInUse = false;
     };
 }
 
