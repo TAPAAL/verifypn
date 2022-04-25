@@ -788,12 +788,16 @@ namespace PetriEngine {
                     bool some_in_query = false;
                     bool exact = true;
                     // D3. Presets must match
+                    size_t j = 0;
                     for (size_t i = 0; i < trans1.pre.size(); ++i) {
                         Arc& arc = trans1.pre[i];
-                        size_t j = 0;
                         for(; j < trans2.pre.size(); ++j)
+                        {
                             if(trans2.pre[j].place == arc.place)
                                 break;
+                            pre_equal &= placeInQuery[trans2.pre[j].place] == 0;
+                            exact = false;
+                        }
                         if(j >= trans2.pre.size() || trans2.pre[j].place != arc.place)
                         {
                             ok = 1;
@@ -824,7 +828,10 @@ namespace PetriEngine {
                                                   arc.weight == arc2.weight*mult);
                         exact &= arc.weight == arc2.weight*mult;
                         if(!pre_equal) break;
+                        ++j;
                     }
+                    for(; j < trans2.pre.size(); ++j)
+                        pre_equal &= placeInQuery[trans2.pre[j].place] == 0;
 
                     if(!pre_equal) break;
                     if (ok == 2) break;
@@ -834,12 +841,16 @@ namespace PetriEngine {
 
 
                     // D4. postsets must match
+                    j = 0;
                     for (size_t i = 0; i < trans2.post.size(); ++i) {
                         Arc& arc2 = trans2.post[i];
-                        size_t j = 0;
                         for(; j < trans1.post.size(); ++j)
+                        {
                             if(trans1.post[j].place == arc2.place)
                                 break;
+                            post_equal &= placeInQuery[trans1.post[j].place] == 0;
+                            exact = false;
+                        }
                         if(j >= trans1.post.size() || trans1.post[j].place != arc2.place)
                         {
                             ok = 1;
@@ -858,6 +869,12 @@ namespace PetriEngine {
                             break;
                         }
                         if(!post_equal) break;
+                    }
+
+                    for(; j < trans1.post.size(); ++j)
+                    {
+                        post_equal &= placeInQuery[trans1.post[j].place] == 0;
+                        exact = false;
                     }
 
                     if(!post_equal) break;
