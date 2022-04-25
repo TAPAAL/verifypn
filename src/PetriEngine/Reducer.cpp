@@ -1658,32 +1658,6 @@ namespace PetriEngine {
         return reduced;
     }
 
-    std::array tnames {
-            "T-lb_balancing_receive_notification_10",
-            "T-lb_balancing_receive_notification_2",
-            "T-lb_balancing_receive_notification_3",
-            "T-lb_balancing_receive_notification_8",
-            "T-lb_balancing_receive_notification_9",
-            "T-lb_idle_receive_notification_4",
-            "T-lb_no_balance_1",
-            "T-lb_receive_client_1",
-            "T-lb_receive_client_2",
-            "T-lb_receive_client_3",
-            "T-lb_receive_client_5",
-            "T-lb_route_to_1_1",
-            "T-lb_route_to_1_8",
-            "T-lb_route_to_1_87",
-            "T-lb_route_to_2_165",
-            "T-lb_route_to_2_43",
-            "T-lb_route_to_2_50",
-            "T-server_endloop_1",
-            "T-server_endloop_2",
-            "T-server_process_1",
-            "T-server_process_10",
-            "T-server_process_3",
-            "T-server_process_7"
-    };
-
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool next_safe, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
