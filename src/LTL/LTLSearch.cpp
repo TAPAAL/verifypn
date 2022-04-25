@@ -205,7 +205,7 @@ namespace LTL {
                 continue;
             }
             for (size_t i = 0; i < fpre->tokens; ++i) {
-                os << _tokenIndent << R"(<token age="0" place=")" << *_net.placeNames()[fpre->place] << "\"/>\n";
+                os << _token_indent << R"(<token age="0" place=")" << *_net.placeNames()[fpre->place] << "\"/>\n";
             }
         }
         os << _indent << "</transition>\n";

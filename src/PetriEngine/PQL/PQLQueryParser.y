@@ -110,7 +110,7 @@ cond_named  : ID DOT sub_cond { $$ = new PathSelectCondition(*$1, Condition_ptr(
             | sub_cond { $$ = $1; }
             ;
 
-sub_cond    : ID QUESTIONMARK   { $$ = new FireableCondition(*$1); }
+sub_cond    : ID QUESTIONMARK   { $$ = new FireableCondition(std::make_shared<const_string>(*$1)); }
             | FIREABLE LPAREN id_list RPAREN
 		    {
 		        $$ = nullptr;
@@ -127,7 +127,6 @@ sub_cond    : ID QUESTIONMARK   { $$ = new FireableCondition(*$1); }
 		            }
 		        }
 		    }
-		| ID QUESTIONMARK           { $$ = new FireableCondition(std::make_shared<const_string>(*$1)); }
 		;
 
 expr	: expr PLUS term			{ $$ = new PlusExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
@@ -160,6 +159,8 @@ sub_named   : ID { $$ = new IdentifierExpr(std::make_shared<const_string>(*$1));
                             a.push_back(std::make_shared<IdentifierExpr>(std::make_shared<const_string>(name)));
                         }
                         $$ = new PlusExpr(std::move(a));
+                    }
+                }
             ;
 
 id_list : ID { $$ = new std::vector<std::string>(); $$->push_back(*$1); delete $1; }
