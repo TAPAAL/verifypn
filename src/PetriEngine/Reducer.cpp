@@ -922,62 +922,19 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
+    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_consumers) {
         bool reduced = false;
-        if(remove_loops)
-        {
 
-            auto result = relevant(placeInQuery, remove_consumers);
-            if (!result) {
-                return false;
-            }
-            auto[tseen, pseen] = result.value();
-
-            reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
-
-            if(reduced)
-                ++_ruleI;
+        auto result = relevant(placeInQuery, remove_consumers);
+        if (!result) {
+            return false;
         }
-        else
-        {
-            const size_t numberofplaces = parent->numberOfPlaces();
-            for(uint32_t p = 0; p < numberofplaces; ++p)
-            {
-                if(hasTimedout()) return false;
-                Place& place = parent->_places[p];
-                if(place.skip) continue;
-                if(place.inhib) continue;
-                if(placeInQuery[p] > 0) continue;
-                if(place.consumers.size() > 0) continue;
+        auto[tseen, pseen] = result.value();
 
-                ++_ruleI;
-                reduced = true;
+        reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
 
-                std::vector<uint32_t> torem;
-                if(remove_consumers)
-                {
-                    for(auto& t : place.producers)
-                    {
-                        auto& trans = parent->_transitions[t];
-                        if(trans.post.size() != 1) // place will be removed later
-                            continue;
-                        bool ok = true;
-                        for(auto& a : trans.pre)
-                        {
-                            if(placeInQuery[a.place] > 0)
-                            {
-                                ok = false;
-                            }
-                        }
-                        if(ok) torem.push_back(t);
-                    }
-                }
-                skipPlace(p);
-                for(auto t : torem)
-                    skipTransition(t);
-                assert(consistent());
-            }
-        }
+        if(reduced)
+            ++_ruleI;
 
         return reduced;
     }
@@ -1677,7 +1634,7 @@ namespace PetriEngine {
             do
             {
                 if(remove_loops && !next_safe)
-                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
@@ -1687,8 +1644,6 @@ namespace PetriEngine {
                         if(!next_safe)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            if(!remove_loops)
-                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
@@ -1722,7 +1677,7 @@ namespace PetriEngine {
 			            continue;
                     }
                 }
-                if(!remove_loops && reduction[i] == 5)
+                if(!remove_loops && (reduction[i] == 5 || reduction[i] == 8))
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
@@ -1766,7 +1721,7 @@ namespace PetriEngine {
                             while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 8:
-                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                             break;
                         case 9:
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
