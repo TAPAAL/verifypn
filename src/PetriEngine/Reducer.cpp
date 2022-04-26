@@ -724,7 +724,6 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs
         // This does not alter the trace.
-        std::cerr << std::boolalpha << " AR " << all_reach << " RL " << remove_loops << std::endl;
         bool continueReductions = false;
         _tflags.resize(parent->_transitions.size(), 0);
         std::fill(_tflags.begin(), _tflags.end(), 0);
