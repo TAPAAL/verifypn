@@ -148,8 +148,8 @@ namespace PetriEngine::Colored {
                     &_preAgglomeration,
                     &_redRuleParallelTransitions,
                     &_redRuleParallelPlaces,
-                    &_redRuleDeadTransitions,
-                    &_redRuleRedundantPlaces
+                    &_redRuleDeadTransitions//,
+                    //&_redRuleRedundantPlaces
 
             };
         };
