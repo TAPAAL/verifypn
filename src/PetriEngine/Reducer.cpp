@@ -721,9 +721,10 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool loop_sensitive) {
+    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs
         // This does not alter the trace.
+        std::cerr << std::boolalpha << " AR " << all_reach << " RL " << remove_loops << std::endl;
         bool continueReductions = false;
         _tflags.resize(parent->_transitions.size(), 0);
         std::fill(_tflags.begin(), _tflags.end(), 0);
@@ -831,13 +832,16 @@ namespace PetriEngine {
                         ++j;
                     }
                     for(; j < trans2.pre.size(); ++j)
+                    {
                         pre_equal &= placeInQuery[trans2.pre[j].place] == 0;
+                        exact = false;
+                    }
 
                     if(!pre_equal) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
                     if(mult != 1 && !all_reach) break;
-                    if(loop_sensitive && !exact) break;
+                    if(!remove_loops && !exact) break;
 
 
                     // D4. postsets must match
@@ -880,7 +884,7 @@ namespace PetriEngine {
                     if(!post_equal) break;
                     if (ok == 2) break;
                     else if (ok == 1) continue;
-                    if(loop_sensitive && !exact) break;
+                    if(!remove_loops && !exact) break;
 
                     // UD1. Remove transition t2
                     continueReductions = true;
