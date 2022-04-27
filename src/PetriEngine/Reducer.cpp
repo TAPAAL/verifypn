@@ -765,6 +765,11 @@ namespace PetriEngine {
                     // From D3, and D4 we have that pre and post-sets are the same
                     if (trans1.post.size() < trans2.post.size()) { break;}
                     if (trans1.pre.size() > trans2.pre.size()) { break;}
+                    if (!remove_loops && (trans1.pre.size() != trans2.pre.size() ||
+                                          trans1.post.size() != trans2.post.size()))
+                    {
+                        break; // we require exactness.
+                    }
 
                     int ok = 0;
                     uint mult = std::numeric_limits<uint>::max();
