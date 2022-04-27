@@ -25,7 +25,9 @@ using namespace PetriEngine::Colored;
 std::ifstream loadFile(const char* file) {
     std::stringstream ss;
     ss << getenv("TEST_FILES") << file;
-    return std::ifstream(ss.str());
+    auto in = std::ifstream(ss.str());
+    assert(in);
+    return in;
 }
 
 class ResultHandler : public Reachability::AbstractHandler {
