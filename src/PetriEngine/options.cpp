@@ -315,7 +315,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 4) {
                 throw base_error("Argument Error: Invalid reduction argument ", std::quoted(argv[i]));
             }
-            if (enablereduction == 3 || enablereduction == 4) {
+            if (enablereduction == 3) {
                 reductions.clear();
                 std::vector<std::string> q = explode(argv[++i]);
                 for (auto& qn : q) {
@@ -324,18 +324,6 @@ bool options_t::parse(int argc, const char** argv) {
                         throw base_error("Error in reduction rule choice ", std::quoted(qn));
                     } else {
                         reductions.push_back(n);
-                    }
-                }
-                if (enablereduction == 4) {
-                    secondaryreductions.clear();
-                    std::vector<std::string> q2 = explode(argv[++i]);
-                    for (auto& qn : q2) {
-                        int32_t n;
-                        if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 18) {
-                            throw base_error("Error in reduction rule choice ", std::quoted(qn));
-                        } else {
-                            secondaryreductions.push_back(n);
-                        }
                     }
                 }
             }

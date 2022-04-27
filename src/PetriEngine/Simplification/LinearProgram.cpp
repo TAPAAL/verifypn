@@ -102,7 +102,7 @@ namespace PetriEngine {
 
                 if(context.timeout())
                 {
-                    std::cerr << "glpk: construction timeout" << std::endl;
+//                    std::cerr << "glpk: construction timeout" << std::endl;
                     glp_delete_prob(lp);
                     return false;
                 }
@@ -128,7 +128,7 @@ namespace PetriEngine {
             if (result == GLP_ETMLIM)
             {
                 _result = result_t::UKNOWN;
-                std::cerr << "glpk: timeout" << std::endl;
+                //std::cerr << "glpk: timeout" << std::endl;
             }
             else if(result == 0)
             {
@@ -143,7 +143,7 @@ namespace PetriEngine {
                     if(ires == GLP_ETMLIM)
                     {
                         _result = result_t::UKNOWN;
-                        std::cerr << "glpk mip: timeout" << std::endl;
+                        //std::cerr << "glpk mip: timeout" << std::endl;
                     }
                     else if(ires == 0)
                     {
@@ -269,7 +269,7 @@ namespace PetriEngine {
                 auto rs = glp_simplex(tmp_lp, &settings);
                 if (rs == GLP_ETMLIM)
                 {
-                    std::cerr << "glpk: timeout" << std::endl;
+                    //std::cerr << "glpk: timeout" << std::endl;
                 }
                 else if(rs == 0)
                 {
@@ -282,7 +282,7 @@ namespace PetriEngine {
                         isettings.presolve = GLP_OFF;
                         auto rs = glp_intopt(tmp_lp, &isettings);
                         if (rs == GLP_ETMLIM) {
-                            std::cerr << "glpk mip: timeout" << std::endl;
+                            //std::cerr << "glpk mip: timeout" << std::endl;
                         } else if (rs == 0) {
                             auto status = glp_mip_status(tmp_lp);
                             if (status == GLP_OPT) {

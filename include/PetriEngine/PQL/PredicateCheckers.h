@@ -118,7 +118,15 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const AFCondition *condition) override;
 
+        void _accept(const ACondition *condition) override;
+
+        void _accept(const NotCondition *condition) override;
+
+        void _accept(const UntilCondition *condition) override;
+
         void _accept(const DeadlockCondition *condition) override;
+    private:
+        bool _negated = false;
     };
 
 

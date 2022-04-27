@@ -132,7 +132,7 @@ namespace PetriEngine {
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query,
                     std::vector<Reachability::ResultPrinter::Result>& results,
                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
-                    std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
+                    std::vector<uint32_t>& reductions);
 
         void printStats(std::ostream& out)
         {
@@ -140,21 +140,6 @@ namespace PetriEngine {
         }
 
         Reducer* getReducer() { return &reducer; }
-
-        /*std::vector<std::pair<shared_const_string, uint32_t>> orphanPlaces() const {
-            std::vector<std::pair<std::string, uint32_t>> res;
-            for(uint32_t p = 0; p < _places.size(); p++) {
-                if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {
-                    for(auto &n : _placenames) {
-                        if(*n.second == *p) {
-                            res.push_back(std::make_pair(n.first, initialMarking[p]));
-                            break;
-                        }
-                    }
-                }
-            }
-            return res;
-        }*/
 
         double getReductionTime() const {
             // duration in seconds

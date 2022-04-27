@@ -93,7 +93,8 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool next_safe, std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops,
+                        bool all_reach, bool all_ltl, bool next_safe, std::vector<uint32_t>& reductions);
 
         size_t numberOfSkippedTransitions() const {
             return _skippedTransitions.size();
@@ -140,7 +141,8 @@ namespace PetriEngine {
     private:
         size_t _skippedPlaces= 0;
         std::vector<uint32_t> _skippedTransitions;
-        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0, _ruleN = 0, _ruleO = 0, _ruleP = 0, _ruleQ = 0, _ruleR = 0, _ruleS = 0;
+        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0,
+        _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0, _ruleN = 0, _ruleO = 0, _ruleP = 0, _ruleQ = 0, _ruleR = 0, _ruleS = 0;
 
         PetriNetBuilder* parent = nullptr;
         bool reconstructTrace = false;
@@ -151,9 +153,9 @@ namespace PetriEngine {
         bool ReducebyRuleA(uint32_t* placeInQuery);
         bool ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks, bool remove_consumers);
         bool ReducebyRuleC(uint32_t* placeInQuery);
-        bool ReducebyRuleD(uint32_t* placeInQuery);
+        bool ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops);
         bool ReducebyRuleEP(uint32_t* placeInQuery);
-        bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
+        bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_consumers);
         bool ReducebyRuleF(uint32_t* placeInQuery);
         bool ReducebyRuleFNO(uint32_t* placeInQuery);
         bool ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
@@ -167,7 +169,7 @@ namespace PetriEngine {
         bool ReducebyRuleR(uint32_t* placeInQuery);
         bool ReducebyRuleS(uint32_t *placeInQuery, bool remove_consumers, bool remove_loops, bool allReach, uint32_t explosion_limiter);
 
-        std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
+        std::optional<std::pair<std::vector<bool>, std::vector<bool>>> relevant(const uint32_t* placeInQuery, bool remove_consumers);
 
         bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);
 

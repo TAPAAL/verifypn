@@ -38,7 +38,6 @@ struct options_t {
     const char* queryfile = nullptr;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving, 3 ... selection, 4 ... alternating selections
     std::vector<uint32_t> reductions{8,2,3,4,5,7,9,6,0,1};
-    std::vector<uint32_t> secondaryreductions{};
     int reductionTimeout = 60;
     bool stubbornreduction = true;
     bool statespaceexploration = false;

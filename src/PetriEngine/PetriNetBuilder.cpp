@@ -30,6 +30,7 @@
 #include <PetriEngine/PQL/PredicateCheckers.h>
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "LTL/LTLValidator.h"
 
 
 namespace PetriEngine {
@@ -547,7 +548,7 @@ namespace PetriEngine {
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results,
                                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
-                                    std::vector<uint32_t>& reductions, std::vector<uint32_t>& secondaryreductions)
+                                    std::vector<uint32_t>& reductions)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
@@ -566,15 +567,16 @@ namespace PetriEngine {
                results[i] == Reachability::ResultPrinter::LTL)
             {
                 PetriEngine::PQL::analyze(queries[i], placecontext);
-                all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
-                all_ltl &= results[i] != Reachability::ResultPrinter::CTL;
+                all_reach &= PetriEngine::PQL::isReachability(queries[i]);
+                LTL::LTLValidator isLtl;
+                all_ltl &= isLtl.isLTL(queries[i]);
                 remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.
                 contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions, secondaryreductions);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions);
     }
 
 
