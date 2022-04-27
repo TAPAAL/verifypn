@@ -773,8 +773,8 @@ namespace PetriEngine {
                     bool some_in_query = false;
                     bool exact = true;
                     // D3. Presets must match
-                    size_t j;
-                    for (size_t i = 0, j = 0; i < trans1.pre.size(); ++i, ++j) {
+                    size_t j = 0;
+                    for (size_t i = 0; i < trans1.pre.size(); ++i, ++j) {
                         Arc& arc = trans1.pre[i];
                         for(; j < trans2.pre.size() && trans2.pre[j].place < arc.place; ++j)
                         {
@@ -826,7 +826,8 @@ namespace PetriEngine {
                     if(!remove_loops && !exact) { break;}
                     ok = 0;
                     // D4. postsets must match
-                    for (size_t i = 0, j = 0; i < trans2.post.size(); ++i, ++j) {
+                    j = 0;
+                    for (size_t i = 0; i < trans2.post.size(); ++i, ++j) {
                         Arc& arc2 = trans2.post[i];
                         for(; j < trans1.post.size() && trans1.post[j].place < arc2.place; ++j)
                         {
