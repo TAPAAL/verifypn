@@ -2746,11 +2746,15 @@ else if (inhibArcs == 0)
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     }
+                    while(ReducebyRuleL(context.getQueryPlaceCount())) changed = true;
                 } while(changed && !hasTimedout());
                 if(!next_safe && !changed)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                    while (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
+                    while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, 100)) changed = true;
+
                 }
             } while(!hasTimedout() && changed);
         }
