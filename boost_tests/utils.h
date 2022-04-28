@@ -50,20 +50,23 @@ class ResultHandler : public Reachability::AbstractHandler {
     }
 };
 
-auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnums,
-        bool partition = false, bool symmetry = false, bool cfp = false, bool over_approx = false,
-        int32_t partitionTimeout = 10, int32_t max_intervals = 100, int32_t intervals_reduced = 10, int32_t interval_timeout = 10)
+auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnums, TemporalLogic logic = TemporalLogic::CTL,
+        bool reduce = false, bool partition = false, bool symmetry = false, bool cfp = false, bool over_approx = false,
+        uint32_t reduceTimeout = 5, int32_t partitionTimeout = 10, int32_t max_intervals = 100,
+        int32_t intervals_reduced = 10, int32_t interval_timeout = 10)
 {
 
     shared_string_set sset;
     ColoredPetriNetBuilder cpnBuilder(sset);
     auto f = loadFile(model.c_str());
     cpnBuilder.parse_model(f);
-    auto [builder, trans_names, place_names] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
-    builder.sort();
     auto q = loadFile(queries.c_str());
     std::vector<std::string> qstrings;
     auto conditions = parseXMLQueries(sset, qstrings, q, qnums, false);
+    std::vector<uint32_t> reductions {};
+    reduceColored(cpnBuilder, conditions, logic, reduceTimeout, std::cerr, reduce ? 1 : 0, reductions);
+    auto [builder, trans_names, place_names] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
+    builder.sort();
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
     contextAnalysis(cpnBuilder.isColored() && !over_approx, trans_names, place_names, builder, pn.get(), conditions);
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
