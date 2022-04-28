@@ -21,6 +21,7 @@ namespace PetriEngine::Colored {
         std::vector<const Variable *> tuple;
         for (auto &v : *e) {
             v->visit(*this);
+            if (!_ok) return;
             tuple.emplace_back(_varRes);
         }
         _tupRes = tuple;
@@ -31,6 +32,7 @@ namespace PetriEngine::Colored {
         VarMultiset ms;
         for (auto &t : *e) {
             t->visit(*this);
+            if (!_ok) return;
             ms += VarMultiset(_tupRes, e->number());
         }
         _msRes = ms;
@@ -40,6 +42,7 @@ namespace PetriEngine::Colored {
         VarMultiset ms;
         for (const auto &expr : *e) {
             expr->visit(*this);
+            if (!_ok) return;
             ms += _msRes;
         }
         _msRes = ms;
@@ -47,6 +50,7 @@ namespace PetriEngine::Colored {
 
     void ArcVarMultisetVisitor::accept(const ScalarProductExpression *e) {
         e->child()->visit(*this);
+        if (!_ok) return;
         _msRes *= e->scalar();
     }
 
