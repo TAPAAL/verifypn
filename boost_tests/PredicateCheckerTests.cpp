@@ -31,10 +31,6 @@
 using namespace PetriEngine;
 namespace utf = boost::unit_test;
 
-BOOST_AUTO_TEST_CASE(DirectoryTest) {
-    BOOST_REQUIRE(getenv("TEST_FILES"));
-}
-
 using namespace PetriEngine::PQL;
 
 BOOST_AUTO_TEST_CASE(not_A_G_deadlock_true) {
