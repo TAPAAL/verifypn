@@ -2706,7 +2706,7 @@ else if (inhibArcs == 0)
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
-        constexpr uint32_t explosion_limiter = 6;
+        constexpr uint32_t explosion_limiter = std::numeric_limits<uint32_t>::max();
 
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
