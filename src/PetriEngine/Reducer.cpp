@@ -705,7 +705,7 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops_no_branch) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs
         // This does not alter the trace.
         bool continueReductions = false;
@@ -726,6 +726,7 @@ namespace PetriEngine {
             }
 
         }
+
         for(auto& op : parent->_places)
         for(size_t outer = 0; outer < op.consumers.size(); ++outer)
         {
@@ -762,60 +763,114 @@ namespace PetriEngine {
                     Transition& trans2 = getTransition(t2);
 
                     // From D3, and D4 we have that pre and post-sets are the same
-                    if (trans1.post.size() != trans2.post.size()) break;
-                    if (trans1.pre.size() != trans2.pre.size()) break;
+                    if (trans1.post.size() < trans2.post.size()) { break;}
+                    if (trans1.pre.size() > trans2.pre.size()) { break;}
+                    if (!remove_loops_no_branch && (trans1.pre.size() != trans2.pre.size() ||
+                                          trans1.post.size() != trans2.post.size()))
+                    {
+                        break; // we require exactness.
+                    }
 
                     int ok = 0;
                     uint mult = std::numeric_limits<uint>::max();
-                    // D4. postsets must match
-                    for (int i = trans1.post.size() - 1; i >= 0; --i) {
-                        Arc& arc = trans1.post[i];
-                        Arc& arc2 = trans2.post[i];
-                        if (arc2.place != arc.place) {
-                            ok = 2;
-                            break;
-                        }
-
-                        if (mult == std::numeric_limits<uint>::max()) {
-                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
-                                ok = 1;
-                                break;
-                            } else {
-                                mult = arc2.weight / arc.weight;
-                            }
-                        } else if (arc2.weight != arc.weight * mult) {
-                            ok = 2;
-                            break;
-                        }
-                    }
-
-                    if (ok == 2) break;
-                    else if (ok == 1) continue;
-
+                    bool pre_equal = true;
+                    bool post_equal = true;
+                    bool some_in_query = false;
+                    bool exact = true;
                     // D3. Presets must match
-                    for (int i = trans1.pre.size() - 1; i >= 0; --i) {
+                    size_t j = 0;
+                    for (size_t i = 0; i < trans1.pre.size(); ++i, ++j) {
                         Arc& arc = trans1.pre[i];
-                        Arc& arc2 = trans2.pre[i];
+                        for(; j < trans2.pre.size() && trans2.pre[j].place < arc.place; ++j)
+                        {
+                            pre_equal &= placeInQuery[trans2.pre[j].place] == 0;
+                            exact = false;
+                        }
+
+                        if(j >= trans2.pre.size() || trans2.pre[j].place != arc.place)
+                        {
+                            ok = 1;
+                            break;
+                        }
+
+                        Arc& arc2 = trans2.pre[j];
                         if (arc2.place != arc.place) {
                             ok = 2;
                             break;
                         }
-
-                        if (mult == std::numeric_limits<uint>::max()) {
-                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
-                                ok = 1;
-                                break;
-                            } else {
-                                mult = arc2.weight / arc.weight;
+                        if (arc2.weight < arc.weight) {
+                            ok = 1;
+                            break;
+                        } else {
+                            auto old = mult;
+                            mult = std::min(arc2.weight / arc.weight, mult);
+                            if(old != std::numeric_limits<uint>::max() &&
+                               mult != old &&
+                               some_in_query)
+                            {
+                                pre_equal = false;
+                                exact = false;
                             }
-                        } else if (arc2.weight != arc.weight * mult) {
+                        }
+                        some_in_query |= placeInQuery[arc2.place] > 0;
+                        pre_equal = pre_equal && (placeInQuery[arc2.place] == 0 ||
+                                                  arc.weight == arc2.weight*mult);
+                        exact &= arc.weight == arc2.weight*mult;
+                        if(!pre_equal) break;
+                    }
+                    for(; j < trans2.pre.size(); ++j)
+                    {
+                        pre_equal &= placeInQuery[trans2.pre[j].place] == 0;
+                        exact = false;
+                    }
+
+                    if(!pre_equal) { break;}
+                    if (ok == 2) { break;}
+                    else if (ok == 1) { continue;}
+                    if(mult != 1 && !all_reach) { break;}
+                    if(!remove_loops_no_branch && !exact) { break;}
+                    ok = 0;
+                    // D4. postsets must match
+                    j = 0;
+                    for (size_t i = 0; i < trans2.post.size(); ++i, ++j) {
+                        Arc& arc2 = trans2.post[i];
+                        for(; j < trans1.post.size() && trans1.post[j].place < arc2.place; ++j)
+                        {
+                            post_equal &= placeInQuery[trans1.post[j].place] == 0;
+                            exact = false;
+                        }
+                        if(j >= trans1.post.size() || trans1.post[j].place != arc2.place)
+                        {
+                            ok = 1;
+                            break;
+                        }
+                        Arc& arc = trans1.post[j];
+                        if (arc2.place != arc.place) {
                             ok = 2;
                             break;
                         }
+                        post_equal = post_equal && (placeInQuery[arc2.place] == 0 ||
+                                                    arc.weight * mult == arc2.weight);
+                        exact &= arc.weight * mult == arc2.weight;
+                        if (arc2.weight > arc.weight * mult) {
+                            ok = 2;
+                            break;
+                        }
+                        if(!post_equal) break;
                     }
 
-                    if (ok == 2) break;
-                    else if (ok == 1) continue;
+                    for(; j < trans1.post.size(); ++j)
+                    {
+                        post_equal &= placeInQuery[trans1.post[j].place] == 0;
+                        exact = false;
+                    }
+
+                    if(!post_equal) { break;}
+                    if (ok == 2) { break;}
+                    else if (ok == 1) {
+                        continue;
+                    }
+                    if(!remove_loops_no_branch && !exact) { break;}
 
                     // UD1. Remove transition t2
                     continueReductions = true;
@@ -1567,34 +1622,7 @@ namespace PetriEngine {
         return reduced;
     }
 
-    std::array tnames {
-            "T-lb_balancing_receive_notification_10",
-            "T-lb_balancing_receive_notification_2",
-            "T-lb_balancing_receive_notification_3",
-            "T-lb_balancing_receive_notification_8",
-            "T-lb_balancing_receive_notification_9",
-            "T-lb_idle_receive_notification_4",
-            "T-lb_no_balance_1",
-            "T-lb_receive_client_1",
-            "T-lb_receive_client_2",
-            "T-lb_receive_client_3",
-            "T-lb_receive_client_5",
-            "T-lb_route_to_1_1",
-            "T-lb_route_to_1_8",
-            "T-lb_route_to_1_87",
-            "T-lb_route_to_2_165",
-            "T-lb_route_to_2_43",
-            "T-lb_route_to_2_50",
-            "T-server_endloop_1",
-            "T-server_endloop_2",
-            "T-server_process_1",
-            "T-server_process_10",
-            "T-server_process_3",
-            "T-server_process_7"
-    };
-
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
-
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool contains_next, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1605,10 +1633,10 @@ namespace PetriEngine {
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;
-                if(!next_safe)
+                if(!contains_next)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                    while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, false)) changed = true;
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             }
@@ -1617,29 +1645,30 @@ namespace PetriEngine {
             bool changed = false;
             do
             {
-                if(remove_loops && !next_safe)
-                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
+                if(remove_loops && !contains_next)
+                    while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe)
+                        if(remove_loops && !contains_next)
+                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        if(!contains_next)
                         {
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops && all_ltl)) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
-                    if(!next_safe)
+                    if(!contains_next)
                     { // then apply tokens moving rules
                         //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     }
                 } while(changed && !hasTimedout());
-                if(!next_safe && !changed)
+                if(!contains_next && !changed)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
@@ -1652,7 +1681,7 @@ namespace PetriEngine {
             const char* rnames = "ABCDEFGHIJK";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
-                if(next_safe)
+                if(contains_next)
                 {
                     if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
@@ -1684,13 +1713,13 @@ namespace PetriEngine {
                             while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 1:
-                            while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 2:
                             while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 3:
-                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops && all_ltl)) changed = true;
                             break;
                         case 4:
                             while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
@@ -1699,19 +1728,19 @@ namespace PetriEngine {
                             while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 6:
-                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 7:
                             while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 8:
-                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
+                            while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
                             break;
                         case 9:
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 10:
-                            if (ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers)) changed = true;
+                            if (ReducebyRuleK(context.getQueryPlaceCount(), all_reach)) changed = true;
                             break;
                     }
 #ifndef NDEBUG
