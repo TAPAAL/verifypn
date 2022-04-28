@@ -330,7 +330,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));
             }
-            if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 3) {
+            if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 4) {
                 throw base_error("Argument Error: Invalid reduction argument ", std::quoted(argv[i]));
             }
             if (enablereduction == 3) {
@@ -338,7 +338,7 @@ bool options_t::parse(int argc, const char** argv) {
                 std::vector<std::string> q = explode(argv[++i]);
                 for (auto& qn : q) {
                     int32_t n;
-                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 10) {
+                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 18) {
                         throw base_error("Error in reduction rule choice ", std::quoted(qn));
                     } else {
                         reductions.push_back(n);
@@ -583,6 +583,9 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
+            printf("                        Mathias Mehl Sørensen <mathiasmehlsoerensen@gmail.com>\n");
+            printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
         } else if (modelfile == nullptr) {
