@@ -53,14 +53,14 @@ namespace PetriEngine {
         void addInputArc(const shared_const_string& place,
                 const shared_const_string& transition,
                 bool inhibitor,
-                int weight);
-        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, int weight);
+                uint32_t weight);
+        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, uint32_t weight);
 
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int weight) override;
-        void addOutputArc(const std::string& transition, const std::string& place, int weight) override;
+                uint32_t weight) override;
+        void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override;
 
         virtual void sort() override;
         /** Make the resulting petri net, you take ownership */

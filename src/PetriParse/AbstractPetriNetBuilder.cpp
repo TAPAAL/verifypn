@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <PetriEngine/AbstractPetriNetBuilder.h>
 
 
 namespace PetriEngine {
@@ -27,5 +28,4 @@ namespace PetriEngine {
         PNMLParser parser;
         parser.parse(model, this);
     }
-
 }

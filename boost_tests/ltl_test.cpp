@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality, * utf::timeout(300)) {
         ResultPrinter::NotSatisfied};
 
     auto [pn, conditions, qstrings] = load_pn("/models/Angiogenesis-PT-01/model.pnml",
-        "/models/Angiogenesis-PT-01/LTLCardinality.xml", qnums);
+        "/models/Angiogenesis-PT-01/LTLCardinality.xml", qnums, TemporalLogic::LTL);
 
     for (auto i : qnums) {
         for (bool trace :{false, true}) {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability, * utf::timeout(300
         ResultPrinter::Satisfied};
 
     auto [pn, conditions, qstrings] = load_pn("/models/Angiogenesis-PT-01/model.pnml",
-        "/models/Angiogenesis-PT-01/LTLFireability.xml", qnums);
+        "/models/Angiogenesis-PT-01/LTLFireability.xml", qnums, TemporalLogic::LTL);
 
     for (auto i : qnums) {
         for (bool trace :{false, true}) {

@@ -10,6 +10,7 @@ namespace PetriEngine {
             auto& transitions = _builder.transitions();
             _stable.resize(places.size());
             for (uint32_t placeId = 0; placeId < places.size(); ++placeId) {
+                if (places[placeId].skipped) continue;
                 _stable[placeId] = true;
                 if (!places[placeId]._post.empty() &&
                     places[placeId]._post.size() == places[placeId]._pre.size()) {

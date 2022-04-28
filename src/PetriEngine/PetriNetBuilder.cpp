@@ -93,14 +93,14 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight)
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, uint32_t weight)
     {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addInputArc(spn, stn, inhibitor, weight);
     }
 
-    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, int weight) {
+    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, uint32_t weight) {
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -111,6 +111,21 @@ namespace PetriEngine {
         }
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
+
+        for (Arc& arc : _transitions[t].pre){
+            if (arc.place == p){
+                if (inhibitor == arc.inhib) {
+                    if (!inhibitor){
+                        arc.weight += weight;
+                    } else {
+                        arc.weight = std::min(arc.weight, weight);
+                    }
+                } else {
+                    throw base_error("Adding an inhibitor and a non-inhibitor arc to the same Place/Transition pair:", place, transition);
+                }
+                return;
+            }
+        }
 
         Arc arc;
         arc.place = p;
@@ -126,13 +141,13 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, uint32_t weight) {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addOutputArc(stn, spn, weight);
     }
 
-    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, uint32_t weight) {
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -145,6 +160,13 @@ namespace PetriEngine {
         uint32_t t = _transitionnames[transition];
         assert(t < _transitions.size());
         assert(p < _places.size());
+
+        for (Arc& arc : _transitions[t].post){
+            if (arc.place == p){
+                arc.weight += weight;
+                return;
+            }
+        }
 
         Arc arc;
         arc.place = p;

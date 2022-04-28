@@ -46,6 +46,9 @@
 
 #include "VerifyPN.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "PetriEngine/PQL/ContainsVisitor.h"
+#include "PetriEngine/Colored/Reduction/ColoredReducer.h"
+#include "PetriEngine/PQL/ColoredUseVisitor.h"
 #include "LTL/LTLValidator.h"
 #include "LTL/Simplification/SpotToPQL.h"
 
@@ -55,6 +58,79 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
+
+bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
+                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reductiontype,
+                   std::vector<uint32_t>& reductions) {
+    if (!cpnBuilder.isColored()) return false;
+
+    if (reductiontype == 0) {
+        out << "\nSkipping colored structural reductions (-R 0)" << std::endl;
+        out << "Net consists of " << cpnBuilder.getPlaceCount() << " places and " << cpnBuilder.getTransitionCount() << " transitions" << std::endl;
+        return false;
+    }
+
+    ColoredUseVisitor useVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount(),
+                                 cpnBuilder.colored_transitionnames(), cpnBuilder.getTransitionCount());
+    bool preserveLoops = false;
+    bool preserveStutter = false;
+    bool allReach = true;
+    bool allLtl = true;
+    bool allCtl = true;
+
+    for (auto &q: queries) {
+        PQL::Visitor::visit(useVisitor, q);
+        preserveLoops |= PetriEngine::PQL::isLoopSensitive(q);
+        preserveStutter |= PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
+        bool is_reach = PetriEngine::PQL::isReachability(q);
+        if(!is_reach)
+        {
+            allReach = false;
+            if(allCtl)
+            {
+                IsCTLVisitor v;
+                Visitor::visit(v, q);
+                allCtl = v.isCTL;
+            }
+            if(allLtl)
+            {
+                LTL::LTLValidator isLtl;
+                allLtl = isLtl.isLTL(q);
+            }
+        }
+    }
+
+
+    if(!allCtl && !allLtl)
+    {
+        out << "Warning: Couldn't correctly detect query type in colored reducer" << std::endl;
+        return false;
+    }
+
+    Colored::Reduction::QueryType queryType = allReach ? Colored::Reduction::QueryType::Reach :
+            (allCtl ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
+
+    Colored::Reduction::ColoredReducer reducer(cpnBuilder);
+    bool anyReduction = reducer.reduce(timeout, useVisitor, queryType, preserveLoops, preserveStutter, reductiontype, reductions);
+
+    auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
+    auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();
+    double placePercentage = 100 * (double)removedPlacesCount / reducer.origPlaceCount();
+    double transitionPercentage = 100 * (double)removedTransitionsCount / reducer.origTransitionCount();
+
+    out << "\nColored structural reductions computed in " << reducer.time() << " seconds" << std::endl;
+    out << "Reduced from " << reducer.origPlaceCount() << " to " << reducer.unskippedPlacesCount() << " places " <<
+        "(" << removedPlacesCount << ", " << placePercentage << "%)" << std::endl;
+    out << "Reduced from " << reducer.origTransitionCount() << " to " << reducer.unskippedTransitionsCount() << " transitions " <<
+        "(" << removedTransitionsCount << ", " << transitionPercentage << "%)" << std::endl;
+
+    auto summary = reducer.createApplicationSummary();
+    for (auto& rule : summary) {
+        out << "Applications of rule " << rule.name << ": " << rule.applications << std::endl;
+    }
+
+    return anyReduction;
+}
 
 std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
@@ -95,17 +171,17 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         }
 
         out << "Size of colored net: " <<
-            cpnBuilder.getPlaceCount() << " places, " <<
-            cpnBuilder.getTransitionCount() << " transitions, and " <<
+            cpnBuilder.unskippedPlacesCount() << " places, " <<
+            cpnBuilder.unskippedTransitionsCount() << " transitions, and " <<
             cpnBuilder.getArcCount() << " arcs" << std::endl;
         out << "Size of unfolded net: " <<
             r.numberOfPlaces() << " places, " <<
             r.numberOfTransitions() << " transitions, and " <<
             unfolder.number_of_arcs() << " arcs" << std::endl;
-        out << "Unfolded in " << unfolder.time() << " seconds" << std::endl;
         if (compute_partiton) {
             out << "Partitioned in " << partition.time() << " seconds" << std::endl;
         }
+        out << "Unfolded in " << unfolder.time() << " seconds" << std::endl;
         return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
             (std::move(r),
             shared_name_name_map{unfolder.transition_names()},
