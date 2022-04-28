@@ -1622,7 +1622,7 @@ namespace PetriEngine {
         return reduced;
     }
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool next_safe, std::vector<uint32_t>& reduction) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool contains_next, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1633,7 +1633,7 @@ namespace PetriEngine {
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;
-                if(!next_safe)
+                if(!contains_next)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, false)) changed = true;
@@ -1645,29 +1645,30 @@ namespace PetriEngine {
             bool changed = false;
             do
             {
-                if(remove_loops && !next_safe)
+                if(remove_loops && !contains_next)
                     while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe)
+                        if(remove_loops && !contains_next)
+                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        if(!contains_next)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops && all_ltl)) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
-                    if(!next_safe)
+                    if(!contains_next)
                     { // then apply tokens moving rules
                         //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     }
                 } while(changed && !hasTimedout());
-                if(!next_safe && !changed)
+                if(!contains_next && !changed)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
@@ -1680,7 +1681,7 @@ namespace PetriEngine {
             const char* rnames = "ABCDEFGHIJK";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
-                if(next_safe)
+                if(contains_next)
                 {
                     if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
