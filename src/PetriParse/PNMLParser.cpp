@@ -360,9 +360,9 @@ void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector
         std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
 		auto value = element->first_attribute("value")->value();
 		auto intRangeElement = element->first_node("finiteintrange");
-		uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
-		uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
-		expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end)));
+		const char* start = intRangeElement->first_attribute("start")->value();
+		const char* end = intRangeElement->first_attribute("end")->value();
+		expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start, end)));
         collectedColors.push_back(expressionsToAdd);
 	} else if (strcmp(element->name(), "useroperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0
 					|| strcmp(element->name(), "successor") == 0 || strcmp(element->name(), "predecessor") == 0) {
@@ -486,8 +486,8 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
     } else if (strcmp(element->name(), "finiteintrangeconstant") == 0){
 		auto value = element->first_attribute("value")->value();
 		auto intRangeElement = element->first_node("finiteintrange");
-		uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
-		uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
+		const char* start = intRangeElement->first_attribute("start")->value();
+		const char* end = intRangeElement->first_attribute("end")->value();
 		return std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end));
 
 	} else if (strcmp(element->name(), "tuple") == 0) {
@@ -892,7 +892,7 @@ std::vector<PetriEngine::Colored::ColorExpression_ptr> PNMLParser::findPartition
     return colorExpressions;
 }
 
-const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, uint32_t start, uint32_t end) const{
+const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, const char* start, const char* end) const{
     bool placeTypeIsTuple = false;
     if (!hasPartition && !placeTypeContext.empty()) {
         auto &placeColorType = colorTypes.find(placeTypeContext)->second;
@@ -908,14 +908,13 @@ const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* 
                 //go through all colotypes in the tuple
                 for (uint32_t i = 0; i < placeColorType->productSize(); i++) {
                     const auto &nestedColorType = pt->getNestedColorType(i);
-                    if (nestedColorType->productSize() > 1) {
+                    if (nestedColorType->isProduct()) {
                         throw base_error("Nested products when finding colors: ", nestedColorType->getName());
                     }
-                    auto col = (*nestedColorType)[value];
-                    if (col) {
-                        if ((*nestedColorType).operator[](size_t{0}).getId() == (start - 1) &&
-                            (*elem.second).operator[]((*elem.second).size() - 1).getId() == end - 1)
-                            return col;
+                    const std::string& fn = (*nestedColorType)[size_t{0}].getColorName();
+                    const std::string& ln = (*nestedColorType)[(*nestedColorType).size()-1].getColorName();
+                    if(fn.compare(start) == 0 && ln.compare(end) == 0) {
+                        return &(*nestedColorType)[atoll(value) - atoll(start)];
                     }
                 }
                 //type of place is not a tuple
@@ -923,11 +922,12 @@ const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* 
                 continue;
             }
         }
-		auto col = (*elem.second)[value];
-		if (col){
-			if((*elem.second).operator[](size_t{0}).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
-				return col;
-		}
+        if(elem.second->isProduct()) continue;
+        const std::string& fn = (*elem.second)[size_t{0}].getColorName();
+        const std::string& ln = (*elem.second)[(*elem.second).size()-1].getColorName();
+        if(fn.compare(start) == 0 && ln.compare(end) == 0) {
+            return &(*elem.second)[atoll(value) - atoll(start)];
+        }
 	}
 	throw base_error("Could not find color: ", value, "\nCANNOT_COMPUTE\n");
 }

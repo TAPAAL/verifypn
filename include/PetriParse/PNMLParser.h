@@ -101,7 +101,7 @@ private:
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::Color* findColor(const char* name) const;
-    const PetriEngine::Colored::Color* findColorForIntRange(const char* value, uint32_t start, uint32_t end) const;
+    const PetriEngine::Colored::Color* findColorForIntRange(const char* value, const char* start, const char* end) const;
     std::vector<PetriEngine::Colored::ColorExpression_ptr> findPartitionColors(rapidxml::xml_node<>* element) const;
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
