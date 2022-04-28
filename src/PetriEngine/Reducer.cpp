@@ -705,7 +705,7 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops) {
+    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops_no_branch) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs
         // This does not alter the trace.
         bool continueReductions = false;
@@ -765,7 +765,7 @@ namespace PetriEngine {
                     // From D3, and D4 we have that pre and post-sets are the same
                     if (trans1.post.size() < trans2.post.size()) { break;}
                     if (trans1.pre.size() > trans2.pre.size()) { break;}
-                    if (!remove_loops && (trans1.pre.size() != trans2.pre.size() ||
+                    if (!remove_loops_no_branch && (trans1.pre.size() != trans2.pre.size() ||
                                           trans1.post.size() != trans2.post.size()))
                     {
                         break; // we require exactness.
@@ -828,7 +828,7 @@ namespace PetriEngine {
                     if (ok == 2) { break;}
                     else if (ok == 1) { continue;}
                     if(mult != 1 && !all_reach) { break;}
-                    if(!remove_loops && !exact) { break;}
+                    if(!remove_loops_no_branch && !exact) { break;}
                     ok = 0;
                     // D4. postsets must match
                     j = 0;
@@ -870,7 +870,7 @@ namespace PetriEngine {
                     else if (ok == 1) {
                         continue;
                     }
-                    if(!remove_loops && !exact) { break;}
+                    if(!remove_loops_no_branch && !exact) { break;}
 
                     // UD1. Remove transition t2
                     continueReductions = true;
@@ -1622,7 +1622,7 @@ namespace PetriEngine {
         return reduced;
     }
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool next_safe, std::vector<uint32_t>& reduction) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool all_reach, bool all_ltl, bool next_safe, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1636,7 +1636,7 @@ namespace PetriEngine {
                 if(!next_safe)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
-                    while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
+                    while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, false)) changed = true;
                     while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             }
@@ -1656,7 +1656,7 @@ namespace PetriEngine {
                         if(!next_safe)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
-                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops && all_ltl)) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
@@ -1718,7 +1718,7 @@ namespace PetriEngine {
                             while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 3:
-                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops)) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, remove_loops && all_ltl)) changed = true;
                             break;
                         case 4:
                             while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;

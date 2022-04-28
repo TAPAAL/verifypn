@@ -30,6 +30,7 @@
 #include <PetriEngine/PQL/PredicateCheckers.h>
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "LTL/LTLValidator.h"
 
 
 namespace PetriEngine {
@@ -528,6 +529,7 @@ namespace PetriEngine {
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
+        bool all_ltl = true;
         bool remove_loops = true;
         bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
@@ -542,14 +544,19 @@ namespace PetriEngine {
                results[i] == Reachability::ResultPrinter::LTL)
             {
                 PetriEngine::PQL::analyze(queries[i], placecontext);
-                all_reach &= PetriEngine::PQL::isReachability(queries[i]);
+                bool is_reach = PetriEngine::PQL::isReachability(queries[i]);
+                if(!is_reach) {
+                    LTL::LTLValidator isLtl;
+                    all_reach = false;
+                    all_ltl &= isLtl.isLTL(queries[i]);
+                }
                 remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.
                 contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions);
     }
 
 
