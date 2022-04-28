@@ -75,16 +75,40 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
     bool preserveLoops = false;
     bool preserveStutter = false;
     bool allReach = true;
+    bool allLtl = true;
+    bool allCtl = true;
 
     for (auto &q: queries) {
         PQL::Visitor::visit(useVisitor, q);
         preserveLoops |= PetriEngine::PQL::isLoopSensitive(q);
         preserveStutter |= PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
-        allReach &= PetriEngine::PQL::isReachability(q);
+        bool is_reach = PetriEngine::PQL::isReachability(q);
+        if(!is_reach)
+        {
+            allReach = false;
+            if(allCtl)
+            {
+                IsCTLVisitor v;
+                Visitor::visit(v, q);
+                allCtl = v.isCTL;
+            }
+            if(allLtl)
+            {
+                LTL::LTLValidator isLtl;
+                allLtl = isLtl.isLTL(q);
+            }
+        }
+    }
+
+
+    if(!allCtl && !allLtl)
+    {
+        out << "Warning: Couldn't correctly detect query type in colored reducer" << std::endl;
+        return false;
     }
 
     Colored::Reduction::QueryType queryType = allReach ? Colored::Reduction::QueryType::Reach :
-            (logic == TemporalLogic::CTL ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
+            (allCtl ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
 
     Colored::Reduction::ColoredReducer reducer(cpnBuilder);
     bool anyReduction = reducer.reduce(timeout, useVisitor, queryType, preserveLoops, preserveStutter, reductiontype, reductions);

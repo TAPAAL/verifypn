@@ -8,10 +8,12 @@
 #ifndef VERIFYPN_ARCVARMULTISETVISITOR_H
 #define VERIFYPN_ARCVARMULTISETVISITOR_H
 
-#include <utils/errors.h>
 #include "Expressions.h"
 #include "ColorExpressionVisitor.h"
 #include "VarMultiset.h"
+
+#include <utils/errors.h>
+#include <optional>
 
 namespace PetriEngine::Colored {
 
