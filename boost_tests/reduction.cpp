@@ -23,6 +23,8 @@
 
 #include "LTL/LTLSearch.h"
 #include "utils.h"
+#include "CTL/CTLResult.h"
+#include "CTL/CTLEngine.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
@@ -85,6 +87,40 @@ BOOST_AUTO_TEST_CASE(ruleD2, * utf::timeout(60)) {
         auto result = r ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
         BOOST_REQUIRE_EQUAL(expected[i], result);
         ++i;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ruleD3, * utf::timeout(60)) {
+
+    const std::set<size_t> qnums{0};
+    const std::vector<Reachability::ResultPrinter::Result> expected{
+        Reachability::ResultPrinter::NotSatisfied};
+    for(size_t rmode : {0,1})
+    {
+        std::vector<Reachability::ResultPrinter::Result> results{
+            Reachability::ResultPrinter::Unknown};
+
+        auto [conditions, builder, qstrings, trans_names, place_names] = load_builder("/models/DiscoveryGPU-PT-15a/model.pnml",
+            "/models/DiscoveryGPU-PT-15a/ruleDerr.xml", qnums);
+        std::vector<uint32_t> reds;
+        std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
+        contextAnalysis(false, trans_names, place_names, builder, net.get(), conditions);
+        builder.reduce(conditions, results, rmode, false, net.get(), 10, reds);
+        net.reset(builder.makePetriNet(false));
+        contextAnalysis(false, trans_names, place_names, builder, net.get(), conditions);
+
+
+        for (size_t i = 0; i < conditions.size(); ++i) {
+            CTLResult cres(conditions[i].get());
+            AsCTL v;
+            Visitor::visit(v, conditions[i]);
+            std::cerr << std::endl;
+            auto p = PetriEngine::PQL::pushNegation(v._ctl_query);
+            bool res = CTLSingleSolve(p.get(), net.get(), CTL::CZero, Strategy::DFS, false, cres);
+            auto result = res ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
+            BOOST_REQUIRE_EQUAL(expected[i], result);
+            ++i;
+        }
     }
 }
 

@@ -56,6 +56,13 @@ namespace PetriEngine { namespace PQL {
     }
 
     Condition_ptr
+    pushNegation(Condition_ptr cond) {
+        negstat_t s;
+        EvaluationContext c(nullptr, nullptr);
+        return pushNegation(cond, s, c, false, false, false);
+    }
+
+    Condition_ptr
     pushNegation(Condition_ptr cond, negstat_t &stats, const EvaluationContext &context, bool nested, bool negated, bool initrw) {
         PushNegationVisitor pn_visitor(stats, context, nested, negated, initrw);
         Visitor::visit(pn_visitor, cond);

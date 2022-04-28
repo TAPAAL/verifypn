@@ -8,7 +8,13 @@
 #include "Algorithm/AlgorithmTypes.h"
 #include "../PetriEngine/PQL/PQL.h"
 
+#include "CTLResult.h"
+
 #include <set>
+
+bool CTLSingleSolve(PetriEngine::PQL::Condition* query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    Strategy strategytype, bool partial_order, CTLResult& result);
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
