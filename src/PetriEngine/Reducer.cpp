@@ -1753,7 +1753,8 @@ else if (inhibArcs == 0)
                                 }
 
                                 // Check the requirement to fire. For non-inhibitors i <= j should hold, for inhibitors it is i >= j
-                                if ((!pre_subset[i].inhib && pre_superset[j].weight < pre_subset[i].weight) || (pre_subset[i].inhib && pre_superset[j].weight > pre_subset[i].weight)) {
+                                if ((!pre_subset[i].inhib && pre_superset[j].weight < pre_subset[i].weight) ||
+                                     (pre_subset[i].inhib && pre_superset[j].weight > pre_subset[i].weight)) {
                                     ok = false;
                                     break;
                                 }
@@ -1769,19 +1770,19 @@ else if (inhibArcs == 0)
                         }
                         size_t superset_in_weight = 0;
                         if (!j_done && place == pre_superset[j].place){
-                            if (!pre_superset[i].inhib) superset_in_weight = pre_superset[j].weight;
+                            if (!pre_superset[j].inhib) superset_in_weight = pre_superset[j].weight;
                             j++;
                             j_done = j >= pre_superset.size();
                         }
                         size_t subset_out_weight = 0;
                         if (!k_done && place == post_subset[k].place){
-                            if (!post_subset[i].inhib) subset_out_weight = post_subset[k].weight;
+                            if (!post_subset[k].inhib) subset_out_weight = post_subset[k].weight;
                             k++;
                             k_done = k >= post_subset.size();
                         }
                         size_t superset_out_weight = 0;
                         if (!l_done && place == post_superset[l].place){
-                            if (!post_superset[i].inhib) superset_out_weight = post_superset[l].weight;
+                            if (!post_superset[l].inhib) superset_out_weight = post_superset[l].weight;
                             l++;
                             l_done = l >= post_superset.size();
                         }
@@ -2257,7 +2258,7 @@ else if (inhibArcs == 0)
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleR(uint32_t* placeInQuery)
+    bool Reducer::ReducebyRuleR(uint32_t* placeInQuery, uint32_t explosion_limiter)
     {
         // Rule R performs post agglomeration on a single producer, merging its firing with all consumers
 
@@ -2276,6 +2277,8 @@ else if (inhibArcs == 0)
             // Check that prod and cons are disjoint
             const auto presize = place.producers.size();
             const auto postsize = place.consumers.size();
+            if(presize * postsize > explosion_limiter)
+                continue;
             bool ok = true;
             uint32_t i = 0, j = 0;
             while (i < presize && j < postsize)
@@ -2436,7 +2439,7 @@ else if (inhibArcs == 0)
                 continue;
 
             // Performance consideration
-            if (place.producers.size() > explosion_limiter){
+            if ((place.producers.size()*place.consumers.size()) > explosion_limiter) {
                 continue;
             }
 
@@ -2703,6 +2706,8 @@ else if (inhibArcs == 0)
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
+        constexpr uint32_t explosion_limiter = 6;
+
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
             std::cout << "Rule H disabled when a trace is requested." << std::endl;
@@ -2749,8 +2754,8 @@ else if (inhibArcs == 0)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
                     while (ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
-                    while (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
-                    while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, 100)) changed = true;
+                    while (ReducebyRuleR(context.getQueryPlaceCount(), explosion_limiter)) changed = true;
+                    while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, explosion_limiter)) changed = true;
 
                 }
             } while(!hasTimedout() && changed);
@@ -2780,7 +2785,6 @@ else if (inhibArcs == 0)
                 }
             }
             bool changed = true;
-            uint32_t explosion_limiter = 5;
 
             while(changed && !hasTimedout())
             {
@@ -2843,7 +2847,7 @@ else if (inhibArcs == 0)
                             if (ReducebyRuleQ(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 17:
-                            while (ReducebyRuleR(context.getQueryPlaceCount())) changed = true;
+                            while (ReducebyRuleR(context.getQueryPlaceCount(), explosion_limiter)) changed = true;
                             break;
                         case 18:
                             if (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, explosion_limiter)) changed = true;
