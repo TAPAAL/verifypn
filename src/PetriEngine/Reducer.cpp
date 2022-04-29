@@ -2851,10 +2851,12 @@ restart:
 
                 if(!changed && !RQ)
                 {
-                    RQ = true;
-                    while(ReducebyRuleQ(context.getQueryPlaceCount())) RQ = true;
-                    if(RQ)
-                       goto restart;
+                    if(!contains_next)
+                    {
+                        RQ = ReducebyRuleQ(context.getQueryPlaceCount());
+                        if(RQ)
+                            goto restart;
+                    }
                 }
                 RQ = false;
             } while(!hasTimedout() && changed);
