@@ -25,6 +25,8 @@ namespace PetriEngine {
             Visitor() {
             }
 
+            virtual ~Visitor() = default;
+
             template<typename T>
             void accept(T &&element) {
                 _accept(element);

@@ -43,18 +43,14 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
     return ReturnValue::ContinueCode;
 }
 
-bool singleSolve(Condition* query, PetriNet* net,
-                 CTLAlgorithmType algorithmtype,
-                 Strategy strategytype, bool partial_order, CTLResult& result);
-
-bool singleSolve(const Condition_ptr& query, PetriNet* net,
+bool CTLSingleSolve(const Condition_ptr& query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
-    return singleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
+    return CTLSingleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
 }
 
-bool singleSolve(Condition* query, PetriNet* net,
+bool CTLSingleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
@@ -282,7 +278,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
     }
     //else
     {
-        return singleSolve(query, net, algorithmtype, strategytype, partial_order, result);
+        return CTLSingleSolve(query, net, algorithmtype, strategytype, partial_order, result);
     }
 }
 
@@ -328,7 +324,7 @@ ReturnValue CTLMain(PetriNet* net,
         if(!solved)
         {
             if(options.strategy == Strategy::BFS || options.strategy == Strategy::RDFS)
-                result.result = singleSolve(result.query, net, algorithmtype, options.strategy, options.stubbornreduction, result);
+                result.result = CTLSingleSolve(result.query, net, algorithmtype, options.strategy, options.stubbornreduction, result);
             else
                 result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }

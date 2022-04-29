@@ -272,7 +272,6 @@ int main(int argc, const char** argv) {
                             results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                         alldone = false;
                     } else {
-                        queries[i] = prepareForReachability(queries[i]);
                         alldone = false;
                     }
                 }
@@ -483,6 +482,12 @@ int main(int argc, const char** argv) {
             // Change default place-holder to default strategy
             if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
+            // remove the prefix EF/AF (LEGACY, should not be handled here)
+            for(uint32_t i = 0; i < results.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                    queries[i] = prepareForReachability(queries[i]);
+            }
             if (options.tar && net->numberOfPlaces() > 0) {
                 //Create reachability search strategy
                 TarResultPrinter tar_printer(printer);
