@@ -44,8 +44,8 @@ namespace PetriEngine::Colored {
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
             bool reduce(uint32_t timeout, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
-                        bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
-                        std::vector<uint32_t>& reductions);
+                        bool preserveLoops, bool preserveStutter, uint32_t reduceMode,
+                        std::vector<uint32_t>& userSequence);
 
             double time() const {
                 return _timeSpent;
@@ -127,12 +127,12 @@ namespace PetriEngine::Colored {
             std::vector<uint32_t> _skippedPlaces;
             std::vector<uint32_t> _skippedTransitions;
 
-            std::vector<ReductionRule *> buildApplicationSequence(std::vector<uint32_t>& reductions) {
-                std::vector<ReductionRule *> specifiedReductions;
-                for (auto &rule: reductions) {
-                    specifiedReductions.push_back(_reductions[rule]);
+            std::vector<ReductionRule *> buildApplicationSequence(std::vector<uint32_t>& userReductionSequence) {
+                std::vector<ReductionRule *> resultSequence;
+                for (auto &rule: userReductionSequence) {
+                    resultSequence.push_back(_reductions[rule]);
                 }
-                return specifiedReductions;
+                return resultSequence;
             }
 
             // Reduction rules
