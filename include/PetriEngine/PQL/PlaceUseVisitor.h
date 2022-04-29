@@ -24,6 +24,7 @@ namespace PQL {
     public:
 
         PlaceUseVisitor(size_t places);
+        virtual ~PlaceUseVisitor() = default;
 
         bool operator[](size_t id) const {
             return _in_use[id];

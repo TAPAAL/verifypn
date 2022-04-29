@@ -19,4 +19,4 @@ add_library(PetriEngine ${HEADER_FILES}
     TraceReplay.cpp
     options.cpp)
 
-target_link_libraries(PetriEngine PRIVATE Colored ColoredReduction Structures Simplification Stubborn Reachability PQL TAR Synthesis)
+target_link_libraries(PetriEngine PRIVATE Colored ColoredReduction Structures Simplification Stubborn Reachability PQL TAR PQL Synthesis)
