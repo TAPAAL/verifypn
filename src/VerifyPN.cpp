@@ -96,7 +96,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
             }
         }
     }
-    
+
     if (!allCtl && !allLtl)
     {
         out << "Warning: Could not correctly detect query type in colored reducer" << std::endl;
