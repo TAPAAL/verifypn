@@ -17,6 +17,7 @@
 #include <queue>
 #include <set>
 #include <algorithm>
+#include <numeric>
 
 namespace PetriEngine {
 
@@ -1566,6 +1567,62 @@ else if (inhibArcs == 0)
         return continueReductions;
     }
 
+    bool Reducer::ReducebyRuleJ(uint32_t* placeInQuery) {
+        bool any = false;
+        for(std::size_t p = 0; p < parent->numberOfPlaces(); ++p)
+        {
+            if(placeInQuery[p] > 0) continue;
+            auto& place = parent->_places[p];
+            if(place.skip) continue;
+            uint32_t mod = std::numeric_limits<uint32_t>::max();
+            bool ok = true;
+            for(auto& t : parent->_places[p].consumers)
+            {
+                auto& trans = getTransition(t);
+                auto arc = getInArc(p, trans);
+                if(mod == std::numeric_limits<uint32_t>::max())
+                    mod = arc->weight;
+                else
+                    mod = std::gcd(mod, arc->weight);
+                if(mod == 1)
+                    break;
+            }
+            if(!ok) continue;
+            if(mod == 1) continue;
+            for(auto& t : parent->_places[p].producers)
+            {
+                auto& trans = getTransition(t);
+                auto arc = getOutArc(trans, p);
+                if(mod == std::numeric_limits<uint32_t>::max())
+                    mod = arc->weight;
+                else
+                    mod = std::gcd(mod, arc->weight);
+                if(mod == 1)
+                    break;
+            }
+            if(!ok) continue;
+            if(mod == 1) continue;
+
+            ++_ruleJ;
+
+            for(auto& t : parent->_places[p].consumers)
+            {
+                auto& trans = getTransition(t);
+                auto arc = getInArc(p, trans);
+                arc->weight /= mod;
+            }
+            for(auto& t : parent->_places[p].producers)
+            {
+                auto& trans = getTransition(t);
+                auto arc = getInArc(p, trans);
+                arc->weight /= mod;
+            }
+            parent->initialMarking[p] /= mod;
+            any = true;
+        }
+        return any;
+    }
+
     bool Reducer::ReducebyRuleK(uint32_t *placeInQuery, bool remove_consumers) {
         bool reduced = false;
         auto opt = relevant(placeInQuery, remove_consumers);
@@ -2761,6 +2818,7 @@ else if (inhibArcs == 0)
 restart:
                 if(remove_loops && !contains_next)
                     while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
+                while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
