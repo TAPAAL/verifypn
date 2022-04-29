@@ -1574,6 +1574,8 @@ else if (inhibArcs == 0)
             if(placeInQuery[p] > 0) continue;
             auto& place = parent->_places[p];
             if(place.skip) continue;
+            if(place.consumers.empty() && place.producers.empty())
+                continue;
             uint32_t mod = std::numeric_limits<uint32_t>::max();
             bool ok = true;
             for(auto& t : parent->_places[p].consumers)
