@@ -2517,8 +2517,6 @@ else if (inhibArcs == 0)
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++) {
             if (hasTimedout())
                 return false;
-            if (parent->originalNumberOfTransitions() * 2 < numberOfUnskippedTransitions())
-                return false;
 
             const Place &place = parent->_places[pid];
 
@@ -2528,7 +2526,7 @@ else if (inhibArcs == 0)
                 continue;
 
             // Performance consideration
-            if ((place.producers.size()*place.consumers.size()) > explosion_limiter) {
+            if ((place.producers.size()*place.consumers.size()) > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size())) {
                 continue;
             }
 
