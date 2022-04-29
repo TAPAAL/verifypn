@@ -1335,7 +1335,7 @@ else if (inhibArcs == 0)
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
+    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery, bool all_ltl)
     {
         if(reconstructTrace)
             return false; // we don't know where in the loop the tokens are needed
@@ -1372,7 +1372,7 @@ else if (inhibArcs == 0)
             return 1;
         };
 
-        auto removeLoop = [this,placeInQuery](std::vector<uint32_t>& loop) -> bool {
+        auto removeLoop = [this,placeInQuery,all_ltl](std::vector<uint32_t>& loop) -> bool {
             size_t i = 0;
             for(; i < loop.size(); ++i)
                 if(loop[i] == loop.back())
@@ -1399,6 +1399,38 @@ else if (inhibArcs == 0)
                 {
                     continue;
                 }
+
+                if(!all_ltl)
+                {
+                    bool ok = true;
+                    for(auto p : {p1, p2})
+                    {
+                        for(auto& a : {parent->_places[p].producers, parent->_places[p].consumers})
+                        {
+                            for(auto& t : a)
+                            {
+                                auto& trans = getTransition(t);
+                                for(auto& arcset : {trans.pre, trans.post})
+                                {
+                                    for(auto& arc : arcset)
+                                    {
+                                        if(placeInQuery[arc.place] > 0)
+                                        {
+                                            ok = false;
+                                            break;
+                                        }
+                                    }
+                                    if(!ok) break;
+                                }
+                                if(!ok) break;
+                            }
+                            if(!ok) break;
+                        }
+                        if(!ok) break;
+                    }
+                    if(!ok) continue;
+                }
+
                 removed = true;
                 ++_ruleH;
                 skipTransition(loop[j-1]);
@@ -1431,19 +1463,17 @@ else if (inhibArcs == 0)
                 }
 
                 {
-                    auto p2it = place2.producers.begin();
-
-                    for(;p2it != place2.producers.end(); ++p2it)
+                    for(auto p2it : place2.producers)
                     {
-                        auto& t = parent->_transitions[*p2it];
+                        auto& t = parent->_transitions[p2it];
                         Arc a = *getOutArc(t, p2);
                         a.place = p1;
                         auto dest = std::lower_bound(t.post.begin(), t.post.end(), a);
                         if(dest == t.post.end() || dest->place != p1)
                         {
                             t.post.insert(dest, a);
-                            auto lb = std::lower_bound(place1.producers.begin(), place1.producers.end(), *p2it);
-                            place1.producers.insert(lb, *p2it);
+                            auto lb = std::lower_bound(place1.producers.begin(), place1.producers.end(), p2it);
+                            place1.producers.insert(lb, p2it);
                         }
                         else
                         {
@@ -2719,7 +2749,7 @@ else if (inhibArcs == 0)
                 {
                     while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     while(ReducebyRuleD(context.getQueryPlaceCount(), all_reach, false)) changed = true;
-                    while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleH(context.getQueryPlaceCount(), all_ltl)) changed = true;
                 }
             }
         }
@@ -2753,7 +2783,7 @@ else if (inhibArcs == 0)
                 if(!contains_next && !changed)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
-                    while (ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                    while (ReducebyRuleH(context.getQueryPlaceCount(), all_ltl)) changed = true;
                     while (all_ltl && ReducebyRuleR(context.getQueryPlaceCount(), explosion_limiter)) changed = true;
                     while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, explosion_limiter)) changed = true;
 
@@ -2820,7 +2850,7 @@ else if (inhibArcs == 0)
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, all_reach)) changed = true;
                             break;
                         case 7:
-                            while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleH(context.getQueryPlaceCount(), all_ltl)) changed = true;
                             break;
                         case 8:
                             while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
