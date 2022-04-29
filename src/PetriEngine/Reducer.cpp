@@ -576,144 +576,128 @@ namespace PetriEngine {
     }
 
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
-        // Rule C - Places with same input and output-transitions which a modulo each other
+        // Rule C - Places in parallel where one accumulates tokens while the others disable their post set
         bool continueReductions = false;
 
         _pflags.resize(parent->_places.size(), 0);
         std::fill(_pflags.begin(), _pflags.end(), 0);
 
-        for(uint32_t touter = 0; touter < parent->numberOfTransitions(); ++touter)
-        for(size_t outer = 0; outer < parent->_transitions[touter].post.size(); ++outer)
-        {
-            auto pouter = parent->_transitions[touter].post[outer].place;
-            if(_pflags[pouter] > 0) continue;
-            _pflags[pouter] = 1;
-            if(hasTimedout()) return false;
-            const Place &pout = parent->_places[pouter];
-            if(pout.skip) continue;
+        for (uint32_t tid_outer = 0; tid_outer < parent->numberOfTransitions(); ++tid_outer) {
+            for (size_t aid_outer = 0; aid_outer < parent->_transitions[tid_outer].post.size(); ++aid_outer) {
 
-            // C4. No inhib
-            if(pout.inhib) continue;
+                auto pid_outer = parent->_transitions[tid_outer].post[aid_outer].place;
+                if (_pflags[pid_outer] > 0) continue;
+                _pflags[pid_outer] = 1;
 
-            for (size_t inner = outer + 1; inner < parent->_transitions[touter].post.size(); ++inner)
-            {
-                if (pout.skip) break;
-                auto pinner = parent->_transitions[touter].post[inner].place;
-                if(parent->_places[pinner].skip) continue;
+                if (hasTimedout()) return false;
 
-                // C4. No inhib
-                if(parent->_places[pinner].inhib) continue;
+                const Place &pout = parent->_places[pid_outer];
+                if (pout.skip) continue;
 
-                for(size_t swp = 0; swp < 2; ++swp)
-                {
-                    if(hasTimedout()) return false;
-                    if( parent->_places[pinner].skip ||
-                        parent->_places[pouter].skip) break;
+                for (size_t aid_inner = aid_outer + 1; aid_inner < parent->_transitions[tid_outer].post.size(); ++aid_inner) {
+                    if (pout.skip) break;
+                    auto pid_inner = parent->_transitions[tid_outer].post[aid_inner].place;
+                    if (parent->_places[pid_inner].skip) continue;
 
-                    uint p1 = pouter;
-                    uint p2 = pinner;
+                    for (size_t swp = 0; swp < 2; ++swp) {
+                        if (hasTimedout()) return false;
+                        if (parent->_places[pid_inner].skip ||
+                            parent->_places[pid_outer].skip)
+                            break;
 
-                    if(swp == 1) std::swap(p1, p2);
+                        uint p1 = pid_outer;
+                        uint p2 = pid_inner;
 
-                    Place& place1 = parent->_places[p1];
+                        assert(p1 != p2);
+                        if (swp == 1) std::swap(p1, p2);
 
-                    // C1. Not same place
-                    if(p1 == p2) break;
+                        if (placeInQuery[p2] > 0) continue;
 
-                    // C5. Dont mess with query
-                    if(placeInQuery[p2] > 0)
-                        continue;
+                        Place &place1 = parent->_places[p1];
+                        Place &place2 = parent->_places[p2];
 
-                    Place& place2 = parent->_places[p2];
+                        if (place2.producers.empty() || place1.consumers.empty()) continue;
 
-                    // C2, C3. Consumer and producer-sets must match
-                    if(place1.consumers.size() < place2.consumers.size() ||
-                       place1.producers.size() > place2.producers.size())
+                        if (place1.consumers.size() < place2.consumers.size() ||
+                            place1.producers.size() > place2.producers.size())
+                            continue;
+
+                        bool ok = true;
+
+                        double maxDrainRatio = 0;
+
+                        uint32_t i = 0, j = 0;
+                        while (i < place1.consumers.size() && j < place2.consumers.size()) {
+
+                            uint32_t p1t = place1.consumers[i];
+                            uint32_t p2t = place2.consumers[j];
+
+                            if (p2t < p1t) {
+                                // place2.consumers is not a subset of place1.consumers
+                                ok = false;
+                                break;
+                            }
+
+                            i++;
+                            if (p2t > p1t) {
+                                swp = 2; // We can't remove p1, so don't swap
+                                continue;
+                            }
+                            j++;
+
+                            Transition &tran = getTransition(p1t);
+                            const auto &p1Arc = getInArc(p1, tran);
+                            const auto &p2Arc = getInArc(p2, tran);
+
+                            maxDrainRatio = std::max(maxDrainRatio, (double)p2Arc->weight / (double)p1Arc->weight);
+                        }
+
+                        if (!ok || j != place2.consumers.size()) continue;
+
+                        if (parent->initialMarking[p2] < parent->initialMarking[p1] * maxDrainRatio) continue;
+
+                        i = 0, j = 0;
+                        while (i < place1.producers.size() && j < place2.producers.size()) {
+
+                            uint32_t p1t = place1.producers[i];
+                            uint32_t p2t = place2.producers[j];
+
+                            if (p1t < p2t) {
+                                // place1.producers is not a subset of place2.producers
+                                ok = false;
+                                break;
+                            }
+
+                            j++;
+                            if (p1t > p2t) {
+                                swp = 2; // We can't remove p1, so don't swap
+                                continue;
+                            }
+                            i++;
+
+                            Transition &tran = getTransition(p2t);
+                            const auto &p2Arc = getOutArc(tran, p2);
+                            const auto &p1Arc = getOutArc(tran, p1);
+
+                            if (maxDrainRatio > (double)p2Arc->weight / (double)p1Arc->weight) {
+                                ok = false;
+                                break;
+                            }
+                        }
+
+                        if (!ok || i != place1.producers.size()) continue;
+
+                        continueReductions = true;
+                        _ruleC++;
+                        skipPlace(p2);
+
+                        // p2 has now been removed from tid_outer.post, so update arc indexes to not miss any places
+                        if (p2 == pid_outer) {
+                            aid_outer--;
+                            aid_inner--;
+                        } else if (p2 == pid_inner) aid_inner--;
                         break;
-
-                    long double mult = 1;
-
-                    // C8. Consumers must match with weights
-                    int ok = 0;
-                    size_t j = 0;
-                    for(size_t i = 0; i < place2.consumers.size(); ++i)
-                    {
-                        while(j < place1.consumers.size() && place1.consumers[j] < place2.consumers[i] ) ++j;
-                        if(place1.consumers.size() <= j || place1.consumers[j] != place2.consumers[i])
-                        {
-                            ok = 2;
-                            break;
-                        }
-
-                        Transition& trans = getTransition(place1.consumers[j]);
-                        auto a1 = getInArc(p1, trans);
-                        auto a2 = getInArc(p2, trans);
-                        assert(a1 != trans.pre.end());
-                        assert(a2 != trans.pre.end());
-                        mult = std::max(mult, ((long double)a2->weight) / ((long double)a1->weight));
                     }
-
-                    if(ok == 2) break;
-
-                    // C6. We do not care about excess markings in p2.
-                    if(mult != std::numeric_limits<long double>::max() &&
-                            (((long double)parent->initialMarking[p1]) * mult) > ((long double)parent->initialMarking[p2]))
-                    {
-                        continue;
-                    }
-
-
-                    // C7. Producers must match with weights
-                    j = 0;
-                    for(size_t i = 0; i < place1.producers.size(); ++i)
-                    {
-                        while(j < place2.producers.size() && place2.producers[j] < place1.producers[i]) ++j;
-                        if(j == place2.producers.size() || place1.producers[i] != place2.producers[j])
-                        {
-                            ok = 2;
-                            break;
-                        }
-
-                        Transition& trans = getTransition(place1.producers[i]);
-                        auto a1 = getOutArc(trans, p1);
-                        auto a2 = getOutArc(trans, p2);
-                        assert(a1 != trans.post.end());
-                        assert(a2 != trans.post.end());
-
-                        if(((long double)a1->weight)*mult > ((long double)a2->weight))
-                        {
-                            ok = 1;
-                            break;
-                        }
-                    }
-
-                    if(ok == 2) break;
-                    else if(ok == 1) continue;
-
-                    parent->initialMarking[p2] = 0;
-
-                    if(reconstructTrace)
-                    {
-                        for(auto t : place2.consumers)
-                        {
-                            auto tname = getTransitionName(t);
-                            const ArcIter arc = getInArc(p2, getTransition(t));
-                            _extraconsume[*tname].emplace_back(getPlaceName(p2), arc->weight);
-                        }
-                    }
-
-                    continueReductions = true;
-                    _ruleC++;
-                    // UC1. Remove p2
-                    skipPlace(p2);
-                    _pflags[pouter] = 0;
-
-                    // p2 has now been removed from touter.post, so update indexes to not miss any
-                    if (p2 == pouter) {
-                        outer--;
-                        inner--;
-                    } else if (p2 == pinner) inner--;
-                    break;
                 }
             }
         }
@@ -916,68 +900,25 @@ namespace PetriEngine {
 
             _ruleE++;
             continueReductions = true;
-            
+
         }
         assert(consistent());
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
+    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_consumers) {
         bool reduced = false;
-        if(remove_loops)
-        {
 
-            auto result = relevant(placeInQuery, remove_consumers);
-            if (!result) {
-                return false;
-            }
-            auto[tseen, pseen] = result.value();
-
-            reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
-
-            if(reduced)
-                ++_ruleI;
+        auto result = relevant(placeInQuery, remove_consumers);
+        if (!result) {
+            return false;
         }
-        else
-        {
-            const size_t numberofplaces = parent->numberOfPlaces();
-            for(uint32_t p = 0; p < numberofplaces; ++p)
-            {
-                if(hasTimedout()) return false;
-                Place& place = parent->_places[p];
-                if(place.skip) continue;
-                if(place.inhib) continue;
-                if(placeInQuery[p] > 0) continue;
-                if(place.consumers.size() > 0) continue;
+        auto[tseen, pseen] = result.value();
 
-                ++_ruleI;
-                reduced = true;
+        reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
 
-                std::vector<uint32_t> torem;
-                if(remove_consumers)
-                {
-                    for(auto& t : place.producers)
-                    {
-                        auto& trans = parent->_transitions[t];
-                        if(trans.post.size() != 1) // place will be removed later
-                            continue;
-                        bool ok = true;
-                        for(auto& a : trans.pre)
-                        {
-                            if(placeInQuery[a.place] > 0)
-                            {
-                                ok = false;
-                            }
-                        }
-                        if(ok) torem.push_back(t);
-                    }
-                }
-                skipPlace(p);
-                for(auto t : torem)
-                    skipTransition(t);
-                assert(consistent());
-            }
-        }
+        if(reduced)
+            ++_ruleI;
 
         return reduced;
     }
@@ -1677,7 +1618,7 @@ namespace PetriEngine {
             do
             {
                 if(remove_loops && !next_safe)
-                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                 do{
                     do { // start by rules that do not move tokens
                         changed = false;
@@ -1687,8 +1628,6 @@ namespace PetriEngine {
                         if(!next_safe)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
-                            if(!remove_loops)
-                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
                             //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
@@ -1722,7 +1661,7 @@ namespace PetriEngine {
 			            continue;
                     }
                 }
-                if(!remove_loops && reduction[i] == 5)
+                if(!remove_loops && (reduction[i] == 5 || reduction[i] == 8))
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
@@ -1766,7 +1705,7 @@ namespace PetriEngine {
                             while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 8:
-                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                             break;
                         case 9:
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;

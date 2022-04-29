@@ -8,9 +8,11 @@
 #ifndef VERIFYPN_VARMULTISET_H
 #define VERIFYPN_VARMULTISET_H
 
+#include "Colors.h"
+
 #include <vector>
 #include <cstdint>
-#include "Colors.h"
+#include <optional>
 
 namespace PetriEngine::Colored {
     class VarMultiset {

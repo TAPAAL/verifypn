@@ -104,6 +104,7 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
                 {
                     for(auto approx : {false, true})
                     {
+                        if(approx && reduce) continue;
                         std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                         try {
                             auto [pn, conditions, qstrings] = load_pn(model.c_str(),
@@ -116,8 +117,8 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
                                 std::vector<Condition_ptr> vec{c2};
                                 std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
                                 strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                                BOOST_REQUIRE(!approx);
-                                BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                                if(!approx) // if it is approx, the answer could be anything, the handling-logic is in the result-printer
+                                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
                             }
                         } catch (const base_error& er) {
                             BOOST_REQUIRE(approx);
