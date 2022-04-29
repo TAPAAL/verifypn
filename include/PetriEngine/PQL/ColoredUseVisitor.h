@@ -55,6 +55,8 @@ namespace PetriEngine::PQL {
 
         void _accept(const BooleanCondition *element) override;
 
+        void _accept(const UpperBoundsCondition *element) override;
+
         void _accept(const IdentifierExpr *element) override;
 
         void _accept(const LiteralExpr *element) override;
