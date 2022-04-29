@@ -2307,7 +2307,7 @@ else if (inhibArcs == 0)
             // Check that prod and cons are disjoint
             const auto presize = place.producers.size();
             const auto postsize = place.consumers.size();
-            if(presize * postsize > explosion_limiter)
+            if(presize * postsize > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size()))
                 continue;
             bool ok = true;
             uint32_t i = 0, j = 0;
@@ -2736,7 +2736,7 @@ else if (inhibArcs == 0)
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
-        constexpr uint32_t explosion_limiter = 4;
+        constexpr uint32_t explosion_limiter = 6;
 
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
@@ -2755,8 +2755,10 @@ else if (inhibArcs == 0)
         }
         else if (enablereduction == 1) {
             bool changed = false;
+            bool RQ = false;
             do
             {
+restart:
                 if(remove_loops && !contains_next)
                     while(ReducebyRuleI(context.getQueryPlaceCount(), all_reach)) changed = true;
                 do{
@@ -2788,6 +2790,15 @@ else if (inhibArcs == 0)
                     while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, explosion_limiter)) changed = true;
 
                 }
+
+                if(!changed && !RQ)
+                {
+                    RQ = true;
+                    while(ReducebyRuleQ(context.getQueryPlaceCount())) RQ = true;
+                    if(RQ)
+                       goto restart;
+                }
+                RQ = false;
             } while(!hasTimedout() && changed);
         }
         else
