@@ -301,4 +301,11 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
+
+    bool containsDeadlock(const Condition_ptr condition) {
+        ContainsDeadlockVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
+
 } }

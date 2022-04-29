@@ -489,7 +489,7 @@ int main(int argc, const char** argv) {
                 if(results[i] == ResultPrinter::Unknown)
                     queries[i] = prepareForReachability(queries[i]);
             }
-            if (options.tar && net->numberOfPlaces() > 0) {
+            if (options.tar && net->numberOfPlaces() > 0 && !std::any_of(queries.begin(), queries.end(), containsDeadlock)) {
                 //Create reachability search strategy
                 TarResultPrinter tar_printer(printer);
                 TARReachabilitySearch strategy(tar_printer, *net, builder.getReducer(), options.kbound);

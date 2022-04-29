@@ -131,7 +131,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
     {
         ResultHandler handler(is_conj, lstate);
         std::vector<AbstractHandler::Result> res(queries.size(), AbstractHandler::Unknown);
-        if(!options.tar)
+        if(!options.tar || std::any_of(queries.begin(), queries.end(), containsDeadlock))
         {
             ReachabilitySearch strategy(*net, handler, options.kbound, true);
             strategy.reachable(queries, res,
@@ -227,7 +227,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         std::vector<Condition_ptr> queries{prepareForReachability(query)};
         std::vector<AbstractHandler::Result> res;
         res.emplace_back(AbstractHandler::Unknown);
-        if(options.tar)
+        if(options.tar && !std::any_of(queries.begin(), queries.end(), containsDeadlock))
         {
             TARReachabilitySearch tar(handler, *net, nullptr, options.kbound);
             tar.reachable(queries, res, false, false);
