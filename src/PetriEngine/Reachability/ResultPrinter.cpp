@@ -40,7 +40,7 @@ namespace PetriEngine {
                 {
                     auto upq = ((PQL::UnfoldedUpperBoundsCondition*)query);
                     auto bnd = upq->bounds();
-                    if(initialMarking == nullptr || bnd > upq->value(initialMarking))
+                    if(!upq->places().empty() && (initialMarking == nullptr || bnd > upq->value(initialMarking)))
                         retval = Unknown;
                 }
                 else if (result == Satisfied)

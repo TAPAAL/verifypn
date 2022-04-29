@@ -273,7 +273,7 @@ namespace PetriEngine { namespace PQL {
 
     void EvaluateVisitor::_accept(UnfoldedUpperBoundsCondition *element) {
         element->setUpperBound(element->value(_context.marking()));
-        _return_value = {element->getMax() <= element->getBound() ? Condition::RTRUE : Condition::RUNKNOWN};
+        _return_value = {element->getMax() <= element->getBound() || element->places().empty() ? Condition::RTRUE : Condition::RUNKNOWN};
     }
 
     void EvaluateVisitor::_accept(UpperBoundsCondition *element) {

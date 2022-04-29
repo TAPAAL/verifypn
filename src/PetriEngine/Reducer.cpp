@@ -1784,6 +1784,8 @@ else if (inhibArcs == 0)
         // Rule 2 from "Structural Reductions Revisited" by yann thierry-mieg
 
         bool continueReductions = false;
+        if(parent->numberOfTransitions() == 0)
+            return false;
         for (size_t t1 = 0; t1 < parent->numberOfTransitions() - 1; ++t1) {
             Transition &tran1 = getTransition(t1);
             if (tran1.skip) break;
