@@ -142,7 +142,6 @@ int main(int argc, const char** argv) {
 
         std::stringstream ss;
         std::ostream& out = options.printstatistics ? std::cout : ss;
-
         reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
 
         if (options.model_col_out_file.size() > 0) {
