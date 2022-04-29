@@ -178,15 +178,15 @@ function verifyparallel {
     local NUMBER=`echo "$NUMBER-$TMP" | bc`
     QUERIES=( $(seq 1 $NUMBER) )
 
-    if [[ ! -s $QF ]]; then
+    if [[ ! -s "$QF" ]]; then
         echo "No simplified files created. Constructing non simplified files."
         time_left
 	LTLFLAG=""
 	if [[ $BK_EXAMINATION == "LTL"* ]] ; then
-		LTLFLAG="-ltl"
+		LTLFLAG="-ltl none"
 	fi
-        echo "$VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
-	TMP=$($TIMEOUT_CMD $SECONDS $VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
+        echo "$VERIFYPN -n $LTLFLAG -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
+	TMP=$($TIMEOUT_CMD $SECONDS $VERIFYPN -n $LTLFLAG -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
 	echo "$TMP"
     	TMP=$(echo "$TMP" | grep "FORMULA" | wc -l)
     	for i in $(seq 1 $TMP); do
