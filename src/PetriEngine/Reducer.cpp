@@ -2508,6 +2508,7 @@ else if (inhibArcs == 0)
             }
 
             consistent();
+            return continueReductions;
         }
         return continueReductions;
     }
@@ -2846,9 +2847,9 @@ restart:
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
                     while (ReducebyRuleH(context.getQueryPlaceCount(), all_ltl)) changed = true;
-                    while (all_ltl && ReducebyRuleR(context.getQueryPlaceCount(), explosion_limiter)) changed = true;
                     while (ReducebyRuleS(context.getQueryPlaceCount(), all_reach, remove_loops, all_reach, explosion_limiter)) changed = true;
-
+                    if(all_ltl && !changed) // ruleR is a last resort
+                        changed = ReducebyRuleR(context.getQueryPlaceCount(), explosion_limiter);
                 }
 
                 if(!changed && !RQ)
