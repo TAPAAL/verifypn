@@ -2368,7 +2368,9 @@ else if (inhibArcs == 0)
             // Check that prod and cons are disjoint
             const auto presize = place.producers.size();
             const auto postsize = place.consumers.size();
-            if(presize * postsize > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size()))
+            const auto expl = presize*postsize;
+            size_t n_new_trans = 0;
+            if(expl > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size()))
                 continue;
             bool ok = true;
             uint32_t i = 0, j = 0;
@@ -2454,6 +2456,7 @@ else if (inhibArcs == 0)
                         parent->_transitionnames[newTransName()] = id;
                         parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
                     }
+                    ++n_new_trans;
                     Transition& newtran = parent->_transitions[id];
                     newtran.skip = false;
                     newtran.inhib = false;
@@ -2494,6 +2497,8 @@ else if (inhibArcs == 0)
                 }
 
                 skipTransition(prod_id);
+                if(n_new_trans > 0)
+                    --n_new_trans;
                 continueReductions = true;
                 _ruleR++;
             }
@@ -2502,13 +2507,18 @@ else if (inhibArcs == 0)
             {
                 auto consumers = place.consumers;
                 for (auto cons_id : consumers)
+                {
                     skipTransition(cons_id);
+                    if(n_new_trans > 0)
+                        --n_new_trans;
+                }
 
                 skipPlace(pid);
             }
 
             consistent();
-            return continueReductions;
+            if(n_new_trans > explosion_limiter) // we did something that expands the number of transitions significantly
+                return continueReductions;
         }
         return continueReductions;
     }
