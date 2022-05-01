@@ -62,6 +62,9 @@ namespace PetriEngine {
             uint32_t operator[] (const Color* color) const;
             uint32_t& operator[] (const Color* color);
 
+            bool isSubsetOf(const Multiset&) const;
+            bool isSubsetOrEqTo(const Multiset&) const;
+
             bool empty() const;
             void clean();
 

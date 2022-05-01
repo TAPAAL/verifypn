@@ -136,8 +136,10 @@ namespace PetriEngine {
                 init();
                 auto& places = _builder.places();
                 auto& transitions = _builder.transitions();
-                for (size_t i = 0; i < places.size(); ++i)
+                for (size_t i = 0; i < places.size(); ++i) {
+                    if (places[i].skipped) continue;
                     _placeFixpointQueue.emplace_back(i);
+                }
                 _considered.resize(transitions.size());
                 std::fill(_considered.begin(), _considered.end(), false);
 

@@ -165,8 +165,17 @@ namespace PetriEngine { namespace PQL {
         }
     };
 
+    class ContainsDeadlockVisitor : public AnyVisitor {
+        void _accept(const DeadlockCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
     bool containsUpperBounds(const Condition* condition);
     bool containsUpperBounds(const Condition_ptr& condition);
+
+    bool containsDeadlock(const Condition_ptr condition) ;
 } }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

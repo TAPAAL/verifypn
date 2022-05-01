@@ -31,6 +31,7 @@ namespace PetriEngine {
     class AbstractPetriNetBuilder {
     protected:
         bool _isColored = false;
+        bool _hasPartition = false;
 
     public:
         void parse_model(const std::string&& model);
@@ -68,19 +69,19 @@ namespace PetriEngine {
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int) = 0;
+                uint32_t weight) = 0;
         /** Add colored input arc with given arc expression */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool inhibitor, int weight)
+                uint32_t inhib_weight)
         {
             throw base_error("Colored input arcs are not supported in standard P/T nets");
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
-                int weight) = 0;
+                uint32_t weight) = 0;
         /** Add output arc with given arc expression */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
@@ -95,12 +96,25 @@ namespace PetriEngine {
             throw base_error("Color types are not supported in standard P/T nets");
         }
 
+        virtual void addVariable(const PetriEngine::Colored::Variable* variable)
+        {
+            throw base_error("Variables are not supported in standard P/T nets");
+        }
+
         virtual void enableColors() {
             _isColored = true;
         }
 
         virtual bool isColored() const {
             return _isColored;
+        }
+
+        virtual void enablePartition() {
+            _hasPartition = true;
+        }
+
+        virtual bool hasPartition() const {
+            return _hasPartition;
         }
 
         virtual void sort() = 0;

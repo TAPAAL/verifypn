@@ -39,8 +39,21 @@ namespace PetriEngine {
             uint32_t transition;
             ArcExpression_ptr expr;
             bool input;
-            uint32_t weight;
+            uint32_t inhib_weight; // inhibitor arc if >0
+
+            bool operator == (const Arc& other) const
+            {
+                return place == other.place && transition == other.transition && input == other.input && inhib_weight == other.inhib_weight && (inhib_weight > 0 || to_string(*expr) == to_string(*other.expr));
+            }
         };
+
+        [[maybe_unused]]
+        struct {
+            bool operator()(const Arc &a, const Arc &b) const
+            {
+                return a.place < b.place;
+            }
+        } ArcLessThanByPlace;
 
         struct Transition {
             shared_const_string name;
@@ -49,6 +62,8 @@ namespace PetriEngine {
             double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
+            bool inhibited = false;
+            bool skipped = false;
         };
 
         struct Place {
@@ -59,6 +74,7 @@ namespace PetriEngine {
             bool inhibitor;
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
+            bool skipped = false;
         };
     }
 }

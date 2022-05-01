@@ -49,6 +49,10 @@ namespace PetriEngine {
         }
     }
 
+    void ColoredPetriNetBuilder::addVariable(const PetriEngine::Colored::Variable* variable) {
+        _variables.push_back(variable);
+    }
+
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
         auto tmp = std::make_shared<const_string>(name);
         tmp = *_string_set.insert(tmp).first;
@@ -86,27 +90,28 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool inhibitor, int weight) {
-        addArc(place, transition, expr, true, inhibitor, weight);
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {
+        assert((expr == nullptr) != (inhib_weight == 0));
+        addArc(place, transition, expr, true, inhib_weight);
     }
 
-    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
         if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }
     }
 
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
-        addArc(place, transition, expr, false, false, 1);
+        addArc(place, transition, expr, false, 0);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, uint32_t inhib_weight) {
         auto stn = std::make_shared<const_string>(transition);
         auto spn = std::make_shared<const_string>(place);
         if(_transitionnames.count(stn) == 0)
@@ -119,24 +124,59 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        if(input) _places[p]._post.emplace_back(t);
-        else      _places[p]._pre.emplace_back(t);
+        if (!input) assert(expr != nullptr);
+        assert((expr == nullptr) != (inhib_weight == 0));
+
+        // Modify arc if it already exists
+        if (inhib_weight > 0) {
+            for (PetriEngine::Colored::Arc& arc : _inhibitorArcs) {
+                if (arc.place == p && arc.transition == t) {
+                    arc.inhib_weight = std::min(arc.inhib_weight, inhib_weight);
+                    return;
+                }
+            }
+        }
+        else if (input) {
+            for (PetriEngine::Colored::Arc& arc : _transitions[t].input_arcs){
+                if (arc.place == p){
+                    std::vector<Colored::ArcExpression_ptr> exprsToAdd;
+                    exprsToAdd.emplace_back(arc.expr);
+                    exprsToAdd.emplace_back(expr);
+                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(exprsToAdd));
+                    return;
+                }
+            }
+        }
+        else {
+            for (PetriEngine::Colored::Arc& arc : _transitions[t].output_arcs){
+                if (arc.place == p){
+                    std::vector<Colored::ArcExpression_ptr> addDuplicates;
+                    addDuplicates.emplace_back(arc.expr);
+                    addDuplicates.emplace_back(expr);
+                    arc.expr = std::make_shared<PetriEngine::Colored::AddExpression>(std::move(addDuplicates));
+                    return;
+                }
+            }
+        }
 
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
-        _places[p].inhibitor |= inhibitor;
-        if(!inhibitor)
-            assert(expr != nullptr);
-        arc.expr = std::move(expr);
+        _places[p].inhibitor |= inhib_weight > 0;
+        _transitions[t].inhibited |= inhib_weight > 0;
+        arc.expr = expr;
         arc.input = input;
-        arc.weight = weight;
-        if(inhibitor){
-            _inhibitorArcs.push_back(std::move(arc));
-        } else {
-            input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
-        }
+        arc.inhib_weight = inhib_weight;
 
+        if (inhib_weight > 0) {
+            _inhibitorArcs.push_back(std::move(arc));
+        } else if (input) {
+            _transitions[t].input_arcs.push_back(std::move(arc));
+            _places[p]._post.emplace_back(t);
+        } else {
+            _transitions[t].output_arcs.push_back(std::move(arc));
+            _places[p]._pre.emplace_back(t);
+        }
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
@@ -144,5 +184,14 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::sort() {
+        for (Colored::Place &place : _places) {
+            std::sort(place._pre.begin(), place._pre.end());
+            std::sort(place._post.begin(), place._post.end());
+        }
+        for (Colored::Transition &tran : _transitions) {
+            std::sort(tran.input_arcs.begin(), tran.input_arcs.end(), Colored::ArcLessThanByPlace);
+            std::sort(tran.output_arcs.begin(), tran.output_arcs.end(), Colored::ArcLessThanByPlace);
+        }
+        std::sort(_inhibitorArcs.begin(), _inhibitorArcs.end(), Colored::ArcLessThanByPlace);
     }
 }

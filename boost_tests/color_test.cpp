@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(5)) {
         auto [pn, conditions, qstrings] = load_pn(model.c_str(),
             query.c_str(), qnums);
         BOOST_REQUIRE_GE(pn->numberOfPlaces(), 5);
+
         BOOST_REQUIRE_GE(pn->numberOfTransitions(), 5);
     } catch(base_error ex)
     {
@@ -93,31 +94,35 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
         Reachability::ResultPrinter::Satisfied};
     ResultHandler handler;
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        for(auto i : qnums)
-                        {
-                            std::cerr << "\t\tQ[" << i << "] " << std::endl;
-                            auto c2 = prepareForReachability(conditions[i]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                            BOOST_REQUIRE(!approx);
-                            BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                    for(auto approx : {false, true})
+                    {
+                        if(approx && reduce) continue;
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            for(auto i : qnums)
+                            {
+                                std::cerr << "\t\tQ[" << i << "] " << std::endl;
+                                auto c2 = prepareForReachability(conditions[i]);
+                                ReachabilitySearch strategy(*pn, handler, 0);
+                                std::vector<Condition_ptr> vec{c2};
+                                std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                                strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                                if(!approx) // if it is approx, the answer could be anything, the handling-logic is in the result-printer
+                                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                            }
+                        } catch (const base_error& er) {
+                            BOOST_REQUIRE(approx);
                         }
-                    } catch (const base_error& er) {
-                        BOOST_REQUIRE(approx);
                     }
                 }
             }
@@ -148,39 +153,42 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(60)) {
         Reachability::ResultPrinter::Satisfied};
     ResultHandler handler;
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        for(auto i : qnums)
-                        {
-                            std::cerr << "\t\tQ[" << i << "] " << std::endl;
-                            auto c2 = prepareForReachability(conditions[i]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                            if(!approx)
-                                BOOST_REQUIRE_EQUAL(expected[i], results[0]);
-                            else
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            for(auto i : qnums)
                             {
-                                // the solver does not know that it is solving approx.
-                                // result-printer actually deals with it, so cannot test for now
-                                //BOOST_REQUIRE(expected[i] == results[0] || // either solved correctly or not determined.
-                                //    (results[0] != Reachability::ResultPrinter::Satisfied && results[0] != Reachability::ResultPrinter::NotSatisfied));
+                                std::cerr << "\t\tQ[" << i << "] " << std::endl;
+                                auto c2 = prepareForReachability(conditions[i]);
+                                ReachabilitySearch strategy(*pn, handler, 0);
+                                std::vector<Condition_ptr> vec{c2};
+                                std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                                strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                                if(!approx)
+                                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                                else
+                                {
+                                    // the solver does not know that it is solving approx.
+                                    // result-printer actually deals with it, so cannot test for now
+                                    //BOOST_REQUIRE(expected[i] == results[0] || // either solved correctly or not determined.
+                                    //    (results[0] != Reachability::ResultPrinter::Satisfied && results[0] != Reachability::ResultPrinter::NotSatisfied));
+                                }
                             }
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
                         }
-                    } catch (const base_error& er) {
-                        std::cerr << er.what() << std::endl;
-                        BOOST_REQUIRE(false);
                     }
                 }
             }
@@ -196,23 +204,26 @@ BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(60)) {
     // this model is to large too verify as a test, but unfolding should be ok.
     // the unfolding provoked an error in the CFP of colored nets.
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        BOOST_REQUIRE(pn->numberOfTransitions() > 0);
-                        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                    } catch (const base_error& er) {
-                        std::cerr << er.what() << std::endl;
-                        BOOST_REQUIRE(false);
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfTransitions() > 0);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
                     }
                 }
             }
@@ -227,23 +238,26 @@ BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(60)) {
     // this model is to large too verify as a test, but unfolding should be ok.
     // the unfolding provoked an error in the CFP of colored nets.
     std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        BOOST_REQUIRE(pn->numberOfTransitions() > 0);
-                        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                    } catch (const base_error& er) {
-                        std::cerr << er.what() << std::endl;
-                        BOOST_REQUIRE(false);
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfTransitions() > 0);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
                     }
                 }
             }
@@ -257,30 +271,33 @@ BOOST_AUTO_TEST_CASE(RangeNotOne, * utf::timeout(1)) {
     std::string query("/models/intrangeNotOne/query.xml");
     std::set<size_t> qnums{0};
     ResultHandler handler;
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        BOOST_REQUIRE(pn->numberOfTransitions() > 0);
-                        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                        auto c2 = prepareForReachability(conditions[0]);
-                        ReachabilitySearch strategy(*pn, handler, 0);
-                        std::vector<Condition_ptr> vec{c2};
-                        std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                        strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                        if(!approx)
-                            BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
-                    } catch (const base_error& er) {
-                        std::cerr << er.what() << std::endl;
-                        BOOST_REQUIRE(false);
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfTransitions() > 0);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                            auto c2 = prepareForReachability(conditions[0]);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{c2};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                            if(!approx)
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
                     }
                 }
             }
@@ -295,29 +312,32 @@ BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(1)) {
     std::string query("/models/unfolding_loop.xml");
     std::set<size_t> qnums{0};
     ResultHandler handler;
-    for(auto partition : {false, true})
+    for(auto reduce : {false, true})
     {
-        for(auto symmetry : {false, true})
+        for(auto partition : {false, true})
         {
-            for(auto cfp : {false, true})
+            for(auto symmetry : {false, true})
             {
-                for(auto approx : {false, true})
+                for(auto cfp : {false, true})
                 {
-                    std::cerr << "\t" << model << ", " << query << " partition=" << std::boolalpha << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                    try {
-                        auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                            query.c_str(), qnums, partition, symmetry, cfp, approx);
-                        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                        auto c2 = prepareForReachability(conditions[0]);
-                        ReachabilitySearch strategy(*pn, handler, 0);
-                        std::vector<Condition_ptr> vec{c2};
-                        std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                        strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
-                        if(!approx)
-                            BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::NotSatisfied, results[0]);
-                    } catch (const base_error& er) {
-                        std::cerr << er.what() << std::endl;
-                        BOOST_REQUIRE(false);
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                            auto c2 = prepareForReachability(conditions[0]);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{c2};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                            if(!approx)
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::NotSatisfied, results[0]);
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
                     }
                 }
             }

@@ -53,6 +53,16 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << ",State_Space_Exploration=DISABLED";
     }
 
+    if (enablecolreduction == 0) {
+        optionsOut << ",Colored_Structural_Reduction=DISABLED";
+    } else if (enablecolreduction == 1) {
+        optionsOut << ",Colored_Structural_Reduction=ALL";
+    } else if (enablecolreduction == 2) {
+        optionsOut << ",Colored_Structural_Reduction=CUSTOM SEQUENCE";
+    }
+
+    optionsOut << ",Colored_Struct_Red_Timout=" << colReductionTimeout;
+
     if (enablereduction == 0) {
         optionsOut << ",Structural_Reduction=DISABLED";
     } else if (enablereduction == 1) {
@@ -129,7 +139,12 @@ void printHelp() {
         "                                       - 1  aggressive reduction (default)\n"
         "                                       - 2  reduction preserving k-boundedness\n"
         "                                       - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
+        "  -R, --col-reduction <type>           Change structural net reduction:\n"
+        "                                       - 0  disabled\n"
+        "                                       - 1  aggressive reduction (default)\n"
+        "                                       - 2  user defined reduction sequence, eg -b 2 1,0 to use colored rules B,A only, and in that order\n"
         "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
+        "  -D, --colreduction-timeout <timeout> Timeout for colored structural reductions in seconds (default 60)\n"
         "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
         "                                       write -q 0 to disable query reduction\n"
         "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
@@ -167,6 +182,8 @@ void printHelp() {
         "                                       LTL model checking. Not recommended.\n"
         "  --noreach                            Force use of CTL/LTL engine, even when queries are reachability.\n"
         "                                       Not recommended since the reachability engine is faster.\n"
+        "  --nounfold                           Stops after colored structural reductions and writing the reduced net\n"
+        "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
         "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
         "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
@@ -181,6 +198,7 @@ void printHelp() {
         "  --write-unfolded-queries <filename>  Outputs the queries to the given file before query reduction but after unfolding\n"
         "  --keep-solved                        Keeps queries reduced to TRUE and FALSE in the output (--write-simplified, --write-unfolded-queries)\n"
         "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+        "  --write-col-reduced <filename>       Outputs the model to the given file after colored structural reduction\n"
         "  --write-unfolded-net <filename>      Outputs the model to the given file before structural reduction but after unfolding\n"
         "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
         "                                       - 0 MCC XML format for Input and Output\n"
@@ -312,7 +330,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));
             }
-            if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 3) {
+            if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 4) {
                 throw base_error("Argument Error: Invalid reduction argument ", std::quoted(argv[i]));
             }
             if (enablereduction == 3) {
@@ -320,10 +338,28 @@ bool options_t::parse(int argc, const char** argv) {
                 std::vector<std::string> q = explode(argv[++i]);
                 for (auto& qn : q) {
                     int32_t n;
-                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 10) {
+                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 18) {
                         throw base_error("Error in reduction rule choice ", std::quoted(qn));
                     } else {
                         reductions.push_back(n);
+                    }
+                }
+            }
+        } else if (std::strcmp(argv[i], "-R") == 0 || std::strcmp(argv[i], "--col-reduction") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &enablecolreduction) != 1 || enablecolreduction < 0 || enablecolreduction > 2) {
+                throw base_error("Argument Error: Invalid colored reduction argument ", std::quoted(argv[i]));
+            }
+            if (enablecolreduction == 2) {
+                std::vector<std::string> q = explode(argv[++i]);
+                for (auto& qn : q) {
+                    int32_t n;
+                    if (sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 5) {
+                        throw base_error("Error in colored reduction rule choice ", std::quoted(qn));
+                    } else {
+                        colreductions.push_back(n);
                     }
                 }
             }
@@ -334,10 +370,17 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%d", &reductionTimeout) != 1) {
                 throw base_error("Argument Error: Invalid reduction timeout argument ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "--seed-offset") == 0) {
-            if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
-                throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
+        } else if (std::strcmp(argv[i], "-D") == 0 || std::strcmp(argv[i], "--colreduction-timeout") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
             }
+            if (sscanf(argv[++i], "%d", &colReductionTimeout) != 1) {
+                throw base_error("Argument Error: Invalid reduction timeout argument ", std::quoted(argv[i]));
+            }
+        } else if (std::strcmp(argv[i], "--seed-offset") == 0) {
+        if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
+            throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
+        }
         } else if (std::strcmp(argv[i], "-p") == 0 || std::strcmp(argv[i], "--disable-partial-order") == 0) {
             stubbornreduction = false;
         } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--siphon-trap") == 0) {
@@ -377,6 +420,8 @@ bool options_t::parse(int argc, const char** argv) {
             }
         } else if (std::strcmp(argv[i], "--write-reduced") == 0) {
             model_out_file = std::string(argv[++i]);
+        } else if (std::strcmp(argv[i], "--write-col-reduced") == 0) {
+            model_col_out_file = std::string(argv[++i]);
         } else if (std::strcmp(argv[i], "--write-unfolded-net") == 0) {
             unfolded_out_file = std::string(argv[++i]);
         } else if (std::strcmp(argv[i], "--write-unfolded-queries") == 0) {
@@ -500,6 +545,8 @@ bool options_t::parse(int argc, const char** argv) {
             computePartition = false;
         } else if (std::strcmp(argv[i], "--noverify") == 0) {
             doVerification = false;
+        } else if (std::strcmp(argv[i], "--nounfold") == 0) {
+            doUnfolding = false;
         } else if (std::strcmp(argv[i], "--disable-symmetry-vars") == 0) {
             symmetricVariables = false;
         } else if (std::strcmp(argv[i], "--strategy-output") == 0) {
@@ -536,6 +583,9 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
+            printf("                        Mathias Mehl Sørensen <mathiasmehlsoerensen@gmail.com>\n");
+            printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
         } else if (modelfile == nullptr) {

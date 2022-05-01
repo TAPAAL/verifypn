@@ -53,14 +53,14 @@ namespace PetriEngine {
         void addInputArc(const shared_const_string& place,
                 const shared_const_string& transition,
                 bool inhibitor,
-                int weight);
-        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, int weight);
+                uint32_t weight);
+        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, uint32_t weight);
 
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                int weight) override;
-        void addOutputArc(const std::string& transition, const std::string& place, int weight) override;
+                uint32_t weight) override;
+        void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override;
 
         virtual void sort() override;
         /** Make the resulting petri net, you take ownership */
@@ -82,6 +82,43 @@ namespace PetriEngine {
             return _transitionnames.size();
         }
 
+        uint32_t originalNumberOfPlaces() const
+        {
+            return _originalNumberOfPlaces;
+        }
+
+        uint32_t originalNumberOfTransitions() const
+        {
+            return _originalNumberOfTransitions;
+        }
+
+        int32_t removedTransitions()
+        {
+            // Can be negative if transitions were added during reduction
+            return reducer.removedTransitions();
+        }
+
+        int32_t removedPlaces()
+        {
+            return reducer.removedPlaces();
+        }
+
+        uint32_t numberOfUnskippedTransitions()
+        {
+            return reducer.numberOfUnskippedTransitions();
+        }
+
+        uint32_t numberOfUnskippedPlaces()
+        {
+            return reducer.numberOfUnskippedPlaces();
+        }
+
+        void freezeOriginalSize()
+        {
+            _originalNumberOfPlaces = numberOfUnskippedPlaces();
+            _originalNumberOfTransitions = numberOfUnskippedTransitions();
+        }
+
         const shared_name_index_map& getPlaceNames() const
         {
             return _placenames;
@@ -94,17 +131,8 @@ namespace PetriEngine {
 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query,
                     std::vector<Reachability::ResultPrinter::Result>& results,
-                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions);
-
-        size_t RemovedTransitions() const
-        {
-            return reducer.RemovedTransitions();
-        }
-
-        size_t RemovedPlaces() const
-        {
-            return reducer.RemovedPlaces();
-        }
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
+                    std::vector<uint32_t>& reductions);
 
         void printStats(std::ostream& out)
         {
@@ -112,21 +140,6 @@ namespace PetriEngine {
         }
 
         Reducer* getReducer() { return &reducer; }
-
-        /*std::vector<std::pair<shared_const_string, uint32_t>> orphanPlaces() const {
-            std::vector<std::pair<std::string, uint32_t>> res;
-            for(uint32_t p = 0; p < _places.size(); p++) {
-                if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {
-                    for(auto &n : _placenames) {
-                        if(*n.second == *p) {
-                            res.push_back(std::make_pair(n.first, initialMarking[p]));
-                            break;
-                        }
-                    }
-                }
-            }
-            return res;
-        }*/
 
         double getReductionTime() const {
             // duration in seconds
@@ -152,6 +165,8 @@ namespace PetriEngine {
         std::vector<PetriEngine::Transition> _transitions;
         std::vector<PetriEngine::Place> _places;
 
+        uint32_t _originalNumberOfPlaces;
+        uint32_t _originalNumberOfTransitions;
         std::vector<MarkVal> initialMarking;
         Reducer reducer;
         shared_string_set& _string_set;

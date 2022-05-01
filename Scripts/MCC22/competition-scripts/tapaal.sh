@@ -167,7 +167,7 @@ function verifyparallel {
 
     echo "$TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
 
-    TMP=$($TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
+    TMP=$($TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY 2>&1 )
 
     echo "$TMP"
     TMP=$(echo "$TMP" | grep "FORMULA" | wc -l)
@@ -178,15 +178,15 @@ function verifyparallel {
     local NUMBER=`echo "$NUMBER-$TMP" | bc`
     QUERIES=( $(seq 1 $NUMBER) )
 
-    if [[ ! -s $QF ]]; then
+    if [[ ! -s "$QF" ]]; then
         echo "No simplified files created. Constructing non simplified files."
         time_left
 	LTLFLAG=""
 	if [[ $BK_EXAMINATION == "LTL"* ]] ; then
-		LTLFLAG="-ltl"
+		LTLFLAG="-ltl none"
 	fi
-        echo "$VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
-	TMP=$($TIMEOUT_CMD $SECONDS $VERIFYPN -n $LTLFLAG none -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
+        echo "$VERIFYPN -n $LTLFLAG -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
+	TMP=$($TIMEOUT_CMD $SECONDS $VERIFYPN -n $LTLFLAG -q 0 -d 0 -z 4 --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY  2>&1 )
 	echo "$TMP"
     	TMP=$(echo "$TMP" | grep "FORMULA" | wc -l)
     	for i in $(seq 1 $TMP); do
@@ -320,7 +320,7 @@ function verifyparallel {
     RUN_TIME=$(echo "$SECONDS*6/8" | bc)
     if [[ "$RUN_TIME" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi
     echo "Running multiquery on -x $MULTIQUERY_INPUT for $RUN_TIME seconds" 
-    TMP=$($TIME_CMD $TIMEOUT_CMD $RUN_TIME $VERIFYPN -n $STRATEGY_MULTI $OPTIONS -d $RED -q $RED -p $MF $QF --binary-query-io 1 -n -x $MULTIQUERY_INPUT )
+    TMP=$($TIME_CMD $TIMEOUT_CMD $RUN_TIME $VERIFYPN -n $STRATEGY_MULTI $OPTIONS -d $RED -q $RED -p $MF $QF --binary-query-io 1 -n -x $MULTIQUERY_INPUT 2>&1 )
 
     echo "$TMP"
 
