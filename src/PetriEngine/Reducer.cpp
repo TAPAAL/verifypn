@@ -2244,6 +2244,7 @@ else if (inhibArcs == 0)
                             ++_ruleP;
                             continue_reductions = true;
                         }
+                        else all_ok = false;
                     }
                     else
                     {
