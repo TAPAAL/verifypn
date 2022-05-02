@@ -2183,7 +2183,7 @@ else if (inhibArcs == 0)
         for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
             if (!parent->_transitions[t].skip && _tflags[t] == 0) {
                 skipTransition(t);
-                _ruleM++;
+                _ruleE++;
                 continue_reductions = true;
             }
         }
@@ -2193,7 +2193,6 @@ else if (inhibArcs == 0)
             if(place.skip) continue;
             if (_pflags[p] == 0) {
                 // Remove places that cannot increase nor decrease (Rule M)
-                // Dead transitions are removed later (_tflags[t] == 0)
                 if(placeInQuery[p] == 0)
                 {
                     ++_ruleM;
@@ -2248,18 +2247,22 @@ else if (inhibArcs == 0)
                     }
                     else
                     {
-                        if(inArc->weight < parent->initialMarking[p] && (_pflags[p] & CAN_INC) == 0)
+                        if(inArc->weight > parent->initialMarking[p] && (_pflags[p] & CAN_INC) == 0)
                         {
-                            skipTransition(t);
+                            skipTransition(t); // technically this should never happen I suppose.
                             ++_ruleE;
                             continue_reductions = true;
+                            continue;
                         }
-
-                        if(inArc->weight > _lower[p])
+                        else if(inArc->weight > _lower[p]) // this is implied by above check also
                         {
+                            // this arc may or may not be satisfied, nothing conclusive to say
                             all_ok = false;
                             continue;
                         }
+
+                        // all other arcs are *permanently* satisfied, so we can
+                        // compile them into their joint effect.
                         auto& trans = getTransition(t);
                         auto out = getOutArc(trans, p);
                         if(out != std::end(trans.post))
@@ -2294,6 +2297,9 @@ else if (inhibArcs == 0)
                 }
                 if(all_ok)
                 {
+                    // all consuming arcs of the place are always either satisfied
+                    // or not satisfied (and removed above) so we can remove
+                    // the place assuming that it is not observable.
                     if(placeInQuery[p] == 0)
                     {
                         skipPlace(p);
