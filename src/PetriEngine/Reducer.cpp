@@ -2055,18 +2055,17 @@ else if (inhibArcs == 0)
         // If a place only has transitions with positive effect and no inhibitor arcs, then it is removed too (Rule F).
 
         if (hasTimedout()) return false;
-
+        bool continue_reductions = false;
         // Use two greatest bits of pflags to keep track of places that can increase or decrease their number of tokens.
-        // Use the last 6 bits to hold the lower bound of places that can decrease their number of tokens.
-        // The greatest lower bound we can store is therefore 64, which is plenty
         const uint8_t CAN_INC =  0b10000000u;
         const uint8_t CAN_DEC =  0b01000000u;
-        const uint8_t LOW_MASK = 0b00111111u;
         _pflags.resize(parent->_places.size(), 0);
+        std::fill(_pflags.begin(), _pflags.end(), 0);
+
         // Initialize lower bound as initial marking
-        for (uint32_t p = 0; p < parent->_places.size(); p++) {
-            _pflags[p] = (uint8_t)std::min((uint32_t)LOW_MASK, parent->initialMarking[p]);
-        }
+        _lower.resize(parent->_places.size(), 0);
+        std::fill(_lower.begin(), _lower.end(), 0);
+        std::copy(parent->initialMarking.begin(), parent->initialMarking.end(), _lower.begin());
 
         // Use tflags to mark processed fireable transitions
         _tflags.resize(parent->_transitions.size(), 0);
@@ -2087,9 +2086,9 @@ else if (inhibArcs == 0)
             }
         };
 
-        auto processDecPlace = [&](uint32_t p, uint8_t low) {
+        auto processDecPlace = [&](uint32_t p, uint32_t low) {
             // Update lower bound
-            _pflags[p] = (_pflags[p] & ~LOW_MASK) | std::min<uint8_t>(_pflags[p] & LOW_MASK, low);
+            _lower[p] = std::min(low, _lower[p]);
             if ((_pflags[p] & CAN_DEC) == 0) {
                 // Mark place as decreasing
                 _pflags[p] |= CAN_DEC;
@@ -2126,7 +2125,6 @@ else if (inhibArcs == 0)
                             processIncPlace(tran.post[j].place);
                         }
                     }
-
                     i++; j++;
                 }
             }
@@ -2180,96 +2178,137 @@ else if (inhibArcs == 0)
             }
         }
 
-        bool anyRemovedByM = false;
-        for (uint32_t p = 0; p < parent->_places.size(); ++p) {
-            const Place& place = parent->_places[p];
-            if (!place.skip && placeInQuery[p] == 0 && (_pflags[p] & ~LOW_MASK) == 0) {
-                // Remove places that cannot increase nor decrease (Rule M)
-                skipPlace(p);
-                anyRemovedByM = true;
-            } else if (!place.skip) {
-
-                // This place can either gain or lose tokens, but it may also have bounds
-                uint8_t low = _pflags[p] & LOW_MASK;
-
-                bool affectsBehaviour = low == 0 || (_pflags[p] & CAN_INC) != 0;
-
-                if (0 < low || (_pflags[p] & CAN_INC) == 0) {
-                    for (long i = place.consumers.size() - 1; i >= 0; i--) {
-                        uint32_t con = place.consumers[i];
-
-                        if (_tflags[con] == 0)
-                            continue; // This transition cannot fire and will be removed later
-
-                        Transition &tran = getTransition(con);
-                        const auto inArc = getInArc(p, tran);
-
-                        // Apply rule N and O
-                        if (inArc->weight <= low) {
-                            if (inArc->inhib) {
-                                // By the lower bound, this transition is always disabled by p.
-                                // Hence, we can remove the transition (Rule O)
-
-                                skipTransition(con);
-                                _ruleO++;
-                                continue;
-
-                            } else {
-                                // By the lower bound, this transition is never disabled by p.
-                                // Hence, the arc is redundant and we can remove it, and update the weight on the out arc. (Rule N)
-
-                                const auto outArc = getOutArc(tran, p);
-                                if (outArc != tran.post.end()) {
-                                    if (inArc->weight == outArc->weight) {
-                                        skipOutArc(con, p);
-                                    } else {
-                                        outArc->weight -= inArc->weight;
-                                    }
-                                }
-                                skipInArc(p, con);
-                                _ruleN++;
-                            }
-                        } else {
-                            affectsBehaviour = true;
-                        }
-
-                        // Apply rule P
-                        if ((_pflags[p] & CAN_INC) == 0) {
-                            // This place cannot gain tokens. Transitions that require more tokens than
-                            // the initial marking are already marked as unfireable and will be removed later.
-                            // But, any out-going inhibitor arc with greater
-                            // weight than the initial marking can be removed (Rule P)
-
-                            if (inArc->inhib && parent->initialMarking[0] < inArc->weight) {
-                                skipInArc(p, con);
-                                _ruleP++;
-                            }
-                        } else {
-                            affectsBehaviour = true;
-                        }
-                    }
-                }
-
-                // Apply rule F
-                if (!place.skip && !affectsBehaviour && placeInQuery[p] == 0) {
-                    // This place is decreasing but it does not affect behaviour, so we can remove it
-                    skipPlace(p);
-                    _ruleF++;
-                    // TODO Reconstruct trace
-                }
-            }
-        }
         for (uint32_t t = 0; t < parent->_transitions.size(); ++t) {
             if (!parent->_transitions[t].skip && _tflags[t] == 0) {
                 skipTransition(t);
-                anyRemovedByM = true;
+                _ruleE++;
+                continue_reductions = true;
             }
         }
-        if (anyRemovedByM) {
-            _ruleM++;
-            return true;
+
+        for (uint32_t p = 0; p < parent->_places.size(); ++p) {
+            Place& place = parent->_places[p];
+            if(place.skip) continue;
+            if (_pflags[p] == 0) {
+                // Remove places that cannot increase nor decrease (Rule M)
+                if(placeInQuery[p] == 0)
+                {
+                    ++_ruleM;
+                    skipPlace(p);
+                    continue_reductions = true;
+                }
+                else
+                {
+                    ++_ruleM;
+                    for(auto t : place.consumers)
+                    {
+                        auto& trans = getTransition(t);
+                        auto inArc = getInArc(p, trans);
+                        trans.pre.erase(inArc);
+                    }
+                    for(auto t : place.producers)
+                    {
+                        auto& trans = getTransition(t);
+                        auto arc = getOutArc(trans, p);
+                        trans.post.erase(arc);
+                    }
+                    continue_reductions |= (place.consumers.size() + place.producers.size()) > 0;
+                    place.producers.clear();
+                    place.consumers.clear();
+                }
+            }
+            else
+            {
+                bool all_ok = true;
+                for(int64_t i = (int64_t)(place.consumers.size())-1; i >= 0; --i)
+                {
+                    auto t = place.consumers[i];
+                    auto& trans = getTransition(t);
+                    auto inArc = getInArc(p, trans);
+                    if(inArc->inhib)
+                    {
+                        if(inArc->weight <= _lower[p])
+                        {
+                            // always disabled
+                            skipTransition(t);
+                            ++_ruleO;
+                            continue_reductions = true;
+                        }
+                        else if((_pflags[p] & CAN_INC) == 0)
+                        {
+                            // inhibitor is useless
+                            trans.pre.erase(inArc);
+                            ++_ruleP;
+                            continue_reductions = true;
+                        }
+                        else all_ok = false;
+                    }
+                    else
+                    {
+                        if(inArc->weight > parent->initialMarking[p] && (_pflags[p] & CAN_INC) == 0)
+                        {
+                            skipTransition(t); // technically this should never happen I suppose.
+                            ++_ruleE;
+                            continue_reductions = true;
+                            continue;
+                        }
+                        else if(inArc->weight > _lower[p]) // this is implied by above check also
+                        {
+                            // this arc may or may not be satisfied, nothing conclusive to say
+                            all_ok = false;
+                            continue;
+                        }
+
+                        // all other arcs are *permanently* satisfied, so we can
+                        // compile them into their joint effect.
+                        auto& trans = getTransition(t);
+                        auto out = getOutArc(trans, p);
+                        if(out != std::end(trans.post))
+                        {
+                            if(out->weight > inArc->weight)
+                            {
+                                out->weight -= inArc->weight;
+                                trans.pre.erase(inArc);
+                                place.consumers.erase(place.consumers.begin() + i);
+                                ++_ruleN;
+                                continue_reductions = true;
+                            }
+                            else if(out->weight == inArc->weight)
+                            {
+                                trans.pre.erase(inArc);
+                                place.consumers.erase(place.consumers.begin() + i);
+                                skipOutArc(t, p);
+                                ++_ruleN;
+                                continue_reductions = true;
+                            }
+                            else {
+                                assert(false);
+                                all_ok = false;
+                            }
+                        }
+                        else
+                        {
+                            assert(false);
+                            all_ok = false;
+                        }
+                    }
+                }
+                if(all_ok)
+                {
+                    // all consuming arcs of the place are always either satisfied
+                    // or not satisfied (and removed above) so we can remove
+                    // the place assuming that it is not observable.
+                    if(placeInQuery[p] == 0)
+                    {
+                        skipPlace(p);
+                        ++_ruleF;
+                        continue_reductions = true;
+                    }
+                }
+            }
         }
-        return false;
+
+        return continue_reductions;
     }
 
     bool Reducer::ReducebyRuleQ(uint32_t* placeInQuery)
@@ -2369,7 +2408,7 @@ else if (inhibArcs == 0)
             const auto presize = place.producers.size();
             const auto postsize = place.consumers.size();
             const auto expl = presize*postsize;
-            size_t n_new_trans = 0;
+            int64_t n_new_trans = 0;
             if(expl > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size()))
                 continue;
             bool ok = true;
@@ -2497,8 +2536,7 @@ else if (inhibArcs == 0)
                 }
 
                 skipTransition(prod_id);
-                if(n_new_trans > 0)
-                    --n_new_trans;
+                --n_new_trans;
                 continueReductions = true;
                 _ruleR++;
             }
@@ -2509,15 +2547,14 @@ else if (inhibArcs == 0)
                 for (auto cons_id : consumers)
                 {
                     skipTransition(cons_id);
-                    if(n_new_trans > 0)
-                        --n_new_trans;
+                    --n_new_trans;
                 }
 
                 skipPlace(pid);
             }
 
             consistent();
-            if(n_new_trans > explosion_limiter) // we did something that expands the number of transitions significantly
+            if(n_new_trans > (int64_t)explosion_limiter) // we did something that expands the number of transitions significantly
                 return continueReductions;
         }
         return continueReductions;
@@ -2538,10 +2575,7 @@ else if (inhibArcs == 0)
                 place.consumers.empty())
                 continue;
 
-            // Performance consideration
-            if ((place.producers.size()*place.consumers.size()) > std::max(explosion_limiter, (uint32_t)_skippedTransitions.size())) {
-                continue;
-            }
+            int64_t n_added = 0;
 
             // Check that prod and cons are disjoint
             // T4/S4
@@ -2695,6 +2729,7 @@ else if (inhibArcs == 0)
                                 parent->_transitionnames[newTransName()] = id;
                                 parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
                             }
+                            ++n_added;
 
                             // Re-fetch the transition pointers as it might be invalidated, I think that's the issue?
                             Transition &producerPrime = getTransition(prod);
@@ -2750,6 +2785,7 @@ else if (inhibArcs == 0)
                             parent->_transitionnames[newTransName()] = id;
                             parent->_transitionlocations.emplace_back(std::tuple<double, double>(0.0, 0.0));
                         }
+                        ++n_added;
 
                         // Re-fetch the transition pointers as it might be invalidated, I think that's the issue?
                         Transition &producerPrime = getTransition(prod);
@@ -2783,6 +2819,7 @@ else if (inhibArcs == 0)
                     }
                 }
                 skipTransition(originalConsumers[n]);
+                --n_added;
                 continueReductions = true;
                 _ruleS++;
             }
@@ -2791,11 +2828,15 @@ else if (inhibArcs == 0)
                 // The producers of place will become purely consuming transitions when it is gone
                 auto transitions = place.producers;
                 for (uint32_t tran_id : transitions)
+                {
                     skipTransition(tran_id);
+                    --n_added;
+                }
                 skipPlace(pid);
             }
-
             consistent();
+            if(n_added >= (int64_t)explosion_limiter)
+                return continueReductions;
         }
 
         return continueReductions;
