@@ -2057,8 +2057,6 @@ else if (inhibArcs == 0)
         if (hasTimedout()) return false;
         bool continue_reductions = false;
         // Use two greatest bits of pflags to keep track of places that can increase or decrease their number of tokens.
-        // Use the last 6 bits to hold the lower bound of places that can decrease their number of tokens.
-        // The greatest lower bound we can store is therefore 64, which is plenty
         const uint8_t CAN_INC =  0b10000000u;
         const uint8_t CAN_DEC =  0b01000000u;
         _pflags.resize(parent->_places.size(), 0);
