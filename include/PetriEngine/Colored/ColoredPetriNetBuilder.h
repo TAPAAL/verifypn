@@ -28,9 +28,9 @@
 #include "../PetriNetBuilder.h"
 
 namespace PetriEngine {
-    namespace Colored::Reduction {
+    namespace Colored { namespace Reduction {
         class ColoredReducer;
-    }
+    } }
     namespace Colored {
         class PnmlWriter;
     }
@@ -67,9 +67,9 @@ namespace PetriEngine {
                 bool inhibitor,
                 uint32_t weight) override;
         void addInputArc(const std::string& place,
-                         const std::string& transition,
-                         const Colored::ArcExpression_ptr &expr,
-                         uint32_t inhib_weight) override;
+                const std::string& transition,
+                const Colored::ArcExpression_ptr &expr,
+                uint32_t inhib_weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 uint32_t weight) override;

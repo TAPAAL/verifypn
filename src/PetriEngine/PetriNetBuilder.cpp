@@ -219,9 +219,8 @@ namespace PetriEngine {
          * a decision-tree like construction, possibly improving successor generation.
          */
 
-        uint32_t nplaces = _places.size() - reducer.RemovedPlaces();
-        uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
-
+        uint32_t nplaces = numberOfUnskippedPlaces();
+        uint32_t ntrans = numberOfUnskippedTransitions();
         std::vector<uint32_t> place_cons_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_prod_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
@@ -547,7 +546,8 @@ namespace PetriEngine {
 
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results,
-                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions)
+                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
+                                    std::vector<uint32_t>& reductions)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;

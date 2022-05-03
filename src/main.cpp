@@ -285,8 +285,9 @@ int main(int argc, const char** argv) {
 
         //--------------------- Apply Net Reduction ---------------//
 
+        builder.freezeOriginalSize();
         if (options.enablereduction > 0) {
-            // Compute how many times each place appears in the query
+            // Compute structural reductions
             builder.startTimer();
             builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr,
                            options.reductionTimeout, options.reductions);

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>P2=1 is not reduced</id>
+    <description>P2=1 is not reduced</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P2</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>P7=1 is reduced</id>
+    <description>P7=1 is reduced</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P7</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>
