@@ -20,7 +20,8 @@ Unfolder.cpp
 PnmlWriter.cpp
 PnmlWriterColorExprVisitor.cpp
 VarMultiset.cpp
-ArcVarMultisetVisitor.cpp)
+ArcVarMultisetVisitor.cpp
+CloningVisitor.cpp)
 
 
 target_link_libraries(Colored ColoredReduction)
