@@ -342,8 +342,11 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             for(auto s : succs){ --s->refcnt; release(s);}
                             succs.clear();
                             succs.push_back(newEdge(*v, 0));
-                            if(right)
+                            if(right && (left == nullptr && valid))
                             {
+                                // we don't need to validate right IF left
+                                // is trivially satisfied and we have a satisfied
+                                // successor.
                                 --right->refcnt;
                                 release(right);
                                 right = nullptr;
