@@ -181,7 +181,13 @@ int main(int argc, const char** argv) {
             for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
                 initial_size += qm0[i];
 
-            if (queries.size() == 0 ||
+            if(queries.empty() && options.cpnOverApprox)
+            {
+                std::cerr << "WARNING: Could not run CPN over-approximation on any queries, terminating." << std::endl;
+                std::exit(0);
+            }
+
+            if (queries.empty() ||
                 contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Could not analyze the queries");
             }
