@@ -130,7 +130,8 @@ function verifyparallel {
     echo "            Step -1: Stripping Colors              "
     echo "---------------------------------------------------"
     echo "Verifying stripped models ($NUMBER in total)        "
-    TMP=$($TIMEOUT_CMD $TIMEOUT_SIMP $VERIFYPN -n -c -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY )
+    echo "$VERIFYPN -n -c -q $TIMEOUT_SIMP $PARALLEL_SIMPLIFICATION_OPTIONS -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
+    TMP=$($TIMEOUT_CMD $TIMEOUT_SIMP $VERIFYPN -n -c -q $TIMEOUT_SIMP $PARALLEL_SIMPLIFICATION_OPTIONS -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY 2>&1 )
     CNT=0
     SOLVED=$(echo "$TMP" | grep "FORMULA" | grep -oP "(?<=-)[0-9]+(?=( TRUE)|( FALSE)|( [0-9]))")
 
