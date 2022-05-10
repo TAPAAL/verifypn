@@ -5,6 +5,7 @@
  *      Mathias Mehl Sørensen
  */
 
+#include <PetriEngine/Colored/VariableVisitor.h>
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 #include "PetriEngine/Colored/Multiset.h"
@@ -289,5 +290,24 @@ namespace PetriEngine::Colored::Reduction {
         _builder.addOutputArc(*_builder._transitions[tid].name.get(), *_builder._places[pid].name, expr);
         std::sort(_builder._places[pid]._pre.begin(), _builder._places[pid]._pre.end());
         std::sort(_builder._transitions[tid].output_arcs.begin(), _builder._transitions[tid].output_arcs.end(), ArcLessThanByPlace);
+    }
+
+    uint32_t ColoredReducer::getBindingCount(const Transition &transition) {
+        std::set<const Colored::Variable *> variables;
+
+        for (const auto &arc: transition.input_arcs) {
+            assert(arc.expr != nullptr);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
+        }
+        for (const auto &arc: transition.output_arcs) {
+            assert(arc.expr != nullptr);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
+        }
+
+        uint32_t size = 1;
+        for (auto &v: variables) {
+            size *= v->colorType->size();
+        }
+        return size;
     }
 }

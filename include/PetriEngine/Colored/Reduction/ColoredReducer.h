@@ -116,6 +116,8 @@ namespace PetriEngine::Colored {
 
             std::vector<uint8_t> _pflags;
 
+            uint32_t getBindingCount(const Transition &transition);
+
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
             std::chrono::system_clock::time_point _startTime;

@@ -8,6 +8,7 @@
 #ifndef VERIFYPN_REDRULEDEADTRANSITIONS_H
 #define VERIFYPN_REDRULEDEADTRANSITIONS_H
 
+#include "../PartitionBuilder.h"
 #include "ReductionRule.h"
 
 namespace PetriEngine::Colored::Reduction {
@@ -19,6 +20,11 @@ namespace PetriEngine::Colored::Reduction {
 
         bool apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
                    bool preserveLoops, bool preserveStutter) override;
+
+        bool markingEnablesInArc(Multiset &marking, const Arc &arc,
+                                 const Colored::Transition &transition,
+                                 PartitionBuilder &partition,
+                                 const ColorTypeMap &colors) const;
     };
 }
 
