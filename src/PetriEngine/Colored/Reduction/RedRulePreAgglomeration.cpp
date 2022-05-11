@@ -92,6 +92,7 @@ namespace PetriEngine::Colored::Reduction {
                 bool todoAllGood = true;
                 // S11, S12
                 std::vector<bool> kIsAlwaysOne (postsize, true);
+                bool prodAllConst = true;
 
                 for (const auto& prod : place._pre){
                     const Transition& producer = red.transitions()[prod];
@@ -103,6 +104,13 @@ namespace PetriEngine::Colored::Reduction {
 
                     const CArcIter& prodArc = red.getOutArc(producer, pid);
                     uint32_t kw;
+                    
+                    std::set<const Variable*> prodArcVars;
+                    Colored::VariableVisitor::get_variables(*prodArc->expr, prodArcVars);
+                    prodAllConst &= !prodArcVars.empty();
+                    if (prodArcVars.size() > 1){
+                        break;
+                    }
 
                     // T9, S6
                     if(prodArc->expr->is_single_color()){
@@ -199,6 +207,16 @@ namespace PetriEngine::Colored::Reduction {
                     
                     const auto& consArc = red.getInArc(pid, consumer);
                     uint32_t w = consArc->expr->weight();
+                    
+                    std::set<const Variable*> consArcVars;
+                    Colored::VariableVisitor::get_variables(*consArc->expr, consArcVars);
+                    if (consArcVars.size() > 1 || (prodAllConst && !consArcVars.empty())){
+                        if (atomic_viable){
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
                     
                     // Update
                     for (const auto& prod : originalProducers){
