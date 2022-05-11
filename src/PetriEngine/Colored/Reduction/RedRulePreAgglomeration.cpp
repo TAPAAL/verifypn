@@ -5,6 +5,7 @@
  *      Mathias Mehl Sørensen
  */
 
+#include <PetriEngine/Colored/VariableVisitor.h>
 #include "PetriEngine/Colored/Reduction/RedRulePreAgglomeration.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 
