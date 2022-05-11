@@ -11,7 +11,7 @@
 
 namespace PetriEngine::Colored::Reduction {
     bool RedRulePreAgglomeration::isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const {
-        return queryType != CTL && !preserveStutter;
+        return (queryType == Reach) && !preserveLoops;
     }
 
     bool RedRulePreAgglomeration::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
