@@ -188,7 +188,7 @@ namespace PetriEngine::Colored::Reduction {
                         // S11
                         if (!kIsAlwaysOne[n]) {
                             for (const auto& conspost : consumer.output_arcs) {
-                                if (red.places()[conspost.place].inhibitor || (queryType != Reach && inQuery.isPlaceUsed(conspost.place))) {
+                                if (red.places()[conspost.place].inhibitor) {
                                     ok = false;
                                     break;
                                 }
