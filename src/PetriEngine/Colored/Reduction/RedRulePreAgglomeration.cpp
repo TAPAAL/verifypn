@@ -124,7 +124,7 @@ namespace PetriEngine::Colored::Reduction {
                             } else if (kw != w) {
                                 kIsAlwaysOne[n] = false;
                             }
-                        } else if (!consArc->expr->is_single_color() || kw != w) {
+                        } else if (!consArc->expr->is_single_color() || kw != w || consumer.input_arcs.size() != 1) {
                             ok = false;
                             break;
                         }
@@ -178,8 +178,8 @@ namespace PetriEngine::Colored::Reduction {
 
                     const Transition &consumer = red.transitions()[originalConsumers[n]];
                     if (consumer.guard != nullptr) continue;
-
-                    // T trivially passes these because of T5 earlier
+                    
+                    // T5 and T12 have this covered already for the non-atomic case
                     if (atomic_viable){
                         // S12
                         if (!kIsAlwaysOne[n] && consumer.input_arcs.size() != 1) {
@@ -194,9 +194,9 @@ namespace PetriEngine::Colored::Reduction {
                                 }
                             }
                         }
+                        if (!ok) continue;
                     }
-                    if (!ok) continue;
-
+                    
                     const auto& consArc = red.getInArc(pid, consumer);
                     uint32_t w = consArc->expr->weight();
                     
