@@ -50,6 +50,23 @@ namespace PetriEngine::Colored::Reduction {
             if (!red._tflags[tid] && inQuery.isTransitionUsed(tid)) {
                 wtrans.push_back(tid);
                 red._tflags[tid] = true;
+                // All places that a query transition consumes from should be treated as being in the query too.
+                for (const auto& arc : red.transitions()[tid].input_arcs){
+                    red._pflags[arc.place] = true;
+                    const Place &place = red.places()[arc.place];
+                    for (auto t : place._post) {
+                        if (!red._tflags[t]) {
+                            wtrans.push_back(t);
+                            red._tflags[t] = true;
+                        }
+                    }
+                    for (auto t : place._pre) {
+                        if (!red._tflags[t]) {
+                            wtrans.push_back(t);
+                            red._tflags[t] = true;
+                        }
+                    }
+                }
             }
         }
 
