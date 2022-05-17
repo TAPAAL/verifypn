@@ -114,10 +114,29 @@ namespace PetriEngine::Colored::Reduction {
             assert(ait != tran.input_arcs.end());
             tran.input_arcs.erase(ait);
         }
-        auto &inhibs = _builder._inhibitorArcs;
-        inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                    [&pid](Arc &arc) { return arc.place == pid; }),
-                     inhibs.end());
+        if (place.inhibitor) {
+            std::cout << "removing inhibitor place" << std::endl;
+            auto &inhibs = _builder._inhibitorArcs;
+            for (auto& inhib: inhibs) {
+                if (inhib.place == pid) {
+                    Transition &tran = _builder._transitions[inhib.transition];
+                    uint32_t numInhibitorArcs = 0;
+                    for (auto& innerInhib: inhibs) {
+                        if (innerInhib.transition == inhib.transition) {
+                            numInhibitorArcs++;
+                        }
+                    }
+                    if (numInhibitorArcs == 0) {
+                        tran.inhibited = false;
+                    }
+                }
+            }
+            inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
+                                        [&pid](Arc &arc) { return arc.place == pid; }),
+                         inhibs.end());
+            place.inhibitor = false;
+        }
+
         place._post.clear();
         place._pre.clear();
     }
@@ -139,10 +158,29 @@ namespace PetriEngine::Colored::Reduction {
             assert(it != place._pre.end());
             place._pre.erase(it);
         }
-        auto &inhibs = _builder._inhibitorArcs;
-        inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                    [&tid](Arc &arc) { return arc.transition == tid; }),
-                     inhibs.end());
+        if (tran.inhibited) {
+            std::cout << "removing inhibited transition" << std::endl;
+            auto &inhibs = _builder._inhibitorArcs;
+            for (auto& inhib: inhibs) {
+                if (inhib.transition == tid) {
+                    Place &place = _builder._places[inhib.place];
+                    uint32_t numInhibitorArcs = 0;
+                    for (auto& innerInhib: inhibs) {
+                        if (innerInhib.place == inhib.place) {
+                            numInhibitorArcs++;
+                        }
+                    }
+                    if (numInhibitorArcs == 0) {
+                        place.inhibitor = false;
+                    }
+                }
+            }
+            inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
+                                        [&tid](Arc &arc) { return arc.transition == tid; }),
+                         inhibs.end());
+            tran.inhibited = false;
+        }
+
         tran.input_arcs.clear();
         tran.output_arcs.clear();
     }
