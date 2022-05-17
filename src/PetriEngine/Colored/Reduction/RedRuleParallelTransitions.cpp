@@ -101,6 +101,8 @@ namespace PetriEngine::Colored::Reduction {
                         if (fail == 2) break;
                         else if (fail == 1) continue;
 
+                        if (mult != 1 && (preserveStutter || queryType == QueryType::CTL)) break;
+
                         // Check input arcs
                         for (int i = trans1.input_arcs.size() - 1; i >= 0; i--) {
                             const Arc &arc1 = trans1.input_arcs[i];
