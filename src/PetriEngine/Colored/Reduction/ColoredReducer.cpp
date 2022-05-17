@@ -115,8 +115,9 @@ namespace PetriEngine::Colored::Reduction {
             tran.input_arcs.erase(ait);
         }
         if (place.inhibitor) {
-            std::cout << "removing inhibitor place" << std::endl;
             auto &inhibs = _builder._inhibitorArcs;
+
+
             for (auto& inhib: inhibs) {
                 if (inhib.place == pid) {
                     Transition &tran = _builder._transitions[inhib.transition];
@@ -126,7 +127,7 @@ namespace PetriEngine::Colored::Reduction {
                             numInhibitorArcs++;
                         }
                     }
-                    if (numInhibitorArcs == 0) {
+                    if (numInhibitorArcs == 1) {
                         tran.inhibited = false;
                     }
                 }
@@ -134,6 +135,7 @@ namespace PetriEngine::Colored::Reduction {
             inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
                                         [&pid](Arc &arc) { return arc.place == pid; }),
                          inhibs.end());
+
             place.inhibitor = false;
         }
 
@@ -159,8 +161,8 @@ namespace PetriEngine::Colored::Reduction {
             place._pre.erase(it);
         }
         if (tran.inhibited) {
-            std::cout << "removing inhibited transition" << std::endl;
             auto &inhibs = _builder._inhibitorArcs;
+
             for (auto& inhib: inhibs) {
                 if (inhib.transition == tid) {
                     Place &place = _builder._places[inhib.place];
@@ -170,7 +172,7 @@ namespace PetriEngine::Colored::Reduction {
                             numInhibitorArcs++;
                         }
                     }
-                    if (numInhibitorArcs == 0) {
+                    if (numInhibitorArcs == 1) {
                         place.inhibitor = false;
                     }
                 }
@@ -178,6 +180,7 @@ namespace PetriEngine::Colored::Reduction {
             inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
                                         [&tid](Arc &arc) { return arc.transition == tid; }),
                          inhibs.end());
+
             tran.inhibited = false;
         }
 
