@@ -48,7 +48,7 @@ namespace PetriEngine {
                 std::vector<const ColorType *> types;
                 colortype->getColortypes(types);
                 if (types.size() > 1 && colortype->productSize() == 1) {
-                        throw base_error("types.size was over 1");
+                    throw base_error("types.size was over 1");
                 }
                 if (colortype->productSize() > 1) {
                     productSorts.push_back(namedSort.first);
@@ -60,7 +60,8 @@ namespace PetriEngine {
 
                 //this is a hack, better way to find if a color is a finite int range?
                 if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
-                    _namedSortTypes.insert(std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
+                    _namedSortTypes.insert(
+                            std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
                     handleFiniteRange(types);
                 } else {
                     if (types[0]->getName() == "dot") {
@@ -97,28 +98,28 @@ namespace PetriEngine {
         }
 
         void PnmlWriter::handleCyclicEnumeration(std::vector<const ColorType *> types) {
-                _out << increaseTabs() << "<cyclicenumeration>\n";
+            _out << increaseTabs() << "<cyclicenumeration>\n";
 
-                for (auto &type: types) {
-                    if (type->productSize() > 1) {
-                        throw base_error("Nested products, aborting writing PNML");
-                    }
-                    if (type->getName() == "dot" || type->getName() == "Dot") {
-                        _out << increaseTabs() << "<dot/>\n";
-                        break;
-                    }
-                    bool first = true;
-
-                    for (uint32_t i = 0; i < type->size(); i++) {
-                        auto nestedType = type->operator[](i);
-
-                        _out << (first ? increaseTabs() : getTabs()) << "<feconstant id=\"" << nestedType.getColorName()
-                             << "\" name=\"" << nestedType.getDisplayName() << "\"/>" << "\n";
-                        first = false;
-                    }
+            for (auto &type: types) {
+                if (type->productSize() > 1) {
+                    throw base_error("Nested products, aborting writing PNML");
                 }
-                _out << decreaseTabs() << "</cyclicenumeration>\n";
+                if (type->getName() == "dot" || type->getName() == "Dot") {
+                    _out << increaseTabs() << "<dot/>\n";
+                    break;
+                }
+                bool first = true;
+
+                for (uint32_t i = 0; i < type->size(); i++) {
+                    auto nestedType = type->operator[](i);
+
+                    _out << (first ? increaseTabs() : getTabs()) << "<feconstant id=\"" << nestedType.getColorName()
+                         << "\" name=\"" << nestedType.getDisplayName() << "\"/>" << "\n";
+                    first = false;
+                }
             }
+            _out << decreaseTabs() << "</cyclicenumeration>\n";
+        }
 
         void PnmlWriter::handleProductSort(std::vector<const ColorType *> types) {
             _out << increaseTabs() << "<productsort>\n";
@@ -147,7 +148,8 @@ namespace PetriEngine {
         void PnmlWriter::handleVariables() {
             _out << getTabs() << "<!-- Declaration of user-defined color variables -->\n";
             for (auto variable: _builder._variables) {
-                _out << getTabs() << "<variabledecl id=\"" << variable->name << "\" name=\"" << variable->name << "\">\n";
+                _out << getTabs() << "<variabledecl id=\"" << variable->name << "\" name=\"" << variable->name
+                     << "\">\n";
                 _out << increaseTabs() << "<usersort declaration=\"" << variable->colorType->getName() << "\"/>\n";
                 _out << decreaseTabs() << "</variabledecl>\n";
             }
@@ -191,9 +193,14 @@ namespace PetriEngine {
                 _out << increaseTabs() << "<position x=\"" << place._x << "\" y=\"" << place._y << "\"/>\n";
                 _out << decreaseTabs() << "</graphics>\n";
                 handleType(place);
-                if (place.marking.distinctSize() > 0) {
-                    handlehlinitialMarking(place.marking);
+
+                bool ok = !place.marking.empty();
+                for (const auto &p: place.marking) {
+                    if (p.second > 0) continue;
+                    ok = false;
                 }
+                if (ok) handlehlinitialMarking(place.marking);
+
                 _out << decreaseTabs() << "</place>\n";
             }
         }
@@ -293,7 +300,7 @@ namespace PetriEngine {
                 std::string start = c->getColorType()->operator[](size_t{0}).getColorName();
                 std::string end = c->getColorType()->operator[](
                         c->getColorType()->size() - 1).getColorName();
-                _out << increaseTabs() << "<finiteintrangeconstant value=\"" <<  c->getColorName() << "\">\n>";
+                _out << increaseTabs() << "<finiteintrangeconstant value=\"" << c->getColorName() << "\">\n>";
                 _out << increaseTabs() << "<finiteintrange start=\"" << start << "\" end=\"" << end << "\"/>\n";
                 _out << decreaseTabs() << "</finiteintrangeconstant>\n";
             } else {
