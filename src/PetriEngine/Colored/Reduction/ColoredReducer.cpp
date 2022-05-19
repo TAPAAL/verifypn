@@ -117,26 +117,15 @@ namespace PetriEngine::Colored::Reduction {
         if (place.inhibitor) {
             auto &inhibs = _builder._inhibitorArcs;
 
-
-            for (auto& inhib: inhibs) {
+            for (int i = inhibs.size() - 1; i >= 0; i--) {
+                const Arc& inhib = inhibs[i];
                 if (inhib.place == pid) {
                     Transition &tran = _builder._transitions[inhib.transition];
-                    uint32_t numInhibitorArcs = 0;
-                    for (auto& innerInhib: inhibs) {
-                        if (innerInhib.transition == inhib.transition) {
-                            numInhibitorArcs++;
-                        }
-                    }
-                    if (numInhibitorArcs == 1) {
-                        tran.inhibited = false;
-                    }
+                    tran.inhibited--;
+                    inhibs.erase(inhibs.begin() + i);
                 }
             }
-            inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                        [&pid](Arc &arc) { return arc.place == pid; }),
-                         inhibs.end());
-
-            place.inhibitor = false;
+            place.inhibitor = 0;
         }
 
         place._post.clear();
@@ -163,25 +152,15 @@ namespace PetriEngine::Colored::Reduction {
         if (tran.inhibited) {
             auto &inhibs = _builder._inhibitorArcs;
 
-            for (auto& inhib: inhibs) {
+            for (int i = inhibs.size() - 1; i >= 0; i--) {
+                const Arc& inhib = inhibs[i];
                 if (inhib.transition == tid) {
                     Place &place = _builder._places[inhib.place];
-                    uint32_t numInhibitorArcs = 0;
-                    for (auto& innerInhib: inhibs) {
-                        if (innerInhib.place == inhib.place) {
-                            numInhibitorArcs++;
-                        }
-                    }
-                    if (numInhibitorArcs == 1) {
-                        place.inhibitor = false;
-                    }
+                    place.inhibitor--;
+                    inhibs.erase(inhibs.begin() + i);
                 }
             }
-            inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                        [&tid](Arc &arc) { return arc.transition == tid; }),
-                         inhibs.end());
-
-            tran.inhibited = false;
+            tran.inhibited = 0;
         }
 
         tran.input_arcs.clear();
