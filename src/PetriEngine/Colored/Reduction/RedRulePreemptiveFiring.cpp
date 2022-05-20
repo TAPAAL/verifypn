@@ -14,8 +14,9 @@ namespace PetriEngine::Colored::Reduction {
     bool RedRulePreemptiveFiring::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                         QueryType queryType,
                                         bool preserveLoops, bool preserveStutter) {
-        Colored::PartitionBuilder partition(red.transitions(), red.places());
+
         bool continueReductions = false;
+
         const size_t numberofplaces = red.placeCount();
         for (uint32_t p = 0; p < numberofplaces; ++p) {
             if (red.hasTimedOut()) return false;
@@ -34,6 +35,8 @@ namespace PetriEngine::Colored::Reduction {
             if (!t_is_viable(red, inQuery, place._post[0], p)) continue;
 
             const Transition &transition = red.transitions()[place._post[0]];
+
+            fired.insert(transition.name);
 
             for (auto &out: transition.output_arcs) {
                 auto &otherplace = const_cast<Place &>(red.places()[out.place]);
@@ -85,6 +88,8 @@ namespace PetriEngine::Colored::Reduction {
         if (inQuery.isTransitionUsed(t)) return false;
 
         const Transition &transition = red.transitions()[t];
+        if (fired.find(transition.name) != fired.end()) return false;
+
         // Easiest to not handle guards
         if (transition.guard) return false;
         if (transition.inhibited) return false;
@@ -96,6 +101,7 @@ namespace PetriEngine::Colored::Reduction {
         if ((place.marking.size() % in->expr->weight()) != 0) {
             return false;
         }
+        if (place._pre.size() > 0 && in->expr->weight() != 1) return false;
 
         // Post set cannot inhibit or be in query
         for (auto &out: transition.output_arcs) {
@@ -117,13 +123,6 @@ namespace PetriEngine::Colored::Reduction {
             if (to_string(*out.expr) != to_string(*in->expr)) {
                 return false;
             }
-        }
-
-        // Make sure that we do not produce tokens to something that can produce tokens to our preset. To disallow infinite use of this rule by looping
-        if (place._pre.size() > 0) {
-            if (in->expr->weight() != 1) return false;
-            std::set<uint32_t> already_checked;
-            if (transition_can_produce_to_place(t, p, red, already_checked)) return false;
         }
 
         return true;
