@@ -87,28 +87,17 @@ namespace PetriEngine::Colored::Reduction {
         const Transition &transition = red.transitions()[t];
         // Easiest to not handle guards
         if (transition.guard) return false;
-
-        // Check if the transition is currently inhibited
-        for (auto &inhibArc: red.inhibitorArcs()) {
-            if (inhibArc.place == p && inhibArc.transition == t) {
-                auto &place = red.places()[p];
-                if (inhibArc.inhib_weight <= place.marking.size()) {
-                    return false;
-                }
-            }
-        }
-
-        //could also relax this, but seems difficult
+        if (transition.inhibited) return false;
         if (transition.input_arcs.size() > 1) return false;
 
-        //Could relax this, and only move some tokens, or check distinct size on marking
+        // We must be able to move all the tokens
         auto &place = red.places()[p];
         const auto &in = red.getInArc(p, transition);
         if ((place.marking.size() % in->expr->weight()) != 0) {
             return false;
         }
 
-        // - postset cannot inhibit or be in query
+        // Post set cannot inhibit or be in query
         for (auto &out: transition.output_arcs) {
             auto &outPlace = red.places()[out.place];
             if (inQuery.isPlaceUsed(out.place) || outPlace.inhibitor) {
@@ -116,21 +105,21 @@ namespace PetriEngine::Colored::Reduction {
             }
 
 
-            //for fireability consistency. We don't want to put tokens to a place enabling transition
+            // For fireability consistency. We don't want to put tokens to a place enabling transition
             for (auto &tin: outPlace._post) {
                 if (inQuery.isTransitionUsed(tin)) {
                     return false;
                 }
             }
 
-            //todo could relax this, and instead of simply copying the tokens to the new place, then update them according to the out arc expression
-            //todo or simple extension, check if constant color on the out arc
+            // todo could relax this, and instead of simply copying the tokens to the new place, then update them according to the out arc expression
+            // todo or simple extension, check if constant color on the out arc
             if (to_string(*out.expr) != to_string(*in->expr)) {
                 return false;
             }
         }
 
-        // - Make sure that we do not produce tokens to something that can produce tokens to our preset. To disallow infinite use of this rule by looping
+        // Make sure that we do not produce tokens to something that can produce tokens to our preset. To disallow infinite use of this rule by looping
         if (place._pre.size() > 0) {
             if (in->expr->weight() != 1) return false;
             std::set<uint32_t> already_checked;
