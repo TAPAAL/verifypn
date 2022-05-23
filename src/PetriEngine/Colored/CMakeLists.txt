@@ -21,7 +21,9 @@ PnmlWriter.cpp
 PnmlWriterColorExprVisitor.cpp
 VarMultiset.cpp
 ArcVarMultisetVisitor.cpp
-CloningVisitor.cpp)
+CloningVisitor.cpp
+VarReplaceVisitor.cpp)
+
 
 
 target_link_libraries(Colored ColoredReduction)

@@ -42,49 +42,49 @@ namespace PetriEngine {
         }
 
         void CloningVisitor::accept(const LessThanExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _col_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _col_res;
             _guard_res = std::make_shared<PetriEngine::Colored::LessThanExpression>(std::move(left), std::move(right));
         }
 
         void CloningVisitor::accept(const LessThanEqExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _col_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _col_res;
             _guard_res = std::make_shared<PetriEngine::Colored::LessThanEqExpression>(std::move(left), std::move(right));
         }
 
         void CloningVisitor::accept(const EqualityExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _col_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _col_res;
             _guard_res = std::make_shared<PetriEngine::Colored::EqualityExpression>(std::move(left), std::move(right));
         }
 
         void CloningVisitor::accept(const InequalityExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _col_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _col_res;
             _guard_res = std::make_shared<PetriEngine::Colored::InequalityExpression>(std::move(left), std::move(right));
         }
 
         void CloningVisitor::accept(const AndExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _guard_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _guard_res;
             _guard_res = std::make_shared<PetriEngine::Colored::AndExpression>(std::move(left), std::move(right));
         }
 
         void CloningVisitor::accept(const OrExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _guard_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _guard_res;
             _guard_res = std::make_shared<PetriEngine::Colored::OrExpression>(std::move(left), std::move(right));
         }
@@ -117,9 +117,9 @@ namespace PetriEngine {
         }
 
         void CloningVisitor::accept(const SubtractExpression *expression) {
-            expression[0].visit(*this);
+            (*expression)[0]->visit(*this);
             auto left = _arc_res;
-            expression[1].visit(*this);
+            (*expression)[1]->visit(*this);
             auto right = _arc_res;
             _arc_res = std::make_shared<PetriEngine::Colored::SubtractExpression>(std::move(left), std::move(right));
         }
