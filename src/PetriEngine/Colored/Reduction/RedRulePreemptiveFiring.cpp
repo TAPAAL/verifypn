@@ -52,42 +52,14 @@ namespace PetriEngine::Colored::Reduction {
         return continueReductions;
     }
 
-    // Search function to see if a transition t can somehow get tokens to place p. Very overestimation, just looking at arcs
-    bool RedRulePreemptiveFiring::transition_can_produce_to_place(unsigned int t, uint32_t p, ColoredReducer &red,
-                                                                  std::set<uint32_t> &already_checked) const {
-        const Transition &transition = red.transitions()[t];
-        for (auto &out: transition.output_arcs) {
-
-            //base case
-            if (out.place == p) {
-                return true;
-            }
-
-            if (already_checked.find(out.place) != already_checked.end()) {
-                continue;
-            } else {
-                already_checked.insert(out.place);
-            }
-
-            const Place &place = red.places()[out.place];
-            if (place.skipped) continue;
-
-            // recursive case
-            for (auto &inout: place._post) {
-                bool can_produce = (transition_can_produce_to_place(inout, p, red, already_checked));
-                if (can_produce) return true;
-            }
-        }
-
-        return false;
-    }
-
     bool RedRulePreemptiveFiring::t_is_viable(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                               uint32_t t, uint32_t p) {
         //fireability consistency check
         if (inQuery.isTransitionUsed(t)) return false;
 
         const Transition &transition = red.transitions()[t];
+
+        // Only fire each transition once to avoid infinite loops
         if (fired.find(transition.name) != fired.end()) return false;
 
         // Easiest to not handle guards
