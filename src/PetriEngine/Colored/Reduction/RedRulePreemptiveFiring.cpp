@@ -38,11 +38,13 @@ namespace PetriEngine::Colored::Reduction {
 
             fired.insert(transition.name);
 
+            const Multiset tokens = place.marking;
+
             for (auto &out: transition.output_arcs) {
                 auto &otherplace = const_cast<Place &>(red.places()[out.place]);
-                otherplace.marking += place.marking;
+                otherplace.marking += tokens;
             }
-            place.marking *= 0;
+            place.marking -= tokens;
 
 
             _applications++;
