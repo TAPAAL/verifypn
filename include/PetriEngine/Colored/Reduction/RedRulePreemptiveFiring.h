@@ -26,6 +26,9 @@ namespace PetriEngine::Colored::Reduction {
         bool transition_can_produce_to_place(unsigned int t, uint32_t p, ColoredReducer &red, std::set<uint32_t> &already_checked) const;
 
         bool t_is_viable(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, uint32_t t, uint32_t p);
+
+    private:
+        std::set<shared_const_string> fired;
     };
 }
 

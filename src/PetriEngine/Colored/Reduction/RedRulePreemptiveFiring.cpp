@@ -14,8 +14,9 @@ namespace PetriEngine::Colored::Reduction {
     bool RedRulePreemptiveFiring::apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                         QueryType queryType,
                                         bool preserveLoops, bool preserveStutter) {
-        Colored::PartitionBuilder partition(red.transitions(), red.places());
+
         bool continueReductions = false;
+
         const size_t numberofplaces = red.placeCount();
         for (uint32_t p = 0; p < numberofplaces; ++p) {
             if (red.hasTimedOut()) return false;
@@ -35,11 +36,15 @@ namespace PetriEngine::Colored::Reduction {
 
             const Transition &transition = red.transitions()[place._post[0]];
 
+            fired.insert(transition.name);
+
+            const Multiset tokens = place.marking;
+
             for (auto &out: transition.output_arcs) {
                 auto &otherplace = const_cast<Place &>(red.places()[out.place]);
-                otherplace.marking += place.marking;
+                otherplace.marking += tokens;
             }
-            place.marking *= 0;
+            place.marking -= tokens;
 
 
             _applications++;
@@ -49,42 +54,16 @@ namespace PetriEngine::Colored::Reduction {
         return continueReductions;
     }
 
-    // Search function to see if a transition t can somehow get tokens to place p. Very overestimation, just looking at arcs
-    bool RedRulePreemptiveFiring::transition_can_produce_to_place(unsigned int t, uint32_t p, ColoredReducer &red,
-                                                                  std::set<uint32_t> &already_checked) const {
-        const Transition &transition = red.transitions()[t];
-        for (auto &out: transition.output_arcs) {
-
-            //base case
-            if (out.place == p) {
-                return true;
-            }
-
-            if (already_checked.find(out.place) != already_checked.end()) {
-                continue;
-            } else {
-                already_checked.insert(out.place);
-            }
-
-            const Place &place = red.places()[out.place];
-            if (place.skipped) continue;
-
-            // recursive case
-            for (auto &inout: place._post) {
-                bool can_produce = (transition_can_produce_to_place(inout, p, red, already_checked));
-                if (can_produce) return true;
-            }
-        }
-
-        return false;
-    }
-
     bool RedRulePreemptiveFiring::t_is_viable(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
                                               uint32_t t, uint32_t p) {
         //fireability consistency check
         if (inQuery.isTransitionUsed(t)) return false;
 
         const Transition &transition = red.transitions()[t];
+
+        // Only fire each transition once to avoid infinite loops
+        if (fired.find(transition.name) != fired.end()) return false;
+
         // Easiest to not handle guards
         if (transition.guard) return false;
         if (transition.inhibited) return false;
@@ -96,6 +75,7 @@ namespace PetriEngine::Colored::Reduction {
         if ((place.marking.size() % in->expr->weight()) != 0) {
             return false;
         }
+        if (place._pre.size() > 0 && in->expr->weight() != 1) return false;
 
         // Post set cannot inhibit or be in query
         for (auto &out: transition.output_arcs) {
@@ -117,13 +97,6 @@ namespace PetriEngine::Colored::Reduction {
             if (to_string(*out.expr) != to_string(*in->expr)) {
                 return false;
             }
-        }
-
-        // Make sure that we do not produce tokens to something that can produce tokens to our preset. To disallow infinite use of this rule by looping
-        if (place._pre.size() > 0) {
-            if (in->expr->weight() != 1) return false;
-            std::set<uint32_t> already_checked;
-            if (transition_can_produce_to_place(t, p, red, already_checked)) return false;
         }
 
         return true;
