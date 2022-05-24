@@ -101,6 +101,7 @@ namespace PetriEngine::Colored::Reduction {
 
                 for (const auto& prod : place._pre){
                     const Transition& producer = red.transitions()[prod];
+
                     // X8.1, X6
                     if(producer.inhibited || producer.output_arcs.size() != 1){
                         ok = false;
@@ -253,24 +254,21 @@ namespace PetriEngine::Colored::Reduction {
                                 break;
                             }
                         }
-                    } else {
-                        if (consumer.guard)
-                            Colored::VariableVisitor::get_variables(*consumer.guard, consVars);
-                    }
-
-                    for (auto &arc: consumer.input_arcs) {
-                        if (!prodHangingVars.first || arc.place != consArc->place) {
-                            Colored::VariableVisitor::get_variables(*arc.expr, consVars);
-                        }
-                    }
-                    for (auto &arc: consumer.output_arcs) {
-                        if (!prodHangingVars.first || arc.place != consArc->place) {
-                            Colored::VariableVisitor::get_variables(*arc.expr, consVars);
-                        }
                     }
 
                     // The hanging guards that could not be caught by the producer's arcs have to be caught by the consumer's arcs now, or the agglomeration cant go on.
                     if (prodHangingVars.first || consHangingGuardVarRisk) {
+                        for (auto &arc: consumer.input_arcs) {
+                            if (arc.place != consArc->place) {
+                                Colored::VariableVisitor::get_variables(*arc.expr, consVars);
+                            }
+                        }
+                        for (auto &arc: consumer.output_arcs) {
+                            if (arc.place != consArc->place) {
+                                Colored::VariableVisitor::get_variables(*arc.expr, consVars);
+                            }
+                        }
+
                         for (auto &var: consArcVars) {
                             if (consVars.find(var) == consVars.end()) {
                                 // If the producer has a hanging guard variable, we cannot allow consArc to also have hanging variables
@@ -403,7 +401,6 @@ namespace PetriEngine::Colored::Reduction {
                                     for (auto& cvar : consArcVars){
                                         varReplacementMap[cvar->name] = newVar;
                                     }
-
                                 }
                             }
                         }
@@ -512,7 +509,7 @@ namespace PetriEngine::Colored::Reduction {
     std::pair<bool, bool> RedRulePreAgglomeration::_prodHangingGuardVar(ColoredReducer& red, uint32_t pid, const std::vector<uint32_t>& originalProducers) {
         bool hangingGuardVar_risk = false;
         bool hangingArcVar = false;
-        for (const auto& prod : originalProducers){
+        for (const uint32_t prod : originalProducers){
             const Transition& producer = red.transitions()[prod];
             const CArcIter prodArc = red.getOutArc(producer, pid);
             std::set<const Variable*> prodArcVars;

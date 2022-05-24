@@ -348,6 +348,9 @@ namespace PetriEngine::Colored::Reduction {
     uint32_t ColoredReducer::getBindingCount(const Transition &transition) {
         std::set<const Colored::Variable *> variables;
 
+        if (transition.guard != nullptr) {
+            Colored::VariableVisitor::get_variables(*transition.guard, variables);
+        }
         for (const auto &arc: transition.input_arcs) {
             assert(arc.expr != nullptr);
             Colored::VariableVisitor::get_variables(*arc.expr, variables);

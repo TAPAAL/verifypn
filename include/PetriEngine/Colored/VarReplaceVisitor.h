@@ -19,7 +19,7 @@ namespace PetriEngine::Colored {
         VarReplaceVisitor(std::unordered_map<std::string ,const Variable*>& varReplacementMap)
         : _varReplacementMap(varReplacementMap) {}
 
-        void accept(const VariableExpression * e) override;
+        void accept(const VariableExpression* e) override;
 
         GuardExpression_ptr makeReplacementGuard(const GuardExpression_ptr& e){
             e->visit(*this);
