@@ -56,6 +56,7 @@ namespace PetriEngine::Colored::Reduction {
                         const Place &place1 = red.places()[p1];
                         const Place &place2 = red.places()[p2];
 
+                        if (place2.inhibitor) continue;
                         if (place2._pre.empty() || place1._post.empty()) continue;
 
                         if (place1._post.size() < place2._post.size() ||
