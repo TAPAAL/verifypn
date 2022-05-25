@@ -69,6 +69,8 @@ namespace PetriEngine::Colored::Reduction {
             any |= changed;
         } while (changed && !hasTimedOut());
 
+        consistent();
+
         auto now = std::chrono::high_resolution_clock::now();
         _timeSpent = (std::chrono::duration_cast<std::chrono::microseconds>(now - _startTime).count()) * 0.000001;
         return any;
