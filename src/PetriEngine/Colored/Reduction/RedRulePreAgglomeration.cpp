@@ -474,6 +474,13 @@ namespace PetriEngine::Colored::Reduction {
                                 }
                             }
 
+                            for (const auto& arc : red.inhibitorArcs()){
+                                if (arc.transition == originalConsumers[n]){
+                                    ArcExpression_ptr expr = nullptr;
+                                    red.addInputArc(arc.place, tid, expr, arc.inhib_weight);
+                                }
+                            }
+
                             for (const auto& arc : producerPrime.input_arcs){
                                 ArcExpression_ptr expr = varReplacevis.makeReplacementArcExpr(arc.expr);
                                 red.addInputArc(arc.place, tid, expr, arc.inhib_weight);
