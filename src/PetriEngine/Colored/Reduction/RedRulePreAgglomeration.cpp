@@ -216,12 +216,16 @@ namespace PetriEngine::Colored::Reduction {
                     if (atomic_viable) {
                         // S12
                         if (!kIsAlwaysOne[n] && consumer.input_arcs.size() != 1) {
+                            todo[n] = false;
+                            todoAllGood = false;
                             continue;
                         }
                         // S11
                         if (!kIsAlwaysOne[n]) {
                             for (const auto &conspost: consumer.output_arcs) {
                                 if (red.places()[conspost.place].inhibitor) {
+                                    todo[n] = false;
+                                    todoAllGood = false;
                                     ok = false;
                                     break;
                                 }
