@@ -92,16 +92,14 @@ namespace PetriEngine::Colored::Reduction {
                     skipplace = false;
                 else {
                     red.skipTransition(cons);
+                    _applications++;
+                    continueReductions = true;
                 }
             }
 
             if (skipplace) {
                 red.skipPlace(p);
             }
-
-            _applications++;
-            continueReductions = true;
-
         }
         red.consistent();
         return continueReductions;
