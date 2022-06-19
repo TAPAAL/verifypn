@@ -262,7 +262,7 @@ namespace LTL {
             if constexpr (T::save_trace()) {
                 _loop_state = cstack[to]._stateid;
                 _loop_trans = successorGenerator.fired();
-                cstack[from]._lowsource = to;
+                cstack[to]._lowsource = from;
             }
         }
     }
@@ -306,7 +306,7 @@ namespace LTL {
             cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
         }
         // follow previously found back edges via lowsource until back in dstack.
-        if(cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
+        if(!had_deadlock && cstack[p]._lowsource != std::numeric_limits<idx_t>::max())
         {
             p = cstack[p]._lowsource;
             while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
@@ -322,6 +322,7 @@ namespace LTL {
                     break;
                 assert(cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p]._lowsource;
+                assert(p != cstack[p]._lowsource);
             }
             if(!had_deadlock)
             {
