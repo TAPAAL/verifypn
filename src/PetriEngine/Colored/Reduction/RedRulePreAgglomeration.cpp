@@ -10,7 +10,6 @@
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 #include "PetriEngine/Colored/ArcVarMultisetVisitor.h"
 #include "PetriEngine/Colored/VariableVisitor.h"
-#include "PetriEngine/Colored/IsVariableVisitor.h"
 
 namespace PetriEngine::Colored::Reduction {
     bool RedRulePreAgglomeration::isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const {
@@ -188,9 +187,8 @@ namespace PetriEngine::Colored::Reduction {
                     for (auto& tuple : allProdTuples){
                         if (!referenceTuple){
                             // We only support tuples of variables
-                            IsVariableVisitor v;
-                            for (auto& element : tuple.second){
-                                if(!v.isVariableExpr(element)){
+                            for (auto& element : tuple.second) {
+                                if (!dynamic_cast<const VariableExpression*>(element)) {
                                     ok = false;
                                     break;
                                 }
@@ -303,23 +301,26 @@ namespace PetriEngine::Colored::Reduction {
 
                     // referenceTuple being nullptr here means there were no tuples in the producers
                     assert(consTuples.empty() == (referenceTuple == nullptr));
-                    if (!consTuples.empty()){
-                        IsVariableVisitor varvis;
-                        for (auto& tuple : consTuples){
-                            if (tuple.second.size() == referenceTuple->size()){
+                    if (!consTuples.empty()) {
+                        // Check that the tuple is all variables, now for the consumer
+                        for (auto& tuple : consTuples) {
+                            if (tuple.second.size() == referenceTuple->size()) {
                                 std::unordered_map<std::string , uint32_t> tuplematching;
-                                for (uint32_t ii = 0; ii < consTuples.size(); ii++){
-                                    if (!varvis.isVariableExpr(tuple.second[ii])){
-                                        // Check that the tuple is all variables, now for the consumer
-                                        ok = false;
-                                        break;
-                                    } else if (tuplematching[varvis.getVariableName(tuple.second[ii])] != tuplematching[varvis.getVariableName((*referenceTuple)[ii])]){
-                                        // This branch is reached if one of the transitions is a duplicate, while the other is not, or is a duplicate too but of a different variable
-                                        ok = false;
-                                        break;
+                                for (uint32_t ii = 0; ii < consTuples.size(); ii++) {
+                                    auto refv = (const VariableExpression *) (*referenceTuple)[ii];
+                                    if (auto v = dynamic_cast<const VariableExpression*>(tuple.second[ii])) {
+                                        if (tuplematching[v->variable()->name] != tuplematching[refv->variable()->name]) {
+                                            // This branch is reached if one of the variables is a duplicate, while the other is not, or is a duplicate too but of a different variable
+                                            ok = false;
+                                            break;
+                                        } else {
+                                            tuplematching[v->variable()->name] = ii;
+                                            tuplematching[refv->variable()->name] = ii;
+                                        }
                                     } else {
-                                        tuplematching[varvis.getVariableName(tuple.second[ii])] = ii;
-                                        tuplematching[varvis.getVariableName((*referenceTuple)[ii])] = ii;
+                                        // Not a variable
+                                        ok = false;
+                                        break;
                                     }
                                 }
                             } else {
@@ -376,13 +377,12 @@ namespace PetriEngine::Colored::Reduction {
                         std::set<const Variable*> pairVars;
                         std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> prodTuples;
                         Colored::VariableVisitor::get_variables(*proArc->expr, pairVars, prodTuples);
-                        IsVariableVisitor varvis;
 
                         std::unordered_map<std::string, const Variable*> varReplacementMap;
                         if (!prodTuples.empty()){
                             for (uint32_t tupleIndex = 0; tupleIndex < referenceTuple->size(); tupleIndex++){
-                                const Variable* prodVar = varvis.getVariable(prodTuples.at(1)[tupleIndex]);
-                                const Variable* consVar = varvis.getVariable(consTuples.at(1)[tupleIndex]);
+                                const Variable* prodVar = ((const VariableExpression *) prodTuples.at(1)[tupleIndex])->variable();
+                                const Variable* consVar = ((const VariableExpression *) consTuples.at(1)[tupleIndex])->variable();
                                 if (varReplacementMap[prodVar->name] == nullptr && varReplacementMap[consVar->name] == nullptr){
                                     auto* newVar = new Variable{*producer.name + *consumer2.name + prodVar->name + consVar->name, prodVar->colorType};
                                     red.addVariable(newVar);
