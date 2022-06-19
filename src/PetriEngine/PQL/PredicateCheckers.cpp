@@ -269,6 +269,26 @@ namespace PetriEngine { namespace PQL {
         setConditionFound();
     }
 
+    void IsLoopSensitiveVisitor::_accept(const ACondition *condition)
+    {
+        _negated = !_negated;
+        AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const NotCondition *condition)
+    {
+        _negated = !_negated;
+        AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const UntilCondition *condition)
+    {
+        if(_negated)
+            setConditionFound();
+        else
+            AnyVisitor::_accept(condition);
+    }
+
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
@@ -305,4 +325,11 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
+
+    bool containsDeadlock(const Condition_ptr condition) {
+        ContainsDeadlockVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
+
 } }

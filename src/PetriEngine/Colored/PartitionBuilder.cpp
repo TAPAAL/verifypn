@@ -24,6 +24,7 @@ namespace PetriEngine {
 
         void PartitionBuilder::printPartion() const {
             for(size_t i = 0; i < _partition.size(); ++i){
+                if (_places[i].skipped) continue;
                 auto& equivalenceVec = _partition[i];
                 std::cout << "Partition for place " << _places[i].name << std::endl;
                 std::cout << "Diag variables: (";
@@ -43,6 +44,7 @@ namespace PetriEngine {
             //Instantiate partitions
             for(uint32_t i = 0; i < _places.size(); i++){
                 const PetriEngine::Colored::Place& place = _places[i];
+                if (place.skipped) continue;
                 EquivalenceClass fullClass = EquivalenceClass(++_eq_id_counter, place.type);
                 if(_fixed_point != nullptr){
                     fullClass.setIntervalVector((*_fixed_point)[i].constraints);
@@ -100,6 +102,8 @@ namespace PetriEngine {
 
         void PartitionBuilder::assignColorMap(std::vector<EquivalenceVec> &partition) const{
             for(size_t pi = 0; pi < partition.size(); ++pi){
+                if (_places[pi].skipped) continue;
+
                 auto& eqVec = partition[pi];
                 if(eqVec.isDiagonal()){
                     continue;
@@ -436,6 +440,7 @@ namespace PetriEngine {
         void PartitionBuilder::handleLeafTransitions(){
             for(uint32_t i = 0; i < _transitions.size(); i++){
                 const Transition &transition = _transitions[i];
+                if (transition.skipped) continue;
                 if(transition.output_arcs.empty() && !transition.input_arcs.empty()){
                     handleTransition(transition, transition.input_arcs.back().place, &transition.input_arcs.back());
                 }

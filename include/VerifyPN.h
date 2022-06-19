@@ -108,6 +108,9 @@ using namespace PetriEngine::Reachability;
 #define VERIFYPN_H
 
 
+bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
+                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reductiontype,std::vector<uint32_t>& reductions);
+
 std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
     std::ostream& out = std::cout, int32_t partitionTimeout = 0, int32_t max_intervals = 0, int32_t intervals_reduced = 0, int32_t interval_timeout = 0, bool over_approx = false);

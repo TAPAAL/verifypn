@@ -1,8 +1,13 @@
 /*
- * File:   Reducer.h
- * Author: srba
+ * File:   Reducer.cpp
+ * Authors:
+ *      Jiri Srba
+ *      Jesper Adriaan van Diepen
+ *      Nicolaj Østerby Jensen
+ *      Masthias Mehl Sørensen
  *
  * Created on 15 February 2014, 10:50
+ * Updated 7 March 2022
  */
 
 #ifndef REDUCER_H
@@ -88,20 +93,26 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reductions);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops,
+        bool all_reach, bool all_ltl, bool contains_next, std::vector<uint32_t>& reductions);
 
-        size_t RemovedTransitions() const {
-            return _removedTransitions;
+        size_t numberOfSkippedTransitions() const {
+            return _skippedTransitions.size();
         }
 
-        size_t RemovedPlaces() const {
-            return _removedPlaces;
+        size_t numberOfSkippedPlaces() const {
+            return _skippedPlaces;
         }
+
+        uint32_t numberOfUnskippedTransitions();
+        uint32_t numberOfUnskippedPlaces();
+        int32_t removedTransitions();
+        int32_t removedPlaces();
 
         void printStats(std::ostream& out)
         {
-            out << "Removed transitions: " << _removedTransitions << "\n"
-                << "Removed places: " << _removedPlaces << "\n"
+            out << "Removed transitions: " << removedTransitions() << "\n"
+                << "Removed places: " << removedPlaces() << "\n"
                 << "Applications of rule A: " << _ruleA << "\n"
                 << "Applications of rule B: " << _ruleB << "\n"
                 << "Applications of rule C: " << _ruleC << "\n"
@@ -112,7 +123,15 @@ namespace PetriEngine {
                 << "Applications of rule H: " << _ruleH << "\n"
                 << "Applications of rule I: " << _ruleI << "\n"
                 << "Applications of rule J: " << _ruleJ << "\n"
-                << "Applications of rule K: " << _ruleK << std::endl;
+                << "Applications of rule K: " << _ruleK << "\n"
+                << "Applications of rule L: " << _ruleL << "\n"
+                << "Applications of rule M: " << _ruleM << "\n"
+                << "Applications of rule N: " << _ruleN << "\n"
+                << "Applications of rule O: " << _ruleO << "\n"
+                << "Applications of rule P: " << _ruleP << "\n"
+                << "Applications of rule Q: " << _ruleQ << "\n"
+                << "Applications of rule R: " << _ruleR << "\n"
+                << "Applications of rule S: " << _ruleS << std::endl;
         }
 
         void postFire(std::ostream&, const std::string& transition) const;
@@ -120,9 +139,11 @@ namespace PetriEngine {
         void initFire(std::ostream&) const;
 
     private:
-        size_t _removedTransitions = 0;
-        size_t _removedPlaces= 0;
-        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0, _ruleJ = 0, _ruleK = 0;
+        size_t _skippedPlaces= 0;
+        std::vector<uint32_t> _skippedTransitions;
+        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0,
+        _ruleI = 0, _ruleJ = 0, _ruleK = 0, _ruleL = 0, _ruleM = 0, _ruleN = 0, _ruleO = 0, _ruleP = 0, _ruleQ = 0, _ruleR = 0, _ruleS = 0;
+
         PetriNetBuilder* parent = nullptr;
         bool reconstructTrace = false;
         std::chrono::high_resolution_clock::time_point _timer;
@@ -132,16 +153,24 @@ namespace PetriEngine {
         bool ReducebyRuleA(uint32_t* placeInQuery);
         bool ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks, bool remove_consumers);
         bool ReducebyRuleC(uint32_t* placeInQuery);
-        bool ReducebyRuleD(uint32_t* placeInQuery);
-        bool ReducebyRuleE(uint32_t* placeInQuery);
-        bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
+        bool ReducebyRuleD(uint32_t* placeInQuery, bool all_reach, bool remove_loops_no_branch);
+        bool ReducebyRuleEP(uint32_t* placeInQuery);
+        bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_consumers);
         bool ReducebyRuleF(uint32_t* placeInQuery);
+        bool ReducebyRuleFNO(uint32_t* placeInQuery);
         bool ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
-        bool ReducebyRuleH(uint32_t* placeInQuery);
+        bool ReducebyRuleH(uint32_t* placeInQuery, bool all_ltl);
         bool ReducebyRuleJ(uint32_t* placeInQuery);
         bool ReducebyRuleK(uint32_t* placeInQuery, bool remove_consumers);
+        bool ReducebyRuleL(uint32_t* placeInQuery);
+        bool ReducebyRuleM(uint32_t* placeInQuery);
+        bool ReducebyRuleEFMNOP(uint32_t* placeInQuery);
+        bool ReducebyRuleQ(uint32_t* placeInQuery);
+        bool ReducebyRuleR(uint32_t* placeInQuery, uint32_t explosion_limiter);
+        bool ReducebyRuleS(uint32_t *placeInQuery, bool remove_consumers, bool remove_loops, bool allReach, uint32_t explosion_limiter);
 
-        std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
+        std::optional<std::pair<std::vector<bool>, std::vector<bool>>> relevant(const uint32_t* placeInQuery, bool remove_consumers);
+
         bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);
 
         shared_const_string getTransitionName(uint32_t transition);
@@ -153,13 +182,20 @@ namespace PetriEngine {
         void eraseTransition(std::vector<uint32_t>&, uint32_t);
         void skipTransition(uint32_t);
         void skipPlace(uint32_t);
+        void skipInArc(uint32_t, uint32_t);
+        void skipOutArc(uint32_t, uint32_t);
+
         shared_const_string newTransName();
 
         bool consistent();
+
         bool hasTimedout() const {
+            return genericTimeout(_timer, _timeout);
+        }
+        bool genericTimeout(std::chrono::high_resolution_clock::time_point timer, int timeout) const {
             auto end = std::chrono::high_resolution_clock::now();
-            auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _timer);
-            return (diff.count() >= _timeout);
+            auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - timer);
+            return (diff.count() >= timeout);
         }
 
         std::vector<shared_const_string> _initfire;
@@ -167,8 +203,8 @@ namespace PetriEngine {
         std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
         std::vector<uint8_t> _tflags;
         std::vector<uint8_t> _pflags;
+        std::vector<uint32_t> _lower;
         size_t _tnameid = 0;
-        std::vector<uint32_t> _skipped_trans;
     };
 
 

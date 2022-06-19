@@ -45,6 +45,7 @@
  */
 
 
+#include <PetriEngine/Colored/PnmlWriter.h>
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
@@ -76,6 +77,11 @@ int main(int argc, const char** argv) {
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
+        }
+
+        if (!options.model_col_out_file.empty() && cpnBuilder.hasPartition()) {
+            std::cerr << "Cannot write colored PNML as the original net has partitions. Not supported (yet)" << std::endl;
+            return to_underlying(ReturnValue::UnknownCode);
         }
 
         if (options.cpnOverApprox && !cpnBuilder.isColored()) {
@@ -136,6 +142,19 @@ int main(int argc, const char** argv) {
 
         std::stringstream ss;
         std::ostream& out = options.printstatistics ? std::cout : ss;
+        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
+
+        if (options.model_col_out_file.size() > 0) {
+            std::fstream file;
+            file.open(options.model_col_out_file, std::ios::out);
+            PetriEngine::Colored::PnmlWriter writer(cpnBuilder, file);
+            writer.toColPNML();
+        }
+
+        if (!options.doUnfolding) {
+            return 0;
+        }
+
         auto [builder, transition_names, place_names] = unfold(cpnBuilder,
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,
@@ -162,7 +181,13 @@ int main(int argc, const char** argv) {
             for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
                 initial_size += qm0[i];
 
-            if (queries.size() == 0 ||
+            if(queries.empty() && options.cpnOverApprox)
+            {
+                std::cerr << "WARNING: Could not run CPN over-approximation on any queries, terminating." << std::endl;
+                std::exit(0);
+            }
+
+            if (queries.empty() ||
                 contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Could not analyze the queries");
             }
@@ -253,7 +278,6 @@ int main(int argc, const char** argv) {
                             results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                         alldone = false;
                     } else {
-                        queries[i] = prepareForReachability(queries[i]);
                         alldone = false;
                     }
                 }
@@ -267,8 +291,9 @@ int main(int argc, const char** argv) {
 
         //--------------------- Apply Net Reduction ---------------//
 
+        builder.freezeOriginalSize();
         if (options.enablereduction > 0) {
-            // Compute how many times each place appears in the query
+            // Compute structural reductions
             builder.startTimer();
             builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr,
                            options.reductionTimeout, options.reductions);
@@ -308,6 +333,14 @@ int main(int argc, const char** argv) {
         }
 
         if (options.doVerification) {
+
+            auto verifStart = std::chrono::high_resolution_clock::now();
+            // When this ptr goes out of scope it will print the time spent during verification
+            std::shared_ptr<void> defer (nullptr, [&verifStart](...){
+                auto verifEnd = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::microseconds>(verifEnd - verifStart).count() / 1000000.0;
+                std::cout << std::setprecision(6) << "Spent " << diff << " on verification" << std::endl;
+            });
 
             //----------------------- Verify CTL queries -----------------------//
             std::vector<size_t> ctl_ids;
@@ -456,6 +489,12 @@ int main(int argc, const char** argv) {
             // Change default place-holder to default strategy
             if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
+            // remove the prefix EF/AF (LEGACY, should not be handled here)
+            for(uint32_t i = 0; i < results.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                    queries[i] = prepareForReachability(queries[i]);
+            }
             if (options.tar && net->numberOfPlaces() > 0) {
                 //Create reachability search strategy
                 TarResultPrinter tar_printer(printer);

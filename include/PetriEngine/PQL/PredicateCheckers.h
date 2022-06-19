@@ -126,9 +126,17 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const AFCondition *condition) override;
 
+        void _accept(const ACondition *condition) override;
+
+        void _accept(const NotCondition *condition) override;
+
+        void _accept(const UntilCondition *condition) override;
+
         void _accept(const DeadlockCondition *condition) override;
 
         void _accept(const PathQuant *element) override;
+    private:
+        bool _negated = false;
     };
 
 
@@ -169,8 +177,17 @@ namespace PetriEngine { namespace PQL {
         }
     };
 
+    class ContainsDeadlockVisitor : public AnyVisitor {
+        void _accept(const DeadlockCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
     bool containsUpperBounds(const Condition* condition);
     bool containsUpperBounds(const Condition_ptr& condition);
+
+    bool containsDeadlock(const Condition_ptr condition) ;
 } }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

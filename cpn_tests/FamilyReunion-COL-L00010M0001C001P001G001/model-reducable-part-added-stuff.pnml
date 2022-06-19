@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="l30">
+                <name>
+                    <text>l30</text>
+                    <graphics>
+                        <offset x="54" y="-26"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="350" y="350"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l21">
+                <name>
+                    <text>l21</text>
+                    <graphics>
+                        <offset x="64" y="-17"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="987" y="357"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'LegalResident.all)</text>
+                    <structure>
+                        <add>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="LegalResident"/>
+                                        </all>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </add>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <place id="l22">
+                <name>
+                    <text>l22</text>
+                    <graphics>
+                        <offset x="56" y="43"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="750" y="417"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l24">
+                <name>
+                    <text>l24</text>
+                    <graphics>
+                        <offset x="116" y="8"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="850" y="150"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l25">
+                <name>
+                    <text>l25</text>
+                    <graphics>
+                        <offset x="60" y="-31"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="750" y="283"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l23">
+                <name>
+                    <text>l23</text>
+                    <graphics>
+                        <offset x="81" y="42"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="850" y="550"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l28">
+                <name>
+                    <text>l28</text>
+                    <graphics>
+                        <offset x="60" y="46"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="550" y="417"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l26">
+                <name>
+                    <text>l26</text>
+                    <graphics>
+                        <offset x="61" y="-25"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="450" y="150"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l27">
+                <name>
+                    <text>l27</text>
+                    <graphics>
+                        <offset x="61" y="-29"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="550" y="283"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="l29">
+                <name>
+                    <text>l29</text>
+                    <graphics>
+                        <offset x="65" y="44"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="450" y="550"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="P13">
+                <name>
+                    <text>P13</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="180" y="360"/>
+                </graphics>
+                <type>
+                    <text>LegalResident</text>
+                    <structure>
+                        <usersort declaration="LegalResident"/>
+                    </structure>
+                </type>
+            </place>
+            <transition id="Gate2ANDJoin">
+                <name>
+                    <graphics>
+                        <offset x="111" y="10"/>
+                    </graphics>
+                    <text>Gate2ANDJoin</text>
+                </name>
+                <graphics>
+                    <position x="450" y="350"/>
+                </graphics>
+            </transition>
+            <transition id="Gate2ANDSplit">
+                <name>
+                    <graphics>
+                        <offset x="2" y="26"/>
+                    </graphics>
+                    <text>Gate2ANDSplit</text>
+                </name>
+                <graphics>
+                    <position x="850" y="350"/>
+                </graphics>
+            </transition>
+            <transition id="PrepIncomeCertif">
+                <name>
+                    <graphics>
+                        <offset x="57" y="51"/>
+                    </graphics>
+                    <text>PrepIncomeCertif</text>
+                </name>
+                <graphics>
+                    <position x="650" y="417"/>
+                </graphics>
+            </transition>
+            <transition id="ObtainRelativeFinStatement">
+                <name>
+                    <graphics>
+                        <offset x="85" y="-33"/>
+                    </graphics>
+                    <text>ObtainRelativeFinStatement</text>
+                </name>
+                <graphics>
+                    <position x="650" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="ObtainFamRelCertif">
+                <name>
+                    <graphics>
+                        <offset x="58" y="-16"/>
+                    </graphics>
+                    <text>ObtainFamRelCertif</text>
+                </name>
+                <graphics>
+                    <position x="650" y="283"/>
+                </graphics>
+            </transition>
+            <transition id="ObtainRelHealtCondStatement">
+                <name>
+                    <graphics>
+                        <offset x="72" y="33"/>
+                    </graphics>
+                    <text>ObtainRelHealtCondStatement</text>
+                </name>
+                <graphics>
+                    <position x="650" y="550"/>
+                </graphics>
+            </transition>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="270" y="360"/>
+                </graphics>
+                <condition>
+                    <text>l eq t</text>
+                    <structure>
+                        <equality>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="Vart"/>
+                            </subterm>
+                        </equality>
+                    </structure>
+                </condition>
+            </transition>
+            <arc id="l21_to_Gate2ANDSplit" source="l21" target="Gate2ANDSplit" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l22_to_PrepIncomeCertif" source="l22" target="PrepIncomeCertif" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l24_to_ObtainRelativeFinStatement" source="l24" target="ObtainRelativeFinStatement" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l25_to_ObtainFamRelCertif" source="l25" target="ObtainFamRelCertif" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l23_to_ObtainRelHealtCondStatement" source="l23" target="ObtainRelHealtCondStatement" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l28_to_Gate2ANDJoin" source="l28" target="Gate2ANDJoin" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l26_to_Gate2ANDJoin" source="l26" target="Gate2ANDJoin" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l27_to_Gate2ANDJoin" source="l27" target="Gate2ANDJoin" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l29_to_Gate2ANDJoin" source="l29" target="Gate2ANDJoin" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="l30_to_T0" source="l30" target="T0" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="Gate2ANDSplit_to_l22" source="Gate2ANDSplit" target="l22" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="Gate2ANDSplit_to_l24" source="Gate2ANDSplit" target="l24" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="Gate2ANDSplit_to_l25" source="Gate2ANDSplit" target="l25" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="Gate2ANDSplit_to_l23" source="Gate2ANDSplit" target="l23" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="PrepIncomeCertif_to_l28" source="PrepIncomeCertif" target="l28" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="ObtainRelativeFinStatement_to_l26" source="ObtainRelativeFinStatement" target="l26" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="ObtainFamRelCertif_to_l27" source="ObtainFamRelCertif" target="l27" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="ObtainRelHealtCondStatement_to_l29" source="ObtainRelHealtCondStatement" target="l29" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="Gate2ANDJoin_to_l30" source="Gate2ANDJoin" target="l30" type="normal">
+                <hlinscription>
+                    <text>1'l</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varl"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="T0_to_P13" source="T0" target="P13" type="normal">
+                <hlinscription>
+                    <text>1't</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="Vart"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="LegalResident" name="LegalResident">
+                        <cyclicenumeration>
+                            <feconstant id="LegalResident0" name="LegalResident"/>
+                            <feconstant id="LegalResident1" name="LegalResident"/>
+                            <feconstant id="LegalResident2" name="LegalResident"/>
+                            <feconstant id="LegalResident3" name="LegalResident"/>
+                            <feconstant id="LegalResident4" name="LegalResident"/>
+                            <feconstant id="LegalResident5" name="LegalResident"/>
+                            <feconstant id="LegalResident6" name="LegalResident"/>
+                            <feconstant id="LegalResident7" name="LegalResident"/>
+                            <feconstant id="LegalResident8" name="LegalResident"/>
+                            <feconstant id="LegalResident9" name="LegalResident"/>
+                            <feconstant id="LegalResident10" name="LegalResident"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="MICSystem" name="MICSystem">
+                        <cyclicenumeration>
+                            <feconstant id="MICSystem0" name="MICSystem"/>
+                            <feconstant id="MICSystem1" name="MICSystem"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="CINFORMI" name="CINFORMI">
+                        <cyclicenumeration>
+                            <feconstant id="CINFORMI0" name="CINFORMI"/>
+                            <feconstant id="CINFORMI1" name="CINFORMI"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="PublicAdminOffice" name="PublicAdminOffice">
+                        <cyclicenumeration>
+                            <feconstant id="PublicAdminOffice0" name="PublicAdminOffice"/>
+                            <feconstant id="PublicAdminOffice1" name="PublicAdminOffice"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="GovernmentCommission" name="GovernmentCommission">
+                        <cyclicenumeration>
+                            <feconstant id="GovernmentCommission0" name="GovernmentCommission"/>
+                            <feconstant id="GovernmentCommission1" name="GovernmentCommission"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="response" name="Response">
+                        <cyclicenumeration>
+                            <feconstant id="Response0" name="Response"/>
+                            <feconstant id="Response1" name="Response"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="LxM" name="LxM">
+                        <productsort>
+                            <usersort declaration="LegalResident"/>
+                            <usersort declaration="MICSystem"/>
+                        </productsort>
+                    </namedsort>
+                    <namedsort id="LxC" name="LxC">
+                        <productsort>
+                            <usersort declaration="LegalResident"/>
+                            <usersort declaration="CINFORMI"/>
+                        </productsort>
+                    </namedsort>
+                    <namedsort id="LxP" name="LxP">
+                        <productsort>
+                            <usersort declaration="LegalResident"/>
+                            <usersort declaration="PublicAdminOffice"/>
+                        </productsort>
+                    </namedsort>
+                    <namedsort id="LxG" name="LxG">
+                        <productsort>
+                            <usersort declaration="LegalResident"/>
+                            <usersort declaration="GovernmentCommission"/>
+                        </productsort>
+                    </namedsort>
+                    <namedsort id="LxR" name="LxR">
+                        <productsort>
+                            <usersort declaration="LegalResident"/>
+                            <usersort declaration="response"/>
+                        </productsort>
+                    </namedsort>
+                    <variabledecl id="varl" name="l">
+                        <usersort declaration="LegalResident"/>
+                    </variabledecl>
+                    <variabledecl id="varm" name="m">
+                        <usersort declaration="MICSystem"/>
+                    </variabledecl>
+                    <variabledecl id="varc" name="c">
+                        <usersort declaration="CINFORMI"/>
+                    </variabledecl>
+                    <variabledecl id="varp" name="p">
+                        <usersort declaration="PublicAdminOffice"/>
+                    </variabledecl>
+                    <variabledecl id="varg" name="g">
+                        <usersort declaration="GovernmentCommission"/>
+                    </variabledecl>
+                    <variabledecl id="varr" name="r">
+                        <usersort declaration="response"/>
+                    </variabledecl>
+                    <variabledecl id="Vart" name="t">
+                        <usersort declaration="LegalResident"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+    </net>
+</pnml>

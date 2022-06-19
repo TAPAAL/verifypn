@@ -19,21 +19,21 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
     size_t cnt = 0;
     while(!strategy->empty())
     {
-        while (auto e = strategy->popEdge(false)) 
+        while (auto e = strategy->popEdge(false))
         {
             ++e->refcnt;
             assert(e->refcnt >= 1);
             checkEdge(e);
             assert(e->refcnt >= -1);
             if(e->refcnt > 0) --e->refcnt;
-            if(e->refcnt == 0) graph->release(e);            
+            if(e->refcnt == 0) graph->release(e);
             ++cnt;
             if((cnt % 1000) == 0) strategy->trivialNegation();
             if(vertex->isDone()) return vertex->assignment == ONE;
         }
-        
+
         if(vertex->isDone()) return vertex->assignment == ONE;
-        
+
         if(!strategy->trivialNegation())
         {
             cnt = 0;
@@ -67,7 +67,7 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         }
         if(!any && e->source != vertex) return;
     }*/
-    
+
     bool allOne = true;
     bool hasCZero = false;
     //auto pre_empty = e->targets.empty();
@@ -91,6 +91,10 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
                     break;
                 }
                 else if(lastUndecided == nullptr)
+                {
+                    lastUndecided = *it;
+                }
+                else if(lastUndecided != nullptr && lastUndecided->assignment == UNKNOWN && (*it)->assignment == ZERO)
                 {
                     lastUndecided = *it;
                 }
@@ -157,7 +161,7 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
                     for (auto t : e->targets)
                         t->addDependency(e);
                 }
-            }                 
+            }
             if (lastUndecided->assignment == UNKNOWN) {
                 explore(lastUndecided);
             }
@@ -204,7 +208,7 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
         --e->refcnt;
         if(e->refcnt == 0) graph->release(e);
     }
-    
+
     c->dependency_set.clear();
 }
 
@@ -218,13 +222,13 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
 
         _exploredConfigurations += 1;
         _numberOfEdges += c->nsuccs;
-        // before we start exploring, lets check if any of them determine 
+        // before we start exploring, lets check if any of them determine
         // the outcome already!
 
         for(int32_t i = c->nsuccs-1; i >= 0; --i)
         {
             checkEdge(succs[i], true);
-            if(c->isDone()) 
+            if(c->isDone())
             {
                 for(Edge *e : succs){
                     assert(e->refcnt <= 1);

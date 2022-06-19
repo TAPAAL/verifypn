@@ -30,6 +30,7 @@
 #include <PetriEngine/PQL/PredicateCheckers.h>
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/Analyze.h"
+#include "LTL/LTLValidator.h"
 
 
 namespace PetriEngine {
@@ -92,14 +93,14 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight)
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, uint32_t weight)
     {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addInputArc(spn, stn, inhibitor, weight);
     }
 
-    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, int weight) {
+    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, uint32_t weight) {
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -110,6 +111,21 @@ namespace PetriEngine {
         }
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
+
+        for (Arc& arc : _transitions[t].pre){
+            if (arc.place == p){
+                if (inhibitor == arc.inhib) {
+                    if (!inhibitor){
+                        arc.weight += weight;
+                    } else {
+                        arc.weight = std::min(arc.weight, weight);
+                    }
+                } else {
+                    throw base_error("Adding an inhibitor and a non-inhibitor arc to the same Place/Transition pair:", place, transition);
+                }
+                return;
+            }
+        }
 
         Arc arc;
         arc.place = p;
@@ -125,13 +141,13 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, uint32_t weight) {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addOutputArc(stn, spn, weight);
     }
 
-    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, uint32_t weight) {
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -144,6 +160,13 @@ namespace PetriEngine {
         uint32_t t = _transitionnames[transition];
         assert(t < _transitions.size());
         assert(p < _places.size());
+
+        for (Arc& arc : _transitions[t].post){
+            if (arc.place == p){
+                arc.weight += weight;
+                return;
+            }
+        }
 
         Arc arc;
         arc.place = p;
@@ -196,9 +219,8 @@ namespace PetriEngine {
          * a decision-tree like construction, possibly improving successor generation.
          */
 
-        uint32_t nplaces = _places.size() - reducer.RemovedPlaces();
-        uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
-
+        uint32_t nplaces = numberOfUnskippedPlaces();
+        uint32_t ntrans = numberOfUnskippedTransitions();
         std::vector<uint32_t> place_cons_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_prod_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
@@ -524,10 +546,12 @@ namespace PetriEngine {
 
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results,
-                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions)
+                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout,
+                                    std::vector<uint32_t>& reductions)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
+        bool all_ltl = true;
         bool remove_loops = true;
         bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
@@ -542,14 +566,19 @@ namespace PetriEngine {
                results[i] == Reachability::ResultPrinter::LTL)
             {
                 PetriEngine::PQL::analyze(queries[i], placecontext);
-                all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
+                bool is_reach = PetriEngine::PQL::isReachability(queries[i]);
+                if(!is_reach) {
+                    LTL::LTLValidator isLtl;
+                    all_reach = false;
+                    all_ltl &= isLtl.isLTL(queries[i]);
+                }
                 remove_loops &= !PetriEngine::PQL::isLoopSensitive(queries[i]);
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.
                 contains_next |= PetriEngine::PQL::containsNext(queries[i]) || PetriEngine::PQL::hasNestedDeadlock(queries[i]);
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions);
     }
 
 

@@ -59,7 +59,7 @@ namespace PetriEngine {
                 _type = other._type;
             }
             if (other._type != nullptr && _type != other._type) {
-                throw "You cannot add Multisets over different sets";
+                throw base_error("You cannot add Multisets over different sets");
             }
             for (auto c : other._set) {
                 const Color* color = &(*ColorType::dotInstance()->begin());
@@ -74,7 +74,7 @@ namespace PetriEngine {
                 _type = other._type;
             }
             if (other._type != nullptr && _type != other._type) {
-                throw "You cannot add Multisets over different sets";
+                throw base_error("You cannot add Multisets over different sets");
             }
             for (auto c : _set) {
                 const Color* color = &(*ColorType::dotInstance()->begin());
@@ -111,7 +111,7 @@ namespace PetriEngine {
                 _type = color->getColorType();
             }
             if (color->getColorType() != nullptr && _type != color->getColorType()) {
-                throw "You cannot access a Multiset with a color from a different color type";
+                throw base_error("You cannot access a Multiset with a color from a different color type");
             }
             for (auto & i : _set) {
                 if (i.first == color->getId())
@@ -122,17 +122,25 @@ namespace PetriEngine {
             return _set.back().second;
         }
 
-        bool Multiset::empty() const {
-            return _set.empty();
+        bool Multiset::isSubsetOf(const Multiset &other) const {
+            Multiset thisMinusOther(*this);
+            thisMinusOther -= other;
+            Multiset otherMinusThis(other);
+            otherMinusThis -= *this;
+            return thisMinusOther.empty() && !otherMinusThis.empty();
         }
 
-        void Multiset::clean() {
-            if (std::find_if(_set.begin(), _set.end(), [&](auto elem) { return elem.second == 0; }) == _set.end())
-                return;
+        bool Multiset::isSubsetOrEqTo(const Multiset &other) const {
+            Multiset thisMinusOther(*this);
+            thisMinusOther -= other;
+            return thisMinusOther.empty();
+        }
 
-            _set.erase(std::remove_if(_set.begin(), _set.end(), [&](auto elem) {
-                return elem.second == 0;
-            }));
+        bool Multiset::empty() const {
+            for (auto & e : _set) {
+                if (e.second > 0) return false;
+            }
+            return true;
         }
 
         const Multiset::Iterator Multiset::begin() const {

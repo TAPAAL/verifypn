@@ -71,7 +71,7 @@ namespace PetriEngine { namespace PQL {
             if (result.success) {
                 i.first = result.offset;
             } else {
-                throw base_error("Unable to resolve identifier \"", i.second, "\"");
+                throw base_error("Unable to resolve identifier \"", *i.second, "\"");
             }
         }
         std::vector<Expr_ptr> old_exprs;
@@ -102,7 +102,7 @@ namespace PetriEngine { namespace PQL {
         if (result.success) {
             return result.offset;
         } else {
-            throw base_error("Unable to resolve identifier \"", name, "\"");
+            throw base_error("Unable to resolve identifier \"", *name, "\"");
         }
         return -1;
     }
@@ -124,7 +124,7 @@ namespace PetriEngine { namespace PQL {
             if (!coloredContext->resolvePlace(element->name(), [&](auto& n){
                 names.emplace_back(n);
             })) {
-                throw base_error("Unable to resolve colored identifier \"", element->name(), "\"");
+                throw base_error("Unable to resolve colored identifier \"", *element->name(), "\"");
             }
 
             if (names.size() == 1) {
@@ -426,7 +426,7 @@ namespace PetriEngine { namespace PQL {
                     if (!coloredContext->resolvePlace(p, [&](auto& pn){
                         uplaces.emplace_back(pn);
                     })) {
-                        throw base_error("Unable to resolve colored identifier \"", p, "\"");
+                        throw base_error("Unable to resolve colored identifier \"", *p, "\"");
                     }
                 }
                 element->_compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
@@ -443,7 +443,7 @@ namespace PetriEngine { namespace PQL {
             if (result.success) {
                 p._place = result.offset;
             } else {
-                throw base_error("Unable to resolve identifier \"", p._name, "\"");
+                throw base_error("Unable to resolve identifier \"", *p._name, "\"");
             }
         }
         std::sort(element->_places.begin(), element->_places.end());

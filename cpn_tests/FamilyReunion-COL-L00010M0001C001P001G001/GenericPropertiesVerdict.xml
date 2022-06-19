@@ -1,0 +1,87 @@
+<toolspecific tool="propertiesverdict" version="2.0">
+  <modelreference modelname="FamilyReunion"/>
+  <verdict category="GENERIC" reference="ORDINARY" value="unknown">
+    <explanation>true for the colored model; probably false for the P/T model (stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s))</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SIMPLE_FREE_CHOICE" value="unknown">
+    <explanation>true for the colored model; probably false for the P/T model (stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s))</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="EXTENDED_FREE_CHOICE" value="unknown">
+    <explanation>true for the colored model;</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="STATE_MACHINE" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="MARKED_GRAPH" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="CONNECTED" value="true">
+    <explanation>stated by CAESARBDD version 2.8 to be true on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="STRONGLY_CONNECTED" value="unknown">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SOURCE_PLACE" value="true">
+    <explanation>stated by CAESARBDD version 2.8 to be true on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SINK_PLACE" value="true">
+    <explanation>stated by CAESARBDD version 2.8 to be true on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SOURCE_TRANSITION" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SINK_TRANSITION" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="LOOP_FREE" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="CONSERVATIVE" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SUBCONSERVATIVE" value="false">
+    <explanation>stated by CAESARBDD version 2.8 to be false on 5 instance(s) out of 6, and unknown on the remaining 1 instance(s)</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="NESTED_UNITS" value="false">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="SAFE" value="false">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="DEAD_PLACES" value="unknown">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="DEAD_TRANSITIONS" value="true">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="DEADLOCK" value="true">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="REVERSIBLE" value="false">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+  <verdict category="GENERIC" reference="LIVE" value="false">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2020" date="2020-01-02T11:59:07.117+01:00" reference="https://mcc.lip6.fr/pdf/FamilyReunion-form.pdf"/>
+  </verdict>
+</toolspecific>
