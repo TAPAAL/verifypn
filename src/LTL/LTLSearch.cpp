@@ -218,6 +218,7 @@ namespace LTL {
         _checker->set_utilize_weak(utilize_weak);
         _checker->set_heuristic(_heuristic.get());
         _checker->set_partial_order(por);
+        _checker->set_tracing(trace);
         _result = _checker->check();
         return _result xor _negated_answer;
     }

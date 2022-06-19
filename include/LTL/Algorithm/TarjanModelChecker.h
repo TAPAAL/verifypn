@@ -91,8 +91,8 @@ namespace LTL {
         }
 
         struct plain_centry_t {
-            idx_t _lowlink;
-            idx_t _stateid;
+            idx_t _lowlink = std::numeric_limits<idx_t>::max();
+            idx_t _stateid = std::numeric_limits<idx_t>::max();
             idx_t _next = std::numeric_limits<idx_t>::max();
             bool _dstack = true;
             plain_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : _lowlink(lowlink), _stateid(stateid), _next(next) {}
@@ -101,7 +101,7 @@ namespace LTL {
 
         struct tracable_centry_t : plain_centry_t {
             idx_t _lowsource = std::numeric_limits<idx_t>::max();
-            idx_t _sourcetrans;
+            idx_t _sourcetrans = std::numeric_limits<idx_t>::max();
             tracable_centry_t(idx_t lowlink, idx_t stateid, idx_t next) : plain_centry_t(lowlink, stateid, next) {}
             static constexpr bool save_trace() { return true; }
         };
