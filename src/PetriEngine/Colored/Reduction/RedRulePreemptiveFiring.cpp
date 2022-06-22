@@ -44,8 +44,12 @@ namespace PetriEngine::Colored::Reduction {
                 auto &otherplace = const_cast<Place &>(red.places()[out.place]);
                 otherplace.marking += tokens;
             }
-            place.marking -= tokens;
 
+            if (place._pre.empty()) {
+                red.skipPlace(p);
+            } else {
+                place.marking = Multiset();
+            }
 
             _applications++;
             continueReductions = true;
@@ -72,10 +76,10 @@ namespace PetriEngine::Colored::Reduction {
         // We must be able to move all the tokens
         auto &place = red.places()[p];
         const auto &in = red.getInArc(p, transition);
-        if ((place.marking.size() % in->expr->weight()) != 0) {
-            return false;
-        }
-        if (place._pre.size() > 0 && in->expr->weight() != 1) return false;
+        uint32_t inWeight = red.getInArc(p, transition)->expr->weight();
+        if (!place._pre.empty() && inWeight != 1) return false;
+        if (place.marking.distinctSize() > 1 && inWeight != 1) return false;
+        if ((place.marking.size() % inWeight) != 0) return false;
 
         // Post set cannot inhibit or be in query
         for (auto &out: transition.output_arcs) {
