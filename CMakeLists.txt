@@ -87,34 +87,38 @@ if (VERIFYPN_GetDependencies)
         CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/external/include
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include
     )
+
+    if (WIN32) #If windows 32 or 64
+      set(GLPK_CFLAGS "-D __WOE__ -O3" )
+      set(HOST "--host=x86_64-w64-mingw32")
+      message("Windows")
+    else(WIN32)
+      set(GLPK_CFLAGS "-O3" )
+    endif(WIN32)
+
     if (UNIX AND NOT APPLE)
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
-            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.10.6.tar.gz
+            URL_HASH SHA512=22642fb0c8d53e35fb6fb3413756da5fec6477247179e2097e68494de0e91a111afe4f58d0b3cc1c7ce4c6a5a5533bba4e5f243da113036de339aeafb63b2067
             BUILD_COMMAND make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++20 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin --host=x86_64-w64-mingw32 
             INSTALL_COMMAND make install
         )
     else ()
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
-            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.10.6.tar.gz
+            URL_HASH SHA512=22642fb0c8d53e35fb6fb3413756da5fec6477247179e2097e68494de0e91a111afe4f58d0b3cc1c7ce4c6a5a5533bba4e5f243da113036de339aeafb63b2067
             BUILD_COMMAND make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug  --disable-shared --enable-static --enable-c++20 CFLAGS=${CMAKE_CXX_FLAGS} ${HOST} LDFLAGS=${CMAKE_LINKER_FLAGS}
             INSTALL_COMMAND make install
         )
     endif ()
 
-    if (WIN32) #If windows 32 or 64
-      set(GLPK_CFLAGS "-D __WOE__ -O3" )
-    else(WIN32)
-      set(GLPK_CFLAGS "-O3" )
-    endif(WIN32)
     ExternalProject_add(glpk-ext
         URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
         URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
-	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION} CFLAGS=${GLPK_CFLAGS}
-	BUILD_COMMAND make
+	    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION} CFLAGS=${GLPK_CFLAGS} ${HOST}
+        BUILD_COMMAND make
         INSTALL_COMMAND make install
         PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/glpk-warning.patch
     )
