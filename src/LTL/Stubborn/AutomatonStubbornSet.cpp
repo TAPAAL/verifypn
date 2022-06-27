@@ -152,7 +152,7 @@ namespace LTL {
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
 #ifndef NDEBUG
-            std::cerr << "Lone successor " << _net.transitionNames()[_ordering.front()] << std::endl;
+            std::cerr << "Lone successor " << *_net.transitionNames()[_ordering.front()] << std::endl;
 #endif
             return true;
         }

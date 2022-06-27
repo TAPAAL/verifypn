@@ -138,7 +138,7 @@ namespace LTL {
             query->toString(ss);
             throw base_error("Formula is not in supported LTL or HyperLTL fragment: ", ss.str());
         }
-
+        _traces.clear();
         std::tie(_negated_formula, _negated_answer) = to_ltl(query, _traces);
         _buchi = make_buchi_automaton(_negated_formula, optimization, compression);
     }
@@ -158,10 +158,8 @@ namespace LTL {
     // TODO refactor this into a trace-printer, this does not belong in the solver.
     void LTLSearch::_print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const {
 
-        auto& trace = _checker->trace();
-        const size_t ntraces = std::max(_traces.size(), size_t{1});
-        if(!_traces.empty() && _traces.back().size() != ntraces)
-            throw base_error("Trace-transition cardinality does not match cardinality of (Hyper-)ltl quantifiers");
+        const auto& trace = _checker->trace();
+        const size_t ntraces = _traces.empty() ? 1 : _traces.size();
         std::string tindent = ntraces <= 1 ? "" : "  ";
         std::string indent = tindent + "  ";
         std::string token_indent = indent + "  ";
