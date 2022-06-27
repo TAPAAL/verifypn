@@ -691,6 +691,10 @@ namespace PetriEngine { namespace PQL {
         _accept(static_cast<ShallowCondition*>(element));
     }
 
+    void PushNegationVisitor::_accept(PathSelectCondition* element) {
+        RETURN(std::make_shared<PathSelectCondition>(element->name(), subvisit(element->child(), nested, negated), element->offset()))
+    }
+
     Condition_ptr PushNegationVisitor::subvisit(Condition* condition, bool _nested, bool _negated) {
     {
             bool old_nested = nested;

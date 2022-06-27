@@ -128,6 +128,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(QuasiLivenessCondition* element) override;
 
         void _accept(StableMarkingCondition* element) override;
+
+        void _accept(PathSelectCondition* element) override;
     };
 } }
 

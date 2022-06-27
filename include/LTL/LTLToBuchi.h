@@ -145,6 +145,7 @@ namespace LTL {
         APCompression _compress;
         spot::formula _formula;
         const bool _expand;
+        const PetriEngine::PQL::PathSelectCondition* _path_select = nullptr;
         spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element);
     };
 
