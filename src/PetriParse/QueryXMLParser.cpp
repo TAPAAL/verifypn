@@ -448,7 +448,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     }
     else if(elementName == "path-scope")
     {
-        if (getChildCount(element) != 0)
+        if (getChildCount(element) != 1)
             throw base_error("Expected exactly one child of ", elementName);
 
         auto* name = element->first_attribute("name");
