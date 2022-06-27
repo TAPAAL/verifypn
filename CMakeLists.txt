@@ -98,18 +98,20 @@ if (VERIFYPN_GetDependencies)
 
     if (UNIX AND NOT APPLE)
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.10.6.tar.gz
-            URL_HASH SHA512=22642fb0c8d53e35fb6fb3413756da5fec6477247179e2097e68494de0e91a111afe4f58d0b3cc1c7ce4c6a5a5533bba4e5f243da113036de339aeafb63b2067
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff
+6cc5ade3a2
             BUILD_COMMAND make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++20 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin --host=x86_64-w64-mingw32 
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin ${HOST}
             INSTALL_COMMAND make install
         )
     else ()
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.10.6.tar.gz
-            URL_HASH SHA512=22642fb0c8d53e35fb6fb3413756da5fec6477247179e2097e68494de0e91a111afe4f58d0b3cc1c7ce4c6a5a5533bba4e5f243da113036de339aeafb63b2067
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff
+6cc5ade3a2
             BUILD_COMMAND make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug  --disable-shared --enable-static --enable-c++20 CFLAGS=${CMAKE_CXX_FLAGS} ${HOST} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug  --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} ${HOST} LDFLAGS=${CMAKE_LINKER_FLAGS}
             INSTALL_COMMAND make install
         )
     endif ()
