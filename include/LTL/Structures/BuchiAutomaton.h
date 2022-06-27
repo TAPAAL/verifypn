@@ -86,7 +86,6 @@ namespace LTL { namespace Structures {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
                 using PetriEngine::PQL::Condition;
-                _ap_info.at(var)._expression->toString(std::cerr);
                 Condition::Result res = PetriEngine::PQL::evaluate(_ap_info.at(var)._expression.get(), ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:
