@@ -83,6 +83,8 @@ namespace LTL {
 
         bool print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const;
 
+        const std::vector<std::vector<uint32_t>>& raw_trace() const { return _checker->trace(); }
+
     private:
         void _print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const;
         std::ostream &

@@ -68,3 +68,73 @@ BOOST_AUTO_TEST_CASE(SimpleHyperTest, * utf::timeout(300)) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(HyperStutter, * utf::timeout(300)) {
+    std::set<size_t> qnums{0, 1};
+    std::vector<Reachability::ResultPrinter::Result> expected{
+        ResultPrinter::Satisfied,
+        ResultPrinter::Satisfied
+    };
+
+    auto [pn, conditions, qstrings] = load_pn("/models/hyper_stutter.pnml",
+        "/models/hyper_stutter.xml", qnums);
+
+    for (auto i : qnums) {
+        for (bool trace : {false, true}) {
+            for (auto alg : {LTL::Algorithm::NDFS /*, LTL::Algorithm::Tarjan*/}) {
+                for (auto por :{LTL::LTLPartialOrder::None/*, LTL::LTLPartialOrder::Liebke,
+                        LTL::LTLPartialOrder::Visible, LTL::LTLPartialOrder::Automaton*/}) {
+                    if (alg == LTL::Algorithm::NDFS && por != LTL::LTLPartialOrder::None)
+                        continue;
+                    for (auto heur : {LTL::LTLHeuristic::DFS/*, LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
+                            LTL::LTLHeuristic::FireCount*/}) {
+
+                        std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace
+                            << " por=" << to_underlying(por) << " alg=" << to_underlying(alg) << " heur=" << to_underlying(heur) << std::endl;
+                        Strategy strategy = Strategy::HEUR;
+                        if (heur == LTL::LTLHeuristic::DFS)
+                            strategy = Strategy::HEUR;
+                        LTL::LTLSearch search(*pn, conditions[i], LTL::BuchiOptimization::Low, LTL::APCompression::None);
+                        auto r = search.solve(trace, 0, alg, por, strategy, heur, true);
+                        auto& raw = search.raw_trace();
+                        BOOST_REQUIRE_EQUAL(raw.size(), 2);
+
+                        if(i == 0)
+                        {
+                            BOOST_REQUIRE_EQUAL(raw[0].size(), 2);
+                            BOOST_REQUIRE_EQUAL(raw[1].size(), 4);
+                            if(*pn->transitionNames()[raw[0][0]] == "T0")
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T1");
+                            else
+                            {
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T3");
+                            }
+                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T2");
+                            for(size_t k = 1; k < raw[1].size(); ++k)
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][k]], "T4");
+                        }
+
+                        if(i == 1)
+                        {
+                            BOOST_REQUIRE_EQUAL(raw[0].size(), 2);
+                            BOOST_REQUIRE_EQUAL(raw[1].size(), 2);
+                            if(*pn->transitionNames()[raw[0][0]] == "T0")
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T1");
+                            else
+                            {
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T3");
+                            }
+                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T2");
+                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][1]], "T4");
+                        }
+
+                        auto result = r ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
+                        BOOST_REQUIRE_EQUAL(expected[i], result);
+                    }
+                }
+            }
+        }
+    }
+}
