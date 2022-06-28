@@ -167,6 +167,7 @@ namespace LTL {
             os << "<trace-list>\n";
         for(size_t j = 0; j < ntraces; ++j)
         {
+            bool printed_deadlock = false;
             os << tindent << "<trace";
             if(ntraces > 1)
                 os << " name=\"" << _traces[j] << "\"";
@@ -176,7 +177,7 @@ namespace LTL {
                 if (i == _checker->loop_index())
                     os << indent << "<loop/>\n";
                 assert(trace[i].size() == ntraces);
-                print_transition(trace[i][j], reducer, os, indent, token_indent);
+                print_transition(trace[i][j], reducer, os, indent, token_indent, printed_deadlock);
             }
             os << std::endl << tindent << "</trace>" << std::endl;
         }
@@ -185,9 +186,11 @@ namespace LTL {
     }
 
     std::ostream &
-    LTLSearch::print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indent, const std::string& _token_indent) const {
+    LTLSearch::print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indent, const std::string& _token_indent, bool& printed_deadlock) const {
         if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-            os << _indent << "<deadlock/>";
+            if(!printed_deadlock)
+                os << _indent << "<deadlock/>";
+            printed_deadlock = true;
             return os;
         }
 

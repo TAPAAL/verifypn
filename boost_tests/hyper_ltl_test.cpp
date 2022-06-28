@@ -96,42 +96,44 @@ BOOST_AUTO_TEST_CASE(HyperStutter, * utf::timeout(300)) {
                             strategy = Strategy::HEUR;
                         LTL::LTLSearch search(*pn, conditions[i], LTL::BuchiOptimization::Low, LTL::APCompression::None);
                         auto r = search.solve(trace, 0, alg, por, strategy, heur, true);
-                        auto& raw = search.raw_trace();
-                        BOOST_REQUIRE_EQUAL(raw.size(), 2);
-
-                        if(i == 0)
-                        {
-                            BOOST_REQUIRE_EQUAL(raw[0].size(), 2);
-                            BOOST_REQUIRE_EQUAL(raw[1].size(), 4);
-                            if(*pn->transitionNames()[raw[0][0]] == "T0")
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T1");
-                            else
-                            {
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T3");
-                            }
-                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T2");
-                            for(size_t k = 1; k < raw[1].size(); ++k)
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][k]], "T4");
-                        }
-
-                        if(i == 1)
-                        {
-                            BOOST_REQUIRE_EQUAL(raw[0].size(), 2);
-                            BOOST_REQUIRE_EQUAL(raw[1].size(), 2);
-                            if(*pn->transitionNames()[raw[0][0]] == "T0")
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T1");
-                            else
-                            {
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
-                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T3");
-                            }
-                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T2");
-                            BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][1]], "T4");
-                        }
-
                         auto result = r ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
                         BOOST_REQUIRE_EQUAL(expected[i], result);
+                        if(trace)
+                        {
+                            auto& raw = search.raw_trace();
+
+
+                            if(i == 0)
+                            {
+                                BOOST_REQUIRE_EQUAL(raw.size(), 6);
+                                if(*pn->transitionNames()[raw[0][1]] == "T0")
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][1]], "T1");
+                                else
+                                {
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T2");
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][1]], "T3");
+                                }
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
+                                for(size_t k = 1; k < raw.size(); ++k)
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[k][0]], "T4");
+                            }
+
+                            if(i == 1)
+                            {
+                                BOOST_REQUIRE_EQUAL(raw.size(), 2);
+                                BOOST_REQUIRE_EQUAL(raw[0].size(), 2);
+                                BOOST_REQUIRE_EQUAL(raw[1].size(), 2);
+                                if(*pn->transitionNames()[raw[0][0]] == "T0")
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T1");
+                                else
+                                {
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][0]], "T2");
+                                    BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][0]], "T3");
+                                }
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[0][1]], "T2");
+                                BOOST_REQUIRE_EQUAL(*pn->transitionNames()[raw[1][1]], "T4");
+                            }
+                        }
                     }
                 }
             }

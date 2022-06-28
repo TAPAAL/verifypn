@@ -94,7 +94,7 @@ namespace PetriEngine {
                         {
                             if(hyper_traces > 1)
                                 os << "H[" << j << "] ";
-                            os << *net.placeNames()[i+j*net.numberOfPlaces()] << ": " << _marking[i+j*net.numberOfPlaces()] << '\n';
+                            os << *net.placeNames()[i] << ": " << _marking[i+j*net.numberOfPlaces()] << '\n';
                         }
                     }
                 }

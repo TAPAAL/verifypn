@@ -88,7 +88,7 @@ namespace LTL {
     private:
         void _print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const;
         std::ostream &
-        print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indend, const std::string& _token_indent) const;
+        print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indend, const std::string& _token_indent, bool& printed_deadlock) const;
 
     };
 

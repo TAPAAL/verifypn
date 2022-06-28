@@ -54,7 +54,7 @@ namespace LTL { namespace Structures {
             for(size_t i = 0; i < _hyper_traces; ++i)
             {
                 PetriEngine::Structures::State dummy(const_cast<PetriEngine::MarkVal*>(state.marking()) + i * _markings.net().numberOfPlaces());
-                const auto res = _markings.add(state);
+                const auto res = _markings.add(dummy);
                 dummy.release();
                 if (res.second == std::numeric_limits<size_t>::max()) {
                     return {res.first, res.second, res.second};
