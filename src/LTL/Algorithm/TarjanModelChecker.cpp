@@ -288,7 +288,7 @@ namespace LTL {
             _loop = _trace.size();
         dstack.pop_back();
         size_t p = 0;
-        bool had_deadlock = false;
+        bool had_deadlock = _loop_trans == std::numeric_limits<uint32_t>::max() - 1;
         // print (reverted) dstack
         while (!dstack.empty()) {
             p = dstack.back()._pos;
@@ -296,7 +296,7 @@ namespace LTL {
             auto stateid = cstack[p]._stateid;
             auto[parent, tid] = seen.get_history(stateid);
             _trace.push_back({(uint32_t)tid});
-            if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+            if(tid >= std::numeric_limits<uint32_t>::max() - 1)
             {
                 had_deadlock = true;
                 break;

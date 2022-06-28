@@ -97,6 +97,10 @@ namespace LTL {
             return _last;
         }
 
+        uint32_t generated() const {
+            return SuccessorGenerator::fired();
+        }
+
 
         void prepare(const Structures::ProductState *state, successor_info_t &sucinfo)
         {
@@ -141,7 +145,7 @@ namespace LTL {
         {
             assert(sucinfo._successors != nullptr);
             if (sucinfo._successors.empty()) {
-                _last = std::numeric_limits<uint32_t>::max();
+                _last = std::numeric_limits<uint32_t>::max() - 1;
                 return false;
             }
             _last = sucinfo._successors.front();
