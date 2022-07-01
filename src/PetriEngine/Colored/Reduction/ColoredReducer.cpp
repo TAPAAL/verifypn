@@ -43,9 +43,6 @@ namespace PetriEngine::Colored::Reduction {
                                 QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t reduceMode,
                                 std::vector<uint32_t> &userSequence) {
 
-        //if (inQuery.anyTransitionUsed())
-        //    return false; // TODO Only cardinality has been thoroughly tested
-
         assert(reduceMode > 0);
         auto reductionsToUse = reduceMode == 1 ? _reductions : buildApplicationSequence(userSequence);
 
