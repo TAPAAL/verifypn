@@ -47,7 +47,7 @@ namespace PetriEngine {
         public:
             VariableVisitor(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions,
                     VariableModifierMap& varModifierMap, std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& _tuples, bool includeSubtracts)
-            : _variables(variables), _varPositions(varPositions), _varModifiers(varModifierMap), _tuples(_tuples), _include_subtracts(includeSubtracts) {
+            : _variables(variables), _tuples(_tuples), _varPositions(varPositions), _varModifiers(varModifierMap), _include_subtracts(includeSubtracts) {
 
             }
 

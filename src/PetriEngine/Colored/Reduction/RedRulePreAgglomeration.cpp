@@ -241,7 +241,6 @@ namespace PetriEngine::Colored::Reduction {
                     }
 
                     const auto &consArc = red.getInArc(pid, consumer);
-                    uint32_t w = consArc->expr->weight();
 
                     // Identify the variables of the consumer
                     bool consHangingGuardVarRisk = false;
