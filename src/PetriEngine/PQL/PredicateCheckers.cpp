@@ -199,7 +199,6 @@ namespace PetriEngine { namespace PQL {
         if (!_is_nested) setConditionFound();
     }
 
-
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
         IsLoopSensitiveVisitor visitor;
@@ -267,6 +266,22 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
         else
             AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const LivenessCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const StableMarkingCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
     }
 
 
