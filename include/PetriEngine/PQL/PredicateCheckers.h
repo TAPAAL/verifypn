@@ -84,6 +84,8 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const QuasiLivenessCondition *element) override;
 
+        void _accept(const KSafeCondition* element) override;
+
         void _accept(const LivenessCondition *element) override;
 
         void _accept(const StableMarkingCondition *element) override;

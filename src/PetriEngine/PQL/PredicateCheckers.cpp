@@ -188,6 +188,16 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const KSafeCondition* element) {
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+        {
+            if(_is_nested)
+                setConditionFound();
+        }
+    }
+
     void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
             Visitor::visit(this, element->getCompiled());
