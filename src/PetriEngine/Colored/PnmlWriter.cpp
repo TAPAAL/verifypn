@@ -276,8 +276,8 @@ namespace PetriEngine {
                     _out << getTabs() << "<subterm>" << "\n";
                 }
                 if (is_number(color->toString())) {
-                    std::string start = color->getColorType()->operator[](size_t{0}).getColorName();
-                    std::string end = color->getColorType()->operator[](
+                    const std::string& start = color->getColorType()->operator[](size_t{0}).getColorName();
+                    const std::string& end = color->getColorType()->operator[](
                             color->getColorType()->size() - 1).getColorName();
                     _out << increaseTabs() << "<finiteintrangeconstant value=\"" << color->getColorName()
                          << "\">\n";
@@ -294,18 +294,22 @@ namespace PetriEngine {
         }
 
         void PnmlWriter::handleOtherColor(const PetriEngine::Colored::Color *const c) {
-            std::string thePnmlColorType = _namedSortTypes.find(c->getColorType()->getName())->second;
             if (c->getColorName() == "Dot" || c->getColorName() == "dot") {
                 _out << increaseTabs() << "<dotconstant/>\n";
-            } else if (thePnmlColorType == "finite range") {
-                std::string start = c->getColorType()->operator[](size_t{0}).getColorName();
-                std::string end = c->getColorType()->operator[](
-                        c->getColorType()->size() - 1).getColorName();
-                _out << increaseTabs() << "<finiteintrangeconstant value=\"" << c->getColorName() << "\">\n>";
-                _out << increaseTabs() << "<finiteintrange start=\"" << start << "\" end=\"" << end << "\"/>\n";
-                _out << decreaseTabs() << "</finiteintrangeconstant>\n";
-            } else {
-                _out << increaseTabs() << "<useroperator declaration=\"" << c->getColorName() << "\"/>\n";
+            }
+            else
+            {
+                const std::string& thePnmlColorType = _namedSortTypes.find(c->getColorType()->getName())->second;
+                if (thePnmlColorType == "finite range") {
+                    const std::string& start = c->getColorType()->operator[](size_t{0}).getColorName();
+                    const std::string& end = c->getColorType()->operator[](
+                            c->getColorType()->size() - 1).getColorName();
+                    _out << increaseTabs() << "<finiteintrangeconstant value=\"" << c->getColorName() << "\">\n>";
+                    _out << increaseTabs() << "<finiteintrange start=\"" << start << "\" end=\"" << end << "\"/>\n";
+                    _out << decreaseTabs() << "</finiteintrangeconstant>\n";
+                } else {
+                    _out << increaseTabs() << "<useroperator declaration=\"" << c->getColorName() << "\"/>\n";
+                }
             }
         }
 
