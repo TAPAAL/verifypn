@@ -18,7 +18,7 @@ namespace PetriEngine {
             for (const auto &place : _builder.places()) {
                 const auto &placeID = _builder.colored_placenames().find(place.name)->second;
                 const auto &placeColorFixpoint = _placeColorFixpoints[placeID];
-                std::cout << "Place: " << place.name << " in queue: " << placeColorFixpoint.inQueue << " with colortype " << place.type->getName() << std::endl;
+                std::cout << "Place: " << *place.name << " in queue: " << placeColorFixpoint.inQueue << " with colortype " << place.type->getName() << std::endl;
 
                 for (const auto &fixpointPair : placeColorFixpoint.constraints) {
                     std::cout << "[";
@@ -170,9 +170,12 @@ namespace PetriEngine {
                         processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, maxIntervals);
 
                         //If there were colors which activated the transitions, compute the intervals produced
-                        if (transitionActivated) {
+                        if (transitionActivated)
+                        {
                             processOutputArcs(transition, transitionId);
                         }
+                        else
+                            _transition_variable_maps[transitionId].clear();
                     }
                     end = std::chrono::high_resolution_clock::now();
                 }
@@ -283,16 +286,27 @@ namespace PetriEngine {
                 //Apply partitioning to unbound outgoing variables such that
                 // bindings are only created for colors used in the rest of the net
                 if (_partition.computed() && !_partition.partition()[arc.place].isDiagonal()) {
+                    int i = 0;
                     for (auto* outVar : variables) {
                         for (auto& varMap : _transition_variable_maps[transition_id]) {
                             if (varMap.count(outVar) == 0) {
                                 Colored::interval_vector_t varIntervalTuple;
                                 for (const auto& EqClass : _partition.partition()[arc.place].getEquivalenceClasses()) {
-                                    varIntervalTuple.addInterval(EqClass.intervals().back().getSingleColorInterval());
+                                    interval_t ci;
+                                    // TODO: this looks odd. Why are we only using the last of the intervals?
+                                    auto canonical = EqClass.intervals().back().getCanonicalInterval();
+                                    for(size_t n = 0; n < outVar->colorType->productSize(); ++n)
+                                    {
+                                        ci.addRange(canonical[i + n]);
+                                    }
+                                    varIntervalTuple.addInterval(ci);
                                 }
+                                assert(outVar->colorType->productSize() == varIntervalTuple.size());
+                                varIntervalTuple.simplify();
                                 varMap[outVar] = std::move(varIntervalTuple);
                             }
                         }
+                        i += outVar->colorType->productSize();
                     }
                 } else {
                     // Else if partitioning was not computed or diagonal
@@ -335,6 +349,5 @@ namespace PetriEngine {
                 _considered[transition_id] = true;
             }
         }
-
     }
 }
