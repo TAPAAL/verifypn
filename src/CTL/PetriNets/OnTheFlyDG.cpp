@@ -90,7 +90,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             if (!e->handled) {
                 succs.push_back(e);
             }
-            else release(e);
+            else {
+                --e->refcnt;
+                release(e);
+            }
         }
         else if(v->query->getQuantifier() == AND){
             auto cond = static_cast<AndCondition*>(v->query);
@@ -120,8 +123,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 add_target(e, createConfiguration(v->marking, v->getOwner(), c));
                 if (e->handled) break;
             }
-            if (e->handled)
+            if (e->handled) {
+                --e->refcnt;
                 release(e);
+            }
             else
                 succs.push_back(e);
         }
@@ -151,8 +156,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 assert(PetriEngine::PQL::isTemporal(c));
                 Edge *e = newEdge(*v, /*cond->distance(context)*/0);
                 add_target(e, createConfiguration(v->marking, v->getOwner(), c));
-                if (e->handled)
+                if (e->handled) {
+                    --e->refcnt;
                     release(e);
+                }
                 else
                     succs.push_back(e);
             }
@@ -217,8 +224,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                         if (left != NULL) {
                                             add_target(leftEdge, left);
                                         }
-                                        if (leftEdge->handled)
+                                        if (leftEdge->handled){
+                                            --leftEdge->refcnt;
                                             release(leftEdge);
+                                        }
                                         else
                                             succs.push_back(leftEdge);
                                     }
@@ -227,8 +236,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 } //else: Left side is not temporal and it's false, no way to succeed there...
 
                 if (right != NULL) {
-                    if (right->handled)
+                    if (right->handled){
+                        --right->refcnt;
                         release(right);
+                    }
                     else
                         succs.push_back(right);
                 }
@@ -273,8 +284,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                         },
                         [&]()
                         {
-                            if (e1->handled)
+                            if (e1->handled) {
+                                --e1->refcnt;
                                 release(e1);
+                            }
                             else
                                 succs.push_back(e1);
                         }
@@ -393,6 +406,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             add_target(e, left);
                         }
                         if (e->handled) {
+                            --e->refcnt;
                             release(e);
                             // we _don't_ abort suc generation, since EU will have many out-edges
                         }
@@ -402,8 +416,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }, [](){});
 
                 if (right != nullptr) {
-                    if (right->handled)
+                    if (right->handled) {
+                        --right->refcnt;
                         release(right);
+                    }
                     else
                         succs.push_back(right);
                 }
@@ -448,8 +464,10 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 add_target(e, c);
                                 if (!e->handled)
                                     succs.push_back(e);
-                                else
+                                else {
+                                    --e->refcnt;
                                     release(e);
+                                }
                                 return true;
                             },
                             [](){}

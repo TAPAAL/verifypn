@@ -70,7 +70,6 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
 
     bool allOne = true;
     bool hasCZero = false;
-    bool has_loop = false;
     //auto pre_empty = e->targets.empty();
     Configuration *lastUndecided = nullptr;
     {
@@ -78,10 +77,6 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         auto pit = e->targets.before_begin();
         while(it != e->targets.end())
         {
-            if ((*it) == e->source) {
-                has_loop = true;
-                break;
-            }
             if ((*it)->assignment == ONE)
             {
                 e->targets.erase_after(pit);
@@ -107,17 +102,6 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
             pit = it;
             ++it;
         }
-    }
-    if (has_loop) {
-        --e->source->nsuccs;
-        e->handled = true;
-        assert(e->refcnt > 0);
-        if(only_assign) --e->refcnt;
-        if (e->source->nsuccs == 0) {
-            finalAssign(e, CZERO);
-        }
-        if(e->refcnt == 0) { graph->release(e);}
-        return;
     }
     /*if(e->targets.empty())
     {
