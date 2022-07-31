@@ -58,9 +58,11 @@ Condition::Result OnTheFlyDG::fastEval(Condition* query, Marking* unfolded)
 
 void add_target(Edge* e, Configuration* c) {
     if (c == e->source) {
-        e->handled = true; return; // TODO can be a return code for boolean instead?
+        e->handled = true;
     }
-    e->addTarget(c);
+    else {
+        e->addTarget(c);
+    }
 }
 
 std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
