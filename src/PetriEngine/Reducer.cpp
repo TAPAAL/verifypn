@@ -2185,7 +2185,7 @@ else if (inhibArcs == 0)
                 continue_reductions = true;
             }
         }
-
+        assert(consistent());
         for (uint32_t p = 0; p < parent->_places.size(); ++p) {
             Place& place = parent->_places[p];
             if(place.skip) continue;
@@ -2216,9 +2216,11 @@ else if (inhibArcs == 0)
                     place.producers.clear();
                     place.consumers.clear();
                 }
+                assert(consistent());
             }
             else
             {
+                assert(consistent());
                 bool all_ok = true;
                 for(int64_t i = (int64_t)(place.consumers.size())-1; i >= 0; --i)
                 {
@@ -2238,6 +2240,7 @@ else if (inhibArcs == 0)
                         {
                             // inhibitor is useless
                             trans.pre.erase(inArc);
+                            place.consumers.erase(place.consumers.begin() + i);
                             ++_ruleP;
                             continue_reductions = true;
                         }
@@ -2307,6 +2310,7 @@ else if (inhibArcs == 0)
                 }
             }
         }
+        assert(consistent());
 
         return continue_reductions;
     }
