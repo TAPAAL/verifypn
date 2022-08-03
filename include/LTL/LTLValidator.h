@@ -46,6 +46,10 @@ namespace LTL {
             }
         };
 
+        void _accept(const PetriEngine::PQL::ControlCondition *condition) override {
+            setBad();
+        }
+
         void _accept(const PetriEngine::PQL::EFCondition *condition) override {
             setBad();
         }
