@@ -269,7 +269,7 @@ namespace PetriEngine {
 
             if (place.inhibitor) {
                 if (_sumPlacesNames.size() <= arc.place) _sumPlacesNames.resize(arc.place + 1);
-                auto sumPlaceName = _sumPlacesNames[arc.place];
+                auto& sumPlaceName = _sumPlacesNames[arc.place];
                 if (sumPlaceName == nullptr || sumPlaceName->empty()) {
                     auto newSumPlaceName = std::make_shared<const_string>(*place.name + "Sum");
                     ptBuilder.addPlace(newSumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
