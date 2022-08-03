@@ -19,6 +19,7 @@
 #include "RedRuleRelevance.h"
 #include "RedRuleDeadTransitions.h"
 #include "RedRuleRedundantPlaces.h"
+#include "RedRulePreemptiveFiring.h"
 
 
 namespace PetriEngine::Colored {
@@ -44,8 +45,8 @@ namespace PetriEngine::Colored {
             std::vector<ApplicationSummary> createApplicationSummary() const;
 
             bool reduce(uint32_t timeout, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,
-                        bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
-                        std::vector<uint32_t>& reductions);
+                        bool preserveLoops, bool preserveStutter, uint32_t reduceMode,
+                        std::vector<uint32_t>& userSequence);
 
             double time() const {
                 return _timeSpent;
@@ -96,6 +97,10 @@ namespace PetriEngine::Colored {
                 return _builder.inhibitors();
             }
 
+            void addVariable(const Colored::Variable* var) const {
+                _builder.addVariable(var);
+            }
+
             void addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight);
             void addOutputArc(uint32_t tid, uint32_t pid, ArcExpression_ptr expr);
 
@@ -110,11 +115,15 @@ namespace PetriEngine::Colored {
             uint32_t newTransition(const Colored::GuardExpression_ptr& guard);
             void addDummyPlace();
 
+            void renameVariables(uint32_t transId);
+
             void consistent();
 
             std::vector<uint8_t> _tflags;
 
             std::vector<uint8_t> _pflags;
+
+            uint32_t getBindingCount(const Transition &transition);
 
         private:
             PetriEngine::ColoredPetriNetBuilder &_builder;
@@ -127,12 +136,12 @@ namespace PetriEngine::Colored {
             std::vector<uint32_t> _skippedPlaces;
             std::vector<uint32_t> _skippedTransitions;
 
-            std::vector<ReductionRule *> buildApplicationSequence(std::vector<uint32_t>& reductions) {
-                std::vector<ReductionRule *> specifiedReductions;
-                for (auto &rule: reductions) {
-                    specifiedReductions.push_back(_reductions[rule]);
+            std::vector<ReductionRule *> buildApplicationSequence(std::vector<uint32_t>& userReductionSequence) {
+                std::vector<ReductionRule *> resultSequence;
+                for (auto &rule: userReductionSequence) {
+                    resultSequence.push_back(_reductions[rule]);
                 }
-                return specifiedReductions;
+                return resultSequence;
             }
 
             // Reduction rules
@@ -142,15 +151,16 @@ namespace PetriEngine::Colored {
             RedRuleRelevance _redRuleRelevance;
             RedRuleDeadTransitions _redRuleDeadTransitions;
             RedRuleRedundantPlaces _redRuleRedundantPlaces;
+            RedRulePreemptiveFiring _redRulePreemptiveFiring;
 
             std::vector<ReductionRule *> _reductions{
                     &_redRuleRelevance,
                     &_preAgglomeration,
                     &_redRuleParallelTransitions,
                     &_redRuleParallelPlaces,
-                    &_redRuleDeadTransitions//,
-                    //&_redRuleRedundantPlaces
-
+                    &_redRuleDeadTransitions,
+                    &_redRuleRedundantPlaces,
+                    &_redRulePreemptiveFiring
             };
         };
     }

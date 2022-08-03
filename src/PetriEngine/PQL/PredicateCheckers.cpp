@@ -188,6 +188,16 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const KSafeCondition* element) {
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+        {
+            if(_is_nested)
+                setConditionFound();
+        }
+    }
+
     void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
             Visitor::visit(this, element->getCompiled());
@@ -198,7 +208,6 @@ namespace PetriEngine { namespace PQL {
     void IsNotReachabilityVisitor::_accept(const CompareConjunction *element) {
         if (!_is_nested) setConditionFound();
     }
-
 
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
@@ -267,6 +276,22 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
         else
             AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const LivenessCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const StableMarkingCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
     }
 
 

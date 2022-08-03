@@ -17,7 +17,7 @@ namespace PetriEngine::Colored::Reduction {
         std::string name() override { return "ParallelTransitions"; }
 
         bool isApplicable(QueryType queryType, bool preserveLoops, bool preserveStutter) const override {
-            return !preserveStutter;
+            return true; // Functionality differs on CTL or when preserving stutter
         }
 
         bool apply(ColoredReducer &red, const PetriEngine::PQL::ColoredUseVisitor &inQuery, QueryType queryType,

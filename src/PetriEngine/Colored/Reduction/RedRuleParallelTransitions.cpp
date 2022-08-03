@@ -89,6 +89,10 @@ namespace PetriEngine::Colored::Reduction {
                                 fail = 2;
                                 break;
                             }
+                            if (queryType != QueryType::Reach && inQuery.isPlaceUsed(arc1.place)) {
+                                fail = 2;
+                                break;
+                            }
 
                             checkMult(fail, mult, *arc1.expr, *arc2.expr);
                             if (fail > 0) break;
@@ -97,11 +101,18 @@ namespace PetriEngine::Colored::Reduction {
                         if (fail == 2) break;
                         else if (fail == 1) continue;
 
+                        if (mult != 1 && (preserveStutter || queryType == QueryType::CTL)) break;
+
                         // Check input arcs
                         for (int i = trans1.input_arcs.size() - 1; i >= 0; i--) {
                             const Arc &arc1 = trans1.input_arcs[i];
                             const Arc &arc2 = trans2.input_arcs[i];
+                            
                             if (arc1.place != arc2.place) {
+                                fail = 2;
+                                break;
+                            }
+                            if (queryType != QueryType::Reach && inQuery.isPlaceUsed(arc1.place)) {
                                 fail = 2;
                                 break;
                             }

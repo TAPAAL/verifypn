@@ -5,6 +5,8 @@
  *      Mathias Mehl Sørensen
  */
 
+#include <PetriEngine/Colored/VariableVisitor.h>
+#include <PetriEngine/Colored/VarReplaceVisitor.h>
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/Reduction/ColoredReducer.h"
 #include "PetriEngine/Colored/Multiset.h"
@@ -38,19 +40,12 @@ namespace PetriEngine::Colored::Reduction {
     }
 
     bool ColoredReducer::reduce(uint32_t timeout, const PetriEngine::PQL::ColoredUseVisitor &inQuery,
-                                QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t reductiontype,
-                                std::vector<uint32_t> &reductions) {
+                                QueryType queryType, bool preserveLoops, bool preserveStutter, uint32_t reduceMode,
+                                std::vector<uint32_t> &userSequence) {
 
-        if (inQuery.anyTransitionUsed())
-            return false; // TODO Only cardinality has been thoroughly tested
+        assert(reduceMode > 0);
+        auto reductionsToUse = reduceMode == 1 ? _reductions : buildApplicationSequence(userSequence);
 
-        std::vector<ReductionRule *> reductionsToUse;
-
-        if (reductiontype == 2) {
-            reductionsToUse = ColoredReducer::buildApplicationSequence(reductions);
-        } else {
-            reductionsToUse = _reductions;
-        }
         for (int i = reductionsToUse.size() - 1; i >= 0; i--) {
             if (!reductionsToUse[i]->isApplicable(queryType, preserveLoops, preserveStutter))
                 reductionsToUse.erase(reductionsToUse.begin() + i);
@@ -70,6 +65,8 @@ namespace PetriEngine::Colored::Reduction {
             }
             any |= changed;
         } while (changed && !hasTimedOut());
+
+        consistent();
 
         auto now = std::chrono::high_resolution_clock::now();
         _timeSpent = (std::chrono::duration_cast<std::chrono::microseconds>(now - _startTime).count()) * 0.000001;
@@ -117,10 +114,20 @@ namespace PetriEngine::Colored::Reduction {
             assert(ait != tran.input_arcs.end());
             tran.input_arcs.erase(ait);
         }
-        auto &inhibs = _builder._inhibitorArcs;
-        inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                    [&pid](Arc &arc) { return arc.place == pid; }),
-                     inhibs.end());
+        if (place.inhibitor) {
+            auto &inhibs = _builder._inhibitorArcs;
+
+            for (int i = inhibs.size() - 1; i >= 0; i--) {
+                const Arc& inhib = inhibs[i];
+                if (inhib.place == pid) {
+                    Transition &tran = _builder._transitions[inhib.transition];
+                    tran.inhibited--;
+                    inhibs.erase(inhibs.begin() + i);
+                }
+            }
+            place.inhibitor = 0;
+        }
+
         place._post.clear();
         place._pre.clear();
     }
@@ -142,10 +149,20 @@ namespace PetriEngine::Colored::Reduction {
             assert(it != place._pre.end());
             place._pre.erase(it);
         }
-        auto &inhibs = _builder._inhibitorArcs;
-        inhibs.erase(std::remove_if(inhibs.begin(), inhibs.end(),
-                                    [&tid](Arc &arc) { return arc.transition == tid; }),
-                     inhibs.end());
+        if (tran.inhibited) {
+            auto &inhibs = _builder._inhibitorArcs;
+
+            for (int i = inhibs.size() - 1; i >= 0; i--) {
+                const Arc& inhib = inhibs[i];
+                if (inhib.transition == tid) {
+                    Place &place = _builder._places[inhib.place];
+                    place.inhibitor--;
+                    inhibs.erase(inhibs.begin() + i);
+                }
+            }
+            tran.inhibited = 0;
+        }
+
         tran.input_arcs.clear();
         tran.output_arcs.clear();
     }
@@ -263,10 +280,9 @@ namespace PetriEngine::Colored::Reduction {
             id = _skippedTransitions.back();
             _skippedTransitions.pop_back();
             PetriEngine::Colored::Transition& tran = _builder._transitions[id];
-            tran.guard = nullptr;
+            tran.guard = guard;
             tran.skipped = false;
             tran.inhibited = false;
-            tran.guard = nullptr;
             _builder._transitionnames.erase(tran.name);
             tran.name = std::make_shared<const_string>(newTransitionName());
             _builder._transitionnames[tran.name] = id;
@@ -283,6 +299,39 @@ namespace PetriEngine::Colored::Reduction {
         _builder.addPlace("Dummy", ColorType::dotInstance(), Multiset(), 0, 0);
     }
 
+    void ColoredReducer::renameVariables(uint32_t transId){
+        PetriEngine::Colored::Transition& transition = _builder._transitions[transId];
+        std::unordered_map<std::string, const Variable*> varReplacementMap;
+        std::set<const Variable*> vars;
+
+        if (transition.guard){
+            Colored::VariableVisitor::get_variables(*transition.guard, vars);
+        }
+        for (auto& arc : transition.input_arcs) {
+            Colored::VariableVisitor::get_variables(*arc.expr, vars);
+        }
+        for (auto& arc : transition.output_arcs) {
+            Colored::VariableVisitor::get_variables(*arc.expr, vars);
+        }
+
+        for (const auto& var : vars){
+            const Variable* newvar = new Variable {*transition.name + var->name, var->colorType};
+            varReplacementMap[var->name] = newvar;
+            addVariable(newvar);
+        }
+        auto varvis = VarReplaceVisitor(varReplacementMap);
+
+        if (transition.guard){
+            transition.guard = varvis.makeReplacementGuard(transition.guard);
+        }
+        for (auto& arc : transition.input_arcs) {
+            arc.expr = varvis.makeReplacementArcExpr(arc.expr);
+        }
+        for (auto& arc : transition.output_arcs) {
+            arc.expr = varvis.makeReplacementArcExpr(arc.expr);
+        }
+    }
+
     void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){
         _builder.addInputArc(*_builder._places[pid].name, *_builder._transitions[tid].name, expr, inhib_weight);
         std::sort(_builder._places[pid]._post.begin(), _builder._places[pid]._post.end());
@@ -293,5 +342,27 @@ namespace PetriEngine::Colored::Reduction {
         _builder.addOutputArc(*_builder._transitions[tid].name.get(), *_builder._places[pid].name, expr);
         std::sort(_builder._places[pid]._pre.begin(), _builder._places[pid]._pre.end());
         std::sort(_builder._transitions[tid].output_arcs.begin(), _builder._transitions[tid].output_arcs.end(), ArcLessThanByPlace);
+    }
+
+    uint32_t ColoredReducer::getBindingCount(const Transition &transition) {
+        std::set<const Colored::Variable *> variables;
+
+        if (transition.guard != nullptr) {
+            Colored::VariableVisitor::get_variables(*transition.guard, variables);
+        }
+        for (const auto &arc: transition.input_arcs) {
+            assert(arc.expr != nullptr);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
+        }
+        for (const auto &arc: transition.output_arcs) {
+            assert(arc.expr != nullptr);
+            Colored::VariableVisitor::get_variables(*arc.expr, variables);
+        }
+
+        uint32_t size = 1;
+        for (auto &v: variables) {
+            size *= v->colorType->size();
+        }
+        return size;
     }
 }

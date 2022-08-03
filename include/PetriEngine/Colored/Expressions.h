@@ -166,6 +166,10 @@ namespace PetriEngine {
                 _colorType = getColorType(colorTypes);
             }
 
+            TupleExpression(std::vector<ColorExpression_ptr>&& colors, const ColorType * colorType)
+                    : _colors(std::move(colors)), _colorType(colorType) {
+            }
+
             virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
 
                 std::vector<const ColorType*> types;
@@ -186,6 +190,10 @@ namespace PetriEngine {
                 assert(false);
                 throw base_error("COULD NOT FIND PRODUCT TYPE");
                 return nullptr;
+            }
+
+            const ColorType* colorType() const {
+                return _colorType;
             }
         };
 

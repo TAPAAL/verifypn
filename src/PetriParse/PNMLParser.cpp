@@ -47,7 +47,7 @@ void PNMLParser::parse(std::istream& xml,
     //Set the builder
     this->builder = builder;
 
-    //Parser the xml
+    //Parse the xml
     rapidxml::xml_document<> doc;
     std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
     buffer.push_back('\0');
@@ -669,9 +669,26 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
 
     bool first = true;
     auto weightTag = element->first_attribute("weight");
-    if(weightTag != nullptr){
+    if(weightTag != nullptr) {
         weight = atoi(weightTag->value());
         assert(weight > 0);
+    } else if (isColored && inhibitor) {
+        auto hlin = element->first_node("hlinscription");
+        if (hlin != nullptr) {
+            auto structure = hlin->first_node("structure");
+            if (structure != nullptr) {
+                auto numberOf = structure->first_node("numberof");
+                if (numberOf != nullptr) {
+                    for (auto subterm = numberOf->first_node("subterm"); subterm; subterm = subterm->next_sibling("subterm")) {
+                        auto numberConstant = subterm->first_node("numberconstant");
+                        if (numberConstant != nullptr) {
+                            auto valueTag = numberConstant->first_attribute("value");
+                            weight = atoi(valueTag->value());
+                        }
+                    }
+                }
+            }
+        }
     } else {
         for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
             std::string text;
@@ -753,7 +770,6 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
     t.y = 0;
     t.id = element->first_attribute("id")->value();
     t.expr = nullptr;
-
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         // name element is ignored

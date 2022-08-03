@@ -92,7 +92,7 @@ namespace PetriEngine {
                 return ids;
             }
 
-            interval_t getSingleColorInterval() const {
+            interval_t getCanonicalInterval() const {
                 interval_t newInterval;
                 for(auto& range : _ranges){
                     newInterval.addRange(range._lower, range._lower);
@@ -323,11 +323,12 @@ namespace PetriEngine {
                 _intervals.insert(_intervals.end(), other._intervals.begin(), other._intervals.end());
             }
 
-            interval_t isRangeEnd(const std::vector<uint32_t>& ids) const {
+            interval_t nextInterval(const std::vector<uint32_t>& ids) const {
                 for (uint32_t j = 0; j < _intervals.size(); j++) {
                     bool rangeEnd = true;
                     for (uint32_t i = 0; i < _intervals[j].size(); i++) {
-                        auto range =  _intervals[j][i];
+                        assert(ids.size() > i);
+                        auto& range =  _intervals[j][i];
                         if (range._upper != ids[i]) {
                             rangeEnd = false;
                             break;

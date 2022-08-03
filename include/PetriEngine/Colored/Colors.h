@@ -169,7 +169,7 @@ namespace PetriEngine {
             }
 
             virtual const Color* getColor(const std::vector<uint32_t> &ids) const {
-                assert(ids.size() == 1);
+                //assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
 
@@ -287,7 +287,6 @@ namespace PetriEngine {
         struct Variable {
             std::string name;
             const ColorType* colorType;
-
         };
 
         struct ColorFixpoint {

@@ -675,6 +675,7 @@ namespace PetriEngine {
                         Place &place1 = parent->_places[p1];
                         Place &place2 = parent->_places[p2];
 
+                        if (place2.inhib) continue;
                         if (place2.producers.empty() || place1.consumers.empty()) continue;
 
                         if (place1.consumers.size() < place2.consumers.size() ||

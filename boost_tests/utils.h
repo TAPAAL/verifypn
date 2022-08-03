@@ -73,7 +73,6 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
         bool reduce = false, bool partition = false, bool symmetry = false, bool cfp = false, bool over_approx = false,
         uint32_t reduceTimeout = 5, int32_t partitionTimeout = 10, int32_t max_intervals = 100,
         int32_t intervals_reduced = 10, int32_t interval_timeout = 10)
-
 {
 
     shared_string_set sset;
