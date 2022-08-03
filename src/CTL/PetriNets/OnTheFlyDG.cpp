@@ -199,7 +199,8 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                     if(res == Condition::RFALSE)
                                     {
                                         left = nullptr;
-                                        leftEdge->targets.clear();
+                                        --leftEdge->refcnt;
+                                        release(leftEdge);
                                         leftEdge = nullptr;
                                         return false;
                                     }
@@ -217,6 +218,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                         if (leftEdge->handled){
                                             --leftEdge->refcnt;
                                             release(leftEdge);
+                                            leftEdge = nullptr;
                                         }
                                         else
                                             succs.push_back(leftEdge);
