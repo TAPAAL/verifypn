@@ -116,18 +116,28 @@ if (VERIFYPN_GetDependencies)
     endif ()
 
     if (WIN32) #If windows 32 or 64
-      set(GLPK_CFLAGS "-D __WOE__ -O3" )
+        set(GLPK_CFLAGS "-D __WOE__ -O3" )
+        ExternalProject_add(glpk-ext
+            URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
+            URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION} CFLAGS=${GLPK_CFLAGS} --host=x86_64-w64-mingw32
+            BUILD_COMMAND make
+            INSTALL_COMMAND make install
+            PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/glpk-warning.patch
+        )
+
     else(WIN32)
-      set(GLPK_CFLAGS "-O3" )
+        set(GLPK_CFLAGS "-O3" )
+        ExternalProject_add(glpk-ext
+            URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
+            URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION} CFLAGS=${GLPK_CFLAGS}
+            BUILD_COMMAND make
+            INSTALL_COMMAND make install
+            PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/glpk-warning.patch
+        )
+
     endif(WIN32)
-    ExternalProject_add(glpk-ext
-        URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
-        URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
-	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION} CFLAGS=${GLPK_CFLAGS}
-	BUILD_COMMAND make
-        INSTALL_COMMAND make install
-        PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/glpk-warning.patch
-    )
 
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib64)
