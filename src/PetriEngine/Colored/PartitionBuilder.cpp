@@ -19,14 +19,13 @@ namespace PetriEngine {
         : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size())
         , _fixed_point(placeColorFixpoints) {
 
-
         }
 
         void PartitionBuilder::printPartion() const {
             for(size_t i = 0; i < _partition.size(); ++i){
                 if (_places[i].skipped) continue;
                 auto& equivalenceVec = _partition[i];
-                std::cout << "Partition for place " << _places[i].name << std::endl;
+                std::cout << "Partition for place " << *_places[i].name << std::endl;
                 std::cout << "Diag variables: (";
                 for(auto daigPos : equivalenceVec.getDiagonalTuplePositions()){
                     std::cout << daigPos << ",";

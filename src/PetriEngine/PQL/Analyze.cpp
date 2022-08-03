@@ -110,6 +110,9 @@ namespace PetriEngine { namespace PQL {
             if (names.size() == 1) {
                 element->_compiled = generateUnfoldedIdentifierExpr(*coloredContext, names.back());
             } else {
+                if (names.back()->substr(names.back()->size() - 3) == "Sum"){
+                    names.pop_back();
+                }
                 element->_compiled = std::make_shared<PQL::PlusExpr>(std::move(names));
             }
         } else {

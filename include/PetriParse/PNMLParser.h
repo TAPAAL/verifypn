@@ -113,6 +113,7 @@ private:
     VariableMap variables;
     bool isColored;
     std::string placeTypeContext;
+    std::string tid;
     bool hasPartition;
     std::vector<Query> queries;
     std::vector<PetriEngine::Colored::ColorTypePartition> partitions;

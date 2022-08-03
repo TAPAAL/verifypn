@@ -117,8 +117,11 @@ namespace PetriEngine::Colored {
         for (const auto &pair : combined) {
             double a = (*this)[pair.first];
             double b = other[pair.first];
-            if (a == 0 && b != 0) return std::nullopt;
-            mult = std::max(mult, b / a);
+            if (a != 0) {
+                mult = std::max(mult, b / a);
+            } else if (b != 0) {
+                return std::nullopt;
+            }
         }
         return std::optional(mult);
     }

@@ -12,7 +12,7 @@
 
 #include <vector>
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     class ColoredUseVisitor : public Visitor {
     public:
         ColoredUseVisitor(const shared_name_index_map &placeNameToIndexMap, size_t places,
@@ -65,6 +65,14 @@ namespace PetriEngine::PQL {
 
         void _accept(const NaryExpr *element) override;
 
+        void _accept(const KSafeCondition* element) override;
+
+        void _accept(const LivenessCondition* element) override;
+
+        void _accept(const QuasiLivenessCondition* element) override;
+
+        void _accept(const StableMarkingCondition* element) override;
+
     private:
         const shared_name_index_map &_placeNameToIndexMap;
         const shared_name_index_map &_transitionNameToIndexMap;
@@ -72,6 +80,6 @@ namespace PetriEngine::PQL {
         std::vector<bool> _transitionInUse;
         bool _anyTransitionInUse = false;
     };
-}
+} }
 
 #endif //VERIFYPN_COLOREDUSEVISITOR_H
