@@ -228,7 +228,7 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
         for(int32_t i = c->nsuccs-1; i >= 0; --i)
         {
             checkEdge(succs[i], true);
-            if(c->isDone())
+            if (c->isDone())
             {
                 for(Edge *e : succs){
                     assert(e->refcnt <= 1);

@@ -116,7 +116,7 @@ namespace LTL {
                 if (!next_trans(seen, cstack, successorGenerator, working, parent, dtop)) {
                     ++_expanded;
 #ifndef NDEBUG
-                    std::cerr << "backtrack\n";
+                    //std::cerr << "backtrack\n";
 #endif
                     pop(seen, cstack, dstack, successorGenerator);
                     continue;
@@ -127,7 +127,7 @@ namespace LTL {
                 successorGenerator.fired();
 #ifndef NDEBUG
                 if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
-                    std::cerr << "looping\n";
+                    //std::cerr << "looping\n";
                 }
 #endif
                 ++_explored;
