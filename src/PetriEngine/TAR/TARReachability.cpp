@@ -431,7 +431,7 @@ namespace PetriEngine {
                 {
                     for(size_t token = 0; token < pre.first->tokens; ++token )
                     {
-                        std::cerr << "\t\t<token place=\"" << _net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
+                        std::cerr << "\t\t<token place=\"" << *_net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
                     }
                 }
 
