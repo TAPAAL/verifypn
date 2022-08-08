@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>,
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

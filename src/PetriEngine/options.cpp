@@ -564,11 +564,13 @@ bool options_t::parse(int argc, const char** argv) {
             printf("Copyright (C) 2011-2021\n");
             printf("                        Alexander Bilgram <alexander@bilgram.dk>\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
+            printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>\n");
             printf("                        Lasse Steen Jensen <lassjen88@gmail.com>\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
+            printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");
             printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
             printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
             printf("                        Kenneth Yrke Jørgensen <kenneth@yrke.dk>\n");
@@ -579,13 +581,12 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
             printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk>\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+            printf("                        Mathias Mehl Sørensen <mathiasmehlsoerensen@gmail.com>\n");
             printf("                        Peter Haar Taankvist <ptaankvist@gmail.com>\n");
+            printf("                        Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>\n");
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
-            printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
-            printf("                        Mathias Mehl Sørensen <mathiasmehlsoerensen@gmail.com>\n");
-            printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
         } else if (modelfile == nullptr) {
