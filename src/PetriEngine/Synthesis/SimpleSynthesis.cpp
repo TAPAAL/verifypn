@@ -382,7 +382,7 @@ namespace PetriEngine {
                                 if (parent[p] > 0) {
                                     if (!fp) out << ",";
                                     fp = false;
-                                    out << _net.placeNames()[p] << ":" << parent[p];
+                                    out << *_net.placeNames()[p] << ":" << parent[p];
                                 }
                             }
                             out << "\":\n\t[";
@@ -390,7 +390,7 @@ namespace PetriEngine {
                         if (!first)
                             out << ",";
                         first = false;
-                        out << "\"" << _net.transitionNames()[wt] << "\"";
+                        out << "\"" << *_net.transitionNames()[wt] << "\"";
                     }
                     if (!first) out << "]";
                 }
@@ -429,7 +429,7 @@ namespace PetriEngine {
                 _net.print(_parent.marking());
                 std::cerr << "[" << child._marking << "] ";
                 _net.print(_working.marking());
-                std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                std::cerr << "CTRL[" << cconf._marking << "] -" << *_net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                  */
 
                 some = true;
@@ -480,7 +480,7 @@ namespace PetriEngine {
                 _net.print(_parent.marking());
                  std::cerr << "[" << child._marking << "] ";
                 _net.print(_working.marking());
-                std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                std::cerr << "ENV[" << cconf._marking << "] -" << *_net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                  */
                 some_env = true;
                 if (child._state == SynthConfig::LOSING) {
