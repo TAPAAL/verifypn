@@ -3036,7 +3036,7 @@ restart:
 
             for(const auto& el : it->second)
             {
-                out << "\t<transition id=\"" << el << "\">\n";
+                out << "\t<transition id=\"" << *el << "\">\n";
                 extraConsume(out, *el);
                 out << "\t</transition>\n";
                 postFire(out, *el);
