@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="process" name="Process">
+                        <cyclicenumeration>
+                            <feconstant id="process0" name="Process"/>
+                            <feconstant id="process1" name="Process"/>
+                            <feconstant id="process2" name="Process"/>
+                            <feconstant id="process3" name="Process"/>
+                            <feconstant id="process4" name="Process"/>
+                            <feconstant id="process5" name="Process"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="Couple" name="Couple">
+                        <productsort>
+                            <usersort declaration="process"/>
+                            <usersort declaration="process"/>
+                        </productsort>
+                    </namedsort>
+                    <variabledecl id="vari" name="i">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                    <variabledecl id="varx" name="x">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                    <variabledecl id="vary" name="y">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="state">
+                <name>
+                    <text>state</text>
+                    <graphics>
+                        <offset x="85" y="50"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="450" y="255"/>
+                </graphics>
+                <type>
+                    <text>Couple</text>
+                    <structure>
+                        <usersort declaration="Couple"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'(Process.all, process0))</text>
+                    <structure>
+                        <add>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <tuple>
+                                            <subterm>
+                                                <all>
+                                                    <usersort declaration="process"/>
+                                                </all>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="process0"/>
+                                            </subterm>
+                                        </tuple>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </add>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <place id="P1">
+                <name>
+                    <text>P1</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="90" y="435"/>
+                </graphics>
+                <type>
+                    <text>dot</text>
+                    <structure>
+                        <usersort declaration="dot"/>
+                    </structure>
+                </type>
+            </place>
+            <transition id="otherprocess">
+                <name>
+                    <graphics>
+                        <offset x="0" y="18"/>
+                    </graphics>
+                    <text>otherprocess</text>
+                </name>
+                <graphics>
+                    <position x="165" y="255"/>
+                </graphics>
+            </transition>
+            <arc id="state_to_otherprocess" source="state" target="otherprocess" type="normal">
+                <hlinscription>
+                    <text>1'(Process.all, process0)</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <tuple>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="process"/>
+                                        </all>
+                                    </subterm>
+                                    <subterm>
+                                        <useroperator declaration="process0"/>
+                                    </subterm>
+                                </tuple>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+                <graphics>
+                    <position x="332" y="314"/>
+                </graphics>
+            </arc>
+            <arc id="otherprocess_to_P1" source="otherprocess" target="P1" type="normal">
+                <hlinscription>
+                    <text>1'dot</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <useroperator declaration="dot"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+    </net>
+</pnml>

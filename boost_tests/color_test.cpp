@@ -427,3 +427,44 @@ BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(1)) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(1)) {
+
+    std::string model("/models/error-all-token-ring.pnml");
+    std::string query("/models/error-all-token-ring.xml");
+    std::set<size_t> qnums{0};
+    ResultHandler handler;
+    for(auto reduce : {false, true})
+    {
+        for(auto partition : {false, true})
+        {
+            for(auto symmetry : {false, true})
+            {
+                for(auto cfp : {false, true})
+                {
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                            auto c2 = prepareForReachability(conditions[0]);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{c2};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, false, false, 0);
+                            if(!approx)
+                            {
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
+                            }
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
