@@ -105,15 +105,7 @@ namespace PetriEngine {
         }
 
         void EvaluationVisitor::accept(const NumberOfExpression* no) {
-            if (no->size() != 0) {
-                std::vector<std::pair<const Color*,uint32_t>> col;
-                col.reserve(no->size());
-                for (const auto& elem : *no) {
-                    elem->visit(*this);
-                    col.push_back(std::make_pair(_cres, no->number()));
-                }
-                _mres = Multiset(col);
-            } else if (no->is_all()) {
+            if (no->is_all()) {
                 std::vector<std::pair<const Color*,uint32_t>> colors;
 
                 if(_context.placePartition.getEquivalenceClasses().empty() ||
@@ -129,6 +121,14 @@ namespace PetriEngine {
                     }
                 }
                 _mres = Multiset(colors);
+            } else if (no->size() != 0) {
+                std::vector<std::pair<const Color*,uint32_t>> col;
+                col.reserve(no->size());
+                for (const auto& elem : *no) {
+                    elem->visit(*this);
+                    col.push_back(std::make_pair(_cres, no->number()));
+                }
+                _mres = Multiset(col);
             }
         }
 

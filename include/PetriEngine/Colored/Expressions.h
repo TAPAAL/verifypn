@@ -327,7 +327,7 @@ namespace PetriEngine {
             }
 
             bool is_all() const {
-                return (bool)_all;
+                return _all != nullptr;
             }
 
             bool is_single_color() const {
@@ -338,23 +338,27 @@ namespace PetriEngine {
                 return _number;
             }
 
-            const ColorExpression_ptr& operator[](size_t i ) const {
+            const ColorExpression_ptr& operator[](size_t i) const {
+                assert(!is_all());
                 return _color[i];
             }
 
             size_t size() const {
-                return _color.size();
+                return is_all() ? 1 : _color.size();
             }
 
             auto begin() const {
+                assert(!is_all());
                 return _color.begin();
             }
 
             auto end() const {
+                assert(!is_all());
                 return _color.end();
             }
 
             const AllExpression_ptr& all() const {
+                assert(is_all());
                 return _all;
             }
 
