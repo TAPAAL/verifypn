@@ -195,14 +195,11 @@ namespace PetriEngine {
 
             virtual void accept(const NumberOfExpression* no)
             {
-                if(!no->is_all())
+                //TODO: can there be more than one element in a number of expression?
+                for(auto& e : *no)
                 {
-                    //TODO: can there be more than one element in a number of expression?
-                    for(auto& e : *no)
-                    {
-                        _index = 0;
-                        e->visit(*this);
-                    }
+                    _index = 0;
+                    e->visit(*this);
                 }
             }
 

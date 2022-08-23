@@ -97,21 +97,14 @@ namespace PetriEngine {
         }
 
         void CExprToString::accept(const NumberOfExpression* no) {
-            if (no->is_all()) {
-                _out << no->number() << "'(";
-                no->all()->visit(*this);
-                _out << ")";
-
-            } else {
-                _out << no->number() << "'(";
-                bool first = true;
-                for (auto& c : *no) {
-                    if (!first) _out << " + ";
-                    first = false;
-                    c->visit(*this);
-                }
-                _out << ")";
+            _out << no->number() << "'(";
+            bool first = true;
+            for (auto& c : *no) {
+                if (!first) _out << " + ";
+                first = false;
+                c->visit(*this);
             }
+            _out << ")";
         }
 
         void CExprToString::accept(const AddExpression* add) {

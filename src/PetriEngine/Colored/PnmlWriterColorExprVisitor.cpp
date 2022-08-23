@@ -132,23 +132,17 @@ namespace PetriEngine::Colored {
 
     void PnmlWriterColorExprVisitor::accept(const NumberOfExpression *no) {
         _out << increaseTabs() << "<numberof>" << "\n";
-        if (no->is_all()) {
-            _out << increaseTabs() << "<subterm>" << "\n";
-            no->all()->visit(*this);
-            _out << decreaseTabs() << "</subterm>" << "\n";
-        } else {
-            _out << increaseTabs() << "<subterm>" << "\n";
-            _out << increaseTabs() << "<numberconstant value=\"" << no->number() << "\">" << "\n";
-            //todo, check if always positive. No "negative" in mcc2021 looks like.
-            _out << increaseTabs() << "<positive/>\n";
-            _out << decreaseTabs() << "</numberconstant>" << "\n";
-            _out << decreaseTabs() << "</subterm>" << "\n";
+        _out << increaseTabs() << "<subterm>" << "\n";
+        _out << increaseTabs() << "<numberconstant value=\"" << no->number() << "\">" << "\n";
+        //todo, check if always positive. No "negative" in mcc2021 looks like.
+        _out << increaseTabs() << "<positive/>\n";
+        _out << decreaseTabs() << "</numberconstant>" << "\n";
+        _out << decreaseTabs() << "</subterm>" << "\n";
 
-            for (auto &c: *no) {
-                _out << getTabs() << "<subterm>" << "\n";
-                c->visit(*this);
-                _out << decreaseTabs() << "</subterm>" << "\n";
-            }
+        for (auto &c: *no) {
+            _out << getTabs() << "<subterm>" << "\n";
+            c->visit(*this);
+            _out << decreaseTabs() << "</subterm>" << "\n";
         }
         _out << decreaseTabs() << "</numberof>" << "\n";
     }
