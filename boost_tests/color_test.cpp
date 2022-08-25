@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(5)) {
     try {
         auto [pn, conditions, qstrings] = load_pn(model.c_str(),
             query.c_str(), qnums);
-    } catch(base_error ex)
+    } catch(base_error& ex)
     {
         saw_exception = true;
     }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(5)) {
         BOOST_REQUIRE_GE(pn->numberOfPlaces(), 5);
 
         BOOST_REQUIRE_GE(pn->numberOfTransitions(), 5);
-    } catch(base_error ex)
+    } catch(base_error& ex)
     {
         saw_exception = true;
     }

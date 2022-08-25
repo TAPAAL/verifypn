@@ -24,7 +24,7 @@ namespace PetriEngine{
         GuardRestrictor::GuardRestrictor(){}
 
         int32_t GuardRestrictor::getVarModifier(const std::unordered_map<uint32_t, int32_t> &modPairMap, uint32_t index) {
-            int32_t modifier;
+            int32_t modifier = 0;
             for(auto idModPair : modPairMap){
                 if(idModPair.first == index){
                     modifier = idModPair.second;
