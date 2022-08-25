@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(TokenRingAll2, * utf::timeout(1)) {
     ResultHandler handler;
     for(auto reduce : {false, true})
     {
-        for(auto partition : {false, true})
+        for(auto partition : {true, false})
         {
             for(auto symmetry : {false, true})
             {
