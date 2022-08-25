@@ -27,7 +27,7 @@ namespace PetriEngine {
                             _stable[placeId] = false;
                             break;
                         }
-                        const Colored::Arc *inArc;
+                        const Colored::Arc *inArc = nullptr;
                         for (const auto &arc : transitions[transitionId].input_arcs) {
                             if (arc.place == placeId) {
                                 inArc = &arc;

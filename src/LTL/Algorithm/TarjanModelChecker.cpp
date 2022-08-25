@@ -290,7 +290,7 @@ namespace LTL {
         if (cstack[dstack.back()._pos]._stateid == _loop_state)
             _loop = _trace.size();
         dstack.pop_back();
-        unsigned long p;
+        unsigned long p = std::numeric_limits<unsigned long>::max();
         bool had_deadlock = false;
         // print (reverted) dstack
         while (!dstack.empty()) {

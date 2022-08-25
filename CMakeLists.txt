@@ -59,7 +59,7 @@ endif ()
 ## CXX Flags
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -Wall -pedantic-errors -O3 -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -Wall -pedantic-errors -fno-omit-frame-pointer ") # also usefull : -fsanitize=address -fsanitize=undefined -fsanitize=leak
 
 ## Target File location
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/lib)
@@ -77,7 +77,7 @@ if (VERIFYPN_GetDependencies)
 
     ExternalProject_add(ptrie-ext
         GIT_REPOSITORY https://github.com/petergjoel/ptrie
-        GIT_TAG 230b3640bfbe2ed5befdafbaf17bd3804231b50f
+        GIT_TAG f45e1a39524a95a28684aa75b169afa476ac025c
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DPTRIE_BuildTest=OFF -DCMAKE_BUILD_TYPE=Release
     )
     ExternalProject_add(rapidxml-ext
