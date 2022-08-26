@@ -91,7 +91,7 @@ namespace PetriEngine {
 
             std::vector<uint32_t> colorTupleIds;
             std::vector<uint32_t> newColorTupleIds;
-            bool hasDiagonalPositions;
+            bool hasDiagonalPositions = false;
             color->getTupleId(colorTupleIds);
             for(uint32_t i = 0; i < colorTupleIds.size(); i++){
                 if(_diagonalTuplePositions[i]){

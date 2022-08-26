@@ -468,7 +468,6 @@ BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(1)) {
         }
     }
 }
-
 BOOST_AUTO_TEST_CASE(TokenRingAll2, * utf::timeout(1)) {
 
     std::string model("/models/error-all-token-ring-2.pnml");
