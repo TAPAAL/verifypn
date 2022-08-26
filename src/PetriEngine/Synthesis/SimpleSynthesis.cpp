@@ -46,8 +46,16 @@ namespace PetriEngine {
         _stateset(_net, 0), _query(query), _result(&query) {
 
         }
+#ifndef NDEBUG
+        std::vector<MarkVal*> markings;
+#endif
 
         SimpleSynthesis::~SimpleSynthesis() {
+#ifndef NDEBUG
+            for(auto& mark : markings)
+                delete[] mark;
+            markings.clear();
+#endif
         }
 
         std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition) {
@@ -166,10 +174,6 @@ namespace PetriEngine {
             return PetriEngine::PQL::evaluate(cond, ctx) == PQL::Condition::RTRUE;
             // TODO, we can use the stability in the fixpoint computation to prun the Dep-graph
         }
-
-#ifndef NDEBUG
-        std::vector<MarkVal*> markings;
-#endif
 
         SynthConfig& SimpleSynthesis::get_config(Structures::State& state, PQL::Condition* prop, size_t& cid) {
             // TODO, we don't actually have to store winning markings here (what is fastest, checking query or looking up marking?/memory)!

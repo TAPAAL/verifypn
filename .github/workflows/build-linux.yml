@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-concurrency: 
+concurrency:
   group: build-Linux-${{ github.head_ref }}
   cancel-in-progress: true
 
@@ -27,7 +27,7 @@ jobs:
           tar xvfz bison-3.7.6.tar.gz
           cd bison-3.7.6
           ./configure
-          make 
+          make
           sudo make install
 
       - name: Test
@@ -36,16 +36,16 @@ jobs:
           cd build
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Debug -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=ON
           make
-          make test
+          CTEST_OUTPUT_ON_FAILURE=1 make test
 
-      - name: Build 
+      - name: Build
         run: |
           mkdir -p build
           cd build
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=OFF
           make
 
-      - name: Upload artifacts 
+      - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: verifypn-linux64

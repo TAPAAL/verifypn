@@ -152,7 +152,6 @@ namespace PetriEngine { namespace PQL {
         for(; preset.first != preset.second; ++preset.first)
         {
             assert(preset.first->place != std::numeric_limits<uint32_t>::max());
-            assert(preset.first->place != -1);
             constraints.emplace_back();
             constraints.back()._place = preset.first->place;
             constraints.back()._name = _context.net()->placeNames()[preset.first->place];

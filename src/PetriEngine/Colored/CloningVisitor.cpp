@@ -94,17 +94,12 @@ namespace PetriEngine {
         }
 
         void CloningVisitor::accept(const NumberOfExpression *expression) {
-            if (expression->is_all()) {
-                expression->all()->visit(*this);
-                _arc_res = std::make_shared<NumberOfExpression>(std::move(_all_res), expression->number());
-            } else {
-                std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
-                for (auto &expr : *expression) {
-                    expr->visit(*this);
-                    colors.emplace_back(std::move(_col_res));
-                }
-                _arc_res = std::make_shared<NumberOfExpression>(std::move(colors), expression->number());
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
+            for (auto &expr : *expression) {
+                expr->visit(*this);
+                colors.emplace_back(std::move(_col_res));
             }
+            _arc_res = std::make_shared<NumberOfExpression>(std::move(colors), expression->number());
         }
 
         void CloningVisitor::accept(const AddExpression *expression) {

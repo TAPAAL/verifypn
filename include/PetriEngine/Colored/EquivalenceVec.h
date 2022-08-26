@@ -26,7 +26,7 @@ namespace PetriEngine {
                     return _equivalenceClasses;
                 }
 
-                const uint32_t getUniqueIdForColor(const Colored::Color *color) const; 
+                const uint32_t getUniqueIdForColor(const Colored::Color *color) const;
 
 
                 const std::vector<bool> & getDiagonalTuplePositions() const{

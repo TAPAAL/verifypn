@@ -165,17 +165,12 @@ namespace PetriEngine {
             virtual void accept(const NumberOfExpression* no)
             {
                 _result_v.clear();
-                if (!no->is_all()) {
-                    for (const auto& elem : *no) {
-                        for(const auto& varMap : _varmap_vec){
-                            _varmap = &varMap;
-                            elem->visit(*this);
-                            _result_v.emplace_back(_result);
-                        }
+                for (const auto& elem : *no) {
+                    for(const auto& varMap : _varmap_vec){
+                        _varmap = &varMap;
+                        elem->visit(*this);
+                        _result_v.emplace_back(_result);
                     }
-                } else {
-                    no->all()->visit(*this);
-                    _result_v.emplace_back(_result);
                 }
             }
 

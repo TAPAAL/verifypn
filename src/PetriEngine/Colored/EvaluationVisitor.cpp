@@ -113,22 +113,6 @@ namespace PetriEngine {
                     col.push_back(std::make_pair(_cres, no->number()));
                 }
                 _mres = Multiset(col);
-            } else if (no->is_all()) {
-                std::vector<std::pair<const Color*,uint32_t>> colors;
-
-                if(_context.placePartition.getEquivalenceClasses().empty() ||
-                   _context.placePartition.isDiagonal()){
-                    for (size_t i = 0; i < no->all()->sort()->size(); ++i) {
-                        colors.push_back(std::make_pair(&(*no->all()->sort())[i], no->number()));
-                    }
-                } else {
-                    for (const auto& eq_class : _context.placePartition.getEquivalenceClasses()){
-                        colors.push_back(
-                        std::make_pair(no->all()->sort()->getColor(eq_class.intervals().getLowerIds()),
-                            eq_class.size()*no->number()));
-                    }
-                }
-                _mres = Multiset(colors);
             }
         }
 

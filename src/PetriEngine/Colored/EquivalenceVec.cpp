@@ -77,7 +77,7 @@ namespace PetriEngine {
                     if(EqInterval.contains(interval, _diagonalTuplePositions)){
                         auto singleInterval = EqInterval.getCanonicalInterval();
                         for(uint32_t i = 0; i < singleInterval.size(); i++){
-                            colorIds[i] = _diagonalTuplePositions[i]? interval[i]._lower: singleInterval[i]._lower;
+                            colorIds[i] = _diagonalTuplePositions[i] ? interval[i]._lower : singleInterval[i]._lower;
                         }
                     }
                 }
@@ -91,13 +91,13 @@ namespace PetriEngine {
 
             std::vector<uint32_t> colorTupleIds;
             std::vector<uint32_t> newColorTupleIds;
-            bool hasDiagonalPositions;
+            bool hasDiagonalPositions = false;
             color->getTupleId(colorTupleIds);
             for(uint32_t i = 0; i < colorTupleIds.size(); i++){
                 if(_diagonalTuplePositions[i]){
+                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(colorTupleIds[i]);
                 } else {
-                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(eqClass->intervals().back().getLowerIds()[i]);
                 }
             }
