@@ -89,9 +89,9 @@ namespace PetriEngine {
         return (int32_t)parent->_originalNumberOfPlaces - (int32_t)numberOfUnskippedPlaces();
     }
 
-    shared_const_string Reducer::getTransitionName(uint32_t transition)
+    const shared_const_string& Reducer::getTransitionName(uint32_t transition) const
     {
-        for(auto t : parent->_transitionnames)
+        for(auto& t : parent->_transitionnames)
         {
             if(t.second == transition) return t.first;
         }
@@ -111,7 +111,7 @@ namespace PetriEngine {
         return tmp;
     }
 
-    shared_const_string Reducer::getPlaceName(uint32_t place)
+    const shared_const_string& Reducer::getPlaceName(uint32_t place) const
     {
         for(auto& t : parent->_placenames)
         {
@@ -539,12 +539,17 @@ namespace PetriEngine {
                     // remember reduction for recreation of trace
                     auto toutname    = getTransitionName(tOut);
                     auto tinname     = getTransitionName(tIn);
-                    auto pname       = getPlaceName(p);
-                    Arc& a = *getInArc(p, in);
                     if(!added_tIn_extra)
                     {
                         added_tIn_extra = true;
-                        _extraconsume[*tinname].emplace_back(pname, a.weight);
+                        for(auto& arc : in.pre)
+                        {
+                            if(!arc.inhib)
+                            {
+                                auto pname       = getPlaceName(arc.place);
+                                _extraconsume[*tinname].emplace_back(pname, arc.weight);
+                            }
+                        }
                     }
                     for(size_t i = 0; i < multiplier; ++i)
                     {
@@ -637,7 +642,6 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places in parallel where one accumulates tokens while the others disable their post set
         bool continueReductions = false;
-
         _pflags.resize(parent->_places.size(), 0);
         std::fill(_pflags.begin(), _pflags.end(), 0);
 
@@ -1246,7 +1250,7 @@ namespace PetriEngine {
                 continueReductions = true;
                 _ruleF++;
             }
-else if (inhibArcs == 0)
+            else if (inhibArcs == 0)
             {
                 place.inhib = false;
             }
@@ -1569,6 +1573,8 @@ else if (inhibArcs == 0)
     }
 
     bool Reducer::ReducebyRuleJ(uint32_t* placeInQuery) {
+        if(reconstructTrace)
+            return false;
         bool any = false;
         for(std::size_t p = 0; p < parent->numberOfPlaces(); ++p)
         {
@@ -2319,7 +2325,8 @@ else if (inhibArcs == 0)
     bool Reducer::ReducebyRuleQ(uint32_t* placeInQuery)
     {
         // Fire initially enabled transitions if they are the single consumer of their preset
-
+        if(reconstructTrace)
+            return false;
         bool continueReductions = false;
 
         for (uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
@@ -2385,6 +2392,11 @@ else if (inhibArcs == 0)
             {
                 parent->initialMarking[postarc.place] += postarc.weight * k;
             }
+            if(reconstructTrace)
+            {
+                for(size_t i = 0; i < k; ++i)
+                    _initfire.emplace_back(getTransitionName(t));
+            }
 
             _ruleQ++;
             continueReductions = true;
@@ -2396,7 +2408,8 @@ else if (inhibArcs == 0)
     bool Reducer::ReducebyRuleR(uint32_t* placeInQuery, uint32_t explosion_limiter)
     {
         // Rule R performs post agglomeration on a single producer, merging its firing with all consumers
-
+        if(reconstructTrace) // current reconstruction concept does not extend to handle ruleS. The trivial cases are already dealt with in ruleA and ruleB
+            return false;
         bool continueReductions = false;
 
         for (uint32_t pid = 0; pid < parent->numberOfPlaces(); pid++)
@@ -2566,6 +2579,8 @@ else if (inhibArcs == 0)
     }
 
     bool Reducer::ReducebyRuleS(uint32_t* placeInQuery, bool remove_consumers, bool remove_loops, bool allReach, uint32_t explosion_limiter) {
+        if(reconstructTrace) // current reconstruction concept does not extend to handle ruleS. The trivial cases are already dealt with in ruleA and ruleB
+            return false;
         bool continueReductions = false;
         bool atomic_viable = allReach && remove_loops;
 
@@ -2856,7 +2871,7 @@ else if (inhibArcs == 0)
 
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
-            std::cout << "Rule H disabled when a trace is requested." << std::endl;
+            std::cout << "Rule H, J, R, S, Q disabled when a trace is requested." << std::endl;
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
