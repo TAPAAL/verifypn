@@ -130,7 +130,6 @@ namespace PetriEngine {
         Arc arc;
         arc.place = p;
         arc.weight = weight;
-        arc.skip = false;
         arc.inhib = inhibitor;
         assert(t < _transitions.size());
         assert(p < _places.size());
@@ -171,7 +170,6 @@ namespace PetriEngine {
         Arc arc;
         arc.place = p;
         arc.weight = weight;
-        arc.skip = false;
         assert(std::find(_places[p].producers.begin(), _places[p].producers.end(), t) == std::end(_places[p].producers));
 
         _transitions[t].post.push_back(arc);
