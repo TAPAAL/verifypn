@@ -534,6 +534,8 @@ namespace PetriEngine {
                 uint initm = parent->initMarking()[p];
                 initm /= inArc->weight; // integer-devision is floor by default
 
+                continueReductions = true;
+                _ruleB++;
                 if(reconstructTrace)
                 {
                     // remember reduction for recreation of trace
@@ -562,8 +564,6 @@ namespace PetriEngine {
                     }
                 }
 
-                continueReductions = true;
-                _ruleB++;
                  // UB1. Remove place p
                 parent->initialMarking[p] = 0;
                 // We need to remember that when tOut fires, tIn fires just after.
@@ -753,6 +753,19 @@ namespace PetriEngine {
 
                         continueReductions = true;
                         _ruleC++;
+
+                        if(reconstructTrace)
+                        {
+                            // remember reduction for recreation of trace
+                            auto pname       = getPlaceName(p2);
+                            for(auto c : place2.consumers) {
+                                Transition &trans = getTransition(c);
+                                const auto& arc = getInArc(p2, trans);
+                                auto& tname = getTransitionName(c);
+                                _extraconsume[*tname].emplace_back(pname, arc->weight);
+                            }
+                        }
+
                         skipPlace(p2);
 
                         // p2 has now been removed from tid_outer.post, so update arc indexes to not miss any places
