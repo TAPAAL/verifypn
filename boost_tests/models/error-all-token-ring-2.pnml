@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="process" name="Process">
+                        <cyclicenumeration>
+                            <feconstant id="process0" name="Process"/>
+                            <feconstant id="process1" name="Process"/>
+                            <feconstant id="process2" name="Process"/>
+                            <feconstant id="process3" name="Process"/>
+                            <feconstant id="process4" name="Process"/>
+                            <feconstant id="process5" name="Process"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <namedsort id="Couple" name="Couple">
+                        <productsort>
+                            <usersort declaration="process"/>
+                            <usersort declaration="process"/>
+                        </productsort>
+                    </namedsort>
+                    <variabledecl id="vari" name="i">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                    <variabledecl id="varx" name="x">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                    <variabledecl id="vary" name="y">
+                        <usersort declaration="process"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="P2">
+                <name>
+                    <text>P2</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="1020" y="255"/>
+                </graphics>
+                <type>
+                    <text>Couple</text>
+                    <structure>
+                        <usersort declaration="Couple"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="P3">
+                <name>
+                    <text>P3</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="1035" y="435"/>
+                </graphics>
+                <type>
+                    <text>dot</text>
+                    <structure>
+                        <usersort declaration="dot"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="state">
+                <name>
+                    <text>state</text>
+                    <graphics>
+                        <offset x="85" y="50"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="450" y="255"/>
+                </graphics>
+                <type>
+                    <text>Couple</text>
+                    <structure>
+                        <usersort declaration="Couple"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'(Process.all, process0))</text>
+                    <structure>
+                        <add>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <tuple>
+                                            <subterm>
+                                                <all>
+                                                    <usersort declaration="process"/>
+                                                </all>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="process0"/>
+                                            </subterm>
+                                        </tuple>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </add>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="1050" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="mainprocess">
+                <name>
+                    <graphics>
+                        <offset x="100" y="21"/>
+                    </graphics>
+                    <text>mainprocess</text>
+                </name>
+                <graphics>
+                    <position x="750" y="255"/>
+                </graphics>
+            </transition>
+            <arc id="P2_to_T0" source="P2" target="T0" type="normal">
+                <hlinscription>
+                    <text>(1'(process0, process0) + 2 * 1'(process0, process0))</text>
+                    <structure>
+                        <add>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <tuple>
+                                            <subterm>
+                                                <useroperator declaration="process0"/>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="process0"/>
+                                            </subterm>
+                                        </tuple>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                            <subterm>
+                                <scalarproduct>
+                                    <subterm>
+                                        <numberconstant value="2"/>
+                                    </subterm>
+                                    <subterm>
+                                        <numberof>
+                                            <subterm>
+                                                <numberconstant value="1">
+                                                    <positive/>
+                                                </numberconstant>
+                                            </subterm>
+                                            <subterm>
+                                                <tuple>
+                                                    <subterm>
+                                                        <useroperator declaration="process0"/>
+                                                    </subterm>
+                                                    <subterm>
+                                                        <useroperator declaration="process0"/>
+                                                    </subterm>
+                                                </tuple>
+                                            </subterm>
+                                        </numberof>
+                                    </subterm>
+                                </scalarproduct>
+                            </subterm>
+                        </add>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="state_to_mainprocess" source="state" target="mainprocess" type="normal">
+                <hlinscription>
+                    <text>1'(process0, process0)</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <tuple>
+                                    <subterm>
+                                        <useroperator declaration="process0"/>
+                                    </subterm>
+                                    <subterm>
+                                        <useroperator declaration="process0"/>
+                                    </subterm>
+                                </tuple>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+                <graphics>
+                    <position x="642" y="319"/>
+                </graphics>
+            </arc>
+            <arc id="T0_to_P3" source="T0" target="P3" type="normal">
+                <hlinscription>
+                    <text>1'dot</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <useroperator declaration="dot"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="mainprocess_to_P2" source="mainprocess" target="P2" type="normal">
+                <hlinscription>
+                    <text>2'(Process.all, Process.all)</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="2">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <tuple>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="process"/>
+                                        </all>
+                                    </subterm>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="process"/>
+                                        </all>
+                                    </subterm>
+                                </tuple>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+    </net>
+</pnml>
