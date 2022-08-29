@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -192,6 +192,16 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const KSafeCondition* element) {
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+        {
+            if(_is_nested)
+                setConditionFound();
+        }
+    }
+
     void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
             Visitor::visit(this, element->getCompiled());
@@ -287,6 +297,22 @@ namespace PetriEngine { namespace PQL {
             setConditionFound();
         else
             AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const LivenessCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const StableMarkingCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
     }
 
 

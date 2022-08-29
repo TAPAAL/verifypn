@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLFireability, * utf::timeout(300)) {
                 {
                     if(alg == LTL::Algorithm::NDFS && por != LTL::LTLPartialOrder::None)
                         continue;
-                        for(auto heur : { LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
+                    for(auto heur : { LTL::LTLHeuristic::Automaton, LTL::LTLHeuristic::Distance,
                         LTL::LTLHeuristic::FireCount, LTL::LTLHeuristic::DFS, LTL::LTLHeuristic::RDFS})
                     {
                         std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace

@@ -1,0 +1,12 @@
+<pnml>
+<net id="ComposedModel" type="P/T net">
+<declaration><structure><declarations><namedsort id="dot" name="dot"><dot/></namedsort><namedsort id="col" name="col"><finiteintrange end="2" start="1"/></namedsort><namedsort id="prod" name="prod"><productsort><usersort declaration="col"/><usersort declaration="col"/></productsort></namedsort></declarations></structure></declaration><place id="TAPN1_P0" name="TAPN1_P0" initialMarking="2" >
+<type><text>col</text><structure><usersort declaration="col"/></structure></type><hlinitialMarking><text>(1'col.all)</text><structure><add><subterm><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><all><usersort declaration="col"/></all></subterm></numberof></subterm></add></structure></hlinitialMarking><graphics><position x="360" y="420" /></graphics></place>
+<place id="TAPN1_P1" name="TAPN1_P1" initialMarking="0" >
+<type><text>dot</text><structure><usersort declaration="dot"/></structure></type><graphics><position x="615" y="420" /></graphics></place>
+<transition player="0" id="TAPN1_T0" name="TAPN1_T0" >
+<placeHolder/><graphics><position x="480" y="420" /></graphics></transition>
+<inputArc source="TAPN1_P0" target="TAPN1_T0"><inscription><value>1</value></inscription><hlinscription><text>1'1</text><structure><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><finiteintrangeconstant value="1"><finiteintrange end="2" start="1"/></finiteintrangeconstant></subterm></numberof></structure></hlinscription></inputArc>
+<outputArc source="TAPN1_T0" target="TAPN1_P1"><inscription><value>1</value></inscription><hlinscription><text>1'dot</text><structure><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><useroperator declaration="dot"/></subterm></numberof></structure></hlinscription></outputArc>
+</net>
+</pnml>

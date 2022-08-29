@@ -170,7 +170,7 @@ namespace PetriEngine {
         }
 
         PathQuant::PathQuant(std::string id, std::shared_ptr<Condition> child, size_t offset)
-        : _id(id), _child(std::move(child)), _offset(offset) {
+        : _id(id), _offset(offset), _child(std::move(child)) {
         }
 
         /******************** opTAPAAL ********************/

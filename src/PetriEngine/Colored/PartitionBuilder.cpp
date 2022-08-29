@@ -19,14 +19,13 @@ namespace PetriEngine {
         : _transitions(transitions), _places(places), _inQueue(_places.size(), false), _partition(places.size())
         , _fixed_point(placeColorFixpoints) {
 
-
         }
 
         void PartitionBuilder::printPartion() const {
             for(size_t i = 0; i < _partition.size(); ++i){
                 if (_places[i].skipped) continue;
                 auto& equivalenceVec = _partition[i];
-                std::cout << "Partition for place " << _places[i].name << std::endl;
+                std::cout << "Partition for place " << *_places[i].name << "(" << i << ")" << std::endl;
                 std::cout << "Diag variables: (";
                 for(auto daigPos : equivalenceVec.getDiagonalTuplePositions()){
                     std::cout << daigPos << ",";
@@ -375,7 +374,7 @@ namespace PetriEngine {
             } else {
                 EquivalenceClass intersection(++_eq_id_counter);
                 uint32_t ecPos1 = 0, ecPos2 = 0;
-                while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
+                while(findOverlap(equivalenceVec, _partition[placeId], ecPos1, ecPos2, intersection)) {
                     const auto &ec1 = equivalenceVec.getEquivalenceClasses()[ecPos1];
                     const auto &ec2 = _partition[placeId].getEquivalenceClasses()[ecPos2];
                     const auto rightSubtractEc = ec1.subtract(++_eq_id_counter, ec2, equivalenceVec.getDiagonalTuplePositions());
@@ -383,10 +382,10 @@ namespace PetriEngine {
 
                     equivalenceVec.erase_Eqclass(ecPos1);
                     _partition[placeId].erase_Eqclass(ecPos2);
-
                     if(!intersection.isEmpty()){
                         _partition[placeId].push_back_Eqclass(intersection);
                         intersection.clear();
+                        split = true;
                     }
                     if(!leftSubtractEc.isEmpty()){
                         _partition[placeId].push_back_Eqclass(leftSubtractEc);

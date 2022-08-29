@@ -20,7 +20,7 @@ namespace PetriEngine {
                 bool isEmpty() const{
                     if(_colorIntervals.size() < 1 || _colorIntervals.front().size() < 1){
                         return true;
-                    } 
+                    }
                     return false;
                 }
 
@@ -31,19 +31,19 @@ namespace PetriEngine {
                 EquivalenceClass intersect(uint32_t id, const EquivalenceClass &other) const;
 
                 EquivalenceClass subtract(uint32_t id, const EquivalenceClass &other, const std::vector<bool> &diagonalPositions) const;
-                
+
                 uint32_t id() const { return _id; }
                 const ColorType* type() const { return _colorType; }
                 const interval_vector_t& intervals() const { return _colorIntervals; }
                 void clear() { _colorIntervals.clear(); }
                 void setIntervalVector(const interval_vector_t& interval) { _colorIntervals = interval; }
-                void addInterval(interval_t&& interval) { _colorIntervals.addInterval(interval); }
+                void addInterval(interval_t&& interval) { _colorIntervals.addInterval(std::move(interval)); }
             private:
                 uint32_t _id;
                 const ColorType *_colorType;
                 interval_vector_t _colorIntervals;
 
-            
+
         };
     }
 }

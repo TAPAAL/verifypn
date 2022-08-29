@@ -80,7 +80,7 @@ namespace PetriEngine {
                 const Color* color = &(*ColorType::dotInstance()->begin());
                 if (_type != nullptr)
                     color = &((*_type)[c.first]);
-                (*this)[color] = std::min(c.second - other[color], c.second);
+                (*this)[color] =  c.second < other[color] ? 0 : c.second - other[color];
             }
         }
 

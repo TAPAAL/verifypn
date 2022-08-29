@@ -16,7 +16,7 @@ namespace PetriEngine {
                         for(const auto& EQinterval : EQClass.intervals()){
                             auto overlap = interval.getOverlap(EQinterval, _diagonalTuplePositions);
                             if(overlap.isSound()){
-                                auto singleInterval = EQinterval.getSingleColorInterval();
+                                auto singleInterval = EQinterval.getCanonicalInterval();
                                 for(uint32_t i = 0; i < _diagonalTuplePositions.size(); i++){
                                     if(_diagonalTuplePositions[i]){
                                         singleInterval[i] = interval[i];
@@ -75,9 +75,9 @@ namespace PetriEngine {
             for(const auto& EqClass : _equivalenceClasses){
                 for(const auto& EqInterval : EqClass.intervals()){
                     if(EqInterval.contains(interval, _diagonalTuplePositions)){
-                        auto singleInterval = EqInterval.getSingleColorInterval();
+                        auto singleInterval = EqInterval.getCanonicalInterval();
                         for(uint32_t i = 0; i < singleInterval.size(); i++){
-                            colorIds[i] = _diagonalTuplePositions[i]? interval[i]._lower: singleInterval[i]._lower;
+                            colorIds[i] = _diagonalTuplePositions[i] ? interval[i]._lower : singleInterval[i]._lower;
                         }
                     }
                 }
@@ -91,13 +91,13 @@ namespace PetriEngine {
 
             std::vector<uint32_t> colorTupleIds;
             std::vector<uint32_t> newColorTupleIds;
-            bool hasDiagonalPositions;
+            bool hasDiagonalPositions = false;
             color->getTupleId(colorTupleIds);
             for(uint32_t i = 0; i < colorTupleIds.size(); i++){
                 if(_diagonalTuplePositions[i]){
+                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(colorTupleIds[i]);
                 } else {
-                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(eqClass->intervals().back().getLowerIds()[i]);
                 }
             }

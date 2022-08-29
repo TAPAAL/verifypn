@@ -86,7 +86,7 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString) {
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
 	if(pqlqparse() != 0)
-		return NULL;
+		return nullptr;
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);

@@ -62,7 +62,7 @@ namespace PetriEngine {
             double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            bool inhibited = false;
+            uint32_t inhibited = 0; // Number of inhibitor arcs
             bool skipped = false;
         };
 
@@ -71,7 +71,7 @@ namespace PetriEngine {
             const ColorType* type;
             Multiset marking;
             double _x = 0, _y = 0;
-            bool inhibitor;
+            uint32_t inhibitor = 0; // Number of inhibitor arcs
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
             bool skipped = false;

@@ -37,14 +37,17 @@ namespace PetriEngine {
 
         class VariableVisitor : public ColorExpressionVisitor {
             uint32_t _index = 0;
+            uint32_t _tupleIndex = 0;
             std::set<const Colored::Variable*>& _variables;
+            std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& _tuples;
             PositionVariableMap& _varPositions;
             VariableModifierMap& _varModifiers;
             const bool _include_subtracts;
+
         public:
             VariableVisitor(std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions,
-                    VariableModifierMap& varModifierMap, bool includeSubtracts)
-            : _variables(variables), _varPositions(varPositions), _varModifiers(varModifierMap), _include_subtracts(includeSubtracts) {
+                    VariableModifierMap& varModifierMap, std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& _tuples, bool includeSubtracts)
+            : _variables(variables), _tuples(_tuples), _varPositions(varPositions), _varModifiers(varModifierMap), _include_subtracts(includeSubtracts) {
 
             }
 
@@ -57,6 +60,9 @@ namespace PetriEngine {
             {
                 _variables.insert(e->variable());
                 _varPositions[_index] = e->variable();
+                if(_tupleIndex > 0){
+                    _tuples[_tupleIndex].emplace_back(e);
+                }
                 if(_varModifiers.count(e->variable()) == 0){
                     std::vector<std::unordered_map<uint32_t, int32_t>> newVec;
 
@@ -78,10 +84,17 @@ namespace PetriEngine {
 
             virtual void accept(const UserOperatorExpression* e)
             {
+                if(_tupleIndex > 0){
+                    _tuples[_tupleIndex].emplace_back(e);
+                }
             }
 
             virtual void accept(const SuccessorExpression* e)
             {
+                // Relies on tuples not being nested
+                if(_tupleIndex > 0){
+                    _tuples[_tupleIndex].emplace_back(e);
+                }
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 auto indexBefore = _index;
                 e->child()->visit(*this);
@@ -96,6 +109,10 @@ namespace PetriEngine {
 
             virtual void accept(const PredecessorExpression* e)
             {
+                // Relies on tuples not being nested
+                if(_tupleIndex > 0){
+                    _tuples[_tupleIndex].emplace_back(e);
+                }
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 auto indexBefore = _index;
                 e->child()->visit(*this);
@@ -110,10 +127,12 @@ namespace PetriEngine {
 
             virtual void accept(const TupleExpression* tup)
             {
+                _tupleIndex = _tuples.size() + 1;
                 for (const auto& elem : *tup) {
                     elem->visit(*this);
                     ++_index;
                 }
+                _tupleIndex = 0;
             }
 
             virtual void accept(const LessThanExpression* e)
@@ -176,14 +195,11 @@ namespace PetriEngine {
 
             virtual void accept(const NumberOfExpression* no)
             {
-                if(!no->is_all())
+                //TODO: can there be more than one element in a number of expression?
+                for(auto& e : *no)
                 {
-                    //TODO: can there be more than one element in a number of expression?
-                    for(auto& e : *no)
-                    {
-                        _index = 0;
-                        e->visit(*this);
-                    }
+                    _index = 0;
+                    e->visit(*this);
                 }
             }
 
@@ -216,26 +232,37 @@ namespace PetriEngine {
                 scalar->child()->visit(*this);
             }
 
-            static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) {
-                VariableVisitor v(variables, varPositions, varModifierMap, includeSubtracts);
+            static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& tuples, bool includeSubtracts) {
+                VariableVisitor v(variables, varPositions, varModifierMap, tuples, includeSubtracts);
                 e.visit(v);
+            }
+
+            static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions, VariableModifierMap& varModifierMap, bool includeSubtracts) {
+                std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> tuples;
+                get_variables(e, variables, varPositions, varModifierMap, tuples, includeSubtracts);
             }
 
             static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions) {
                 VariableModifierMap varModifierMap;
-                get_variables(e, variables, varPositions, varModifierMap, false);
+                std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> tuples;
+                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
             }
 
             static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables) {
                 PositionVariableMap varPositions;
                 VariableModifierMap varModifierMap;
+                std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> tuples;
 
-                get_variables(e, variables, varPositions, varModifierMap, false);
+                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
             }
 
+            static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& tuples) {
+                PositionVariableMap varPositions;
+                VariableModifierMap varModifierMap;
+
+                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+            }
         };
-
-
     }
 }
 

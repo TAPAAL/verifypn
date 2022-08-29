@@ -173,8 +173,8 @@ namespace PetriEngine {
 
         bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);
 
-        shared_const_string getTransitionName(uint32_t transition);
-        shared_const_string getPlaceName(uint32_t place);
+        const shared_const_string& getTransitionName(uint32_t transition) const;
+        const shared_const_string& getPlaceName(uint32_t place) const;
 
         PetriEngine::Transition& getTransition(uint32_t transition);
         ArcIter getOutArc(PetriEngine::Transition&, uint32_t place);

@@ -101,16 +101,11 @@ namespace PetriEngine {
 
             virtual void accept(const NumberOfExpression* no)
             {
-                if (no->is_all())
-                    no->all()->visit(*this);
-                else
-                {
-                    for (const auto& elem : *no) {
-                        _color_map.clear();
-                        elem->visit(*this);
-                        for(const auto& pair : _color_map) {
-                            _constantMap[pair.first].push_back(pair.second);
-                        }
+                for (const auto& elem : *no) {
+                    _color_map.clear();
+                    elem->visit(*this);
+                    for(const auto& pair : _color_map) {
+                        _constantMap[pair.first].push_back(pair.second);
                     }
                 }
             }

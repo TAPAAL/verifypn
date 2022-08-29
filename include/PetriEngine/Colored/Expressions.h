@@ -166,6 +166,10 @@ namespace PetriEngine {
                 _colorType = getColorType(colorTypes);
             }
 
+            TupleExpression(std::vector<ColorExpression_ptr>&& colors, const ColorType * colorType)
+                    : _colors(std::move(colors)), _colorType(colorType) {
+            }
+
             virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const override{
 
                 std::vector<const ColorType*> types;
@@ -186,6 +190,10 @@ namespace PetriEngine {
                 assert(false);
                 throw base_error("COULD NOT FIND PRODUCT TYPE");
                 return nullptr;
+            }
+
+            const ColorType* colorType() const {
+                return _colorType;
             }
         };
 
@@ -309,28 +317,20 @@ namespace PetriEngine {
         private:
             uint32_t _number;
             std::vector<ColorExpression_ptr> _color;
-            AllExpression_ptr _all;
         public:
             uint32_t weight() const override {
-                if (_all == nullptr)
-                    return _number * _color.size();
-                else
-                    return _number * _all->size();
-            }
-
-            bool is_all() const {
-                return (bool)_all;
+                return _number * _color.size();
             }
 
             bool is_single_color() const {
-                return !is_all() && _color.size() == 1;
+                return _color.size() == 1;
             }
 
             uint32_t number() const {
                 return _number;
             }
 
-            const ColorExpression_ptr& operator[](size_t i ) const {
+            const ColorExpression_ptr& operator[](size_t i) const {
                 return _color[i];
             }
 
@@ -346,14 +346,10 @@ namespace PetriEngine {
                 return _color.end();
             }
 
-            const AllExpression_ptr& all() const {
-                return _all;
-            }
-
             NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint32_t number = 1)
-                    : _number(number), _color(std::move(color)), _all(nullptr) {}
+                    : _number(number), _color(std::move(color)) {}
             NumberOfExpression(AllExpression_ptr&& all, uint32_t number = 1)
-                    : _number(number), _color(), _all(std::move(all)) {}
+                    : _number(number), _color() {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };

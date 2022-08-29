@@ -94,7 +94,7 @@ namespace LTL {
     }
 
     void SafeAutStubbornSet::_print_debug() {
-#ifndef NDEBUG
+#ifdef STUBBORN_STATISTICS
         float num_stubborn = 0;
         float num_enabled = 0;
         float num_enabled_stubborn = 0;

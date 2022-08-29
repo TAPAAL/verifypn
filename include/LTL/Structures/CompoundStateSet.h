@@ -110,7 +110,7 @@ namespace LTL { namespace Structures {
 
         PetriEngine::Structures::StateSet _markings;
         stateset_type _states;
-        ptrie::set_stable<size_t,17,128,4> _compounds;
+        ptrie::set_stable<size_t,size_t,17,128,4> _compounds;
         static constexpr auto _err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
 
         size_t _discovered = 0;

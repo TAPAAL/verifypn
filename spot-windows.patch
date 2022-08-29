@@ -1,0 +1,11 @@
+--- /ltdl/lt__dirent.c
++++ /ltdl/lt__dirent.c
+@@ -34,7 +34,7 @@
+ 
+ #include "lt__dirent.h"
+ 
+-#if defined __WINDOWS__
++#if 0
+ 
+ void
+ closedir (DIR *entry)

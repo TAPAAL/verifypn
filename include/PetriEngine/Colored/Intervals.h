@@ -92,7 +92,7 @@ namespace PetriEngine {
                 return ids;
             }
 
-            interval_t getSingleColorInterval() const {
+            interval_t getCanonicalInterval() const {
                 interval_t newInterval;
                 for(auto& range : _ranges){
                     newInterval.addRange(range._lower, range._lower);
@@ -190,32 +190,45 @@ namespace PetriEngine {
                     return result;
                 }
 
-                for(uint32_t i = 0; i < size(); i++){
-                    interval_t newInterval = *this;
-                    if(diagonalPositions[i]){
+                auto remainder = *this;
+                for(uint32_t i = 0; i < size(); ++i){
+                    interval_t newInterval = remainder;
+                    if(diagonalPositions[i]) {
                         continue;
                     }
 
-                    int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
-                    uint32_t newMaxLower = std::max(other[i]._upper +1, _ranges[i]._lower);
+                    int64_t newMinUpper = std::min(((int64_t) other[i]._lower) -1, (int64_t)remainder._ranges[i]._upper);
+                    uint64_t newMaxLower = std::max(other[i]._upper +1, remainder._ranges[i]._lower);
 
-                    if(((int32_t) _ranges[i]._lower) <= newMinUpper && newMaxLower <= _ranges[i]._upper){
-                        auto intervalCopy = *this;
-                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
-                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
-                        newInterval._ranges[i] = lowerRange;
-                        intervalCopy._ranges[i] = upperRange;
+                    if(((int64_t) remainder._ranges[i]._lower) <= newMinUpper && newMaxLower <= remainder._ranges[i]._upper){
+                        // sliced from both sides
+                        auto intervalCopy = remainder;
+                        newInterval._ranges[i] = Reachability::range_t(remainder._ranges[i]._lower, newMinUpper);
+                        intervalCopy._ranges[i] = Reachability::range_t(newMaxLower, remainder._ranges[i]._upper);
+                        remainder._ranges[i] = Reachability::range_t(newMinUpper+1, newMaxLower-1);
                         result.push_back(std::move(intervalCopy));
                         result.push_back(std::move(newInterval));
 
-                    } else if (((int32_t) _ranges[i]._lower)  <= newMinUpper){
-                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
-                        newInterval._ranges[i] = lowerRange;
+                    } else if (((int64_t) remainder._ranges[i]._lower)  <= newMinUpper){
+                        // sliced from the bottom
+                        newInterval._ranges[i] = Reachability::range_t(remainder._ranges[i]._lower, newMinUpper);
                         result.push_back(std::move(newInterval));
-                    } else if (newMaxLower <= _ranges[i]._upper) {
-                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
-                        newInterval._ranges[i] = upperRange;
+                        if((int64_t)remainder._ranges[i]._upper <= newMinUpper)
+                        {
+                            assert(result.back().contains(remainder, diagonalPositions));
+                            break;
+                        }
+                        remainder._ranges[i] = Reachability::range_t(newMinUpper + 1, remainder._ranges[i]._upper);
+                    } else if (newMaxLower <= remainder._ranges[i]._upper) {
+                        // sliced from the top
+                        newInterval._ranges[i] = Reachability::range_t(newMaxLower, remainder._ranges[i]._upper);
                         result.push_back(std::move(newInterval));
+                        if((int64_t)remainder._ranges[i]._lower >= newMaxLower)
+                        {
+                            assert(result.back().contains(remainder, diagonalPositions));
+                            break;
+                        }
+                        remainder._ranges[i] = Reachability::range_t(remainder._ranges[i]._lower, newMaxLower-1);
                     }
                 }
                 return result;
@@ -323,11 +336,12 @@ namespace PetriEngine {
                 _intervals.insert(_intervals.end(), other._intervals.begin(), other._intervals.end());
             }
 
-            interval_t isRangeEnd(const std::vector<uint32_t>& ids) const {
+            interval_t nextInterval(const std::vector<uint32_t>& ids) const {
                 for (uint32_t j = 0; j < _intervals.size(); j++) {
                     bool rangeEnd = true;
                     for (uint32_t i = 0; i < _intervals[j].size(); i++) {
-                        auto range =  _intervals[j][i];
+                        assert(ids.size() > i);
+                        auto& range =  _intervals[j][i];
                         if (range._upper != ids[i]) {
                             rangeEnd = false;
                             break;
@@ -372,7 +386,7 @@ namespace PetriEngine {
                     FoundPlace foundPlace = undecided;
 
                     for(uint32_t k = 0; k < interval.size(); k++){
-                        if(interval[k]._lower > localInterval[k]._upper  || localInterval[k]._lower > interval[k]._upper){
+                        if(!interval[k].intersects(localInterval[k])) {
                             extendsInterval = false;
                         }
                         if(interval[k]._lower < localInterval[k]._lower){

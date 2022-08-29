@@ -204,7 +204,7 @@ namespace PetriEngine {
                         auto sumPlaceName = std::make_shared<const_string>(*place.name + "Sum");
                         ptBuilder.addPlace(sumPlaceName, place.marking.size(), place._x + 30, place._y - 30);
                         if (_ptplacenames.count(place.name) <= 0) {
-                            _ptplacenames[place.name][0] = sumPlaceName;
+                            _ptplacenames[place.name][place.type->size()] = sumPlaceName;
                         }
                         placeName = _sumPlacesNames[inhibArc.place] = std::move(sumPlaceName);
                     }
@@ -268,8 +268,8 @@ namespace PetriEngine {
             }
 
             if (place.inhibitor) {
-                if (_sumPlacesNames.size() < arc.place) _sumPlacesNames.resize(arc.place + 1);
-                auto sumPlaceName = _sumPlacesNames[arc.place];
+                if (_sumPlacesNames.size() <= arc.place) _sumPlacesNames.resize(arc.place + 1);
+                auto& sumPlaceName = _sumPlacesNames[arc.place];
                 if (sumPlaceName == nullptr || sumPlaceName->empty()) {
                     auto newSumPlaceName = std::make_shared<const_string>(*place.name + "Sum");
                     ptBuilder.addPlace(newSumPlaceName, place.marking.size(), place._x + 30, place._y - 30);

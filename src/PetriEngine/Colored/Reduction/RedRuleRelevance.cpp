@@ -50,6 +50,23 @@ namespace PetriEngine::Colored::Reduction {
             if (!red._tflags[tid] && inQuery.isTransitionUsed(tid)) {
                 wtrans.push_back(tid);
                 red._tflags[tid] = true;
+                // All places that a query transition consumes from should be treated as being in the query too.
+                for (const auto& arc : red.transitions()[tid].input_arcs){
+                    red._pflags[arc.place] = true;
+                    const Place &place = red.places()[arc.place];
+                    for (auto t : place._post) {
+                        if (!red._tflags[t]) {
+                            wtrans.push_back(t);
+                            red._tflags[t] = true;
+                        }
+                    }
+                    for (auto t : place._pre) {
+                        if (!red._tflags[t]) {
+                            wtrans.push_back(t);
+                            red._tflags[t] = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -61,25 +78,22 @@ namespace PetriEngine::Colored::Reduction {
             for (const Arc &arc: relevantTrans.input_arcs) {
                 const Place &place = red.places()[arc.place];
                 red._pflags[arc.place] = true;
-                if (arc.inhib_weight == 0){
-                    for (uint32_t prtID : place._pre) {
-                        if (!red._tflags[prtID]) {
-                            const PetriEngine::Colored::Transition& potentiallyRelevantTrans = red.transitions()[prtID];
-                            // Loops that do not alter the marking in the place are not considered relevant to the place.
-                            const auto& prtIn = red.getInArc(arc.place, potentiallyRelevantTrans);
-                            if (prtIn != potentiallyRelevantTrans.input_arcs.end()) {
-                                const auto& prtOut = red.getOutArc(potentiallyRelevantTrans, arc.place);
-                                if (const auto ms1 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)){
-                                    if (const auto ms2 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)) {
-                                        if (ms1 == ms2){
-                                            continue;
-                                        }
+                for (uint32_t prtID : place._pre) {
+                    if (!red._tflags[prtID]) {
+                        const PetriEngine::Colored::Transition& potentiallyRelevantTrans = red.transitions()[prtID];
+                        // Loops that do not alter the marking in the place are not considered relevant to the place.
+                        const auto& prtIn = red.getInArc(arc.place, potentiallyRelevantTrans);
+                        if (prtIn != potentiallyRelevantTrans.input_arcs.end()) {
+                            if (const auto ms1 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)){
+                                if (const auto ms2 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)) {
+                                    if (ms1 == ms2){
+                                        continue;
                                     }
                                 }
                             }
-                            red._tflags[prtID] = true;
-                            wtrans.push_back(prtID);
                         }
+                        red._tflags[prtID] = true;
+                        wtrans.push_back(prtID);
                     }
                 }
             }
@@ -87,6 +101,7 @@ namespace PetriEngine::Colored::Reduction {
                 if (inhibitor.transition != t)
                     continue;
 
+                red._pflags[inhibitor.place] = true;
                 for (const auto prtID : red.places()[inhibitor.place]._post) {
                     if (!red._tflags[prtID]) {
                         // Summary of block: the potentially relevant transition is seen unless it:

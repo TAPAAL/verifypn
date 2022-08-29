@@ -60,11 +60,11 @@ using namespace PetriEngine::Reachability;
 
 
 bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reductiontype,
-                   std::vector<uint32_t>& reductions) {
+                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reduceMode,
+                   std::vector<uint32_t>& userSequence) {
     if (!cpnBuilder.isColored()) return false;
 
-    if (reductiontype == 0) {
+    if (reduceMode == 0) {
         out << "\nSkipping colored structural reductions (-R 0)" << std::endl;
         out << "Net consists of " << cpnBuilder.getPlaceCount() << " places and " << cpnBuilder.getTransitionCount() << " transitions" << std::endl;
         return false;
@@ -80,30 +80,26 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
 
     for (auto &q: queries) {
         PQL::Visitor::visit(useVisitor, q);
-        preserveLoops |= PetriEngine::PQL::isLoopSensitive(q);
-        preserveStutter |= PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
+        preserveLoops = preserveLoops || PetriEngine::PQL::isLoopSensitive(q);
+        preserveStutter = preserveStutter || PetriEngine::PQL::containsNext(q) || PetriEngine::PQL::hasNestedDeadlock(q);
         bool is_reach = PetriEngine::PQL::isReachability(q);
-        if(!is_reach)
-        {
+        if (!is_reach) {
             allReach = false;
-            if(allCtl)
-            {
+            if (allCtl) {
                 IsCTLVisitor v;
                 Visitor::visit(v, q);
                 allCtl = v.isCTL;
             }
-            if(allLtl)
-            {
+            if (allLtl) {
                 LTL::LTLValidator isLtl;
                 allLtl = isLtl.isLTL(q);
             }
         }
     }
 
-
-    if(!allCtl && !allLtl)
+    if (!allCtl && !allLtl)
     {
-        out << "Warning: Couldn't correctly detect query type in colored reducer" << std::endl;
+        out << "Warning: Could not correctly detect query type in colored reducer" << std::endl;
         return false;
     }
 
@@ -111,7 +107,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
             (allCtl ? Colored::Reduction::QueryType::CTL : Colored::Reduction::QueryType::LTL);
 
     Colored::Reduction::ColoredReducer reducer(cpnBuilder);
-    bool anyReduction = reducer.reduce(timeout, useVisitor, queryType, preserveLoops, preserveStutter, reductiontype, reductions);
+    bool anyReduction = reducer.reduce(timeout, useVisitor, queryType, preserveLoops, preserveStutter, reduceMode, userSequence);
 
     auto removedPlacesCount = (int32_t)reducer.origPlaceCount() - (int32_t)reducer.unskippedPlacesCount();
     auto removedTransitionsCount = (int32_t)reducer.origTransitionCount() - (int32_t)reducer.unskippedTransitionsCount();

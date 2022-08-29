@@ -36,11 +36,12 @@ namespace PetriEngine {
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
         // cleaning up colors
         for(auto& e : _colors)
-        {
             if(e.second != Colored::ColorType::dotInstance())
                 delete e.second;
-        }
+        for(auto& v : _variables)
+            delete v;
         _colors.clear();
+        _variables.clear();
     }
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, uint32_t tokens, double x, double y) {
@@ -162,8 +163,10 @@ namespace PetriEngine {
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
-        _places[p].inhibitor |= inhib_weight > 0;
-        _transitions[t].inhibited |= inhib_weight > 0;
+        if (inhib_weight > 0) {
+            _places[p].inhibitor++;
+            _transitions[t].inhibited++;
+        }
         arc.expr = expr;
         arc.input = input;
         arc.inhib_weight = inhib_weight;

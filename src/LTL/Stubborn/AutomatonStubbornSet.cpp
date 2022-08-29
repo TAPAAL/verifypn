@@ -262,13 +262,13 @@ namespace LTL {
 #ifndef NDEBUG
         return;
         std::cout << "Enabled: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_enabled[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }
         }
         std::cout << "\nStubborn: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_stubborn[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }

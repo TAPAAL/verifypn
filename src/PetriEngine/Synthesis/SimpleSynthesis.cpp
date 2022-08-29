@@ -46,8 +46,16 @@ namespace PetriEngine {
         _stateset(_net, 0), _query(query), _result(&query) {
 
         }
+#ifndef NDEBUG
+        std::vector<MarkVal*> markings;
+#endif
 
         SimpleSynthesis::~SimpleSynthesis() {
+#ifndef NDEBUG
+            for(auto& mark : markings)
+                delete[] mark;
+            markings.clear();
+#endif
         }
 
         std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition) {
@@ -166,10 +174,6 @@ namespace PetriEngine {
             return PetriEngine::PQL::evaluate(cond, ctx) == PQL::Condition::RTRUE;
             // TODO, we can use the stability in the fixpoint computation to prun the Dep-graph
         }
-
-#ifndef NDEBUG
-        std::vector<MarkVal*> markings;
-#endif
 
         SynthConfig& SimpleSynthesis::get_config(Structures::State& state, PQL::Condition* prop, size_t& cid) {
             // TODO, we don't actually have to store winning markings here (what is fastest, checking query or looking up marking?/memory)!
@@ -382,7 +386,7 @@ namespace PetriEngine {
                                 if (parent[p] > 0) {
                                     if (!fp) out << ",";
                                     fp = false;
-                                    out << _net.placeNames()[p] << ":" << parent[p];
+                                    out << *_net.placeNames()[p] << ":" << parent[p];
                                 }
                             }
                             out << "\":\n\t[";
@@ -390,7 +394,7 @@ namespace PetriEngine {
                         if (!first)
                             out << ",";
                         first = false;
-                        out << "\"" << _net.transitionNames()[wt] << "\"";
+                        out << "\"" << *_net.transitionNames()[wt] << "\"";
                     }
                     if (!first) out << "]";
                 }
@@ -429,7 +433,7 @@ namespace PetriEngine {
                 _net.print(_parent.marking());
                 std::cerr << "[" << child._marking << "] ";
                 _net.print(_working.marking());
-                std::cerr << "CTRL[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                std::cerr << "CTRL[" << cconf._marking << "] -" << *_net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                  */
 
                 some = true;
@@ -480,7 +484,7 @@ namespace PetriEngine {
                 _net.print(_parent.marking());
                  std::cerr << "[" << child._marking << "] ";
                 _net.print(_working.marking());
-                std::cerr << "ENV[" << cconf._marking << "] -" << _net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
+                std::cerr << "ENV[" << cconf._marking << "] -" << *_net.transitionNames()[generator.fired()] << "-> [" << child._marking << "]" << std::endl;
                  */
                 some_env = true;
                 if (child._state == SynthConfig::LOSING) {

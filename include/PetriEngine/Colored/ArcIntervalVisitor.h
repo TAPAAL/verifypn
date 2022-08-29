@@ -171,16 +171,10 @@ namespace PetriEngine {
 
             virtual void accept(const NumberOfExpression* e)
             {
-                if (e->is_all()) {
-                    e->all()->visit(*this);
-                }
-                else
-                {
-                    _index = 0;
-                    for (const auto& elem : *e) {
-                        elem->visit(*this);
-                        if(!_ok) return;
-                    }
+                _index = 0;
+                for (const auto& elem : *e) {
+                    elem->visit(*this);
+                    if(!_ok) return;
                 }
             }
 

@@ -8,7 +8,7 @@
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/PQL/ColoredUseVisitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     void ColoredUseVisitor::_accept(const NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
@@ -85,4 +85,26 @@ namespace PetriEngine::PQL {
         for (auto &cond : element->expressions())
             Visitor::visit(this, cond);
     }
-}
+
+    void ColoredUseVisitor::_accept(const KSafeCondition* element)
+    {
+        std::fill(_placeInUse.begin(), _placeInUse.end(), true);
+    }
+
+    void ColoredUseVisitor::_accept(const LivenessCondition* element)
+    {
+        std::fill(_transitionInUse.begin(), _transitionInUse.end(), true);
+        _anyTransitionInUse = true;
+    }
+
+    void ColoredUseVisitor::_accept(const QuasiLivenessCondition* element)
+    {
+        std::fill(_transitionInUse.begin(), _transitionInUse.end(), true);
+        _anyTransitionInUse = true;
+    }
+
+    void ColoredUseVisitor::_accept(const StableMarkingCondition* element)
+    {
+        std::fill(_placeInUse.begin(), _placeInUse.end(), true);
+    }
+} }
