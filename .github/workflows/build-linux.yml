@@ -2,9 +2,9 @@ name: Build Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, v4.2.2 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, v4.2.2 ]
   workflow_dispatch:
 
 concurrency: 
