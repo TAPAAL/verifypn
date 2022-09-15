@@ -478,17 +478,26 @@ namespace PetriEngine {
                 uint initm = parent->initMarking()[p];
                 initm /= inArc->weight; // integer-devision is floor by default
 
+                continueReductions = true;
+                _ruleB++;
+
                 if(reconstructTrace)
                 {
                     // remember reduction for recreation of trace
-                    std::string toutname    = getTransitionName(tOut);
-                    std::string tinname     = getTransitionName(tIn);
-                    std::string pname       = getPlaceName(p);
-                    Arc& a = *getInArc(p, in);
+                    auto toutname    = getTransitionName(tOut);
+                    auto tinname     = getTransitionName(tIn);
+
                     if(!added_tIn_extra)
                     {
                         added_tIn_extra = true;
-                        _extraconsume[tinname].emplace_back(pname, a.weight);
+                        for(auto& arc : in.pre)
+                        {
+                            if(!arc.inhib)
+                            {
+                                auto pname       = getPlaceName(arc.place);
+                                _extraconsume[tinname].emplace_back(pname, arc.weight);
+                            }
+                        }
                     }
                     for(size_t i = 0; i < multiplier; ++i)
                     {
@@ -501,8 +510,6 @@ namespace PetriEngine {
                     }
                 }
 
-                continueReductions = true;
-                _ruleB++;
                  // UB1. Remove place p
                 parent->initialMarking[p] = 0;
                 // We need to remember that when tOut fires, tIn fires just after.
