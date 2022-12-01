@@ -122,6 +122,10 @@ namespace PetriEngine {
                        else TEMPPAR(X, SuccessorGenerator)
 
 
+        size_t ReachabilitySearch::maxTokens() const {
+            return _max_tokens;
+        }
+
         bool ReachabilitySearch::reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,

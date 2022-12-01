@@ -154,6 +154,10 @@ namespace LTL {
         }
     }
 
+    size_t NestedDepthFirstSearch::max_tokens() const {
+        return _states.max_tokens();
+    }
+
     void NestedDepthFirstSearch::print_stats(std::ostream &os) const
     {
         ModelChecker::print_stats(os, _states.discovered(), _states.max_tokens());

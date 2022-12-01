@@ -74,6 +74,8 @@ namespace LTL {
             return _loop;
         }
 
+        virtual size_t max_tokens() const = 0;
+
         const std::vector<size_t>& trace() const {
             return _trace;
         }

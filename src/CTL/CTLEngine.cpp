@@ -71,6 +71,7 @@ bool CTLSingleSolve(Condition* query, PetriNet* net,
     result.processedNegationEdges += alg->processedNegationEdges();
     result.exploredConfigurations += alg->exploredConfigurations();
     result.numberOfEdges += alg->numberOfEdges();
+    result.maxTokens = std::max(graph.maxTokens(), result.maxTokens);
     return res;
 }
 
@@ -141,6 +142,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         false,
                                         false,
                                         options.seed());
+            result.maxTokens = std::max(result.maxTokens, strategy.maxTokens());
         }
         else
         {
@@ -242,6 +244,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                            false,
                            false,
                            options.seed());
+            result.maxTokens = std::max(strategy.maxTokens(), result.maxTokens);
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
@@ -272,8 +275,11 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         if(ok)
         {
             LTL::LTLSearch search(*net, q, options.buchiOptimization, options.ltl_compress_aps);
-            return search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
+            auto r = search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
                             options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
+
+            result.maxTokens = std::max(search.max_tokens(), result.maxTokens);
+            return r;
         }
     }
     //else
@@ -321,6 +327,7 @@ ReturnValue CTLMain(PetriNet* net,
         result.exploredConfigurations = 0;
         result.numberOfEdges = 0;
         result.duration = 0;
+        result.maxTokens = 0;
         if(!solved)
         {
             if(options.strategy == Strategy::BFS || options.strategy == Strategy::RDFS)
