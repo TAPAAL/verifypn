@@ -62,6 +62,7 @@ namespace PetriEngine {
                     bool printstats,
                     bool keep_trace,
                     size_t seed);
+            size_t maxTokens() const;
         private:
             struct searchstate_t {
                 size_t expandedStates = 0;
@@ -89,6 +90,7 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
             AbstractHandler& _callback;
+            size_t _max_tokens = 0;
         };
 
         template <typename G>
@@ -136,8 +138,10 @@ namespace PetriEngine {
                 {
                     if(checkQueries(queries, results, working, ss, &states))
                     {
-                        if(printstats) printStats(ss, &states);
-                            return true;
+                        if(printstats)
+                            printStats(ss, &states);
+                        _max_tokens = states.maxTokens();
+                        return true;
                     }
                 }
                 // add initial to queue
@@ -163,7 +167,9 @@ namespace PetriEngine {
                             _satisfyingMarking = res.second;
                             ss.exploredStates++;
                             if (checkQueries(queries, results, working, ss, &states)) {
-                                if(printstats) printStats(ss, &states);
+                                if(printstats)
+                                    printStats(ss, &states);
+                                _max_tokens = states.maxTokens();
                                 return true;
                             }
                         }
@@ -181,7 +187,9 @@ namespace PetriEngine {
                 }
             }
 
-            if(printstats) printStats(ss, &states);
+            if(printstats)
+                printStats(ss, &states);
+            _max_tokens = states.maxTokens();
             return false;
         }
 

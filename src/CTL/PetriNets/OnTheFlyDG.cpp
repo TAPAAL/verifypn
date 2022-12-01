@@ -580,6 +580,10 @@ size_t OnTheFlyDG::markingCount() const
     return _markingCount;
 }
 
+size_t OnTheFlyDG::maxTokens() const {
+    return _maxTokens;
+}
+
 PetriConfig *OnTheFlyDG::createConfiguration(size_t marking, size_t own, Condition* t_query)
 {
     auto& configs = trie.get_data(marking);
@@ -614,6 +618,7 @@ size_t OnTheFlyDG::createMarking(Marking& t_marking){
     auto tit = trie.insert(w.raw(), w.size());
     if(tit.first){
         _markingCount++;
+        _maxTokens = std::max(sum, _maxTokens);
     }
 
     return tit.second;

@@ -60,6 +60,8 @@ namespace LTL {
 
         void print_stats(std::ostream &os) const override;
 
+        virtual size_t max_tokens() const override;
+
         virtual void set_partial_order(LTLPartialOrder);
 
         LTLPartialOrder used_partial_order() const {

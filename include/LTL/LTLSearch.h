@@ -73,6 +73,10 @@ namespace LTL {
             return _checker->is_weak();
         }
 
+        size_t max_tokens() const {
+            return _checker->max_tokens();
+        }
+
         std::string heuristic_type() const {
             std::stringstream ss;
             if(_heuristic)

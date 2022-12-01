@@ -53,6 +53,8 @@ namespace LTL {
 
         void print_stats(std::ostream &os) const override;
 
+        virtual size_t max_tokens() const override;
+
     private:
         using State = LTL::Structures::ProductState;
         std::pair<bool,size_t> mark(State& state, uint8_t);
