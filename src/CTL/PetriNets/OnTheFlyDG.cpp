@@ -564,6 +564,7 @@ size_t OnTheFlyDG::createMarking(Marking& t_marking){
     binarywrapper_t w = binarywrapper_t(encoder.scratchpad().raw(), length*8);
     auto tit = trie.insert(w.raw(), w.size());
     if(tit.first){
+        _max_tokens = std::max(_max_tokens, sum);
         _markingCount++;
     }
 

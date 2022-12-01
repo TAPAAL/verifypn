@@ -44,7 +44,8 @@ public:
     //stats
     size_t configurationCount() const;
     size_t markingCount() const;
-    
+    size_t maxTokens() const { return _max_tokens; }
+
     Condition::Result initialEval();
 
 protected:
@@ -59,6 +60,7 @@ protected:
     uint32_t n_places = 0;
     size_t _markingCount = 0;
     size_t _configurationCount = 0;
+    size_t _max_tokens = 0;
     //used after query is set
     Condition_ptr query = nullptr;
 
@@ -68,12 +70,12 @@ protected:
         return fastEval(query.get(), unfolded);
     }
     void nextStates(Marking& t_marking, Condition*,
-    std::function<void ()> pre, 
-    std::function<bool (Marking&)> foreach, 
+    std::function<void ()> pre,
+    std::function<bool (Marking&)> foreach,
     std::function<void ()> post);
     template<typename T>
-    void dowork(T& gen, bool& first, 
-    std::function<void ()>& pre, 
+    void dowork(T& gen, bool& first,
+    std::function<void ()>& pre,
     std::function<bool (Marking&)>& foreach)
     {
         gen.prepare(&query_marking);
@@ -95,7 +97,7 @@ protected:
     }
     size_t createMarking(Marking &marking);
     void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
-    
+
     DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source, uint32_t weight);
 
     std::stack<DependencyGraph::Edge*> recycle;
@@ -104,7 +106,7 @@ protected:
 
     // Problem  with linked bucket and complex constructor
     linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>* conf_alloc = nullptr;
-    
+
     PetriEngine::ReducingSuccessorGenerator _redgen;
     bool _partial_order = false;
 

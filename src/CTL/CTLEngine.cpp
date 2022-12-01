@@ -71,6 +71,7 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
         cout << "	Processed Edges   : " << result.processedEdges << endl;
         cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
         cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
+        cout << "	max tokens        : " << result.exploredConfigurations << endl;
         std::cout << endl;
     }
 }
@@ -100,6 +101,7 @@ bool singleSolve(const Condition_ptr& query, PetriNet* net,
     result.processedNegationEdges += alg->processedNegationEdges();
     result.exploredConfigurations += alg->exploredConfigurations();
     result.numberOfEdges += alg->numberOfEdges();
+    result.maxTokens = std::max(result.maxTokens, graph.maxTokens());
     return res;
 }
 
@@ -170,6 +172,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         false,
                                         false,
                                         options.seed());
+            result.maxTokens = std::max(result.maxTokens, strategy.maxTokens());
         }
         else
         {
@@ -260,6 +263,7 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                            false,
                            false,
                            options.seed());
+            result.maxTokens = std::max(result.maxTokens, strategy.maxTokens());
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
@@ -310,6 +314,7 @@ ReturnValue CTLMain(PetriNet* net,
         result.exploredConfigurations = 0;
         result.numberOfEdges = 0;
         result.duration = 0;
+        result.maxTokens = 0;
         if(!solved)
         {
             result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
