@@ -2,9 +2,9 @@ name: Build MacOS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, hyper_ltl ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, hyper_ltl ]
     types: [synchronize, opened, reopened, ready_for_review]
   workflow_dispatch:
 
