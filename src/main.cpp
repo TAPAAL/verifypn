@@ -428,7 +428,6 @@ int main(int argc, const char** argv) {
 
                     if(options.trace != TraceLevel::None)
                         search.print_trace(std::cerr, *builder.getReducer());
-
                 }
 
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {

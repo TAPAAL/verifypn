@@ -78,6 +78,7 @@ namespace LTL {
             return _trace;
         }
 
+        virtual size_t max_tokens() const = 0;
 
         virtual LTLPartialOrder used_partial_order() const {
             return LTLPartialOrder::None;

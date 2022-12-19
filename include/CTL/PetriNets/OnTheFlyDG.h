@@ -44,7 +44,7 @@ public:
     //stats
     size_t configurationCount() const;
     size_t markingCount() const;
-
+    size_t maxTokens() const;
     Condition::Result initialEval();
 
 protected:
@@ -58,6 +58,7 @@ protected:
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
     size_t _markingCount = 0;
+    size_t _maxTokens = 0;
     size_t _configurationCount = 0;
     //used after query is set
     Condition* query = nullptr;

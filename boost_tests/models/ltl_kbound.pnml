@@ -1,0 +1,18 @@
+<pnml>
+<net id="ComposedModel" type="P/T net">
+<place id="TAPN1_P0" name="TAPN1_P0" invariant="&lt; inf" initialMarking="1" >
+<graphics><position x="330" y="300" /></graphics></place>
+<place id="TAPN1_P1" name="TAPN1_P1" invariant="&lt; inf" initialMarking="0" >
+<graphics><position x="645" y="300" /></graphics></place>
+<place id="TAPN1_P2" name="TAPN1_P2" invariant="&lt; inf" initialMarking="0" >
+<graphics><position x="930" y="300" /></graphics></place>
+<transition player="0" id="TAPN1_T0" name="TAPN1_T0" urgent="false">
+<graphics><position x="465" y="300" /></graphics></transition>
+<transition player="0" id="TAPN1_T1" name="TAPN1_T1" urgent="false">
+<graphics><position x="810" y="300" /></graphics></transition>
+<inputArc source="TAPN1_P0" target="TAPN1_T0"><inscription><value>1</value></inscription></inputArc>
+<inputArc source="TAPN1_P1" target="TAPN1_T1"><inscription><value>2</value></inscription></inputArc>
+<outputArc source="TAPN1_T0" target="TAPN1_P1"><inscription><value>2</value></inscription></outputArc>
+<outputArc source="TAPN1_T1" target="TAPN1_P2"><inscription><value>2</value></inscription></outputArc>
+</net>
+</pnml>

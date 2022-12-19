@@ -24,6 +24,10 @@ namespace LTL {
         ModelChecker::print_stats(os, _discoverd, _max_tokens);
     }
 
+    size_t TarjanModelChecker::max_tokens() const {
+        return _max_tokens;
+    }
+
     void TarjanModelChecker::set_partial_order(LTLPartialOrder o)
     {
         if(_net.has_inhibitor())
