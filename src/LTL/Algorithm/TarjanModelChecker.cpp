@@ -328,11 +328,11 @@ namespace LTL {
                 p = cstack[p]._lowsource;
                 assert(p != cstack[p]._lowsource);
             }
-            if(!had_deadlock)
-            {
-                assert(_loop_trans < _net.numberOfTransitions());
-                _trace.push_back({_loop_trans});
-            }
+        }
+        if(!had_deadlock)
+        {
+            assert(_loop_trans < _net.numberOfTransitions());
+            _trace.push_back({_loop_trans});
         }
     }
 }
