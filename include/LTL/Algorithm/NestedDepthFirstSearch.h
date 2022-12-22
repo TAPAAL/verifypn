@@ -80,6 +80,9 @@ namespace LTL {
         bool check_with_generator(G& gen);
 
         template<typename T, typename S>
+        void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states, size_t init);
+
+        template<typename T, typename S>
         void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states);
 
         template<typename T, typename S>

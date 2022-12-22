@@ -86,21 +86,27 @@ namespace LTL {
     template<typename T, typename S>
     void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator, S& states)
     {
+        auto initial_states = successor_generator.make_initial_state();
+        for (auto &state : initial_states) {
+            auto res = states.add(state);
+            if (std::get<0>(res)) {
+                dfs(successor_generator, states, std::get<1>(res));
+                if(_violation)
+                    break;
+            }
+        }
+    }
+
+    template<typename T, typename S>
+    void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator, S& states, size_t init)
+    {
         light_deque<stack_entry_t<T>> todo;
         light_deque<stack_entry_t<T>> nested_todo;
 
         State working = this->_factory.new_state(_hyper_traces);
         State curState = this->_factory.new_state(_hyper_traces);
 
-        {
-            auto initial_states = successor_generator.make_initial_state();
-            for (auto &state : initial_states) {
-                auto res = states.add(state);
-                if (std::get<0>(res)) {
-                    todo.push_back(stack_entry_t<T>{std::get<1>(res), successor_generator.initial_suc_info()});
-                }
-            }
-        }
+        todo.push_back(stack_entry_t<T>{init, successor_generator.initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.back();
@@ -225,9 +231,14 @@ namespace LTL {
                 }
                 auto res = top._sucinfo.transition();
                 if constexpr (std::is_same<decltype(res),std::vector<uint32_t>>::value)
+                {
                     _trace.emplace_back(top._sucinfo.transition());
+                }
                 else
+                {
                     _trace.push_back({top._sucinfo.transition()});
+                    assert(top._sucinfo.transition() < _net.numberOfTransitions());
+                }
                 (*stck).pop_front();
             }
         }
