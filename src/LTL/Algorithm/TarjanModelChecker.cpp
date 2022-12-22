@@ -329,7 +329,7 @@ namespace LTL {
                 assert(p != cstack[p]._lowsource);
             }
         }
-        if(!had_deadlock)
+        if(!had_deadlock && _loop_trans < _net.numberOfTransitions())
         {
             assert(_loop_trans < _net.numberOfTransitions());
             _trace.push_back({_loop_trans});
