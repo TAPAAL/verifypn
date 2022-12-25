@@ -77,7 +77,7 @@ if (VERIFYPN_GetDependencies)
 
     ExternalProject_add(ptrie-ext
         GIT_REPOSITORY https://github.com/petergjoel/ptrie
-        GIT_TAG f45e1a39524a95a28684aa75b169afa476ac025c
+        GIT_TAG f41e1bed54b647a52a7a8b0b32c87881648cb582
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DPTRIE_BuildTest=OFF -DCMAKE_BUILD_TYPE=Release
     )
     ExternalProject_add(rapidxml-ext
