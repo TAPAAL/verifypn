@@ -71,13 +71,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/bin)
 find_package(FLEX 2.6.4 REQUIRED)
 find_package(BISON 3.0.5 REQUIRED)
 
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
 if (VERIFYPN_GetDependencies)
     include(ExternalProject)
     # Install location should be ${EXTERNAL_INSTALL_LOCATION}
 
     ExternalProject_add(ptrie-ext
         GIT_REPOSITORY https://github.com/petergjoel/ptrie
-        GIT_TAG f41e1bed54b647a52a7a8b0b32c87881648cb582
+        GIT_TAG 9132d723cf19fad5a402f4b19a194c6aa66325fb
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DPTRIE_BuildTest=OFF -DCMAKE_BUILD_TYPE=Release
     )
     ExternalProject_add(rapidxml-ext
