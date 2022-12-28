@@ -102,27 +102,27 @@ if (VERIFYPN_GetDependencies)
 
     if (UNIX AND NOT APPLE)
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
-            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
-            BUILD_COMMAND make
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.11.3.tar.gz
+            URL_HASH SHA512=bb838b5a5eb772f31f1e39389d27f5e6b478713040cd6609a76c534afb491bc477d54f7fa8c7c4800efae74259781fddeff2854f601b685745797faaf7998d20
+            BUILD_COMMAND cd spot && make
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin ${HOST}
-            INSTALL_COMMAND make install
+            INSTALL_COMMAND cd spot && make install
         )
     elseif (APPLE)
         ExternalProject_add(spot-ext
             URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
             URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
-            BUILD_COMMAND make
+            BUILD_COMMAND cd spot && make
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug  --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} ${HOST} LDFLAGS=${CMAKE_LINKER_FLAGS}
-            INSTALL_COMMAND make install
+            INSTALL_COMMAND cd spot && make install
         )
     else ()
         ExternalProject_add(spot-ext
             URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
             URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
-            BUILD_COMMAND make
+            BUILD_COMMAND cd spot && make
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS} --host=x86_64-w64-mingw32
-            INSTALL_COMMAND make install
+            INSTALL_COMMAND cd spot && make install
             PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/spot-windows.patch
         )
 
