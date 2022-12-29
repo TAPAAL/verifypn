@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Packages
         run: |
-          brew install flex bison
+          brew install flex bison autoconf automake libtool
         
       - name: Build 
         uses: lukka/run-cmake@v2.5
