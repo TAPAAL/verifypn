@@ -9,3 +9,12 @@
  
  void
  closedir (DIR *entry)
+--- /spot/bricks/brick-shmem
++++ /spot/bricks/brick-shmem
+@@ -48,5 +48,5 @@
+ #include <future>
+-
++#include <thread>
+ #include <unistd.h> // alarm
+ #include <vector>
+ 
