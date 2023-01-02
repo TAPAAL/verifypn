@@ -79,6 +79,13 @@ namespace PetriEngine {
                 bool usequeries,
                 bool printstats,
                 size_t seed);
+            template<typename Q, typename W = Structures::StateSet, typename G>
+            bool tryReachPotency(
+                    std::vector<std::shared_ptr<PQL::Condition>> &queries,
+                    std::vector<ResultPrinter::Result> &results,
+                    bool usequeries,
+                    bool printstats,
+                    size_t seed);
             void printStats(searchstate_t& s, Structures::StateSetInterface*);
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                     std::vector<ResultPrinter::Result>&,
@@ -193,7 +200,76 @@ namespace PetriEngine {
             return false;
         }
 
+        template<typename Q, typename W, typename G>
+        bool ReachabilitySearch::tryReachPotency(std::vector<std::shared_ptr<PQL::Condition>> &queries,
+                                                 std::vector<ResultPrinter::Result> &results, bool usequeries,
+                                                 bool printstats, size_t seed) {
+            searchstate_t ss;
+            ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
+            ss.expandedStates = 0;
+            ss.exploredStates = 1;
+            ss.heurquery = queries.size() >= 2 ? std::rand() % queries.size() : 0;
+            ss.usequeries = usequeries;
 
+            Structures::State state;
+            Structures::State working;
+            _initial.setMarking(_net.makeInitialMarking());
+            state.setMarking(_net.makeInitialMarking());
+            working.setMarking(_net.makeInitialMarking());
+
+            W states(_net, _kbound);
+            Q queue(_net.numberOfTransitions(), seed);
+            G generator = _makeSucGen<G>(_net, queries);
+            auto r = states.add(state);
+            if (r.first) {
+                _satisfyingMarking = r.second;
+                if (ss.usequeries) {
+                    if (checkQueries(queries, results, working, ss, &states)) {
+                        printStats(ss, &states);
+                        return true;
+                    }
+                }
+                {
+                    PQL::DistanceContext dc(&_net, working.marking());
+                    queue.push(r.second, &dc, queries[ss.heurquery].get());
+                }
+                for (auto [nid, pDist] = queue.pop();
+                     nid != Structures::Queue::EMPTY; std::tie(nid, pDist) = queue.pop()) {
+                    states.decode(state, nid);
+                    generator.prepare(&state);
+
+                    while (generator.next(working)) {
+                        ss.enabledTransitionsCount[generator.fired()]++;
+                        auto res = states.add(working);
+                        if (res.first) {
+                            {
+                                PQL::DistanceContext dc(&_net, working.marking());
+                                queue.push(res.second, &dc, queries[ss.heurquery].get(), generator.fired(), pDist);
+                            }
+                            states.setHistory(res.second, generator.fired());
+                            _satisfyingMarking = res.second;
+                            ss.exploredStates++;
+                            if (checkQueries(queries, results, working, ss, &states)) {
+                                printStats(ss, &states);
+                                return true;
+                            }
+                        }
+                    }
+                    ss.expandedStates++;
+                }
+            }
+
+            for (size_t i = 0; i < queries.size(); ++i) {
+                if (results[i] == ResultPrinter::Unknown) {
+                    results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states).first;
+                }
+            }
+
+            if (printstats)
+                printStats(ss, &states);
+
+            return false;
+        }
     }
 } // Namespaces
 
