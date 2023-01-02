@@ -24,6 +24,8 @@
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/SuccessorGenerator.h"
 
+#include "PetriEngine/Structures/PotencyQueue.h"
+
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Structures;
 
@@ -121,6 +123,12 @@ namespace PetriEngine {
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
                        else TEMPPAR(X, SuccessorGenerator)
 
+#define TRYREACHPARPOTENCY      (queries, results, usequeries, printstats, seed)
+#define TEMPPARPOTENCY(X, Y)    if(keep_trace) return tryReachPotency<X, Structures::TracableStateSet, Y>TRYREACHPARPOTENCY ; \
+                                else return tryReachPotency<X, Structures::StateSet, Y> TRYREACHPARPOTENCY;
+#define TRYREACHPOTENCY(X)      if(stubbornreduction) TEMPPARPOTENCY(X, ReducingSuccessorGenerator) \
+                                else TEMPPARPOTENCY(X, SuccessorGenerator)
+
 
         size_t ReachabilitySearch::maxTokens() const {
             return _max_tokens;
@@ -154,6 +162,9 @@ namespace PetriEngine {
                     break;
                 case Strategy::RDFS:
                     TRYREACH(RDFSQueue)
+                    break;
+                case Strategy::RPFS:
+                    TRYREACHPOTENCY(RandomPotencyQueue)
                     break;
                 default:
                     throw base_error("Unsupported search strategy");
