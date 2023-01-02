@@ -18,6 +18,7 @@ enum class Strategy {
     HEUR,
     RDFS,
     OverApprox,
+    RPFS,
     DEFAULT
 };
 

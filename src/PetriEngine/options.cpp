@@ -33,6 +33,8 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << "\nSearch=HEUR";
     } else if (strategy == Strategy::RDFS) {
         optionsOut << "\nSearch=RDFS";
+    } else if (strategy == Strategy::RPFS) {
+        optionsOut << "\nSearch=RPFS";
     } else {
         optionsOut << "\nSearch=OverApprox";
     }
@@ -130,6 +132,7 @@ void printHelp() {
         "                                       - BFS          Breadth first search\n"
         "                                       - DFS          Depth first search (CTL default)\n"
         "                                       - RDFS         Random depth first search\n"
+        "                                       - RPFS         Random potency first search\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
@@ -261,6 +264,8 @@ bool options_t::parse(int argc, const char** argv) {
                 strategy = Strategy::DFS;
             else if (std::strcmp(s, "RDFS") == 0)
                 strategy = Strategy::RDFS;
+            else if (std::strcmp(s, "RPFS") == 0)
+                strategy = Strategy::RPFS;
             else if (std::strcmp(s, "OverApprox") == 0)
                 strategy = Strategy::OverApprox;
             else {
@@ -587,6 +592,12 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Emil Gybel Henriksen <emil-g-h@hotmail.com>\n");
+            printf("                        Alan Mozafar Khorsid <alan18@hotmail.dk>\n");
+            printf("                        Esben Nielsen <esbenn179@gmail.com>\n");
+            printf("                        Theodor Risager <theodor349@gmail.com>\n");
+            printf("                        Adam Moloney Stück <adam@adast.xyz>\n");
+            printf("                        Andreas Sebastian Sørensen <todes92@protonmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
         } else if (modelfile == nullptr) {
@@ -636,10 +647,11 @@ bool options_t::parse(int argc, const char** argv) {
         if(strategy != Strategy::DFS &&
            strategy != Strategy::RDFS &&
            strategy != Strategy::HEUR &&
+           strategy != Strategy::RPFS &&
            strategy != Strategy::DEFAULT &&
            strategy != Strategy::OverApprox)
         {
-            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, and BestFS.");
+            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, RPFS, and BestFS.");
         }
     }
 
