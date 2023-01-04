@@ -71,11 +71,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VERIFYPN_TARGETDIR}/bin)
 find_package(FLEX 2.6.4 REQUIRED)
 find_package(BISON 3.0.5 REQUIRED)
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
 if (VERIFYPN_GetDependencies)
+    if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+        cmake_policy(SET CMP0135 NEW)
+    endif()
+
     include(ExternalProject)
     # Install location should be ${EXTERNAL_INSTALL_LOCATION}
 
@@ -102,27 +102,27 @@ if (VERIFYPN_GetDependencies)
 
     if (UNIX AND NOT APPLE)
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.11.3.tar.gz
-            URL_HASH SHA512=bb838b5a5eb772f31f1e39389d27f5e6b478713040cd6609a76c534afb491bc477d54f7fa8c7c4800efae74259781fddeff2854f601b685745797faaf7998d20
-            BUILD_COMMAND  cd buddy && make COMMAND cd lib && make COMMAND cd picosat && make COMMAND cd ltdl && make COMMAND cd spot && make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin ${HOST}
-            INSTALL_COMMAND cd buddy && make install COMMAND cd spot && make install
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.8.tar.gz
+            URL_HASH SHA512=daba437f8647a392e8a31b65880d31f2c9d420452335c30e2ae58c036766e1ea453ed4d283a27072f57d4c05e9d82ceb77e979548c3b045b8dd88baf56542c2f
+            BUILD_COMMAND make
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+            INSTALL_COMMAND make install
         )
     elseif (APPLE)
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.11.3.tar.gz
-            URL_HASH SHA512=bb838b5a5eb772f31f1e39389d27f5e6b478713040cd6609a76c534afb491bc477d54f7fa8c7c4800efae74259781fddeff2854f601b685745797faaf7998d20
-            BUILD_COMMAND cd buddy && make COMMAND cd lib && make COMMAND cd picosat && make COMMAND cd ltdl && make COMMAND cd spot && make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug  --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} ${HOST} LDFLAGS=${CMAKE_LINKER_FLAGS}
-            INSTALL_COMMAND cd buddy && make install COMMAND cd spot && make install
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.8.tar.gz
+            URL_HASH SHA512=daba437f8647a392e8a31b65880d31f2c9d420452335c30e2ae58c036766e1ea453ed4d283a27072f57d4c05e9d82ceb77e979548c3b045b8dd88baf56542c2f
+            BUILD_COMMAND make
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            INSTALL_COMMAND make install
         )
     else ()
         ExternalProject_add(spot-ext
-            URL http://www.lrde.epita.fr/dload/spot/spot-2.11.3.tar.gz
-            URL_HASH SHA512=bb838b5a5eb772f31f1e39389d27f5e6b478713040cd6609a76c534afb491bc477d54f7fa8c7c4800efae74259781fddeff2854f601b685745797faaf7998d20
-            BUILD_COMMAND cd buddy && make COMMAND cd lib && make COMMAND cd picosat && make COMMAND cd ltdl && make COMMAND cd spot && make
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.8.tar.gz
+            URL_HASH SHA512=daba437f8647a392e8a31b65880d31f2c9d420452335c30e2ae58c036766e1ea453ed4d283a27072f57d4c05e9d82ceb77e979548c3b045b8dd88baf56542c2f
+            BUILD_COMMAND make
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS} --host=x86_64-w64-mingw32
-            INSTALL_COMMAND cd buddy && make install COMMAND cd spot && make install
+            INSTALL_COMMAND make install
             PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/spot-windows.patch
         )
 
