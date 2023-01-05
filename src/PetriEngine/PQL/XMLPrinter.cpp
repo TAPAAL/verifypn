@@ -36,12 +36,6 @@ namespace PetriEngine {
             return os;
         }
 
-        void XMLPrinter::openXmlTag(const char* tag) {
-            generateTabs() << "<" << tag << ">";
-            newline();
-            ++tabs;
-        }
-
         void XMLPrinter::closeXmlTag(const char* tag) {
             --tabs;
             generateTabs() << "</" << tag << ">";
@@ -260,6 +254,16 @@ namespace PetriEngine {
             Visitor::visit(this, condition->getCond());
         }
 
+        void XMLPrinter::_accept(const AllPaths *condition) {
+            Tag a(this, "all-paths", "name", condition->name());
+            Visitor::visit(this, condition->child());
+        }
+
+        void XMLPrinter::_accept(const ExistPath *condition) {
+            Tag a(this, "exists-path", "name", condition->name());
+            Visitor::visit(this, condition->child());
+        }
+
         void XMLPrinter::_accept(const ECondition *condition) {
             Tag e(this, "exists-path");
             Visitor::visit(this, condition->getCond());
@@ -300,6 +304,11 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const BooleanCondition *element) {
             outputLine(element->value ? "<true/>": "<false/>");
+        }
+
+        void XMLPrinter::_accept(const PathSelectCondition* element) {
+            Tag i(this, "path-scope", "name", element->name());
+            Visitor::visit(this, element->child());
         }
 
         void XMLPrinter::_accept(const UnfoldedIdentifierExpr *element) {
@@ -378,6 +387,11 @@ namespace PetriEngine {
 
         void XMLPrinter::_accept(const IdentifierExpr *element) {
             Visitor::visit(this, element->compiled());
+        }
+
+        void XMLPrinter::_accept(const PathSelectExpr* element) {
+            Tag i(this, "path-scope", "name", element->name());
+            Visitor::visit(this, element->child());
         }
 
         void XMLPrinter::_accept(const ShallowCondition *element) {

@@ -74,12 +74,11 @@ namespace LTL {
             return _loop;
         }
 
-        virtual size_t max_tokens() const = 0;
-
-        const std::vector<size_t>& trace() const {
+        const std::vector<std::vector<uint32_t>>& trace() const {
             return _trace;
         }
 
+        virtual size_t max_tokens() const = 0;
 
         virtual LTLPartialOrder used_partial_order() const {
             return LTLPartialOrder::None;
@@ -106,7 +105,7 @@ namespace LTL {
         bool _build_trace = false;
         Heuristic* _heuristic = nullptr;
         size_t _loop = std::numeric_limits<size_t>::max();
-        std::vector<size_t> _trace;
+        std::vector<std::vector<uint32_t>> _trace;
         bool _violation = false;
     };
 }

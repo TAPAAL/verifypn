@@ -26,14 +26,12 @@
 #include <iostream>
 #include <algorithm>
 
-int getChildCount(rapidxml::xml_node<> *n)
-{
-  int c = 0;
-  for (rapidxml::xml_node<> *child = n->first_node(); child != nullptr; child = child->next_sibling())
-  {
-    c++;
-  }
-  return c;
+int getChildCount(rapidxml::xml_node<> *n) {
+    int c = 0;
+    for (rapidxml::xml_node<> *child = n->first_node(); child != nullptr; child = child->next_sibling()) {
+        c++;
+    }
+    return c;
 }
 
 QueryXMLParser::QueryXMLParser(shared_string_set& string_set)
@@ -239,9 +237,18 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
             assert(false);
             return nullptr;
         }
-        if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<ECondition>(cond);
-
+        cond = parseBooleanFormula(element->first_node());
+        if(cond != nullptr)
+        {
+            if(auto name = element->first_attribute("name"))
+            {
+                return std::make_shared<ExistPath>(name->value(), cond);
+            }
+            else
+            {
+                return std::make_shared<ECondition>(cond);
+            }
+        }
     } else if (elementName == "next") {
         if (getChildCount(element) != 1) {
             assert(false);
@@ -289,8 +296,18 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
             assert(false);
             return nullptr;
         }
-        if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
-            return std::make_shared<ACondition>(cond);
+        cond = parseBooleanFormula(element->first_node());
+        if(cond != nullptr)
+        {
+            if(auto name = element->first_attribute("name"))
+            {
+                return std::make_shared<AllPaths>(name->value(), cond);
+            }
+            else
+            {
+                return std::make_shared<ACondition>(cond);
+            }
+        }
     } else if (elementName == "deadlock") {
         return std::make_shared<DeadlockCondition>();
     } else if (elementName == "true") {
@@ -429,6 +446,18 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         }
         return std::make_shared<OrCondition>(conds);
     }
+    else if(elementName == "path-scope")
+    {
+        if (getChildCount(element) != 1)
+            throw base_error("Expected exactly one child of ", elementName);
+
+        auto* name = element->first_attribute("name");
+        if(name == nullptr)
+            throw base_error("Expected name-tag in path-scope");
+        cond = parseBooleanFormula(element->first_node());
+        if(cond != nullptr)
+            return std::make_shared<PathSelectCondition>(name->value(), cond);
+    }
     fatal_error(elementName);
     return nullptr;
 }
@@ -510,6 +539,19 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         if(els.size() == 1)
             els.emplace(els.begin(), std::make_shared<LiteralExpr>(0));
         return std::make_shared<SubtractExpr>(std::move(els));
+    }
+    else if(elementName == "path-scope")
+    {
+        if (getChildCount(element) != 1)
+            throw base_error("Expected exactly one child of ", elementName);
+
+        auto* name = element->first_attribute("name");
+        if(name == nullptr)
+            throw base_error("Expected name-tag in path-scope");
+
+        auto expr = parseIntegerExpression(element->first_node());
+        if(expr != nullptr)
+            return std::make_shared<PathSelectExpr>(name->value(), expr);
     }
     assert(false);
     return nullptr;

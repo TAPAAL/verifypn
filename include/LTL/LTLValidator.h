@@ -28,12 +28,24 @@ namespace LTL {
         operator bool() const { return !bad(); }
 
         bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
-            std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
-                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
-                Visitor::visit(this, (*quantifierCondition)[0]);
+            if (condition->is<PetriEngine::PQL::ACondition>() ||
+                condition->is<PetriEngine::PQL::ECondition>()) {
+                auto sq = std::static_pointer_cast<PetriEngine::PQL::SimpleQuantifierCondition>(condition);
+                Visitor::visit(this, (*sq)[0]);
+            } else if(auto path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(condition)) {
+                bool is_exists = false;
+                bool is_all = false;
+                auto last = path;
+                do {
+                    last = path;
+                    is_all |= path->is<PetriEngine::PQL::AllPaths>();
+                    is_exists |= path->is<PetriEngine::PQL::ExistPath>();
+                    if(is_all && is_exists)
+                        return false;
+                } while(path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(path->child()));
+                Visitor::visit(this, last->child());
             } else {
-                Visitor::visit(this, condition);
+                _bad = true;
             }
             return !bad();
         }
@@ -80,6 +92,15 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::AUCondition *condition) override {
             setBad();
+        }
+
+        void _accept(const PetriEngine::PQL::PathQuant *condition) override {
+            setBad();
+            std::cerr << "found nested HyperLTL path quantifier" << std::endl;
+        }
+
+        void _accept(const PetriEngine::PQL::PathSelectCondition* condition) override {
+            Visitor::visit(this, condition->child());
         }
 
         void _accept(const PetriEngine::PQL::ACondition *condition) override {
@@ -186,6 +207,8 @@ namespace LTL {
         void _accept(const PetriEngine::PQL::SubtractExpr *element) override {}
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override {}
+
+        void _accept(const PetriEngine::PQL::PathSelectExpr *element) override {}
 
     private:
         bool _bad = false;

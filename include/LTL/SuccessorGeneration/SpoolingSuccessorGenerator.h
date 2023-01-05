@@ -26,12 +26,22 @@
 #include "LTL/SuccessorGeneration/Heuristics.h"
 
 namespace LTL {
-    class SpoolingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
+    class SpoolingSuccessorGenerator : private PetriEngine::SuccessorGenerator {
     public:
         SpoolingSuccessorGenerator(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &)
                 : SuccessorGenerator(net), _transbuf(new uint32_t[net.numberOfTransitions()])
         {
-            _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces() + 1], net.numberOfPlaces());
+            _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces()]);
+        }
+
+        using SuccessorGenerator::getParent;
+
+        size_t state_size() const {
+            return _net.numberOfPlaces();
+        }
+
+        void initialize(PetriEngine::MarkVal* marking) const {
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), marking);
         }
 
         struct successor_info_t {
@@ -47,11 +57,7 @@ namespace LTL {
                 return _last_state != NoLastState;
             }
 
-            size_t state() const {
-                return _last_state;
-            }
-
-            size_t transition() const {
+            uint32_t transition() const {
                 return _transition;
             }
 
@@ -71,7 +77,7 @@ namespace LTL {
             _heuristic = heuristic;
         }
 
-        [[nodiscard]] static successor_info_t initial_suc_info()
+        [[nodiscard]] successor_info_t initial_suc_info()
         {
             return successor_info_t{successor_info_t::NoBuchiState, successor_info_t::NoLastState};
         }
@@ -84,6 +90,15 @@ namespace LTL {
         bool next(PetriEngine::Structures::State &write)
         {
             return PetriEngine::SuccessorGenerator::next(write);
+        }
+
+
+        uint32_t fired() const {
+            return _last;
+        }
+
+        uint32_t generated() const {
+            return SuccessorGenerator::fired();
         }
 
 
@@ -122,11 +137,12 @@ namespace LTL {
                 }
             }
         }
+
         bool next(Structures::ProductState &state, successor_info_t &sucinfo)
         {
             assert(sucinfo._successors != nullptr);
             if (sucinfo._successors.empty()) {
-                _last = std::numeric_limits<uint32_t>::max();
+                _last = std::numeric_limits<uint32_t>::max() - 1;
                 return false;
             }
             _last = sucinfo._successors.front();
@@ -135,8 +151,6 @@ namespace LTL {
             SuccessorGenerator::_fire(state, _last);
             return true;
         }
-
-        [[nodiscard]] uint32_t fired() const { return _last; }
 
         void generate_all(LTL::Structures::ProductState *parent, successor_info_t &sucinfo)
         {
@@ -196,17 +210,6 @@ namespace LTL {
                                [](auto &p) { return p.first; });
                 sucinfo._successors.extend_to(_transbuf.get(), weighted_tids.size());
             }
-        }
-
-        void push() {
-            // No transitions have been fired yet. We must be in the initial marking.
-            if (!_heuristic || fired() == std::numeric_limits<uint32_t>::max()) return;
-            _heuristic->push(fired());
-        }
-
-        void pop(const successor_info_t &sc) {
-            if (_heuristic && sc._successors.has_consumed())
-                _heuristic->pop(sc._successors.last_pop());
         }
 
     private:

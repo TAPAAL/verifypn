@@ -21,7 +21,7 @@
 
 #define RETURN(x) {_return_value = x; return;}
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Retval simplify(const std::shared_ptr<Condition> element, SimplificationContext& context) {
         Simplifier query_simplifier(context);
@@ -290,6 +290,12 @@ namespace PetriEngine::PQL {
         Visitor::visit(*this, element->compiled());
     }
 
+    void ConstraintVisitor::_accept(const PathSelectExpr *element) {
+        if(element->offset() != 0)
+            _return_value = Member(0, false);
+        else
+            Visitor::visit(*this, element->child());
+    }
 
     /******* Simplifier accepts ********/
 
@@ -903,4 +909,24 @@ namespace PetriEngine::PQL {
             RETURN(Retval(BooleanCondition::getShared(condition->value)))
         }
     }
-}
+
+    void Simplifier::_accept(const PathSelectCondition* condition) {
+        Condition_ptr res;
+        if(condition->offset() != 0)
+        {
+            Visitor::visit(this, condition->child());
+            if(_return_value.formula->isTriviallyFalse() || _return_value.formula->isTriviallyFalse())
+                RETURN(_return_value.formula)
+            else
+                RETURN(Retval(std::make_shared<PathSelectCondition>(condition->name(), _return_value.formula, condition->offset())))
+        }
+        else
+        {
+            auto res = std::make_shared<PathSelectCondition>(condition->name(), condition->child(), condition->offset());
+            if(_context.negated())
+                RETURN(Retval(std::make_shared<NotCondition>(res)))
+            else
+                RETURN(Retval(res))
+        }
+    }
+} }

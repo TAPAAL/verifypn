@@ -20,11 +20,14 @@
 #ifndef CONTEXTS_H
 #define CONTEXTS_H
 
+#include "PQL.h"
+
 #include "../PetriNet.h"
 #include "../Simplification/LPCache.h"
-#include "PQL.h"
 #include "../NetStructures.h"
 #include "utils/structures/shared_string.h"
+
+#include "utils/errors.h"
 
 #include <string>
 #include <vector>
@@ -43,6 +46,7 @@ namespace PetriEngine {
             const shared_name_index_map& _placeNames;
             const shared_name_index_map& _transitionNames;
             const PetriNet* _net = nullptr;
+            std::unordered_map<std::string, uint32_t> _trace_names;
         public:
 
             /** A resolution result */
@@ -67,6 +71,8 @@ namespace PetriEngine {
 
             /** Resolve an identifier */
             virtual ResolutionResult resolve(const shared_const_string& identifier, bool place = true);
+
+            uint32_t resolve_trace_name(const std::string& s, bool create);
 
             auto& allPlaceNames() const { return _placeNames; }
             auto& allTransitionNames() const { return _transitionNames; }
@@ -118,7 +124,7 @@ namespace PetriEngine {
             EvaluationContext() {};
 
             const MarkVal* marking() const {
-                return _marking;
+                return &_marking[_offset];
             }
 
             void setMarking(MarkVal* marking) {
@@ -128,9 +134,15 @@ namespace PetriEngine {
             const PetriNet* net() const {
                 return _net;
             }
+
+            void set_offset(size_t i) {
+                _offset = i;
+            }
+
         private:
             const MarkVal* _marking = nullptr;
             const PetriNet* _net = nullptr;
+            size_t _offset = 0;
         };
 
         /** Context for distance computation */

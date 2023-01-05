@@ -18,7 +18,7 @@
 
 #include <memory>
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void IsCTLVisitor::_accept(const NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
@@ -233,6 +233,17 @@ namespace PetriEngine::PQL {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
+    void IsCTLVisitor::_accept(const PathQuant *element) {
+        isCTL = false;
+    }
+
+    void IsCTLVisitor::_accept(const PathSelectCondition *element) {
+        isCTL = false;
+    }
+
+    void IsCTLVisitor::_accept(const PathSelectExpr *element) {
+        isCTL = false;
+    }
 
     void AsCTL::_accept(const NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
@@ -497,5 +508,4 @@ namespace PetriEngine::PQL {
     void AsCTL::_accept(const UnfoldedIdentifierExpr *element) {
         _expression = std::make_shared<UnfoldedIdentifierExpr>(*element);
     }
-
-}
+} }

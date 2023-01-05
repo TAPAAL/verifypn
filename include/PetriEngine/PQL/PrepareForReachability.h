@@ -23,7 +23,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr prepareForReachability(const Condition* condition);
     Condition_ptr prepareForReachability(const Condition_ptr& condition);
@@ -91,7 +91,6 @@ namespace PetriEngine::PQL {
 
         void _accept(const ShallowCondition *condition) override;
     };
-
-}
+} }
 
 #endif //VERIFYPN_PREPAREFORREACHABILITY_H

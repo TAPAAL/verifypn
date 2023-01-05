@@ -51,7 +51,11 @@ namespace LTL {
     protected:
         void _accept(const PetriEngine::PQL::ACondition *condition) override;
 
+        void _accept(const PetriEngine::PQL::AllPaths *condition) override;
+
         void _accept(const PetriEngine::PQL::ECondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::ExistPath *condition) override;
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
 
@@ -86,6 +90,8 @@ namespace LTL {
         void _accept(const PetriEngine::PQL::SubtractExpr *element) override;
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
+
+        void _accept(const PetriEngine::PQL::PathSelectCondition *element) override;
 
         void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
 
@@ -139,6 +145,7 @@ namespace LTL {
         APCompression _compress;
         spot::formula _formula;
         const bool _expand;
+        const PetriEngine::PQL::PathSelectCondition* _path_select = nullptr;
         spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element);
     };
 

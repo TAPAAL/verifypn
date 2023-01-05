@@ -21,12 +21,13 @@
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/PetriNet.h"
 #include "PetriEngine/Structures/State.h"
-#include <memory>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 
-namespace LTL {
+#include <memory>
 
-    class ResumingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
+namespace LTL {
+    // this class def. should NOT inherit from SuccessorGenerator, it should encapsulate it.
+    class ResumingSuccessorGenerator : private PetriEngine::SuccessorGenerator {
     public:
 
         struct successor_info_t {
@@ -35,38 +36,11 @@ namespace LTL {
             size_t _buchi_state;
             size_t _last_state;
 
-            friend bool operator==(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return  lhs._pcounter ==    rhs._pcounter &&
-                        lhs._tcounter ==    rhs._tcounter &&
-                        lhs._buchi_state == rhs._buchi_state &&
-                        lhs._last_state ==  rhs._last_state;
-            }
-
-            friend bool operator!=(const successor_info_t &lhs, const successor_info_t &rhs) {
-                return !(rhs == lhs);
-            }
-
-            bool has_pcounter() const {
-                return _pcounter != NoPCounter;
-            }
-
-            bool has_tcounter() const {
-                return _tcounter != NoTCounter;
-            }
-
-            bool has_buchistate() const {
-                return _buchi_state != NoBuchiState;
-            }
-
             bool has_prev_state() const {
                 return _last_state != NoLastState;
             }
 
-            size_t state() const {
-                return _last_state;
-            }
-
-            size_t transition() const {
+            uint32_t transition() const {
                 return _tcounter - 1;
             }
 
@@ -93,6 +67,14 @@ namespace LTL {
 
         ~ResumingSuccessorGenerator() override = default;
 
+        size_t state_size() const {
+            return _net.numberOfPlaces();
+        }
+
+        void initialize(PetriEngine::MarkVal* marking) const {
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), marking);
+        }
+
         void prepare(const PetriEngine::Structures::State *state, const successor_info_t &sucinfo);
 
         bool next(PetriEngine::Structures::State &write, successor_info_t &sucinfo) {
@@ -101,17 +83,10 @@ namespace LTL {
             return has_suc;
         }
 
+        using SuccessorGenerator::getParent;
+
         uint32_t fired() const {
             return _suc_tcounter - 1;
-        }
-
-        const PetriEngine::MarkVal *get_parent() const {
-            return _parent->marking();
-        }
-
-        size_t last_transition() const {
-            return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() :
-                    _suc_tcounter - 1;
         }
 
         static constexpr successor_info_t _initial_suc_info{
@@ -120,14 +95,12 @@ namespace LTL {
             successor_info_t::NoBuchiState,
             successor_info_t::NoLastState};
 
-        static constexpr auto initial_suc_info() {
+        auto initial_suc_info() {
             return _initial_suc_info;
         }
 
     private:
         void get_succ_info(successor_info_t &sucinfo) const;
-
-        //friend class ReducingSuccessorGenerator;
     };
 }
 

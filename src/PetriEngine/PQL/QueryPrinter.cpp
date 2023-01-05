@@ -124,6 +124,24 @@ namespace PetriEngine {
             Visitor::visit(this, (*condition)[0]);
         }
 
+        void QueryPrinter::_accept(const AllPaths* condition)
+        {
+            os << "all-paths " << condition->name() << ".";
+            Visitor::visit(this, condition->child());
+        }
+
+        void QueryPrinter::_accept(const ExistPath* condition)
+        {
+            os << "exist-path " << condition->name() << ".";
+            Visitor::visit(this, condition->child());
+        }
+
+        void QueryPrinter::_accept(const PathSelectCondition* condition)
+        {
+            os << condition->name() << ".";
+            Visitor::visit(this, condition->child());
+        }
+
         void QueryPrinter::_accept(const EXCondition *condition) {
             os << "AF ";
             Visitor::visit(this, (*condition)[0]);
@@ -297,6 +315,11 @@ namespace PetriEngine {
                 Visitor::visit(this, element->compiled());
             else
                 os << *element->name();
+        }
+
+        void QueryPrinter::_accept(const PathSelectExpr *element) {
+            os << element->name() << ".";
+            Visitor::visit(this, element->child());
         }
     }
 }

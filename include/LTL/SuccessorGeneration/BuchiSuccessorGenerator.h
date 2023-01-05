@@ -69,18 +69,6 @@ namespace LTL {
             return _aut.buchi().get_init_state_number();
         }
 
-        [[nodiscard]] PetriEngine::PQL::Condition_ptr get_expression(size_t i) const
-        {
-            return _aut.ap_info().at(i)._expression;
-        }
-
-        [[nodiscard]] bool is_weak() const
-        {
-            return (bool) _aut.buchi().prop_weak();
-        }
-
-        size_t buchi_states() const { return _aut.buchi().num_states(); }
-
         bool has_invariant_self_loop(size_t state) {
             if (_self_loops[state] != InvariantSelfLoop::UNKNOWN)
                 return _self_loops[state] == InvariantSelfLoop::TRUE;

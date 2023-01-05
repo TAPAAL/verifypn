@@ -28,7 +28,7 @@ namespace LTL {
     public:
 
         using successor_info_t = typename S::successor_info_t;
-        static constexpr auto initial_suc_info() { return S::initial_suc_info(); }
+        auto initial_suc_info() { return this->_successor_generator.initial_suc_info(); }
 
         ReachStubProductSuccessorGenerator(const PetriEngine::PetriNet& net, const Structures::BuchiAutomaton &buchi,
                                            S& successorGen, std::unique_ptr<Spooler> &&fallbackSpooler)

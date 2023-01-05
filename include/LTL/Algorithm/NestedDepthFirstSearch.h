@@ -46,8 +46,8 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, uint32_t kbound)
-                : ModelChecker(net, query, buchi), _states(net, kbound) {}
+                               const Structures::BuchiAutomaton &buchi, uint32_t kbound, uint32_t hyper_traces)
+                : ModelChecker(net, query, buchi), _kbound(kbound), _hyper_traces(hyper_traces == 0 ? 1 : hyper_traces) {}
 
         virtual bool check();
 
@@ -57,14 +57,15 @@ namespace LTL {
 
     private:
         using State = LTL::Structures::ProductState;
-        std::pair<bool,size_t> mark(State& state, uint8_t);
-
-        LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> _states;
 
         ptrie::map<size_t, uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
+        const uint32_t _kbound = 0;
+        const uint32_t _hyper_traces = 0;
+        size_t _discovered = 0;
+        size_t _max_tokens = 0;
 
         template<typename T>
         struct stack_entry_t {
@@ -72,11 +73,20 @@ namespace LTL {
             typename T::successor_info_t _sucinfo;
         };
 
-        template<typename T>
-        void dfs(ProductSuccessorGenerator<T>& successor_generator);
+        template<typename S>
+        std::pair<bool,size_t> mark(S& states, State& state, uint8_t);
 
-        template<typename T>
-        void ndfs(ProductSuccessorGenerator<T>& successor_generator, const State &state, light_deque<stack_entry_t<T>>& nested_todo);
+        template<typename G>
+        bool check_with_generator(G& gen);
+
+        template<typename T, typename S>
+        void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states, size_t init);
+
+        template<typename T, typename S>
+        void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states);
+
+        template<typename T, typename S>
+        void ndfs(ProductSuccessorGenerator<T>& successor_generator, S& states, const State &state, light_deque<stack_entry_t<T>>& nested_todo);
 
         template<typename T>
         void build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo);

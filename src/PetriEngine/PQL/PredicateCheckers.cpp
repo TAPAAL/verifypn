@@ -59,6 +59,10 @@ namespace PetriEngine { namespace PQL {
         return visitor.getReturnValue();
     }
 
+    void IsTemporalVisitor::_accept(const PathQuant *condition) {
+        setConditionFound();
+    }
+
     void IsTemporalVisitor::_accept(const SimpleQuantifierCondition *condition) {
         setConditionFound();
     }
@@ -209,6 +213,19 @@ namespace PetriEngine { namespace PQL {
         if (!_is_nested) setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectCondition *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectExpr *element) {
+        setConditionFound();
+    }
+
+
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
         IsLoopSensitiveVisitor visitor;
@@ -255,6 +272,10 @@ namespace PetriEngine { namespace PQL {
     }
 
     void IsLoopSensitiveVisitor::_accept(const DeadlockCondition* condition) {
+        setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const PathQuant *element) {
         setConditionFound();
     }
 
@@ -314,6 +335,10 @@ namespace PetriEngine { namespace PQL {
     }
 
     void ContainsNextVisitor::_accept(const AXCondition* condition) {
+        setConditionFound();
+    }
+
+    void ContainsNextVisitor::_accept(const PathQuant *element) {
         setConditionFound();
     }
 

@@ -33,11 +33,10 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-
 BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality, * utf::timeout(300)) {
 
-    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    std::vector<Reachability::ResultPrinter::Result> expected{
+    const std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    const std::vector<Reachability::ResultPrinter::Result> expected{
         ResultPrinter::NotSatisfied,
         ResultPrinter::NotSatisfied,
         ResultPrinter::NotSatisfied,
@@ -71,7 +70,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality, * utf::timeout(300)) {
                         LTL::LTLHeuristic::FireCount})
                     {
                         std::cerr << "Q[" << i << "] trace=" << std::boolalpha << trace
-                            << " por=" << to_underlying(por) << " heur=" << to_underlying(heur) << std::endl;
+                            << " por=" << to_underlying(por) << " alg=" << to_underlying(alg) << " heur=" << to_underlying(heur) << std::endl;
                             Strategy strategy = Strategy::HEUR;
                         if(heur == LTL::LTLHeuristic::DFS)
                             strategy = Strategy::HEUR;
@@ -86,10 +85,10 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLCardinality, * utf::timeout(300)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability, * utf::timeout(300)) {
+BOOST_AUTO_TEST_CASE(AngiogenesisPT01LTLFireability, * utf::timeout(300)) {
 
-    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    std::vector<Reachability::ResultPrinter::Result> expected{
+    const std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    const std::vector<Reachability::ResultPrinter::Result> expected{
         ResultPrinter::NotSatisfied,
         ResultPrinter::NotSatisfied,
         ResultPrinter::NotSatisfied,

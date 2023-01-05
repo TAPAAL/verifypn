@@ -169,6 +169,17 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<EGCondition>() { return type_id<AFCondition>() + 1; }
 
+        class AllPaths;
+        template<>
+        constexpr type_id_t type_id<AllPaths>() { return type_id<EGCondition>() + 1; }
+
+        class ExistPath;
+        template<>
+        constexpr type_id_t type_id<ExistPath>() { return type_id<AllPaths>() + 1; }
+
+        class PathSelectCondition;
+        template<>
+        constexpr type_id_t type_id<PathSelectCondition>() { return type_id<ExistPath>() + 1; }
 
         class PlusExpr;
         template<>
@@ -198,6 +209,9 @@ namespace PetriEngine {
         template<>
         constexpr type_id_t type_id<UnfoldedIdentifierExpr>() { return type_id<LiteralExpr>() + 1; }
 
+        class PathSelectExpr;
+        template<>
+        constexpr type_id_t type_id<PathSelectExpr>() { return type_id<UnfoldedIdentifierExpr>() + 1; }
 
         Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr);
         Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b);
@@ -293,6 +307,22 @@ namespace PetriEngine {
         protected:
             int64_t apply(int64_t a, int64_t b) const { return a * b; }
             std::string op() const override;
+        };
+
+        class PathSelectExpr : public Expr {
+        private:
+            std::string _name;
+            size_t _offset;
+            Expr_ptr _child;
+        public:
+            PathSelectExpr(std::string name, Expr_ptr child, size_t offset = 0)
+            : _name(name), _offset(offset), _child(child) {};
+            virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
+            [[nodiscard]] virtual bool placeFree() const { return _child->placeFree(); };
+            const Expr_ptr& child() const { return _child; }
+            const std::string& name() const { return _name; }
+            size_t offset() const { return _offset; }
+            void set_offset(size_t offset) { _offset = offset; }
         };
 
         /** Unary minus expression*/
@@ -424,6 +454,69 @@ namespace PetriEngine {
 
 
         /******************** TEMPORAL OPERATORS ********************/
+
+        class PathQuant : public Condition {
+        private:
+            std::string _id;
+            size_t _offset;
+            Condition_ptr _child;
+        public:
+            PathQuant(std::string id, std::shared_ptr<Condition> child, size_t offset = 0);
+            Quantifier getQuantifier() const override { return EMPTY; }
+            Path getPath() const override { return pError; }
+            CTLType getQueryType() const override { return TYPE_ERROR; }
+            uint32_t distance(DistanceContext& context) const override {
+                if(_child)
+                    return _child->distance(context);
+                else
+                    return 0;
+            }
+            const Condition_ptr& child() const { return _child; }
+            const std::string& name() const { return _id; }
+            size_t offset() const { return _offset; }
+        };
+
+        class AllPaths : public PathQuant {
+        public:
+            using PathQuant::PathQuant;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        };
+
+        class ExistPath : public PathQuant {
+        public:
+            using PathQuant::PathQuant;
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+        };
+
+        class PathSelectCondition : public Condition {
+        private:
+            std::string _name;
+            size_t _offset;
+            Condition_ptr _child;
+        public:
+            PathSelectCondition(std::string name, Condition_ptr child, size_t offset = 0)
+            : _name(name), _offset(offset), _child(child) {}
+            Quantifier getQuantifier() const override { return EMPTY; }
+            Path getPath() const override { return pError; }
+            CTLType getQueryType() const override { return TYPE_ERROR; }
+            uint32_t distance(DistanceContext& context) const override {
+                context.set_offset(_offset);
+                auto fn = [this](auto& context) -> uint32_t {
+                if(_child)
+                    return _child->distance(context);
+                else
+                    return 0;
+                };
+                auto r = fn(context);
+                context.set_offset(0);
+                return r;
+            }
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+            const Condition_ptr& child() const { return _child; }
+            const std::string& name() const { return _name; }
+            size_t offset() const { return _offset; }
+            void set_offset(size_t offset) { _offset = offset; }
+        };
 
         class QuantifierCondition : public Condition
         {
@@ -1071,10 +1164,6 @@ namespace PetriEngine {
             double _max = std::numeric_limits<double>::infinity();
             double _offset = 0;
         };
-
     }
 }
-
-
-
 #endif // EXPRESSIONS_H

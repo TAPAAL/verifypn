@@ -44,6 +44,8 @@ namespace PetriEngine { namespace PQL {
 
     class IsTemporalVisitor : public AnyVisitor {
 
+        void _accept(const PathQuant* condition) override;
+
         void _accept(const SimpleQuantifierCondition *condition) override;
 
         void _accept(const UntilCondition *condition) override;
@@ -95,6 +97,12 @@ namespace PetriEngine { namespace PQL {
         void _accept(const UntilCondition *element) override;
 
         void _accept(const CompareConjunction *element) override;
+
+        void _accept(const PathQuant *element) override;
+
+        void _accept(const PathSelectCondition *element) override;
+
+        void _accept(const PathSelectExpr *element) override;
     };
 
 
@@ -128,6 +136,8 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const DeadlockCondition *condition) override;
 
+        void _accept(const PathQuant *element) override;
+
         void _accept(const LivenessCondition *condition) override;
 
         void _accept(const StableMarkingCondition *condition) override;
@@ -145,6 +155,8 @@ namespace PetriEngine { namespace PQL {
         void _accept(const EXCondition *condition) override;
 
         void _accept(const AXCondition *condition) override;
+
+        void _accept(const PathQuant *element) override;
     };
 
     class ContainsFireabilityVisitor : public AnyVisitor {

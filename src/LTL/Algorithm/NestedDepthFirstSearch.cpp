@@ -17,6 +17,8 @@
 
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 #include "LTL/SuccessorGeneration/Spoolers.h"
+#include "LTL/SuccessorGeneration/CompoundGenerator.h"
+#include "LTL/Structures/CompoundStateSet.h"
 
 namespace LTL {
 
@@ -24,31 +26,54 @@ namespace LTL {
     {
         if(_heuristic)
         {
+            if(_hyper_traces > 1)
+                throw base_error("Hyper-LTL with heuristics or partial order reduction not yet enabled.");
             SpoolingSuccessorGenerator gen(_net, _formula);
             EnabledSpooler spooler(_net, gen);
             gen.set_spooler(spooler);
             gen.set_heuristic(_heuristic);
-            ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
-            dfs(prod_gen);
+            return check_with_generator(gen);
         } else {
-            ResumingSuccessorGenerator gen(_net);
-            ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
-            dfs(prod_gen);
+            if(_hyper_traces <= 1)
+            {
+                ResumingSuccessorGenerator gen(_net);
+                return check_with_generator(gen);
+            }
+            else
+            {
+                CompoundGenerator gen(_net, _hyper_traces);
+                return check_with_generator(gen);
+            }
+        }
+    }
+
+    template<typename G>
+    bool NestedDepthFirstSearch::check_with_generator(G& gen) {
+        ProductSuccessorGenerator prod_gen(_net, _buchi, gen);
+        if constexpr (std::is_same<G,CompoundGenerator>::value) {
+            LTL::Structures::CompoundStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _hyper_traces, _kbound);
+            dfs(prod_gen, states);
+        }
+        else
+        {
+            LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
+            dfs(prod_gen, states);
         }
         return !_violation;
     }
 
-    std::pair<bool,size_t> NestedDepthFirstSearch::mark(State& state, const uint8_t MARKER)
+    template<typename S>
+    std::pair<bool,size_t> NestedDepthFirstSearch::mark(S& states, State& state, const uint8_t MARKER)
     {
         // technically we could decorate the states here instead of
         // maintaining the index twice in the _mark_count.
         // this would also spare us one ptrie lookup.
-        auto[_, stateid, data_id] = _states.add(state);
+        auto[_, stateid, data_id] = states.add(state);
         if (stateid == std::numeric_limits<size_t>::max()) {
             return std::make_pair(false, stateid);
         }
 
-        auto& r = _states.get_data(data_id);
+        auto& r = states.get_data(data_id);
         const bool is_new = (r & MARKER) == 0;
         if(is_new)
         {
@@ -58,31 +83,37 @@ namespace LTL {
         return std::make_pair(is_new, stateid);
     }
 
-    template<typename T>
-    void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator)
+    template<typename T, typename S>
+    void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator, S& states)
+    {
+        auto initial_states = successor_generator.make_initial_state();
+        for (auto &state : initial_states) {
+            auto res = states.add(state);
+            if (std::get<0>(res)) {
+                dfs(successor_generator, states, std::get<1>(res));
+                if(_violation)
+                    break;
+            }
+        }
+    }
+
+    template<typename T, typename S>
+    void NestedDepthFirstSearch::dfs(ProductSuccessorGenerator<T>& successor_generator, S& states, size_t init)
     {
         light_deque<stack_entry_t<T>> todo;
         light_deque<stack_entry_t<T>> nested_todo;
 
-        State working = this->_factory.new_state();
-        State curState = this->_factory.new_state();
+        State working = this->_factory.new_state(_hyper_traces);
+        State curState = this->_factory.new_state(_hyper_traces);
 
-        {
-            auto initial_states = successor_generator.make_initial_state();
-            for (auto &state : initial_states) {
-                auto res = _states.add(state);
-                if (std::get<0>(res)) {
-                    todo.push_back(stack_entry_t<T>{std::get<1>(res), T::initial_suc_info()});
-                }
-            }
-        }
+        todo.push_back(stack_entry_t<T>{init, successor_generator.initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.back();
-            _states.decode(curState, top._id);
+            states.decode(curState, top._id);
             successor_generator.prepare(&curState, top._sucinfo);
             if (top._sucinfo.has_prev_state()) {
-                _states.decode(working, top._sucinfo._last_state);
+                states.decode(working, top._sucinfo._last_state);
             }
             if (!successor_generator.next(working, top._sucinfo)) {
                 // no successor
@@ -90,16 +121,18 @@ namespace LTL {
                     if(successor_generator.has_invariant_self_loop(curState))
                         _violation = true;
                     else
-                        ndfs(successor_generator, curState, nested_todo);
+                        ndfs(successor_generator, states, curState, nested_todo);
                     if (_violation) {
                         if(_build_trace)
                             build_trace(todo, nested_todo);
+                        _discovered = states.discovered();
+                        _max_tokens = states.max_tokens();
                         return;
                     }
                 }
                 todo.pop_back();
             } else {
-                auto [is_new, stateid] = mark(working, MARKER1);
+                auto [is_new, stateid] = mark(states, working, MARKER1);
                 if (stateid == std::numeric_limits<size_t>::max()) {
                     continue;
                 }
@@ -112,55 +145,61 @@ namespace LTL {
                         _violation = true;
                         if(_build_trace)
                             build_trace(todo, nested_todo);
+                        _discovered = states.discovered();
+                        _max_tokens = states.max_tokens();
                         return;
                     }
-                    todo.push_back(stack_entry_t<T>{stateid, T::initial_suc_info()});
+                    todo.push_back(stack_entry_t<T>{stateid, successor_generator.initial_suc_info()});
                 }
             }
         }
+        _discovered = states.discovered();
+        _max_tokens = states.max_tokens();
     }
 
-    template<typename T>
-    void NestedDepthFirstSearch::ndfs(ProductSuccessorGenerator<T>& successor_generator, const State &state, light_deque<stack_entry_t<T>>& nested_todo)
+    template<typename T, typename S>
+    void NestedDepthFirstSearch::ndfs(ProductSuccessorGenerator<T>& successor_generator, S& states, const State &state, light_deque<stack_entry_t<T>>& nested_todo)
     {
 
-        State working = _factory.new_state();
-        State curState = _factory.new_state();
+        State working = _factory.new_state(_hyper_traces);
+        State curState = _factory.new_state(_hyper_traces);
 
-        nested_todo.push_back(stack_entry_t<T>{std::get<1>(_states.add(state)), T::initial_suc_info()});
+        nested_todo.push_back(stack_entry_t<T>{std::get<1>(states.add(state)), successor_generator.initial_suc_info()});
 
         while (!nested_todo.empty()) {
             auto &top = nested_todo.back();
-            _states.decode(curState, top._id);
+            states.decode(curState, top._id);
             successor_generator.prepare(&curState, top._sucinfo);
             if (top._sucinfo.has_prev_state()) {
-                _states.decode(working, top._sucinfo._last_state);
+                states.decode(working, top._sucinfo._last_state);
             }
             if (!successor_generator.next(working, top._sucinfo)) {
                 nested_todo.pop_back();
             } else {
-                if (working == state) {
+                if(working.get_buchi_state() == state.get_buchi_state() &&
+                   std::equal(working.marking(), working.marking() + _net.numberOfPlaces()*_hyper_traces,
+                              state.marking())) {
                     _violation = true;
                     return;
                 }
-                auto [is_new, stateid] = mark(working, MARKER2);
+                auto [is_new, stateid] = mark(states, working, MARKER2);
                 if (stateid == std::numeric_limits<size_t>::max())
                     continue;
                 top._sucinfo._last_state = stateid;
                 if (is_new) {
-                    nested_todo.push_back(stack_entry_t<T>{stateid, T::initial_suc_info()});
+                    nested_todo.push_back(stack_entry_t<T>{stateid, successor_generator.initial_suc_info()});
                 }
             }
         }
     }
 
     size_t NestedDepthFirstSearch::max_tokens() const {
-        return _states.max_tokens();
+        return _max_tokens;
     }
 
     void NestedDepthFirstSearch::print_stats(std::ostream &os) const
     {
-        ModelChecker::print_stats(os, _states.discovered(), _states.max_tokens());
+        ModelChecker::print_stats(os, _discovered, _max_tokens);
     }
 
 
@@ -190,7 +229,16 @@ namespace LTL {
                     _loop = _trace.size();
                     loop_id = std::numeric_limits<size_t>::max();
                 }
-                _trace.emplace_back(top._sucinfo.transition());
+                auto res = top._sucinfo.transition();
+                if constexpr (std::is_same<decltype(res),std::vector<uint32_t>>::value)
+                {
+                    _trace.emplace_back(top._sucinfo.transition());
+                }
+                else
+                {
+                    _trace.push_back({top._sucinfo.transition()});
+                    assert(top._sucinfo.transition() < _net.numberOfTransitions());
+                }
                 (*stck).pop_front();
             }
         }

@@ -71,7 +71,7 @@ namespace PetriEngine {
         class SimplificationContext;
 
         /** Representation of an expression */
-        class Expr {
+        class Expr : public std::enable_shared_from_this<Expr>{
             int _eval = 0;
         public:
             /** Virtual destructor, an expression should know it subexpressions */
@@ -87,6 +87,12 @@ namespace PetriEngine {
 
             [[nodiscard]] int getEval() const {
                 return _eval;
+            }
+
+            template<typename T>
+            bool is() const {
+                static_assert(std::is_base_of<Expr,T>::value);
+                return type_id<T>() == type();
             }
         };
 /******************* NEGATION PUSH STATS  *******************/
@@ -203,6 +209,11 @@ namespace PetriEngine {
             [[nodiscard]] virtual Path getPath() const = 0;
             void toString(std::ostream& os = std::cout);
             virtual type_id_t type() const = 0;
+            template<typename T>
+            bool is() const {
+                static_assert(std::is_base_of<Condition,T>::value);
+                return type_id<T>() == type();
+            }
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

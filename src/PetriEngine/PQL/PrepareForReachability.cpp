@@ -22,7 +22,7 @@
 
 #define RETURN(x) { _return_value = x; return; }
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr prepareForReachability(const Condition_ptr& condition) {
         return prepareForReachability(condition.get());
@@ -129,4 +129,4 @@ namespace PetriEngine::PQL {
     void PrepareForReachabilityVisitor::_accept(const ShallowCondition* condition) {
         RETURN(subvisit(condition->getCompiled().get(), _negated))
     }
-}
+} }

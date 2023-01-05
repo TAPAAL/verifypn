@@ -101,7 +101,7 @@ namespace PetriEngine { namespace PQL {
 
     void ExprEvalVisitor::_accept(const UnfoldedIdentifierExpr *element) {
         assert(element->offset() != -1);
-        _value = (int64_t) _context.marking()[element->offset()];
+        _value = (int64_t) _context.marking()[element->offset() + _offset*_context.net()->numberOfPlaces()];
     }
 
     void ExprEvalVisitor::_accept(const IdentifierExpr *element) {
@@ -111,6 +111,13 @@ namespace PetriEngine { namespace PQL {
 
     void ExprEvalVisitor::_accept(const LiteralExpr *element) {
         _value = {element->value()};
+    }
+
+    void ExprEvalVisitor::_accept(const PathSelectExpr *element) {
+        auto old = _offset;
+        _offset = element->offset();
+        Visitor::visit(this, element->child());
+        _offset = old;
     }
 
 /******************** Evaluation ********************/

@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<property-set xmlns="http://mcc.lip6.fr/">
+      <property>
+        <id>hyper1 (TRUE)</id>
+        <description>Simplified</description>
+        <formula>
+          <exists-path name="T1">
+            <exists-path name="T2">
+              <conjunction>
+                <next>
+                  <integer-ne>
+                    <path-scope name="T1">
+                      <tokens-count>
+                        <place>P1</place>
+                      </tokens-count>
+                    </path-scope>
+                    <path-scope name="T2">
+                      <tokens-count>
+                        <place>P1</place>
+                      </tokens-count>
+                    </path-scope>
+                  </integer-ne>
+                </next>
+                <next>
+                  <next>
+                    <conjunction>
+                      <integer-eq>
+                        <path-scope name="T1">
+                          <tokens-count>
+                            <place>P3</place>
+                          </tokens-count>
+                        </path-scope>
+                        <integer-constant>1</integer-constant>
+                      </integer-eq>
+                      <integer-eq>
+                        <path-scope name="T2">
+                          <tokens-count>
+                            <place>P3</place>
+                          </tokens-count>
+                        </path-scope>
+                        <integer-constant>1</integer-constant>
+                      </integer-eq>
+                    </conjunction>
+                  </next>
+                </next>
+              </conjunction>
+            </exists-path>
+          </exists-path>
+        </formula>
+    </property>
+      <property>
+        <id>hyper2 (FALSE)</id>
+        <description>Simplified</description>
+        <formula>
+          <all-paths name="T1">
+            <all-paths name="T2">
+              <conjunction>
+                <next>
+                  <integer-ne>
+                    <path-scope name="T1">
+                      <tokens-count>
+                        <place>P1</place>
+                      </tokens-count>
+                    </path-scope>
+                    <path-scope name="T2">
+                      <tokens-count>
+                        <place>P1</place>
+                      </tokens-count>
+                    </path-scope>
+                  </integer-ne>
+                </next>
+                <next>
+                  <next>
+                    <conjunction>
+                      <integer-eq>
+                        <path-scope name="T1">
+                          <tokens-count>
+                            <place>P3</place>
+                          </tokens-count>
+                        </path-scope>
+                        <integer-constant>1</integer-constant>
+                      </integer-eq>
+                      <integer-eq>
+                        <path-scope name="T2">
+                          <tokens-count>
+                            <place>P3</place>
+                          </tokens-count>
+                        </path-scope>
+                        <integer-constant>1</integer-constant>
+                      </integer-eq>
+                    </conjunction>
+                  </next>
+                </next>
+              </conjunction>
+            </exists-path>
+          </exists-path>
+        </formula>
+      </property>
+
+</property-set>

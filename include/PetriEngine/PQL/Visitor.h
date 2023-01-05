@@ -98,6 +98,9 @@ namespace PetriEngine {
                         case type_id<UnfoldedIdentifierExpr>():
                             visitor->accept(static_cast<UnfoldedIdentifierExpr*> (c));
                             break;
+                        case type_id<PathSelectExpr>():
+                            visitor->accept(static_cast<PathSelectExpr*> (c));
+                            break;
                         default:
                             __builtin_unreachable(); // <-- helps the compiler optimize
                     }
@@ -216,6 +219,15 @@ namespace PetriEngine {
                             case type_id<EGCondition>():
                                 visitor->accept(static_cast<EGCondition*> (c));
                                 break;
+                            case type_id<AllPaths>():
+                                visitor->accept(static_cast<AllPaths*> (c));
+                                break;
+                            case type_id<ExistPath>():
+                                visitor->accept(static_cast<ExistPath*> (c));
+                                break;
+                            case type_id<PathSelectCondition>():
+                                visitor->accept(static_cast<PathSelectCondition*> (c));
+                                break;
                             default:
                                 __builtin_unreachable(); // <-- helps the compiler optimize
                         }
@@ -304,6 +316,31 @@ namespace PetriEngine {
             virtual void _accept(const ControlCondition *condition) {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));
             };
+
+            virtual void _accept(const PathQuant *element) {
+                assert(false);
+                throw base_error("No accept for PathQuant (may be called from subclass)");
+            }
+
+            virtual void _accept(const ExistPath *element) {
+                _accept(static_cast<const PathQuant*>(element));
+            }
+
+            virtual void _accept(const AllPaths *element) {
+                _accept(static_cast<const PathQuant*>(element));
+            }
+
+            virtual void _accept(const PathSelectCondition *element) {
+                assert(false);
+                throw base_error("No accept for PathSelectCondition");
+            }
+
+            virtual void _accept(const PathSelectExpr *element)
+            {
+                assert(false);
+                throw base_error("No accept for PathSelectExpr");
+            }
+
 
             virtual void _accept(const EFCondition *condition) {
                 _accept(static_cast<const SimpleQuantifierCondition*> (condition));
@@ -574,6 +611,18 @@ namespace PetriEngine {
                 if (const auto& compiled = element->compiled())
                     visit(this, compiled);
                 // no-op
+            }
+
+            void _accept(const PathSelectExpr* element) override {
+                visit(this, element->child());
+            }
+
+            void _accept(const PathSelectCondition* cond) override {
+                visit(this, cond->child());
+            }
+
+            void _accept(const PathQuant* cond) override {
+                visit(this, cond->child());
             }
         };
 

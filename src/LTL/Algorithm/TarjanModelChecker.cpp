@@ -126,10 +126,7 @@ namespace LTL {
                     continue;
                 }
 #ifndef NDEBUG
-                auto fired =
-#endif
-                successorGenerator.fired();
-#ifndef NDEBUG
+                auto fired = successorGenerator.fired();
                 if (fired >= std::numeric_limits<uint32_t>::max() - 3) {
                     //std::cerr << "looping\n";
                 }
@@ -209,7 +206,7 @@ namespace LTL {
         const auto h = hash(StateSet::get_marking_id(stateid), StateSet::get_buchi_state(stateid));
         cstack.push_back(T{ctop, stateid, _chash[h]});
         _chash[h] = ctop;
-        dstack.push_back(D{ctop});
+        dstack.push_back(D{ctop, successor_generator.initial_suc_info()});
         if (successor_generator.is_accepting(state)) {
             _astack.push_back(ctop);
             if (successor_generator.has_invariant_self_loop(state)){
@@ -269,7 +266,7 @@ namespace LTL {
             if constexpr (T::save_trace()) {
                 _loop_state = cstack[to]._stateid;
                 _loop_trans = successorGenerator.fired();
-                cstack[from]._lowsource = to;
+                cstack[to]._lowsource = from;
             }
         }
     }
@@ -294,16 +291,16 @@ namespace LTL {
         if (cstack[dstack.back()._pos]._stateid == _loop_state)
             _loop = _trace.size();
         dstack.pop_back();
-        unsigned long p = std::numeric_limits<unsigned long>::max();
-        bool had_deadlock = false;
+        size_t p = 0;
+        bool had_deadlock = _loop_trans == std::numeric_limits<uint32_t>::max() - 1;
         // print (reverted) dstack
         while (!dstack.empty()) {
             p = dstack.back()._pos;
             dstack.pop_back();
             auto stateid = cstack[p]._stateid;
             auto[parent, tid] = seen.get_history(stateid);
-            _trace.emplace_back(tid);
-            if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
+            _trace.push_back({(uint32_t)tid});
+            if(tid >= std::numeric_limits<uint32_t>::max() - 1)
             {
                 had_deadlock = true;
                 break;
@@ -313,22 +310,29 @@ namespace LTL {
             cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
         }
         // follow previously found back edges via lowsource until back in dstack.
-        if(cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
+        if(!had_deadlock && cstack[p]._lowsource != std::numeric_limits<idx_t>::max())
         {
             p = cstack[p]._lowsource;
             while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.get_history(cstack[p]._stateid);
-                _trace.emplace_back(tid);
+                assert(tid < _net.numberOfTransitions());
+                _trace.push_back({(uint32_t)tid});
                 if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
                 {
                     had_deadlock = true;
                     break;
                 }
+                if(cstack[p]._lowsource == std::numeric_limits<idx_t>::max())
+                    break;
                 assert(cstack[p]._lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p]._lowsource;
+                assert(p != cstack[p]._lowsource);
             }
-            if(!had_deadlock)
-                _trace.emplace_back(_loop_trans);
+        }
+        if(!had_deadlock && _loop_trans < _net.numberOfTransitions())
+        {
+            assert(_loop_trans < _net.numberOfTransitions());
+            _trace.push_back({_loop_trans});
         }
     }
 }

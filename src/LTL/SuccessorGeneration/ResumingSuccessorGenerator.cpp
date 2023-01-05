@@ -46,8 +46,5 @@ namespace LTL {
         sucinfo._pcounter = _suc_pcounter;
         sucinfo._tcounter = _suc_tcounter;
     }
-
-
-
 }
 

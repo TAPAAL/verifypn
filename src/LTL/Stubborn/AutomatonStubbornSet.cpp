@@ -152,7 +152,7 @@ namespace LTL {
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
 #ifndef NDEBUG
-            std::cerr << "Lone successor " << _net.transitionNames()[_ordering.front()] << std::endl;
+            std::cerr << "Lone successor " << *_net.transitionNames()[_ordering.front()] << std::endl;
 #endif
             return true;
         }
@@ -262,13 +262,13 @@ namespace LTL {
 #ifndef NDEBUG
         return;
         std::cout << "Enabled: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_enabled[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }
         }
         std::cout << "\nStubborn: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_stubborn[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }

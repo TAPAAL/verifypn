@@ -178,27 +178,27 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<LessThanCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<FireableCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<EqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-        _formula = make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
+        _formula = make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::CompareConjunction *element) {
@@ -251,11 +251,29 @@ namespace LTL {
         Visitor::visit(this, (*condition)[0]);
     }
 
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ExistPath *condition) {
+        Visitor::visit(this, condition->child());
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::AllPaths *condition) {
+        Visitor::visit(this, condition->child());
+    }
+
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::PathSelectCondition *condition) {
+        auto old = _path_select;
+        _path_select = condition;
+        Visitor::visit(this, condition->child());
+        _path_select = old;
+    }
+
     spot::formula FormulaToSpotSyntax::make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element) {
-        auto cond =
-                const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
+        auto* cond =
+                const_cast<PetriEngine::PQL::Condition *>(element.get());
         std::stringstream ss;
         bool choice = _compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
+        auto prop = cond->shared_from_this();
+        if(_path_select)
+            prop = std::make_shared<PathSelectCondition>(_path_select->name(), prop, _path_select->offset());
         if (_compress == APCompression::Full || choice) {
             // FIXME Very naive; this completely removes APs being in multiple places in the query,
             // leading to some query not being answered as is. The net gain is large in the firebaility category,
@@ -264,9 +282,10 @@ namespace LTL {
             ss << _ap_info.size();
         } else {
             PetriEngine::PQL::QueryPrinter _printer{ss};
-            Visitor::visit(_printer, cond);
+            Visitor::visit(_printer, prop);
         }
-        _ap_info.push_back(AtomicProposition{cond, ss.str()});
+        _ap_info.push_back(AtomicProposition{prop, ss.str()});
+
         return spot::formula::ap(_ap_info.back()._text);
     }
 
@@ -285,7 +304,7 @@ namespace LTL {
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
-        spot::postprocessor::optimization_level level;
+        spot::postprocessor::optimization_level level = spot::postprocessor::Low;
         switch(optimization) {
             case BuchiOptimization::Low:
                 level = spot::postprocessor::Low;
@@ -296,6 +315,8 @@ namespace LTL {
             case BuchiOptimization::High:
                 level = spot::postprocessor::High;
                 break;
+            default:
+                assert(false);
         }
         translator.set_level(level);
         spot::twa_graph_ptr automaton = translator.run(formula);
@@ -309,5 +330,4 @@ namespace LTL {
 
         return Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)};
     }
-
 }

@@ -40,7 +40,7 @@ namespace LTL {
     public:
 
         using successor_info_t = typename SuccessorGen::successor_info_t;
-        static constexpr auto initial_suc_info() { return SuccessorGen::initial_suc_info(); }
+        auto initial_suc_info() { return _successor_generator.initial_suc_info(); }
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet& net,
                                   const Structures::BuchiAutomaton& buchi,
@@ -51,10 +51,6 @@ namespace LTL {
 
         }
 
-        const PetriEngine::PetriNet& net() const { return _net; }
-
-        [[nodiscard]] size_t initial_buchi_state() const { return _buchi_succ_gen.initial_state_number(); };
-
         bool next(LTL::Structures::ProductState &state)
         {
             if (_fresh_marking) {
@@ -62,7 +58,7 @@ namespace LTL {
                 if (!_successor_generator->next(state)) {
                     // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(_successor_generator->getParent(), _successor_generator->getParent() + state._buchi_state_idx + 1,
+                    std::copy(_successor_generator->getParent(), _successor_generator->getParent() + _successor_generator.state_size(),
                               state.marking());
                 }
             }
@@ -96,25 +92,19 @@ namespace LTL {
         std::vector<LTL::Structures::ProductState> make_initial_state()
         {
             std::vector<LTL::Structures::ProductState> states;
-            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
-            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = initial_buchi_state();
+            auto buf = new PetriEngine::MarkVal[_successor_generator.state_size()];
+            _successor_generator.initialize(buf);
             LTL::Structures::ProductState state{&_buchi_succ_gen.automaton()};
-            state.setMarking(buf, _net.numberOfPlaces());
-            //state.setBuchiState(initial_buchi_state());
+            state.setMarking(buf);
+            state.set_buchi_state(_buchi_succ_gen.initial_state_number());
             _buchi_succ_gen.prepare(state.get_buchi_state());
             while (next_buchi_succ(state)) {
                 states.emplace_back(&_buchi_succ_gen.automaton());
-                states.back().setMarking(new PetriEngine::MarkVal[_net.numberOfPlaces() + 1], _net.numberOfPlaces());
-                std::copy(state.marking(), state.marking() + _net.numberOfPlaces(), states.back().marking());
+                states.back().setMarking(new PetriEngine::MarkVal[_successor_generator.state_size()]);
+                std::copy(state.marking(), state.marking() + _successor_generator.state_size(), states.back().marking());
                 states.back().set_buchi_state(state.get_buchi_state());
             }
             return states;
-        }
-
-        [[nodiscard]] bool is_initial_state(const LTL::Structures::ProductState &state) const
-        {
-            return state.markingEqual(_net.initial());
         }
 
         /**
@@ -156,8 +146,9 @@ namespace LTL {
                 if (!_successor_generator.next(state, sucinfo)) {
                     // This is a fresh marking, so if there are no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(_successor_generator.getParent(), _successor_generator.getParent() + state._buchi_state_idx + 1,
+                    std::copy(_successor_generator.getParent(), _successor_generator.getParent() + _successor_generator.state_size(),
                               state.marking());
+                    state.set_buchi_state(_buchi_parent);
                 }
             }
             if (next_buchi_succ(state)) {
@@ -172,7 +163,6 @@ namespace LTL {
                     // reset buchi successors
                     _buchi_succ_gen.prepare(_buchi_parent);
                     if (next_buchi_succ(state)) {
-                        //_successor_generator->getSuccInfo(sucinfo);
                         sucinfo._buchi_state = state.get_buchi_state();
                         return true;
                     }
@@ -181,58 +171,12 @@ namespace LTL {
             }
         }
 
-
-        [[nodiscard]] bool is_weak() const
-        {
-            return _buchi_succ_gen.is_weak();
-        }
-
-        size_t last_transition() const { return _successor_generator.last_transition(); }
-
         size_t fired() const { return _successor_generator.fired(); }
 
         void generate_all(LTL::Structures::ProductState *parent, typename SuccessorGen::successor_info_t &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 _successor_generator.generate_all(parent, sucinfo);
-            }
-        }
-
-        size_t number_enabled()
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.number_enabled();
-            }
-            return -1;
-        }
-
-        const bool *enabled() const
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.enabled();
-            }
-            return nullptr;
-        };
-
-        const bool *stubborn() const
-        {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.stubborn();
-            }
-            return nullptr;
-        };
-
-        size_t buchi_states() { return _buchi_succ_gen.buchi_states(); }
-
-        void push() {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.push();
-            }
-        }
-
-        void pop(const typename SuccessorGen::successor_info_t &sucinfo) {
-            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.pop(sucinfo);
             }
         }
 
@@ -261,7 +205,8 @@ namespace LTL {
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
         {
             PetriEngine::PQL::EvaluationContext ctx{state.marking(), &_net};
-            return _buchi_succ_gen.automaton().guard_valid(ctx, bdd);
+            auto res = _buchi_succ_gen.automaton().guard_valid(ctx, bdd);
+            return res;
         }
 
 

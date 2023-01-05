@@ -24,7 +24,7 @@
 namespace LTL {
     class EnabledSpooler : public SuccessorSpooler {
     public:
-        EnabledSpooler(const PetriEngine::PetriNet& net, PetriEngine::SuccessorGenerator &sucGen)
+        EnabledSpooler(const PetriEngine::PetriNet& net, SpoolingSuccessorGenerator& sucGen)
                 : _successorGenerator(sucGen)
         {
             _marking.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces()]);
@@ -40,14 +40,14 @@ namespace LTL {
             // TODO don't need to actually fire the transition, merely spool to next.
             // this is a non-trivial refactor in SuccessorGenerator, but seems natural.
             if (_successorGenerator.next(_marking)) {
-                return _successorGenerator.fired();
+                return _successorGenerator.generated();
             } else {
                 return NoTransition;
             }
         }
 
     private:
-        PetriEngine::SuccessorGenerator &_successorGenerator;
+        SpoolingSuccessorGenerator& _successorGenerator;
         PetriEngine::Structures::State _marking;
     };
 }

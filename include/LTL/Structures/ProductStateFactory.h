@@ -28,12 +28,13 @@ namespace LTL { namespace Structures {
         ProductStateFactory(const PetriEngine::PetriNet& net, const BuchiAutomaton& aut)
             : _net(net), _aut(aut) {}
 
-        ProductState new_state() {
-            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces()+1];
-            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = 0;
+        ProductState new_state(size_t hyper_traces = 1) {
+            hyper_traces = std::max(hyper_traces,size_t{1});
+            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces()*hyper_traces];
+            for(size_t i = 0; i < hyper_traces; ++i)
+                std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf + i * _net.numberOfPlaces());
             ProductState state{&_aut};
-            state.setMarking(buf, _net.numberOfPlaces());
+            state.setMarking(buf);
             state.set_buchi_state(_aut.buchi().get_init_state_number());
             return state;
         }

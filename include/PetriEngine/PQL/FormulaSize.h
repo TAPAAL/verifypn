@@ -74,6 +74,12 @@ namespace PetriEngine { namespace PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const LogicalCondition *condition) override;
+
+        void _accept(const PathSelectCondition*) override;
+
+        void _accept(const PathQuant*) override;
+
+        void _accept(const PathSelectExpr*) override;
     };
 } }
 #endif //VERIFYPN_FORMULASIZE_H

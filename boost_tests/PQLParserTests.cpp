@@ -1,10 +1,14 @@
 #define BOOST_TEST_MODULE PQLParserTests
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine::PQL;
+
+BOOST_AUTO_TEST_CASE(DirectoryTest) {
+    BOOST_REQUIRE(getenv("TEST_FILES"));
+}
 
 BOOST_AUTO_TEST_CASE(double_fireable_condition) {
     std::string query = R"(is-fireable("t1","t2"))";

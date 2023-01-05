@@ -16,7 +16,7 @@
 
 #define register      // Deprecated in C++11.
 extern "C" int pqlqwrap(){return 1;}
-extern std::shared_ptr<PetriEngine::PQL::Condition> query;
+extern PetriEngine::PQL::Condition* query;
 extern int pqlqparse();
 %}
 %option prefix="pqlq"
@@ -49,6 +49,9 @@ letter        [a-zA-Z_]
 "G"						{return TOKEN(G);}
 "U"						{return TOKEN(U);}
 "control"				{return TOKEN(CONTROL);}
+"exists"				{return TOKEN(EXISTS);}
+"forall"				{return TOKEN(FORALL);}
+"."                     {return TOKEN(DOT);}
 "NOT" {return TOKEN(NOT);}
 {letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
 {digit}+          {SAVE_TOKEN; return INT;}
@@ -87,7 +90,7 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString) {
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
-	return query;
+	return Condition_ptr(query);
 }
 }}
 #ifdef __clang__
