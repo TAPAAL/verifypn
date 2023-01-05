@@ -1,6 +1,6 @@
 --- /ltdl/lt__dirent.c
 +++ /ltdl/lt__dirent.c
-@@ -34,7 +34,7 @@
+@@ -35,7 +35,7 @@
  
  #include "lt__dirent.h"
  
@@ -9,3 +9,30 @@
  
  void
  closedir (DIR *entry)
+--- /spot/bricks/brick-shmem
++++ /spot/bricks/brick-shmem
+@@ -48,5 +48,5 @@
+ #include <future>
+-
++#include <thread>
+ #include <unistd.h> // alarm
+ #include <vector>
+ 
+--- /spot/Makefile.in
++++ /spot/Makefile.in
+@@ -1277,4 +1277,4 @@
+# libspot.la needed by the tests)
+ SUBDIRS = misc priv tl graph twa twacube twaalgos ta taalgos kripke \
+-          twacube_algos mc parseaut parsetl . ltsmin gen
++          twacube_algos mc parseaut parsetl . gen
+ 
+ lib_LTLIBRARIES = libspot.la
+--- /spot/Makefile.am
++++ /spot/Makefile.am
+@@ -33,4 +33,4 @@
+# libspot.la needed by the tests)
+ SUBDIRS = misc priv tl graph twa twacube twaalgos ta taalgos kripke \
+-          twacube_algos mc parseaut parsetl . ltsmin gen
++          twacube_algos mc parseaut parsetl . gen
+ 
+ lib_LTLIBRARIES = libspot.la

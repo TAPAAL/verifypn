@@ -304,7 +304,7 @@ namespace LTL {
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
-        spot::postprocessor::optimization_level level;
+        spot::postprocessor::optimization_level level = spot::postprocessor::Low;
         switch(optimization) {
             case BuchiOptimization::Low:
                 level = spot::postprocessor::Low;
@@ -315,6 +315,8 @@ namespace LTL {
             case BuchiOptimization::High:
                 level = spot::postprocessor::High;
                 break;
+            default:
+                assert(false);
         }
         translator.set_level(level);
         spot::twa_graph_ptr automaton = translator.run(formula);
