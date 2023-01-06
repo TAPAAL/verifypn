@@ -122,7 +122,7 @@ namespace PetriEngine {
                 }
 
                 n += _potencies[t].value;
-                float r = (float) rand() / RAND_MAX;
+                double r = (double) rand() / RAND_MAX;
                 float threshold = _potencies[t].value / (float) n;
                 if (r <= threshold)
                     current = t;
