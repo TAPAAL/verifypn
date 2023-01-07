@@ -123,12 +123,6 @@ namespace PetriEngine {
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
                        else TEMPPAR(X, SuccessorGenerator)
 
-#define TRYREACHPARPOTENCY      (queries, results, usequeries, printstats, seed)
-#define TEMPPARPOTENCY(X, Y)    if(keep_trace) return tryReachPotency<X, Structures::TracableStateSet, Y>TRYREACHPARPOTENCY ; \
-                                else return tryReachPotency<X, Structures::StateSet, Y> TRYREACHPARPOTENCY;
-#define TRYREACHPOTENCY(X)      if(stubbornreduction) TEMPPARPOTENCY(X, ReducingSuccessorGenerator) \
-                                else TEMPPARPOTENCY(X, SuccessorGenerator)
-
 
         size_t ReachabilitySearch::maxTokens() const {
             return _max_tokens;
