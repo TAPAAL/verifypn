@@ -3,24 +3,13 @@
 
 namespace PetriEngine {
     namespace Structures {
-        PotencyQueue::PotencyQueue(size_t nTransitions, size_t s) : _queues(nTransitions) {
-            if (nTransitions == 0)
-                _queues = std::vector<std::priority_queue<weighted_t>>(1);
-
-            _potencies.reserve(nTransitions);
-            for (uint32_t i = 0; i < nTransitions; i++) {
-                size_t prev = i == 0 ? SIZE_MAX : i - 1;
-                size_t next = i == nTransitions - 1 ? SIZE_MAX : i + 1;
-                _potencies.push_back(potency_t(100, prev, next));
-            }
-            _best = 0;
-        }
+        PotencyQueue::PotencyQueue(size_t s) {}
 
         PotencyQueue::~PotencyQueue() {}
 
-        std::tuple<size_t, uint32_t> PotencyQueue::pop() {
+        size_t PotencyQueue::pop() {
             if (_size == 0)
-                return std::make_tuple(PetriEngine::PQL::EMPTY, PetriEngine::PQL::EMPTY);
+                return PetriEngine::PQL::EMPTY;
 
             size_t t = _best;
             while (_queues[t].empty()) {
@@ -29,10 +18,14 @@ namespace PetriEngine {
             weighted_t n = _queues[t].top();
             _queues[t].pop();
             _size--;
-            return std::make_tuple(n.item, n.weight);
+            _currentParentDist = n.weight;
+            return n.item;
         }
 
         void PotencyQueue::push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query) {
+            if (_potencies.empty())
+                this->_initializePotencies(context->net()->numberOfTransitions(), 100);
+
             uint32_t dist = query->distance(*context);
             _queues[_best].emplace(dist, id);
             _size++;
@@ -64,28 +57,40 @@ namespace PetriEngine {
             _potencies[b].next = a;
         }
 
-        RandomPotencyQueue::RandomPotencyQueue(size_t nTransitions, size_t seed) : PotencyQueue(nTransitions),
-                                                                                   _seed(seed) {
+        void PotencyQueue::_initializePotencies(size_t nTransitions, uint32_t initValue) {
+            if (nTransitions == 0)
+                _queues = std::vector<std::priority_queue<weighted_t>>(1);
+
+            _potencies.reserve(nTransitions);
+            for (uint32_t i = 0; i < nTransitions; i++) {
+                size_t prev = i == 0 ? SIZE_MAX : i - 1;
+                size_t next = i == nTransitions - 1 ? SIZE_MAX : i + 1;
+                _potencies.push_back(potency_t(initValue, prev, next));
+            }
+            _best = 0;
+        }
+
+        RandomPotencyQueue::RandomPotencyQueue(size_t seed) : PotencyQueue(seed), _seed(seed) {
             srand(_seed);
         }
 
         RandomPotencyQueue::~RandomPotencyQueue() {}
 
-        void RandomPotencyQueue::push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query, uint32_t t,
-                                      uint32_t pDist) {
+        void
+        RandomPotencyQueue::push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query, uint32_t t) {
             uint32_t dist = query->distance(*context);
 
-            if (dist < pDist) {
-                _potencies[t].value += pDist - dist;
+            if (dist < _currentParentDist) {
+                _potencies[t].value += _currentParentDist - dist;
                 while (_potencies[t].prev != SIZE_MAX && _potencies[t].value > _potencies[_potencies[t].prev].value) {
                     _swapAdjacent(_potencies[t].prev, t);
                 }
 
                 if (_potencies[t].prev == SIZE_MAX)
                     _best = t;
-            } else if (dist > pDist && _potencies[t].value != 0) {
-                if (_potencies[t].value - 1 >= dist - pDist)
-                    _potencies[t].value -= dist - pDist;
+            } else if (dist > _currentParentDist && _potencies[t].value != 0) {
+                if (_potencies[t].value - 1 >= dist - _currentParentDist)
+                    _potencies[t].value -= dist - _currentParentDist;
                 else
                     _potencies[t].value = 1;
                 while (_potencies[t].next != SIZE_MAX && _potencies[t].value < _potencies[_potencies[t].next].value) {
@@ -100,15 +105,16 @@ namespace PetriEngine {
             _size++;
         }
 
-        std::tuple<size_t, uint32_t> RandomPotencyQueue::pop() {
+        size_t RandomPotencyQueue::pop() {
             if (_size == 0)
-                return std::make_tuple(PetriEngine::PQL::EMPTY, PetriEngine::PQL::EMPTY);
+                return PetriEngine::PQL::EMPTY;
 
-            if (_potencies.size() == 0) {
+            if (_potencies.empty()) {
                 weighted_t e = _queues[_best].top();
                 _queues[_best].pop();
                 _size--;
-                return std::make_tuple(e.item, e.weight);
+                _currentParentDist = e.weight;
+                return e.item;
             }
 
             uint32_t n = 0;
@@ -133,7 +139,8 @@ namespace PetriEngine {
             weighted_t e = _queues[current].top();
             _queues[current].pop();
             _size--;
-            return std::make_tuple(e.item, e.weight);
+            _currentParentDist = e.weight;
+            return e.item;
         }
     }
 }
