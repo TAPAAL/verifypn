@@ -55,6 +55,12 @@ namespace LTL {
 
         virtual size_t max_tokens() const override;
 
+        virtual size_t get_discovered() const override;
+
+        virtual size_t get_markings() const override;
+
+        virtual size_t get_configurations() const override;
+
     private:
         using State = LTL::Structures::ProductState;
 
@@ -66,6 +72,8 @@ namespace LTL {
         const uint32_t _hyper_traces = 0;
         size_t _discovered = 0;
         size_t _max_tokens = 0;
+        size_t _markings = 0;
+        size_t _configurations = 0;
 
         template<typename T>
         struct stack_entry_t {

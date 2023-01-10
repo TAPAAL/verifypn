@@ -155,6 +155,8 @@ namespace LTL {
         }
         _discovered = states.discovered();
         _max_tokens = states.max_tokens();
+        _configurations = states.configurations();
+        _markings = states.markings();
     }
 
     template<typename T, typename S>
@@ -195,6 +197,18 @@ namespace LTL {
 
     size_t NestedDepthFirstSearch::max_tokens() const {
         return _max_tokens;
+    }
+
+    size_t NestedDepthFirstSearch::get_markings() const {
+        return _markings;
+    }
+
+    size_t NestedDepthFirstSearch::get_configurations() const {
+        return _configurations;
+    }
+
+    size_t NestedDepthFirstSearch::get_discovered() const {
+        return _discovered;
     }
 
     void NestedDepthFirstSearch::print_stats(std::ostream &os) const

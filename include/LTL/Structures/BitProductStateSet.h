@@ -73,6 +73,7 @@ namespace LTL { namespace Structures {
             assert(res.second == get_marking_id(product_id));
             assert(state.get_buchi_state() == get_buchi_state(product_id));
             auto [is_new, data_id] = _states.insert(product_id);
+            if(is_new) ++_configurations;
             return {is_new, product_id, data_id};
         }
 
@@ -104,6 +105,10 @@ namespace LTL { namespace Structures {
 
         size_t max_tokens() const { return _markings.maxTokens(); }
 
+        size_t markings() const { return _markings.size(); }
+
+        size_t configurations() const { return _configurations; }
+
     protected:
 
         static constexpr auto BUCHI_MASK = ~(std::numeric_limits<size_t>::max() << (nbits));
@@ -114,6 +119,7 @@ namespace LTL { namespace Structures {
         static constexpr auto _err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
 
         size_t _discovered = 0;
+        size_t _configurations = 0;
     };
 
     template<uint8_t nbits = 20>

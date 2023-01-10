@@ -64,9 +64,19 @@ namespace LTL {
             return _shortcircuitweak;
         }
 
-        size_t get_explored() {
+        size_t get_explored() const {
             return _explored;
         }
+
+        size_t get_expanded() const {
+            return _expanded;
+        }
+
+        virtual size_t get_discovered() const = 0;
+
+        virtual size_t get_markings() const = 0;
+
+        virtual size_t get_configurations() const = 0;
 
         virtual void print_stats(std::ostream&) const = 0;
 

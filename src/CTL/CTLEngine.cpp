@@ -79,13 +79,41 @@ bool recursiveSolve(const Condition_ptr& query, PetriNet* net,
                     CTLAlgorithmType algorithmtype,
                     Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
 
-class ResultHandler : public AbstractHandler {
+class SimpleResultHandler : public AbstractHandler
+{
+public:
+    size_t _expanded = 0;
+    size_t _explored = 0;
+    size_t _discovered = 0;
+    size_t _max_tokens = 0;
+    size_t _stored = 0;
+
+    std::pair<AbstractHandler::Result, bool> handle(
+                size_t index,
+                PQL::Condition* query,
+                AbstractHandler::Result result,
+                const std::vector<uint32_t>* maxPlaceBound,
+                size_t expandedStates,
+                size_t exploredStates,
+                size_t discoveredStates,
+                int maxTokens,
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
+        _expanded = std::max(_expanded, expandedStates);
+        _explored = std::max(_explored, exploredStates);
+        _discovered = std::max(_discovered, discoveredStates);
+        _max_tokens = std::max<size_t>(_max_tokens, maxTokens);
+        _stored = std::max(_stored, stateset->size());
+        return std::make_pair(result, false);
+    }
+};
+
+class ResultHandler : public SimpleResultHandler {
     private:
         bool _is_conj = false;
         const std::vector<int8_t>& _lstate;
     public:
         ResultHandler(bool is_conj, const std::vector<int8_t>& lstate)
-        : _is_conj(is_conj), _lstate(lstate)
+        : SimpleResultHandler(), _is_conj(is_conj), _lstate(lstate)
         {}
 
         std::pair<AbstractHandler::Result, bool> handle(
@@ -108,6 +136,7 @@ class ResultHandler : public AbstractHandler {
                 result = _lstate[index] < 0 ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
             }
             bool terminate = _is_conj ? (result == ResultPrinter::NotSatisfied) : (result == ResultPrinter::Satisfied);
+            SimpleResultHandler::handle(index, query, result, maxPlaceBound, expandedStates, exploredStates, discoveredStates, maxTokens, stateset, lastmarking, initialMarking, false);
             return std::make_pair(result, terminate);
         }
 };
@@ -142,7 +171,10 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         false,
                                         false,
                                         options.seed());
-            result.maxTokens = std::max(result.maxTokens, strategy.maxTokens());
+            result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
+            result.exploredConfigurations += handler._explored;
+            result.numberOfConfigurations += handler._stored;
+            result.numberOfMarkings += handler._stored;
         }
         else
         {
@@ -178,23 +210,6 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
     }
     return is_conj;
 }
-
-class SimpleResultHandler : public AbstractHandler
-{
-public:
-    std::pair<AbstractHandler::Result, bool> handle(
-                size_t index,
-                PQL::Condition* query,
-                AbstractHandler::Result result,
-                const std::vector<uint32_t>* maxPlaceBound,
-                size_t expandedStates,
-                size_t exploredStates,
-                size_t discoveredStates,
-                int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
-        return std::make_pair(result, false);
-    }
-};
 
 bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
@@ -244,7 +259,10 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                            false,
                            false,
                            options.seed());
-            result.maxTokens = std::max(strategy.maxTokens(), result.maxTokens);
+            result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
+            result.exploredConfigurations += handler._explored;
+            result.numberOfConfigurations += handler._stored;
+            result.numberOfMarkings += handler._stored;
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
@@ -277,7 +295,9 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
             LTL::LTLSearch search(*net, q, options.buchiOptimization, options.ltl_compress_aps);
             auto r = search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
                             options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
-
+            result.numberOfMarkings += search.markings();
+            result.numberOfConfigurations += search.configurations();
+            result.exploredConfigurations += search.explored();
             result.maxTokens = std::max(search.max_tokens(), result.maxTokens);
             return r;
         }

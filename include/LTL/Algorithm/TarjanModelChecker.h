@@ -64,6 +64,12 @@ namespace LTL {
 
         virtual size_t max_tokens() const override;
 
+        virtual size_t get_discovered() const override;
+
+        virtual size_t get_markings() const override;
+
+        virtual size_t get_configurations() const override;
+
         virtual void set_partial_order(LTLPartialOrder);
 
         LTLPartialOrder used_partial_order() const {
@@ -127,6 +133,8 @@ namespace LTL {
         uint32_t _loop_trans = std::numeric_limits<uint32_t>::max();
         size_t _discoverd = std::numeric_limits<size_t>::max();
         size_t _max_tokens = std::numeric_limits<size_t>::max();
+        size_t _markings = 0;
+        size_t _configurations = 0;
         const uint32_t _k_bound = 0;
         const uint32_t _hyper_traces = 0;
         LTLPartialOrder _order = LTLPartialOrder::None;

@@ -103,6 +103,10 @@ namespace LTL { namespace Structures {
 
         size_t max_tokens() const { return _markings.maxTokens(); }
 
+        size_t markings() const { return _markings.size(); }
+
+        size_t configurations() const { return _states.size(); }
+
     protected:
 
         static constexpr auto BUCHI_MASK = ~(std::numeric_limits<size_t>::max() << (nbits));
