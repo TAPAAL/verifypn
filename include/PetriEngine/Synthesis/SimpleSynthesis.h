@@ -42,7 +42,7 @@
 namespace PetriEngine {
     namespace Synthesis {
 
-        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition);
+        std::pair<bool, PQL::Condition_ptr> get_predicate(PQL::Condition* condition);
 
         class SimpleSynthesis {
         public:
@@ -89,7 +89,7 @@ namespace PetriEngine {
             Structures::AnnotatedStateSet<SynthConfig> _stateset;
             bool _is_safety = false;
             PQL::Condition& _query;
-            PQL::Condition* _predicate = nullptr;
+            PQL::Condition_ptr _predicate = nullptr;
             CTLResult _result;
 
         };

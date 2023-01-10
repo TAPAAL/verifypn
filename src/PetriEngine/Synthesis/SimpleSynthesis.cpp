@@ -27,11 +27,11 @@
 #include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
 #include "PetriEngine/options.h"
 #include "utils/stopwatch.h"
-#include "CTL/CTLResult.h"
 #include "PetriEngine/Synthesis/GameSuccessorGenerator.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/PQL/Evaluation.h"
-#include "PetriEngine/Synthesis/GamePORSuccessorGenerator.h"
+#include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/PushNegation.h"
 
 #include <vector>
 
@@ -58,18 +58,44 @@ namespace PetriEngine {
 #endif
         }
 
-        std::pair<bool, PQL::Condition*> get_predicate(PQL::Condition* condition) {
+        std::pair<bool, PQL::Condition_ptr> get_predicate(PQL::Condition* condition) {
 
             if (auto a = dynamic_cast<PQL::ACondition*> (condition)) {
                 if (auto p = dynamic_cast<PQL::FCondition*> ((*a)[0].get())) {
-                    return {false, (*p)[0].get()};
+                    return {false, (*p)[0]};
                 } else if (auto p = dynamic_cast<PQL::GCondition*> ((*a)[0].get())) {
-                    return {true, (*p)[0].get()};
+                    return {true, (*p)[0]};
                 }
             } else if (auto a = dynamic_cast<PQL::AGCondition*> (condition)) {
-                return {true, (*a)[0].get()};
+                return {true, (*a)[0]};
             } else if (auto a = dynamic_cast<PQL::AFCondition*> (condition)) {
-                return {false, (*a)[0].get()};
+                return {false, (*a)[0]};
+            }
+            else if(auto n = dynamic_cast<PQL::NotCondition*>(condition))
+            {
+                if(auto c = dynamic_cast<PQL::EFCondition*>((*n)[0].get()))
+                {
+                    PQL::Condition_ptr neg = std::make_shared<PQL::NotCondition>((*c)[0]);
+                    return {true, PQL::pushNegation(neg)};
+                }
+                else if(auto c = dynamic_cast<PQL::EGCondition*>((*n)[0].get()))
+                {
+                    auto neg = std::make_shared<PQL::NotCondition>((*c)[0]);
+                    return {false, PQL::pushNegation(neg)};
+                }
+                else if(auto c = dynamic_cast<PQL::ECondition*>((*n)[0].get()))
+                {
+                    if(auto pc = dynamic_cast<PQL::FCondition*>((*c)[0].get()))
+                    {
+                        auto neg = std::make_shared<PQL::NotCondition>((*pc)[0]);
+                        return {true, PQL::pushNegation(neg)};
+                    }
+                    else if (auto pc = dynamic_cast<PQL::GCondition*>((*c)[0].get()))
+                    {
+                        auto neg = std::make_shared<PQL::NotCondition>((*pc)[0]);
+                        return {false, PQL::pushNegation(neg)};
+                    }
+                }
             }
             throw base_error("Only AF and AG propositions supported for synthesis");
         }
@@ -84,8 +110,7 @@ namespace PetriEngine {
             auto ctrl = dynamic_cast<PQL::ControlCondition*> (&_query);
             if (ctrl == nullptr)
                 throw base_error("Missing topmost control-condition for synthesis");
-            auto quant = dynamic_cast<PQL::SimpleQuantifierCondition*> ((*ctrl)[0].get());
-            std::tie(_is_safety, _predicate) = get_predicate(quant);
+            std::tie(_is_safety, _predicate) = get_predicate((*ctrl)[0].get());
             if (PQL::isTemporal(_predicate))
                 throw base_error("Only simple synthesis propositions supported (i.e. one top-most AF or AG and no other nested quantifiers)");
 
@@ -201,10 +226,10 @@ namespace PetriEngine {
                 } else {
                     auto res = eval(prop, state.marking());
                     if (_is_safety) {
-                        if (res == false)
+                        if (!res)
                             meta._state = SynthConfig::LOSING;
                     } else {
-                        if (res != false)
+                        if (res)
                             meta._state = SynthConfig::WINNING;
                     }
                 }
@@ -408,6 +433,7 @@ namespace PetriEngine {
             switch (strategy) {
                 case Strategy::HEUR:
                     std::cout << "Using DFS instead of BestFS for synthesis" << std::endl;
+                case Strategy::DEFAULT:
                 case Strategy::DFS:
                     return std::make_unique<Structures::DFSQueue>(0);
                 case Strategy::BFS:
@@ -427,7 +453,7 @@ namespace PetriEngine {
             bool some = false;
             bool some_winning = false;
             while (generator.next_ctrl(_working)) {
-                auto& child = get_config(_working, _predicate, cid);
+                auto& child = get_config(_working, _predicate.get(), cid);
                 /*
                 std::cerr << "[" << cconf._marking << "] ";
                 _net.print(_parent.marking());
@@ -478,7 +504,7 @@ namespace PetriEngine {
             successors_t env_buffer;
             size_t cid;
             while (generator.next_env(_working)) {
-                auto& child = get_config(_working, _predicate, cid);
+                auto& child = get_config(_working, _predicate.get(), cid);
                 /*
                 std::cerr << "[" << cconf._marking << "] ";
                 _net.print(_parent.marking());
@@ -566,11 +592,11 @@ namespace PetriEngine {
             size_t nid;
             _working.copy(_net.initial(), _net.numberOfPlaces());
 
-            auto& meta = get_config(_working, _predicate, cid);
+            auto& meta = get_config(_working, _predicate.get(), cid);
             meta._waiting = 1;
 
             auto queue = make_queue(strategy);
-            auto generator = make_generator(_net, _predicate, _is_safety, use_stubborn);
+            auto generator = make_generator(_net, _predicate.get(), _is_safety, use_stubborn);
 
 
             std::stack<SynthConfig*> back;
