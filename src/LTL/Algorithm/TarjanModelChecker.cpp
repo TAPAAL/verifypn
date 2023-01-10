@@ -168,14 +168,6 @@ namespace LTL {
                     continue;
                 }
                 if (!_store.exists(stateid).first) {
-                    auto bstate = StateSet::get_buchi_state(stateid);
-                    if(_shortcircuitweak &&
-                       successorGenerator.is_accepting(bstate) &&
-                       successorGenerator.has_invariant_self_loop(bstate))
-                    {
-                        _violation = true;
-                        break;
-                    }
                     push(seen, cstack, dstack, successorGenerator, working, stateid);
                 }
             }
