@@ -28,6 +28,18 @@ namespace LTL {
         return _max_tokens;
     }
 
+    size_t TarjanModelChecker::get_discovered() const {
+        return _discoverd;
+    }
+
+    size_t TarjanModelChecker::get_markings() const {
+        return _markings;
+    }
+
+    size_t TarjanModelChecker::get_configurations() const {
+        return _markings;
+    }
+
     void TarjanModelChecker::set_partial_order(LTLPartialOrder o)
     {
         if(_net.has_inhibitor())
@@ -193,6 +205,8 @@ namespace LTL {
         }
         _discoverd = seen.discovered();
         _max_tokens = seen.max_tokens();
+        _markings = seen.markings();
+        _configurations = seen.configurations();
         return !_violation;
     }
 

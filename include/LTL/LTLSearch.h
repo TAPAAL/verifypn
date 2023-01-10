@@ -78,6 +78,22 @@ namespace LTL {
             return _checker->max_tokens();
         }
 
+        size_t configurations() const {
+            return _checker->get_configurations();
+        }
+
+        size_t discovered() const {
+            return _checker->get_discovered();
+        }
+
+        size_t markings() const {
+            return _checker->get_markings();
+        }
+
+        size_t explored() const {
+            return _checker->get_explored();
+        }
+
         std::string heuristic_type() const {
             std::stringstream ss;
             if(_heuristic)
