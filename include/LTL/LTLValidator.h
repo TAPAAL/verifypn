@@ -29,10 +29,20 @@ namespace LTL {
 
         bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
             if (condition->is<PetriEngine::PQL::ACondition>() ||
-                condition->is<PetriEngine::PQL::ECondition>()) {
+                condition->is<PetriEngine::PQL::AFCondition>() ||
+                condition->is<PetriEngine::PQL::AGCondition>() ||
+                condition->is<PetriEngine::PQL::ECondition>() ||
+                condition->is<PetriEngine::PQL::EFCondition>() ||
+                condition->is<PetriEngine::PQL::EGCondition>()) {
                 auto sq = std::static_pointer_cast<PetriEngine::PQL::SimpleQuantifierCondition>(condition);
                 Visitor::visit(this, (*sq)[0]);
-            } else if(auto path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(condition)) {
+            } else if(condition->is<PetriEngine::PQL::EUCondition>() ||
+                      condition->is<PetriEngine::PQL::AUCondition>()){
+                auto uq = std::static_pointer_cast<PetriEngine::PQL::UntilCondition>(condition);
+                Visitor::visit(this, (*uq)[0]);
+                Visitor::visit(this, (*uq)[1]);
+            }
+            else if(auto path = std::dynamic_pointer_cast<PetriEngine::PQL::PathQuant>(condition)) {
                 bool is_exists = false;
                 bool is_all = false;
                 auto last = path;
