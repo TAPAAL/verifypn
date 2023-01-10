@@ -436,7 +436,10 @@ int main(int argc, const char** argv) {
             }
 
 
-            for (auto i: synth_ids) {
+            for (auto i : synth_ids) {
+                if(options.tar) {
+                    throw base_error("TAR not supported for synthesis.");
+                }
                 Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
 
                 std::ostream *strategy_out = nullptr;
