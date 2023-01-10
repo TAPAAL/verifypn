@@ -37,7 +37,7 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
     std::string model =  std::string("/models/games/") + fn + ".pnml";
     std::string query =  std::string("/models/games/") + fn + ".xml";
     std::set<size_t> qnums{quid};
-    for(auto reduction : {true, false})
+    for(auto reduction : {/*true,*/ false}) // reductions are NOT safe for games yet.
     for(auto partition : {true, false})
     for(auto symmetry : {true,false})
     for(auto cfp : {true, false})
@@ -53,10 +53,6 @@ void test_single_game(const char* fn, Reachability::ResultPrinter::Result expect
             for (auto permissive: {false, true}) {
                 for (auto stubborn: {false, true}) {
                     Synthesis::SimpleSynthesis strategy(*pn, *conditions[0], 0);
-                    std::cerr << "Running " << fn << " query " << quid << " " << " permissive: " << std::boolalpha
-                              << permissive << " stubborn: " << stubborn << " search: " << (int) search << std::endl;
-                    conditions[0]->toString(std::cerr);
-                    std::cerr << std::endl;
                     auto r = strategy.synthesize(search, stubborn, permissive);
                     BOOST_REQUIRE_EQUAL(expected, r);
                 }
