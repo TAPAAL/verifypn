@@ -24,6 +24,8 @@
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/SuccessorGenerator.h"
 
+#include "PetriEngine/Structures/PotencyQueue.h"
+
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Structures;
 
@@ -154,6 +156,9 @@ namespace PetriEngine {
                     break;
                 case Strategy::RDFS:
                     TRYREACH(RDFSQueue)
+                    break;
+                case Strategy::RPFS:
+                    TRYREACH(RandomPotencyQueue)
                     break;
                 default:
                     throw base_error("Unsupported search strategy");

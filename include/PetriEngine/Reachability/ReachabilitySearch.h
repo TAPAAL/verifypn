@@ -26,6 +26,7 @@
 #include "../PetriNet.h"
 #include "../Structures/StateSet.h"
 #include "../Structures/Queue.h"
+#include "../Structures/PotencyQueue.h"
 #include "../SuccessorGenerator.h"
 #include "../ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
@@ -161,7 +162,10 @@ namespace PetriEngine {
                         if (res.first) {
                             {
                                 PQL::DistanceContext dc(&_net, working.marking());
-                                queue.push(res.second, &dc, queries[ss.heurquery].get());
+                                if constexpr (std::is_same_v<Q, Structures::RandomPotencyQueue>)
+                                    queue.push(res.second, &dc, queries[ss.heurquery].get(), generator.fired());
+                                else
+                                    queue.push(res.second, &dc, queries[ss.heurquery].get());
                             }
                             states.setHistory(res.second, generator.fired());
                             _satisfyingMarking = res.second;
@@ -192,8 +196,6 @@ namespace PetriEngine {
             _max_tokens = states.maxTokens();
             return false;
         }
-
-
     }
 } // Namespaces
 
