@@ -71,7 +71,7 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
         cout << "	Processed Edges   : " << result.processedEdges << endl;
         cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
         cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
-        cout << "	max tokens        : " << result.exploredConfigurations << endl;
+        cout << "	max tokens        : " << result.maxTokens << endl;
         std::cout << endl;
     }
 }
