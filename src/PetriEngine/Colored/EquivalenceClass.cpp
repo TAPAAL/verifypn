@@ -68,9 +68,9 @@ namespace PetriEngine {
                 }
                 for(const auto& interval : intervalSubRes){
                     resIntervals.addInterval(interval);
-                }                
+                }
             }
-            result._colorIntervals = resIntervals;                  
+            result._colorIntervals = std::move(resIntervals);
             return result;
         }
 

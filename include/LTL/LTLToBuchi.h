@@ -18,10 +18,9 @@
 #ifndef VERIFYPN_LTLTOBUCHI_H
 #define VERIFYPN_LTLTOBUCHI_H
 
-#include "PetriParse/QueryParser.h"
-#include "PetriEngine/PQL/QueryPrinter.h"
+#include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/PQL/FormulaSize.h"
-#include "PetriEngine/options.h"
+#include "LTLOptions.h"
 
 #include <iostream>
 #include <string>
@@ -30,36 +29,33 @@
 
 namespace LTL {
     struct AtomicProposition {
-        PetriEngine::PQL::Condition_ptr expression;
-        std::string text;
+        PetriEngine::PQL::Condition_ptr _expression;
+        std::string _text;
     };
 
     using APInfo = std::vector<AtomicProposition>;
 
-    std::string toSpotFormat(const QueryItem &query);
-
-    void toSpotFormat(const QueryItem &query, std::ostream &os);
-
     std::pair<spot::formula, APInfo>
-    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
+    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, APCompression compression);
 
     class BuchiSuccessorGenerator;
     namespace Structures {
         class BuchiAutomaton;
     }
 
-    Structures::BuchiAutomaton makeBuchiAutomaton(
+    Structures::BuchiAutomaton make_buchi_automaton(
             const PetriEngine::PQL::Condition_ptr &query,
-            const options_t &options);
+            BuchiOptimization optimization, APCompression compression);
 
-    BuchiSuccessorGenerator
-    makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
-
-    class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
+    class FormulaToSpotSyntax : public PetriEngine::PQL::Visitor {
     protected:
         void _accept(const PetriEngine::PQL::ACondition *condition) override;
 
+        void _accept(const PetriEngine::PQL::AllPaths *condition) override;
+
         void _accept(const PetriEngine::PQL::ECondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::ExistPath *condition) override;
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
 
@@ -81,6 +77,8 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
 
+        void _accept(const PetriEngine::PQL::DeadlockCondition *element) override;
+
         void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
 
         void _accept(const PetriEngine::PQL::PlusExpr *element) override;
@@ -93,55 +91,62 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
 
+        void _accept(const PetriEngine::PQL::PathSelectCondition *element) override;
+
         void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
+
+        void _accept(const PetriEngine::PQL::EFCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::EGCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AGCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::AFCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::EXCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AXCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::EUCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::AUCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::GCondition *condition)  override;
+
+        void _accept(const PetriEngine::PQL::FCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::XCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
 
     public:
 
-        explicit FormulaToSpotSyntax(std::ostream &os = std::cout, APCompression compress_aps = APCompression::Choose)
-                : PetriEngine::PQL::QueryPrinter(os), compress(compress_aps) {}
+        explicit FormulaToSpotSyntax(APCompression compress_aps = APCompression::Choose, bool expand = true)
+                : _compress(compress_aps), _expand(expand) {}
 
 
         auto begin() const
         {
-            return std::begin(ap_info);
+            return std::begin(_ap_info);
         }
 
         auto end() const
         {
-            return std::end(ap_info);
+            return std::end(_ap_info);
         }
 
         const APInfo &apInfo() const
         {
-            return ap_info;
+            return _ap_info;
         }
-
+        spot::formula& formula() { return _formula; }
     private:
-        APInfo ap_info;
-        bool is_quoted = false;
-        APCompression compress;
-
-        void make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
-        {
-            auto cond =
-                    const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
-            std::stringstream ss;
-            ss << "\"";
-            bool choice = compress == APCompression::Choose && PetriEngine::PQL::formulaSize(element) > 250;
-            if (compress == APCompression::Full || choice) {
-                // FIXME Very naive; this completely removes APs being in multiple places in the query,
-                // leading to some query not being answered as is. The net gain is large in the firebaility category,
-                // but ideally it would be possible to make a smarter approach that looks at previously stored APs
-                // and efficiently checks for repeat APs such that we can reuse APs.
-                ss << ap_info.size();
-            } else {
-                PetriEngine::PQL::QueryPrinter _printer{ss};
-                cond->visit(_printer);
-            }
-            ss << "\"";
-            os << ss.str();
-            ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
-        }
+        APInfo _ap_info;
+        APCompression _compress;
+        spot::formula _formula;
+        const bool _expand;
+        const PetriEngine::PQL::PathSelectCondition* _path_select = nullptr;
+        spot::formula make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element);
     };
 
 }

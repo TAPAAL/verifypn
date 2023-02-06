@@ -40,6 +40,26 @@ namespace PetriEngine {
         class Visitor;
         class MutatingVisitor;
 
+        using type_id_t = uint8_t;
+        constexpr auto untyped = std::numeric_limits<type_id_t>::max();
+
+        template<typename T>
+        constexpr type_id_t type_id() {
+            if constexpr (std::is_pointer<T>::value) {
+                using Q = typename std::remove_pointer<T>::type;
+                return type_id<Q>();
+            }
+            else if constexpr (std::is_const<T>::value) {
+                using Q = typename std::remove_cv<T>::type;
+                return type_id<Q>();
+            }
+            else
+            {
+                return untyped;
+            }
+        }
+
+
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, BControl = 10, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, PControl = 5, pError = -1 };
@@ -50,70 +70,14 @@ namespace PetriEngine {
         class DistanceContext;
         class SimplificationContext;
 
-        /** Representation of a PQL error */
-        class ExprError {
-            std::string _text;
-            int _length;
-        public:
-
-            ExprError(std::string text = "", int length = 0) {
-                _text = text;
-                _length = length;
-            }
-
-            /** Human readable explaination of the error */
-            const std::string& text() const {
-                return _text;
-            }
-
-            /** length in the source, 0 if not applicable */
-            int length() const {
-                return _length;
-            }
-
-            /** Convert error to string */
-            std::string toString() const {
-                return "Parsing error \"" + text() + "\"";
-            }
-
-            /** True, if this is a default created ExprError without any information */
-            bool isEmpty() const {
-                return _text.empty() && _length == 0;
-            }
-        };
-
         /** Representation of an expression */
-        class Expr {
+        class Expr : public std::enable_shared_from_this<Expr>{
             int _eval = 0;
-        public:
-            /** Types of expressions */
-            enum Types {
-                /** Binary addition expression */
-                PlusExpr,
-                /** Binary subtraction expression */
-                SubtractExpr,
-                /** Binary multiplication expression */
-                MultiplyExpr,
-                /** Unary minus expression */
-                MinusExpr,
-                /** Literal integer expression */
-                LiteralExpr,
-                /** Identifier expression */
-                IdentifierExpr
-            };
         public:
             /** Virtual destructor, an expression should know it subexpressions */
             virtual ~Expr();
-            /** Perform context analysis */
-            virtual void analyze(AnalysisContext& context) = 0;
-            /** Evaluate the expression given marking and assignment */
-            [[nodiscard]] virtual int evaluate(const EvaluationContext& context) = 0;
-            int evalAndSet(const EvaluationContext& context);
-            virtual void visit(Visitor& visitor) const = 0;
-            /** Expression type */
-            [[nodiscard]] virtual Types type() const = 0;
-            /** Construct left/right side of equations used in query simplification */
-            virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
+
+            virtual type_id_t type() const = 0;
 
             [[nodiscard]] virtual bool placeFree() const = 0;
 
@@ -123,6 +87,12 @@ namespace PetriEngine {
 
             [[nodiscard]] int getEval() const {
                 return _eval;
+            }
+
+            template<typename T>
+            bool is() const {
+                static_assert(std::is_base_of<Expr,T>::value);
+                return type_id<T>() == type();
             }
         };
 /******************* NEGATION PUSH STATS  *******************/
@@ -196,14 +166,6 @@ namespace PetriEngine {
         public:
             /** Virtual destructor */
             virtual ~Condition();
-            /** Perform context analysis  */
-            virtual void analyze(AnalysisContext& context) = 0;
-            /** Evaluate condition */
-            virtual Result evaluate(const EvaluationContext& context) = 0;
-            virtual Result evalAndSet(const EvaluationContext& context) = 0;
-            virtual void visit(Visitor& visitor) const = 0;
-            virtual void visit(MutatingVisitor& visitor) = 0;
-
             /** Get distance to query */
             [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
 
@@ -246,6 +208,12 @@ namespace PetriEngine {
             [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
             [[nodiscard]] virtual Path getPath() const = 0;
             void toString(std::ostream& os = std::cout);
+            virtual type_id_t type() const = 0;
+            template<typename T>
+            bool is() const {
+                static_assert(std::is_base_of<Condition,T>::value);
+                return type_id<T>() == type();
+            }
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

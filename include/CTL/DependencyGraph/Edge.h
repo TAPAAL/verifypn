@@ -21,14 +21,20 @@ public:
     Edge(){}
     Edge(Configuration &t_source) : source(&t_source) {}
 
-    void addTarget(Configuration* conf)
+    bool addTarget(Configuration* conf)
     {
+        if(handled) return true;
         assert(conf);
-        targets.push_front(conf);
-        //++children;
+        if(conf == source)
+        {
+            handled = true;
+            targets.clear();
+        }
+        else targets.push_front(conf);
+        return handled;
     }
-    
-    container targets;    
+
+    container targets;
     Configuration* source;
     uint8_t status = 0;
     bool processed = false;

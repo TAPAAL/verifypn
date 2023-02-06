@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-concurrency: 
+concurrency:
   group: build-Linux-${{ github.head_ref }}
   cancel-in-progress: true
 
@@ -21,25 +21,32 @@ jobs:
       - name: Install Packages
         run: |
           sudo apt-get update
-          sudo apt-get install flex 
+          sudo apt-get install flex libboost-all-dev
 
           wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz
           tar xvfz bison-3.7.6.tar.gz
           cd bison-3.7.6
           ./configure
-          make 
+          make
           sudo make install
 
-      - name: Build 
-        uses: lukka/run-cmake@v2.5
-        with:
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
-          cmakeAppendedArgs: '-DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF'
-          cmakeBuildType: Release
-          cmakeGenerator: UnixMakefiles
-          buildDirectory: '${{runner.workspace}}/build'     
-      - name: Upload artifacts 
+      - name: Test
+        run: |
+          mkdir -p build
+          cd build
+          CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Debug -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=ON
+          make
+          CTEST_OUTPUT_ON_FAILURE=1 make test
+
+      - name: Build
+        run: |
+          mkdir -p build
+          cd build
+          CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=OFF
+          make
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: verifypn-linux64
-          path: '${{runner.workspace}}/build/verifypn/bin/verifypn-linux64'
+          path: build/verifypn/bin/verifypn-linux64

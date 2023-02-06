@@ -2,10 +2,10 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   RangeEvalContext.cpp
  * Author: Peter G. Jensen <root@petergjoel.dk>
- * 
+ *
  * Created on April 11, 2020, 1:36 PM
  */
 
@@ -22,7 +22,7 @@ namespace PetriEngine
     }
 
     void RangeEvalContext::_accept(const NotCondition* element) { assert(false); }
-    void RangeEvalContext::_accept(const AndCondition* element) 
+    void RangeEvalContext::_accept(const AndCondition* element)
     {
         prvector_t sufficient;
         sufficient = _sufficient;
@@ -30,10 +30,10 @@ namespace PetriEngine
         bool found = false;
         for(auto& c : *element)
         {
-            c->visit(*this);
+            Visitor::visit(this, c);
             if(!_bool_result)
             {
-                c->visit(*this);
+                Visitor::visit(this, c);
                 if(!found || _sufficient._ranges.size() < best._ranges.size())
                     best = _sufficient;
                 _sufficient = sufficient;
@@ -46,13 +46,13 @@ namespace PetriEngine
             _sufficient = sufficient;
         _bool_result = !found; // true on TOS
     }
-    
+
     void RangeEvalContext::_accept(const OrCondition* element)
     {
         prvector_t sufficient = _sufficient;
         for(auto& c : *element)
         {
-            c->visit(*this);
+            Visitor::visit(this, c);
             if(_bool_result)
             {
                 _sufficient = sufficient;
@@ -70,10 +70,10 @@ namespace PetriEngine
         {
             //_limit = vr + (strict ? 0 : 1);
             //_lt = false;
-            right->visit(*this);
+            Visitor::visit(this, right);
             auto cnst = _literal;
             _literal = 0;
-            left->visit(*this);
+            Visitor::visit(this, left);
             cnst -= _literal;
             assert(cnst >= 0);
             // p < const
@@ -88,16 +88,16 @@ namespace PetriEngine
                 }
                 _sufficient &= placerange_t(p, val, range_t::max());
             }
-        } 
+        }
         else if(left->placeFree())
         {
             //_limit = vl - (strict ? 0 : 1);
             //_lt = true;
-            left->visit(*this);
+            Visitor::visit(this, left);
             auto cnst = _literal;
             _literal = 0;
             cnst -= _literal;
-            right->visit(*this);
+            Visitor::visit(this, right);
             // const < p
             // const <= p
             for(auto p : _places)
@@ -119,12 +119,12 @@ namespace PetriEngine
                 _sufficient &= placerange_t(p, 0, 0);*/
         }
     }
-    
+
     void RangeEvalContext::_accept(const EqualCondition* element)
     {
         _bool_result = true; // TODO handle better
     }
-    
+
     void RangeEvalContext::_accept(const NotEqualCondition* element)
     {
         _bool_result = true; // TODO handle better
@@ -134,7 +134,7 @@ namespace PetriEngine
     {
         handle_compare((*element)[0], (*element)[1], true);
     }
-   
+
     void RangeEvalContext::_accept(const LessThanOrEqualCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], false);
@@ -144,7 +144,7 @@ namespace PetriEngine
     {
         _bool_result = true;
     }
-    
+
     void RangeEvalContext::_accept(const CompareConjunction* element)
     {
         placerange_t tmp;
@@ -161,7 +161,7 @@ namespace PetriEngine
             {
                 if(it == nullptr || // unconstraint
                    it->_range._upper < c._lower || // -INF [... it->_upper] [c._lower, c._upper] + INF
-                   c._upper < it->_range._lower    // -INF [c._lower, c._upper] [it->_lower ...] + INF                   
+                   c._upper < it->_range._lower    // -INF [c._lower, c._upper] [it->_lower ...] + INF
                    )
                 {
                     _bool_result = true;
@@ -212,47 +212,47 @@ namespace PetriEngine
             _bool_result = !found;
             return;
         }
-        _bool_result = !element->isNegated(); 
+        _bool_result = !element->isNegated();
     }
-    
-    
+
+
     void RangeEvalContext::_accept(const LiteralExpr* element)
     {
         _literal = element->value();
     }
-    
+
     void RangeEvalContext::_accept(const UnfoldedIdentifierExpr* element)
     {
         _places.emplace_back(element->offset());
     }
-    
+
     void RangeEvalContext::_accept(const PlusExpr* element)
     {
         for(auto& e : element->expressions())
-            e->visit(*this);
+            Visitor::visit(this, e);
         _literal += element->constant();
         for(auto p :  element->places())
             _places.push_back(p.first);
     }
-    
+
     void RangeEvalContext::_accept(const UnfoldedUpperBoundsCondition* element)
     {
         _bool_result = true;
     }
-    
+
     void RangeEvalContext::_accept(const MultiplyExpr*)
     {
-        _bool_result = true;        
+        _bool_result = true;
     }
 
     void RangeEvalContext::_accept(const MinusExpr*)
     {
-        _bool_result = true;        
+        _bool_result = true;
     }
-    
+
     void RangeEvalContext::_accept(const SubtractExpr*)
     {
-        _bool_result = true;        
+        _bool_result = true;
     }
 }
 

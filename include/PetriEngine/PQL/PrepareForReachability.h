@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr prepareForReachability(const Condition* condition);
     Condition_ptr prepareForReachability(const Condition_ptr& condition);
@@ -43,7 +43,7 @@ namespace PetriEngine::PQL {
             bool prev_negated = _negated;
             _negated = negated;
 
-            condition->visit(*this);
+            Visitor::visit(this, condition);
 
             _negated = prev_negated;
             return _return_value;
@@ -91,7 +91,6 @@ namespace PetriEngine::PQL {
 
         void _accept(const ShallowCondition *condition) override;
     };
-
-}
+} }
 
 #endif //VERIFYPN_PREPAREFORREACHABILITY_H

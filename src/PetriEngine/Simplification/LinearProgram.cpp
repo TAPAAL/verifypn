@@ -45,7 +45,7 @@ namespace PetriEngine {
         }
 
         constexpr auto infty = std::numeric_limits<REAL>::infinity();
-        
+
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
@@ -72,12 +72,12 @@ namespace PetriEngine {
             auto lp = context.makeBaseLP();
             if(lp == nullptr)
                 return false;
-            
+
             int rowno = 1 + net->numberOfPlaces();
             glp_add_rows(lp, _equations.size());
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
-                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));                
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
                 glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 if(!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
@@ -102,12 +102,12 @@ namespace PetriEngine {
 
                 if(context.timeout())
                 {
-                    std::cerr << "glpk: construction timeout" << std::endl;
+//                    std::cerr << "glpk: construction timeout" << std::endl;
                     glp_delete_prob(lp);
                     return false;
                 }
             }
-            
+
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
                 glp_set_obj_coef(lp, i, 0);
@@ -128,7 +128,7 @@ namespace PetriEngine {
             if (result == GLP_ETMLIM)
             {
                 _result = result_t::UKNOWN;
-                std::cerr << "glpk: timeout" << std::endl;
+                //std::cerr << "glpk: timeout" << std::endl;
             }
             else if(result == 0)
             {
@@ -143,7 +143,7 @@ namespace PetriEngine {
                     if(ires == GLP_ETMLIM)
                     {
                         _result = result_t::UKNOWN;
-                        std::cerr << "glpk mip: timeout" << std::endl;
+                        //std::cerr << "glpk mip: timeout" << std::endl;
                     }
                     else if(ires == 0)
                     {
@@ -217,7 +217,8 @@ namespace PetriEngine {
                     p0 = m0[tp];
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
-                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);
+                        row[1 + t] = net->outArc(t, tp);
+                        row[1 + t] -= net->inArc(tp, t);
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
                     }
@@ -227,8 +228,10 @@ namespace PetriEngine {
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
                         double cnt = 0;
-                        for(auto tp : places)
-                            cnt += net->outArc(t, tp) - net->inArc(tp, t);
+                        for(auto tp : places) {
+                            cnt += net->outArc(t, tp);
+                            cnt -= net->inArc(tp, t);
+                        }
                         row[1 + t] = cnt;
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
@@ -253,7 +256,7 @@ namespace PetriEngine {
                 auto tmp_lp = context.makeBaseLP();
                 if(tmp_lp == nullptr)
                     return result;
-            
+
                 // Max the objective
                 glp_set_obj_dir(tmp_lp, GLP_MAX);
 
@@ -266,7 +269,7 @@ namespace PetriEngine {
                 auto rs = glp_simplex(tmp_lp, &settings);
                 if (rs == GLP_ETMLIM)
                 {
-                    std::cerr << "glpk: timeout" << std::endl;
+                    //std::cerr << "glpk: timeout" << std::endl;
                 }
                 else if(rs == 0)
                 {
@@ -279,7 +282,7 @@ namespace PetriEngine {
                         isettings.presolve = GLP_OFF;
                         auto rs = glp_intopt(tmp_lp, &isettings);
                         if (rs == GLP_ETMLIM) {
-                            std::cerr << "glpk mip: timeout" << std::endl;
+                            //std::cerr << "glpk mip: timeout" << std::endl;
                         } else if (rs == 0) {
                             auto status = glp_mip_status(tmp_lp);
                             if (status == GLP_OPT) {

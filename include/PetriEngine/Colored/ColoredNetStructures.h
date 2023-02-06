@@ -20,12 +20,16 @@
 #ifndef COLOREDNETSTRUCTURES_H
 #define COLOREDNETSTRUCTURES_H
 
-#include <vector>
-#include <set>
-#include <assert.h>
+
 #include "Colors.h"
 #include "Expressions.h"
 #include "Multiset.h"
+
+#include "utils/structures/shared_string.h"
+
+#include <vector>
+#include <set>
+#include <cassert>
 
 namespace PetriEngine {
     namespace Colored {
@@ -35,27 +39,42 @@ namespace PetriEngine {
             uint32_t transition;
             ArcExpression_ptr expr;
             bool input;
-            uint32_t weight;
+            uint32_t inhib_weight; // inhibitor arc if >0
+
+            bool operator == (const Arc& other) const
+            {
+                return place == other.place && transition == other.transition && input == other.input && inhib_weight == other.inhib_weight && (inhib_weight > 0 || to_string(*expr) == to_string(*other.expr));
+            }
         };
 
+        [[maybe_unused]]
+        struct {
+            bool operator()(const Arc &a, const Arc &b) const
+            {
+                return a.place < b.place;
+            }
+        } ArcLessThanByPlace;
+
         struct Transition {
-            std::string name;
+            shared_const_string name;
             GuardExpression_ptr guard;
             int32_t _player;
             double _x = 0, _y = 0;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            std::vector<std::unordered_map<const Variable *, interval_vector_t>> variableMaps;
-            bool considered;
+            uint32_t inhibited = 0; // Number of inhibitor arcs
+            bool skipped = false;
         };
 
         struct Place {
-            std::string name;
+            shared_const_string name;
             const ColorType* type;
             Multiset marking;
             double _x = 0, _y = 0;
-            bool inhibitor;
-            bool stable = true;
+            uint32_t inhibitor = 0; // Number of inhibitor arcs
+            std::vector<uint32_t> _pre;
+            std::vector<uint32_t> _post;
+            bool skipped = false;
         };
     }
 }

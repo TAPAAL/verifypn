@@ -2,7 +2,7 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   ContainsVisitor.h
  * Author: Peter G. Jensen <root@petergjoel.dk>
  *
@@ -40,120 +40,120 @@ namespace PetriEngine
                 _value = true;
             return _value;
         }
-        
-        virtual void _accept(const NotCondition* element) override 
-        { 
+
+        virtual void _accept(const NotCondition* element) override
+        {
             if(found_type(element)) return;
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
         virtual void _accept(const PetriEngine::PQL::AndCondition* element) override
-        { 
+        {
             if(found_type(element)) return;
             for(auto& e : *element)
             {
-                e->visit(*this);
+                Visitor::visit(this, e);
                 if(_value) return;
             }
         }
 
         virtual void _accept(const OrCondition* element) override
-        { 
+        {
             if(found_type(element)) return;
             for(auto& e : *element)
             {
-                e->visit(*this);
+                Visitor::visit(this, e);
                 if(_value) return;
             }
         }
-        
+
         template<typename K>
         void handleCompare(const CompareCondition* element)
         {
             if(found_type(element)) return;
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
             if(_value) return;
-            (*element)[1]->visit(*this);            
+            Visitor::visit(this, (*element)[1]);
         }
 
         virtual void _accept(const LessThanCondition* element) override
-        { 
+        {
             handleCompare<decltype(element)>(element);
         }
-        
+
         virtual void _accept(const LessThanOrEqualCondition* element) override
-        { 
+        {
             handleCompare<decltype(element)>(element);
         }
-        
+
         virtual void _accept(const NotEqualCondition* element) override
-        { 
+        {
             handleCompare<decltype(element)>(element);
         }
 
         virtual void _accept(const EqualCondition* element) override
-        { 
+        {
             handleCompare<decltype(element)>(element);
-        }        
-        
+        }
+
         virtual void _accept(const IdentifierExpr* element) override
-        { 
+        {
             if(found_type(element)) return;
-        }        
+        }
 
         virtual void _accept(const LiteralExpr* element) override
-        { 
+        {
             if(found_type(element)) return;
         }
-        
+
         virtual void _accept(const UnfoldedIdentifierExpr* element) override
-        { 
+        {
             if(found_type(element)) return;
         }
-        
+
         template<typename K>
         void handleNaryExpr(K element)
         {
             if(found_type(element)) return;
             for(auto& e : element->expressions())
             {
-                e->visit(*this);
+                Visitor::visit(this, e);
                 if(_value) return;
-            }            
+            }
         }
-        
+
         virtual void _accept(const PlusExpr* element) override
-        { 
+        {
             handleNaryExpr<decltype(element)>(element);
         }
 
         virtual void _accept(const MultiplyExpr* element) override
-        { 
+        {
             handleNaryExpr<decltype(element)>(element);
         }
-        
+
         virtual void _accept(const MinusExpr* element) override
-        { 
+        {
             if(found_type(element)) return;
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
-        
+
         virtual void _accept(const SubtractExpr* element) override
-        { 
+        {
             handleNaryExpr<decltype(element)>(element);
         }
 
         virtual void _accept(const DeadlockCondition* element) override
-        { 
+        {
             if(found_type(element)) return;
-        }        
-        
+        }
+
         virtual void _accept(const CompareConjunction* element) override
-        { 
+        {
             if(found_type(element)) return;
-        }        
-        
+        }
+
         virtual void _accept(const UnfoldedUpperBoundsCondition* element) override
-        { 
+        {
             if(found_type(element)) return;
         }
 
@@ -161,9 +161,9 @@ namespace PetriEngine
         void handleSimpleQuantifierCondition(K element)
         {
             if(found_type(element)) return;
-            (*element)[0]->visit(*this);
+            Visitor::visit(this, (*element)[0]);
         }
-        
+
         virtual void _accept(const EFCondition* el)
         {   handleSimpleQuantifierCondition(el); }
         virtual void _accept(const EGCondition* el)
@@ -176,25 +176,25 @@ namespace PetriEngine
         {   handleSimpleQuantifierCondition(el); }
         virtual void _accept(const AXCondition* el)
         {   handleSimpleQuantifierCondition(el); }
-        
+
         virtual void _accept(const EUCondition* el)
-        {   
+        {
             if(found_type(el)) return;
-            (*el)[0]->visit(*this);
+            Visitor::visit(this, (*el)[0]);
             if(_value) return;
-            (*el)[1]->visit(*this);
+            Visitor::visit(this, (*el)[1]);
         }
-        
+
         virtual void _accept(const AUCondition* el)
-        {   
+        {
             if(found_type(el)) return;
-            (*el)[0]->visit(*this);
+            Visitor::visit(this, (*el)[0]);
             if(_value) return;
-            (*el)[1]->visit(*this);
+            Visitor::visit(this, (*el)[1]);
         }
 
         // shallow elements, neither of these should exist in a compiled expression
-        virtual void _accept(const UnfoldedFireableCondition* element) 
+        virtual void _accept(const UnfoldedFireableCondition* element)
         {   found_type(element); };
         virtual void _accept(const FireableCondition* element)
         {   found_type(element); };
@@ -210,8 +210,8 @@ namespace PetriEngine
         {   found_type(element); };
         virtual void _accept(const BooleanCondition* element)
         {   found_type(element); };
-        
-        
+
+
     };
 }
 

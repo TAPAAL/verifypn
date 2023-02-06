@@ -85,27 +85,32 @@ namespace PetriEngine {
                 std::swap(_marking, other._marking);
             }
 
-            void print(const PetriNet& net, std::ostream &os = std::cout) {
-                for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
-                    if(_marking[i])
-                        os << net.placeNames()[i] << ": " << _marking[i] << std::endl;
+            void print(const PetriNet& net, std::ostream &os = std::cout, uint32_t hyper_traces = 1) const {
+                hyper_traces = std::max<uint32_t>(hyper_traces, 1);
+                for(uint32_t j = 0; j < hyper_traces; ++j)
+                {
+                    for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
+                        if(_marking[i+j*net.numberOfPlaces()])
+                        {
+                            if(hyper_traces > 1)
+                                os << "H[" << j << "] ";
+                            os << *net.placeNames()[i] << ": " << _marking[i+j*net.numberOfPlaces()] << '\n';
+                        }
+                    }
                 }
-                os << std::endl;
             }
 
-            std::ostream &printShort(const PetriNet &net, std::ostream &os) {
-                for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
-                        os << _marking[i];
+            std::ostream &printShort(const PetriNet &net, std::ostream &os, uint32_t hyper_traces = 1) const {
+                hyper_traces = std::max<uint32_t>(hyper_traces, 1);
+                for(uint32_t j = 0; j < hyper_traces; ++j)
+                {
+                    if(hyper_traces > 1)
+                        os << "H[" << j << "] ";
+                    for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
+                        os << _marking[i+j*net.numberOfPlaces()] << ",";
+                    }
                 }
                 return os;
-            }
-
-            bool operator==(const State &rhs) const {
-                return _marking == rhs._marking;
-            }
-
-            bool operator!=(const State &rhs) const {
-                return !(rhs == *this);
             }
 
             MarkVal operator[](size_t i) const { return _marking[i]; }

@@ -45,14 +45,18 @@
  */
 
 
+#include <PetriEngine/Colored/PnmlWriter.h>
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
+#include "LTL/LTLSearch.h"
+#include "PetriEngine/PQL/PQL.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 int main(int argc, const char** argv) {
+    shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
         options_t options;
         if (options.parse(argc, argv)) // if options were --help or --version
@@ -67,12 +71,17 @@ int main(int argc, const char** argv) {
         }
         options.print();
 
-        ColoredPetriNetBuilder cpnBuilder;
+        ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
+        }
+
+        if (!options.model_col_out_file.empty() && cpnBuilder.hasPartition()) {
+            std::cerr << "Cannot write colored PNML as the original net has partitions. Not supported (yet)" << std::endl;
+            return to_underlying(ReturnValue::UnknownCode);
         }
 
         if (options.cpnOverApprox && !cpnBuilder.isColored()) {
@@ -86,7 +95,7 @@ int main(int argc, const char** argv) {
 
         //----------------------- Parse Query -----------------------//
         std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(options, querynames);
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
         auto queries = options.logic == TemporalLogic::CTL
                        ? getCTLQueries(ctlStarQueries)
                        : getLTLQueries(ctlStarQueries);
@@ -131,21 +140,27 @@ int main(int argc, const char** argv) {
             }
         }
 
+        std::stringstream ss;
+        std::ostream& out = options.printstatistics == StatisticsLevel::Full ? std::cout : ss;
+        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
 
-        if (options.computePartition) {
-            cpnBuilder.computePartition(options.partitionTimeout);
-        }
-        if (options.symmetricVariables) {
-            cpnBuilder.computeSymmetricVariables();
-        }
-        if (options.computeCFP) {
-            cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced,
-                                                 options.intervalTimeout);
+        if (options.model_col_out_file.size() > 0) {
+            std::fstream file;
+            file.open(options.model_col_out_file, std::ios::out);
+            PetriEngine::Colored::PnmlWriter writer(cpnBuilder, file);
+            writer.toColPNML();
         }
 
+        if (!options.doUnfolding) {
+            return 0;
+        }
 
-        auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
-        printUnfoldingStats(cpnBuilder, options);
+        auto [builder, transition_names, place_names] = unfold(cpnBuilder,
+            options.computePartition, options.symmetricVariables,
+            options.computeCFP, out,
+            options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
+            options.intervalTimeout, options.cpnOverApprox);
+
         builder.sort();
         std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
         ResultPrinter printer(&builder, &options, querynames);
@@ -166,20 +181,30 @@ int main(int argc, const char** argv) {
             for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
                 initial_size += qm0[i];
 
-            if (queries.size() == 0 ||
-                contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
+            if(queries.empty() && options.cpnOverApprox)
+            {
+                std::cerr << "WARNING: Could not run CPN over-approximation on any queries, terminating." << std::endl;
+                std::exit(0);
+            }
+
+            if (queries.empty() ||
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, b2, qnet.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Could not analyze the queries");
             }
 
             if (options.unfold_query_out_file.size() > 0) {
-                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file);
+                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file, options.keep_solved);
             }
 
 
             {
                 EvaluationContext context(qm0.get(), qnet.get());
                 for (size_t i = 0; i < queries.size(); ++i) {
-                    auto r = queries[i]->evaluate(context);
+                    ContainsFireabilityVisitor has_fireability;
+                    Visitor::visit(has_fireability, queries[i]);
+                    if(has_fireability.getReturnValue() && options.cpnOverApprox) continue;
+                    if(containsUpperBounds(queries[i])) continue;
+                    auto r = PQL::evaluate(queries[i].get(), context);
                     if(r == Condition::RFALSE)
                     {
                         queries[i] = BooleanCondition::FALSE_CONSTANT;
@@ -198,7 +223,7 @@ int main(int argc, const char** argv) {
 
 
             if (options.query_out_file.size() > 0) {
-                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io);
+                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
             }
 
             if (!options.statespaceexploration) {
@@ -225,7 +250,12 @@ int main(int argc, const char** argv) {
                             // we misuse the implementation to make sure we print the empty-trace
                             // when the initial marking is sufficient.
                             Structures::StateSet tmp(*qnet, 0);
-                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied, nullptr,
+                            // we are tricking the printer into printing the trace here.
+                            // TODO fix, remove setInvariant
+                            // also we make a new FALSE object here to avoid sideeffects.
+                            queries[i] = std::make_shared<BooleanCondition>(false);
+                            queries[i]->setInvariant(true);
+                            results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied, nullptr,
                                                     0, 1, 1, initial_size, &tmp, 0, qm0.get()).first;
                         }
                         else
@@ -248,7 +278,6 @@ int main(int argc, const char** argv) {
                             results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                         alldone = false;
                     } else {
-                        queries[i] = prepareForReachability(queries[i]);
                         alldone = false;
                     }
                 }
@@ -262,8 +291,9 @@ int main(int argc, const char** argv) {
 
         //--------------------- Apply Net Reduction ---------------//
 
+        builder.freezeOriginalSize();
         if (options.enablereduction > 0) {
-            // Compute how many times each place appears in the query
+            // Compute structural reductions
             builder.startTimer();
             builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr,
                            options.reductionTimeout, options.reductions);
@@ -284,7 +314,7 @@ int main(int argc, const char** argv) {
             return to_underlying(ReturnValue::SuccessCode);
 
         if (options.replay_trace) {
-            if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+            if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("Fatal error assigning indexes");
             }
             std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -304,6 +334,14 @@ int main(int argc, const char** argv) {
 
         if (options.doVerification) {
 
+            auto verifStart = std::chrono::high_resolution_clock::now();
+            // When this ptr goes out of scope it will print the time spent during verification
+            std::shared_ptr<void> defer (nullptr, [&verifStart](...){
+                auto verifEnd = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::microseconds>(verifEnd - verifStart).count() / 1000000.0;
+                std::cout << std::setprecision(6) << "Spent " << diff << " on verification" << std::endl;
+            });
+
             //----------------------- Verify CTL queries -----------------------//
             std::vector<size_t> ctl_ids;
             std::vector<size_t> ltl_ids;
@@ -319,7 +357,7 @@ int main(int argc, const char** argv) {
             }
 
             if (options.replay_trace) {
-                if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                if (contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                     throw base_error("Fatal error assigning indexes");
                 }
                 std::ifstream replay_file(options.replay_file, std::ifstream::in);
@@ -332,7 +370,7 @@ int main(int argc, const char** argv) {
 
             // Assign indexes
             if (queries.empty() ||
-                contextAnalysis(cpnBuilder, builder, net.get(), queries) != ReturnValue::ContinueCode) {
+                contextAnalysis(cpnBuilder.isColored() && !options.cpnOverApprox, transition_names, place_names, builder, net.get(), queries) != ReturnValue::ContinueCode) {
                 throw base_error("An error occurred while assigning indexes");
             }
 
@@ -363,19 +401,45 @@ int main(int argc, const char** argv) {
             if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
                 options.usedltl = true;
 
-                for (auto qid: ltl_ids) {
-                    auto res = LTL::LTLMain(net.get(), queries[qid], querynames[qid], options, builder.getReducer());
+                for (auto qid : ltl_ids) {
+                    LTL::LTLSearch search(*net, queries[qid], options.buchiOptimization, options.ltl_compress_aps);
+                    auto res = search.solve(options.trace != TraceLevel::None, options.kbound,
+                        options.ltlalgorithm, options.stubbornreduction ? options.ltl_por : LTL::LTLPartialOrder::None,
+                        options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
+
+                    if(options.printstatistics != StatisticsLevel::None)
+                        search.print_stats(std::cout);
+
+                    std::cout << "FORMULA " << querynames[qid]
+                        << (res ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                        << LTL::to_string(options.ltlalgorithm)
+                        << (search.is_weak() ? " WEAK_SKIP" : "")
+                        << (search.used_partial_order() != LTL::LTLPartialOrder::None ? " STUBBORN" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Visible ? " CLASSIC_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Automaton ? " AUT_STUB" : "")
+                        << (search.used_partial_order() == LTL::LTLPartialOrder::Liebke ? " LIEBKE_STUB" : "");
+                    auto heur = search.heuristic_type();
+                    if (!heur.empty())
+                        std::cout << " HEURISTIC " << heur;
+                    std::cout << " OPTIM-" << to_underlying(options.buchiOptimization) << std::endl;
+
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
+                    if(options.trace != TraceLevel::None)
+                        search.print_trace(std::cerr, *builder.getReducer());
                 }
+
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
                     return to_underlying(ReturnValue::SuccessCode);
                 }
             }
 
 
-            for (auto i: synth_ids) {
+            for (auto i : synth_ids) {
+                if(options.tar) {
+                    throw base_error("TAR not supported for synthesis.");
+                }
                 Synthesis::SimpleSynthesis strategy(*net, *queries[i], options.kbound);
 
                 std::ostream *strategy_out = nullptr;
@@ -410,7 +474,7 @@ int main(int argc, const char** argv) {
                         STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                         stSolver.solve(options.siphontrapTimeout);
                         results[i] = stSolver.printResult();
-                        if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics == StatisticsLevel::Full) {
+                        if (results[i] != Reachability::ResultPrinter::Unknown && options.printstatistics == StatisticsLevel::Full) {
                             std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
                         }
                     }
@@ -427,6 +491,12 @@ int main(int argc, const char** argv) {
             // Change default place-holder to default strategy
             if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
+            // remove the prefix EF/AF (LEGACY, should not be handled here)
+            for(uint32_t i = 0; i < results.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                    queries[i] = prepareForReachability(queries[i]);
+            }
             if (options.tar && net->numberOfPlaces() > 0) {
                 //Create reachability search strategy
                 TarResultPrinter tar_printer(printer);

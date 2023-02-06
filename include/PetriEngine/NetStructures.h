@@ -16,13 +16,11 @@ namespace PetriEngine {
     struct Arc {
         uint32_t place;
         uint32_t weight;
-        bool skip = false;
         bool inhib = false;
 
         Arc() :
         place(std::numeric_limits<uint32_t>::max()),
         weight(std::numeric_limits<uint32_t>::max()),
-        skip(false),
         inhib(false) {
         };
 

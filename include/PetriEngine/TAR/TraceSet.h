@@ -2,7 +2,7 @@
  *  Copyright Peter G. Jensen, all rights reserved.
  */
 
-/* 
+/*
  * File:   TraceSet.h
  * Author: Peter G. Jensen <root@petergjoel.dk>
  *
@@ -15,6 +15,8 @@
 #include "range.h"
 #include "TARAutomata.h"
 #include "PetriEngine/PetriNet.h"
+
+#include "utils/structures/shared_string.h"
 
 #include <cinttypes>
 #include <vector>
@@ -32,7 +34,7 @@ namespace PetriEngine {
             bool follow(const std::set<size_t>& from, std::set<size_t>& nextinter, size_t symbol);
             std::set<size_t> maximize(const std::set<size_t>& from) const;
             std::set<size_t> minimize(const std::set<size_t>& from) const;
-            std::set<size_t> initial() const { return _initial; }   
+            std::set<size_t> initial() const { return _initial; }
             std::ostream& print(std::ostream& out) const;
             void removeEdges(size_t edge);
         private:

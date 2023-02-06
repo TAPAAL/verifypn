@@ -25,6 +25,8 @@
 #include "utils/structures/light_deque.h"
 #include "LTL/Structures/ProductStateFactory.h"
 
+#include <ptrie/ptrie_map.h>
+
 namespace LTL {
 
     /**
@@ -40,58 +42,64 @@ namespace LTL {
      *   On Nested Depth First Search<br>
      *   https://spinroot.com/gerard/pdf/inprint/spin96.pdf
      * </p>
-     * For most use cases, Tarjan's algorithm (see LTL::TarjanModelChecker) is faster.
-     * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
-     *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
      */
-    template<typename SucGen>
-    class NestedDepthFirstSearch : public ModelChecker<ProductSuccessorGenerator, SucGen> {
+    class NestedDepthFirstSearch : public ModelChecker {
     public:
-        NestedDepthFirstSearch(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &query,
-                               const Structures::BuchiAutomaton &buchi, SucGen *gen, const bool print_trace, int kbound, const PetriEngine::Reducer* reducer)
-                : ModelChecker<ProductSuccessorGenerator, SucGen>(net, query, buchi, gen, reducer),
-                  _states(net, kbound), _print_trace(print_trace) {}
+        NestedDepthFirstSearch(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr &query,
+                               const Structures::BuchiAutomaton &buchi, uint32_t kbound, uint32_t hyper_traces)
+                : ModelChecker(net, query, buchi), _kbound(kbound), _hyper_traces(hyper_traces == 0 ? 1 : hyper_traces) {}
 
-        bool isSatisfied() override;
+        virtual bool check();
 
-        void printStats(std::ostream &os) override;
+        void print_stats(std::ostream &os) const override;
+
+        virtual size_t max_tokens() const override;
+
+        virtual size_t get_discovered() const override;
+
+        virtual size_t get_markings() const override;
+
+        virtual size_t get_configurations() const override;
 
     private:
         using State = LTL::Structures::ProductState;
-        std::pair<bool,size_t> mark(State& state, uint8_t);
 
-
-        LTL::Structures::BitProductStateSet<> _states;
-
-        std::unordered_map<size_t, uint8_t> _markers;
-        //std::vector<uint8_t> _markers;
+        ptrie::map<size_t, uint8_t> _markers;
         static constexpr uint8_t MARKER1 = 1;
         static constexpr uint8_t MARKER2 = 2;
         size_t _mark_count[3] = {0,0,0};
+        const uint32_t _kbound = 0;
+        const uint32_t _hyper_traces = 0;
+        size_t _discovered = 0;
+        size_t _max_tokens = 0;
+        size_t _markings = 0;
+        size_t _configurations = 0;
 
-        struct StackEntry {
+        template<typename T>
+        struct stack_entry_t {
             size_t _id;
-            typename SucGen::successor_info_t _sucinfo;
+            typename T::successor_info_t _sucinfo;
         };
 
-        bool _violation = false;
-        const bool _print_trace = false;
+        template<typename S>
+        std::pair<bool,size_t> mark(S& states, State& state, uint8_t);
 
-        //Used for printing the trace
-        std::stack<std::pair<size_t, size_t>> _nested_transitions;
+        template<typename G>
+        bool check_with_generator(G& gen);
 
-        void dfs();
+        template<typename T, typename S>
+        void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states, size_t init);
 
-        void ndfs(const State &state, light_deque<StackEntry>& nested_todo);
+        template<typename T, typename S>
+        void dfs(ProductSuccessorGenerator<T>& successor_generator, S& states);
 
-        void print_trace(light_deque<StackEntry>& todo, light_deque<StackEntry>& nested_todo, std::ostream &os = std::cout);
+        template<typename T, typename S>
+        void ndfs(ProductSuccessorGenerator<T>& successor_generator, S& states, const State &state, light_deque<stack_entry_t<T>>& nested_todo);
+
+        template<typename T>
+        void build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo);
     };
 
-    extern template
-    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator>;
-
-    extern template
-    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H

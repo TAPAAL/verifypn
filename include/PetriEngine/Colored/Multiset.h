@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   Multiset.h
  * Author: andreas
  *
@@ -41,14 +41,18 @@ namespace PetriEngine {
             };
 
             typedef std::vector<std::pair<uint32_t,uint32_t>> Internal;
-            
+
         public:
             Multiset();
-            Multiset(const Multiset& orig);
+            Multiset(const Multiset& orig) = default;
+            Multiset(Multiset&&) = default;
             Multiset(std::pair<const Color*,uint32_t> color);
             Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors);
             virtual ~Multiset();
-            
+
+            Multiset& operator=(const Multiset&) = default;
+            Multiset& operator=(Multiset&&) = default;
+
             Multiset operator+ (const Multiset& other) const;
             Multiset operator- (const Multiset& other) const;
             Multiset operator* (uint32_t scalar) const;
@@ -57,7 +61,10 @@ namespace PetriEngine {
             void operator*= (uint32_t scalar);
             uint32_t operator[] (const Color* color) const;
             uint32_t& operator[] (const Color* color);
-            
+
+            bool isSubsetOf(const Multiset&) const;
+            bool isSubsetOrEqTo(const Multiset&) const;
+
             bool empty() const;
             void clean();
 
@@ -66,12 +73,12 @@ namespace PetriEngine {
             }
 
             size_t size() const;
-            
+
             const Iterator begin() const;
             const Iterator end() const;
 
             std::string toString() const;
-            
+
         private:
             Internal _set;
             const ColorType* _type;

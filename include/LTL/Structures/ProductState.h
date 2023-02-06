@@ -25,7 +25,7 @@ namespace LTL {
     template <class SuccessorGen>
     class ProductSuccessorGenerator;
 }
-namespace LTL::Structures {
+namespace LTL { namespace Structures {
     /**
      * State on the form (M, q) for marking M and NBA state q.
      * Represented as array of size nplaces + 1, where the last element is the number
@@ -35,58 +35,25 @@ namespace LTL::Structures {
     public:
         explicit ProductState(const BuchiAutomaton* aut = nullptr) : PetriEngine::Structures::State(), _aut(aut) {}
 
-        void setMarking(PetriEngine::MarkVal* marking, size_t nplaces)
-        {
-            State::setMarking(marking);
-            // because zero-indexing
-            buchi_state_idx = nplaces;
+        uint32_t get_buchi_state() const {
+            return _buchi_state;
         }
 
-        uint32_t getBuchiState() const {
-            return marking()[buchi_state_idx];
-        }
-
-        void setBuchiState(uint32_t state) {
-            marking()[buchi_state_idx] = state;
-        }
-
-        [[nodiscard]] bool markingEqual(const PetriEngine::MarkVal *rhs) const {
-            for (size_t i = 0; i < buchi_state_idx; ++i) {
-                if (marking()[i] != rhs[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        bool operator==(const ProductState &rhs) const {
-            for (size_t i = 0; i <= buchi_state_idx; ++i) {
-                if (marking()[i] != rhs.marking()[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-
-        size_t size() const { return buchi_state_idx + 1; }
-
-
-        bool operator!=(const ProductState &rhs) const {
-            return !(rhs == *this);
+        void set_buchi_state(uint32_t state) {
+            _buchi_state = state;
         }
 
         [[nodiscard]] bool is_accepting() const {
             assert(_aut);
-            return _aut->_buchi->state_is_accepting(getBuchiState());
+            return _aut->buchi().state_is_accepting(get_buchi_state());
         }
 
     private:
         template <typename T>
         friend class LTL::ProductSuccessorGenerator;
-        size_t buchi_state_idx;
-        const LTL::Structures::BuchiAutomaton *_aut = nullptr;
+        size_t _buchi_state;
+        const LTL::Structures::BuchiAutomaton* _aut = nullptr;
     };
-}
+} }
 
 #endif //VERIFYPN_PRODUCTSTATE_H

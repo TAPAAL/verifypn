@@ -14,6 +14,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/PrepareForReachability.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+#include "LTL/LTLSearch.h"
 
 #include <iostream>
 #include <iomanip>
@@ -42,18 +43,14 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
     return ReturnValue::ContinueCode;
 }
 
-bool singleSolve(Condition* query, PetriNet* net,
-                 CTLAlgorithmType algorithmtype,
-                 Strategy strategytype, bool partial_order, CTLResult& result);
-
-bool singleSolve(const Condition_ptr& query, PetriNet* net,
+bool CTLSingleSolve(const Condition_ptr& query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
-    return singleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
+    return CTLSingleSolve(query.get(), net, algorithmtype, strategytype, partial_order, result);
 }
 
-bool singleSolve(Condition* query, PetriNet* net,
+bool CTLSingleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
@@ -74,6 +71,7 @@ bool singleSolve(Condition* query, PetriNet* net,
     result.processedNegationEdges += alg->processedNegationEdges();
     result.exploredConfigurations += alg->exploredConfigurations();
     result.numberOfEdges += alg->numberOfEdges();
+    result.maxTokens = std::max(graph.maxTokens(), result.maxTokens);
     return res;
 }
 
@@ -81,13 +79,41 @@ bool recursiveSolve(const Condition_ptr& query, PetriNet* net,
                     CTLAlgorithmType algorithmtype,
                     Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
 
-class ResultHandler : public AbstractHandler {
+class SimpleResultHandler : public AbstractHandler
+{
+public:
+    size_t _expanded = 0;
+    size_t _explored = 0;
+    size_t _discovered = 0;
+    size_t _max_tokens = 0;
+    size_t _stored = 0;
+
+    std::pair<AbstractHandler::Result, bool> handle(
+                size_t index,
+                PQL::Condition* query,
+                AbstractHandler::Result result,
+                const std::vector<uint32_t>* maxPlaceBound,
+                size_t expandedStates,
+                size_t exploredStates,
+                size_t discoveredStates,
+                int maxTokens,
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
+        _expanded = std::max(_expanded, expandedStates);
+        _explored = std::max(_explored, exploredStates);
+        _discovered = std::max(_discovered, discoveredStates);
+        _max_tokens = std::max<size_t>(_max_tokens, maxTokens);
+        _stored = std::max(_stored, stateset->size());
+        return std::make_pair(result, false);
+    }
+};
+
+class ResultHandler : public SimpleResultHandler {
     private:
         bool _is_conj = false;
         const std::vector<int8_t>& _lstate;
     public:
         ResultHandler(bool is_conj, const std::vector<int8_t>& lstate)
-        : _is_conj(is_conj), _lstate(lstate)
+        : SimpleResultHandler(), _is_conj(is_conj), _lstate(lstate)
         {}
 
         std::pair<AbstractHandler::Result, bool> handle(
@@ -110,6 +136,7 @@ class ResultHandler : public AbstractHandler {
                 result = _lstate[index] < 0 ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
             }
             bool terminate = _is_conj ? (result == ResultPrinter::NotSatisfied) : (result == ResultPrinter::Satisfied);
+            SimpleResultHandler::handle(index, query, result, maxPlaceBound, expandedStates, exploredStates, discoveredStates, maxTokens, stateset, lastmarking, initialMarking, false);
             return std::make_pair(result, terminate);
         }
 };
@@ -144,6 +171,10 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         StatisticsLevel::None,
                                         false,
                                         options.seed());
+            result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
+            result.exploredConfigurations += handler._explored;
+            result.numberOfConfigurations += handler._stored;
+            result.numberOfMarkings += handler._stored;
         }
         else
         {
@@ -179,23 +210,6 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
     }
     return is_conj;
 }
-
-class SimpleResultHandler : public AbstractHandler
-{
-public:
-    std::pair<AbstractHandler::Result, bool> handle(
-                size_t index,
-                PQL::Condition* query,
-                AbstractHandler::Result result,
-                const std::vector<uint32_t>* maxPlaceBound,
-                size_t expandedStates,
-                size_t exploredStates,
-                size_t discoveredStates,
-                int maxTokens,
-                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
-        return std::make_pair(result, false);
-    }
-};
 
 bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
@@ -246,12 +260,52 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                            StatisticsLevel::None,
                            false,
                            options.seed());
+            result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
+            result.exploredConfigurations += handler._explored;
+            result.numberOfConfigurations += handler._stored;
+            result.numberOfMarkings += handler._stored;
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
-    else
+    else if(!containsNext(query)) {
+        // there are probably many more cases w. nested quantifiers we can do
+        // one instance is E[ non_temp U [E non_temp U ...]] in a chain
+        // also, this should go into some *neat* visitor to do the check.
+        auto q = query->shared_from_this();
+        bool ok = false;
+        if(auto* af = dynamic_cast<AFCondition*>(query))
+        {
+            if(!isTemporal((*af)[0]))
+                ok = true;
+        }
+        else if(auto* eg = dynamic_cast<EGCondition*>(query))
+        {
+            if(!isTemporal((*eg)[0]))
+                ok = true;
+        }
+        else if(auto* au = dynamic_cast<AUCondition*>(query)) {
+            if(!isTemporal((*au)[0]) && !isTemporal((*au)[1]))
+                ok = true;
+        }
+        else if(auto* eu = dynamic_cast<EUCondition*>(query)) {
+            if(!isTemporal((*eu)[0]) && !isTemporal((*eu)[1]))
+                ok = true;
+        }
+        if(ok)
+        {
+            LTL::LTLSearch search(*net, q, options.buchiOptimization, options.ltl_compress_aps);
+            auto r = search.solve(false, options.kbound, options.ltlalgorithm, options.ltl_por,
+                            options.strategy, options.ltlHeuristic, options.ltluseweak, options.seed_offset);
+            result.numberOfMarkings += search.markings();
+            result.numberOfConfigurations += search.configurations();
+            result.exploredConfigurations += search.explored();
+            result.maxTokens = std::max(search.max_tokens(), result.maxTokens);
+            return r;
+        }
+    }
+    //else
     {
-        return singleSolve(query, net, algorithmtype, strategytype, partial_order, result);
+        return CTLSingleSolve(query, net, algorithmtype, strategytype, partial_order, result);
     }
 }
 
@@ -294,9 +348,13 @@ ReturnValue CTLMain(PetriNet* net,
         result.exploredConfigurations = 0;
         result.numberOfEdges = 0;
         result.duration = 0;
+        result.maxTokens = 0;
         if(!solved)
         {
-            result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
+            if(options.strategy == Strategy::BFS || options.strategy == Strategy::RDFS)
+                result.result = CTLSingleSolve(result.query, net, algorithmtype, options.strategy, options.stubbornreduction, result);
+            else
+                result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
         result.print(querynames[qnum], printstatistics, qnum, options, std::cout);
     }

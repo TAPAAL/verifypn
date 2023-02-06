@@ -11,4 +11,7 @@ For creating the VM remember:
 
 - install time, parallel (check for --will-cite) and bc
 
+- to fix locales do: sudo apt-get purge locales
+                     sudo apt-get install locales
+
 - for running qemu, check the MCC18 folder.

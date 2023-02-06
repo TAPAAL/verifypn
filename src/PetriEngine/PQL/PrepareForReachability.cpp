@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #define RETURN(x) { _return_value = x; return; }
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Condition_ptr prepareForReachability(const Condition_ptr& condition) {
         return prepareForReachability(condition.get());
@@ -30,7 +30,7 @@ namespace PetriEngine::PQL {
 
     Condition_ptr prepareForReachability(const Condition* condition) {
         PrepareForReachabilityVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -129,4 +129,4 @@ namespace PetriEngine::PQL {
     void PrepareForReachabilityVisitor::_accept(const ShallowCondition* condition) {
         RETURN(subvisit(condition->getCompiled().get(), _negated))
     }
-}
+} }

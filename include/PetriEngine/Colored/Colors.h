@@ -51,10 +51,12 @@ namespace PetriEngine {
             const ColorType * const _colorType;
             std::string _colorName;
             uint32_t _id;
+            std::string _displayName;
 
         public:
             Color(const ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
             Color(const ColorType* colorType, uint32_t id, const char* color);
+            Color(const ColorType* colorType, uint32_t id, const char* color, const char* colorname);
             ~Color() {}
 
             bool isTuple() const {
@@ -74,6 +76,13 @@ namespace PetriEngine {
                     throw base_error("Cannot get color from a tuple color.");
                 }
                 return _colorName;
+            }
+
+            const std::string& getDisplayName() const {
+                if (this->isTuple()) {
+                    throw base_error("Cannot get display name from a tuple color.");
+                }
+                return _displayName;
             }
 
             const ColorType* getColorType() const {
@@ -118,6 +127,7 @@ namespace PetriEngine {
 
             static const ColorType* dotInstance();
             virtual void addColor(const char* colorName);
+            virtual void addColor(const char* colorName, const char* colorName1);
 
             virtual size_t size() const {
                 return _colors.size();
@@ -152,15 +162,6 @@ namespace PetriEngine {
                 return _colors[index];
             }
 
-            virtual const Color& operator[] (int index) const {
-                return _colors[index];
-            }
-
-            virtual const Color& operator[] (uint32_t index) const {
-                assert(index < _colors.size());
-                return _colors[index];
-            }
-
             virtual const Color* operator[] (const char* index) const;
 
             virtual const Color* operator[] (const std::string& index) const {
@@ -168,7 +169,7 @@ namespace PetriEngine {
             }
 
             virtual const Color* getColor(const std::vector<uint32_t> &ids) const {
-                assert(ids.size() == 1);
+                //assert(ids.size() == 1);
                 return &_colors[ids[0]];
             }
 
@@ -182,6 +183,10 @@ namespace PetriEngine {
 
             std::vector<Color>::const_iterator end() const {
                 return _colors.end();
+            }
+
+            virtual bool isProduct() const {
+                return false;
             }
         };
 
@@ -271,15 +276,12 @@ namespace PetriEngine {
             const Color* getColor(const std::vector<const Color*>& colors) const;
 
             const Color& operator[](size_t index) const override;
-            const Color& operator[](int index) const override {
-                return operator[]((size_t)index);
-            }
-            const Color& operator[](uint32_t index) const override {
-                return operator[]((size_t)index);
-            }
-
             const Color* operator[](const char* index) const override;
             const Color* operator[](const std::string& index) const override;
+
+            virtual bool isProduct() const {
+                return true;
+            }
         };
 
         struct Variable {

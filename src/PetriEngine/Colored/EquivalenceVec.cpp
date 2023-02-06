@@ -16,7 +16,7 @@ namespace PetriEngine {
                         for(const auto& EQinterval : EQClass.intervals()){
                             auto overlap = interval.getOverlap(EQinterval, _diagonalTuplePositions);
                             if(overlap.isSound()){
-                                auto singleInterval = EQinterval.getSingleColorInterval(); 
+                                auto singleInterval = EQinterval.getCanonicalInterval();
                                 for(uint32_t i = 0; i < _diagonalTuplePositions.size(); i++){
                                     if(_diagonalTuplePositions[i]){
                                         singleInterval[i] = interval[i];
@@ -30,7 +30,7 @@ namespace PetriEngine {
                 }
                 newTupleVec.push_back(std::move(newIntervalTuple));
             }
-            arcInterval._intervalTupleVec = std::move(newTupleVec);               
+            arcInterval._intervalTupleVec = std::move(newTupleVec);
         }
 
         void EquivalenceVec::mergeEqClasses(){
@@ -47,19 +47,19 @@ namespace PetriEngine {
                         _equivalenceClasses.erase(_equivalenceClasses.begin() + i);
                         break;
                     }
-                } 
+                }
             }
         }
 
         void EquivalenceVec::addColorToEqClassMap(const Color *color){
-            for(auto& eqClass : _equivalenceClasses){  
+            for(auto& eqClass : _equivalenceClasses){
                 std::vector<uint32_t> colorIds;
                 color->getTupleId(colorIds);
                 if(eqClass.containsColor(colorIds, _diagonalTuplePositions)){
                     _colorEQClassMap[color] = &eqClass;
                     break;
                 }
-            } 
+            }
         }
 
         void EquivalenceVec::applyPartition(std::vector<uint32_t> &colorIds) const{
@@ -67,7 +67,7 @@ namespace PetriEngine {
                 return;
             }
 
-            interval_t interval; 
+            interval_t interval;
             for(auto colorId : colorIds){
                 interval.addRange(colorId, colorId);
             }
@@ -75,29 +75,29 @@ namespace PetriEngine {
             for(const auto& EqClass : _equivalenceClasses){
                 for(const auto& EqInterval : EqClass.intervals()){
                     if(EqInterval.contains(interval, _diagonalTuplePositions)){
-                        auto singleInterval = EqInterval.getSingleColorInterval(); 
+                        auto singleInterval = EqInterval.getCanonicalInterval();
                         for(uint32_t i = 0; i < singleInterval.size(); i++){
-                            colorIds[i] = _diagonalTuplePositions[i]? interval[i]._lower: singleInterval[i]._lower;
+                            colorIds[i] = _diagonalTuplePositions[i] ? interval[i]._lower : singleInterval[i]._lower;
                         }
                     }
                 }
             }
         }
 
-        //Add color ids of diagonal positions as we represent partitions with diagonal postitions 
+        //Add color ids of diagonal positions as we represent partitions with diagonal postitions
         //as a single equivalence class to save space, but they should not be partition together
         const uint32_t EquivalenceVec::getUniqueIdForColor(const Colored::Color *color) const {
             PetriEngine::Colored::EquivalenceClass *eqClass = _colorEQClassMap.find(color)->second;
-            
+
             std::vector<uint32_t> colorTupleIds;
             std::vector<uint32_t> newColorTupleIds;
-            bool hasDiagonalPositions;
+            bool hasDiagonalPositions = false;
             color->getTupleId(colorTupleIds);
             for(uint32_t i = 0; i < colorTupleIds.size(); i++){
                 if(_diagonalTuplePositions[i]){
+                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(colorTupleIds[i]);
                 } else {
-                    hasDiagonalPositions = true;
                     newColorTupleIds.push_back(eqClass->intervals().back().getLowerIds()[i]);
                 }
             }
@@ -107,7 +107,7 @@ namespace PetriEngine {
             }
 
             return eqClass->id();
-            
+
         }
     }
 }

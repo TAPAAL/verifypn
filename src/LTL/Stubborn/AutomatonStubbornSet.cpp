@@ -17,7 +17,7 @@
 
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
-#include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "LTL/Stubborn/LTLEvalAndSetVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 using namespace PetriEngine;
@@ -152,18 +152,18 @@ namespace LTL {
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
 #ifndef NDEBUG
-            std::cerr << "Lone successor " << _net.transitionNames()[_ordering.front()] << std::endl;
+            std::cerr << "Lone successor " << *_net.transitionNames()[_ordering.front()] << std::endl;
 #endif
             return true;
         }
 
 
-        GuardInfo buchi_state = _state_guards[state->getBuchiState()];
+        guard_info_t buchi_state = _state_guards[state->get_buchi_state()];
 
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
 
         // Check if retarding is satisfied for condition 3.
-        _retarding_satisfied = _aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram);
+        _retarding_satisfied = _aut.guard_valid(evaluationContext, buchi_state._retarding._bdd);
         /*
         if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
             set_all_stubborn();
@@ -172,7 +172,7 @@ namespace LTL {
         }*/
 
         // Calculate retarding subborn set to ensure S-INV.
-        auto negated_retarding = std::make_unique<NotCondition>(buchi_state.retarding.condition);
+        auto negated_retarding = std::make_unique<NotCondition>(buchi_state._retarding._condition);
         _retarding_stubborn_set.setQuery(negated_retarding.get());
         _retarding_stubborn_set.prepare(state);
 
@@ -180,8 +180,8 @@ namespace LTL {
         _nenabled = _ordering.size();
 
         // If a progressing formula satisfies the guard St=T is the only way to ensure NLG.
-        for (auto &q : buchi_state.progressing) {
-            if (_aut.guard_valid(evaluationContext, q.decision_diagram)) {
+        for (auto &q : buchi_state._progressing) {
+            if (_aut.guard_valid(evaluationContext, q._bdd)) {
                 set_all_stubborn();
                 __print_debug();
                 return true;
@@ -189,12 +189,12 @@ namespace LTL {
         }
 
         //Interesting on each progressing formula gives NLG.
-        for (auto &q : buchi_state.progressing) {
-            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q.condition->visit(evalAndSetVisitor);
+        for (auto &q : buchi_state._progressing) {
+            LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            PetriEngine::PQL::Visitor::visit(evalAndSetVisitor, q._condition);
 
             NondeterministicConjunctionVisitor interesting{*this};
-            q.condition->visit(interesting);
+            PetriEngine::PQL::Visitor::visit(interesting, q._condition);
             if (_done) return true;
             else {
                 assert(!_track_changes);
@@ -222,7 +222,7 @@ namespace LTL {
         }*/
 
         // Ensure we have a key transition in accepting buchi states.
-        if (!_has_enabled_stubborn && buchi_state.is_accepting) {
+        if (!_has_enabled_stubborn && buchi_state._is_accepting) {
             for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 if (!_stubborn[i] && _enabled[i]) {
                     addToStub(i);
@@ -262,13 +262,13 @@ namespace LTL {
 #ifndef NDEBUG
         return;
         std::cout << "Enabled: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_enabled[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }
         }
         std::cout << "\nStubborn: ";
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+        for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_stubborn[i]) {
                 std::cout << _net.transitionNames()[i] << ' ';
             }
@@ -318,7 +318,7 @@ namespace LTL {
             _gen.consumePreset(_markbuf, t);
             _gen.producePostset(_markbuf, t);
             return _aut.guard_valid(ctx,
-                                    _state_guards[static_cast<const LTL::Structures::ProductState *>(_parent)->getBuchiState()].retarding.decision_diagram);
+                                    _state_guards[static_cast<const LTL::Structures::ProductState *>(_parent)->get_buchi_state()]._retarding._bdd);
         }
     }
 

@@ -89,7 +89,7 @@ private:
     void parseNamedSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag);
-    PetriEngine::Colored::ColorExpression_ptr parseColorExpression(rapidxml::xml_node<>* element);
+    std::vector<PetriEngine::Colored::ColorExpression_ptr> parseColorExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ArcExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
@@ -101,7 +101,7 @@ private:
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::Color* findColor(const char* name) const;
-    const PetriEngine::Colored::Color* findColorForIntRange(const char* value, uint32_t start, uint32_t end) const;
+    const PetriEngine::Colored::Color* findColorForIntRange(const char* value, const char* start, const char* end) const;
     std::vector<PetriEngine::Colored::ColorExpression_ptr> findPartitionColors(rapidxml::xml_node<>* element) const;
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
@@ -112,6 +112,9 @@ private:
     ColorTypeMap colorTypes;
     VariableMap variables;
     bool isColored;
+    std::string placeTypeContext;
+    std::string tid;
+    bool hasPartition;
     std::vector<Query> queries;
     std::vector<PetriEngine::Colored::ColorTypePartition> partitions;
     std::vector<std::pair<char *, PetriEngine::Colored::ProductType*>> missingCTs;

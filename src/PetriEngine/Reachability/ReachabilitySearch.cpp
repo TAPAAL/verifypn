@@ -20,8 +20,11 @@
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/SuccessorGenerator.h"
+
+#include "PetriEngine/Structures/PotencyQueue.h"
 
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Structures;
@@ -42,7 +45,7 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     EvaluationContext ec(state.marking(), &_net);
-                    if(queries[i]->evaluate(ec) == Condition::RTRUE)
+                    if(PetriEngine::PQL::evaluate(queries[i].get(), ec) == Condition::RTRUE)
                     {
                         auto r = doCallback(queries[i], i, ResultPrinter::Satisfied, ss, states);
                         results[i] = r.first;
@@ -94,26 +97,26 @@ namespace PetriEngine {
 
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
-                std::cout << "<" << _net.transitionNames()[i] << ":"
+                std::cout << "<" << *_net.transitionNames()[i] << ":"
                         << ss.enabledTransitionsCount[i] << ">";
             }
             // report how many times transitions were enabled (? means that the transition was removed in net reduction)
             for(size_t i = _net.numberOfTransitions(); i < _net.transitionNames().size(); ++i)
             {
-                std::cout << "<" << _net.transitionNames()[i] << ":?>";
+                std::cout << "<" << *_net.transitionNames()[i] << ":?>";
             }
 
 
             std::cout << "\n\nPLACE-BOUND STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfPlaces(); ++i)
             {
-                std::cout << "<" << _net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
+                std::cout << "<" << *_net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
             }
 
             // report maximum bounds for each place (? means that the place was removed in net reduction)
             for(size_t i = _net.numberOfPlaces(); i < _net.placeNames().size(); ++i)
             {
-                std::cout << "<" << _net.placeNames()[i] << ";?>";
+                std::cout << "<" << *_net.placeNames()[i] << ";?>";
             }
 
             std::cout << std::endl << std::endl;
@@ -125,6 +128,10 @@ namespace PetriEngine {
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
                        else TEMPPAR(X, SuccessorGenerator)
 
+
+        size_t ReachabilitySearch::maxTokens() const {
+            return _max_tokens;
+        }
 
         bool ReachabilitySearch::reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
@@ -154,6 +161,9 @@ namespace PetriEngine {
                     break;
                 case Strategy::RDFS:
                     TRYREACH(RDFSQueue)
+                    break;
+                case Strategy::RPFS:
+                    TRYREACH(RandomPotencyQueue)
                     break;
                 default:
                     throw base_error("Unsupported search strategy");

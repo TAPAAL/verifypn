@@ -4,33 +4,46 @@
 
 #include "PetriEngine/PQL/Contexts.h"
 
-
+#include <iostream>
 
 namespace PetriEngine {
     namespace PQL {
-       
-        bool ColoredAnalysisContext::resolvePlace(const std::string& place, std::unordered_map<uint32_t, std::string>& out)
+
+        uint32_t AnalysisContext::resolve_trace_name(const std::string& s, bool create)
+        {
+            uint32_t id = _trace_names.size();
+            auto [it, inserted] = _trace_names.emplace(std::make_pair(s,id));
+            if(!inserted && create)
+                throw base_error("Trace identifier ", s, " already existed.");
+            if(inserted && !create)
+                throw base_error("Trace identifier ", s, " does not exist, but is used as a prefix in the query.");
+            return it->second;
+        }
+
+        bool ColoredAnalysisContext::resolvePlace(const shared_const_string& place, std::function<void(const shared_const_string&)>&& fn)
         {
             auto it = _coloredPlaceNames.find(place);
             if (it != _coloredPlaceNames.end()) {
-                out = it->second;
-                return true;
-            }
-            return false;
-        }
-        
-        bool ColoredAnalysisContext::resolveTransition(const std::string& transition, std::vector<std::string>& out)
-        {
-            auto it = _coloredTransitionNames.find(transition);
-            if (it != _coloredTransitionNames.end()) {
-                out = it->second;
+                for(auto& [_, name] : it->second)
+                    fn(name);
                 return true;
             }
             return false;
         }
 
-       
-        AnalysisContext::ResolutionResult AnalysisContext::resolve(const std::string& identifier, bool place)
+        bool ColoredAnalysisContext::resolveTransition(const shared_const_string& transition, std::function<void(const shared_const_string)>&& fn)
+        {
+            auto it = _coloredTransitionNames.find(transition);
+            if (it != _coloredTransitionNames.end()) {
+                for(auto& e : it->second)
+                    fn(e);
+                return true;
+            }
+            return false;
+        }
+
+
+        AnalysisContext::ResolutionResult AnalysisContext::resolve(const shared_const_string& identifier, bool place)
         {
             ResolutionResult result;
             result.offset = -1;
@@ -56,7 +69,7 @@ namespace PetriEngine {
             auto end = std::chrono::high_resolution_clock::now();
             return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
         }
-        
+
         glp_prob* SimplificationContext::makeBaseLP() const
         {
             if (_base_lp == nullptr)
@@ -67,7 +80,7 @@ namespace PetriEngine {
             glp_copy_prob(tmp_lp, _base_lp, GLP_OFF);
             return tmp_lp;
         }
-        
+
         glp_prob* SimplificationContext::buildBase() const
         {
             constexpr auto infty = std::numeric_limits<double>::infinity();

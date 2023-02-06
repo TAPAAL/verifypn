@@ -32,9 +32,10 @@ namespace PetriEngine {
     SuccessorGenerator::~SuccessorGenerator() {
     }
 
-    bool SuccessorGenerator::prepare(const Structures::State* state) {
+    bool SuccessorGenerator::prepare(const Structures::State* state, uint32_t pcounter, uint32_t tcounter) {
         _parent = state;
-        reset();
+        _suc_pcounter = pcounter;
+        _suc_tcounter = tcounter;
         return true;
     }
 
@@ -91,33 +92,9 @@ namespace PetriEngine {
         }
     }
 
-    bool SuccessorGenerator::next(Structures::State& write, uint32_t &tindex) {
-        _parent = &write;
-        _suc_pcounter = 0;
-        for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
-            // orphans are currently under "place 0" as a special case
-            if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {
-                if (tindex == std::numeric_limits<uint32_t>::max()) {
-                    tindex = _net._placeToPtrs[_suc_pcounter];
-                }
-                uint32_t last = _net._placeToPtrs[_suc_pcounter + 1];
-                for (; tindex != last; ++tindex) {
-
-                    if (!checkPreset(tindex)) continue;
-                    _fire(write, tindex);
-
-                    ++tindex;
-                    return true;
-                }
-                tindex = std::numeric_limits<uint32_t>::max();
-            }
-            tindex = std::numeric_limits<uint32_t>::max();
-        }
-        return false;
-    }
-
     void SuccessorGenerator::_fire(Structures::State &write, uint32_t tid) {
         assert(checkPreset(tid));
+        _suc_tcounter = tid + 1; // make sure "fired()" call reflects this now
         memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
         consumePreset(write, tid);
         producePostset(write, tid);

@@ -7,7 +7,7 @@
 
 using namespace PetriEngine::PQL;
 
-std::shared_ptr<PetriEngine::PQL::Condition> query;
+PetriEngine::PQL::Condition* query;
 extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
@@ -27,22 +27,22 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 /* Terminal type definition */
 %token <string> ID INT
 
-%token <token> A E X F G U EF EG AF AG EX AX CONTROL
+%token <token> A E X F G U EF EG AF AG EX AX CONTROL EXISTS FORALL
 %token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
 %token <token> EQUAL NEQUAL LESS LESSEQUAL GREATER GREATEREQUAL
 %token <token> PLUS MINUS MULTIPLY
-%token <token> COMMA COLON
+%token <token> COMMA COLON DOT
 %token <token> TOKENCOUNT QUESTIONMARK FIREABLE
 
 /* Terminal associativity */
 %left AND OR  EF EG AF AG EX AX F G A E
-%right NOT
+%right NOT EXISTS FORALL
 
 /* Nonterminal type definition */
-%type <expr> expr term factor
-%type <cond> path_formula state_formula_or
+%type <expr> expr term factor named sub_named
+%type <cond> path_formula state_formula_or cond_named sub_cond
 %type <cond> state_formula state_formula_and state_formula_quantifier atomic_formula compare query
 %type <ids> id_list
 
@@ -53,8 +53,10 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query : CONTROL COLON state_formula { query = Condition_ptr(new ControlCondition(Condition_ptr($3))); }
-        | state_formula { query = Condition_ptr($1); }
+query   : CONTROL COLON state_formula { query = new ControlCondition(Condition_ptr($3)); }
+        | EXISTS ID DOT query { query = new ExistPath(*$2, Condition_ptr(query)); delete $2; }
+        | FORALL ID DOT query { query = new AllPaths(*$2, Condition_ptr(query)); delete $2; }
+        | state_formula { query = $1; }
         ;
 
 state_formula : LPAREN state_formula RPAREN	{ $$ = $2; }
@@ -101,23 +103,30 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
 		| expr LESSEQUAL expr 		{ $$ = new LessThanOrEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		| expr GREATER expr			{ $$ = new LessThanCondition(Expr_ptr($3), Expr_ptr($1)); }
 		| expr GREATEREQUAL expr	{ $$ = new LessThanOrEqualCondition(Expr_ptr($3), Expr_ptr($1)); }
-		| FIREABLE LPAREN id_list RPAREN
+        | cond_named                { $$ = $1; }
+		;
+
+cond_named  : ID DOT sub_cond { $$ = new PathSelectCondition(*$1, Condition_ptr($3)); delete $1; }
+            | sub_cond { $$ = $1; }
+            ;
+
+sub_cond    : ID QUESTIONMARK   { $$ = new FireableCondition(std::make_shared<const_string>(*$1)); }
+            | FIREABLE LPAREN id_list RPAREN
 		    {
 		        $$ = nullptr;
 		        {
 		            auto ids = $3;
 		            if ((*ids).size() == 1) {
-		                $$ = new FireableCondition((*ids)[0]);
+		                $$ = new FireableCondition(std::make_shared<const_string>((*ids)[0]));
 		            } else {
 		                std::vector<Condition_ptr> a;
                         for (auto& name : *ids) {
-                            a.push_back(std::make_shared<FireableCondition>(name));
+                            a.push_back(std::make_shared<FireableCondition>(std::make_shared<const_string>(name)));
                         }
                         $$ = new OrCondition(a);
 		            }
 		        }
 		    }
-		| ID QUESTIONMARK           { $$ = new FireableCondition(*$1); }
 		;
 
 expr	: expr PLUS term			{ $$ = new PlusExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
@@ -132,21 +141,28 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_
 
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
 		| INT			{ $$ = new LiteralExpr(atol($1->c_str())); delete $1; }
-		| ID			{ $$ = new IdentifierExpr(*$1); delete $1; }
-        | TOKENCOUNT LPAREN id_list RPAREN
-            {
-                $$ = nullptr;
-                {
-                    auto ids = $3;
-                    std::vector<Expr_ptr> a;
-                    for (auto& name : *ids) {
-                        a.push_back(std::make_shared<IdentifierExpr>(name));
-                    }
-                    $$ = new PlusExpr(std::move(a), true);
-                }
-            }
+    | named         { $$ = $1; }
 		;
 
-id_list : ID { $$ = new std::vector<std::string>(); $$->push_back(*$1); }
-        | id_list COMMA ID { $$ = $1; $$->push_back(*$3); }
+named   : ID DOT sub_named { $$ = new PathSelectExpr(*$1, Expr_ptr($3)); delete $1; }
+        | sub_named { $$ = $1; }
+        ;
+
+sub_named   : ID { $$ = new IdentifierExpr(std::make_shared<const_string>(*$1)); delete $1; }
+            | TOKENCOUNT LPAREN id_list RPAREN
+                {
+                    $$ = nullptr;
+                    {
+                        auto ids = $3;
+                        std::vector<Expr_ptr> a;
+                        for (auto& name : *ids) {
+                            a.push_back(std::make_shared<IdentifierExpr>(std::make_shared<const_string>(name)));
+                        }
+                        $$ = new PlusExpr(std::move(a));
+                    }
+                }
+            ;
+
+id_list : ID { $$ = new std::vector<std::string>(); $$->push_back(*$1); delete $1; }
+        | id_list COMMA ID { $$ = $1; $$->push_back(*$3); delete $3; }
         ;

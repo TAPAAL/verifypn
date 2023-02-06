@@ -23,7 +23,7 @@ bool QueryBinaryParser::parse(std::istream& bin, const std::set<size_t>& parse_o
     //Parse the xml
     uint32_t numq;
     bin.read(reinterpret_cast<char*>(&numq), sizeof(uint32_t));
-    std::vector<std::string> names;
+    std::vector<shared_const_string> names;
     uint32_t nnames;
     bin.read(reinterpret_cast<char*>(&nnames), sizeof(uint32_t));
     names.resize(nnames);
@@ -31,7 +31,9 @@ bool QueryBinaryParser::parse(std::istream& bin, const std::set<size_t>& parse_o
     {
         uint32_t id;
         bin.read(reinterpret_cast<char*>(&id), sizeof(uint32_t));
-        std::getline(bin, names[id], '\0');
+        std::string tmp;
+        std::getline(bin, tmp, '\0');
+        names[id] = *_string_set.emplace(std::make_shared<const_string>(tmp)).first;
     }
 
     bool parsingOK = true;
@@ -52,7 +54,7 @@ bool QueryBinaryParser::parse(std::istream& bin, const std::set<size_t>& parse_o
     return parsingOK;
 }
 
-Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vector<std::string>& names)
+Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vector<shared_const_string>& names)
 {
     Path p;
     binary.read(reinterpret_cast<char*>(&p), sizeof(Path));
@@ -238,7 +240,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::istream& binary, const std::vec
     return nullptr;
 }
 
-Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<std::string>& names) {
+Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<shared_const_string>& names) {
     char t;
     bin.read(&t, sizeof(char));
     if(t == 'l')

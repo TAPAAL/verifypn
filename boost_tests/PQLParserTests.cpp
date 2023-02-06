@@ -1,10 +1,14 @@
 #define BOOST_TEST_MODULE PQLParserTests
 
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine::PQL;
+
+BOOST_AUTO_TEST_CASE(DirectoryTest) {
+    BOOST_REQUIRE(getenv("TEST_FILES"));
+}
 
 BOOST_AUTO_TEST_CASE(double_fireable_condition) {
     std::string query = R"(is-fireable("t1","t2"))";
@@ -20,8 +24,8 @@ BOOST_AUTO_TEST_CASE(double_fireable_condition) {
     BOOST_TEST(fireable1 = std::dynamic_pointer_cast<FireableCondition>((*orCondition)[0]));
     BOOST_TEST(fireable2 = std::dynamic_pointer_cast<FireableCondition>((*orCondition)[1]));
 
-    BOOST_TEST(fireable1->getName() == "t1");
-    BOOST_TEST(fireable2->getName() == "t2");
+    BOOST_TEST(*fireable1->getName() == "t1");
+    BOOST_TEST(*fireable2->getName() == "t2");
 }
 
 BOOST_AUTO_TEST_CASE(or_condition) {
@@ -47,7 +51,7 @@ BOOST_AUTO_TEST_CASE(fireable_condition) {
     std::shared_ptr<FireableCondition> fireable;
     BOOST_TEST(fireable = std::dynamic_pointer_cast<FireableCondition>(actual));
 
-    BOOST_TEST(fireable->getName() == "t1");
+    BOOST_TEST(*fireable->getName() == "t1");
 }
 
 BOOST_AUTO_TEST_CASE(E_F_deadlock) {
@@ -91,7 +95,7 @@ BOOST_AUTO_TEST_CASE(A_G_compare) {
         BOOST_REQUIRE(identifierExpr = std::dynamic_pointer_cast<IdentifierExpr>((*leqCondition)[0]));
         BOOST_REQUIRE(literalExpr = std::dynamic_pointer_cast<LiteralExpr>((*leqCondition)[1]));
 
-        BOOST_TEST(identifierExpr->name() == "p0");
+        BOOST_TEST(*identifierExpr->name() == "p0");
         BOOST_TEST(literalExpr->value() == 4);
     }
 }
@@ -152,7 +156,7 @@ BOOST_AUTO_TEST_CASE(control_condition) {
     BOOST_REQUIRE(identifierExpr = std::dynamic_pointer_cast<IdentifierExpr>((*leqCondition)[0]));
     BOOST_REQUIRE(literalExpr = std::dynamic_pointer_cast<LiteralExpr>((*leqCondition)[1]));
 
-    BOOST_TEST(identifierExpr->name() == "p0");
+    BOOST_TEST(*identifierExpr->name() == "p0");
     BOOST_TEST(literalExpr->value() == 4);
 }
 

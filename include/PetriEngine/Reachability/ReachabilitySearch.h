@@ -26,6 +26,7 @@
 #include "../PetriNet.h"
 #include "../Structures/StateSet.h"
 #include "../Structures/Queue.h"
+#include "../Structures/PotencyQueue.h"
 #include "../SuccessorGenerator.h"
 #include "../ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
@@ -62,6 +63,7 @@ namespace PetriEngine {
                     StatisticsLevel printstats,
                     bool keep_trace,
                     size_t seed);
+            size_t maxTokens() const;
         private:
             struct searchstate_t {
                 size_t expandedStates = 0;
@@ -89,6 +91,7 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
             AbstractHandler& _callback;
+            size_t _max_tokens = 0;
         };
 
         template <typename G>
@@ -136,8 +139,10 @@ namespace PetriEngine {
                 {
                     if(checkQueries(queries, results, working, ss, &states))
                     {
-                        if(statisticsLevel != StatisticsLevel::None) printStats(ss, &states, statisticsLevel);
-                            return true;
+                        if(statisticsLevel != StatisticsLevel::None)
+                            printStats(ss, &states, statisticsLevel);
+                        _max_tokens = states.maxTokens();
+                        return true;
                     }
                 }
                 // add initial to queue
@@ -157,13 +162,17 @@ namespace PetriEngine {
                         if (res.first) {
                             {
                                 PQL::DistanceContext dc(&_net, working.marking());
-                                queue.push(res.second, &dc, queries[ss.heurquery].get());
+                                if constexpr (std::is_same_v<Q, Structures::RandomPotencyQueue>)
+                                    queue.push(res.second, &dc, queries[ss.heurquery].get(), generator.fired());
+                                else
+                                    queue.push(res.second, &dc, queries[ss.heurquery].get());
                             }
                             states.setHistory(res.second, generator.fired());
                             _satisfyingMarking = res.second;
                             ss.exploredStates++;
                             if (checkQueries(queries, results, working, ss, &states)) {
                                 printStats(ss, &states, statisticsLevel);
+                                _max_tokens = states.maxTokens();
                                 return true;
                             }
                         }
@@ -181,11 +190,11 @@ namespace PetriEngine {
                 }
             }
 
-            if(statisticsLevel != StatisticsLevel::None) printStats(ss, &states, statisticsLevel);
+            if(statisticsLevel != StatisticsLevel::None)
+                printStats(ss, &states, statisticsLevel);
+            _max_tokens = states.maxTokens();
             return false;
         }
-
-
     }
 } // Namespaces
 

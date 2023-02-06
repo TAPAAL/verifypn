@@ -1,4 +1,4 @@
-/* Copyright (C) 2011  Rasmus Tollund <rtollu18@student.aau.dk>
+/* Copyright (C) 2011  Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@ using namespace PetriEngine::PQL;
 
 int PetriEngine::PQL::formulaSize(const Condition_constptr& condition) {
     FormulaSizeVisitor formulaSizeVisitor;
-    condition->visit(formulaSizeVisitor);
+    Visitor::visit(formulaSizeVisitor, condition);
     return formulaSizeVisitor.getReturnValue();
 }
 
 int formulaSize(const Expr_ptr &element) {
     FormulaSizeVisitor formulaSizeVisitor;
-    element->visit(formulaSizeVisitor);
+    Visitor::visit(formulaSizeVisitor, element);
     return formulaSizeVisitor.getReturnValue();
 }
 
@@ -117,4 +117,20 @@ void FormulaSizeVisitor::_accept(const LogicalCondition *condition) {
     for(auto& c : *condition)
         i += subvisit(c);
     RETURN(i)
+}
+
+
+void FormulaSizeVisitor::_accept(const PathSelectCondition* c)
+{
+    RETURN(subvisit(c->child()) + 1)
+}
+
+void FormulaSizeVisitor::_accept(const PathQuant* c)
+{
+    RETURN(subvisit(c->child()) + 1)
+}
+
+void FormulaSizeVisitor::_accept(const PathSelectExpr* e)
+{
+    RETURN(subvisit(e->child()) + 1)
 }

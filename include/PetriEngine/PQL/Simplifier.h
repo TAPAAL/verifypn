@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     Retval simplify(std::shared_ptr<Condition> element, SimplificationContext& context);
 
@@ -30,26 +30,27 @@ namespace PetriEngine::PQL {
 
     public:
         explicit Simplifier(SimplificationContext& context) :
-            context(context) {}
+                _context(context) {}
 
-        Retval return_value;
+        Retval get_return_value() { return std::move(_return_value); }
 
     protected:
-        SimplificationContext& context;
+        SimplificationContext& _context;
+        Retval _return_value;
 
-        Retval simplifyOr(const LogicalCondition* element);
-        Retval simplifyAnd(const LogicalCondition *element);
+        Retval simplify_or(const LogicalCondition* element);
+        Retval simplify_and(const LogicalCondition *element);
 
-        Retval simplifyAG(Retval &r);
-        Retval simplifyAF(Retval &r);
-        Retval simplifyAX(Retval &r);
+        Retval simplify_AG(Retval &r);
+        Retval simplify_AF(Retval &r);
+        Retval simplify_AX(Retval &r);
 
-        Retval simplifyEG(Retval &r);
-        Retval simplifyEF(Retval &r);
-        Retval simplifyEX(Retval &r);
+        Retval simplify_EG(Retval &r);
+        Retval simplify_EF(Retval &r);
+        Retval simplify_EX(Retval &r);
 
         template <typename Quantifier>
-        Retval simplifySimpleQuant(Retval &r);
+        Retval simplify_simple_quantifier(Retval &r);
 
         void _accept(const NotCondition *element) override;
 
@@ -102,6 +103,39 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const BooleanCondition *element) override;
+
+        void _accept(const PathSelectCondition *element) override;
     };
-}
+
+    Member constraint(const Expr *element, const SimplificationContext &context);
+
+    class ConstraintVisitor : public ExpressionVisitor {
+    public:
+        explicit ConstraintVisitor(const SimplificationContext &context) : _context(context) {}
+
+        Member get_return_value() { return _return_value; }
+
+    private:
+        const SimplificationContext& _context;
+        Member _return_value;
+
+        void _accept(const LiteralExpr *element) override;
+
+        void _accept(const UnfoldedIdentifierExpr *element) override;
+
+        void _accept(const PlusExpr *element) override;
+
+        void _accept(const SubtractExpr *element) override;
+
+        void _accept(const MultiplyExpr *element) override;
+
+        void _accept(const MinusExpr *element) override;
+
+        void _commutative_cons(const CommutativeExpr *element, int _constant, const std::function<void(Member &, Member)> &op);
+
+        void _accept(const IdentifierExpr *element) override;
+
+        void _accept(const PathSelectExpr *element) override;
+    };
+} }
 #endif //VERIFYPN_SIMPLIFIER_H

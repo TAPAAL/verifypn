@@ -28,8 +28,15 @@ public:
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
+
     virtual bool prepare(const Structures::State& state) { return prepare(&state); }
-    virtual bool prepare(const Structures::State* state);
+    virtual bool prepare(const Structures::State* state) { return prepare(state, 0); }
+    // these two should really accept an internal state instead
+    bool prepare(const Structures::State& state, uint32_t pcounter, uint32_t tcounter = std::numeric_limits<uint32_t>::max()) { return prepare(&state, pcounter, tcounter); }
+    bool prepare(const Structures::State* state, uint32_t pcounter, uint32_t tcounter = std::numeric_limits<uint32_t>::max()) ;
+    std::tuple<uint32_t,uint32_t> state() const {
+        return {_suc_pcounter, _suc_tcounter};
+    }
     virtual bool next(Structures::State& write)
     {
         return _next(write, [](size_t){ return true; });
@@ -74,8 +81,6 @@ public:
 protected:
     const PetriNet& _net;
 
-    bool next(Structures::State &write, uint32_t &tindex);
-
     void _fire(Structures::State &write, uint32_t tid);
 
     template<typename T>
@@ -91,11 +96,7 @@ protected:
 
                     if (!checkPreset(_suc_tcounter)) continue;
                     if (!predicate(_suc_tcounter)) continue;
-                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
-                    consumePreset(write, _suc_tcounter);
-                    producePostset(write, _suc_tcounter);
-
-                    ++_suc_tcounter;
+                    _fire(write, _suc_tcounter); // <-- also updated _suc_tcounter
                     return true;
                 }
                 _suc_tcounter = std::numeric_limits<uint32_t>::max();

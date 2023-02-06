@@ -27,24 +27,21 @@ namespace PetriEngine {
         struct ArcIntervals {
             VariableModifierMap _varIndexModMap;
             std::vector<Colored::interval_vector_t> _intervalTupleVec;
-            const Colored::ColorFixpoint * _source;
-            
+
             ~ArcIntervals() {_varIndexModMap.clear();}
             ArcIntervals() {
             }
 
-            ArcIntervals(const Colored::ColorFixpoint * source) : _source(source){
-            }
+            ArcIntervals(VariableModifierMap varIndexModMap)
+            : _varIndexModMap(std::move(varIndexModMap)) {}
 
-            ArcIntervals(const Colored::ColorFixpoint * source, VariableModifierMap varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
-            };
-
-            ArcIntervals(const Colored::ColorFixpoint * source, VariableModifierMap varIndexModMap,  std::vector<Colored::interval_vector_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
+            ArcIntervals(VariableModifierMap&& varIndexModMap,  std::vector<Colored::interval_vector_t> ranges)
+            : _varIndexModMap(std::move(varIndexModMap)), _intervalTupleVec(std::move(ranges)) {
             };
 
             void print() {
                 std::cout << "[ ";
-                for(auto varModifierPair : _varIndexModMap){
+                for(auto& varModifierPair : _varIndexModMap){
                     std::cout << "(" << varModifierPair.first->name << ", " << varModifierPair.first->colorType->productSize() <<  ") ";
                 }
                 std::cout << "]" << std::endl;

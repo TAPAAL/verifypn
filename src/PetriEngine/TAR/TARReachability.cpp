@@ -28,6 +28,7 @@
 #include "PetriEngine/TAR/Solver.h"
 #include "PetriEngine/PQL/ContainsVisitor.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
+#include "PetriEngine/PQL/Evaluation.h"
 #include "utils/stopwatch.h"
 
 
@@ -420,8 +421,8 @@ namespace PetriEngine {
             for(auto& t : stack)
             {
                 if(t.get_edge_cnt() == 0) break;
-                std::string tname = _net.transitionNames()[t.get_edge_cnt() - 1];
-                std::cerr << "\t<transition id=\"" << tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
+                auto& tname = _net.transitionNames()[t.get_edge_cnt() - 1];
+                std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
 
                 // well, yeah, we are not really efficient in constructing the trace.
                 // feel free to improve
@@ -430,17 +431,17 @@ namespace PetriEngine {
                 {
                     for(size_t token = 0; token < pre.first->tokens; ++token )
                     {
-                        std::cerr << "\t\t<token place=\"" << _net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
+                        std::cerr << "\t\t<token place=\"" << *_net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
                     }
                 }
 
-                if(_reducer != NULL)
-                    _reducer->extraConsume(std::cerr, tname);
+                if(_reducer != nullptr)
+                    _reducer->extraConsume(std::cerr, *tname);
 
                 std::cerr << "\t</transition>\n";
 
-                if(_reducer != NULL)
-                    _reducer->postFire(std::cerr, tname);
+                if(_reducer != nullptr)
+                    _reducer->postFire(std::cerr, *tname);
 
             }
 
@@ -482,9 +483,9 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     PlaceUseVisitor visitor(_net.numberOfPlaces());
-                    queries[i]->visit(visitor);
+                    Visitor::visit(visitor, queries[i]);
                     ContainsVisitor<DeadlockCondition> dlvisitor;
-                    queries[i]->visit(dlvisitor);
+                    Visitor::visit(dlvisitor, queries[i]);
                     auto used = visitor.in_use();
                     if(dlvisitor.does_contain())
                     {
@@ -521,7 +522,7 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     EvaluationContext ec(state.marking(), &_net);
-                    if(queries[i]->evaluate(ec) == Condition::RTRUE)
+                    if(PetriEngine::PQL::evaluate(queries[i].get(), ec) == Condition::RTRUE)
                     {
                         auto ret = _printer.handle(i, queries[i].get(), ResultPrinter::Satisfied);
                         results[i] = ret.first;

@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     bool hasNestedDeadlock(const Condition* condition);
     bool hasNestedDeadlock(const Condition_ptr& condition);
@@ -43,6 +43,8 @@ namespace PetriEngine::PQL {
     bool isTemporal(const Condition *condition);
 
     class IsTemporalVisitor : public AnyVisitor {
+
+        void _accept(const PathQuant* condition) override;
 
         void _accept(const SimpleQuantifierCondition *condition) override;
 
@@ -84,6 +86,8 @@ namespace PetriEngine::PQL {
 
         void _accept(const QuasiLivenessCondition *element) override;
 
+        void _accept(const KSafeCondition* element) override;
+
         void _accept(const LivenessCondition *element) override;
 
         void _accept(const StableMarkingCondition *element) override;
@@ -93,6 +97,12 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *element) override;
 
         void _accept(const CompareConjunction *element) override;
+
+        void _accept(const PathQuant *element) override;
+
+        void _accept(const PathSelectCondition *element) override;
+
+        void _accept(const PathSelectExpr *element) override;
     };
 
 
@@ -118,11 +128,26 @@ namespace PetriEngine::PQL {
 
         void _accept(const AFCondition *condition) override;
 
+        void _accept(const ACondition *condition) override;
+
+        void _accept(const NotCondition *condition) override;
+
+        void _accept(const UntilCondition *condition) override;
+
         void _accept(const DeadlockCondition *condition) override;
+
+        void _accept(const PathQuant *element) override;
+
+        void _accept(const LivenessCondition *condition) override;
+
+        void _accept(const StableMarkingCondition *condition) override;
+    private:
+        bool _negated = false;
     };
 
 
     bool containsNext(const Condition_ptr& condition);
+    bool containsNext(const Condition* condition);
 
     class ContainsNextVisitor : public AnyVisitor {
         void _accept(const XCondition *condition) override;
@@ -130,7 +155,45 @@ namespace PetriEngine::PQL {
         void _accept(const EXCondition *condition) override;
 
         void _accept(const AXCondition *condition) override;
+
+        void _accept(const PathQuant *element) override;
     };
-}
+
+    class ContainsFireabilityVisitor : public AnyVisitor {
+        void _accept(const FireableCondition* c) override
+        {
+            setConditionFound();
+        }
+
+        void _accept(const UnfoldedFireableCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
+    class ContainsUpperBoundsVisitor : public AnyVisitor {
+        void _accept(const UpperBoundsCondition* c) override
+        {
+            setConditionFound();
+        }
+
+        void _accept(const UnfoldedUpperBoundsCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
+    class ContainsDeadlockVisitor : public AnyVisitor {
+        void _accept(const DeadlockCondition* c) override
+        {
+            setConditionFound();
+        }
+    };
+
+    bool containsUpperBounds(const Condition* condition);
+    bool containsUpperBounds(const Condition_ptr& condition);
+
+    bool containsDeadlock(const Condition_ptr condition) ;
+} }
 
 #endif //VERIFYPN_PREDICATECHECKERS_H

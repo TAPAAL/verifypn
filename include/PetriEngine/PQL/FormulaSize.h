@@ -1,4 +1,4 @@
-/* Copyright (C) 2011  Rasmus Tollund <rtollu18@student.aau.dk>
+/* Copyright (C) 2011  Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 #include "Visitor.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     /** Count size of the entire formula in number of nodes */
     int formulaSize(const Condition_constptr & condition);
     int formulaSize(const Expr_ptr& element);
@@ -35,11 +35,11 @@ namespace PetriEngine::PQL {
         int _return_value = -1;
 
         int subvisit(const Condition_ptr& condition) {
-            condition->visit(*this);
+            Visitor::visit(this, condition);
             return _return_value;
         }
         int subvisit(const Expr_ptr& expr) {
-            expr->visit(*this);
+            Visitor::visit(this, expr);
             return _return_value;
         }
 
@@ -74,8 +74,12 @@ namespace PetriEngine::PQL {
         void _accept(const UntilCondition *condition) override;
 
         void _accept(const LogicalCondition *condition) override;
+
+        void _accept(const PathSelectCondition*) override;
+
+        void _accept(const PathQuant*) override;
+
+        void _accept(const PathSelectExpr*) override;
     };
-
-}
-
+} }
 #endif //VERIFYPN_FORMULASIZE_H

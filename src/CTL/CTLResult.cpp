@@ -28,6 +28,7 @@ void CTLResult::print(const std::string& qname, StatisticsLevel statisticslevel,
         out << "	Processed Edges   : " << processedEdges << "\n";
         out << "	Processed N. Edges: " << processedNegationEdges << "\n";
         out << "	Explored Configs  : " << exploredConfigurations << "\n";
+        out << "	max tokens:       : " << maxTokens << "\n"; // kept lower case to be compatible with reachability format 
     }
     out << std::endl;
 }

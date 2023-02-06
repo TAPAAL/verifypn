@@ -49,31 +49,36 @@ namespace PetriEngine {
             stream << color.toString();
             return stream;
         }*/
-        
+
         Color::Color(const ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
                 : _tuple(colors), _colorType(colorType), _colorName(""), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
         }
-        
+
         Color::Color(const ColorType* colorType, uint32_t id, const char* color)
                 : _tuple(), _colorType(colorType), _colorName(color), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
         }
-        
+
+        Color::Color(const ColorType *colorType, uint32_t id, const char *color, const char *colorname)
+            : _tuple(), _colorType(colorType), _colorName(color), _id(id), _displayName(colorname)
+        {
+            if (colorType != nullptr)
+                assert(id <= colorType->size());
+        }
+
         const Color& Color::operator++ () const {
-            //std::cout << _colorName <<" " << _colorType->getName() << std::endl;
             if (_id >= _colorType->size() - 1) {
-                //std::cout << "inside if" << std::endl;
-                return (*_colorType)[0];
+                return (*_colorType)[size_t{0}];
             }
             assert(_id + 1 < _colorType->size());
             return (*_colorType)[_id + 1];
         }
-        
+
         const Color& Color::operator-- () const {
             if (_id <= 0) {
                 return (*_colorType)[_colorType->size() - 1];
@@ -81,7 +86,7 @@ namespace PetriEngine {
             assert(_id - 1 >= 0);
             return (*_colorType)[_id - 1];
         }
-        
+
         std::string Color::toString() const {
             return toString(this);
         }
@@ -107,7 +112,7 @@ namespace PetriEngine {
                     }
 
                     constraintsVector[index] = curRange;
-                }            
+                }
             }
         }
 
@@ -120,7 +125,7 @@ namespace PetriEngine {
                 idVector.push_back(_id);
             }
         }
-        
+
         std::string Color::toString(const Color* color) {
             if (color->isTuple()) {
                 std::ostringstream oss;
@@ -134,12 +139,12 @@ namespace PetriEngine {
             }
             return std::string(color->_colorName);
         }
-        
+
         std::string Color::toString(const std::vector<const Color*>& colors) {
             std::ostringstream oss;
             if (colors.size() > 1)
                 oss << "(";
-            
+
             for (size_t i = 0; i < colors.size(); i++) {
                 oss << colors[i]->toString();
                 if (i < colors.size() - 1) oss << ",";
@@ -158,11 +163,15 @@ namespace PetriEngine {
             }
             return &instance;
         }
-        
+
         void ColorType::addColor(const char* colorName) {
             _colors.emplace_back(this, _colors.size(), colorName);
         }
-        
+
+        void ColorType::addColor(const char* colorName, const char* displayName) {
+            _colors.emplace_back(this, _colors.size(), colorName, displayName);
+        }
+
         const Color* ColorType::operator[] (const char* index) const {
             for (size_t i = 0; i < _colors.size(); i++) {
                 if (strcmp(operator[](i).toString().c_str(), index) == 0)

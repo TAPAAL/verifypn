@@ -1,5 +1,5 @@
 /* Copyright (C) 2011  Peter Gjøl Jensen <root@petergjoel.dk>,
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ namespace PetriEngine {
         class XMLPrinter : public Visitor {
         public:
 
-            XMLPrinter(std::ostream& os, uint32_t init_tabs = 4, uint32_t tab_size = 2, bool print_newlines = true, bool token_count = false) :
-                os(os), token_count(token_count), tabs(init_tabs), tab_size(tab_size),
+            XMLPrinter(std::ostream& os, uint32_t init_tabs = 4, uint32_t tab_size = 2, bool print_newlines = true) :
+                os(os), tabs(init_tabs), tab_size(tab_size),
                         print_newlines(print_newlines) {
             }
 
@@ -34,7 +34,6 @@ namespace PetriEngine {
 
         protected:
             std::ostream& os;
-            const bool token_count;
             uint32_t tabs;
             uint32_t tab_size;
             const bool print_newlines;
@@ -48,7 +47,30 @@ namespace PetriEngine {
                 (generateTabs() << ... << args);
                 newline();
             }
-            void openXmlTag(const char* tag);
+
+            template<typename F, typename C, typename ...Args>
+            void attributes(const F& name, const C& arg, Args ...args) {
+                os << ' ' << name << "=\"" << arg << '"';
+            }
+
+            template<typename ...Args>
+            void openXmlTag(const char* tag, Args ...args)
+            {
+                generateTabs() << "<" << tag;
+                attributes(std::forward<Args>(args)...);
+                os << ">";
+                newline();
+                ++tabs;
+            }
+
+            void openXmlTag(const char* tag)
+            {
+                generateTabs() << "<" << tag << ">";
+                newline();
+                ++tabs;
+            }
+
+
             void closeXmlTag(const char* tag);
 
             void _accept(const NotCondition *element) override;
@@ -91,6 +113,10 @@ namespace PetriEngine {
 
             void _accept(const ACondition *condition) override;
 
+            void _accept(const AllPaths* condition) override;
+
+            void _accept(const ExistPath* condition) override;
+
             void _accept(const ECondition *condition) override;
 
             void _accept(const GCondition *condition) override;
@@ -107,6 +133,8 @@ namespace PetriEngine {
 
             void _accept(const ShallowCondition *element) override;
 
+            void _accept(const PathSelectCondition* condition) override;
+
             void _accept(const UnfoldedIdentifierExpr *element) override;
 
             void _accept(const LiteralExpr *element) override;
@@ -121,16 +149,22 @@ namespace PetriEngine {
 
             void _accept(const IdentifierExpr *element) override;
 
+            void _accept(const PathSelectExpr* element) override;
+
             class Tag {
                 XMLPrinter* _printer;
                 const char* _tag;
             public:
-                Tag(XMLPrinter& printer, const char* tag)
-                : Tag(&printer, tag) {};
-                Tag(XMLPrinter* printer, const char* tag)
+                template<typename ...Args>
+                Tag(XMLPrinter& printer, const char* tag, Args ...args)
+                : Tag(&printer, tag, std::forward<Args>(args)...) {}
+
+
+                template<typename ...Args>
+                Tag(XMLPrinter* printer, const char* tag, Args ...args)
                 : _printer(printer), _tag(tag)
                 {
-                    _printer->openXmlTag(_tag);
+                    _printer->openXmlTag(_tag, std::forward<Args>(args)...);
                 }
 
                 ~Tag()

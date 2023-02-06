@@ -18,16 +18,16 @@
 
 #include <memory>
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void IsCTLVisitor::_accept(const NotCondition *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const LogicalCondition *element) {
         for (size_t i = 0; i < element->operands(); i++){
-            (*element)[i]->visit(*this);
+            Visitor::visit(this, (*element)[i]);
             if (_cur_type != CTLSyntaxType::BOOLEAN){
                 isCTL = false;
                 break;
@@ -77,97 +77,97 @@ namespace PetriEngine::PQL {
     }
 
     void IsCTLVisitor::_accept(const ControlCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
     }
 
     void IsCTLVisitor::_accept(const EFCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EGCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AGCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AFCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EXCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AXCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EUCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AUCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const ACondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const ECondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const GCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const FCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const XCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const UntilCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[1]);
         if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         _cur_type = CTLSyntaxType::PATH;
@@ -233,9 +233,20 @@ namespace PetriEngine::PQL {
         _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
+    void IsCTLVisitor::_accept(const PathQuant *element) {
+        isCTL = false;
+    }
+
+    void IsCTLVisitor::_accept(const PathSelectCondition *element) {
+        isCTL = false;
+    }
+
+    void IsCTLVisitor::_accept(const PathSelectExpr *element) {
+        isCTL = false;
+    }
 
     void AsCTL::_accept(const NotCondition *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         _ctl_query = std::make_shared<NotCondition>(_ctl_query);
     }
 
@@ -243,7 +254,7 @@ namespace PetriEngine::PQL {
     void AsCTL::_acceptNary(const T *element) {
         std::vector<Condition_ptr> children;
         for (auto operand : *element){
-            operand->visit(*this);
+            Visitor::visit(this, operand);
             children.push_back(_ctl_query);
         }
         _ctl_query = std::make_shared<T>(children);
@@ -293,51 +304,51 @@ namespace PetriEngine::PQL {
     }
 
     void AsCTL::_accept(const ControlCondition* condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<ControlCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EFCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<EFCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EGCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<EGCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AGCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<AGCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AFCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<AFCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EXCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<EXCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AXCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         _ctl_query = std::make_shared<AXCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EUCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         auto first = _ctl_query;
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[1]);
         _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
     }
 
     void AsCTL::_accept(const AUCondition *condition) {
-        (*condition)[0]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
         auto first = _ctl_query;
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[1]);
         _ctl_query = std::make_shared<AUCondition>(first, _ctl_query);
     }
 
@@ -345,21 +356,21 @@ namespace PetriEngine::PQL {
         auto child = dynamic_cast<QuantifierCondition*>((*condition)[0].get());
         switch (child->getPath()) {
             case Path::G:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<AGCondition>(_ctl_query);
                 break;
             case Path::X:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<AXCondition>(_ctl_query);
                 break;
             case Path::F:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<AFCondition>(_ctl_query);
                 break;
             case Path::U: {
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 auto first = _ctl_query;
-                (*child)[1]->visit(*this);
+                Visitor::visit(this, (*child)[1]);
                 _ctl_query = std::make_shared<AUCondition>(first, _ctl_query);
                 break;
             }
@@ -374,21 +385,21 @@ namespace PetriEngine::PQL {
         auto child = dynamic_cast<QuantifierCondition*>((*condition)[0].get());
         switch (child->getPath()) {
             case Path::G:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<EGCondition>(_ctl_query);
                 break;
             case Path::X:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<EXCondition>(_ctl_query);
                 break;
             case Path::F:
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 _ctl_query = std::make_shared<EFCondition>(_ctl_query);
                 break;
             case Path::U: {
-                (*child)[0]->visit(*this);
+                Visitor::visit(this, (*child)[0]);
                 auto first = _ctl_query;
-                (*child)[1]->visit(*this);
+                Visitor::visit(this, (*child)[1]);
                 _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
                 break;
             }
@@ -482,7 +493,7 @@ namespace PetriEngine::PQL {
     }
 
     void AsCTL::_accept(const MinusExpr *element) {
-        (*element)[0]->visit(*this);
+        Visitor::visit(this, (*element)[0]);
         _expression = std::make_shared<MinusExpr>(_expression);
     }
 
@@ -497,5 +508,4 @@ namespace PetriEngine::PQL {
     void AsCTL::_accept(const UnfoldedIdentifierExpr *element) {
         _expression = std::make_shared<UnfoldedIdentifierExpr>(*element);
     }
-
-}
+} }

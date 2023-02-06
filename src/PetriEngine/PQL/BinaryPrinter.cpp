@@ -1,4 +1,4 @@
-/* Copyright (C) 2011  Rasmus Tollund <rtollu18@student.aau.dk>
+/* Copyright (C) 2011  Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 #include "PetriEngine/PQL/BinaryPrinter.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
     void BinaryPrinter::_accept(const LiteralExpr *element){
         os.write("l", sizeof(char));
         int temp = element->value();
@@ -34,7 +34,8 @@ namespace PetriEngine::PQL {
         std::vector<Expr_ptr> exprs;
         exprs.push_back(e1);
         exprs.push_back((*element)[0]);
-        PQL::SubtractExpr(std::move(exprs)).visit(*this);
+        PQL::SubtractExpr t(std::move(exprs));
+        Visitor::visit(this, t);
     }
 
     void BinaryPrinter::_accept(const SubtractExpr *element){
@@ -42,7 +43,7 @@ namespace PetriEngine::PQL {
         uint32_t size = element->expressions().size();
         os.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
         for(auto& e : element->expressions())
-            e->visit(*this);
+            Visitor::visit(this, e);
     }
 
     void BinaryPrinter::_accept(const CommutativeExpr *element){
@@ -57,7 +58,7 @@ namespace PetriEngine::PQL {
         for(auto& id : element->places())
             os.write(reinterpret_cast<const char*>(&id.first), sizeof(uint32_t));
         for(auto& e : element->expressions())
-            e->visit(*this);
+            Visitor::visit(this, e);
     }
 
     void BinaryPrinter::_accept(const SimpleQuantifierCondition *condition){
@@ -65,7 +66,7 @@ namespace PetriEngine::PQL {
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-        condition->getCond()->visit(*this);
+        Visitor::visit(this, condition->getCond());
     }
 
     void BinaryPrinter::_accept(const UntilCondition *condition){
@@ -73,8 +74,8 @@ namespace PetriEngine::PQL {
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-        (*condition)[0]->visit(*this);
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
+        Visitor::visit(this, (*condition)[1]);
     }
 
     void BinaryPrinter::_accept(const LogicalCondition *condition){
@@ -85,7 +86,7 @@ namespace PetriEngine::PQL {
         uint32_t size = condition->operands();
         os.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
         for(auto& c : *condition)
-            c->visit(*this);
+            Visitor::visit(this, c);
     }
 
     void BinaryPrinter::_accept(const CompareConjunction *element){
@@ -113,8 +114,8 @@ namespace PetriEngine::PQL {
         std::string sop = condition->op();
         os.write(sop.data(), sop.size());
         os.write("\0", sizeof(char));
-        (*condition)[0]->visit(*this);
-        (*condition)[1]->visit(*this);
+        Visitor::visit(this, (*condition)[0]);
+        Visitor::visit(this, (*condition)[1]);
     }
 
     void BinaryPrinter::_accept(const DeadlockCondition *condition){
@@ -155,14 +156,14 @@ namespace PetriEngine::PQL {
         auto quant = condition->getQuantifier();
         os.write(reinterpret_cast<const char*>(&path), sizeof(Path));
         os.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-        condition->getCond()->visit(*this);
+        Visitor::visit(this, condition->getCond());
     }
 
     void BinaryPrinter::_accept(const IdentifierExpr *condition) {
-        condition->compiled()->visit(*this);
+        Visitor::visit(this, condition->compiled());
     }
 
     void BinaryPrinter::_accept(const ShallowCondition *condition) {
-        condition->getCompiled()->visit(*this);
+        Visitor::visit(this, condition->getCompiled());
     }
-}
+} }

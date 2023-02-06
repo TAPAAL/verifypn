@@ -17,7 +17,7 @@
 
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 #include "LTL/Stubborn/VisibleLTLStubbornSet.h"
-#include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "LTL/Stubborn/LTLEvalAndSetVisitor.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -35,8 +35,8 @@ namespace LTL {
         }
         //TODO needed? We do not run Interesting visitor so we do not immediately need it, but is is needed by closure?
         for (auto &q : _queries) {
-            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q->visit(evalAndSetVisitor);
+            LTLEvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            Visitor::visit(evalAndSetVisitor, q);
         }
         findKeyTransition();
 

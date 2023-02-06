@@ -2,7 +2,7 @@
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
  *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *                     Rasmus Tollund <rtollu18@student.aau.dk>
+ *                     Rasmus Grønkjær Tollund <rasmusgtollund@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/PredicateCheckers.h"
 
-namespace PetriEngine::PQL {
+namespace PetriEngine { namespace PQL {
 
     /*** Nested Deadlock ***/
 
@@ -31,14 +31,14 @@ namespace PetriEngine::PQL {
 
     bool hasNestedDeadlock(const Condition* condition) {
         NestedDeadlockVisitor v;
-        condition->visit(v);
+        Visitor::visit(v, condition);
         return v.getReturnValue();
     }
 
     void NestedDeadlockVisitor::_accept(const LogicalCondition *condition) {
         _nested_in_logical_condition = true;
         for (auto& c : condition->getOperands())
-            c->visit(*this);
+            Visitor::visit(this, c);
         _nested_in_logical_condition = false;
     }
 
@@ -55,8 +55,12 @@ namespace PetriEngine::PQL {
 
     bool isTemporal(const Condition *condition) {
         IsTemporalVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
+    }
+
+    void IsTemporalVisitor::_accept(const PathQuant *condition) {
+        setConditionFound();
     }
 
     void IsTemporalVisitor::_accept(const SimpleQuantifierCondition *condition) {
@@ -71,7 +75,7 @@ namespace PetriEngine::PQL {
     /*** Is Reachability ***/
     bool isReachability(const Condition* condition) {
         IsNotReachabilityVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return !visitor.getReturnValue();
     }
 
@@ -92,7 +96,7 @@ namespace PetriEngine::PQL {
     void IsNotReachabilityVisitor::_accept(const EFCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
-            element->getCond()->visit(*this);
+            Visitor::visit(this, element->getCond());
             _is_nested = false;
         } else {
             setConditionFound();
@@ -102,7 +106,7 @@ namespace PetriEngine::PQL {
     void IsNotReachabilityVisitor ::_accept(const AGCondition *element) {
         if (!_is_nested) {
             _is_nested = true;
-            element->getCond()->visit(*this);
+            Visitor::visit(this, element->getCond());
             _is_nested = false;
         } else {
             setConditionFound();
@@ -113,7 +117,7 @@ namespace PetriEngine::PQL {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<FCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->getCond()->visit(*this);
+                Visitor::visit(this, cond->getCond());
                 _is_nested = false;
             } else {
                 setConditionFound();
@@ -127,7 +131,7 @@ namespace PetriEngine::PQL {
         if (!_is_nested) {
             if (auto cond = dynamic_cast<GCondition*>(element->getCond().get())) {
                 _is_nested = true;
-                cond->getCond()->visit(*this);
+                Visitor::visit(this, cond->getCond());
                 _is_nested = false;
             } else {
                 setConditionFound();
@@ -141,8 +145,7 @@ namespace PetriEngine::PQL {
         if (_is_nested) {
             for(auto& c : element->getOperands())
             {
-                c->visit(*this);
-
+                Visitor::visit(this, c);
                 if(_condition_found)
                     break;
             }
@@ -156,7 +159,7 @@ namespace PetriEngine::PQL {
     }
 
     void IsNotReachabilityVisitor::_accept(const NotCondition *element) {
-        element->getCond()->visit(*this);
+        Visitor::visit(this, element->getCond());
     }
 
     void IsNotReachabilityVisitor::_accept(const BooleanCondition *element) {
@@ -177,21 +180,31 @@ namespace PetriEngine::PQL {
 
     void IsNotReachabilityVisitor::_accept(const QuasiLivenessCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
         else
             setConditionFound();
     }
 
     void IsNotReachabilityVisitor::_accept(const LivenessCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
         else
             setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const KSafeCondition* element) {
+        if(element->getCompiled())
+            Visitor::visit(this, element->getCompiled());
+        else
+        {
+            if(_is_nested)
+                setConditionFound();
+        }
+    }
+
     void IsNotReachabilityVisitor::_accept(const StableMarkingCondition *element) {
         if (element->getCompiled())
-            element->getCompiled()->visit(*this);
+            Visitor::visit(this, element->getCompiled());
         else
             setConditionFound();
     }
@@ -200,11 +213,23 @@ namespace PetriEngine::PQL {
         if (!_is_nested) setConditionFound();
     }
 
+    void IsNotReachabilityVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectCondition *element) {
+        setConditionFound();
+    }
+
+    void IsNotReachabilityVisitor::_accept(const PathSelectExpr *element) {
+        setConditionFound();
+    }
+
 
     /*** Is Loop Sensitive ***/
     bool isLoopSensitive(const Condition_ptr& condition) {
         IsLoopSensitiveVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -250,11 +275,54 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
+    void IsLoopSensitiveVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const ACondition *condition)
+    {
+        _negated = !_negated;
+        AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const NotCondition *condition)
+    {
+        _negated = !_negated;
+        AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const UntilCondition *condition)
+    {
+        if(_negated)
+            setConditionFound();
+        else
+            AnyVisitor::_accept(condition);
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const LivenessCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
+    }
+
+    void IsLoopSensitiveVisitor::_accept(const StableMarkingCondition *condition)
+    {
+        if(condition->getCompiled())
+            AnyVisitor::_accept(condition);
+        else
+            setConditionFound();
+    }
+
 
     /*** Contains Next ***/
     bool containsNext(const Condition_ptr& condition) {
+        return containsNext(condition.get());
+    }
+    bool containsNext(const Condition* condition) {
         ContainsNextVisitor visitor;
-        condition->visit(visitor);
+        Visitor::visit(visitor, condition);
         return visitor.getReturnValue();
     }
 
@@ -270,4 +338,24 @@ namespace PetriEngine::PQL {
         setConditionFound();
     }
 
-}
+    void ContainsNextVisitor::_accept(const PathQuant *element) {
+        setConditionFound();
+    }
+
+    bool containsUpperBounds(const Condition_ptr& condition) {
+        return containsUpperBounds(condition.get());
+    }
+
+    bool containsUpperBounds(const Condition* condition) {
+        ContainsUpperBoundsVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
+
+    bool containsDeadlock(const Condition_ptr condition) {
+        ContainsDeadlockVisitor visitor;
+        Visitor::visit(visitor, condition);
+        return visitor.getReturnValue();
+    }
+
+} }
