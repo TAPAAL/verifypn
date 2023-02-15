@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This is the initialization script for the participation of TAPAAL
-# untimed engine verifypn in the Petri net competition 2021.
+# untimed engine verifypn in the Petri net competition 2023.
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
