@@ -83,7 +83,7 @@ STRATEGIES_PAR[3]="-s RDFS -q 0 -l 0 -d $SHORTRED"
 
 STRATEGIES_RAND[0]="-s RPFS --seed-offset 0 -q $TIMEOUT_TOTAL -l 0 -d $SHORTRED"
 STRATEGIES_RAND[1]="-s RDFS --seed-offset 1337 -q 0 -l 0 -d 0"
-STRATEGIES_RAND[2]="-s RPDFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
+STRATEGIES_RAND[2]="-s RPFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
 STRATEGIES_RAND[3]="-tar -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
 
 run_multi=false;
