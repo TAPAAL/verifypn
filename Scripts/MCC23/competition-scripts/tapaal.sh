@@ -516,7 +516,7 @@ case "$BK_EXAMINATION" in
 	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
 	unset STRATEGIES_SEQ
-	STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
+	STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
         verifyparallel
         ;;
 
@@ -529,7 +529,7 @@ case "$BK_EXAMINATION" in
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
 	unset STRATEGIES_SEQ
-	STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
+	STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
         verifyparallel
         ;;
 
