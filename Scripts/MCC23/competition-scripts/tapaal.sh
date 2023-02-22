@@ -515,6 +515,8 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
 	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
+	unset STRATEGIES_SEQ
+	STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
         verifyparallel
         ;;
 
@@ -526,6 +528,8 @@ case "$BK_EXAMINATION" in
  	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
+	unset STRATEGIES_SEQ
+	STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
         verifyparallel
         ;;
 
@@ -534,7 +538,7 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying LTLCardinality  *"
         echo "*************************************"
-	      CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
+	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         LTL
        ;;
@@ -544,7 +548,7 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying LTLFireability  *"
         echo "*************************************"
- 	      CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
+ 	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
         LTL
