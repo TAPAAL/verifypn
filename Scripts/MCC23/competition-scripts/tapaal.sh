@@ -71,7 +71,7 @@ SHORTRED=$(echo "$TIMEOUT_TOTAL/30" | bc)
 EXTENDED=$(echo "$TIMEOUT_TOTAL/25" | bc)
 
 STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
-STRATEGIES_SEQ[1]="-tar -q 0 -d $SHORTRED"
+STRATEGIES_SEQ[1]="-tar -s DFS -q 0 -d $SHORTRED"
 
 
 STRATEGY_MULTI="-s RDFS -q 15 -l 3 -d $SHORTRED"
@@ -400,6 +400,18 @@ function LTL {
     verifyparallel
 }
 
+function CTL {
+
+    STRATEGIES_PAR[0]="-s BestFS -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[1]="-s RPFS -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[2]="-s BFS -q 0 -l 0 -d $SHORTRED"
+    STRATEGIES_PAR[3]="-s DFS -q 0 -l 0 -d $SHORTRED"
+    
+    STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
+
+    verifyparallel
+}
+
 case "$BK_EXAMINATION" in
 
     StateSpace)
@@ -515,9 +527,7 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
 	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
-	unset STRATEGIES_SEQ
-	STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
-        verifyparallel
+	CTL
         ;;
 
     CTLFireability)
@@ -528,9 +538,7 @@ case "$BK_EXAMINATION" in
  	CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
         TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
-	unset STRATEGIES_SEQ
-	STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
-        verifyparallel
+	CTL
         ;;
 
     LTLCardinality)
