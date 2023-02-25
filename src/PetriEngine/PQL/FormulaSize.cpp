@@ -16,25 +16,25 @@
 
 #include "PetriEngine/PQL/FormulaSize.h"
 
-#define RETURN(x) {_return_value = x; return;}
+#define RETURN(x,y) { _return_size = x; _return_depth = y; return;}
 
 using namespace PetriEngine::PQL;
 
-int PetriEngine::PQL::formulaSize(const Condition_constptr& condition) {
+int64_t PetriEngine::PQL::formulaSize(const Condition_constptr& condition) {
     FormulaSizeVisitor formulaSizeVisitor;
     Visitor::visit(formulaSizeVisitor, condition);
-    return formulaSizeVisitor.getReturnValue();
+    return formulaSizeVisitor.size();
 }
 
-int formulaSize(const Expr_ptr &element) {
+int64_t formulaSize(const Expr_ptr &element) {
     FormulaSizeVisitor formulaSizeVisitor;
     Visitor::visit(formulaSizeVisitor, element);
-    return formulaSizeVisitor.getReturnValue();
+    return formulaSizeVisitor.size();
 }
 
 
 void FormulaSizeVisitor::_accept(const CompareConjunction *condition) {
-    int sum = 0;
+    int64_t sum = 0;
     for(auto& c : condition->constraints())
     {
         assert(c._place >= 0);
@@ -44,93 +44,118 @@ void FormulaSizeVisitor::_accept(const CompareConjunction *condition) {
             if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
         }
     }
-    if(sum == 1) RETURN(2)
-    else RETURN((sum*2) + 1)
+    if(sum == 1) RETURN(2, 0)
+    else RETURN((sum*2) + 1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const CompareCondition *condition) {
-    RETURN(subvisit(condition->getExpr1()) + subvisit(condition->getExpr2()) + 1)
+    auto [x1, y1] = subvisit(condition->getExpr1());
+    auto [x2, y2] = subvisit(condition->getExpr2());
+    RETURN(x1 + x2 + 1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const BooleanCondition *condition) {
-    RETURN(0)
+    RETURN(0, 0)
 }
 
 void FormulaSizeVisitor::_accept(const DeadlockCondition *condition) {
-    RETURN(1)
+    RETURN(1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const UnfoldedUpperBoundsCondition *condition) {
-    RETURN(condition->places().size())
+    RETURN(condition->places().size(), 0)
 }
 
 void FormulaSizeVisitor::_accept(const NaryExpr *element) {
     size_t sum = 0;
     for(auto& e : element->expressions())
-        sum += subvisit(e);
-    RETURN(sum + 1)
+    {
+        auto [x, _] = subvisit(e);
+        sum += x;
+    }
+    RETURN(sum + 1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const CommutativeExpr *element) {
     size_t sum = element->places().size();
     for(auto& e : element->expressions())
-        sum += subvisit(e);
-    RETURN(sum + 1)
+    {
+        auto [x, _] = subvisit(e);
+        sum += x;
+    }
+    RETURN(sum + 1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const MinusExpr *element) {
-    RETURN(subvisit((*element)[0]))
+    auto [x, y] = subvisit((*element)[0]);
+    RETURN(x, 0)
 }
 
 void FormulaSizeVisitor::_accept(const LiteralExpr *element) {
-    RETURN(1)
+    RETURN(1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const IdentifierExpr *element) {
     if(element->compiled())
-        RETURN(subvisit(element->compiled()));
-    RETURN(1);
+    {
+        auto [x, y] = subvisit(element->compiled());
+        RETURN(x, y);
+    }
+    else RETURN(1, 0);
 }
 
 void FormulaSizeVisitor::_accept(const UnfoldedIdentifierExpr *condition) {
-    RETURN(1)
+    RETURN(1, 0)
 }
 
 void FormulaSizeVisitor::_accept(const ShallowCondition *condition) {
-    RETURN(subvisit(condition->getCompiled()))
+    auto [x, y] = subvisit(condition->getCompiled());
+    RETURN(x, y)
 }
 
 void FormulaSizeVisitor::_accept(const NotCondition *condition) {
-    RETURN(subvisit(condition->getCond()) + 1)
+    auto [x, y] = subvisit(condition->getCond());
+    RETURN(x + 1, y + 1)
 }
 
 void FormulaSizeVisitor::_accept(const SimpleQuantifierCondition *condition) {
-    RETURN(subvisit(condition->getCond()) + 1)
+    auto [x, y] = subvisit(condition->getCond());
+    RETURN(x + 1, y + 1)
 }
 
 void FormulaSizeVisitor::_accept(const UntilCondition *condition) {
-    RETURN(subvisit(condition->getCond1()) + subvisit(condition->getCond2()) + 1)
+    auto [x1, y1] = subvisit(condition->getCond1());
+    auto [x2, y2] = subvisit(condition->getCond2());
+    RETURN(x1 + x2, std::max(y1, y2) + 1)
 }
 
 void FormulaSizeVisitor::_accept(const LogicalCondition *condition) {
-    size_t i = 1;
+    int64_t i = 1;
+    int64_t d = 0;
     for(auto& c : *condition)
-        i += subvisit(c);
-    RETURN(i)
+    {
+        auto [x, y] = subvisit(c);
+        i += x;
+        d = std::max(d, y);
+    }
+    RETURN(i, d)
 }
 
 
 void FormulaSizeVisitor::_accept(const PathSelectCondition* c)
 {
-    RETURN(subvisit(c->child()) + 1)
+    auto [x, y] = subvisit(c->child());
+    RETURN(x + 1, y + 1)
 }
 
 void FormulaSizeVisitor::_accept(const PathQuant* c)
 {
-    RETURN(subvisit(c->child()) + 1)
+    auto [x, y] = subvisit(c->child());
+    RETURN(x + 1, y + 1)
 }
 
 void FormulaSizeVisitor::_accept(const PathSelectExpr* e)
 {
-    RETURN(subvisit(e->child()) + 1)
+    auto [x, y] = subvisit(e->child());
+    RETURN(x + 1, y + 1)
 }

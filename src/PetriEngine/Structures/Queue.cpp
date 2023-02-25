@@ -34,10 +34,14 @@ namespace PetriEngine {
 
         size_t BFSQueue::pop()
         {
+            std::shuffle(_cache.begin(), _cache.end(), _rng);
+            for(auto e : _cache)
+                _queue.emplace(e);
+            _cache.clear();
             if(!_queue.empty())
             {
                 auto r = _queue.front();
-                _queue.pop();
+                _queue.pop();                
                 return r;
             }
             else
@@ -49,11 +53,11 @@ namespace PetriEngine {
         void BFSQueue::push(size_t id, PQL::DistanceContext*,
             const PQL::Condition* query)
         {
-            _queue.push(id);
+            _cache.emplace_back(id);
         }
 
         bool BFSQueue::empty() const {
-            return _queue.empty();
+            return _queue.empty() && _cache.empty();
         }
 
         DFSQueue::DFSQueue(size_t) : Queue() {}
