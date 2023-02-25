@@ -13,6 +13,7 @@ namespace Algorithm {
             case Strategy::DFS:
                 strategy = std::make_shared<DFSSearch>();
                 break;
+            case Strategy::RPFS:
             case Strategy::RDFS:
                 strategy = std::make_shared<RDFSSearch>();
                 break;

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Encoder.h
  * Author: Peter G. Jensen
  *
@@ -19,15 +19,25 @@ namespace SearchStrategy {
 class BFSSearch : public SearchStrategy {
 
 protected:
-    size_t Wsize() const { return W.size(); };
-    void pushToW(DependencyGraph::Edge* edge) { W.push(edge); };
-    DependencyGraph::Edge* popFromW() 
+    size_t Wsize() const { return W.size() + _cache.size(); };
+    void pushToW(DependencyGraph::Edge* edge) {
+        _cache.push_back(edge);
+    }
+
+    DependencyGraph::Edge* popFromW()
     {
+        std::shuffle(_cache.begin(), _cache.end(), _rng);
+        for(auto* e : _cache)
+            W.emplace(e);
+        _cache.clear();
         auto e = W.front();
         W.pop();
         return e;
-    };    
+    }
+
     std::queue<DependencyGraph::Edge*> W;
+    std::vector<DependencyGraph::Edge*> _cache;
+    std::default_random_engine _rng{};
 };
 
 }   // end SearchStrategy

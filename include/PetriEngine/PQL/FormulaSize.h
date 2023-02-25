@@ -21,26 +21,31 @@
 
 namespace PetriEngine { namespace PQL {
     /** Count size of the entire formula in number of nodes */
-    int formulaSize(const Condition_constptr & condition);
-    int formulaSize(const Expr_ptr& element);
+    int64_t formulaSize(const Condition_constptr & condition);
+    int64_t formulaSize(const Expr_ptr& element);
 
     class FormulaSizeVisitor : public Visitor {
 
     public:
-        [[nodiscard]] int getReturnValue() const {
-            return _return_value;
+        [[nodiscard]] int64_t size() const {
+            return _return_size;
+        }
+
+        [[nodiscard]] int64_t depth() const {
+            return _return_depth;
         }
 
     private:
-        int _return_value = -1;
+        int64_t _return_size = -1;
+        int64_t _return_depth = -1;
 
-        int subvisit(const Condition_ptr& condition) {
+        std::pair<int64_t,int64_t> subvisit(const Condition_ptr& condition) {
             Visitor::visit(this, condition);
-            return _return_value;
+            return std::make_pair(_return_size, _return_depth);
         }
-        int subvisit(const Expr_ptr& expr) {
+        std::pair<int64_t,int64_t> subvisit(const Expr_ptr& expr) {
             Visitor::visit(this, expr);
-            return _return_value;
+            return std::make_pair(_return_size, _return_depth);
         }
 
         void _accept(const CompareConjunction *condition) override;
