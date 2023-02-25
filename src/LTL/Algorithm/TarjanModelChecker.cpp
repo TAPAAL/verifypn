@@ -319,7 +319,7 @@ namespace LTL {
         if(!had_deadlock && cstack[p]._lowsource != std::numeric_limits<idx_t>::max())
         {
             p = cstack[p]._lowsource;
-            while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max() && p == cstack[p]._lowsource) {
+            while (cstack[p]._lowlink != std::numeric_limits<idx_t>::max() && p != cstack[p]._lowsource) {
                 auto[parent, tid] = seen.get_history(cstack[p]._stateid);
                 assert(tid < _net.numberOfTransitions());
                 _trace.push_back({(uint32_t)tid});
