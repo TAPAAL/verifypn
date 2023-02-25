@@ -1,5 +1,5 @@
 /* TAPAAL untimed verification engine verifypn
- * Copyright (C) 2011-2021  Jonas Finnemann Jensen <jopsen@gmail.com>,
+ * Copyright (C) 2011-2023  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
  *                          Jiri Srba <srba.jiri@gmail.com>,
