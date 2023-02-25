@@ -236,7 +236,7 @@ namespace LTL {
             if(_cstack[p]._lowsource != std::numeric_limits<idx_t>::max() && !had_deadlock)
             {
                 p = _cstack[p]._lowsource;
-                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max() && p != cstack[p]._lowsource) {
+                while (_cstack[p]._lowlink != std::numeric_limits<idx_t>::max() && p != _cstack[p]._lowsource) {
                     auto[parent, tid] = _seen.getHistory(_cstack[p]._stateid);
                     this->printTransition(tid, os) << '\n';
                     if(tid >= std::numeric_limits<ptrie::uint>::max() - 1)
