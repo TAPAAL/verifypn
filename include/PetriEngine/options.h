@@ -32,18 +32,6 @@ enum class TemporalLogic {
     CTL, LTL
 };
 
-enum class BuchiOptimization {
-    Low = 1,
-    Medium = 2,
-    High = 3
-};
-
-enum class LTLHeuristic {
-    Distance,
-    Automaton,
-    FireCount,
-};
-
 enum class StatisticsLevel {
     None,
     SearchOnly,
