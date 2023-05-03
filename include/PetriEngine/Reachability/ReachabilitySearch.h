@@ -257,7 +257,8 @@ namespace PetriEngine {
                     }
 
                     // Search! Each step is a random walk and resets the queue
-                    for(size_t stepCounter = 0, auto nid = queue.pop(); nid != Structures::Queue::EMPTY && stepCounter < maxSteps; nid = queue.pop(), ++stepCounter) {
+                    size_t stepCounter = 0;
+                    for(auto nid = queue.pop(); nid != Structures::Queue::EMPTY && stepCounter < maxSteps; nid = queue.pop(), ++stepCounter) {
                         states.decode(state, nid);
                         generator.prepare(&state);
 
