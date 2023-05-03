@@ -73,6 +73,15 @@ namespace PetriEngine {
                 bool usequeries;
             };
 
+            template<typename W, typename G>
+            bool tryReachRandomWalk(
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                std::vector<ResultPrinter::Result>& results,
+                bool usequeries,
+                bool printstats,
+                size_t maxSteps,
+                size_t seed);
+
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
@@ -159,6 +168,7 @@ namespace PetriEngine {
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
                         auto res = states.add(working);
+                        // If we have not seen this state before
                         if (res.first) {
                             {
                                 PQL::DistanceContext dc(&_net, working.marking());
@@ -179,6 +189,100 @@ namespace PetriEngine {
                         }
                     }
                     ss.expandedStates++;
+                }
+            }
+
+            // no more successors, print last results
+            for(size_t i= 0; i < queries.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                {
+                    results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states).first;
+                }
+            }
+
+            if(printstats)
+                printStats(ss, &states);
+            _max_tokens = states.maxTokens();
+            return false;
+        }
+
+        template<typename W, typename G>
+        bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
+                                                    std::vector<ResultPrinter::Result>& results, bool usequeries,
+                                                    bool printstats, size_t maxSteps, size_t seed)
+        {
+            // set up state
+            searchstate_t ss;
+            ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
+            ss.expandedStates = 0;
+            ss.exploredStates = 1;
+            ss.heurquery = queries.size() >= 2 ? std::rand() % queries.size() : 0;
+            ss.usequeries = usequeries;
+
+            // set up working area
+            Structures::State state;
+            Structures::State working;
+            _initial.setMarking(_net.makeInitialMarking());
+            state.setMarking(_net.makeInitialMarking());
+            working.setMarking(_net.makeInitialMarking());
+
+            W states(_net, _kbound);                        // stateset
+            Structures::RandomWalkPotencyQueue queue(seed); // working queue
+            G generator = _makeSucGen<G>(_net, queries);    // successor generator
+            auto r = states.add(state);
+            // this can fail due to reductions; we push tokens around and violate K
+            if(r.first){
+                // add initial to states, check queries on initial state
+                _satisfyingMarking = r.second;
+                size_t _initialMarking = r.second;
+                // check initial marking
+                if(ss.usequeries)
+                {
+                    if(checkQueries(queries, results, working, ss, &states))
+                    {
+                        if(printstats)
+                            printStats(ss, &states);
+                        _max_tokens = states.maxTokens();
+                        return true;
+                    }
+                }
+                // Typically a timeout
+                bool stopRandomWalkCondition = false;
+                while(!stopRandomWalkCondition) {
+                    // add initial to queue
+                    {
+                        PQL::DistanceContext dc(&_net, _initial.marking());
+                        queue.push(r.second, &dc, queries[ss.heurquery].get());
+                    }
+
+                    // Search! Each step is a random walk and resets the queue
+                    for(size_t stepCounter = 0, auto nid = queue.pop(); nid != Structures::Queue::EMPTY && stepCounter < maxSteps; nid = queue.pop(), ++stepCounter) {
+                        states.decode(state, nid);
+                        generator.prepare(&state);
+
+                        while(generator.next(working)) {
+                            ss.enabledTransitionsCount[generator.fired()]++;
+                            auto res = states.add(working);
+                            // If we have not seen this state before
+                            if (res.first) {
+                                {
+                                    PQL::DistanceContext dc(&_net, working.marking());
+                                    queue.push(res.second, &dc, queries[ss.heurquery].get(), generator.fired());
+                                }
+                                // states.setHistory(res.second, generator.fired()); // No need to setHistory
+                                _satisfyingMarking = res.second;
+                                ss.exploredStates++;
+                                if (checkQueries(queries, results, working, ss, &states)) {
+                                    if(printstats)
+                                        printStats(ss, &states);
+                                    _max_tokens = states.maxTokens();
+                                    return true;
+                                }
+                            }
+                        }
+                        ss.expandedStates++;
+                    }
                 }
             }
 
