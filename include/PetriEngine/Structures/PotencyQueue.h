@@ -69,6 +69,32 @@ namespace PetriEngine {
         private:
             size_t _seed;
         };
+
+        class RandomWalkPotencyQueue : public PotencyQueue {
+        public:
+            RandomWalkPotencyQueue(size_t seed);
+
+            virtual ~RandomWalkPotencyQueue();
+
+            using PotencyQueue::push;
+
+            void push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query, uint32_t t) override;
+
+            /* Returns the next element according to the potencies.
+             * Then calls resetQueue() to reset the queue.
+             */
+            size_t pop();
+
+            /* Resets the queue to the initial state.
+             * The initial state is the state where the queue contains empty priority_queues.
+             * Uses the actual size of _queue to determine the number of empty priority_queues.
+             * Also sets _size to 0.
+             */
+            void resetQueue();
+
+        private:
+            size_t _seed;
+        };
     }
 }
 
