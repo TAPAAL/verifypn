@@ -66,19 +66,15 @@ namespace PetriEngine {
 
             size_t pop();
 
-        private:
+        protected:
             size_t _seed;
         };
 
-        class RandomWalkPotencyQueue : public PotencyQueue {
+        class RandomWalkPotencyQueue : public RandomPotencyQueue {
         public:
             RandomWalkPotencyQueue(size_t seed);
 
             virtual ~RandomWalkPotencyQueue();
-
-            using PotencyQueue::push;
-
-            void push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query, uint32_t t) override;
 
             /* Returns the next element according to the potencies.
              * Then calls resetQueue() to reset the queue.
@@ -91,9 +87,6 @@ namespace PetriEngine {
              * Also sets _size to 0.
              */
             void resetQueue();
-
-        private:
-            size_t _seed;
         };
     }
 }

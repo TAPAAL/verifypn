@@ -142,41 +142,9 @@ namespace PetriEngine {
             return e.item;
         }
 
-        RandomWalkPotencyQueue::RandomWalkPotencyQueue(size_t seed) : PotencyQueue(seed), _seed(seed) {
-            srand(_seed);
-        }
+        RandomWalkPotencyQueue::RandomWalkPotencyQueue(size_t seed) : RandomPotencyQueue(seed) {}
 
         RandomWalkPotencyQueue::~RandomWalkPotencyQueue() {}
-
-        void
-        RandomWalkPotencyQueue::push(size_t id, PQL::DistanceContext *context, const PQL::Condition *query, uint32_t t) {
-            // TODO: Seems okay, but not sure
-            uint32_t dist = query->distance(*context);
-
-            if (dist < _currentParentDist) {
-                _potencies[t].value += _currentParentDist - dist;
-                while (_potencies[t].prev != SIZE_MAX && _potencies[t].value > _potencies[_potencies[t].prev].value) {
-                    _swapAdjacent(_potencies[t].prev, t);
-                }
-
-                if (_potencies[t].prev == SIZE_MAX)
-                    _best = t;
-            } else if (dist > _currentParentDist && _potencies[t].value != 0) {
-                if (_potencies[t].value - 1 >= dist - _currentParentDist)
-                    _potencies[t].value -= dist - _currentParentDist;
-                else
-                    _potencies[t].value = 1;
-                while (_potencies[t].next != SIZE_MAX && _potencies[t].value < _potencies[_potencies[t].next].value) {
-                    if (_best == t)
-                        _best = _potencies[t].next;
-
-                    _swapAdjacent(t, _potencies[t].next);
-                }
-            }
-
-            _queues[t].emplace(dist, id);
-            _size++;
-        }
 
         size_t RandomWalkPotencyQueue::pop() {
             if (empty())
