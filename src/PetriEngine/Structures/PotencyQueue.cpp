@@ -141,51 +141,5 @@ namespace PetriEngine {
             _currentParentDist = e.weight;
             return e.item;
         }
-
-        RandomWalkPotencyQueue::RandomWalkPotencyQueue(size_t seed) : RandomPotencyQueue(seed) {}
-
-        RandomWalkPotencyQueue::~RandomWalkPotencyQueue() {}
-
-        size_t RandomWalkPotencyQueue::pop() {
-            if (empty())
-                return PetriEngine::PQL::EMPTY;
-
-            if (_potencies.empty()) {
-                weighted_t e = _queues[_best].top();
-                _currentParentDist = e.weight;
-                resetQueue();
-                return e.item;
-            }
-
-            uint32_t n = 0;
-            size_t current = SIZE_MAX;
-
-            size_t t = _best;
-            while (t != SIZE_MAX) {
-                if (_queues[t].empty()) {
-                    t = _potencies[t].next;
-                    continue;
-                }
-
-                n += _potencies[t].value;
-                double r = (double) rand() / RAND_MAX;
-                float threshold = _potencies[t].value / (float) n;
-                if (r <= threshold)
-                    current = t;
-
-                t = _potencies[t].next;
-            }
-
-            weighted_t e = _queues[current].top();
-            _queues[current].pop();
-            _currentParentDist = e.weight;
-            resetQueue();
-            return e.item;
-        }
-
-        void RandomWalkPotencyQueue::resetQueue() {
-            _queues = std::vector<std::priority_queue<weighted_t>>(_queues.size());
-            _size = 0;
-        }
     }
 }
