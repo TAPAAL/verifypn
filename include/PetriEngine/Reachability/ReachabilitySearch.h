@@ -73,7 +73,7 @@ namespace PetriEngine {
                 bool usequeries;
             };
 
-            template<typename W, typename G>
+            template<typename G>
             bool tryReachRandomWalk(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
@@ -207,83 +207,70 @@ namespace PetriEngine {
             return false;
         }
 
-        template<typename W, typename G>
+        template<typename G>
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     bool printstats, size_t maxSteps, size_t seed)
         {
-            // set up state
+            // Set up state
             searchstate_t ss;
             ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
             ss.expandedStates = 0;
             ss.exploredStates = 1;
             ss.heurquery = queries.size() >= 2 ? std::rand() % queries.size() : 0;
             ss.usequeries = usequeries;
+            const PQL::Condition *query = queries[ss.heurquery].get();
 
-            // set up working area
-            Structures::State state;
-            Structures::State working;
+            // Set up working area
             _initial.setMarking(_net.makeInitialMarking());
-            state.setMarking(_net.makeInitialMarking());
-            working.setMarking(_net.makeInitialMarking());
+            State candidate; // Candidate for the next step, modified by the generator
 
-            W states(_net, _kbound);                        // stateset
-            Structures::RandomWalkPotencyQueue queue(seed); // working queue
-            G generator = _makeSucGen<G>(_net, queries);    // successor generator
-            auto r = states.add(state);
-            // this can fail due to reductions; we push tokens around and violate K
-            if(r.first){
-                // add initial to states, check queries on initial state
-                _satisfyingMarking = r.second;
-                size_t _initialMarking = r.second;
-                // check initial marking
-                if(ss.usequeries)
+            RandomWalkStateSet states(_net, _kbound, query); // State set
+            G generator = _makeSucGen<G>(_net, queries);     // Successor generator
+
+            // Check initial marking
+            if(ss.usequeries)
+            {
+                if(checkQueries(queries, results, _initial, ss, &states))
                 {
-                    if(checkQueries(queries, results, working, ss, &states))
-                    {
-                        if(printstats)
-                            printStats(ss, &states);
-                        _max_tokens = states.maxTokens();
-                        return true;
-                    }
+                    // TODO: something here with states
+                    if(printstats)
+                        printStats(ss, &states);
+                    _max_tokens = states.maxTokens();
+                    return true;
                 }
-                // Typically a timeout
-                bool stopRandomWalkCondition = false;
-                while(!stopRandomWalkCondition) {
-                    // add initial to queue
-                    {
-                        PQL::DistanceContext dc(&_net, _initial.marking());
-                        queue.push(r.second, &dc, queries[ss.heurquery].get());
+            }
+            // Typically a timeout
+            bool stopRandomWalkCondition = false;
+            while(!stopRandomWalkCondition) {
+                // Start a new random walk
+                states.newWalk();
+
+                // Search! Each turn is a random step
+                for(size_t stepCounter = 0; stepCounter < maxSteps; ++stepCounter) {
+                    // The currentStepMarking is the nextMarking computed in the previous step
+                    if (!states.nextStep()) {
+                        // No candidate found at the previous step, do a new walk
+                        break;
                     }
+                    generator.prepare(states.currentStepState());
 
-                    // Search! Each step is a random walk and resets the queue
-                    size_t stepCounter = 0;
-                    for(auto nid = queue.pop(); nid != Structures::Queue::EMPTY && stepCounter < maxSteps; nid = queue.pop(), ++stepCounter) {
-                        states.decode(state, nid);
-                        generator.prepare(&state);
+                    while(generator.next(candidate)) {
+                        ss.enabledTransitionsCount[generator.fired()]++;
+                        ss.exploredStates++;
 
-                        while(generator.next(working)) {
-                            ss.enabledTransitionsCount[generator.fired()]++;
-                            auto res = states.add(working);
-                            // If we have not seen this state before
-                            if (res.first) {
-                                {
-                                    PQL::DistanceContext dc(&_net, working.marking());
-                                    queue.push(res.second, &dc, queries[ss.heurquery].get(), generator.fired());
-                                }
-                                // states.setHistory(res.second, generator.fired()); // No need to setHistory
-                                _satisfyingMarking = res.second;
-                                ss.exploredStates++;
-                                if (checkQueries(queries, results, working, ss, &states)) {
-                                    if(printstats)
-                                        printStats(ss, &states);
-                                    _max_tokens = states.maxTokens();
-                                    return true;
-                                }
-                            }
+                        if (checkQueries(queries, results, candidate, ss, &states)) {
+                            // TODO: something there, like states.setNextMarking(candidate.marking());
+                            if(printstats)
+                                printStats(ss, &states);
+                            _max_tokens = states.maxTokens();
+                            _satisfyingMarking = (size_t)candidate.marking();
+                            return true;
+                        } else {
+                            states.computeCandidate(candidate.marking(), query);
                         }
-                        ss.expandedStates++;
                     }
+                    ss.expandedStates++;
                 }
             }
 
