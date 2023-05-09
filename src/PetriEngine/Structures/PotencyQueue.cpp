@@ -13,7 +13,7 @@ namespace PetriEngine {
 
             size_t t = _best;
             while (_queues[t].empty()) {
-                t = _potencies[t].next;
+                ++t;
             }
             weighted_t n = _queues[t].top();
             _queues[t].pop();
@@ -35,28 +35,6 @@ namespace PetriEngine {
             return _size == 0;
         }
 
-        void PotencyQueue::_swapAdjacent(size_t a, size_t b) {
-            // x <-> a <-> b <-> y
-            // Assert: _potencies[a].next == b && _potencies[b].prev == a
-
-            // x
-            if (_potencies[a].prev != SIZE_MAX)
-                _potencies[_potencies[a].prev].next = b;
-
-            // y
-            if (_potencies[b].next != SIZE_MAX)
-                _potencies[_potencies[b].next].prev = a;
-
-            // a
-            size_t prevTmp = _potencies[a].prev;
-            _potencies[a].prev = b;
-            _potencies[a].next = _potencies[b].next;
-
-            // b
-            _potencies[b].prev = prevTmp;
-            _potencies[b].next = a;
-        }
-
         void PotencyQueue::_initializePotencies(size_t nTransitions, uint32_t initValue) {
             _queues = std::vector<std::priority_queue<weighted_t>>(nTransitions != 0 ? nTransitions : 1);
 
@@ -64,7 +42,7 @@ namespace PetriEngine {
             for (uint32_t i = 0; i < nTransitions; i++) {
                 size_t prev = i == 0 ? SIZE_MAX : i - 1;
                 size_t next = i == nTransitions - 1 ? SIZE_MAX : i + 1;
-                _potencies.push_back(potency_t(initValue, prev, next));
+                _potencies.push_back(initValue);
             }
             _best = 0;
         }
@@ -80,24 +58,12 @@ namespace PetriEngine {
             uint32_t dist = query->distance(*context);
 
             if (dist < _currentParentDist) {
-                _potencies[t].value += _currentParentDist - dist;
-                while (_potencies[t].prev != SIZE_MAX && _potencies[t].value > _potencies[_potencies[t].prev].value) {
-                    _swapAdjacent(_potencies[t].prev, t);
-                }
-
-                if (_potencies[t].prev == SIZE_MAX)
-                    _best = t;
-            } else if (dist > _currentParentDist && _potencies[t].value != 0) {
-                if (_potencies[t].value - 1 >= dist - _currentParentDist)
-                    _potencies[t].value -= dist - _currentParentDist;
+                _potencies[t] += _currentParentDist - dist;
+            } else if (dist > _currentParentDist && _potencies[t] != 0) {
+                if (_potencies[t] - 1 >= dist - _currentParentDist)
+                    _potencies[t] -= dist - _currentParentDist;
                 else
-                    _potencies[t].value = 1;
-                while (_potencies[t].next != SIZE_MAX && _potencies[t].value < _potencies[_potencies[t].next].value) {
-                    if (_best == t)
-                        _best = _potencies[t].next;
-
-                    _swapAdjacent(t, _potencies[t].next);
-                }
+                    _potencies[t] = 1;
             }
 
             _queues[t].emplace(dist, id);
@@ -119,20 +85,16 @@ namespace PetriEngine {
             uint32_t n = 0;
             size_t current = SIZE_MAX;
 
-            size_t t = _best;
-            while (t != SIZE_MAX) {
+            for (size_t t = 0; t < _potencies.size(); ++t) {
                 if (_queues[t].empty()) {
-                    t = _potencies[t].next;
                     continue;
                 }
 
-                n += _potencies[t].value;
+                n += _potencies[t];
                 double r = (double) rand() / RAND_MAX;
-                float threshold = _potencies[t].value / (float) n;
+                float threshold = _potencies[t] / (float) n;
                 if (r <= threshold)
                     current = t;
-
-                t = _potencies[t].next;
             }
 
             weighted_t e = _queues[current].top();
