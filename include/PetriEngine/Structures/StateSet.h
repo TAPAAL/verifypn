@@ -28,6 +28,158 @@
 
 namespace PetriEngine {
     namespace Structures {
+        /**
+         * This class defines the state set for a random walk
+         * It is used by the reachability search to store the states during one walk.
+         */
+        class RandomWalkStateSet
+        {
+        public:
+            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query) :
+            _nplaces(net.numberOfPlaces()),
+            _kbound(kbound), _net(net)
+            {
+                _discovered = 1;
+                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
+                _maxTokens = 0;
+                setInitialMarking(net.makeInitialMarking());
+                _initializePotencies(_net.numberOfTransitions(), INIT_POTENCY);
+                PQL::DistanceContext context(&_net, _initialMarking);
+                _initialDistance = query->distance(context);
+            }
+
+            ~RandomWalkStateSet() {
+                // Clean up the markings
+                delete[] _initialMarking;
+                delete[] _nextMarking;
+            }
+
+            void setInitialMarking(MarkVal* marking) {
+                _initialMarking = marking;
+            }
+
+            void setNextMarking(MarkVal* marking) {
+                _nextMarking = marking;
+            }
+
+            const PetriNet& net() { return _net; }
+
+            uint32_t maxTokens() const { return _maxTokens; }
+
+            std::pair<size_t, size_t> getHistory(size_t markingid) const {
+                return std::make_pair(0,0);
+            }
+
+            /**
+             * Computes the candidate marking for the next step of the random walk.
+             * Updates the potency of the given transition according to the distance of the candidate marking.
+             * Updates the _nextMarking using a reservoir sampling algorithm.
+             * @param candidate the candidate marking
+             * @param query the query to check
+             * @param t the transition
+            */
+            void computeCandidate(MarkVal* candidate, const PQL::Condition *query, uint32_t t) {
+                ++_discovered;
+                PQL::DistanceContext context(&_net, candidate);
+
+                uint32_t sumMarking = _sumMarking(candidate);
+                if (_maxTokens < sumMarking) {
+                    _maxTokens = sumMarking;
+                }
+                if (_kbound != 0 && sumMarking > _kbound)
+                    return;
+
+                // Update the potency of the transition
+                uint32_t dist = query->distance(context);
+                if (dist < _currentStepDistance) {
+                    _potencies[t] += _currentStepDistance - dist;
+                } else {
+                    if (_potencies[t] - 1 >= dist - _currentStepDistance)
+                        _potencies[t] -= dist - _currentStepDistance;
+                    else
+                        _potencies[t] = 1;
+                }
+
+                // Weighted random sampling algorithm
+                _totalWeight += _potencies[t];
+                double r = (double)rand() / RAND_MAX;
+                float threshold = _potencies[t] / (float)_totalWeight;
+                if (r <= threshold) {
+                    _nextMarking = candidate;
+                    _nextStepDistance = dist;
+                }
+            }
+
+            /**
+             * Resets the state set for a new random walk.
+             * _nextMarking is set to the initial marking.
+             * The _currentStepDistance is set to the distance of the initial marking.
+            */
+            void newWalk() {
+                // _currentStepMarking = State(_initialMarking);
+                _nextMarking = _initialMarking;
+                _currentStepDistance = _initialDistance;
+            }
+
+            /**
+             * Prepare the next step of the random walk.
+             * _currentStepMarking is set to the _nextMarking.
+             * _nextMarking is set to nullptr. _totalWeight is set to 0.
+             * @return true if the walk can continue, false otherwise.
+            */
+            bool nextStep() {
+                if (_nextMarking == nullptr) {
+                    return false;
+                }
+                // TODO: make a copy of the _nextMarking to be sure it doesn't change during the generator checks?
+                _currentStepMarking = _nextMarking;
+                _currentStepDistance = _nextStepDistance;
+                _totalWeight = 0;
+                _nextMarking = nullptr;
+                return true;
+            }
+
+            State* currentStepState() const {
+                return &State(_currentStepMarking);
+            }
+
+            // We need a State here for the generator and checkQueries to work.
+            // We could implement another generator that uses a MarkVal* instead.
+
+        private:
+            size_t _discovered;
+            uint32_t _kbound;
+            uint32_t _maxTokens;
+            size_t _nplaces;
+            std::vector<uint32_t> _maxPlaceBound;
+            const PetriNet& _net;
+
+            MarkVal* _initialMarking;
+            MarkVal* _currentStepMarking;
+            // The best candidate so far to be the next marking
+            MarkVal* _nextMarking;
+
+            std::vector<uint32_t> _potencies;
+            const int INIT_POTENCY = 100;
+
+            // Useful to update the potencies
+            uint32_t _initialDistance;
+            uint32_t _currentStepDistance;
+            uint32_t _nextStepDistance;
+            uint32_t _totalWeight;
+
+            void _initializePotencies(size_t nTransitions, uint32_t initValue) {
+                _potencies = std::vector<uint32_t>(nTransitions, initValue);
+            }
+
+            uint32_t _sumMarking(MarkVal* marking) {
+                uint32_t sum = 0;
+                for (size_t i = 0; i < _nplaces; ++i) {
+                    sum += marking[i];
+                }
+                return sum;
+            }
+        };
 
         class StateSetInterface
         {
@@ -325,6 +477,8 @@ namespace PetriEngine {
         private:
             size_t _parent = 0;
         };
+
+        
     }
 }
 
