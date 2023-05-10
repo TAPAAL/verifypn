@@ -24,6 +24,7 @@
 #include "AlignedEncoder.h"
 #include "utils/structures/binarywrapper.h"
 #include "utils/errors.h"
+#include "PetriEngine/PQL/Contexts.h"
 
 
 namespace PetriEngine {
@@ -36,16 +37,17 @@ namespace PetriEngine {
         {
         public:
             RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query) :
-            _nplaces(net.numberOfPlaces()),
             _kbound(kbound), _net(net)
             {
+                _nplaces = _net.numberOfPlaces();
                 _discovered = 1;
                 _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
                 _maxTokens = 0;
                 setInitialMarking(net.makeInitialMarking());
                 _initializePotencies(_net.numberOfTransitions(), INIT_POTENCY);
-                PQL::DistanceContext context(&_net, _initialMarking);
+                PQL::DistanceContext context(&_net, initialMarking());
                 _initialDistance = query->distance(context);
+                _nextMarking = nullptr;
             }
 
             ~RandomWalkStateSet() {
@@ -55,11 +57,13 @@ namespace PetriEngine {
             }
 
             void setInitialMarking(MarkVal* marking) {
-                _initialMarking = marking;
+                std::copy(marking, marking + _nplaces, _initialMarking);
             }
 
-            void setNextMarking(MarkVal* marking) {
-                _nextMarking = marking;
+            const MarkVal* initialMarking() { return _initialMarking; }
+
+            void setMarking(const MarkVal* source, MarkVal* target) {
+                std::copy(source, source + _nplaces, target);
             }
 
             const PetriNet& net() { return _net; }
@@ -78,7 +82,7 @@ namespace PetriEngine {
              * @param query the query to check
              * @param t the transition
             */
-            void computeCandidate(MarkVal* candidate, const PQL::Condition *query, uint32_t t) {
+            void computeCandidate(const MarkVal* candidate, const PQL::Condition *query, uint32_t t) {
                 ++_discovered;
                 PQL::DistanceContext context(&_net, candidate);
 
@@ -88,6 +92,12 @@ namespace PetriEngine {
                 }
                 if (_kbound != 0 && sumMarking > _kbound)
                     return;
+
+                // Update the max token bound for each place in the net (only for newly discovered markings)
+                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
+                {
+                    _maxPlaceBound[i] = std::max<MarkVal>(candidate[i], _maxPlaceBound[i]);
+                }
 
                 // Update the potency of the transition
                 uint32_t dist = query->distance(context);
@@ -105,7 +115,7 @@ namespace PetriEngine {
                 double r = (double)rand() / RAND_MAX;
                 float threshold = _potencies[t] / (float)_totalWeight;
                 if (r <= threshold) {
-                    _nextMarking = candidate;
+                   setMarking(candidate, _nextMarking);
                     _nextStepDistance = dist;
                 }
             }
@@ -116,35 +126,36 @@ namespace PetriEngine {
              * The _currentStepDistance is set to the distance of the initial marking.
             */
             void newWalk() {
-                // _currentStepMarking = State(_initialMarking);
-                _nextMarking = _initialMarking;
+                _nextMarking = new MarkVal[_nplaces];
+                setMarking(_initialMarking, _nextMarking);
                 _currentStepDistance = _initialDistance;
             }
 
             /**
              * Prepare the next step of the random walk.
-             * _currentStepMarking is set to the _nextMarking.
+             * currentStepMarking is set to the _nextMarking.
              * _nextMarking is set to nullptr. _totalWeight is set to 0.
              * @return true if the walk can continue, false otherwise.
             */
-            bool nextStep() {
+            bool nextStep(MarkVal* currentStepMarking) {
                 if (_nextMarking == nullptr) {
                     return false;
                 }
-                // TODO: make a copy of the _nextMarking to be sure it doesn't change during the generator checks?
-                _currentStepMarking = _nextMarking;
+                setMarking(_nextMarking, currentStepMarking);
                 _currentStepDistance = _nextStepDistance;
                 _totalWeight = 0;
                 _nextMarking = nullptr;
                 return true;
             }
 
-            State* currentStepState() const {
-                return &State(_currentStepMarking);
+            size_t size() const {
+                // _discovered is used here but not sure it is the right value
+                return _discovered;
             }
 
-            // We need a State here for the generator and checkQueries to work.
-            // We could implement another generator that uses a MarkVal* instead.
+            const std::vector<MarkVal>& maxPlaceBound() const {
+                return _maxPlaceBound;
+            }
 
         private:
             size_t _discovered;
@@ -155,7 +166,6 @@ namespace PetriEngine {
             const PetriNet& _net;
 
             MarkVal* _initialMarking;
-            MarkVal* _currentStepMarking;
             // The best candidate so far to be the next marking
             MarkVal* _nextMarking;
 
@@ -172,7 +182,7 @@ namespace PetriEngine {
                 _potencies = std::vector<uint32_t>(nTransitions, initValue);
             }
 
-            uint32_t _sumMarking(MarkVal* marking) {
+            uint32_t _sumMarking(const MarkVal* marking) {
                 uint32_t sum = 0;
                 for (size_t i = 0; i < _nplaces; ++i) {
                     sum += marking[i];
