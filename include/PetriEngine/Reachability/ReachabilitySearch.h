@@ -30,7 +30,6 @@
 #include "../SuccessorGenerator.h"
 #include "../ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
-#include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/options.h"
 
 #include <memory>
@@ -89,11 +88,14 @@ namespace PetriEngine {
                 bool usequeries,
                 bool printstats,
                 size_t seed);
-            void printStats(searchstate_t& s, Structures::StateSetInterface*);
+            template<typename W>
+            void printStats(searchstate_t& s, W);
+            template<typename W>
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                     std::vector<ResultPrinter::Result>&,
-                                    Structures::State&, searchstate_t&, Structures::StateSetInterface*);
-            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, Structures::StateSetInterface *states);
+                                    Structures::State&, searchstate_t&, W);
+            template<typename W>
+            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, W states);
 
             PetriNet& _net;
             int _kbound;
@@ -223,9 +225,12 @@ namespace PetriEngine {
 
             // Set up working area
             _initial.setMarking(_net.makeInitialMarking());
-            State candidate; // Candidate for the next step, modified by the generator
+            Structures::State candidate; // Candidate for the next step, modified by the generator
+            Structures::State currentStepState;
+            candidate.setMarking(_net.makeInitialMarking());
+            currentStepState.setMarking(_net.makeInitialMarking());
 
-            RandomWalkStateSet states(_net, _kbound, query); // State set
+            Structures::RandomWalkStateSet states(_net, _kbound, query); // State set
             G generator = _makeSucGen<G>(_net, queries);     // Successor generator
 
             // Check initial marking
@@ -249,11 +254,11 @@ namespace PetriEngine {
                 // Search! Each turn is a random step
                 for(size_t stepCounter = 0; stepCounter < maxSteps; ++stepCounter) {
                     // The currentStepMarking is the nextMarking computed in the previous step
-                    if (!states.nextStep()) {
+                    if (!states.nextStep(currentStepState.marking())) {
                         // No candidate found at the previous step, do a new walk
                         break;
                     }
-                    generator.prepare(states.currentStepState());
+                    generator.prepare(&currentStepState);
 
                     while(generator.next(candidate)) {
                         ss.enabledTransitionsCount[generator.fired()]++;
@@ -267,7 +272,7 @@ namespace PetriEngine {
                             _satisfyingMarking = (size_t)candidate.marking();
                             return true;
                         } else {
-                            states.computeCandidate(candidate.marking(), query);
+                            states.computeCandidate(candidate.marking(), query, generator.fired());
                         }
                     }
                     ss.expandedStates++;
