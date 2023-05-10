@@ -88,6 +88,25 @@ public:
     size_t _max_tokens = 0;
     size_t _stored = 0;
 
+    template<typename W>
+    std::pair<AbstractHandler::Result, bool> handle(
+                size_t index,
+                PQL::Condition* query,
+                AbstractHandler::Result result,
+                const std::vector<uint32_t>* maxPlaceBound,
+                size_t expandedStates,
+                size_t exploredStates,
+                size_t discoveredStates,
+                int maxTokens,
+                W stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
+        _expanded = std::max(_expanded, expandedStates);
+        _explored = std::max(_explored, exploredStates);
+        _discovered = std::max(_discovered, discoveredStates);
+        _max_tokens = std::max<size_t>(_max_tokens, maxTokens);
+        _stored = std::max(_stored, stateset->size());
+        return std::make_pair(result, false);
+    }
+
     std::pair<AbstractHandler::Result, bool> handle(
                 size_t index,
                 PQL::Condition* query,
