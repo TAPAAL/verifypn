@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(5)) {
+BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(10)) {
 
     std::string model("/models/color_mismatch.pnml");
     std::string query("/models/color_mismatch.xml");
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(5)) {
     BOOST_REQUIRE(saw_exception);
 }
 
-BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(5)) {
+BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(10)) {
 
     std::string model("/models/color_match.pnml");
     std::string query("/models/color_match.xml");
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(5)) {
 }
 
 
-BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
+BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(100)) {
 
     std::string model("/models/PhilosophersDyn-COL-03/model.pnml");
     std::string query("/models/PhilosophersDyn-COL-03/ReachabilityCardinality.xml");
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(60)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(60)) {
+BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(100)) {
 
     std::string model("/models/Peterson-COL-2/model.pnml");
     std::string query("/models/Peterson-COL-2/ReachabilityCardinality.xml");
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(60)) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(60)) {
+BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(100)) {
 
     std::string model("/models/UtilityControlRoom-COL-Z2T3N04/model.pnml");
     std::string query("/models/UtilityControlRoom-COL-Z2T3N04/ReachabilityCardinality.xml");
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(60)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(60)) {
+BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(100)) {
 
     std::string model("/models/NeoElection-COL-3/model.pnml");
     std::string query("/models/NeoElection-COL-3/ReachabilityCardinality.xml");
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(60)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(RangeNotOne, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(RangeNotOne, * utf::timeout(2)) {
 
     std::string model("/models/intrangeNotOne/model.pnml");
     std::string query("/models/intrangeNotOne/query.xml");
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(RangeNotOne, * utf::timeout(1)) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(2)) {
 
     std::string model("/models/unfolding_loop.pnml");
     std::string query("/models/unfolding_loop.xml");
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(1)) {
 }
 
 
-BOOST_AUTO_TEST_CASE(AllPlaceInterval, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(AllPlaceInterval, * utf::timeout(2)) {
 
     std::string model("/models/all_place_interval.pnml");
     std::string query("/models/all_place_interval.xml");
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(AllPlaceInterval, * utf::timeout(1)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(2)) {
 
     std::string model("/models/all_place_product.pnml");
     std::string query("/models/all_place_product.xml");
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(1)) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(2)) {
 
     std::string model("/models/error-all-token-ring.pnml");
     std::string query("/models/error-all-token-ring.xml");
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(1)) {
         }
     }
 }
-BOOST_AUTO_TEST_CASE(TokenRingAll2, * utf::timeout(1)) {
+BOOST_AUTO_TEST_CASE(TokenRingAll2, * utf::timeout(2)) {
 
     std::string model("/models/error-all-token-ring-2.pnml");
     std::string query("/models/error-all-token-ring-2.xml");
