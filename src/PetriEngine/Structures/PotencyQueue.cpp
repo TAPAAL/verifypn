@@ -90,7 +90,7 @@ namespace PetriEngine {
 
                 n += _potencies[t];
                 double r = (double) rand() / RAND_MAX;
-                float threshold = _potencies[t] / (float) n;
+                double threshold = _potencies[t] / (double) n;
                 if (r <= threshold)
                     current = t;
             }
