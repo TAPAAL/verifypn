@@ -20,8 +20,9 @@ std::vector<std::string> explode(std::string const & s) {
     return result;
 }
 
+
 void options_t::print(std::ostream& optionsOut) {
-    if (!printstatistics) {
+    if (printstatistics != StatisticsLevel::Full) {
         return;
     }
 
@@ -175,6 +176,7 @@ void printHelp() {
         "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
         "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
         "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
+         "                                       Using -n 1 prints just statistics on number of states/edges/etc.\n"
         "  -h, --help                           Display this help message\n"
         "  -v, --version                        Display version information\n"
         "  -ctl, --ctl-algorithm [<type>]       Verify CTL properties\n"
@@ -308,7 +310,22 @@ bool options_t::parse(int argc, const char** argv) {
             statespaceexploration = true;
             computePartition = false;
         } else if (std::strcmp(argv[i], "-n") == 0 || std::strcmp(argv[i], "--no-statistics") == 0) {
-            printstatistics = false;
+            if (argc > i + 1) {
+                if (strcmp("1", argv[i+1]) == 0) {
+                    printstatistics = StatisticsLevel::SearchOnly;
+                }
+                else if (strcmp("2", argv[i+1]) == 0) {
+                    printstatistics = StatisticsLevel::Full;
+                }
+                else {
+                    printstatistics = StatisticsLevel::None;
+                    continue;
+                }
+                ++i;
+            }
+            else {
+                printstatistics = StatisticsLevel::None;
+            }
         } else if (std::strcmp(argv[i], "-t") == 0 || std::strcmp(argv[i], "--trace") == 0) {
             if (argc > i + 1) {
                 if (std::strcmp("1", argv[i + 1]) == 0) {

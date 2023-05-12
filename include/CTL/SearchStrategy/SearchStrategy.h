@@ -6,7 +6,7 @@
 
 namespace SearchStrategy {
 
-struct Message {    
+struct Message {
     uint32_t sender;
     uint32_t distance;
     enum Type {HALT = 0, REQUEST = 1, ANSWER_ONE = 2, ANSWER_ZERO = 3} type;
@@ -47,7 +47,7 @@ protected:
     virtual size_t Wsize() const = 0;
     virtual void pushToW(DependencyGraph::Edge* edge) = 0;
     virtual DependencyGraph::Edge* popFromW() = 0;
-    
+
     std::vector<DependencyGraph::Edge*> N;
     std::vector<DependencyGraph::Edge*> D;
 };

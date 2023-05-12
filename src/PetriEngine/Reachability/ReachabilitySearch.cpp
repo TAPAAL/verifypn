@@ -85,13 +85,19 @@ namespace PetriEngine {
         }
 
         template<typename W>
-        void ReachabilitySearch::printStats(searchstate_t& ss, W states)
+        void ReachabilitySearch::printStats(searchstate_t& ss, W states, StatisticsLevel statisticsLevel)
         {
+            if (statisticsLevel == StatisticsLevel::None)
+                return;
+
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << states->discovered() << std::endl
                         << "\texplored states:   " << ss.exploredStates << std::endl
                         << "\texpanded states:   " << ss.expandedStates << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
+
+            if (statisticsLevel != StatisticsLevel::Full)
+                return;
 
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
@@ -137,7 +143,7 @@ namespace PetriEngine {
                     Strategy strategy,
                     bool stubbornreduction,
                     bool statespacesearch,
-                    bool printstats,
+                    StatisticsLevel printstats,
                     bool keep_trace,
                     size_t seed)
         {

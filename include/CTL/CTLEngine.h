@@ -19,7 +19,7 @@ bool CTLSingleSolve(PetriEngine::PQL::Condition* query, PetriEngine::PetriNet* n
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
                     Strategy strategytype,
-                    bool printstatistics,
+                    StatisticsLevel printstatistics,
                     bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<PetriEngine::PQL::Condition>>& reducedQueries,
