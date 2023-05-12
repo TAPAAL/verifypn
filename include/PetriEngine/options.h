@@ -19,6 +19,7 @@ enum class Strategy {
     RDFS,
     OverApprox,
     RPFS,
+    RANDOMWALK,
     DEFAULT
 };
 

@@ -163,6 +163,12 @@ namespace PetriEngine {
                 case Strategy::RPFS:
                     TRYREACH(RandomPotencyQueue)
                     break;
+                case Strategy::RANDOMWALK:
+                    if (stubbornreduction)
+                        return tryReachRandomWalk<ReducingSuccessorGenerator>TRYREACHPAR;
+                    else
+                        return tryReachRandomWalk<SuccessorGenerator>TRYREACHPAR;
+                    break;
                 default:
                     throw base_error("Unsupported search strategy");
             }

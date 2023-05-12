@@ -35,6 +35,8 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << "\nSearch=RDFS";
     } else if (strategy == Strategy::RPFS) {
         optionsOut << "\nSearch=RPFS";
+    } else if (strategy == Strategy::RANDOMWALK) {
+        optionsOut << "\nSearch=RANDOMWALK";
     } else {
         optionsOut << "\nSearch=OverApprox";
     }
@@ -133,6 +135,7 @@ void printHelp() {
         "                                       - DFS          Depth first search (CTL default)\n"
         "                                       - RDFS         Random depth first search\n"
         "                                       - RPFS         Random potency first search\n"
+        "                                       - RANDOMWALK   Random walk using potency search\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
@@ -266,6 +269,8 @@ bool options_t::parse(int argc, const char** argv) {
                 strategy = Strategy::RDFS;
             else if (std::strcmp(s, "RPFS") == 0)
                 strategy = Strategy::RPFS;
+            else if (std::strcmp(s, "RANDOMWALK") == 0)
+                strategy = Strategy::RANDOMWALK;
             else if (std::strcmp(s, "OverApprox") == 0)
                 strategy = Strategy::OverApprox;
             else {
@@ -648,10 +653,11 @@ bool options_t::parse(int argc, const char** argv) {
            strategy != Strategy::RDFS &&
            strategy != Strategy::HEUR &&
            strategy != Strategy::RPFS &&
+           strategy != Strategy::RANDOMWALK &&
            strategy != Strategy::DEFAULT &&
            strategy != Strategy::OverApprox)
         {
-            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, RPFS, and BestFS.");
+            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, RPFS, RANDOMWALK and BestFS.");
         }
     }
 
