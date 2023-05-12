@@ -40,8 +40,6 @@ namespace PetriEngine {
 
             _potencies.reserve(nTransitions);
             for (uint32_t i = 0; i < nTransitions; i++) {
-                size_t prev = i == 0 ? SIZE_MAX : i - 1;
-                size_t next = i == nTransitions - 1 ? SIZE_MAX : i + 1;
                 _potencies.push_back(initValue);
             }
             _best = 0;
