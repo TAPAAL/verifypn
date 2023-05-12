@@ -168,7 +168,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         options.strategy,
                                         options.stubbornreduction,
                                         false,
-                                        false,
+                                        StatisticsLevel::None,
                                         false,
                                         options.seed());
             result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
@@ -179,7 +179,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
         else
         {
             TARReachabilitySearch tar(handler, *net, nullptr, options.kbound);
-            tar.reachable(queries, res, false, false);
+            tar.reachable(queries, res, StatisticsLevel::None, false);
         }
         size_t j = 0;
         for(size_t i = 0; i < query->size(); ++i) {
@@ -217,6 +217,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
 
 bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
+
                     Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
     return recursiveSolve(query.get(), net, algorithmtype, strategytype, partial_order, result, options);
@@ -247,7 +248,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         if(options.tar)
         {
             TARReachabilitySearch tar(handler, *net, nullptr, options.kbound);
-            tar.reachable(queries, res, false, false);
+            tar.reachable(queries, res, StatisticsLevel::None, false);
         }
         else
         {
@@ -256,7 +257,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                            options.strategy,
                            options.stubbornreduction,
                            false,
-                           false,
+                           StatisticsLevel::None,
                            false,
                            options.seed());
             result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
@@ -312,7 +313,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
 ReturnValue CTLMain(PetriNet* net,
                     CTLAlgorithmType algorithmtype,
                     Strategy strategytype,
-                    bool printstatistics,
+                    StatisticsLevel printstatistics,
                     bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,

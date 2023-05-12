@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityCardinality, * utf::timeout(60)
                     ReachabilitySearch strategy(*pn, handler, 0);
                     std::vector<Condition_ptr> vec{c2};
                     std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                    strategy.reachable(vec, results, search, stub, false, false, trace, 0);
+                    strategy.reachable(vec, results, search, stub, false, StatisticsLevel::None, trace, 0);
                     BOOST_REQUIRE_EQUAL(expected[i], results[0]);
                 }
             }
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability, * utf::timeout(60)
                     ReachabilitySearch strategy(*pn, handler, 0);
                     std::vector<Condition_ptr> vec{c2};
                     std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                    strategy.reachable(vec, results, search, stub, false, false, trace, 0);
+                    strategy.reachable(vec, results, search, stub, false, StatisticsLevel::None, trace, 0);
                     BOOST_REQUIRE_EQUAL(expected[i], results[0]);
                 }
             }

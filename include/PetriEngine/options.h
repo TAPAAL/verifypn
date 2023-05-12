@@ -32,6 +32,12 @@ enum class TemporalLogic {
     CTL, LTL
 };
 
+enum class StatisticsLevel {
+    None,
+    SearchOnly,
+    Full
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -45,7 +51,7 @@ struct options_t {
     int colReductionTimeout = 30;
     bool stubbornreduction = true;
     bool statespaceexploration = false;
-    bool printstatistics = true;
+    StatisticsLevel printstatistics = StatisticsLevel::Full;
     std::set<size_t> querynumbers;
     Strategy strategy = Strategy::DEFAULT;
     int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
@@ -99,7 +105,6 @@ struct options_t {
     int max_intervals_reduced = 5;
 
     std::string strategy_output;
-
     size_t seed() { return ++seed_offset; }
     void print(std::ostream& out = std::cout);
     bool parse(int argc, const char** argv);

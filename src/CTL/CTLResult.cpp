@@ -1,7 +1,7 @@
 #include "CTL/CTLResult.h"
 #include <iomanip>
 
-void CTLResult::print(const std::string& qname, bool statisticslevel, size_t index, options_t& options, std::ostream& out) const {
+void CTLResult::print(const std::string& qname, StatisticsLevel statisticslevel, size_t index, options_t& options, std::ostream& out) const {
 
     const static std::string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STATE_COMPRESSION SAT_SMT ";
 
@@ -18,7 +18,7 @@ void CTLResult::print(const std::string& qname, bool statisticslevel, size_t ind
     out << "Query index " << index << " was solved" << "\n";
     out << "Query is" << (result ? "" : " NOT") << " satisfied." << "\n";
 
-    if(statisticslevel){
+    if(statisticslevel != StatisticsLevel::None){
         out << "\n";
         out << "STATS:" << "\n";
         out << "	Time (seconds)    : " << std::setprecision(4) << duration / 1000 << "\n";
