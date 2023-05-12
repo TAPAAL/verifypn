@@ -29,20 +29,57 @@
 
 namespace PetriEngine {
     namespace Structures {
+        class StateSetInterface
+        {
+        public:
+            StateSetInterface(const PetriNet& net, uint32_t kbound, int nplaces = -1) :
+            _nplaces(nplaces == -1 ? net.numberOfPlaces() : nplaces),
+            _kbound(kbound), _net(net)
+            {
+                _discovered = 0;
+                _maxTokens = 0;
+                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
+            }
+
+            virtual ~StateSetInterface() {}
+
+            const PetriNet& net() { return _net;}
+
+            uint32_t maxTokens() const { return _maxTokens; }
+
+            virtual size_t size() const = 0;
+
+            size_t discovered() const {
+                return _discovered;
+            }
+
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) = 0;
+
+            const std::vector<MarkVal>& maxPlaceBound() const {
+                return _maxPlaceBound;
+            }
+
+
+        protected:
+            size_t _discovered;
+            size_t _nplaces;
+            uint32_t _kbound;
+            uint32_t _maxTokens;
+            std::vector<uint32_t> _maxPlaceBound;
+            const PetriNet& _net;
+        };
+
         /**
          * This class defines the state set for a random walk
          * It is used by the reachability search to store the states during one walk.
          */
-        class RandomWalkStateSet
+        class RandomWalkStateSet : public StateSetInterface
         {
         public:
-            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query) :
-            _kbound(kbound), _net(net)
+            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query, int nplaces = -1) :
+            StateSetInterface(net, kbound, nplaces)
             {
-                _nplaces = _net.numberOfPlaces();
                 _discovered = 1;
-                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
-                _maxTokens = 0;
                 setInitialMarking(net.makeInitialMarking());
                 _initializePotencies(_net.numberOfTransitions(), INIT_POTENCY);
                 PQL::DistanceContext context(&_net, initialMarking());
@@ -64,14 +101,6 @@ namespace PetriEngine {
 
             void setMarking(const MarkVal* source, MarkVal* target) {
                 std::copy(source, source + _nplaces, target);
-            }
-
-            const PetriNet& net() { return _net; }
-
-            uint32_t maxTokens() const { return _maxTokens; }
-
-            std::pair<size_t, size_t> getHistory(size_t markingid) const {
-                return std::make_pair(0,0);
             }
 
             /**
@@ -148,27 +177,17 @@ namespace PetriEngine {
                 return true;
             }
 
-            size_t discovered() const {
-                return _discovered;
-            }
-
-            size_t size() const {
+            virtual size_t size() const override {
                 // _discovered is used here but not sure it is the right value
                 return discovered();
             }
 
-            const std::vector<MarkVal>& maxPlaceBound() const {
-                return _maxPlaceBound;
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override {
+                assert(false);
+                return std::make_pair(0,0);
             }
 
         private:
-            size_t _discovered;
-            uint32_t _kbound;
-            uint32_t _maxTokens;
-            size_t _nplaces;
-            std::vector<uint32_t> _maxPlaceBound;
-            const PetriNet& _net;
-
             MarkVal* _initialMarking;
             // The best candidate so far to be the next marking
             MarkVal* _nextMarking;
@@ -195,21 +214,16 @@ namespace PetriEngine {
             }
         };
 
-        class StateSetInterface
+        class EncodingStateSetInterface : public StateSetInterface
         {
         public:
-            StateSetInterface(const PetriNet& net, uint32_t kbound, int nplaces = -1) :
-            _nplaces(nplaces == -1 ? net.numberOfPlaces() : nplaces),
-            _encoder(_nplaces, kbound), _net(net)
+            EncodingStateSetInterface(const PetriNet& net, uint32_t kbound, int nplaces = -1) :
+            StateSetInterface(net, kbound, nplaces), _encoder(_nplaces, kbound)
             {
-                _discovered = 0;
-                _kbound = kbound;
-                _maxTokens = 0;
-                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
                 _sp = binarywrapper_t(sizeof(uint32_t) * _nplaces * 8);
             }
 
-            virtual ~StateSetInterface()
+            virtual ~EncodingStateSetInterface()
             {
                 _sp.release();
             }
@@ -226,22 +240,10 @@ namespace PetriEngine {
 
             virtual std::pair<bool, size_t> lookup(State &state) = 0;
 
-            const PetriNet& net() { return _net;}
-
             virtual void setHistory(size_t id, size_t transition) = 0;
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) = 0;
-
-            virtual size_t size() const = 0;
-
         protected:
-            size_t _discovered;
-            uint32_t _kbound;
-            uint32_t _maxTokens;
-            size_t _nplaces;
-            std::vector<uint32_t> _maxPlaceBound;
             AlignedEncoder _encoder;
-            const PetriNet& _net;
             binarywrapper_t _sp;
 #ifdef DEBUG
             std::vector<uint32_t*> _dbg;
@@ -336,23 +338,6 @@ namespace PetriEngine {
                 else return std::make_pair(false, std::numeric_limits<size_t>::max());
             }
 
-
-
-        public:
-            size_t discovered() const {
-                return _discovered;
-            }
-
-            uint32_t maxTokens() const {
-                return _maxTokens;
-            }
-
-            const std::vector<MarkVal>& maxPlaceBound() const {
-                return _maxPlaceBound;
-            }
-
-        protected:
-
             void markingStats(const uint32_t* marking, MarkVal& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
             {
                 uint32_t cnt = 0;
@@ -374,13 +359,13 @@ namespace PetriEngine {
         };
 
 #define STATESET_BUCKETS 1000000
-        class StateSet : public StateSetInterface {
+        class StateSet : public EncodingStateSetInterface {
         private:
             using wrapper_t = ptrie::binarywrapper_t;
             using ptrie_t = ptrie::set_stable<ptrie::uchar,size_t,17,128,4>;
 
         public:
-            using StateSetInterface::StateSetInterface;
+            using EncodingStateSetInterface::EncodingStateSetInterface;
 
             virtual std::pair<bool, size_t> add(const State& state) override
             {
@@ -414,12 +399,12 @@ namespace PetriEngine {
         };
 
         template<typename T>
-        class AnnotatedStateSet : public StateSetInterface {
+        class AnnotatedStateSet : public EncodingStateSetInterface {
         private:
             using ptrie_t = ptrie::map<unsigned char, T>;
 
         public:
-            using StateSetInterface::StateSetInterface;
+            using EncodingStateSetInterface::EncodingStateSetInterface;
 
             virtual std::pair<bool, size_t> add(const State& state) override
             {
