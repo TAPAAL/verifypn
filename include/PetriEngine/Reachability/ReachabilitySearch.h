@@ -78,7 +78,7 @@ namespace PetriEngine {
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
-                bool printstats,
+                StatisticsLevel,
                 size_t maxSteps,
                 size_t seed);
 
@@ -212,7 +212,7 @@ namespace PetriEngine {
         template<typename G>
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
-                                                    bool printstats, size_t maxSteps, size_t seed)
+                                                    StatisticsLevel statisticsLevel, size_t maxSteps, size_t seed)
         {
             // Set up state
             searchstate_t ss;
@@ -231,16 +231,15 @@ namespace PetriEngine {
             currentStepState.setMarking(_net.makeInitialMarking());
 
             Structures::RandomWalkStateSet states(_net, _kbound, query); // State set
-            G generator = _makeSucGen<G>(_net, queries);     // Successor generator
+            G generator = _makeSucGen<G>(_net, queries);                 // Successor generator
 
             // Check initial marking
             if(ss.usequeries)
             {
                 if(checkQueries(queries, results, _initial, ss, &states))
                 {
-                    // TODO: something here with states
-                    if(printstats)
-                        printStats(ss, &states);
+                    if(statisticsLevel != StatisticsLevel::None)
+                        printStats(ss, &states, statisticsLevel);
                     _max_tokens = states.maxTokens();
                     return true;
                 }
@@ -265,11 +264,10 @@ namespace PetriEngine {
                         ss.exploredStates++;
 
                         if (checkQueries(queries, results, candidate, ss, &states)) {
-                            // TODO: something there, like states.setNextMarking(candidate.marking());
-                            if(printstats)
-                                printStats(ss, &states);
+                            if(statisticsLevel != StatisticsLevel::None)
+                                printStats(ss, &states, statisticsLevel);
                             _max_tokens = states.maxTokens();
-                            _satisfyingMarking = (size_t)candidate.marking();
+                            _satisfyingMarking = (size_t)candidate.marking(); // TODO: this is bad
                             return true;
                         } else {
                             states.computeCandidate(candidate.marking(), query, generator.fired());
@@ -288,8 +286,8 @@ namespace PetriEngine {
                 }
             }
 
-            if(printstats)
-                printStats(ss, &states);
+            if(statisticsLevel != StatisticsLevel::None)
+                printStats(ss, &states, statisticsLevel);
             _max_tokens = states.maxTokens();
             return false;
         }

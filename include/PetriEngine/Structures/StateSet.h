@@ -148,9 +148,13 @@ namespace PetriEngine {
                 return true;
             }
 
+            size_t discovered() const {
+                return _discovered;
+            }
+
             size_t size() const {
                 // _discovered is used here but not sure it is the right value
-                return _discovered;
+                return discovered();
             }
 
             const std::vector<MarkVal>& maxPlaceBound() const {
