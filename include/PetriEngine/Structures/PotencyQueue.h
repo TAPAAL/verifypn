@@ -22,14 +22,6 @@ namespace PetriEngine {
                 }
             };
 
-            struct potency_t {
-                uint32_t value;
-                size_t prev;
-                size_t next;
-
-                potency_t(uint32_t v, size_t p, size_t n) : value(v), prev(p), next(n) {};
-            };
-
             PotencyQueue(size_t s = 0);
 
             virtual ~PotencyQueue();
@@ -46,10 +38,8 @@ namespace PetriEngine {
             size_t _size = 0;
             size_t _best;
             uint32_t _currentParentDist;
-            std::vector<potency_t> _potencies;
+            std::vector<uint32_t> _potencies;
             std::vector<std::priority_queue<weighted_t>> _queues;
-
-            void _swapAdjacent(size_t a, size_t b);
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue);
         };
