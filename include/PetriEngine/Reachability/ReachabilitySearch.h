@@ -89,14 +89,18 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
                 size_t seed);
-            template<typename W>
-            void printStats(searchstate_t& s, W, StatisticsLevel);
-            template<typename W>
-            bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
-                                    std::vector<ResultPrinter::Result>&,
-                                    Structures::State&, searchstate_t&, W);
-            template<typename W>
-            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, W states);
+
+            void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
+
+            bool checkQueries(std::vector<std::shared_ptr<PQL::Condition > >&,
+                              std::vector<ResultPrinter::Result>&,
+                              Structures::State&, searchstate_t&,
+                              Structures::StateSetInterface*);
+
+            std::pair<ResultPrinter::Result,bool> doCallback(
+                std::shared_ptr<PQL::Condition>& query, size_t i,
+                ResultPrinter::Result r, searchstate_t &ss,
+                Structures::StateSetInterface *states);
 
             PetriNet& _net;
             int _kbound;

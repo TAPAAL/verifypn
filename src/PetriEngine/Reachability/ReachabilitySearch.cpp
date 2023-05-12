@@ -32,11 +32,10 @@ using namespace PetriEngine::Structures;
 namespace PetriEngine {
     namespace Reachability {
 
-        template<typename W>
-        bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                                                std::vector<ResultPrinter::Result>& results,
-                                                State& state,
-                                                searchstate_t& ss, W states)
+        bool ReachabilitySearch::checkQueries(std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                                              std::vector<ResultPrinter::Result>& results,
+                                              State& state, searchstate_t& ss,
+                                              Structures::StateSetInterface* states)
         {
             if(!ss.usequeries) return false;
 
@@ -75,17 +74,19 @@ namespace PetriEngine {
             return alldone;
         }
 
-        template<typename W>
-        std::pair<ResultPrinter::Result,bool> ReachabilitySearch::doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r,
-                                                             searchstate_t& ss, W states)
+        std::pair<ResultPrinter::Result,bool> ReachabilitySearch::doCallback(
+            std::shared_ptr<PQL::Condition>& query, size_t i,
+            ResultPrinter::Result r, searchstate_t& ss,
+            Structures::StateSetInterface* states)
         {
             return _callback.handle(i, query.get(), r, &states->maxPlaceBound(),
                         ss.expandedStates, ss.exploredStates, states->discovered(), states->maxTokens(),
                         states, _satisfyingMarking, _initial.marking());
         }
 
-        template<typename W>
-        void ReachabilitySearch::printStats(searchstate_t& ss, W states, StatisticsLevel statisticsLevel)
+        void ReachabilitySearch::printStats(searchstate_t& ss,
+                                            Structures::StateSetInterface* states,
+                                            StatisticsLevel statisticsLevel)
         {
             if (statisticsLevel == StatisticsLevel::None)
                 return;

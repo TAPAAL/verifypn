@@ -56,7 +56,7 @@ namespace PetriEngine {
 
             size_t pop();
 
-        protected:
+        private:
             size_t _seed;
         };
     }
