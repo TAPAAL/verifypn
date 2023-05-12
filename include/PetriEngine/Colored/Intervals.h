@@ -296,7 +296,7 @@ namespace PetriEngine {
             }
 
             size_t tupleSize() const {
-                return _intervals[0].size();
+                return _intervals.empty() ? 0 : _intervals[0].size();
             }
 
             uint32_t getContainedColors() const {
