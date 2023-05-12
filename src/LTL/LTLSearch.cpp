@@ -175,7 +175,10 @@ namespace LTL {
             reducer.initFire(os);
             for (size_t i = 0; i < trace.size(); ++i) {
                 if (i == _checker->loop_index())
-                    os << indent << "<loop/>\n";
+                {
+                    if(trace[i][j] < std::numeric_limits<ptrie::uint>::max() - 1) // otherwise it is a deadlock.
+                        os << indent << "<loop/>\n";
+                }
                 assert(trace[i].size() == ntraces);
                 print_transition(trace[i][j], reducer, os, indent, token_indent, printed_deadlock);
             }

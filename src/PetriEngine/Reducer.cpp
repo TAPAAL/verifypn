@@ -2045,6 +2045,15 @@ namespace PetriEngine {
         bool anyRemoved = false;
         for (uint32_t p = 0; p < parent->_places.size(); ++p) {
             if (!parent->_places[p].skip && placeInQuery[p] == 0 && _pflags[p] == 0) {
+                if(reconstructTrace)
+                {
+                    auto& place = parent->_places[p];
+                    for(auto t : place.consumers)
+                    {
+                        auto ia = getInArc(p, getTransition(t));
+                        _extraconsume[*getTransitionName(t)].emplace_back(getPlaceName(p), ia->weight);
+                    }
+                }
                 skipPlace(p);
                 anyRemoved = true;
             }
@@ -2211,15 +2220,22 @@ namespace PetriEngine {
             if(place.skip) continue;
             if (_pflags[p] == 0) {
                 // Remove places that cannot increase nor decrease (Rule M)
+                ++_ruleM;
+                if(reconstructTrace)
+                {
+                    for(auto t : place.consumers)
+                    {
+                        auto ia = getInArc(p, getTransition(t));
+                        _extraconsume[*getTransitionName(t)].emplace_back(getPlaceName(p), ia->weight);
+                    }
+                }
                 if(placeInQuery[p] == 0)
                 {
-                    ++_ruleM;
                     skipPlace(p);
                     continue_reductions = true;
                 }
                 else
                 {
-                    ++_ruleM;
                     for(auto t : place.consumers)
                     {
                         auto& trans = getTransition(t);
