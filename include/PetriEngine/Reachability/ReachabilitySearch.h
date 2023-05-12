@@ -171,7 +171,8 @@ namespace PetriEngine {
                             _satisfyingMarking = res.second;
                             ss.exploredStates++;
                             if (checkQueries(queries, results, working, ss, &states)) {
-                                printStats(ss, &states, statisticsLevel);
+                                if(statisticsLevel != StatisticsLevel::None)
+                                    printStats(ss, &states, statisticsLevel);
                                 _max_tokens = states.maxTokens();
                                 return true;
                             }
