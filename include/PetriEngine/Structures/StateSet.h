@@ -80,11 +80,14 @@ namespace PetriEngine {
             StateSetInterface(net, kbound, nplaces)
             {
                 _discovered = 1;
+                _initialMarking = new MarkVal[_nplaces];
                 setInitialMarking(net.makeInitialMarking());
-                _initializePotencies(_net.numberOfTransitions(), INIT_POTENCY);
+                _nextMarking = new MarkVal[_nplaces];
+                _nextMarking[0] = std::numeric_limits<MarkVal>::max();
+
+                _initializePotencies(_net.numberOfTransitions(), _initPotency);
                 PQL::DistanceContext context(&_net, initialMarking());
                 _initialDistance = query->distance(context);
-                _nextMarking = nullptr;
             }
 
             ~RandomWalkStateSet() {
@@ -142,7 +145,7 @@ namespace PetriEngine {
                 // Weighted random sampling algorithm
                 _totalWeight += _potencies[t];
                 double r = (double)rand() / RAND_MAX;
-                float threshold = _potencies[t] / (float)_totalWeight;
+                double threshold = _potencies[t] / (double)_totalWeight;
                 if (r <= threshold) {
                    setMarking(candidate, _nextMarking);
                     _nextStepDistance = dist;
@@ -155,7 +158,6 @@ namespace PetriEngine {
              * The _currentStepDistance is set to the distance of the initial marking.
             */
             void newWalk() {
-                _nextMarking = new MarkVal[_nplaces];
                 setMarking(_initialMarking, _nextMarking);
                 _currentStepDistance = _initialDistance;
             }
@@ -167,13 +169,13 @@ namespace PetriEngine {
              * @return true if the walk can continue, false otherwise.
             */
             bool nextStep(MarkVal* currentStepMarking) {
-                if (_nextMarking == nullptr) {
+                if (_nextMarking[0] == std::numeric_limits<MarkVal>::max()) {
                     return false;
                 }
                 setMarking(_nextMarking, currentStepMarking);
                 _currentStepDistance = _nextStepDistance;
                 _totalWeight = 0;
-                _nextMarking = nullptr;
+                _nextMarking[0] = std::numeric_limits<MarkVal>::max();
                 return true;
             }
 
@@ -193,7 +195,7 @@ namespace PetriEngine {
             MarkVal* _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const int INIT_POTENCY = 100;
+            const uint32_t _initPotency = 100;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
