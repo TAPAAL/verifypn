@@ -51,7 +51,6 @@ TIMEOUT_LP=$(echo "$TIMEOUT_TOTAL/120" | bc)
 TIMEOUT_RED=$(echo "$TIMEOUT_TOTAL/12" | bc)
 TIMEOUT_SEQ_MIN=$(echo "5*60" | bc) # 5 min timeout
 
-STRATEGIES_SEQ[0]="-s RANDOMWALK -q 0 -l 0"
 CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
 
 function time_left {
@@ -170,6 +169,7 @@ function verifysequential {
     echo "---------------------------------------------------"
     echo "Remaining ${#QUERIES[@]} queries are verified sequentially."
     echo "Each query is verified for $TIMEOUT_SEQ_MIN seconds"
+    echo "The search strategy is $SEARCH_STRATEGY"
 
     time_left
     # Count the number of remaining queries to try solving sequentially
@@ -186,7 +186,7 @@ function verifysequential {
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $SECONDS seconds"
         step2="$($TIMEOUT_CMD $TIMEOUT_SEQ $TIME_CMD \
-                $VERIFYPN -n $MF $QF --binary-query-io 1 -x $Q -s RANDOMWALK -q 0 -l 0 2>&1)"
+                $VERIFYPN -n $MF $QF --binary-query-io 1 -x $Q -s $SEARCH_STRATEGY -q 0 -l 0 2>&1)"
         RETVAL=$?
 
         if [[ $RETVAL == 0 ]]; then
