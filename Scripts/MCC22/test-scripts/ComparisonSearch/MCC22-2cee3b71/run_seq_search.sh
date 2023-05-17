@@ -67,7 +67,7 @@ function time_left {
 
 time_left
 
-function verifyparallel {
+function verifysequential {
     # Keep track of time passed (in seconds)
     mkdir -p $TEMPDIR
     export QF=$(mktemp --tmpdir=$TEMPDIR )
@@ -193,7 +193,6 @@ function verifyparallel {
             QUERIES=(${QUERIES[@]:0:$i} ${QUERIES[@]:$(($i + 1))})
             i=$(echo "$i - 1" | bc)
             echo "Solution found by sequential processing (step 2)"
-	        echo "$step2"
         else
             echo "No solution found"
         fi
