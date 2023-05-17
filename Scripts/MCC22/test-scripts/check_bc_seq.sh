@@ -35,8 +35,8 @@ for t in Reachability{Cardinality,Fireability} ; do
 
     unique_answers1=$(comm -13 <(echo "$LEFT" | grep -oP '^.*:FORMULA [^ ]+' | sort) <(echo "$RIGHT"  | grep -oP '^.*:FORMULA [^ ]+' | sort))
     unique_answers2=$(comm -23 <(echo "$LEFT" | grep -oP '^.*:FORMULA [^ ]+' | sort) <(echo "$RIGHT"  | grep -oP '^.*:FORMULA [^ ]+' | sort))
-    echo "Number of unique answers given by $B1: $(echo "$unique_answers1" | wc -l)"
-    echo "Number of unique answers given by $B2: $(echo "$unique_answers2" | wc -l)"
+    echo "Number of unique answers given by $STRATEGY1: $(echo "$unique_answers1" | wc -l)"
+    echo "Number of unique answers given by $STRATEGY2: $(echo "$unique_answers2" | wc -l)"
 
     C1=$(cat $ANSWERS.$STRATEGY1.$t | wc -l)
     C2=$(cat $ANSWERS.$STRATEGY2.$t | wc -l)
