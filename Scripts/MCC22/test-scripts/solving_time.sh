@@ -4,7 +4,7 @@ STRATEGY="$1"
 MODELS="$2"
 BINARY="$3"
 DIR="output/$STRATEGY/$MODELS/$BINARY"
-OUTPUT="time.$MODELS.$BINARY.$STRATEGY"
+OUTPUT="time/$MODELS.$BINARY.$STRATEGY"
 OUTPUT_CAR="$OUTPUT.ReachabilityCardinality.txt"
 OUTPUT_FIR="$OUTPUT.ReachabilityFireability.txt"
 TMP_CAR="tmp.ReachabilityCardinality.txt"
@@ -14,9 +14,9 @@ TMP_FIR="tmp.ReachabilityFireability.txt"
 for f in $(ls $DIR) ; do
     # grep the time spent on verification
     if [[ $f == *ReachabilityCardinality* ]] ; then
-        grep -oP '(?<=Spent ).[0-9\.]*(?= on verification)' $DIR/$f >> $TMP_CAR
+        grep -oP '(?<=Spent ).[0-9\.e-]*(?= on verification)' $DIR/$f >> $TMP_CAR
     else
-        grep -oP '(?<=Spent ).[0-9\.]*(?= on verification)' $DIR/$f >> $TMP_FIR
+        grep -oP '(?<=Spent ).[0-9\.e-]*(?= on verification)' $DIR/$f >> $TMP_FIR
     fi
 done
 
