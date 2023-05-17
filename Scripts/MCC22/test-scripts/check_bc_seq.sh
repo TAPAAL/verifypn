@@ -7,15 +7,18 @@ BINARY="$4"
 DIR1="output/$STRATEGY1/$MODELS/$BINARY"
 DIR2="output/$STRATEGY2/$MODELS/$BINARY"
 OUTPUT="time/$MODELS.$BINARY.$STRATEGY1.$STRATEGY2"
-ANSWERS="../answers/unique/$MODELS.$BINARY"
+ANSWERS="answers/$MODELS.$BINARY"
+DIR=$(pwd)
 
 for t in Reachability{Cardinality,Fireability} ; do
-    pushd output/$STRATEGY1/$MODELS/$BINARY > /dev/null
+    pushd $DIR1 > /dev/null
     # awk is here to take only the answers of the sequential processing
-    awk '/Sequential processing/,0' *.$t | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $ANSWERS.$STRATEGY1.$t
+    # awk '/Sequential processing/,0' *.$t | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $ANSWERS.$STRATEGY1.$t
+    grep -aP 'FORMULA' *.$t | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $DIR/$ANSWERS.$STRATEGY1.$t
     popd > /dev/null
-    pushd output/$STRATEGY2/$MODELS/$BINARY > /dev/null
-    awk '/Sequential processing/,0' *.$t | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $ANSWERS.$STRATEGY2.$t
+    pushd $DIR2 > /dev/null
+    # awk '/Sequential processing/,0' *.$t | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $ANSWERS.$STRATEGY2.$t
+    grep -aP 'FORMULA' *.$t | grep -oP '.*(?=TECHNIQUES)' | sed "s/-$t//g" | grep -v '?' | sort | uniq > $DIR/$ANSWERS.$STRATEGY2.$t
     popd > /dev/null
 
     LEFT=$(comm -13 $ANSWERS.$STRATEGY1.$t $ANSWERS.$STRATEGY2.$t )
@@ -35,8 +38,8 @@ for t in Reachability{Cardinality,Fireability} ; do
     echo "Number of unique answers given by $B1: $(echo "$unique_answers1" | wc -l)"
     echo "Number of unique answers given by $B2: $(echo "$unique_answers2" | wc -l)"
 
-    C1=$(cat answers/$S1.$B1.$t | wc -l)
-    C2=$(cat answers/$S2.$B2.$t | wc -l)
-    echo "$S1.$B1.$t -> $C1 queries answered"
-    echo "$S2.$B2.$t -> $C2 queries answered"
+    C1=$(cat $ANSWERS.$STRATEGY1.$t | wc -l)
+    C2=$(cat $ANSWERS.$STRATEGY2.$t | wc -l)
+    echo "$MODELS.$BINARY.$STRATEGY1.$t -> $C1 queries answered"
+    echo "$MODELS.$BINARY.$STRATEGY2.$t -> $C2 queries answered"
 done
