@@ -523,6 +523,7 @@ int main(int argc, const char** argv) {
                                    options.statespaceexploration,
                                    options.printstatistics,
                                    options.trace != TraceLevel::None,
+                                   options.maxStepsRandomWalk,
                                    options.seed());
             }
         }

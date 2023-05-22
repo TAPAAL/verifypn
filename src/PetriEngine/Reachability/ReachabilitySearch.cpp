@@ -146,6 +146,7 @@ namespace PetriEngine {
                     bool statespacesearch,
                     StatisticsLevel printstats,
                     bool keep_trace,
+                    int maxStepsRandomWalk,
                     size_t seed)
         {
             bool usequeries = !statespacesearch;
@@ -171,11 +172,10 @@ namespace PetriEngine {
                     TRYREACH(RandomPotencyQueue)
                     break;
                 case Strategy::RANDOMWALK: {
-                    constexpr size_t MAX_STEPS = 10000;
                     if (stubbornreduction)
-                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, MAX_STEPS, seed);
+                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, maxStepsRandomWalk, seed);
                     else
-                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, MAX_STEPS, seed);
+                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, maxStepsRandomWalk, seed);
                     break;
                 }
                 default:

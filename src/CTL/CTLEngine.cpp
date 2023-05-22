@@ -165,12 +165,13 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
         {
             ReachabilitySearch strategy(*net, handler, options.kbound, true);
             strategy.reachable(queries, res,
-                                        options.strategy,
-                                        options.stubbornreduction,
-                                        false,
-                                        StatisticsLevel::None,
-                                        false,
-                                        options.seed());
+                               options.strategy,
+                               options.stubbornreduction,
+                               false,
+                               StatisticsLevel::None,
+                               false,
+                               options.maxStepsRandomWalk,
+                               options.seed());
             result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
             result.exploredConfigurations += handler._explored;
             result.numberOfConfigurations += handler._stored;
@@ -254,12 +255,13 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
         {
             ReachabilitySearch strategy(*net, handler, options.kbound, true);
             strategy.reachable(queries, res,
-                           options.strategy,
-                           options.stubbornreduction,
-                           false,
-                           StatisticsLevel::None,
-                           false,
-                           options.seed());
+                               options.strategy,
+                               options.stubbornreduction,
+                               false,
+                               StatisticsLevel::None,
+                               false,
+                               options.maxStepsRandomWalk,
+                               options.seed());
             result.maxTokens = std::max(handler._max_tokens, result.maxTokens);
             result.exploredConfigurations += handler._explored;
             result.numberOfConfigurations += handler._stored;

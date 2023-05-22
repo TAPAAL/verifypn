@@ -137,6 +137,7 @@ void printHelp() {
         "                                       - RDFS         Random depth first search\n"
         "                                       - RPFS         Random potency first search\n"
         "                                       - RANDOMWALK   Random walk using potency search\n"
+        "  --max-steps <number>                 Maximum number of steps for a random walk (Default 10000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
@@ -277,6 +278,13 @@ bool options_t::parse(int argc, const char** argv) {
                 strategy = Strategy::OverApprox;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
+            }
+        } else if (std::strcmp(argv[i], "--max-steps") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &maxStepsRandomWalk) != 1 || maxStepsRandomWalk <= 0) {
+                throw base_error("Argument Error: Invalid max steps argument (must be an int > 0) ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "-q") == 0 || std::strcmp(argv[i], "--query-reduction") == 0) {
             if (i == argc - 1) {
