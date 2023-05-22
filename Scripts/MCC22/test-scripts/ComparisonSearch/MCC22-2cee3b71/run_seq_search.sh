@@ -186,7 +186,7 @@ function verifysequential {
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $SECONDS seconds"
         step2="$($TIMEOUT_CMD $TIMEOUT_SEQ $TIME_CMD \
-                $VERIFYPN -n $MF $QF --binary-query-io 1 -x $Q -s $SEARCH_STRATEGY -q 0 -l 0 2>&1)"
+                $VERIFYPN -n $MF $QF --binary-query-io 1 -x $Q -s $SEARCH_STRATEGY 2>&1)"
         RETVAL=$?
 
         if [[ $RETVAL == 0 ]]; then
