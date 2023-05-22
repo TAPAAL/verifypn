@@ -76,9 +76,10 @@ namespace PetriEngine {
         class RandomWalkStateSet : public StateSetInterface
         {
         public:
-            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query, int nplaces = -1) :
-            StateSetInterface(net, kbound, nplaces)
+            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query, size_t seed, int nplaces = -1) :
+            StateSetInterface(net, kbound, nplaces), _seed(seed)
             {
+                srand(_seed);
                 _discovered = 1;
                 _initialMarking = new MarkVal[_nplaces];
                 setInitialMarking(net.makeInitialMarking());
@@ -202,6 +203,8 @@ namespace PetriEngine {
             uint32_t _currentStepDistance;
             uint32_t _nextStepDistance;
             uint32_t _totalWeight;
+
+            size_t _seed;
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue) {
                 _potencies = std::vector<uint32_t>(nTransitions, initValue);

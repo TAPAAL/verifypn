@@ -235,8 +235,8 @@ namespace PetriEngine {
             candidate.setMarking(_net.makeInitialMarking());
             currentStepState.setMarking(_net.makeInitialMarking());
 
-            Structures::RandomWalkStateSet states(_net, _kbound, query); // State set
-            G generator = _makeSucGen<G>(_net, queries);                 // Successor generator
+            Structures::RandomWalkStateSet states(_net, _kbound, query, seed); // State set
+            G generator = _makeSucGen<G>(_net, queries);                       // Successor generator
 
             // Check initial marking
             if(ss.usequeries)
