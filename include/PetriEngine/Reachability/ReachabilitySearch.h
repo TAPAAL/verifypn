@@ -259,8 +259,7 @@ namespace PetriEngine {
                 states.newWalk();
 
                 // Search! Each turn is a random step
-                size_t stepCounter = 0;
-                for(; stepCounter < currentMaxSteps; ++stepCounter) {
+                for(size_t stepCounter = 0; stepCounter < currentMaxSteps; ++stepCounter) {
                     // The currentStepMarking is the nextMarking computed in the previous step
                     if (!states.nextStep(currentStepState.marking())) {
                         // No candidate found at the previous step, do a new walk
@@ -284,8 +283,7 @@ namespace PetriEngine {
                     }
                     ss.expandedStates++;
                 }
-                if (stepCounter == currentMaxSteps && currentMaxSteps < maxStepsValue) {
-                    // We reached the maximum number of steps, increase it
+                if (currentMaxSteps < maxStepsValue) {
                     currentMaxSteps += 5000;
                 }
             }
