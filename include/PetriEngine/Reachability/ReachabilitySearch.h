@@ -62,8 +62,8 @@ namespace PetriEngine {
                     bool statespacesearch,
                     StatisticsLevel printstats,
                     bool keep_trace,
-                    int maxStepsRandomWalk,
-                    size_t seed);
+                    size_t seed,
+                    int maxStepsRandomWalk = 10000);
             size_t maxTokens() const;
         private:
             struct searchstate_t {
