@@ -250,6 +250,8 @@ namespace PetriEngine {
                     return true;
                 }
             }
+            size_t currentMaxSteps = 5000;
+            constexpr size_t maxStepsValue = std::numeric_limits<size_t>::max() - 5000;
             // Typically a timeout
             bool stopRandomWalkCondition = false;
             while(!stopRandomWalkCondition) {
@@ -257,7 +259,8 @@ namespace PetriEngine {
                 states.newWalk();
 
                 // Search! Each turn is a random step
-                for(size_t stepCounter = 0; stepCounter < maxSteps; ++stepCounter) {
+                size_t stepCounter = 0;
+                for(; stepCounter < currentMaxSteps; ++stepCounter) {
                     // The currentStepMarking is the nextMarking computed in the previous step
                     if (!states.nextStep(currentStepState.marking())) {
                         // No candidate found at the previous step, do a new walk
@@ -280,6 +283,10 @@ namespace PetriEngine {
                         }
                     }
                     ss.expandedStates++;
+                }
+                if (stepCounter == currentMaxSteps && currentMaxSteps < maxStepsValue) {
+                    // We reached the maximum number of steps, increase it
+                    currentMaxSteps += 5000;
                 }
             }
 
