@@ -7,8 +7,8 @@ MAXSTEPS="MaxSteps_$4"
 REDUCTION="$5"
 DIR="output/$STRATEGY/$MAXSTEPS/$MODELS/$BINARY/$REDUCTION"
 OUTPUT="time/$MODELS.$BINARY.$STRATEGY.$MAXSTEPS.$REDUCTION"
-OUTPUT_CAR="$OUTPUT.ReachabilityCardinality.txt"
-OUTPUT_FIR="$OUTPUT.ReachabilityFireability.txt"
+OUTPUT_CAR="test.ReachabilityCardinality.txt"
+OUTPUT_FIR="test.ReachabilityFireability.txt"
 TMP_CAR="tmp.ReachabilityCardinality.txt"
 TMP_FIR="tmp.ReachabilityFireability.txt"
 
@@ -16,9 +16,9 @@ TMP_FIR="tmp.ReachabilityFireability.txt"
 for f in $(ls $DIR) ; do
     # grep the time spent on verification
     if [[ $f == *ReachabilityCardinality* ]] ; then
-        grep -oP '(?<=Spent ).[0-9\.e\-]*(?= on verification)' $DIR/$f >> $TMP_CAR
+        grep -P -A 3 '(?<=Spent ).[0-9\.e\-]*(?= on verification)' $DIR/$f | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-ReachabilityCardinality//g" | grep -v '?' | sort | uniq >> $TMP_CAR
     else
-        grep -oP '(?<=Spent ).[0-9\.e\-]*(?= on verification)' $DIR/$f >> $TMP_FIR
+        grep -P -A 3 '(?<=Spent ).[0-9\.e\-]*(?= on verification)' $DIR/$f | grep -aP 'FORMULA' | grep -oP '.*(?=TECHNIQUES)' | sed "s/-ReachabilityFireability//g" | grep -v '?' | sort | uniq >> $TMP_FIR
     fi
 done
 

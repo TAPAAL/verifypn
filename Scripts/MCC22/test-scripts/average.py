@@ -1,6 +1,6 @@
 filePath = "/mnt/c/Users/dell/Documents/Centrale-Nantes/EI4-INFOIA/TFE/TAPAAL/tapn_examples/time/"
-fileNames = ["MCC22-2cee3b71.7cca7fe1.RDFS.ReachabilityCardinality.txt",
-             "MCC22-2cee3b71.7cca7fe1.RDFS.ReachabilityFireability.txt"]
+fileNames = ["MCC22-2cee3b71.7cca7fe1-maxSteps.RANDOMWALK.MaxSteps_160000.Reduction.ReachabilityCardinality.txt",
+             "MCC22-2cee3b71.7cca7fe1-maxSteps.RANDOMWALK.MaxSteps_160000.Reduction.ReachabilityFireability.txt"]
 for file in fileNames:
     with open(filePath + file, "r") as f:
         lines = f.readlines()
