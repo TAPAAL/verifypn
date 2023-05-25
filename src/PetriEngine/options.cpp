@@ -36,8 +36,8 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << "\nSearch=RDFS";
     } else if (strategy == Strategy::RPFS) {
         optionsOut << "\nSearch=RPFS";
-    } else if (strategy == Strategy::RANDOMWALK) {
-        optionsOut << "\nSearch=RANDOMWALK";
+    } else if (strategy == Strategy::RandomWalk) {
+        optionsOut << "\nSearch=RandomWalk";
     } else {
         optionsOut << "\nSearch=OverApprox";
     }
@@ -136,8 +136,9 @@ void printHelp() {
         "                                       - DFS          Depth first search (CTL default)\n"
         "                                       - RDFS         Random depth first search\n"
         "                                       - RPFS         Random potency first search\n"
-        "                                       - RANDOMWALK   Random walk using potency search\n"
-        "  --max-steps <number>                 Maximum number of steps for a random walk (Default 10000)\n"
+        "     RandomWalk [<depth>] [<inc>]      - RandomWalk   Random walk using potency search\n"
+        "                                           - depth  Maximum depth of a random walk (default 50000)\n"
+        "                                           - inc    Increment of the depth after every random walk (default 5000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
@@ -272,19 +273,40 @@ bool options_t::parse(int argc, const char** argv) {
                 strategy = Strategy::RDFS;
             else if (std::strcmp(s, "RPFS") == 0)
                 strategy = Strategy::RPFS;
-            else if (std::strcmp(s, "RANDOMWALK") == 0)
-                strategy = Strategy::RANDOMWALK;
-            else if (std::strcmp(s, "OverApprox") == 0)
+            else if (std::strcmp(s, "RandomWalk") == 0) {
+                strategy = Strategy::RandomWalk;
+                if (argc > i + 1) {
+                    int depthTemp = 0;
+                    if (sscanf(argv[i + 1], "%d", &depthTemp) == 1) { // next argument is an integer
+                        if (depthTemp <= 0) {
+                            throw base_error("Argument Error: Invalid depth value for RandomWalk ", std::quoted(argv[i + 1]));
+                        } else {
+                            depthRandomWalk = depthTemp;
+                            ++i;
+                        }
+                    } else { // Next argument is not an integer, no depth specified
+                        depthRandomWalk = 50000;
+                        continue;
+                    }
+                }
+                if (argc > i + 1) {
+                    int incTemp = 0;
+                    if (sscanf(argv[i + 1], "%d", &incTemp) == 1) { // next argument is an integer
+                        if (incTemp < 0) {
+                            throw base_error("Argument Error: Invalid increment value for RandomWalk ", std::quoted(argv[i + 1]));
+                        } else {
+                            incRandomWalk = incTemp;
+                            ++i;
+                        }
+                    } else { // Next argument is not an integer, no increment specified
+                        incRandomWalk = 5000;
+                        continue;
+                    }
+                }
+            } else if (std::strcmp(s, "OverApprox") == 0)
                 strategy = Strategy::OverApprox;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
-            }
-        } else if (std::strcmp(argv[i], "--max-steps") == 0) {
-            if (i == argc - 1) {
-                throw base_error("Missing number after ", std::quoted(argv[i]));
-            }
-            if (sscanf(argv[++i], "%d", &maxStepsRandomWalk) != 1 || maxStepsRandomWalk <= 0) {
-                throw base_error("Argument Error: Invalid max steps argument (must be an int > 0) ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "-q") == 0 || std::strcmp(argv[i], "--query-reduction") == 0) {
             if (i == argc - 1) {
@@ -678,11 +700,11 @@ bool options_t::parse(int argc, const char** argv) {
            strategy != Strategy::RDFS &&
            strategy != Strategy::HEUR &&
            strategy != Strategy::RPFS &&
-           strategy != Strategy::RANDOMWALK &&
+           strategy != Strategy::RandomWalk &&
            strategy != Strategy::DEFAULT &&
            strategy != Strategy::OverApprox)
         {
-            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, RPFS, RANDOMWALK and BestFS.");
+            throw base_error("Argument Error: Unsupported search strategy for LTL. Supported values are DEFAULT, OverApprox, DFS, RDFS, RPFS, RandomWalk and BestFS.");
         }
     }
 

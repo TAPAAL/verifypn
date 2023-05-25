@@ -524,7 +524,8 @@ int main(int argc, const char** argv) {
                                    options.printstatistics,
                                    options.trace != TraceLevel::None,
                                    options.seed(),
-                                   options.maxStepsRandomWalk);
+                                   options.depthRandomWalk,
+                                   options.incRandomWalk);
             }
         }
     } catch (base_error& e) {

@@ -63,7 +63,8 @@ namespace PetriEngine {
                     StatisticsLevel printstats,
                     bool keep_trace,
                     size_t seed,
-                    int maxStepsRandomWalk = 10000);
+                    int depthRandomWalk = 50000,
+                    int incRandomWalk = 5000);
             size_t maxTokens() const;
         private:
             struct searchstate_t {
@@ -80,8 +81,9 @@ namespace PetriEngine {
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
                 StatisticsLevel,
-                size_t maxSteps,
-                size_t seed);
+                size_t seed,
+                int depthRandomWalk,
+                int incRandomWalk);
 
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
@@ -218,7 +220,8 @@ namespace PetriEngine {
         template<typename G>
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
-                                                    StatisticsLevel statisticsLevel, size_t maxSteps, size_t seed)
+                                                    StatisticsLevel statisticsLevel, size_t seed,
+                                                    int depthRandomWalk, int incRandomWalk)
         {
             // Set up state
             searchstate_t ss;
@@ -250,16 +253,14 @@ namespace PetriEngine {
                     return true;
                 }
             }
-            size_t currentMaxSteps = 5000;
-            constexpr size_t maxStepsValue = std::numeric_limits<size_t>::max() - 5000;
-            // Typically a timeout
-            bool stopRandomWalkCondition = false;
-            while(!stopRandomWalkCondition) {
+
+            constexpr size_t maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
+            while(true) {
                 // Start a new random walk
                 states.newWalk();
 
                 // Search! Each turn is a random step
-                for(size_t stepCounter = 0; stepCounter < currentMaxSteps; ++stepCounter) {
+                for(size_t stepCounter = 0; stepCounter < depthRandomWalk; ++stepCounter) {
                     // The currentStepMarking is the nextMarking computed in the previous step
                     if (!states.nextStep(currentStepState.marking())) {
                         // No candidate found at the previous step, do a new walk
@@ -283,8 +284,8 @@ namespace PetriEngine {
                     }
                     ss.expandedStates++;
                 }
-                if (currentMaxSteps < maxStepsValue) {
-                    currentMaxSteps += 5000;
+                if (depthRandomWalk < maxDepthValue) {
+                    depthRandomWalk += incRandomWalk;
                 }
             }
 

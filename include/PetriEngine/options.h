@@ -19,7 +19,7 @@ enum class Strategy {
     RDFS,
     OverApprox,
     RPFS,
-    RANDOMWALK,
+    RandomWalk,
     DEFAULT
 };
 
@@ -63,7 +63,8 @@ struct options_t {
     uint32_t cores = 1;
     bool doVerification = true;
     bool doUnfolding = true;
-    int maxStepsRandomWalk = 10000;
+    int depthRandomWalk = 50000;
+    int incRandomWalk = 5000;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
