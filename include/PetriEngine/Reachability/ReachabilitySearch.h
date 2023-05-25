@@ -221,7 +221,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
-                                                    int depthRandomWalk, int incRandomWalk)
+                                                    int depthRandomWalk, const int incRandomWalk)
         {
             // Set up state
             searchstate_t ss;
@@ -254,7 +254,7 @@ namespace PetriEngine {
                 }
             }
 
-            constexpr size_t maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
+            const size_t maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
             while(true) {
                 // Start a new random walk
                 states.newWalk();
