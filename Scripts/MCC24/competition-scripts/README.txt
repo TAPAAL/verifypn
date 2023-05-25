@@ -1,0 +1,17 @@
+For creating the VM remember:
+
+- create tmp directory in ~mcc/BenchKit/bin/tmp and set the owner to mcc and
+  group to users
+
+- upload binary in BenchKit/bin and set the owner, group and executability
+
+- upload the tapaah.sh script (and all xml files) into BenchKit/bin, set owner, group and executability
+
+- upload the BenchKit_head.sh into ~mcc/BenchKit/ 
+
+- install time, parallel (check for --will-cite) and bc
+
+- to fix locales do: sudo apt-get purge locales
+                     sudo apt-get install locales
+
+- for running qemu, check the QEMU-README.txt file.
