@@ -69,6 +69,7 @@ TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/7" | bc) # competition 8.6 min
 SIPHONTRAP=$(echo "$TIMEOUT_TOTAL/12" | bc)
 SHORTRED=$(echo "$TIMEOUT_TOTAL/30" | bc)
 EXTENDED=$(echo "$TIMEOUT_TOTAL/25" | bc)
+TIMEOUT_RW_RAND=$(echo "$TIMEOUT_TOTAL/100" | bc)
 
 STRATEGIES_SEQ[0]="-s RPFS -q 40 -l 5 -d $SHORTRED"
 STRATEGIES_SEQ[1]="-tar -s DFS -q 0 -d $SHORTRED"
@@ -86,7 +87,13 @@ STRATEGIES_RAND[1]="-s RDFS --seed-offset 1337 -q 0 -l 0 -d 0"
 STRATEGIES_RAND[2]="-s RPFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
 STRATEGIES_RAND[3]="-tar -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
 
+STRATEGIES_RW_RAND[0]="-s RandomWalk --seed-offset 0 -q 0 -l 0 -d 0"
+STRATEGIES_RW_RAND[1]="-s RandomWalk --seed-offset 1337 -q 0 -l 0 -d 5"
+STRATEGIES_RW_RAND[2]="-s RandomWalk --seed-offset 2018 -q 5 -l 2 -d 5"
+STRATEGIES_RW_RAND[3]="-s RandomWalk --seed-offset 9220 -q 5 -l 3 -d 10"
+
 run_multi=false;
+run_step05=false;
 
 function time_left {
     T=$(date +"%s")
@@ -166,6 +173,7 @@ function verifyparallel {
     fi
 
     echo "$TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
+    echo 
 
     TMP=$($TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY 2>&1 )
 
@@ -202,6 +210,49 @@ function verifyparallel {
     if [ ! -s $MF ]; then
       echo "Model file after phase 0 is empty (CPN unfolding failed), exiting ..."
       exit
+    fi
+
+    if $run_step05 ; then
+        # Step 0.5: Parallel random walk search
+        echo "---------------------------------------------------"
+        echo "     Step 0.5: Random Walk Parallel processing     "
+        echo "---------------------------------------------------"
+        echo "Doing parallel random walk verification of individual queries ($NUMBER in total)"
+        echo "Each query is verified by ${#STRATEGIES_RW_RAND[@]} parallel random walks for $TIMEOUT_RW_RAND seconds each"
+
+        i=0 
+        for Q in ${QUERIES[@]}; do
+            TIMEOUT_RW_RAND=$(( $TIMEOUT_RW_RAND < $SECONDS ? $TIMEOUT_RW_RAND : $SECONDS))
+            if [[ "$TIMEOUT_RW_RAND" -le 0 ]] ; then echo "Out of time, terminating!"; time_left; exit; fi
+            echo "------------------- QUERY ${Q} ----------------------"
+            # Execute verifypn on all parallel random walks
+            # All processes are killed if one process provides an answer
+            step05="$($PAR_CMD --line-buffer --halt now,success=1 --timeout $TIMEOUT_RW_RAND --xapply\
+                eval $TIME_CMD $VERIFYPN -n $OPTIONS {} $MF $QF --binary-query-io 1 -x $Q \
+                ::: "${STRATEGIES_RW_RAND[@]}" 2>&1)"
+
+            if [[ $? == 0 ]]; then
+                QUERIES=(${QUERIES[@]:0:$i} ${QUERIES[@]:$(($i + 1))})
+                i=$(echo "$i - 1" | bc)
+                echo "Solution found in Random Walk processing (step 0.5)"
+            else
+                echo "No solution found"
+            fi
+            FORMULA_RESULT="$(echo "$step05"|grep -m 1 FORMULA)"
+        
+            if [[ -n "$FORMULA_RESULT" ]]; then 
+                echo "$step05" | sed "/$FORMULA_RESULT/d"
+            else 
+                echo "$step05"
+            fi
+            echo 
+            echo "$FORMULA_RESULT"
+            time_left
+            i=$(echo "$i + 1" | bc)
+        done
+
+        # Exit if all queries are answered
+        if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; time_left; exit; fi
     fi
  
     # Step 1: Parallel
@@ -280,7 +331,6 @@ function verifyparallel {
             QUERIES=(${QUERIES[@]:0:$i} ${QUERIES[@]:$(($i + 1))})
             i=$(echo "$i - 1" | bc)
             echo "Solution found by sequential processing (step 2)"
-	    echo "$step1"
         else
             echo "No solution found"
         fi
@@ -454,6 +504,8 @@ case "$BK_EXAMINATION" in
         TIMEOUT_SEQ_MIN=0 
         CATEGORY="${DIR}/${BK_EXAMINATION}.xml"
         TIMEOUT_PAR=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
+        TIMEOUT_RW_RAND=$(echo "$TIMEOUT_TOTAL/12" | bc) # competition 5 min
+        run_step05=true
         verifyparallel 
         ;;
 
@@ -507,6 +559,7 @@ case "$BK_EXAMINATION" in
         echo "*  TAPAAL verifying ReachabilityCardinality  *"
         echo "**********************************************"
         CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
+        run_step05=true
         verifyparallel 
         ;;
 
@@ -516,7 +569,8 @@ case "$BK_EXAMINATION" in
         echo "*  TAPAAL verifying ReachabilityFireability  *"
         echo "**********************************************"
         CATEGORY="${MODEL_PATH}/${BK_EXAMINATION}.xml"
-	TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
+	    TIMEOUT_SEQ_MIN=$(echo "$TIMEOUT_TOTAL/6" | bc) # competition 10 min
+        run_step05=true
         verifyparallel 
         ;;
 
