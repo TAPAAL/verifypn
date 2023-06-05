@@ -259,7 +259,7 @@ function verifyparallel {
     echo "---------------------------------------------------"
     echo "            Step 1: Parallel processing            "
     echo "---------------------------------------------------"
-    echo "Doing parallel verification of individual queries ($NUMBER in total)"
+    echo "Doing parallel verification of individual queries (on ${#QUERIES[@]} remaining queries)"
     echo "Each query is verified by ${#STRATEGIES_PAR[@]} parallel strategies for $TIMEOUT_PAR seconds"
     
     i=0
