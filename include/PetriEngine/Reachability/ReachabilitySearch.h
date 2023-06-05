@@ -254,13 +254,13 @@ namespace PetriEngine {
                 }
             }
 
-            const size_t maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
+            const int maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
             while(true) {
                 // Start a new random walk
                 states.newWalk();
 
                 // Search! Each turn is a random step
-                for(size_t stepCounter = 0; stepCounter < depthRandomWalk; ++stepCounter) {
+                for(int stepCounter = 0; stepCounter < depthRandomWalk; ++stepCounter) {
                     // The currentStepMarking is the nextMarking computed in the previous step
                     if (!states.nextStep(currentStepState.marking())) {
                         // No candidate found at the previous step, do a new walk
