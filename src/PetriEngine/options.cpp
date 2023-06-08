@@ -138,7 +138,7 @@ void printHelp() {
         "                                       - RPFS         Random potency first search\n"
         "     RandomWalk [<depth>] [<inc>]      - RandomWalk   Random walk using potency search\n"
         "                                           - depth  Maximum depth of a random walk (default 50000)\n"
-        "                                           - inc    Increment of the depth after every random walk (default 5000)\n"
+        "                                           - inc    Increment of the maximum depth after every random walk (default 5000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
