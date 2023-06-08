@@ -276,7 +276,7 @@ namespace PetriEngine {
                             if(statisticsLevel != StatisticsLevel::None)
                                 printStats(ss, &states, statisticsLevel);
                             _max_tokens = states.maxTokens();
-                            _satisfyingMarking = (size_t)candidate.marking(); // TODO: this is bad
+                            _satisfyingMarking = (size_t)candidate.marking(); // This is bad, but _satisfyingMarking is only use for printing the trace (never the case for RandomWalk)
                             return true;
                         } else {
                             states.computeCandidate(candidate.marking(), query, generator.fired());
