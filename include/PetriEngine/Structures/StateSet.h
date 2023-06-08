@@ -97,7 +97,7 @@ namespace PetriEngine {
                 delete[] _nextMarking;
             }
 
-            void setInitialMarking(const MarkVal* marking) {
+            void setInitialMarking(MarkVal* marking) {
                 std::copy(marking, marking + _nplaces, _initialMarking);
             }
 
