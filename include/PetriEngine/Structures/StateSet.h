@@ -81,27 +81,17 @@ namespace PetriEngine {
             {
                 srand(_seed);
                 _discovered = 1;
-                _initialMarking = new MarkVal[_nplaces];
-                setInitialMarking(net.makeInitialMarking());
-                _nextMarking = new MarkVal[_nplaces];
+                _initialMarking = std::make_unique<MarkVal[]>(_nplaces);
+                setMarking(net.makeInitialMarking(), _initialMarking.get());
+                _nextMarking = std::make_unique<MarkVal[]>(_nplaces);
                 _nextMarking[0] = std::numeric_limits<MarkVal>::max();
 
                 _initializePotencies(_net.numberOfTransitions(), _initPotency);
-                PQL::DistanceContext context(&_net, initialMarking());
+                PQL::DistanceContext context(&_net, _initialMarking.get());
                 _initialDistance = query->distance(context);
             }
 
-            ~RandomWalkStateSet() {
-                // Clean up the markings
-                delete[] _initialMarking;
-                delete[] _nextMarking;
-            }
-
-            void setInitialMarking(const MarkVal* marking) {
-                std::copy(marking, marking + _nplaces, _initialMarking);
-            }
-
-            const MarkVal* initialMarking() { return _initialMarking; }
+            ~RandomWalkStateSet() {}
 
             void setMarking(const MarkVal* source, MarkVal* target) {
                 std::copy(source, source + _nplaces, target);
@@ -148,7 +138,7 @@ namespace PetriEngine {
                 double r = (double)rand() / RAND_MAX;
                 double threshold = _potencies[t] / (double)_totalWeight;
                 if (r <= threshold) {
-                   setMarking(candidate, _nextMarking);
+                   setMarking(candidate, _nextMarking.get());
                     _nextStepDistance = dist;
                 }
             }
@@ -159,7 +149,7 @@ namespace PetriEngine {
              * The _currentStepDistance is set to the distance of the initial marking.
             */
             void newWalk() {
-                setMarking(_initialMarking, _nextMarking);
+                setMarking(_initialMarking.get(), _nextMarking.get());
                 _currentStepDistance = _initialDistance;
             }
 
@@ -173,7 +163,7 @@ namespace PetriEngine {
                 if (_nextMarking[0] == std::numeric_limits<MarkVal>::max()) {
                     return false;
                 }
-                setMarking(_nextMarking, currentStepMarking);
+                setMarking(_nextMarking.get(), currentStepMarking);
                 _currentStepDistance = _nextStepDistance;
                 _totalWeight = 0;
                 _nextMarking[0] = std::numeric_limits<MarkVal>::max();
@@ -191,9 +181,9 @@ namespace PetriEngine {
             }
 
         private:
-            MarkVal* _initialMarking;
+            std::unique_ptr<MarkVal[]> _initialMarking;
             // The best candidate so far to be the next marking
-            MarkVal* _nextMarking;
+            std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
             const uint32_t _initPotency = 100;
