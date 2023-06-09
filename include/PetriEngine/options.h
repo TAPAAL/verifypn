@@ -63,7 +63,7 @@ struct options_t {
     uint32_t cores = 1;
     bool doVerification = true;
     bool doUnfolding = true;
-    int depthRandomWalk = 50000;
+    int64_t depthRandomWalk = 50000;
     int incRandomWalk = 5000;
 
     TemporalLogic logic = TemporalLogic::CTL;

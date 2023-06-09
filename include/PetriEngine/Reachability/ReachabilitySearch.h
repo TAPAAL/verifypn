@@ -63,7 +63,7 @@ namespace PetriEngine {
                     StatisticsLevel printstats,
                     bool keep_trace,
                     size_t seed,
-                    int depthRandomWalk = 50000,
+                    int64_t depthRandomWalk = 50000,
                     int incRandomWalk = 5000);
             size_t maxTokens() const;
         private:
@@ -82,7 +82,7 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel,
                 size_t seed,
-                int depthRandomWalk,
+                int64_t depthRandomWalk,
                 int incRandomWalk);
 
             template<typename Q, typename W = Structures::StateSet, typename G>
@@ -221,7 +221,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
-                                                    int depthRandomWalk, const int incRandomWalk)
+                                                    int64_t depthRandomWalk, const int incRandomWalk)
         {
             // Set up state
             searchstate_t ss;
@@ -254,7 +254,7 @@ namespace PetriEngine {
                 }
             }
 
-            const int maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
+            const int64_t maxDepthValue = std::numeric_limits<int64_t>::max() - incRandomWalk;
             while(true) {
                 // Start a new random walk
                 states.newWalk();
