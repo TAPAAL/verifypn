@@ -32,10 +32,10 @@ using namespace PetriEngine::Structures;
 namespace PetriEngine {
     namespace Reachability {
 
-        bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                                                std::vector<ResultPrinter::Result>& results,
-                                                State& state,
-                                                searchstate_t& ss, StateSetInterface* states)
+        bool ReachabilitySearch::checkQueries(std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                                              std::vector<ResultPrinter::Result>& results,
+                                              State& state, searchstate_t& ss,
+                                              Structures::StateSetInterface* states)
         {
             if(!ss.usequeries) return false;
 
@@ -74,14 +74,19 @@ namespace PetriEngine {
             return alldone;
         }
 
-        std::pair<ResultPrinter::Result,bool> ReachabilitySearch::doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r,
-                                                             searchstate_t& ss, Structures::StateSetInterface* states)
+        std::pair<ResultPrinter::Result,bool> ReachabilitySearch::doCallback(
+            std::shared_ptr<PQL::Condition>& query, size_t i,
+            ResultPrinter::Result r, searchstate_t& ss,
+            Structures::StateSetInterface* states)
         {
             return _callback.handle(i, query.get(), r, &states->maxPlaceBound(),
                         ss.expandedStates, ss.exploredStates, states->discovered(), states->maxTokens(),
                         states, _satisfyingMarking, _initial.marking());
         }
-        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states, StatisticsLevel statisticsLevel)
+
+        void ReachabilitySearch::printStats(searchstate_t& ss,
+                                            Structures::StateSetInterface* states,
+                                            StatisticsLevel statisticsLevel)
         {
             if (statisticsLevel == StatisticsLevel::None)
                 return;
@@ -141,7 +146,9 @@ namespace PetriEngine {
                     bool statespacesearch,
                     StatisticsLevel printstats,
                     bool keep_trace,
-                    size_t seed)
+                    size_t seed,
+                    int64_t depthRandomWalk,
+                    const int64_t incRandomWalk)
         {
             bool usequeries = !statespacesearch;
 
@@ -165,6 +172,13 @@ namespace PetriEngine {
                 case Strategy::RPFS:
                     TRYREACH(RandomPotencyQueue)
                     break;
+                case Strategy::RandomWalk: {
+                    if (stubbornreduction)
+                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk);
+                    else
+                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk);
+                    break;
+                }
                 default:
                     throw base_error("Unsupported search strategy");
             }

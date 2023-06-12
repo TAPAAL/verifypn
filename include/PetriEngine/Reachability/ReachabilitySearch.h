@@ -62,7 +62,9 @@ namespace PetriEngine {
                     bool statespacesearch,
                     StatisticsLevel printstats,
                     bool keep_trace,
-                    size_t seed);
+                    size_t seed,
+                    int64_t depthRandomWalk = 50000,
+                    const int64_t incRandomWalk = 5000);
             size_t maxTokens() const;
         private:
             struct searchstate_t {
@@ -73,6 +75,16 @@ namespace PetriEngine {
                 bool usequeries;
             };
 
+            template<typename G>
+            bool tryReachRandomWalk(
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                std::vector<ResultPrinter::Result>& results,
+                bool usequeries,
+                StatisticsLevel,
+                size_t seed,
+                int64_t depthRandomWalk,
+                const int64_t incRandomWalk);
+
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
@@ -80,11 +92,18 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
                 size_t seed);
+
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
-            bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
-                                    std::vector<ResultPrinter::Result>&,
-                                    Structures::State&, searchstate_t&, Structures::StateSetInterface*);
-            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, Structures::StateSetInterface *states);
+
+            bool checkQueries(std::vector<std::shared_ptr<PQL::Condition > >&,
+                              std::vector<ResultPrinter::Result>&,
+                              Structures::State&, searchstate_t&,
+                              Structures::StateSetInterface*);
+
+            std::pair<ResultPrinter::Result,bool> doCallback(
+                std::shared_ptr<PQL::Condition>& query, size_t i,
+                ResultPrinter::Result r, searchstate_t &ss,
+                Structures::StateSetInterface *states);
 
             PetriNet& _net;
             int _kbound;
@@ -159,6 +178,7 @@ namespace PetriEngine {
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
                         auto res = states.add(working);
+                        // If we have not seen this state before
                         if (res.first) {
                             {
                                 PQL::DistanceContext dc(&_net, working.marking());
@@ -179,6 +199,93 @@ namespace PetriEngine {
                         }
                     }
                     ss.expandedStates++;
+                }
+            }
+
+            // no more successors, print last results
+            for(size_t i= 0; i < queries.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                {
+                    results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states).first;
+                }
+            }
+
+            if(statisticsLevel != StatisticsLevel::None)
+                printStats(ss, &states, statisticsLevel);
+            _max_tokens = states.maxTokens();
+            return false;
+        }
+
+        template<typename G>
+        bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
+                                                    std::vector<ResultPrinter::Result>& results, bool usequeries,
+                                                    StatisticsLevel statisticsLevel, size_t seed,
+                                                    int64_t depthRandomWalk, const int64_t incRandomWalk)
+        {
+            // Set up state
+            searchstate_t ss;
+            ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
+            ss.expandedStates = 0;
+            ss.exploredStates = 1;
+            ss.heurquery = queries.size() >= 2 ? std::rand() % queries.size() : 0;
+            ss.usequeries = usequeries;
+            const PQL::Condition *query = queries[ss.heurquery].get();
+
+            // Set up working area
+            _initial.setMarking(_net.makeInitialMarking());
+            Structures::State candidate; // Candidate for the next step, modified by the generator
+            Structures::State currentStepState;
+            candidate.setMarking(_net.makeInitialMarking());
+            currentStepState.setMarking(_net.makeInitialMarking());
+
+            Structures::RandomWalkStateSet states(_net, _kbound, query, seed); // State set
+            G generator = _makeSucGen<G>(_net, queries);                       // Successor generator
+
+            // Check initial marking
+            if(ss.usequeries)
+            {
+                if(checkQueries(queries, results, _initial, ss, &states))
+                {
+                    if(statisticsLevel != StatisticsLevel::None)
+                        printStats(ss, &states, statisticsLevel);
+                    _max_tokens = states.maxTokens();
+                    return true;
+                }
+            }
+
+            const int64_t maxDepthValue = std::numeric_limits<int64_t>::max() - incRandomWalk;
+            while(true) {
+                // Start a new random walk
+                states.newWalk();
+
+                // Search! Each turn is a random step
+                for(int stepCounter = 0; stepCounter < depthRandomWalk; ++stepCounter) {
+                    // The currentStepMarking is the nextMarking computed in the previous step
+                    if (!states.nextStep(currentStepState.marking())) {
+                        // No candidate found at the previous step, do a new walk
+                        break;
+                    }
+                    generator.prepare(&currentStepState);
+
+                    while(generator.next(candidate)) {
+                        ss.enabledTransitionsCount[generator.fired()]++;
+                        ss.exploredStates++;
+
+                        if (checkQueries(queries, results, candidate, ss, &states)) {
+                            if(statisticsLevel != StatisticsLevel::None)
+                                printStats(ss, &states, statisticsLevel);
+                            _max_tokens = states.maxTokens();
+                            // _satisfyingMarking = (size_t)candidate.marking(); // This is bad, but _satisfyingMarking is only used for printing the trace
+                            return true;
+                        } else {
+                            states.computeCandidate(candidate.marking(), query, generator.fired());
+                        }
+                    }
+                    ss.expandedStates++;
+                }
+                if (depthRandomWalk < maxDepthValue) {
+                    depthRandomWalk += incRandomWalk;
                 }
             }
 
