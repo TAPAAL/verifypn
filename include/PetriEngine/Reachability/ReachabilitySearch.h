@@ -63,8 +63,8 @@ namespace PetriEngine {
                     StatisticsLevel printstats,
                     bool keep_trace,
                     size_t seed,
-                    int depthRandomWalk = 50000,
-                    int incRandomWalk = 5000);
+                    int64_t depthRandomWalk = 50000,
+                    const int64_t incRandomWalk = 5000);
             size_t maxTokens() const;
         private:
             struct searchstate_t {
@@ -82,8 +82,8 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel,
                 size_t seed,
-                int depthRandomWalk,
-                int incRandomWalk);
+                int64_t depthRandomWalk,
+                const int64_t incRandomWalk);
 
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
@@ -221,7 +221,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
-                                                    int depthRandomWalk, const int incRandomWalk)
+                                                    int64_t depthRandomWalk, const int64_t incRandomWalk)
         {
             // Set up state
             searchstate_t ss;
@@ -254,7 +254,7 @@ namespace PetriEngine {
                 }
             }
 
-            const int maxDepthValue = std::numeric_limits<int>::max() - incRandomWalk;
+            const int64_t maxDepthValue = std::numeric_limits<int64_t>::max() - incRandomWalk;
             while(true) {
                 // Start a new random walk
                 states.newWalk();
@@ -276,7 +276,7 @@ namespace PetriEngine {
                             if(statisticsLevel != StatisticsLevel::None)
                                 printStats(ss, &states, statisticsLevel);
                             _max_tokens = states.maxTokens();
-                            _satisfyingMarking = (size_t)candidate.marking(); // TODO: this is bad
+                            // _satisfyingMarking = (size_t)candidate.marking(); // This is bad, but _satisfyingMarking is only used for printing the trace
                             return true;
                         } else {
                             states.computeCandidate(candidate.marking(), query, generator.fired());
