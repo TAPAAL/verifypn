@@ -148,7 +148,7 @@ namespace PetriEngine {
                     bool keep_trace,
                     size_t seed,
                     int64_t depthRandomWalk,
-                    int incRandomWalk)
+                    const int64_t incRandomWalk)
         {
             bool usequeries = !statespacesearch;
 

@@ -276,8 +276,8 @@ bool options_t::parse(int argc, const char** argv) {
             else if (std::strcmp(s, "RandomWalk") == 0) {
                 strategy = Strategy::RandomWalk;
                 if (argc > i + 1) {
-                    int depthTemp = 0;
-                    if (sscanf(argv[i + 1], "%d", &depthTemp) == 1) { // next argument is an integer
+                    int64_t depthTemp = 0;
+                    if (sscanf(argv[i + 1], "%lld", &depthTemp) == 1) { // next argument is an int64_t
                         if (depthTemp <= 0) {
                             throw base_error("Argument Error: Invalid depth value for RandomWalk ", std::quoted(argv[i + 1]));
                         } else {
@@ -290,8 +290,8 @@ bool options_t::parse(int argc, const char** argv) {
                     }
                 }
                 if (argc > i + 1) {
-                    int incTemp = 0;
-                    if (sscanf(argv[i + 1], "%d", &incTemp) == 1) { // next argument is an integer
+                    int64_t incTemp = 0;
+                    if (sscanf(argv[i + 1], "%lld", &incTemp) == 1) { // next argument is an int64_t
                         if (incTemp < 0) {
                             throw base_error("Argument Error: Invalid increment value for RandomWalk ", std::quoted(argv[i + 1]));
                         } else {
