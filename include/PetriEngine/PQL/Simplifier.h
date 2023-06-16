@@ -74,6 +74,10 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const ControlCondition *condition) override;
 
+        void _accept(const ExistPath *condition) override;
+
+        void _accept(const AllPaths *condition) override;
+
         void _accept(const EFCondition *condition) override;
 
         void _accept(const EGCondition *condition) override;
