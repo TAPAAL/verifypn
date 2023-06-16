@@ -3,6 +3,7 @@
 
 #include "CTL/DependencyGraph/Edge.h"
 #include <sstream>
+#include <cstdint>
 
 namespace SearchStrategy {
 
