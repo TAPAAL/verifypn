@@ -53,11 +53,19 @@ namespace LTL {
         if constexpr (std::is_same<G,CompoundGenerator>::value) {
             LTL::Structures::CompoundStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _hyper_traces, _kbound);
             dfs(prod_gen, states);
+            _discovered = states.discovered();
+            _max_tokens = states.max_tokens();
+            _configurations = states.configurations();
+            _markings = states.markings();
         }
         else
         {
             LTL::Structures::BitProductStateSet<ptrie::map<Structures::stateid_t, uint8_t>> states(_net, _kbound);
             dfs(prod_gen, states);
+            _discovered = states.discovered();
+            _max_tokens = states.max_tokens();
+            _configurations = states.configurations();
+            _markings = states.markings();
         }
         return !_violation;
     }
@@ -125,8 +133,6 @@ namespace LTL {
                     if (_violation) {
                         if(_build_trace)
                             build_trace(todo, nested_todo);
-                        _discovered = states.discovered();
-                        _max_tokens = states.max_tokens();
                         return;
                     }
                 }
@@ -145,18 +151,12 @@ namespace LTL {
                         _violation = true;
                         if(_build_trace)
                             build_trace(todo, nested_todo);
-                        _discovered = states.discovered();
-                        _max_tokens = states.max_tokens();
                         return;
                     }
                     todo.push_back(stack_entry_t<T>{stateid, successor_generator.initial_suc_info()});
                 }
             }
         }
-        _discovered = states.discovered();
-        _max_tokens = states.max_tokens();
-        _configurations = states.configurations();
-        _markings = states.markings();
     }
 
     template<typename T, typename S>
