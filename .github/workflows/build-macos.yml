@@ -22,7 +22,8 @@ jobs:
       - name: Install Packages
         run: |
           brew install flex bison autoconf automake libtool
-        
+          echo 'export PATH="/usr/local/opt/bison/bin:$PATH"' >> /Users/runner/.bash_profile
+          echo 'export PATH="/usr/local/opt/flex/bin:$PATH"' >> /Users/runner/.bash_profile
       - name: Build 
         uses: lukka/run-cmake@v2.5
         with:
