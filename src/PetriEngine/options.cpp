@@ -232,6 +232,7 @@ void printHelp() {
         "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
         "  --strategy-output <file>             Outputs the synthesized strategy (if a such exist) to <filename>\n"
         "                                           Use '-' (dash) for outputting to standard output.\n"
+        "  --use-lp-potencies                   Use LP for computing the initial potencies\n"
         "\n"
         "Return Values:\n"
         "  0   Successful, query satisfiable\n"
@@ -435,9 +436,11 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Argument Error: Invalid reduction timeout argument ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "--seed-offset") == 0) {
-        if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
-            throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
-        }
+            if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
+                throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
+            }
+        } else if (std::strcmp(argv[i], "--use-lp-potencies") == 0) {
+            useLPPotencies = true;
         } else if (std::strcmp(argv[i], "-p") == 0 || std::strcmp(argv[i], "--disable-partial-order") == 0) {
             stubbornreduction = false;
         } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--siphon-trap") == 0) {

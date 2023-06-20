@@ -110,6 +110,9 @@ struct options_t {
     int max_intervals_reduced = 5;
 
     std::string strategy_output;
+
+    bool useLPPotencies = false;
+
     size_t seed() { return ++seed_offset; }
     void print(std::ostream& out = std::cout);
     bool parse(int argc, const char** argv);
