@@ -110,7 +110,7 @@ namespace PetriEngine {
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
-                glp_set_obj_coef(lp, i, 0);
+                glp_set_obj_coef(lp, i, 1);
                 glp_set_col_kind(lp, i, use_ilp ? GLP_IV :GLP_CV);
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
@@ -120,55 +120,79 @@ namespace PetriEngine {
             auto stime = glp_time();
             glp_smcp settings;
             glp_init_smcp(&settings);
-            auto timeout = std::min(solvetime, context.getLpTimeout())*1000;
+            auto timeout = std::min(solvetime, context.getLpTimeout()) * 1000;
             settings.tm_lim = timeout;
             settings.presolve = GLP_OFF;
             settings.msg_lev = 0;
-            auto result = glp_simplex(lp, &settings);
-            if (result == GLP_ETMLIM)
-            {
-                _result = result_t::UKNOWN;
-                //std::cerr << "glpk: timeout" << std::endl;
-            }
-            else if(result == 0)
-            {
-                auto status = glp_get_status(lp);
-                if(status == GLP_OPT) {
-                    glp_iocp iset;
-                    glp_init_iocp(&iset);
-                    iset.msg_lev = 0;
-                    iset.tm_lim = std::max<uint32_t>(timeout-(stime - glp_time()), 1);
-                    iset.presolve = GLP_OFF;
-                    auto ires = glp_intopt(lp, &iset);
-                    if(ires == GLP_ETMLIM)
-                    {
-                        _result = result_t::UKNOWN;
-                        //std::cerr << "glpk mip: timeout" << std::endl;
-                    }
-                    else if(ires == 0)
-                    {
-                        auto ist = glp_mip_status(lp);
-                        if(ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
-                            _result = result_t::POSSIBLE;
-                        }
-                        else
-                        {
-                            _result = result_t::IMPOSSIBLE;
-                        }
+            auto simp_res = glp_simplex(lp, &settings);
 
-                    }
-                }
-                else if(status == GLP_FEAS || status == GLP_UNBND)
-                {
-                    _result = result_t::POSSIBLE;
-                }
-                else
-                    _result = result_t::IMPOSSIBLE;
-            }
-            else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+            if (simp_res == GLP_ETMLIM)
             {
-                _result = result_t::IMPOSSIBLE;
             }
+            else if (simp_res == 0) {
+                auto result = glp_exact(lp, &settings);
+                if (result == GLP_ETMLIM)
+                {
+                    _result = result_t::UKNOWN;
+                    // std::cerr << "glpk: timeout" << std::endl;
+                }
+                else if (result == 0)
+                {
+                    auto status = glp_get_status(lp);
+                    if (status == GLP_OPT) {
+                        glp_iocp iset;
+                        glp_init_iocp(&iset);
+                        iset.msg_lev = 0;
+                        iset.tm_lim = std::max<uint32_t>(timeout - (stime - glp_time()), 1);
+                        iset.presolve = GLP_OFF;
+                        auto ires = glp_intopt(lp, &iset);
+                        if (ires == GLP_ETMLIM)
+                        {
+                            _result = result_t::UKNOWN;
+                            // std::cerr << "glpk mip: timeout" << std::endl;
+                        }
+                        else if (ires == 0)
+                        {
+                            auto ist = glp_mip_status(lp);
+                            if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
+                                _result = result_t::POSSIBLE;
+                            }
+                            else
+                            {
+                                _result = result_t::IMPOSSIBLE;
+                            }
+                        }
+                    }
+                    else if (status == GLP_FEAS || status == GLP_UNBND)
+                    {
+                        _result = result_t::POSSIBLE;
+                    }
+                    else
+                        _result = result_t::IMPOSSIBLE;
+                }
+                else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+                {
+                    _result = result_t::IMPOSSIBLE;
+                }
+
+                if (context.initPotency && _result == result_t::POSSIBLE)
+                {
+                    for (size_t i = 1; i <= nCol; i++)
+                    {
+                        double col_struct = glp_mip_col_val(lp, i); // Get the value of the i'th column in the optimal solution
+                        context.xs[i - 1] += round(col_struct);
+                    }
+                    // std::cout << "\n***********\nContext.xs: ";
+                    // for (size_t i = 0; i < context.xs.size(); i++)
+                    // {
+                    //     std::cout << context.xs[i] << " ";
+                    // }
+                    // std::cout << "\n_equations:\n";
+                    // print(std::cout, 1) << std::endl;
+                    // std::cout << "\n***********\n";
+                }
+            }
+
             glp_delete_prob(lp);
 
             return _result == result_t::IMPOSSIBLE;
