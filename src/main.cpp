@@ -287,7 +287,7 @@ int main(int argc, const char** argv) {
             }
         }
 
-        options.queryReductionTimeout = 0;
+        // options.queryReductionTimeout = 0;
 
         //--------------------- Apply Net Reduction ---------------//
 
@@ -303,6 +303,11 @@ int main(int argc, const char** argv) {
         printStats(builder, options);
 
         auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
+        std::vector<PetriEngine::MarkVal> potencies(net->numberOfTransitions(), 0);
+        std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
+
+        simplify_queries_potency(qm0.get(), net.get(), queries, options, std::cout, potencies);
 
         if (options.model_out_file.size() > 0) {
             std::fstream file;

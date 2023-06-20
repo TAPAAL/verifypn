@@ -140,6 +140,12 @@ void simplify_queries(const MarkVal* marking,
                         std::vector<PetriEngine::PQL::Condition_ptr>& queries,
                         options_t& options, std::ostream& outstream = std::cout);
 
+void simplify_queries_potency(const MarkVal* marking,
+                              const PetriNet* net,
+                              std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                              options_t& options, std::ostream& outstream,
+                              std::vector<uint32_t> &potencies);
+
 
 std::vector<Condition_ptr>
 parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary = false);
