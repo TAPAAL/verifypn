@@ -76,8 +76,9 @@ namespace PetriEngine {
         class RandomWalkStateSet : public StateSetInterface
         {
         public:
-            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query, size_t seed, int nplaces = -1) :
-            StateSetInterface(net, kbound, nplaces), _seed(seed)
+            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query,
+                               const std::vector<MarkVal> &initPotencies, size_t seed, int nplaces = -1)
+                : StateSetInterface(net, kbound, nplaces), _seed(seed)
             {
                 srand(_seed);
                 _discovered = 1;
@@ -86,7 +87,11 @@ namespace PetriEngine {
                 _nextMarking = std::make_unique<MarkVal[]>(_nplaces);
                 _nextMarking[0] = std::numeric_limits<MarkVal>::max();
 
-                _initializePotencies(_net.numberOfTransitions(), _initPotency);
+                if (initPotencies.empty()) {
+                    _initializePotencies(_net.numberOfTransitions(), _initPotencyConstant);
+                } else {
+                    _initializePotencies(initPotencies);
+                }
                 PQL::DistanceContext context(&_net, _initialMarking.get());
                 _initialDistance = query->distance(context);
             }
@@ -186,7 +191,7 @@ namespace PetriEngine {
             std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const uint32_t _initPotency = 100;
+            const uint32_t _initPotencyConstant = 100;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
@@ -198,6 +203,14 @@ namespace PetriEngine {
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue) {
                 _potencies = std::vector<uint32_t>(nTransitions, initValue);
+            }
+
+            void _initializePotencies(const std::vector<MarkVal> &initPotencies) {
+                assert(initPotencies.size() == _net.numberOfTransitions());
+                _potencies.reserve(initPotencies.size());
+                for (auto potency : initPotencies) {
+                    _potencies.push_back(potency * _initPotencyConstant + 1);
+                }
             }
 
             uint32_t _sumMarking(const MarkVal* marking) {

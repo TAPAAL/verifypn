@@ -64,7 +64,8 @@ namespace PetriEngine {
                     bool keep_trace,
                     size_t seed,
                     int64_t depthRandomWalk = 50000,
-                    const int64_t incRandomWalk = 5000);
+                    const int64_t incRandomWalk = 5000,
+                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>());
             size_t maxTokens() const;
         private:
             struct searchstate_t {
@@ -83,7 +84,8 @@ namespace PetriEngine {
                 StatisticsLevel,
                 size_t seed,
                 int64_t depthRandomWalk,
-                const int64_t incRandomWalk);
+                const int64_t incRandomWalk,
+                const std::vector<MarkVal>& initPotencies);
 
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
@@ -91,7 +93,8 @@ namespace PetriEngine {
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
-                size_t seed);
+                size_t seed,
+                const std::vector<MarkVal>& initPotencies);
 
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
 
@@ -127,7 +130,8 @@ namespace PetriEngine {
         template<typename Q, typename W, typename G>
         bool ReachabilitySearch::tryReach(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
-                                        StatisticsLevel statisticsLevel, size_t seed)
+                                        StatisticsLevel statisticsLevel, size_t seed,
+                                        const std::vector<MarkVal>& initPotencies)
         {
 
             // set up state
@@ -145,8 +149,14 @@ namespace PetriEngine {
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
 
-            W states(_net, _kbound);    // stateset
-            Q queue(seed);           // working queue
+            W states(_net, _kbound); // stateset
+
+            Q queue(seed); // Working queue
+            if constexpr (std::is_base_of_v<Structures::PotencyQueue, Q>) {
+                if (!initPotencies.empty())
+                    queue = Q(initPotencies, seed);
+            }
+
             G generator = _makeSucGen<G>(_net, queries); // successor generator
             auto r = states.add(state);
             // this can fail due to reductions; we push tokens around and violate K
@@ -221,7 +231,8 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
-                                                    int64_t depthRandomWalk, const int64_t incRandomWalk)
+                                                    int64_t depthRandomWalk, const int64_t incRandomWalk,
+                                                    const std::vector<MarkVal>& initPotencies)
         {
             // Set up state
             searchstate_t ss;
@@ -239,8 +250,8 @@ namespace PetriEngine {
             candidate.setMarking(_net.makeInitialMarking());
             currentStepState.setMarking(_net.makeInitialMarking());
 
-            Structures::RandomWalkStateSet states(_net, _kbound, query, seed); // State set
-            G generator = _makeSucGen<G>(_net, queries);                       // Successor generator
+            Structures::RandomWalkStateSet states(_net, _kbound, query, initPotencies, seed); // State set
+            G generator = _makeSucGen<G>(_net, queries); // Successor generator
 
             // Check initial marking
             if(ss.usequeries)

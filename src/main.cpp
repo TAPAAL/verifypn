@@ -304,11 +304,6 @@ int main(int argc, const char** argv) {
 
         auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
 
-        std::vector<PetriEngine::MarkVal> potencies(net->numberOfTransitions(), 0);
-        std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
-
-        simplify_queries_potency(qm0.get(), net.get(), queries, options, std::cout, potencies);
-
         if (options.model_out_file.size() > 0) {
             std::fstream file;
             file.open(options.model_out_file, std::ios::out);
@@ -522,15 +517,36 @@ int main(int argc, const char** argv) {
                 if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
                 //Reachability search
-                strategy.reachable(queries, results,
-                                   options.strategy,
-                                   options.stubbornreduction,
-                                   options.statespaceexploration,
-                                   options.printstatistics,
-                                   options.trace != TraceLevel::None,
-                                   options.seed(),
-                                   options.depthRandomWalk,
-                                   options.incRandomWalk);
+                if (options.useLPPotencies) {
+                    std::vector<MarkVal> initPotencies(net->numberOfTransitions(), 0);
+
+                    {
+                        std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
+                        simplify_queries_potency(qm0.get(), net.get(), queries, options, std::cout, initPotencies);
+                    }
+
+                    strategy.reachable(queries, results,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    options.statespaceexploration,
+                                    options.printstatistics,
+                                    options.trace != TraceLevel::None,
+                                    options.seed(),
+                                    options.depthRandomWalk,
+                                    options.incRandomWalk,
+                                    initPotencies);
+                } else {
+                    strategy.reachable(queries, results,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    options.statespaceexploration,
+                                    options.printstatistics,
+                                    options.trace != TraceLevel::None,
+                                    options.seed(),
+                                    options.depthRandomWalk,
+                                    options.incRandomWalk);
+                }
+
             }
         }
     } catch (base_error& e) {
