@@ -138,7 +138,7 @@ void printHelp() {
         "                                       - RPFS         Random potency first search\n"
         "     RandomWalk [<depth>] [<inc>]      - RandomWalk   Random walk using potency search\n"
         "                                           - depth  Maximum depth of a random walk (default 50000)\n"
-        "                                           - inc    Increment of the depth after every random walk (default 5000)\n"
+        "                                           - inc    Increment of the maximum depth after every random walk (default 5000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
@@ -276,8 +276,8 @@ bool options_t::parse(int argc, const char** argv) {
             else if (std::strcmp(s, "RandomWalk") == 0) {
                 strategy = Strategy::RandomWalk;
                 if (argc > i + 1) {
-                    int depthTemp = 0;
-                    if (sscanf(argv[i + 1], "%d", &depthTemp) == 1) { // next argument is an integer
+                    int64_t depthTemp = 0;
+                    if (sscanf(argv[i + 1], "%ld", &depthTemp) == 1) { // next argument is an int64_t
                         if (depthTemp <= 0) {
                             throw base_error("Argument Error: Invalid depth value for RandomWalk ", std::quoted(argv[i + 1]));
                         } else {
@@ -290,8 +290,8 @@ bool options_t::parse(int argc, const char** argv) {
                     }
                 }
                 if (argc > i + 1) {
-                    int incTemp = 0;
-                    if (sscanf(argv[i + 1], "%d", &incTemp) == 1) { // next argument is an integer
+                    int64_t incTemp = 0;
+                    if (sscanf(argv[i + 1], "%ld", &incTemp) == 1) { // next argument is an int64_t
                         if (incTemp < 0) {
                             throw base_error("Argument Error: Invalid increment value for RandomWalk ", std::quoted(argv[i + 1]));
                         } else {

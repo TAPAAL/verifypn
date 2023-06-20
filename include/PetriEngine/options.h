@@ -1,6 +1,9 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
+#include "CTL/Algorithm/AlgorithmTypes.h"
+#include "LTL/LTLOptions.h"
+
 #include <ctype.h>
 #include <stddef.h>
 #include <limits>
@@ -8,9 +11,8 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <cstdint>
 
-#include "CTL/Algorithm/AlgorithmTypes.h"
-#include "LTL/LTLOptions.h"
 
 enum class Strategy {
     BFS,
@@ -63,8 +65,8 @@ struct options_t {
     uint32_t cores = 1;
     bool doVerification = true;
     bool doUnfolding = true;
-    int depthRandomWalk = 50000;
-    int incRandomWalk = 5000;
+    int64_t depthRandomWalk = 50000;
+    int64_t incRandomWalk = 5000;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <forward_list>
+#include <cstdint>
 
 namespace DependencyGraph {
 

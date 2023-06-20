@@ -885,6 +885,15 @@ namespace PetriEngine { namespace PQL {
                                          : simplify_simple_quantifier<ACondition>(_return_value))
     }
 
+    void Simplifier::_accept(const ExistPath* condition) {
+        assert(false);
+        Visitor::visit(this, condition->child());
+    }
+
+    void Simplifier::_accept(const AllPaths* condition) {
+        assert(false);
+    }
+
     void Simplifier::_accept(const FCondition *condition) {
         Visitor::visit(this, condition->getCond());
         RETURN(_context.negated() ? simplify_simple_quantifier<GCondition>(_return_value)
@@ -911,7 +920,6 @@ namespace PetriEngine { namespace PQL {
     }
 
     void Simplifier::_accept(const PathSelectCondition* condition) {
-        Condition_ptr res;
         if(condition->offset() != 0)
         {
             Visitor::visit(this, condition->child());

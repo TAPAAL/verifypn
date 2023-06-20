@@ -101,6 +101,10 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(AUCondition *condition) override;
 
+        void _accept(AllPaths *condition) override;
+
+        void _accept(ExistPath *condition) override;
+
         void _accept(ACondition *condition) override;
 
         void _accept(ECondition *condition) override;
