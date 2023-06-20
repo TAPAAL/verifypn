@@ -753,16 +753,16 @@ void simplify_queries_potency(const MarkVal* marking,
                             //     out << '\n' << std::endl;
                             // }
                         } catch (std::bad_alloc& ba) {
-                            throw base_error("Query reduction failed.\nException information: ", ba.what());
+                            throw base_error("LP reduction failed.\nException information: ", ba.what());
                         }
 
                         if (simplificationContext.timeout()) {
                             if (options.printstatistics == StatisticsLevel::Full)
-                                out << "Query reduction reached timeout.\n";
+                                out << "LP reduction reached timeout.\n";
                             hadTo[i] = true;
                         } else {
                             if (options.printstatistics == StatisticsLevel::Full)
-                                out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                                out << "LP reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
                             --to_handle;
                         }
                     } else if (options.printstatistics == StatisticsLevel::Full) {
