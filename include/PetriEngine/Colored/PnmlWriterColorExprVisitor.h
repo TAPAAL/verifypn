@@ -5,10 +5,12 @@
 #ifndef VERIFYPN_PNMLWRITERCOLOREXPRVISITOR_H
 #define VERIFYPN_PNMLWRITERCOLOREXPRVISITOR_H
 
-
-#include <ostream>
 #include "utils/errors.h"
 #include "ColorExpressionVisitor.h"
+
+#include <ostream>
+#include <cinttypes>
+
 
 namespace PetriEngine::Colored {
     void writeExpressionToPnml(std::ostream& out, uint32_t tabs, const Expression &expr);

@@ -59,6 +59,7 @@ namespace PetriEngine { namespace PQL {
         const EvaluationContext& context() const { return _context; }
     protected:
         explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
+
         void _accept(PathSelectCondition *element) override
         {
             auto old = _offset;
@@ -66,6 +67,7 @@ namespace PetriEngine { namespace PQL {
             Visitor::visit(this, element->child());
             _offset = old;
         }
+
         void _accept(PathQuant* element) override {
             Visitor::visit(this, element->child());
         }
@@ -99,6 +101,10 @@ namespace PetriEngine { namespace PQL {
         void _accept(ACondition *element) override;
 
         void _accept(ECondition *element) override;
+
+        void _accept(AllPaths *element) override;
+
+        void _accept(ExistPath *element) override;
 
         void _accept(FCondition *element) override;
 

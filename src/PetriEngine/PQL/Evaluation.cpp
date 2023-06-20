@@ -174,6 +174,18 @@ namespace PetriEngine { namespace PQL {
         else _return_value = {Condition::RUNKNOWN};
     }
 
+    void EvaluateVisitor::_accept(AllPaths *element) {
+        Visitor::visit(this, (*element).child());
+        if (_return_value == Condition::RFALSE) _return_value = {Condition::RFALSE};
+        else _return_value = {Condition::RUNKNOWN};
+    }
+
+    void EvaluateVisitor::_accept(ExistPath *element) {
+        Visitor::visit(this, (*element).child());
+        if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};
+        else _return_value = {Condition::RUNKNOWN};
+    }
+
     void EvaluateVisitor::_accept(FCondition *element) {
         Visitor::visit(this, (*element)[0]);
         if (_return_value == Condition::RTRUE) _return_value = {Condition::RTRUE};

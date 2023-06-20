@@ -459,6 +459,18 @@ namespace PetriEngine { namespace PQL {
         else RETURN(std::make_shared<ECondition>(_sub))
     }
 
+    void PushNegationVisitor::_accept(AllPaths *element) {
+        auto e_cond = ExistPath(element->name(), std::make_shared<NotCondition>(element->child()), element->offset());
+        RETURN(subvisit(&e_cond, nested, !negated))
+    }
+
+    void PushNegationVisitor::_accept(ExistPath *element) {
+        // we forward the negated flag, we flip the outer quantifier later!
+        auto _sub = subvisit(element->child(), nested, negated);
+        if (negated) RETURN(std::make_shared<AllPaths>(element->name(), _sub, element->offset()))
+        else RETURN(std::make_shared<ExistPath>(element->name(), _sub, element->offset()))
+    }
+
     void PushNegationVisitor::_accept(GCondition *element) {
         auto f_cond = FCondition(std::make_shared<NotCondition>(element->getCond()));
         RETURN(subvisit(&f_cond, nested, !negated))

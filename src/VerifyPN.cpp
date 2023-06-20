@@ -428,8 +428,9 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     negstat_t stats;
 
     cond = pushNegation(initialMarkingRW([&]() {
-        return cond; }, stats, evalContext, false, false, true),
-        stats, evalContext, false, false, true);
+        return cond;
+    }, stats, evalContext, names.size() > 1, false, true),
+        stats, evalContext, names.size() > 1, false, true);
 
     if (options.printstatistics == StatisticsLevel::Full) {
         out << "RWSTATS PRE:";
@@ -439,20 +440,20 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 
     try {
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
-        cond = pushNegation(simp_cond.formula, stats, evalContext, false, false, true);
+        cond = pushNegation(simp_cond.formula, stats, evalContext, names.size() > 1, false, true);
     }    catch (std::bad_alloc &ba) {
         throw base_error("Query reduction failed.\nException information: ", ba.what());
     }
 
     cond = initialMarkingRW([&]() {
-        auto r = pushNegation(cond, stats, evalContext, false, false, true);
+        auto r = pushNegation(cond, stats, evalContext, names.size() > 1, false, true);
         {
 #ifdef VERIFYPN_MC_Simplification
             std::scoped_lock scopedLock{spot_mutex};
 #endif
             return LTL::simplify(r, options.buchiOptimization, options.ltl_compress_aps);
         }
-    }, stats, evalContext, false, false, true);
+    }, stats, evalContext, names.size() > 1, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
         // nothing
@@ -582,7 +583,8 @@ void simplify_queries(  const MarkVal* marking,
                         continue;
                     }
                     queries[i] = pushNegation(initialMarkingRW([&]() {
-                        return queries[i]; }, stats, context, false, false, true),
+                        return queries[i];
+                    }, stats, context, false, false, true),
                         stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
 

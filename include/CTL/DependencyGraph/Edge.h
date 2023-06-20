@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <forward_list>
+#include <cstdint>
 
 namespace DependencyGraph {
 
