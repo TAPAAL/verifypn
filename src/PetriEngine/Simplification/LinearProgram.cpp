@@ -180,12 +180,12 @@ namespace PetriEngine {
                     for (size_t i = 1; i <= nCol; i++)
                     {
                         double col_struct = glp_mip_col_val(lp, i); // Get the value of the i'th column in the optimal solution
-                        context.xs[i - 1] += round(col_struct);
+                        context._lpSolutions[i - 1] += round(col_struct);
                     }
-                    // std::cout << "\n***********\nContext.xs: ";
-                    // for (size_t i = 0; i < context.xs.size(); i++)
+                    // std::cout << "\n***********\nContext._lpSolutions: ";
+                    // for (size_t i = 0; i < context._lpSolutions.size(); i++)
                     // {
-                    //     std::cout << context.xs[i] << " ";
+                    //     std::cout << context._lpSolutions[i] << " ";
                     // }
                     // std::cout << "\n_equations:\n";
                     // print(std::cout, 1) << std::endl;

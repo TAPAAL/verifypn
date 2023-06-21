@@ -745,7 +745,7 @@ void simplify_queries_potency(const MarkVal* marking,
                             // queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
                             wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
 
-                            potencies = simplificationContext.xs;
+                            potencies = simplificationContext._lpSolutions;
 
                             // if (options.printstatistics == StatisticsLevel::Full) {
                             //     out << "\nPotencies: ";

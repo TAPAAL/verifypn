@@ -181,7 +181,7 @@ namespace PetriEngine {
             SimplificationContext(const MarkVal* marking,
                     const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
                     Simplification::LPCache* cache, bool initPotency = false)
-                    : xs(net->numberOfTransitions()), initPotency(initPotency),
+                    : _lpSolutions(net->numberOfTransitions()), initPotency(initPotency),
                     _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
                 _negated = false;
                 _marking = marking;
@@ -236,7 +236,7 @@ namespace PetriEngine {
 
             glp_prob* makeBaseLP() const;
 
-            mutable std::vector<uint32_t> xs;
+            mutable std::vector<uint32_t> _lpSolutions;
             bool initPotency;
 
         private:
