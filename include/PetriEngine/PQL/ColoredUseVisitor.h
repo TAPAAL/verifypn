@@ -73,6 +73,12 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const StableMarkingCondition* element) override;
 
+        void _accept(const PathQuant* element) override;
+
+        void _accept(const PathSelectCondition* element) override;
+
+        void _accept(const PathSelectExpr* element) override;
+
     private:
         const shared_name_index_map &_placeNameToIndexMap;
         const shared_name_index_map &_transitionNameToIndexMap;
