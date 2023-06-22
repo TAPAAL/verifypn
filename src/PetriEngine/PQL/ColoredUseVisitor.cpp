@@ -26,6 +26,18 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, (*element)[0]);
     }
 
+    void ColoredUseVisitor::_accept(const PathQuant *element) {
+        Visitor::visit(this, element->child());
+    }
+
+    void ColoredUseVisitor::_accept(const PathSelectCondition *element) {
+        Visitor::visit(this, element->child());
+    }
+
+    void ColoredUseVisitor::_accept(const PathSelectExpr *element) {
+        Visitor::visit(this, element->child());
+    }
+
     void ColoredUseVisitor::_accept(const LogicalCondition *element) {
         for (auto &cond : element->getOperands())
             Visitor::visit(this, cond);
