@@ -191,7 +191,7 @@ namespace PetriEngine {
             std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const uint32_t _initPotencyConstant = 100;
+            const static uint32_t _initPotencyConstant = 1000;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
