@@ -124,17 +124,21 @@ namespace PetriEngine {
             settings.tm_lim = timeout;
             settings.presolve = GLP_OFF;
             settings.msg_lev = 0;
-            auto simp_res = glp_simplex(lp, &settings);
+            auto result = glp_simplex(lp, &settings);
 
-            if (simp_res == GLP_ETMLIM)
+            if (result == GLP_ETMLIM)
             {
+                if (!context.initPotency)
+                    _result = result_t::UKNOWN;
             }
-            else if (simp_res == 0) {
-                auto result = glp_exact(lp, &settings);
+            else if (result == 0) {
+                if (context.initPotency) {
+                    // We search for an exact solution only if we want to set the initial potency
+                    result = glp_exact(lp, &settings);
+                }
                 if (result == GLP_ETMLIM)
                 {
                     _result = result_t::UKNOWN;
-                    // std::cerr << "glpk: timeout" << std::endl;
                 }
                 else if (result == 0)
                 {
@@ -149,7 +153,6 @@ namespace PetriEngine {
                         if (ires == GLP_ETMLIM)
                         {
                             _result = result_t::UKNOWN;
-                            // std::cerr << "glpk mip: timeout" << std::endl;
                         }
                         else if (ires == 0)
                         {
@@ -393,4 +396,3 @@ namespace PetriEngine {
         }
     }
 }
-
