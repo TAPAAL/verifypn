@@ -221,7 +221,6 @@ int main(int argc, const char** argv) {
             // simplification. We always want to do negation-push and initial marking check.
             simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
 
-
             if (options.query_out_file.size() > 0) {
                 outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
             }
@@ -287,7 +286,8 @@ int main(int argc, const char** argv) {
             }
         }
 
-        // options.queryReductionTimeout = 0;
+        if (!options.useLPPotencies)
+            options.queryReductionTimeout = 0;
 
         //--------------------- Apply Net Reduction ---------------//
 

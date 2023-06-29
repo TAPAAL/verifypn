@@ -195,6 +195,10 @@ namespace PetriEngine {
                     // std::cout << "\n***********\n";
                 }
             }
+            else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
 
             glp_delete_prob(lp);
 

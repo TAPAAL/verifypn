@@ -43,7 +43,7 @@ namespace PetriEngine {
             std::vector<uint32_t> _potencies;
             std::vector<std::priority_queue<weighted_t>> _queues;
 
-            const static uint32_t _initPotencyConstant = 1000;
+            const static uint32_t _initPotencyConstant = 100;
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue);
             void _initializePotencies(const std::vector<MarkVal> &initPotencies);
