@@ -110,7 +110,7 @@ namespace PetriEngine {
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
-                glp_set_obj_coef(lp, i, 1);
+                glp_set_obj_coef(lp, i, 0);
                 glp_set_col_kind(lp, i, use_ilp ? GLP_IV :GLP_CV);
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
