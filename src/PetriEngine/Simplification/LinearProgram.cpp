@@ -110,7 +110,7 @@ namespace PetriEngine {
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
-                glp_set_obj_coef(lp, i, 0);
+                glp_set_obj_coef(lp, i, 1);
                 glp_set_col_kind(lp, i, use_ilp ? GLP_IV :GLP_CV);
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
@@ -147,7 +147,7 @@ namespace PetriEngine {
                         glp_iocp iset;
                         glp_init_iocp(&iset);
                         iset.msg_lev = 0;
-                        iset.tm_lim = std::max<uint32_t>(timeout - (stime - glp_time()), 1);
+                        iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
                         iset.presolve = GLP_OFF;
                         auto ires = glp_intopt(lp, &iset);
                         if (ires == GLP_ETMLIM)
