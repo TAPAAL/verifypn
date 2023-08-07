@@ -175,12 +175,12 @@ namespace PetriEngine {
                 return true;
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 // _discovered is used here but not sure it is the right value
                 return discovered();
             }
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override {
+            std::pair<size_t, size_t> getHistory(size_t markingid) override {
                 assert(false);
                 return std::make_pair(0,0);
             }
@@ -375,30 +375,30 @@ namespace PetriEngine {
         public:
             using EncodingStateSetInterface::EncodingStateSetInterface;
 
-            virtual std::pair<bool, size_t> add(const State& state) override
+            std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _decode(state, id, _trie);
             }
 
-            virtual std::pair<bool, size_t> lookup(State& state) override
+            std::pair<bool, size_t> lookup(State& state) override
             {
                 return _lookup(state, _trie);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override {}
+            void setHistory(size_t id, size_t transition) override {}
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 assert(false);
                 return std::make_pair(0,0);
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 return _trie.size();
             }
 
@@ -414,12 +414,12 @@ namespace PetriEngine {
         public:
             using EncodingStateSetInterface::EncodingStateSetInterface;
 
-            virtual std::pair<bool, size_t> add(const State& state) override
+            std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _decode(state, id, _trie);
             }
@@ -428,20 +428,20 @@ namespace PetriEngine {
                 return _trie.get_data(markingid);
             }
 
-            virtual std::pair<bool, size_t> lookup(State& state) override
+            std::pair<bool, size_t> lookup(State& state) override
             {
                 return _lookup(state, _trie);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override {}
+            void setHistory(size_t id, size_t transition) override {}
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 assert(false);
                 return std::make_pair(0,0);
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 return _trie.size();
             }
 
@@ -462,20 +462,20 @@ namespace PetriEngine {
         public:
             using AnnotatedStateSet<traceable_t>::AnnotatedStateSet;
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _parent = id;
                 AnnotatedStateSet<traceable_t>::decode(state, id);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override
+            void setHistory(size_t id, size_t transition) override
             {
                 traceable_t& t = get_data(id);
                 t.parent = _parent;
                 t.transition = transition;
             }
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 traceable_t& t = get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent, t.transition);
