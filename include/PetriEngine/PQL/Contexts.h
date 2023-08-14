@@ -244,9 +244,9 @@ namespace PetriEngine {
             const MarkVal* _marking;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
+            mutable glp_prob* _base_lp = nullptr;
             std::chrono::high_resolution_clock::time_point _start;
             Simplification::LPCache* _cache;
-            mutable glp_prob* _base_lp = nullptr;
 
             glp_prob* buildBase() const;
 
