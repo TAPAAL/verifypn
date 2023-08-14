@@ -81,6 +81,7 @@
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/PQL/BinaryPrinter.h"
 #include "PetriEngine/PQL/Simplifier.h"
+#include "PetriEngine/PQL/PotencyVisitor.h"
 #include "PetriEngine/PQL/PushNegation.h"
 #include "PetriEngine/PQL/PrepareForReachability.h"
 
