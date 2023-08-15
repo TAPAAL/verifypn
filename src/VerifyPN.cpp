@@ -515,10 +515,10 @@ void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<Petr
     writeQueries(queries, querynames, reorder, filename, false, builder.getPlaceNames(), keep_solved, true);
 }
 
-void simplify_queries(  const MarkVal* marking,
-                        const PetriNet* net,
-                        std::vector<PetriEngine::PQL::Condition_ptr>& queries,
-                        options_t& options, std::ostream& outstream) {
+void simplify_queries(const MarkVal* marking,
+                      const PetriNet* net,
+                      std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                      options_t& options, std::ostream& outstream) {
     // simplification. We always want to do negation-push and initial marking check.
     std::vector<LPCache> caches(options.cores);
     std::atomic<uint32_t> to_handle(queries.size());
@@ -672,12 +672,11 @@ void simplify_queries(  const MarkVal* marking,
     }) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
 }
 
-void simplify_queries_potency(const MarkVal* marking,
+void initialize_potency(const MarkVal* marking,
                               const PetriNet* net,
                               std::vector<PetriEngine::PQL::Condition_ptr>& queries,
                               options_t& options, std::ostream& outstream,
                               std::vector<PetriEngine::MarkVal> &potencies) {
-    // simplification. We always want to do negation-push and initial marking check.
     std::vector<LPCache> caches(options.cores);
     std::atomic<uint32_t> to_handle(queries.size());
     auto begin = std::chrono::high_resolution_clock::now();
@@ -685,9 +684,9 @@ void simplify_queries_potency(const MarkVal* marking,
     std::vector<bool> hadTo(queries.size(), true);
 
     do {
-        auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (1 + (to_handle / options.cores));
+        auto qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (1 + (to_handle / options.cores));
         if ((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
-            qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+            qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
         std::atomic<uint32_t> cnt(0);
 #ifdef VERIFYPN_MC_Simplification
         std::vector<std::thread> threads;
@@ -699,7 +698,7 @@ void simplify_queries_potency(const MarkVal* marking,
             threads.push_back(std::thread([&, c]() {
             std::stringstream out;
 #else
-            auto simplify = [&, c]() {
+            auto initPot = [&, c]() {
 
                 auto& out = outstream;
 #endif
@@ -710,44 +709,19 @@ void simplify_queries_potency(const MarkVal* marking,
                     if (i >= queries.size()) return;
                     if (!hadTo[i]) continue;
                     hadTo[i] = false;
-                    negstat_t stats;
-                    EvaluationContext context(marking, net);
 
 #ifndef VERIFYPN_MC_Simplification
-                    qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
+                    qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
-                    bool wasAGCPNApprox = dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
-//                     if (options.logic == TemporalLogic::LTL) {
-//                         if (options.queryReductionTimeout == 0 || qt == 0) continue;
-//                         SimplificationContext simplificationContext(marking, net, qt,
-//                             options.lpsolveTimeout, &cache);
-//                         queries[i] = simplify_ltl_query(queries[i], options,
-//                             context, simplificationContext, out);
-// #ifdef VERIFYPN_MC_Simplification
-//                         out_lock.lock();
-//                         outstream << out.str();
-//                         out.clear();
-//                         out_lock.unlock();
-// #endif
-//                         continue;
-//                     }
-                    // queries[i] = pushNegation(initialMarkingRW([&]() {
-                    //     return queries[i]; }, stats, context, false, false, true),
-                    //     stats, context, false, false, true);
-                    // wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
 
-                    if (options.queryReductionTimeout > 0 && qt > 0) {
-                        SimplificationContext simplificationContext(marking, net, qt,
-                            options.lpsolveTimeout, &cache, true);
+                    if (options.initPotencyTimeout > 0 && qt > 0) {
+                        SimplificationContext potencyInitializationContext(marking, net, qt,
+                                                                           options.lpsolveTimeout,
+                                                                           &cache, true); // initPotency = true
                         try {
-                            negstat_t stats;
-                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
-                            // queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
-                            wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
+                            PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies);
 
-                            potencies = simplificationContext._lpSolutions;
-
-                            // if (options.printstatistics == StatisticsLevel::Full) {
+                            // if (options.printstatistics != StatisticsLevel::None) {
                             //     out << "\nPotencies: ";
                             //     for (auto p : potencies) {
                             //         out << p << " ";
@@ -755,27 +729,20 @@ void simplify_queries_potency(const MarkVal* marking,
                             //     out << '\n' << std::endl;
                             // }
                         } catch (std::bad_alloc& ba) {
-                            throw base_error("LP reduction failed.\nException information: ", ba.what());
+                            throw base_error("Potency initialization failed.\nException information: ", ba.what());
                         }
 
-                        if (simplificationContext.timeout()) {
+                        if (potencyInitializationContext.timeout()) {
                             if (options.printstatistics == StatisticsLevel::Full)
-                                out << "LP reduction reached timeout.\n";
+                                out << "Potency initialization reached timeout.\n";
                             hadTo[i] = true;
                         } else {
                             if (options.printstatistics == StatisticsLevel::Full)
-                                out << "LP reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                                out << "Potency initialization finished after " << potencyInitializationContext.getReductionTime() << " seconds.\n";
                             --to_handle;
                         }
                     } else if (options.printstatistics == StatisticsLevel::Full) {
-                        out << "Skipping linear-programming (-q 0)" << std::endl;
-                    }
-                    if (options.cpnOverApprox && wasAGCPNApprox) {
-                        if (queries[i]->isTriviallyTrue())
-                            queries[i] = std::make_shared<BooleanCondition>(false);
-                        else if (queries[i]->isTriviallyFalse())
-                            queries[i] = std::make_shared<BooleanCondition>(true);
-                        queries[i]->setInvariant(wasAGCPNApprox);
+                        out << "Skipping potency initialization" << std::endl;
                     }
 
 #ifdef VERIFYPN_MC_Simplification
@@ -790,7 +757,7 @@ void simplify_queries_potency(const MarkVal* marking,
             ));
 #else
             ;
-            simplify();
+            initPot();
 #endif
         }
 #ifndef VERIFYPN_MC_Simplification
@@ -804,5 +771,5 @@ void simplify_queries_potency(const MarkVal* marking,
 
     } while (std::any_of(hadTo.begin(), hadTo.end(), [](auto a) {
             return a;
-    }) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
+    }) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.initPotencyTimeout && to_handle > 0);
 }

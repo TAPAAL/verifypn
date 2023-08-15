@@ -286,8 +286,7 @@ int main(int argc, const char** argv) {
             }
         }
 
-        if (!options.useLPPotencies)
-            options.queryReductionTimeout = 0;
+        options.queryReductionTimeout = 0;
 
         //--------------------- Apply Net Reduction ---------------//
 
@@ -518,11 +517,11 @@ int main(int argc, const char** argv) {
 
                 //Reachability search
                 if (options.useLPPotencies) {
-                    std::vector<MarkVal> initPotencies(net->numberOfTransitions(), 0);
+                    std::vector<MarkVal> initialPotencies(net->numberOfTransitions(), 0);
 
                     {
                         std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
-                        simplify_queries_potency(qm0.get(), net.get(), queries, options, std::cout, initPotencies);
+                        initialize_potency(qm0.get(), net.get(), queries, options, std::cout, initialPotencies);
                     }
 
                     strategy.reachable(queries, results,
@@ -534,7 +533,7 @@ int main(int argc, const char** argv) {
                                     options.seed(),
                                     options.depthRandomWalk,
                                     options.incRandomWalk,
-                                    initPotencies);
+                                    initialPotencies);
                 } else {
                     strategy.reachable(queries, results,
                                     options.strategy,
@@ -546,7 +545,6 @@ int main(int argc, const char** argv) {
                                     options.depthRandomWalk,
                                     options.incRandomWalk);
                 }
-
             }
         }
     } catch (base_error& e) {
