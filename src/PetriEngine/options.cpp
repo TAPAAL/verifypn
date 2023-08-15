@@ -90,6 +90,12 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << ",Query_Simplication=DISABLED";
     }
 
+    if (initPotencyTimeout > 0) {
+        optionsOut << ",Init_Potency=ENABLED,InitPotencyTimeout=" << initPotencyTimeout;
+    } else {
+        optionsOut << ",Init_Potency=DISABLED";
+    }
+
     if (siphontrapTimeout > 0) {
         optionsOut << ",Siphon_Trap=ENABLED,SPTimeout=" << siphontrapTimeout;
     } else {
@@ -156,6 +162,7 @@ void printHelp() {
         "  -D, --colreduction-timeout <timeout> Timeout for colored structural reductions in seconds (default 60)\n"
         "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
         "                                       write -q 0 to disable query reduction\n"
+        "  --init-potency <timeout>             Initial potency timeout in seconds (default 10)\n"
         "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
         "                                       write --interval-timeout 0 to disable interval limits\n"
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
@@ -315,6 +322,13 @@ bool options_t::parse(int argc, const char** argv) {
             }
             if (sscanf(argv[++i], "%d", &queryReductionTimeout) != 1 || queryReductionTimeout < 0) {
                 throw base_error("Argument Error: Invalid query reduction timeout argument ", std::quoted(argv[i]));
+            }
+        } else if (std::strcmp(argv[i], "--init-potency") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &initPotencyTimeout) != 1 || initPotencyTimeout < 0) {
+                throw base_error("Argument Error: Invalid init potency timeout argument ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "--interval-timeout") == 0) {
             if (i == argc - 1) {
@@ -669,6 +683,7 @@ bool options_t::parse(int argc, const char** argv) {
         enablereduction = 0;
         kbound = 0;
         queryReductionTimeout = 0;
+        initPotencyTimeout = 0;
         lpsolveTimeout = 0;
         siphontrapTimeout = 0;
         stubbornreduction = false;

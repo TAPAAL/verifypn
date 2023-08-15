@@ -57,7 +57,7 @@ struct options_t {
     StatisticsLevel printstatistics = StatisticsLevel::Full;
     std::set<size_t> querynumbers;
     Strategy strategy = Strategy::DEFAULT;
-    int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10;
+    int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10, initPotencyTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
     uint32_t siphontrapTimeout = 0;
