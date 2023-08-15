@@ -27,10 +27,8 @@ namespace PetriEngine { namespace PQL {
         PotencyVisitor potency_initializer(context);
         Visitor::visit(potency_initializer, element);
 
-        // TODO: solve potencies and aggregate the solutions into potencies
-        // by using potency_initializer.get_return_value().lps
-        // return std::move(potency_initializer.get_return_value());
         potency_initializer.get_return_value().lps->satisfiable(context);
+        potencies = context._lpSolutions;
     }
 
     RetvalPot PotencyVisitor::simplify_or(const LogicalCondition *element) {

@@ -50,7 +50,6 @@ namespace PetriEngine {
             bool use_ilp = true;
             auto net = context.net();
 
-
             if(_result != result_t::UKNOWN)
             {
                 if(_result == result_t::IMPOSSIBLE)
@@ -102,7 +101,7 @@ namespace PetriEngine {
 
                 if(context.timeout())
                 {
-//                    std::cerr << "glpk: construction timeout" << std::endl;
+                    // std::cerr << "glpk: construction timeout" << std::endl;
                     glp_delete_prob(lp);
                     return false;
                 }
@@ -125,29 +124,35 @@ namespace PetriEngine {
             settings.presolve = GLP_OFF;
             settings.msg_lev = 0;
             auto result = glp_simplex(lp, &settings);
-
             if (result == GLP_ETMLIM)
             {
                 if (!context.initPotency)
                     _result = result_t::UKNOWN;
             }
             else if (result == 0) {
+                auto status = glp_get_status(lp);
+
                 if (context.initPotency) {
                     // We search for an exact solution only if we want to set the initial potency
                     result = glp_exact(lp, &settings);
+                    if (result != 0)
+                    {
+std::cout << "glpk: exact failed\n";
+                        _result = result_t::UKNOWN;
+                    } else if (status == GLP_OPT || status == GLP_FEAS || status == GLP_UNBND) {
+                        _result = result_t::POSSIBLE;
+                    }
+                    else
+                    {
+                        _result = result_t::IMPOSSIBLE;
+                    }
                 }
-                if (result == GLP_ETMLIM)
-                {
-                    _result = result_t::UKNOWN;
-                }
-                else if (result == 0)
-                {
-                    auto status = glp_get_status(lp);
+                if (!context.initPotency) {
                     if (status == GLP_OPT) {
                         glp_iocp iset;
                         glp_init_iocp(&iset);
                         iset.msg_lev = 0;
-                        iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
+                        iset.tm_lim = std::max<uint32_t>(timeout - (stime - glp_time()), 1);
                         iset.presolve = GLP_OFF;
                         auto ires = glp_intopt(lp, &iset);
                         if (ires == GLP_ETMLIM)
@@ -173,7 +178,8 @@ namespace PetriEngine {
                     else
                         _result = result_t::IMPOSSIBLE;
                 }
-                else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+
+                if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
                 {
                     _result = result_t::IMPOSSIBLE;
                 }
@@ -182,8 +188,8 @@ namespace PetriEngine {
                 {
                     for (size_t i = 1; i <= nCol; i++)
                     {
-                        double col_struct = glp_mip_col_val(lp, i); // Get the value of the i'th column in the optimal solution
-                        context._lpSolutions[i - 1] += round(col_struct);
+                        double col_struct = glp_get_col_prim(lp, i); // Get the value of the i'th column in the solution found
+                        context._lpSolutions[i - 1] += ceil(col_struct); // Round up because it represents the nb of transitions to fire
                     }
                     // std::cout << "\n***********\nContext._lpSolutions: ";
                     // for (size_t i = 0; i < context._lpSolutions.size(); i++)
