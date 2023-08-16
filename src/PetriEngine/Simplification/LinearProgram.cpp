@@ -152,7 +152,7 @@ std::cout << "glpk: exact failed\n";
                         glp_iocp iset;
                         glp_init_iocp(&iset);
                         iset.msg_lev = 0;
-                        iset.tm_lim = std::max<uint32_t>(timeout - (stime - glp_time()), 1);
+                        iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
                         iset.presolve = GLP_OFF;
                         auto ires = glp_intopt(lp, &iset);
                         if (ires == GLP_ETMLIM)
