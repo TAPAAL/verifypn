@@ -16,7 +16,9 @@ namespace PetriEngine {
                 bool has_empty = false;
 
                 virtual void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) = 0;
-                virtual void explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies) = 0;
+                virtual uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
+                                                    std::vector<uint32_t> &potencies,
+                                                    uint32_t maxConfigurationsSolved) = 0;
 
             public:
                 virtual ~AbstractProgramCollection() {}
@@ -32,7 +34,9 @@ namespace PetriEngine {
                 virtual size_t size() const = 0;
                 virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) = 0;
 
-                virtual void explorePotency(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies);
+                virtual uint32_t explorePotency(const PQL::SimplificationContext& context,
+                                                std::vector<uint32_t> &potencies,
+                                                uint32_t maxConfigurationsSolved = std::numeric_limits<uint32_t>::max());
         };
 
         typedef std::shared_ptr<AbstractProgramCollection> AbstractProgramCollection_ptr;
@@ -45,7 +49,9 @@ namespace PetriEngine {
             size_t _size = 0;
 
             void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) override;
-            void explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies) override;
+            uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
+                                        std::vector<uint32_t> &potencies,
+                                        uint32_t maxConfigurationsSolved) override;
 
         public:
             UnionCollection(std::vector<AbstractProgramCollection_ptr>&& programs);
@@ -72,7 +78,9 @@ namespace PetriEngine {
             size_t _size = 0;
 
             void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) override;
-            void explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies) override;
+            uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
+                                        std::vector<uint32_t> &potencies,
+                                        uint32_t maxConfigurationsSolved) override;
 
         public:
             MergeCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B);
@@ -89,7 +97,9 @@ namespace PetriEngine {
 
         protected:
             void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) override;
-            void explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies) override;
+            uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
+                                        std::vector<uint32_t> &potencies,
+                                        uint32_t maxConfigurationsSolved) override;
 
         public:
             SingleProgram();

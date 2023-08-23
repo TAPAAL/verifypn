@@ -28,7 +28,9 @@ namespace PetriEngine { namespace PQL {
      * systems of equations.
      * The result is aggregated in the potencies.
     */
-    void initPotencyVisit(std::shared_ptr<Condition> element, SimplificationContext& context, std::vector<uint32_t> &potencies);
+    void initPotencyVisit(std::shared_ptr<Condition> element, SimplificationContext& context,
+                          std::vector<uint32_t> &potencies,
+                          uint32_t maxConfigurationsSolved = std::numeric_limits<uint32_t>::max());
 
     /**
      * Visitor made to compute the initial potencies of a query.

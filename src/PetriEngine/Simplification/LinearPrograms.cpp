@@ -25,9 +25,10 @@ namespace PetriEngine {
             return _result == POSSIBLE;
         }
 
-        void AbstractProgramCollection::explorePotency(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies)
+        uint32_t AbstractProgramCollection::explorePotency(const PQL::SimplificationContext& context,
+            std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
-            explorePotencyImpl(context, potencies);
+            return explorePotencyImpl(context, potencies, maxConfigurationsSolved);
         }
 
         // *************************
@@ -102,16 +103,19 @@ namespace PetriEngine {
                 _result = IMPOSSIBLE;
         }
 
-        void UnionCollection::explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies)
+        uint32_t UnionCollection::explorePotencyImpl(const PQL::SimplificationContext& context,
+            std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
-            for (int i = lps.size() - 1; i >= 0; --i) // Here we wil add a maximum number of configurations
+            for (int i = lps.size() - 1; i >= 0 && maxConfigurationsSolved > 0; --i)
             {
                 if (context.potencyTimeout())
-                    return;
+                    return 0;
 
-                lps[i]->explorePotency(context, potencies);
-                lps.erase(lps.begin() + i); // Continue to the next configuration
+                maxConfigurationsSolved = lps[i]->explorePotency(context, potencies, maxConfigurationsSolved);
+                lps.erase(lps.begin() + i); // Continue to the next configuration after erasing the one we just solved
             }
+
+            return maxConfigurationsSolved;
         }
 
         // constexpr uint16_t MAX_CONFIG = 10;
@@ -223,28 +227,29 @@ namespace PetriEngine {
                 _result = IMPOSSIBLE;
         }
 
-        void MergeCollection::explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies)
+        uint32_t MergeCollection::explorePotencyImpl(const PQL::SimplificationContext& context,
+            std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
             bool hasmore = false;
             do {
-                if (context.potencyTimeout())
-                {
-                    return;
-                }
+                if (context.potencyTimeout() || maxConfigurationsSolved == 0)
+                    return 0;
 
                 LinearProgram prog;
                 bool has_empty = false;
                 hasmore = merge(has_empty, prog);
                 if (has_empty)
-                {
-                    return;
-                }
+                    return maxConfigurationsSolved;
                 else
                 {
+                    --maxConfigurationsSolved;
                     prog.solvePotency(context, potencies);
                 }
+
                 ++nsat;
             } while (hasmore);
+
+            return maxConfigurationsSolved;
         }
 
         // ***********************
@@ -287,9 +292,14 @@ namespace PetriEngine {
             }
         }
 
-        void SingleProgram::explorePotencyImpl(const PQL::SimplificationContext& context, std::vector<uint32_t> &potencies)
+        uint32_t SingleProgram::explorePotencyImpl(const PQL::SimplificationContext& context,
+            std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
+            if (context.potencyTimeout() || maxConfigurationsSolved == 0)
+                return 0;
+
             program.solvePotency(context, potencies);
+            return maxConfigurationsSolved - 1;
         }
     }
 }

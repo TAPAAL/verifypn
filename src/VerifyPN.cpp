@@ -719,7 +719,8 @@ void initialize_potency(const MarkVal* marking,
                                                                            options.lpsolveTimeout,
                                                                            &cache, options.initPotencyTimeout);
                         try {
-                            PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies);
+                            uint32_t maxConfigurationsSolved = 10;
+                            PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies, maxConfigurationsSolved);
                             // if (options.printstatistics != StatisticsLevel::None) {
                             //     out << "\nPotencies: ";
                             //     for (auto p : potencies) {

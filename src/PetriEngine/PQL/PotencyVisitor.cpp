@@ -22,13 +22,14 @@ namespace PetriEngine { namespace PQL {
 
     void initPotencyVisit(const std::shared_ptr<Condition> element,
                                SimplificationContext& context,
-                               std::vector<uint32_t> &potencies)
+                               std::vector<uint32_t> &potencies,
+                               uint32_t maxConfigurationsSolved)
     {
         PotencyVisitor potency_initializer(context);
         Visitor::visit(potency_initializer, element);
 
         // Explore the configurations and solve the LPs, then update the potencies
-        potency_initializer.get_return_value().lps->explorePotency(context, potencies);
+        potency_initializer.get_return_value().lps->explorePotency(context, potencies, maxConfigurationsSolved);
     }
 
     RetvalPot PotencyVisitor::simplify_or(const LogicalCondition *element)
