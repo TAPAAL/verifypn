@@ -24,14 +24,15 @@ namespace PetriEngine { namespace PQL {
 
     /**
      * Copmutes the initial potencies of a query.
-     * It computes the lps equations along the AST, and merge them into one.
-     * The resut is tored in the potencies of context._lpSolutions.
+     * It computes the lps equations along the AST, and solve the different
+     * systems of equations.
+     * The result is aggregated in the potencies.
     */
     void initPotencyVisit(std::shared_ptr<Condition> element, SimplificationContext& context, std::vector<uint32_t> &potencies);
 
     /**
      * Visitor made to compute the initial potencies of a query.
-     * It computes the lps equations along the AST, and merge them into one.
+     * It computes the lps equations along the AST, and merge them into one object.
      * The result is stored in the _return_value.lps attribute.
      * It's up to the caller to solve the equations and aggregate the solutions.
     */
@@ -83,10 +84,6 @@ namespace PetriEngine { namespace PQL {
 
         void _accept(const ControlCondition *condition) override;
 
-        void _accept(const ExistPath *condition) override;
-
-        void _accept(const AllPaths *condition) override;
-
         void _accept(const EFCondition *condition) override;
 
         void _accept(const EGCondition *condition) override;
@@ -102,10 +99,6 @@ namespace PetriEngine { namespace PQL {
         void _accept(const EUCondition *condition) override;
 
         void _accept(const AUCondition *condition) override;
-
-        void _accept(const ACondition *condition) override;
-
-        void _accept(const ECondition *condition) override;
 
         void _accept(const GCondition *condition) override;
 
