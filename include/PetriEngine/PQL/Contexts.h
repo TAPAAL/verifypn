@@ -180,9 +180,9 @@ namespace PetriEngine {
 
             SimplificationContext(const MarkVal* marking,
                     const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
-                    Simplification::LPCache* cache, bool initPotency = false)
-                    : _lpSolutions(net->numberOfTransitions()), initPotency(initPotency),
-                    _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
+                    Simplification::LPCache* cache, uint32_t potencyTimeout = 0)
+                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout),
+                    _potencyTimeout(potencyTimeout) {
                 _negated = false;
                 _marking = marking;
                 _net = net;
@@ -226,30 +226,32 @@ namespace PetriEngine {
                 return (diff.count() >= _queryTimeout);
             }
 
+            bool potencyTimeout() const {
+                auto end = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
+                return (diff.count() >= _potencyTimeout);
+            }
+
             uint32_t getLpTimeout() const;
+            uint32_t getPotencyTimeout() const;
 
             Simplification::LPCache* cache() const
             {
                 return _cache;
             }
 
-
             glp_prob* makeBaseLP() const;
-
-            mutable std::vector<uint32_t> _lpSolutions;
-            bool initPotency;
 
         private:
             bool _negated;
             const MarkVal* _marking;
             const PetriNet* _net;
-            uint32_t _queryTimeout, _lpTimeout;
+            uint32_t _queryTimeout, _lpTimeout, _potencyTimeout;
             mutable glp_prob* _base_lp = nullptr;
             std::chrono::high_resolution_clock::time_point _start;
             Simplification::LPCache* _cache;
 
             glp_prob* buildBase() const;
-
         };
 
     } // PQL

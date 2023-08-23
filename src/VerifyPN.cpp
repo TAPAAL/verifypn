@@ -717,10 +717,9 @@ void initialize_potency(const MarkVal* marking,
                     if (options.initPotencyTimeout > 0 && qt > 0) {
                         SimplificationContext potencyInitializationContext(marking, net, qt,
                                                                            options.lpsolveTimeout,
-                                                                           &cache, true); // initPotency = true
+                                                                           &cache, options.initPotencyTimeout);
                         try {
                             PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies);
-
                             // if (options.printstatistics != StatisticsLevel::None) {
                             //     out << "\nPotencies: ";
                             //     for (auto p : potencies) {
@@ -732,13 +731,13 @@ void initialize_potency(const MarkVal* marking,
                             throw base_error("Potency initialization failed.\nException information: ", ba.what());
                         }
 
-                        if (potencyInitializationContext.timeout()) {
+                        if (potencyInitializationContext.potencyTimeout()) {
                             if (options.printstatistics == StatisticsLevel::Full)
                                 out << "Potency initialization reached timeout.\n";
                             hadTo[i] = true;
                         } else {
                             if (options.printstatistics == StatisticsLevel::Full)
-                                out << "Potency initialization finished after " << potencyInitializationContext.getReductionTime() << " seconds.\n";
+                                out << "\nPotency initialization finished after " << potencyInitializationContext.getReductionTime() << " seconds.\n\n";
                             --to_handle;
                         }
                     } else if (options.printstatistics == StatisticsLevel::Full) {
