@@ -191,7 +191,8 @@ namespace PetriEngine {
             std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const static uint32_t _initPotencyConstant = 60;
+            const static uint32_t _initPotencyConstant = 1;
+            const static uint32_t _initPotencyMultiplier = 100;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
@@ -208,8 +209,9 @@ namespace PetriEngine {
             void _initializePotencies(const std::vector<MarkVal> &initPotencies) {
                 assert(initPotencies.size() == _net.numberOfTransitions());
                 _potencies.reserve(initPotencies.size());
+                uint32_t maxiInitPotencies = *std::max_element(initPotencies.begin(), initPotencies.end());
                 for (auto potency : initPotencies) {
-                    _potencies.push_back(potency * _initPotencyConstant + 1);
+                    _potencies.push_back(potency * _initPotencyMultiplier / maxiInitPotencies + _initPotencyConstant);
                 }
             }
 
