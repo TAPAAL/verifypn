@@ -723,8 +723,9 @@ void initialize_potency(const MarkVal* marking,
                             PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies, maxConfigurationsSolved);
                             // if (options.printstatistics != StatisticsLevel::None) {
                             //     out << "\nPotencies: ";
-                            //     for (auto p : potencies) {
-                            //         out << p << " ";
+                            //     for (size_t p = 0; p < potencies.size(); ++p) {
+                            //         if (potencies[p] != 0)
+                            //            out << p << " : " << potencies[p] << ", ";
                             //     }
                             //     out << '\n' << std::endl;
                             // }

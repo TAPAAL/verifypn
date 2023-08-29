@@ -55,9 +55,8 @@ namespace PetriEngine {
             _queues = std::vector<std::priority_queue<weighted_t>>(initPotencies.size() != 0 ? initPotencies.size() : 1);
 
             _potencies.reserve(initPotencies.size());
-            uint32_t maxiInitPotencies = *std::max_element(initPotencies.begin(), initPotencies.end());
             for (auto potency : initPotencies) {
-                _potencies.push_back(potency * _initPotencyMultiplier / maxiInitPotencies + _initPotencyConstant);
+                _potencies.push_back(potency * _initPotencyMultiplier + _initPotencyConstant);
             }
             _best = 0;
         }
