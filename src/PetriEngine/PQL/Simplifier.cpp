@@ -699,7 +699,7 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, condition->getCond());
         if(_return_value.formula->isTriviallyTrue() || _return_value.formula->isTriviallyFalse())
         {
-            bool is_true = _return_value.formula->isTriviallyTrue() xor (!_context.negated());
+            bool is_true = _return_value.formula->isTriviallyTrue() xor (_context.negated());
             RETURN(Retval(is_true ?
                            Retval(BooleanCondition::TRUE_CONSTANT) :
                            Retval(BooleanCondition::FALSE_CONSTANT)))
