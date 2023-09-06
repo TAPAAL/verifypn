@@ -188,6 +188,7 @@ namespace PetriEngine {
                 size_t sum = 0;
                 for (size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     sum += marking[p];
+                _result.maxTokens = std::max(_result.maxTokens, sum);
                 if (_kbound < sum)
                     return false;
             }
@@ -234,7 +235,6 @@ namespace PetriEngine {
                     }
                 }
             }
-
 
             return meta;
         }
