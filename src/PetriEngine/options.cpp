@@ -162,11 +162,12 @@ void printHelp() {
         "  -D, --colreduction-timeout <timeout> Timeout for colored structural reductions in seconds (default 60)\n"
         "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
         "                                       write -q 0 to disable query reduction\n"
-        "  --init-potency <timeout>             Initial potency timeout in seconds (default 10)\n"
         "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
         "                                       write --interval-timeout 0 to disable interval limits\n"
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
+        "  --do-not-use-lp-potencies            Disable the LP initialization of potencies\n"
+        "  --init-potency <timeout>             Initial potency timeout in seconds (default 10). Only applicable if LP initialization is enabled\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
         "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
         "                                       - automaton  apply Büchi-guided stubborn set method (Jensen et al., 2021).\n"
@@ -239,7 +240,6 @@ void printHelp() {
         "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
         "  --strategy-output <file>             Outputs the synthesized strategy (if a such exist) to <filename>\n"
         "                                           Use '-' (dash) for outputting to standard output.\n"
-        "  --use-lp-potencies                   Use LP for computing the initial potencies\n"
         "\n"
         "Return Values:\n"
         "  0   Successful, query satisfiable\n"
@@ -453,8 +453,8 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
                 throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "--use-lp-potencies") == 0) {
-            useLPPotencies = true;
+        } else if (std::strcmp(argv[i], "--do-not-use-lp-potencies") == 0) {
+            useLPPotencies = false;
         } else if (std::strcmp(argv[i], "-p") == 0 || std::strcmp(argv[i], "--disable-partial-order") == 0) {
             stubbornreduction = false;
         } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--siphon-trap") == 0) {
