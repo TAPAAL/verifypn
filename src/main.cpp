@@ -448,7 +448,7 @@ int main(int argc, const char** argv) {
 
                 strategy.result().print(querynames[i], options.printstatistics, i, options, std::cout);
 
-                if (options.strategy_output == "_")
+                if (options.strategy_output == "-")
                     strategy_out = &std::cout;
                 else if (options.strategy_output.size() > 0)
                     strategy_out = new std::ofstream(options.strategy_output);
