@@ -137,15 +137,18 @@ void printHelp() {
         "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
         "  -t, --trace                          Provide XML-trace to stderr\n"
         "  -s, --search-strategy <strategy>     Search strategy:\n"
-        "                                       - BestFS       Heuristic search (default)\n"
-        "                                       - BFS          Breadth first search\n"
-        "                                       - DFS          Depth first search (CTL default)\n"
-        "                                       - RDFS         Random depth first search\n"
-        "                                       - RPFS         Random potency first search\n"
-        "     RandomWalk [<depth>] [<inc>]      - RandomWalk   Random walk using potency search\n"
+        "                                       - BestFS                        Heuristic search (default)\n"
+        "                                       - BFS                           Breadth first search\n"
+        "                                       - DFS                           Depth first search (CTL default)\n"
+        "                                       - RDFS                          Random depth first search\n"
+        "                                       - RPFS                          Random potency first search\n"
+        "                                       - RandomWalk [<depth>] [<inc>]  Random walk using potency search\n"
         "                                           - depth  Maximum depth of a random walk (default 50000)\n"
         "                                           - inc    Increment of the maximum depth after every random walk (default 5000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
+        "  --init-potency-timeout <timeout>     Timeout for potencies initialization in seconds (default 10)\n"
+        "                                       Only relevant for RPFS and RandomWalk strategies\n"
+        "                                       write --init-potency-timeout 0 to disable the initialization\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
         "  -x, --xml-queries <query index>      Parse XML query file and verify queries of a given comma-seperated list\n"
@@ -166,8 +169,6 @@ void printHelp() {
         "                                       write --interval-timeout 0 to disable interval limits\n"
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
-        "  --do-not-use-lp-potencies            Disable the LP initialization of potencies\n"
-        "  --init-potency <timeout>             Initial potency timeout in seconds (default 10). Only applicable if LP initialization is enabled\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
         "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
         "                                       - automaton  apply Büchi-guided stubborn set method (Jensen et al., 2021).\n"
@@ -323,7 +324,7 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%d", &queryReductionTimeout) != 1 || queryReductionTimeout < 0) {
                 throw base_error("Argument Error: Invalid query reduction timeout argument ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "--init-potency") == 0) {
+        } else if (std::strcmp(argv[i], "--init-potency-timeout") == 0) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));
             }
@@ -453,8 +454,6 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
                 throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "--do-not-use-lp-potencies") == 0) {
-            useLPPotencies = false;
         } else if (std::strcmp(argv[i], "-p") == 0 || std::strcmp(argv[i], "--disable-partial-order") == 0) {
             stubbornreduction = false;
         } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--siphon-trap") == 0) {

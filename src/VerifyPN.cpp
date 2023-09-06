@@ -684,9 +684,9 @@ void initialize_potency(const MarkVal* marking,
     std::vector<bool> hadTo(queries.size(), true);
 
     do {
-        auto qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (1 + (to_handle / options.cores));
+        auto pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (1 + (to_handle / options.cores));
         if ((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
-            qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+            pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
         std::atomic<uint32_t> cnt(0);
 #ifdef VERIFYPN_MC_Simplification
         std::vector<std::thread> threads;
@@ -711,11 +711,11 @@ void initialize_potency(const MarkVal* marking,
                     hadTo[i] = false;
 
 #ifndef VERIFYPN_MC_Simplification
-                    qt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
+                    pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
 
-                    if (options.initPotencyTimeout > 0 && qt > 0) {
-                        SimplificationContext potencyInitializationContext(marking, net, qt,
+                    if (options.initPotencyTimeout > 0 && pt > 0) {
+                        SimplificationContext potencyInitializationContext(marking, net, pt,
                                                                            options.lpsolveTimeout,
                                                                            &cache, options.initPotencyTimeout);
                         try {

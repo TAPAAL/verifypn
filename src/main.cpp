@@ -516,7 +516,7 @@ int main(int argc, const char** argv) {
                 if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
                 //Reachability search
-                if (options.useLPPotencies && (options.strategy == Strategy::RandomWalk || options.strategy == Strategy::RPFS)) {
+                if (options.initPotencyTimeout > 0 && (options.strategy == Strategy::RandomWalk || options.strategy == Strategy::RPFS)) {
                     std::vector<MarkVal> initialPotencies(net->numberOfTransitions(), 0);
 
                     {
