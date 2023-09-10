@@ -87,9 +87,9 @@ STRATEGIES_RAND[1]="-s RDFS --seed-offset 1337 -q 0 -l 0 -d 0"
 STRATEGIES_RAND[2]="-s RPFS --seed-offset 2018 -q 0 -l 0 -d $SHORTRED"
 STRATEGIES_RAND[3]="-tar -s RDFS --seed-offset 9220 -q 0 -l 0 -d $SHORTRED"
 
-STRATEGIES_RW_RAND[0]="-s RandomWalk --seed-offset 0 -q 0 -l 0 -d 0"
+STRATEGIES_RW_RAND[0]="-s RandomWalk --seed-offset 0 -q 0 -l 0 -d 0 --init-potency-timeout 0"
 STRATEGIES_RW_RAND[1]="-s RandomWalk --seed-offset 1337 -q 0 -l 0 -d 5"
-STRATEGIES_RW_RAND[2]="-s RandomWalk --seed-offset 2018 -q 5 -l 2 -d 5"
+STRATEGIES_RW_RAND[2]="-s RandomWalk --seed-offset 2018 -q 5 -l 2 -d 5 --init-potency-timeout 0"
 STRATEGIES_RW_RAND[3]="-s RandomWalk --seed-offset 9220 -q 5 -l 3 -d 10"
 
 run_multi=false;
@@ -259,7 +259,7 @@ function verifyparallel {
     echo "---------------------------------------------------"
     echo "            Step 1: Parallel processing            "
     echo "---------------------------------------------------"
-    echo "Doing parallel verification of individual queries (on ${#QUERIES[@]} remaining queries)"
+    echo "Doing parallel verification of individual queries ($NUMBER in total)"
     echo "Each query is verified by ${#STRATEGIES_PAR[@]} parallel strategies for $TIMEOUT_PAR seconds"
     
     i=0

@@ -221,7 +221,6 @@ int main(int argc, const char** argv) {
             // simplification. We always want to do negation-push and initial marking check.
             simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
 
-
             if (options.query_out_file.size() > 0) {
                 outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
             }
@@ -517,15 +516,35 @@ int main(int argc, const char** argv) {
                 if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
                 //Reachability search
-                strategy.reachable(queries, results,
-                                   options.strategy,
-                                   options.stubbornreduction,
-                                   options.statespaceexploration,
-                                   options.printstatistics,
-                                   options.trace != TraceLevel::None,
-                                   options.seed(),
-                                   options.depthRandomWalk,
-                                   options.incRandomWalk);
+                if (options.initPotencyTimeout > 0 && (options.strategy == Strategy::RandomWalk || options.strategy == Strategy::RPFS)) {
+                    std::vector<MarkVal> initialPotencies(net->numberOfTransitions(), 0);
+
+                    {
+                        std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
+                        initialize_potency(qm0.get(), net.get(), queries, options, std::cout, initialPotencies);
+                    }
+
+                    strategy.reachable(queries, results,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    options.statespaceexploration,
+                                    options.printstatistics,
+                                    options.trace != TraceLevel::None,
+                                    options.seed(),
+                                    options.depthRandomWalk,
+                                    options.incRandomWalk,
+                                    initialPotencies);
+                } else {
+                    strategy.reachable(queries, results,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    options.statespaceexploration,
+                                    options.printstatistics,
+                                    options.trace != TraceLevel::None,
+                                    options.seed(),
+                                    options.depthRandomWalk,
+                                    options.incRandomWalk);
+                }
             }
         }
     } catch (base_error& e) {

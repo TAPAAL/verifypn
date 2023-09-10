@@ -13,9 +13,9 @@ namespace PetriEngine {
         {
             uint32_t id = _trace_names.size();
             auto [it, inserted] = _trace_names.emplace(std::make_pair(s,id));
-            if(!inserted && create)
+            if (!inserted && create)
                 throw base_error("Trace identifier ", s, " already existed.");
-            if(inserted && !create)
+            if (inserted && !create)
                 throw base_error("Trace identifier ", s, " does not exist, but is used as a prefix in the query.");
             return it->second;
         }
@@ -24,7 +24,7 @@ namespace PetriEngine {
         {
             auto it = _coloredPlaceNames.find(place);
             if (it != _coloredPlaceNames.end()) {
-                for(auto& [_, name] : it->second)
+                for (auto& [_, name] : it->second)
                     fn(name);
                 return true;
             }
@@ -35,7 +35,7 @@ namespace PetriEngine {
         {
             auto it = _coloredTransitionNames.find(transition);
             if (it != _coloredTransitionNames.end()) {
-                for(auto& e : it->second)
+                for (auto& e : it->second)
                     fn(e);
                 return true;
             }
@@ -61,6 +61,11 @@ namespace PetriEngine {
         uint32_t SimplificationContext::getLpTimeout() const
         {
             return _lpTimeout;
+        }
+
+        uint32_t SimplificationContext::getPotencyTimeout() const
+        {
+            return _potencyTimeout;
         }
 
         double SimplificationContext::getReductionTime()
@@ -111,7 +116,7 @@ namespace PetriEngine {
                             ++post.first;
                         }
                         else if (post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place)) {
-                            if(!pre.first->inhibitor)
+                            if (!pre.first->inhibitor)
                                 col[l] = -(double) pre.first->tokens;
                             else
                                 col[l] = 0;
@@ -120,7 +125,7 @@ namespace PetriEngine {
                         }
                         else {
                             assert(pre.first->place == post.first->place);
-                            if(!pre.first->inhibitor)
+                            if (!pre.first->inhibitor)
                                 col[l] = (double) post.first->tokens - (double) pre.first->tokens;
                             else
                                 col[l] = (double) post.first->tokens;

@@ -127,7 +127,7 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
 
-#define TRYREACHPAR    (queries, results, usequeries, printstats, seed)
+#define TRYREACHPAR    (queries, results, usequeries, printstats, seed, initPotencies)
 #define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
                        else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
@@ -148,7 +148,8 @@ namespace PetriEngine {
                     bool keep_trace,
                     size_t seed,
                     int64_t depthRandomWalk,
-                    const int64_t incRandomWalk)
+                    const int64_t incRandomWalk,
+                    const std::vector<MarkVal>& initPotencies)
         {
             bool usequeries = !statespacesearch;
 
@@ -174,9 +175,9 @@ namespace PetriEngine {
                     break;
                 case Strategy::RandomWalk: {
                     if (stubbornreduction)
-                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk);
+                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk, initPotencies);
                     else
-                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk);
+                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk, initPotencies);
                     break;
                 }
                 default:

@@ -16,10 +16,12 @@
  */
 #ifndef STATESET_H
 #define STATESET_H
+
 #include <ptrie/ptrie_stable.h>
 #include <ptrie/ptrie_map.h>
 #include <unordered_map>
 #include <iostream>
+
 #include "State.h"
 #include "AlignedEncoder.h"
 #include "utils/structures/binarywrapper.h"
@@ -76,8 +78,9 @@ namespace PetriEngine {
         class RandomWalkStateSet : public StateSetInterface
         {
         public:
-            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query, size_t seed, int nplaces = -1) :
-            StateSetInterface(net, kbound, nplaces), _seed(seed)
+            RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query,
+                               const std::vector<MarkVal> &initPotencies, size_t seed, int nplaces = -1)
+                : StateSetInterface(net, kbound, nplaces), _seed(seed)
             {
                 srand(_seed);
                 _discovered = 1;
@@ -86,7 +89,11 @@ namespace PetriEngine {
                 _nextMarking = std::make_unique<MarkVal[]>(_nplaces);
                 _nextMarking[0] = std::numeric_limits<MarkVal>::max();
 
-                _initializePotencies(_net.numberOfTransitions(), _initPotency);
+                if (initPotencies.empty()) {
+                    _initializePotencies(_net.numberOfTransitions(), _initPotencyConstant);
+                } else {
+                    _initializePotencies(initPotencies);
+                }
                 PQL::DistanceContext context(&_net, _initialMarking.get());
                 _initialDistance = query->distance(context);
             }
@@ -186,7 +193,8 @@ namespace PetriEngine {
             std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const uint32_t _initPotency = 100;
+            const static uint32_t _initPotencyConstant = 1;
+            const static uint32_t _initPotencyMultiplier = 60;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
@@ -198,6 +206,14 @@ namespace PetriEngine {
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue) {
                 _potencies = std::vector<uint32_t>(nTransitions, initValue);
+            }
+
+            void _initializePotencies(const std::vector<MarkVal> &initPotencies) {
+                assert(initPotencies.size() == _net.numberOfTransitions());
+                _potencies.reserve(initPotencies.size());
+                for (auto potency : initPotencies) {
+                    _potencies.push_back(potency * _initPotencyMultiplier + _initPotencyConstant);
+                }
             }
 
             uint32_t _sumMarking(const MarkVal* marking) {
@@ -436,7 +452,6 @@ namespace PetriEngine {
             ptrie_t _trie;
         };
 
-
         struct traceable_t
         {
             ptrie::uint parent;
@@ -475,6 +490,5 @@ namespace PetriEngine {
         
     }
 }
-
 
 #endif // STATESET_H

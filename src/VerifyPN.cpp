@@ -515,10 +515,10 @@ void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<Petr
     writeQueries(queries, querynames, reorder, filename, false, builder.getPlaceNames(), keep_solved, true);
 }
 
-void simplify_queries(  const MarkVal* marking,
-                        const PetriNet* net,
-                        std::vector<PetriEngine::PQL::Condition_ptr>& queries,
-                        options_t& options, std::ostream& outstream) {
+void simplify_queries(const MarkVal* marking,
+                      const PetriNet* net,
+                      std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                      options_t& options, std::ostream& outstream) {
     // simplification. We always want to do negation-push and initial marking check.
     std::vector<LPCache> caches(options.cores);
     std::atomic<uint32_t> to_handle(queries.size());
@@ -670,4 +670,107 @@ void simplify_queries(  const MarkVal* marking,
     } while (std::any_of(hadTo.begin(), hadTo.end(), [](auto a) {
             return a;
     }) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
+}
+
+void initialize_potency(const MarkVal* marking,
+                              const PetriNet* net,
+                              std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                              options_t& options, std::ostream& outstream,
+                              std::vector<PetriEngine::MarkVal> &potencies) {
+    std::vector<LPCache> caches(options.cores);
+    std::atomic<uint32_t> to_handle(queries.size());
+    auto begin = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::vector<bool> hadTo(queries.size(), true);
+
+    do {
+        auto pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (1 + (to_handle / options.cores));
+        if ((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
+            pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+        std::atomic<uint32_t> cnt(0);
+#ifdef VERIFYPN_MC_Simplification
+        std::vector<std::thread> threads;
+        std::mutex out_lock;
+#endif
+        uint32_t old = to_handle;
+        for (size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c) {
+#ifdef VERIFYPN_MC_Simplification
+            threads.push_back(std::thread([&, c]() {
+            std::stringstream out;
+#else
+            auto initPot = [&, c]() {
+
+                auto& out = outstream;
+#endif
+
+                auto& cache = caches[c];
+                while (true) {
+                    auto i = cnt++;
+                    if (i >= queries.size()) return;
+                    if (!hadTo[i]) continue;
+                    hadTo[i] = false;
+
+#ifndef VERIFYPN_MC_Simplification
+                    pt = (options.initPotencyTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
+#endif
+
+                    if (options.initPotencyTimeout > 0 && pt > 0) {
+                        SimplificationContext potencyInitializationContext(marking, net, pt,
+                                                                           options.lpsolveTimeout,
+                                                                           &cache, options.initPotencyTimeout);
+                        try {
+                            uint32_t maxConfigurationsSolved = 10;
+                            PetriEngine::PQL::initPotencyVisit(queries[i], potencyInitializationContext, potencies, maxConfigurationsSolved);
+                            // if (options.printstatistics != StatisticsLevel::None) {
+                            //     out << "\nPotencies: ";
+                            //     for (size_t p = 0; p < potencies.size(); ++p) {
+                            //         if (potencies[p] != 0)
+                            //            out << p << " : " << potencies[p] << ", ";
+                            //     }
+                            //     out << '\n' << std::endl;
+                            // }
+                        } catch (std::bad_alloc& ba) {
+                            throw base_error("Potency initialization failed.\nException information: ", ba.what());
+                        }
+
+                        if (potencyInitializationContext.potencyTimeout()) {
+                            if (options.printstatistics == StatisticsLevel::Full)
+                                out << "Potency initialization reached timeout.\n";
+                            hadTo[i] = true;
+                        } else {
+                            if (options.printstatistics == StatisticsLevel::Full)
+                                out << "\nPotency initialization finished after " << potencyInitializationContext.getReductionTime() << " seconds.\n\n";
+                            --to_handle;
+                        }
+                    } else if (options.printstatistics == StatisticsLevel::Full) {
+                        out << "Skipping potency initialization" << std::endl;
+                    }
+
+#ifdef VERIFYPN_MC_Simplification
+                    out_lock.lock();
+                    outstream << out.str();
+                    out.clear();
+                    out_lock.unlock();
+#endif
+                }
+            }
+#ifdef VERIFYPN_MC_Simplification
+            ));
+#else
+            ;
+            initPot();
+#endif
+        }
+#ifndef VERIFYPN_MC_Simplification
+        break;
+#else
+        for (size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i) {
+            threads[i].join();
+        }
+#endif
+        end = std::chrono::high_resolution_clock::now();
+
+    } while (std::any_of(hadTo.begin(), hadTo.end(), [](auto a) {
+            return a;
+    }) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.initPotencyTimeout && to_handle > 0);
 }
