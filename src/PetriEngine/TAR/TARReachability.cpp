@@ -425,7 +425,7 @@ namespace PetriEngine {
                 std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
 
                 if(_reducer != nullptr)
-                    _reducer->extraConsume(std::cerr, *tname);
+                    _reducer->tokenConsumption(std::cerr, *tname);
 
                 std::cerr << "\t</transition>\n";
 

@@ -3032,7 +3032,7 @@ restart:
             for (const auto& el : it->second)
             {
                 out << "\t<transition id=\"" << *el << "\">\n";
-                extraConsume(out, *el);
+                tokenConsumption(out, *el);
                 out << "\t</transition>\n";
                 postFire(out, *el);
             }
@@ -3044,13 +3044,13 @@ restart:
         for (const auto& init : _initfire)
         {
             out << "\t<transition id=\"" << *init << "\">\n";
-            extraConsume(out, *init);
+            tokenConsumption(out, *init);
             out << "\t</transition>\n";
             postFire(out, *init);
         }
     }
 
-    void Reducer::extraConsume(std::ostream& out, const std::string& transition) const
+    void Reducer::tokenConsumption(std::ostream& out, const std::string& transition) const
     {
         auto it = _transitionsBeforeReduction.find(transition);
         if (it != std::end(_transitionsBeforeReduction))

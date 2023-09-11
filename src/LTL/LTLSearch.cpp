@@ -201,7 +201,7 @@ namespace LTL {
                 // field width stuff obsolete without büchi state printing.
                 << std::quoted(*_net.transitionNames()[transition]);
         os << ">";
-        reducer.extraConsume(os, *_net.transitionNames()[transition]);
+        reducer.tokenConsumption(os, *_net.transitionNames()[transition]);
         os << std::endl;
         auto [fpre, lpre] = _net.preset(transition);
         for (; fpre < lpre; ++fpre) {

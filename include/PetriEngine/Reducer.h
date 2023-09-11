@@ -135,7 +135,7 @@ namespace PetriEngine {
         }
 
         void postFire(std::ostream&, const std::string& transition) const;
-        void extraConsume(std::ostream&, const std::string& transition) const;
+        void tokenConsumption(std::ostream&, const std::string& transition) const;
         void initFire(std::ostream&) const;
 
         void saveInitialNet();
