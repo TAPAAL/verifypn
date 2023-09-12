@@ -511,7 +511,6 @@ int main(int argc, const char** argv) {
                 options.strategy = Strategy::DFS;
 
                 //Reachability search
-                // TODO: handle trace fix for TAR
                 strategy.reachable(queries, results,
                                    options.printstatistics,
                                    options.trace != TraceLevel::None);
