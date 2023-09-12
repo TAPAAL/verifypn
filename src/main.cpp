@@ -290,6 +290,11 @@ int main(int argc, const char** argv) {
 
         //--------------------- Apply Net Reduction ---------------//
 
+        if (options.trace != TraceLevel::None) {
+            // auto netBeforeReduction = std::unique_ptr<PetriNet>(b2.makePetriNet(false));
+            builder.saveInitialNet();
+        }
+
         builder.freezeOriginalSize();
         if (options.enablereduction > 0) {
             // Compute structural reductions

@@ -579,5 +579,9 @@ namespace PetriEngine {
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, all_ltl, contains_next, reductions);
     }
 
+    void PetriNetBuilder::saveInitialNet()
+    {
+        reducer.saveInitialNet();
+    }
 
 } // PetriEngine
