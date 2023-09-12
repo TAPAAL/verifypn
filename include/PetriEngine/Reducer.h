@@ -135,8 +135,10 @@ namespace PetriEngine {
         }
 
         void postFire(std::ostream&, const std::string& transition) const;
-        void extraConsume(std::ostream&, const std::string& transition) const;
+        void tokenConsumption(std::ostream&, const std::string& transition) const;
         void initFire(std::ostream&) const;
+
+        void saveInitialNet();
 
     private:
         size_t _skippedPlaces= 0;
@@ -200,18 +202,14 @@ namespace PetriEngine {
 
         std::vector<shared_const_string> _initfire;
         std::unordered_map<std::string, std::vector<shared_const_string>> _postfire;
-        std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
+        // _transitionsBeforeReduction[transitionName] = { {placeName, weight}, ... }
+        // Associate a transition with the vector of pre-places and their weights
+        std::unordered_map<std::string, std::vector<ExpandedArc>> _transitionsBeforeReduction;
         std::vector<uint8_t> _tflags;
         std::vector<uint8_t> _pflags;
         std::vector<uint32_t> _lower;
         size_t _tnameid = 0;
     };
-
-
-
-
 }
 
-
 #endif /* REDUCER_H */
-

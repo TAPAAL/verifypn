@@ -62,6 +62,8 @@ namespace PetriEngine {
                 uint32_t weight) override;
         void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override;
 
+        void saveInitialNet();
+
         virtual void sort() override;
         /** Make the resulting petri net, you take ownership */
         PetriNet* makePetriNet(bool reorder = true);
@@ -171,8 +173,6 @@ namespace PetriEngine {
         Reducer reducer;
         shared_string_set& _string_set;
     };
-
 }
 
 #endif // PETRINETBUILDER_H
-

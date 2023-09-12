@@ -336,7 +336,7 @@ namespace PetriEngine {
                 continue;
 
             // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
-            if(parent->_places[pPre].inhib|| trans.inhib) continue;
+            if(parent->_places[pPre].inhib || trans.inhib) continue;
 
             // A5. dont mess with query!
             if(placeInQuery[pPre] > 0) continue;
@@ -364,7 +364,6 @@ namespace PetriEngine {
                     auto prefire = getTransitionName(pp);
                     _postfire[*prefire].push_back(tname);
                 }
-                _extraconsume[*tname].emplace_back(getPlaceName(pPre), w);
                 for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
                 {
                     _initfire.push_back(tname);
@@ -453,7 +452,6 @@ namespace PetriEngine {
                 continue;
             auto prod = place.producers;
             Transition& in = getTransition(tIn);
-            bool added_tIn_extra = false;
             for(auto tOut : prod)
             {
                 Transition& out = getTransition(tOut);
@@ -538,21 +536,8 @@ namespace PetriEngine {
                 _ruleB++;
                 if(reconstructTrace)
                 {
-                    // remember reduction for recreation of trace
-                    auto toutname    = getTransitionName(tOut);
-                    auto tinname     = getTransitionName(tIn);
-                    if(!added_tIn_extra)
-                    {
-                        added_tIn_extra = true;
-                        for(auto& arc : in.pre)
-                        {
-                            if(!arc.inhib)
-                            {
-                                auto pname       = getPlaceName(arc.place);
-                                _extraconsume[*tinname].emplace_back(pname, arc.weight);
-                            }
-                        }
-                    }
+                    auto toutname = getTransitionName(tOut);
+                    auto tinname  = getTransitionName(tIn);
                     for(size_t i = 0; i < multiplier; ++i)
                     {
                         _postfire[*toutname].push_back(tinname);
@@ -753,18 +738,6 @@ namespace PetriEngine {
 
                         continueReductions = true;
                         _ruleC++;
-
-                        if(reconstructTrace)
-                        {
-                            // remember reduction for recreation of trace
-                            auto pname       = getPlaceName(p2);
-                            for(auto c : place2.consumers) {
-                                Transition &trans = getTransition(c);
-                                const auto& arc = getInArc(p2, trans);
-                                auto& tname = getTransitionName(c);
-                                _extraconsume[*tname].emplace_back(pname, arc->weight);
-                            }
-                        }
 
                         skipPlace(p2);
 
@@ -1112,15 +1085,6 @@ namespace PetriEngine {
 
             if((numberofplaces - _skippedPlaces) > 1)
             {
-                if(reconstructTrace)
-                {
-                    for(auto t : place.consumers)
-                    {
-                        auto tname = getTransitionName(t);
-                        const ArcIter arc = getInArc(p, getTransition(t));
-                        _extraconsume[*tname].emplace_back(getPlaceName(p), arc->weight);
-                    }
-                }
                 skipPlace(p);
                 continueReductions = true;
             }
@@ -1250,15 +1214,6 @@ namespace PetriEngine {
             // Apply rule F
             if (removePlace && inhibArcs == 0 && disableableNonNegative == 0 && numberofplaces - _skippedPlaces > 1)
             {
-                if(reconstructTrace)
-                {
-                    for(const auto & t : place.consumers)
-                    {
-                        shared_const_string tname = getTransitionName(t);
-                        const auto & arc = getInArc(p, getTransition(t));
-                        _extraconsume[*tname].emplace_back(getPlaceName(p), arc->weight);
-                    }
-                }
                 skipPlace(p);
                 continueReductions = true;
                 _ruleF++;
@@ -2045,15 +2000,6 @@ namespace PetriEngine {
         bool anyRemoved = false;
         for (uint32_t p = 0; p < parent->_places.size(); ++p) {
             if (!parent->_places[p].skip && placeInQuery[p] == 0 && _pflags[p] == 0) {
-                if(reconstructTrace)
-                {
-                    auto& place = parent->_places[p];
-                    for(auto t : place.consumers)
-                    {
-                        auto ia = getInArc(p, getTransition(t));
-                        _extraconsume[*getTransitionName(t)].emplace_back(getPlaceName(p), ia->weight);
-                    }
-                }
                 skipPlace(p);
                 anyRemoved = true;
             }
@@ -2221,14 +2167,7 @@ namespace PetriEngine {
             if (_pflags[p] == 0) {
                 // Remove places that cannot increase nor decrease (Rule M)
                 ++_ruleM;
-                if(reconstructTrace)
-                {
-                    for(auto t : place.consumers)
-                    {
-                        auto ia = getInArc(p, getTransition(t));
-                        _extraconsume[*getTransitionName(t)].emplace_back(getPlaceName(p), ia->weight);
-                    }
-                }
+
                 if(placeInQuery[p] == 0)
                 {
                     skipPlace(p);
@@ -3070,16 +3009,28 @@ restart:
         return;
     }
 
+    void Reducer::saveInitialNet() {
+        // Called by PetriNetBuilder::saveInitialNet()
+        _transitionsBeforeReduction.reserve(parent->_transitions.size());
+        uint32_t i = 0;
+        for (const auto& trans : parent->_transitions) {
+            for (const auto& arc : trans.pre) {
+                if (!arc.inhib)
+                    _transitionsBeforeReduction[*getTransitionName(i)].emplace_back(getPlaceName(arc.place), arc.weight);
+            }
+            ++i;
+        }
+    }
+
     void Reducer::postFire(std::ostream& out, const std::string& transition) const
     {
         auto it = _postfire.find(transition);
-        if(it != std::end(_postfire))
+        if (it != std::end(_postfire))
         {
-
-            for(const auto& el : it->second)
+            for (const auto& el : it->second)
             {
                 out << "\t<transition id=\"" << *el << "\">\n";
-                extraConsume(out, *el);
+                tokenConsumption(out, *el);
                 out << "\t</transition>\n";
                 postFire(out, *el);
             }
@@ -3088,23 +3039,23 @@ restart:
 
     void Reducer::initFire(std::ostream& out) const
     {
-        for(const auto& init : _initfire)
+        for (const auto& init : _initfire)
         {
             out << "\t<transition id=\"" << *init << "\">\n";
-            extraConsume(out, *init);
+            tokenConsumption(out, *init);
             out << "\t</transition>\n";
             postFire(out, *init);
         }
     }
 
-    void Reducer::extraConsume(std::ostream& out, const std::string& transition) const
+    void Reducer::tokenConsumption(std::ostream& out, const std::string& transition) const
     {
-        auto it = _extraconsume.find(transition);
-        if(it != std::end(_extraconsume))
+        auto it = _transitionsBeforeReduction.find(transition);
+        if (it != std::end(_transitionsBeforeReduction))
         {
-            for(const auto& ec : it->second)
+            for (const auto& arc : it->second)
             {
-                out << ec;
+                out << arc;
             }
         }
     }

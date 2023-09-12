@@ -424,19 +424,8 @@ namespace PetriEngine {
                 auto& tname = _net.transitionNames()[t.get_edge_cnt() - 1];
                 std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
 
-                // well, yeah, we are not really efficient in constructing the trace.
-                // feel free to improve
-                auto pre = _net.preset(t.get_edge_cnt() - 1);
-                for(; pre.first != pre.second; ++pre.first)
-                {
-                    for(size_t token = 0; token < pre.first->tokens; ++token )
-                    {
-                        std::cerr << "\t\t<token place=\"" << *_net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
-                    }
-                }
-
                 if(_reducer != nullptr)
-                    _reducer->extraConsume(std::cerr, *tname);
+                    _reducer->tokenConsumption(std::cerr, *tname);
 
                 std::cerr << "\t</transition>\n";
 

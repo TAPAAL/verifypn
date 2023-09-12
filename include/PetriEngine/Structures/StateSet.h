@@ -62,7 +62,6 @@ namespace PetriEngine {
                 return _maxPlaceBound;
             }
 
-
         protected:
             size_t _discovered;
             size_t _nplaces;
@@ -71,6 +70,7 @@ namespace PetriEngine {
             std::vector<uint32_t> _maxPlaceBound;
             const PetriNet& _net;
         };
+
 
         /**
          * This class defines the state set for a random walk
@@ -230,6 +230,7 @@ namespace PetriEngine {
             }
         };
 
+
         class TracableRandomWalkStateSet : public RandomWalkStateSet
         {
 
@@ -297,6 +298,7 @@ namespace PetriEngine {
             std::stack<size_t> _stackTrace;
             size_t _previousTransition;
         };
+
 
         class EncodingStateSetInterface : public StateSetInterface
         {
