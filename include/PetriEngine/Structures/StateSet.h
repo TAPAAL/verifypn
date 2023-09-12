@@ -16,11 +16,13 @@
  */
 #ifndef STATESET_H
 #define STATESET_H
+
 #include <ptrie/ptrie_stable.h>
 #include <ptrie/ptrie_map.h>
 #include <unordered_map>
 #include <stack>
 #include <iostream>
+
 #include "State.h"
 #include "AlignedEncoder.h"
 #include "utils/structures/binarywrapper.h"
@@ -196,7 +198,8 @@ namespace PetriEngine {
             std::unique_ptr<MarkVal[]> _nextMarking;
 
             std::vector<uint32_t> _potencies;
-            const static uint32_t _initPotencyConstant = 60;
+            const static uint32_t _initPotencyConstant = 1;
+            const static uint32_t _initPotencyMultiplier = 60;
 
             // Useful to update the potencies
             uint32_t _initialDistance;
@@ -214,7 +217,7 @@ namespace PetriEngine {
                 assert(initPotencies.size() == _net.numberOfTransitions());
                 _potencies.reserve(initPotencies.size());
                 for (auto potency : initPotencies) {
-                    _potencies.push_back(potency * _initPotencyConstant + 1);
+                    _potencies.push_back(potency * _initPotencyMultiplier + _initPotencyConstant);
                 }
             }
 
@@ -522,7 +525,6 @@ namespace PetriEngine {
             ptrie_t _trie;
         };
 
-
         struct traceable_t
         {
             ptrie::uint parent;
@@ -561,6 +563,5 @@ namespace PetriEngine {
         
     }
 }
-
 
 #endif // STATESET_H

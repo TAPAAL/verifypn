@@ -55,7 +55,6 @@
 #include <functional>
 // #include <filesystem>
 // #include <bits/stdc++.h>
-// #include <iostream>
 // #include <sys/stat.h>
 // #include <sys/types.h>
 #ifdef VERIFYPN_MC_Simplification
@@ -81,6 +80,7 @@
 #include "PetriEngine/PQL/PredicateCheckers.h"
 #include "PetriEngine/PQL/BinaryPrinter.h"
 #include "PetriEngine/PQL/Simplifier.h"
+#include "PetriEngine/PQL/PotencyVisitor.h"
 #include "PetriEngine/PQL/PushNegation.h"
 #include "PetriEngine/PQL/PrepareForReachability.h"
 
@@ -97,7 +97,6 @@
 
 #include "PetriEngine/TraceReplay.h"
 
-
 #include <atomic>
 
 
@@ -108,47 +107,65 @@ using namespace PetriEngine::Reachability;
 #define VERIFYPN_H
 
 
-bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                   TemporalLogic logic, uint32_t timeout, std::ostream &out, int reductiontype,std::vector<uint32_t>& reductions);
+bool reduceColored(ColoredPetriNetBuilder &cpnBuilder,
+                   std::vector<std::shared_ptr<PQL::Condition> > &queries,
+                   TemporalLogic logic, uint32_t timeout, std::ostream &out,
+                   int reductiontype, std::vector<uint32_t>& reductions);
 
 std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
-unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
-    std::ostream& out = std::cout, int32_t partitionTimeout = 0, int32_t max_intervals = 0, int32_t intervals_reduced = 0, int32_t interval_timeout = 0, bool over_approx = false);
+unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton,
+       bool compute_symmetry, bool computed_fixed_point,
+       std::ostream& out = std::cout, int32_t partitionTimeout = 0,
+       int32_t max_intervals = 0, int32_t intervals_reduced = 0,
+       int32_t interval_timeout = 0, bool over_approx = false);
 
-ReturnValue contextAnalysis(bool colored, const shared_name_name_map& transition_names, const shared_place_color_map& place_names, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries);
+ReturnValue contextAnalysis(bool colored, const shared_name_name_map& transition_names,
+                            const shared_place_color_map& place_names,
+                            PetriNetBuilder& builder, const PetriNet* net,
+                            std::vector<std::shared_ptr<Condition> >& queries);
+
 std::vector<Condition_ptr > readQueries(shared_string_set& string_set, options_t& options, std::vector<std::string>& qstrings);
+
 void printStats(PetriNetBuilder& builder, options_t& options);
-void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
-    std::string& filename, bool binary, const shared_name_index_map& place_names, bool keep_solved, bool compact = false);
+
+void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries,
+                  std::vector<std::string>& querynames,
+                  std::vector<uint32_t>& order, std::string& filename,
+                  bool binary, const shared_name_index_map& place_names,
+                  bool keep_solved, bool compact = false);
+
 std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlStarQueries);
+
 std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlStarQueries);
-Condition_ptr simplify_ltl_query(Condition_ptr query,
-                                 options_t options,
+
+Condition_ptr simplify_ltl_query(Condition_ptr query, options_t options,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout);
 
 void outputNet(const PetriNetBuilder &builder, std::string out_file);
-void outputQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-        std::vector<std::string> &querynames, std::string filename, uint32_t binary_query_io, bool keep_solved);
 
-void outputCompactQueries(const PetriNetBuilder &builder, const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
-    std::vector<std::string> &querynames, std::string filenamem, bool keep_solved);
+void outputQueries(const PetriNetBuilder &builder,
+                   const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
+                   std::vector<std::string> &querynames, std::string filename,
+                   uint32_t binary_query_io, bool keep_solved);
 
-void simplify_queries(const MarkVal* marking,
-                      const PetriNet* net,
+void outputCompactQueries(const PetriNetBuilder &builder,
+                          const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
+                          std::vector<std::string> &querynames, std::string filenamem,
+                          bool keep_solved);
+
+void simplify_queries(const MarkVal* marking, const PetriNet* net,
+                      std::vector<PetriEngine::PQL::Condition_ptr>& queries,
+                      options_t& options, std::ostream& outstream = std::cout);
+
+void initialize_potency(const MarkVal* marking, const PetriNet* net,
                         std::vector<PetriEngine::PQL::Condition_ptr>& queries,
-                        options_t& options, std::ostream& outstream = std::cout);
-
-void simplify_queries_potency(const MarkVal* marking,
-                              const PetriNet* net,
-                              std::vector<PetriEngine::PQL::Condition_ptr>& queries,
-                              options_t& options, std::ostream& outstream,
-                              std::vector<uint32_t> &potencies);
-
+                        options_t& options, std::ostream& outstream,
+                        std::vector<uint32_t> &potencies);
 
 std::vector<Condition_ptr>
-parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings, std::istream& qfile, const std::set<size_t>& qnums, bool binary = false);
+parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings,
+                std::istream& qfile, const std::set<size_t>& qnums, bool binary = false);
 
 #endif /* VERIFYPN_H */
-

@@ -90,6 +90,12 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << ",Query_Simplication=DISABLED";
     }
 
+    if (initPotencyTimeout > 0) {
+        optionsOut << ",Init_Potency=ENABLED,InitPotencyTimeout=" << initPotencyTimeout;
+    } else {
+        optionsOut << ",Init_Potency=DISABLED";
+    }
+
     if (siphontrapTimeout > 0) {
         optionsOut << ",Siphon_Trap=ENABLED,SPTimeout=" << siphontrapTimeout;
     } else {
@@ -131,15 +137,18 @@ void printHelp() {
         "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
         "  -t, --trace                          Provide XML-trace to stderr\n"
         "  -s, --search-strategy <strategy>     Search strategy:\n"
-        "                                       - BestFS       Heuristic search (default)\n"
-        "                                       - BFS          Breadth first search\n"
-        "                                       - DFS          Depth first search (CTL default)\n"
-        "                                       - RDFS         Random depth first search\n"
-        "                                       - RPFS         Random potency first search\n"
-        "     RandomWalk [<depth>] [<inc>]      - RandomWalk   Random walk using potency search\n"
+        "                                       - BestFS                        Heuristic search (default)\n"
+        "                                       - BFS                           Breadth first search\n"
+        "                                       - DFS                           Depth first search (CTL default)\n"
+        "                                       - RDFS                          Random depth first search\n"
+        "                                       - RPFS                          Random potency first search\n"
+        "                                       - RandomWalk [<depth>] [<inc>]  Random walk using potency search\n"
         "                                           - depth  Maximum depth of a random walk (default 50000)\n"
         "                                           - inc    Increment of the maximum depth after every random walk (default 5000)\n"
         "                                       - OverApprox   Linear Over Approx\n"
+        "  --init-potency-timeout <timeout>     Timeout for potencies initialization in seconds (default 10)\n"
+        "                                       Only relevant for RPFS and RandomWalk strategies\n"
+        "                                       write --init-potency-timeout 0 to disable the initialization\n"
         "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
         "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
         "  -x, --xml-queries <query index>      Parse XML query file and verify queries of a given comma-seperated list\n"
@@ -232,7 +241,6 @@ void printHelp() {
         "                                       Using optimization levels above 1 may cause exponential blowups and is not recommended.\n"
         "  --strategy-output <file>             Outputs the synthesized strategy (if a such exist) to <filename>\n"
         "                                           Use '-' (dash) for outputting to standard output.\n"
-        "  --use-lp-potencies                   Use LP for computing the initial potencies\n"
         "\n"
         "Return Values:\n"
         "  0   Successful, query satisfiable\n"
@@ -315,6 +323,13 @@ bool options_t::parse(int argc, const char** argv) {
             }
             if (sscanf(argv[++i], "%d", &queryReductionTimeout) != 1 || queryReductionTimeout < 0) {
                 throw base_error("Argument Error: Invalid query reduction timeout argument ", std::quoted(argv[i]));
+            }
+        } else if (std::strcmp(argv[i], "--init-potency-timeout") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &initPotencyTimeout) != 1 || initPotencyTimeout < 0) {
+                throw base_error("Argument Error: Invalid init potency timeout argument ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "--interval-timeout") == 0) {
             if (i == argc - 1) {
@@ -439,8 +454,6 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%u", &seed_offset) != 1) {
                 throw base_error("Argument Error: Invalid seed offset argument ", std::quoted(argv[i]));
             }
-        } else if (std::strcmp(argv[i], "--use-lp-potencies") == 0) {
-            useLPPotencies = true;
         } else if (std::strcmp(argv[i], "-p") == 0 || std::strcmp(argv[i], "--disable-partial-order") == 0) {
             stubbornreduction = false;
         } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--siphon-trap") == 0) {
@@ -669,6 +682,7 @@ bool options_t::parse(int argc, const char** argv) {
         enablereduction = 0;
         kbound = 0;
         queryReductionTimeout = 0;
+        initPotencyTimeout = 0;
         lpsolveTimeout = 0;
         siphontrapTimeout = 0;
         stubbornreduction = false;

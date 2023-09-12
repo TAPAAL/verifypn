@@ -25,6 +25,7 @@
 namespace PetriEngine { namespace PQL {
 
     Retval simplify(std::shared_ptr<Condition> element, SimplificationContext& context);
+    AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr> &&lps);
 
     class Simplifier : public Visitor {
 
@@ -111,6 +112,7 @@ namespace PetriEngine { namespace PQL {
         void _accept(const PathSelectCondition *element) override;
     };
 
+    Member memberForPlace(size_t p, const SimplificationContext &context);
     Member constraint(const Expr *element, const SimplificationContext &context);
 
     class ConstraintVisitor : public ExpressionVisitor {

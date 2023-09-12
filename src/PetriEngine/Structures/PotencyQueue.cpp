@@ -56,7 +56,7 @@ namespace PetriEngine {
 
             _potencies.reserve(initPotencies.size());
             for (auto potency : initPotencies) {
-                _potencies.push_back(potency * _initPotencyConstant + 1);
+                _potencies.push_back(potency * _initPotencyMultiplier + _initPotencyConstant);
             }
             _best = 0;
         }
