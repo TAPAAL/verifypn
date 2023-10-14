@@ -56,7 +56,7 @@ namespace PetriEngine { namespace PQL {
     void ColoredUseVisitor::_accept(const FireableCondition *element) {
         auto it = _transitionNameToIndexMap.find(element->getName());
         if (it == _transitionNameToIndexMap.end())
-            throw base_error("Unable to resolve identifier \"", element->getName(), "\"");
+            throw base_error("Unable to resolve identifier \"", *element->getName(), "\"");
         _transitionInUse[it->second] = true;
         _anyTransitionInUse = true;
     }
@@ -81,7 +81,7 @@ namespace PetriEngine { namespace PQL {
     void ColoredUseVisitor::_accept(const IdentifierExpr *element) {
         auto it = _placeNameToIndexMap.find(element->name());
         if (it == _placeNameToIndexMap.end())
-            throw base_error("Unable to resolve identifier \"", element->name(), "\"");
+            throw base_error("Unable to resolve identifier \"", *element->name(), "\"");
         _placeInUse[it->second] = true;
     }
 
