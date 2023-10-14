@@ -146,7 +146,7 @@ namespace PetriEngine { namespace PQL {
         if (result.success) {
             element->_offsetInMarking = result.offset;
         } else {
-            throw base_error("Unable to resolve identifier \"", element->name(), "\"");
+            throw base_error("Unable to resolve identifier \"", *element->name(), "\"");
         }
     }
 
@@ -161,7 +161,7 @@ namespace PetriEngine { namespace PQL {
         AnalysisContext::ResolutionResult result = _context.resolve(element->getName(), false);
         if (!result.success)
         {
-            throw base_error("Unable to resolve identifier \"", element->getName(), "\"");
+            throw base_error("Unable to resolve identifier \"", *element->getName(), "\"");
             return;
         }
 
@@ -203,7 +203,7 @@ namespace PetriEngine { namespace PQL {
             if (!coloredContext->resolveTransition(element->getName(), [&](const shared_const_string& tname) {
                 names.emplace_back(tname);
             })) {
-                throw base_error("Unable to resolve colored identifier \"", element->getName(), "\"");
+                throw base_error("Unable to resolve colored identifier \"", *element->getName(), "\"");
             }
             if(names.size() < 1){
                 //If the transition points to empty vector we know that it has
