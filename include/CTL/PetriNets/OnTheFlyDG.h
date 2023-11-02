@@ -14,6 +14,7 @@
 #include "PetriEngine/Structures/AlignedEncoder.h"
 #include "PetriEngine/Structures/linked_bucket.h"
 #include "PetriEngine/ReducingSuccessorGenerator.h"
+#include "PetriEngine/Extrapolator.h"
 
 namespace PetriNets {
 class OnTheFlyDG : public DependencyGraph::BasicDependencyGraph
@@ -22,6 +23,7 @@ public:
     using Condition = PetriEngine::PQL::Condition;
     using Condition_ptr = PetriEngine::PQL::Condition_ptr;
     using Marking = PetriEngine::Structures::State;
+    using Extrapolator = PetriEngine::Extrapolator;
     OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order);
 
     virtual ~OnTheFlyDG();
@@ -45,6 +47,7 @@ public:
     size_t configurationCount() const;
     size_t markingCount() const;
     size_t maxTokens() const;
+    size_t tokensExtrapolated() const;
     Condition::Result initialEval();
 
 protected:
@@ -55,6 +58,7 @@ protected:
     PetriConfig* initial_config;
     Marking working_marking;
     Marking query_marking;
+    Extrapolator* extrapolator = nullptr;
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
     size_t _markingCount = 0;
@@ -89,8 +93,8 @@ protected:
             }
         }
     }
-    PetriConfig *createConfiguration(size_t marking, size_t own, Condition* query);
-    PetriConfig *createConfiguration(size_t marking, size_t own, const Condition_ptr& query)
+    PetriConfig *createConfiguration(Marking& marking, size_t own, Condition* query);
+    PetriConfig *createConfiguration(Marking& marking, size_t own, const Condition_ptr& query)
     {
         return createConfiguration(marking, own, query.get());
     }

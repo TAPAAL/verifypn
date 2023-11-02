@@ -13,11 +13,20 @@ namespace PetriEngine {
 
     class Extrapolator {
     public:
+        virtual ~Extrapolator() = default;
+
         virtual void init(const PetriEngine::PetriNet *net, const Condition *query) = 0;
 
         virtual void extrapolate(Marking *marking, Condition *query) = 0;
 
         std::vector<uint32_t> find_upper_bounds(const PetriEngine::PetriNet *net);
+
+        size_t tokensExtrapolated() const {
+            return _tokensExtrapolated;
+        }
+
+    protected:
+        size_t _tokensExtrapolated = 0;
     };
 
     class NoExtrapolator : public Extrapolator {

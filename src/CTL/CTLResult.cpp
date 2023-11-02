@@ -21,14 +21,15 @@ void CTLResult::print(const std::string& qname, StatisticsLevel statisticslevel,
     if(statisticslevel != StatisticsLevel::None){
         out << "\n";
         out << "STATS:" << "\n";
-        out << "	Time (seconds)    : " << std::setprecision(4) << duration / 1000 << "\n";
-        out << "	Configurations    : " << numberOfConfigurations << "\n";
-        out << "	Markings          : " << numberOfMarkings << "\n";
-        out << "	Edges             : " << numberOfEdges << "\n";
-        out << "	Processed Edges   : " << processedEdges << "\n";
-        out << "	Processed N. Edges: " << processedNegationEdges << "\n";
-        out << "	Explored Configs  : " << exploredConfigurations << "\n";
-        out << "	max tokens:       : " << maxTokens << "\n"; // kept lower case to be compatible with reachability format 
+        out << "	Time (seconds)      : " << std::setprecision(4) << duration / 1000 << "\n";
+        out << "	Configurations      : " << numberOfConfigurations << "\n";
+        out << "	Markings            : " << numberOfMarkings << "\n";
+        out << "	Edges               : " << numberOfEdges << "\n";
+        out << "	Processed Edges     : " << processedEdges << "\n";
+        out << "	Processed N. Edges  : " << processedNegationEdges << "\n";
+        out << "	Explored Configs    : " << exploredConfigurations << "\n";
+        out << "	max tokens:         : " << maxTokens << "\n"; // kept lower case to be compatible with reachability format
+        out << "    Tokens Extrapolated : " << tokensExtrapolated << "\n";
     }
     out << std::endl;
 }

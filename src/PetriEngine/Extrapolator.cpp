@@ -35,7 +35,10 @@ void PetriEngine::SimpleExtrapolator::extrapolate(Marking *marking, Condition *q
     for (int i = 0; i < _net->_nplaces; ++i) {
         if (!visible[i]) {
             // Extrapolating below the upper bound may introduce behaviour
-            marking->marking()[i] = std::min(marking->marking()[i], _upperBounds[i]);
+            uint32_t cur = marking->marking()[i];
+            uint32_t ex = std::min(cur, _upperBounds[i]);
+            _tokensExtrapolated += cur - ex;
+            marking->marking()[i] = ex;
         }
     }
 }

@@ -27,6 +27,7 @@ struct CTLResult {
     size_t exploredConfigurations = 0;
     size_t numberOfEdges = 0;
     size_t maxTokens = 0;
+    size_t tokensExtrapolated = 0;
 #ifdef VERIFYPNDIST
     size_t numberOfRoundsComputingDistance = 0;
     size_t numberOfTokensReceived = 0;
