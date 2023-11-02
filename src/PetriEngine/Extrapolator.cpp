@@ -1,34 +1,53 @@
 #include "PetriEngine/Extrapolator.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 
+std::vector<uint32_t> PetriEngine::Extrapolator::find_upper_bounds(const PetriEngine::PetriNet *net) {
+    std::vector<uint32_t> bounds(net->_nplaces);
+    for (int i; i < net->_ntransitions; ++i) {
+        uint32_t finv = net->_transitions[i].inputs;
+        uint32_t linv = net->_transitions[i].outputs;
+
+        for ( ; finv < linv; ++finv) {
+            const Invariant& inv = net->_invariants[finv];
+            if (inv.inhibitor) {
+                bounds[inv.place] = std::max(bounds[inv.place], inv.tokens);
+            }
+        }
+    }
+
+    return bounds;
+}
+
 void PetriEngine::SimpleExtrapolator::init(const PetriEngine::PetriNet *net, const Condition *query) {
     _initialized = true;
     _net = net;
     PetriEngine::PQL::PlaceUseVisitor puv(net->numberOfPlaces());
     PetriEngine::PQL::Visitor::visit(&puv, query);
     _inQuery = puv.in_use();
+    _upperBounds = find_upper_bounds(net);
     _cache.clear();
 }
 
 void PetriEngine::SimpleExtrapolator::extrapolate(Marking *marking, Condition *query) {
     assert(_initialized);
-    const auto live_places = find_visible_places(query);
+    const auto visible = find_visible_places(query);
 
     for (int i = 0; i < _net->_nplaces; ++i) {
-        if (!live_places[i]) {
-            marking->marking()[i] = 0; // TODO: Minimum of current and greatest inhibitor weight
+        if (!visible[i]) {
+            // Extrapolating below the upper bound may introduce behaviour
+            marking->marking()[i] = std::min(marking->marking()[i], _upperBounds[i]);
         }
     }
 }
 
-std::vector<bool> PetriEngine::SimpleExtrapolator::find_visible_places(const Condition *query) {
+const std::vector<bool>& PetriEngine::SimpleExtrapolator::find_visible_places(const Condition *query) {
     auto it = _cache.find(query);
     if (it != _cache.end()) {
         return it->second;
     }
 
-    std::vector<bool> vis_inc(_net->_nplaces);
-    std::vector<bool> vis_dec(_net->_nplaces);
+    std::vector<bool> vis_inc(_net->_nplaces); // Places where token increment is visible to query
+    std::vector<bool> vis_dec(_net->_nplaces); // Places where token decrement is visible to query
     std::vector<uint32_t> queue;
 
     for (int i = 0; i < _net->_nplaces; ++i) {
@@ -117,7 +136,8 @@ std::vector<bool> PetriEngine::SimpleExtrapolator::find_visible_places(const Con
     for (int i = 0; i < _net->_nplaces; ++i) {
         visible[i] = vis_inc[i] || vis_dec[i];
     }
-    return visible;
+    _cache.insert(std::make_pair(query, visible));
+    return _cache.at(query);
 }
 
 void PetriEngine::SmartExtrapolator::init(const PetriEngine::PetriNet *net, const PetriEngine::Condition *query) {

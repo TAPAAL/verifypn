@@ -150,6 +150,9 @@ namespace PetriEngine {
         friend class ReducingSuccessorGenerator;
         friend class STSolver;
         friend class StubbornSet;
+        friend class Extrapolator;
+        friend class SimpleExtrapolator;
+        friend class SmartExtrapolator;
     };
 
 } // PetriEngine

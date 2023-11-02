@@ -16,6 +16,8 @@ namespace PetriEngine {
         virtual void init(const PetriEngine::PetriNet *net, const Condition *query) = 0;
 
         virtual void extrapolate(Marking *marking, Condition *query) = 0;
+
+        std::vector<uint32_t> find_upper_bounds(const PetriEngine::PetriNet *net);
     };
 
     class NoExtrapolator : public Extrapolator {
@@ -40,11 +42,12 @@ namespace PetriEngine {
         void extrapolate(Marking *marking, Condition *query) override;
 
     protected:
-        std::vector<bool> find_visible_places(const Condition *query);
+        const std::vector<bool> & find_visible_places(const Condition *query);
 
         bool _initialized = false;
         PetriEngine::PetriNet const *_net;
         std::vector<bool> _inQuery;
+        std::vector<uint32_t> _upperBounds;
         std::unordered_map<const Condition *, const std::vector<bool>> _cache;
     };
 
