@@ -71,8 +71,8 @@ bool CTLSingleSolve(Condition* query, PetriNet* net,
     result.processedNegationEdges += alg->processedNegationEdges();
     result.exploredConfigurations += alg->exploredConfigurations();
     result.numberOfEdges += alg->numberOfEdges();
-    result.maxTokens = std::max(graph.maxTokens(), result.maxTokens);
     result.tokensExtrapolated = graph.tokensExtrapolated();
+    result.maxTokens = std::max(graph.maxTokens(), result.maxTokens);
     return res;
 }
 
