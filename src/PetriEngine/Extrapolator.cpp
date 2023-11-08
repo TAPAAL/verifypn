@@ -1,23 +1,31 @@
 #include "PetriEngine/Extrapolator.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 
-std::vector<std::vector<uint32_t>> PetriEngine::Extrapolator::findProducers(const PetriEngine::PetriNet *net) {
+std::pair<std::vector<std::vector<uint32_t>>, std::vector<std::vector<uint32_t>>>
+PetriEngine::Extrapolator::findProducersAndConsumers(const PetriEngine::PetriNet *net) {
     // The PetriNet data structure does not allow us to find producers efficiently.
     // We (re)construct that information here since we will need it a lot for extrapolation.
 
     std::vector<std::vector<uint32_t>> producers(net->_nplaces);
+    std::vector<std::vector<uint32_t>> consumers(net->_nplaces);
 
     for (uint32_t i = 0; i < net->_ntransitions; ++i) {
-        uint32_t finv = net->_transitions[i].outputs;
-        uint32_t linv = net->_transitions[i+1].inputs;
+        uint32_t a = net->_transitions[i].inputs;
+        uint32_t outs = net->_transitions[i].outputs;
+        uint32_t last = net->_transitions[i + 1].inputs;
 
-        for ( ; finv < linv; ++finv) {
-            const Invariant& inv = net->_invariants[finv];
+        for ( ; a < outs; ++a) {
+            const Invariant& inv = net->_invariants[a];
+            consumers[inv.place].push_back(i);
+        }
+
+        for ( ; a < last; ++a) {
+            const Invariant& inv = net->_invariants[a];
             producers[inv.place].push_back(i);
         }
     }
 
-    return producers;
+    return { producers, consumers };
 }
 
 std::vector<uint32_t> PetriEngine::Extrapolator::findUpperBounds(const PetriEngine::PetriNet *net) {
@@ -41,7 +49,9 @@ void PetriEngine::SimpleExtrapolator::init(const PetriEngine::PetriNet *net, con
     _initialized = true;
     _net = net;
     _upperBounds = findUpperBounds(net);
-    _producers = findProducers(net);
+    auto [prod, con] = findProducersAndConsumers(net);
+    _producers = prod;
+    _consumers = con;
     _cache.clear();
 }
 
@@ -87,14 +97,12 @@ const std::vector<bool>& PetriEngine::SimpleExtrapolator::findVisiblePlaces(Cond
         queue.pop_back();
 
         if (vis_dec[p]) {
-            uint32_t t = _net->_placeToPtrs[p];
-            uint32_t lastt = _net->_placeToPtrs[p + 1];
-
-            for (; t < lastt; ++t) {
-                // Put preset of postset in vis_inc,
-                // and inhibiting preset of postset in vis_dec
-                uint32_t finv = _net->_transitions[t].inputs;
-                uint32_t linv = _net->_transitions[t].outputs;
+            // Put preset of postset in vis_inc,
+            // and inhibiting preset of postset in vis_dec
+            for (auto t : _consumers[p]) {
+                const TransPtr &ptr = _net->_transitions[t];
+                uint32_t finv = ptr.inputs;
+                uint32_t linv = ptr.outputs;
                 for ( ; finv < linv; ++finv) {
                     const Invariant& inv = _net->_invariants[finv];
                     if (inv.place == p) {
@@ -122,8 +130,8 @@ const std::vector<bool>& PetriEngine::SimpleExtrapolator::findVisiblePlaces(Cond
         if (vis_inc[p]) {
             // Put preset of preset in vis_inc,
             // and inhibiting preset of preset in vis_dec
-            for (uint32_t t = 0; t < _producers[p].size(); ++t) {
-                const TransPtr &ptr = _net->_transitions[_producers[p][t]];
+            for (auto t : _producers[p]) {
+                const TransPtr &ptr = _net->_transitions[t];
                 uint32_t finv = ptr.inputs;
                 uint32_t linv = ptr.outputs;
                 for ( ; finv < linv; ++finv) {

@@ -19,8 +19,10 @@ namespace PetriEngine {
 
         virtual void extrapolate(Marking *marking, Condition *query) = 0;
 
-        std::vector<uint32_t> findUpperBounds(const PetriEngine::PetriNet *net);
-        std::vector<std::vector<uint32_t>> findProducers(const PetriEngine::PetriNet *net);
+        static std::vector<uint32_t> findUpperBounds(const PetriEngine::PetriNet *net);
+
+        static std::pair<std::vector<std::vector<uint32_t>>, std::vector<std::vector<uint32_t>>>
+        findProducersAndConsumers(const PetriEngine::PetriNet *net);
 
         size_t tokensExtrapolated() const {
             return _tokensExtrapolated;
@@ -58,6 +60,7 @@ namespace PetriEngine {
         PetriEngine::PetriNet const *_net;
         std::vector<uint32_t> _upperBounds;
         std::vector<std::vector<uint32_t>> _producers;
+        std::vector<std::vector<uint32_t>> _consumers;
         std::unordered_map<const Condition *, const std::vector<bool>> _cache;
     };
 
