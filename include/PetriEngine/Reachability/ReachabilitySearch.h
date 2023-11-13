@@ -32,6 +32,7 @@
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 
 #include "PetriEngine/options.h"
+#include "PetriEngine/Extrapolator.h"
 
 #include <memory>
 #include <vector>
@@ -180,6 +181,14 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
+                Extrapolator* extrapolator;
+                if (queries.size() == 1 && usequeries) {
+                    extrapolator = new SimpleReachExtrapolator();
+                    extrapolator->init(&_net, queries[0].get());
+                } else {
+                    extrapolator = new NoExtrapolator();
+                }
+
                 // Search!
                 for(auto nid = queue.pop(); nid != Structures::Queue::EMPTY; nid = queue.pop()) {
                     states.decode(state, nid);
@@ -187,6 +196,7 @@ namespace PetriEngine {
 
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
+                        extrapolator->extrapolate(&working, queries[ss.heurquery].get());
                         auto res = states.add(working);
                         // If we have not seen this state before
                         if (res.first) {
