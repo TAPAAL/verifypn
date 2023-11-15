@@ -84,10 +84,13 @@ namespace PetriEngine::Colored::Reduction {
                         // Loops that do not alter the marking in the place are not considered relevant to the place.
                         const auto& prtIn = red.getInArc(arc.place, potentiallyRelevantTrans);
                         if (prtIn != potentiallyRelevantTrans.input_arcs.end()) {
-                            if (const auto ms1 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)){
-                                if (const auto ms2 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)) {
-                                    if (ms1 == ms2){
-                                        continue;
+                            const auto& prtOut = red.getOutArc(potentiallyRelevantTrans, arc.place);
+                            if (prtOut != potentiallyRelevantTrans.output_arcs.end()) {
+                                if (const auto ms1 = PetriEngine::Colored::extractVarMultiset(*prtIn->expr)) {
+                                    if (const auto ms2 = PetriEngine::Colored::extractVarMultiset(*prtOut->expr)) {
+                                        if (ms1 == ms2) {
+                                            continue;
+                                        }
                                     }
                                 }
                             }
