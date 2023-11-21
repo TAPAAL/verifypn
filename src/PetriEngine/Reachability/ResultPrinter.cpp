@@ -214,7 +214,7 @@ namespace PetriEngine {
                 transitions.push(p.second);
             }
 
-            auto reducer = reducer ? reducer : builder->getReducer();
+            reducer = reducer ? reducer : builder->getReducer();
             
             if(reducer != nullptr)
                 reducer->initFire(std::cerr);
