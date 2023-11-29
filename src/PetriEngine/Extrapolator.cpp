@@ -52,23 +52,32 @@ std::vector<uint32_t> PetriEngine::ExtrapolationContext::findUpperBounds(const P
 }
 
 void PetriEngine::SimpleReachExtrapolator::extrapolate(PetriEngine::Marking *marking, PetriEngine::Condition *query) {
-    const auto visible = findVisiblePlaces(query);
+    const std::vector<bool> *visible;
+    auto it = _cache.find(query);
+    if (it != _cache.end()) {
+        visible = &it->second;
+    } else {
+        visible = &findVisiblePlaces(query);
+    }
 
-    for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-        if (!visible[i]) {
-            // Extrapolating below the upper bound may introduce behaviour
-            uint32_t cur = marking->marking()[i];
-            uint32_t ex = std::min(cur, _ctx->upperBounds[i]);
-            _tokensExtrapolated += cur - ex;
-            marking->marking()[i] = ex;
+    if (!visible->empty()) {
+        for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
+            if (!(*visible)[i]) {
+                // Extrapolating below the upper bound may introduce behaviour
+                uint32_t cur = marking->marking()[i];
+                uint32_t ex = std::min(cur, _ctx->upperBounds[i]);
+                _tokensExtrapolated += cur - ex;
+                marking->marking()[i] = ex;
+            }
         }
     }
 }
 
 const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces(PetriEngine::Condition *query) {
-    auto it = _cache.find(query);
-    if (it != _cache.end()) {
-        return it->second;
+
+    if (PQL::isLoopSensitive(query->shared_from_this()) || !PQL::isReachability(query)) {
+        _cache.insert(std::make_pair(query, std::vector<bool>()));
+        return _cache.at(query);
     }
 
     PetriEngine::PQL::PlaceUseVisitor puv(_ctx->net->numberOfPlaces());
@@ -173,7 +182,7 @@ void PetriEngine::AdaptiveExtrapolator::init(const PetriEngine::PetriNet *net, c
 }
 
 void PetriEngine::AdaptiveExtrapolator::extrapolate(PetriEngine::Marking *marking, PetriEngine::Condition *query) {
-    // TODO
+    _simple.extrapolate(marking, query);
 }
 
 size_t PetriEngine::AdaptiveExtrapolator::tokensExtrapolated() const {

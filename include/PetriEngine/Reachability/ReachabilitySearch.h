@@ -114,6 +114,7 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
             AbstractHandler& _callback;
+            Extrapolator* extrapolator = nullptr; // FIXME: Leaked
             size_t _max_tokens = 0;
         };
 
@@ -181,7 +182,6 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
-                Extrapolator* extrapolator;
                 if (queries.size() == 1 && usequeries) {
                     extrapolator = new SimpleReachExtrapolator();
                     extrapolator->init(&_net, queries[0].get());

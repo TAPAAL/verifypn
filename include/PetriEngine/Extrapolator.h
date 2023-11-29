@@ -97,7 +97,7 @@ namespace PetriEngine {
         size_t tokensExtrapolated() const override;
 
     protected:
-        CTLExtrapolator _ctl;
+        //CTLExtrapolator _ctl;
         SimpleReachExtrapolator _simple;
     };
 }

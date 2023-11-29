@@ -26,7 +26,7 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encod
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-    extrapolator = new PetriEngine::NoExtrapolator();
+    extrapolator = new PetriEngine::AdaptiveExtrapolator();
 }
 
 
@@ -71,7 +71,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
         assert(false);
         //assert(false && "Someone told me, this was a bad place to be.");
         if (fastEval(query, &query_marking) == Condition::RTRUE){
-            succs.push_back(newEdge(*v, 0));///*v->query->distance(context))*/0);
+            succs.push_back(newEdge(*v, 0));///*v->query->distance(context))*/0);F
         }
     }
     else if (query_type == LOPERATOR){
