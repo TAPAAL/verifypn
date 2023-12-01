@@ -58,6 +58,7 @@ protected:
     PetriConfig* initial_config;
     Marking working_marking;
     Marking query_marking;
+    Marking extrapolated_marking;
     Extrapolator* extrapolator = nullptr;
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
@@ -93,8 +94,8 @@ protected:
             }
         }
     }
-    PetriConfig *createConfiguration(Marking& marking, size_t own, Condition* query);
-    PetriConfig *createConfiguration(Marking& marking, size_t own, const Condition_ptr& query)
+    PetriConfig *createConfiguration(const Marking& marking, size_t own, Condition* query);
+    PetriConfig *createConfiguration(const Marking& marking, size_t own, const Condition_ptr& query)
     {
         return createConfiguration(marking, own, query.get());
     }

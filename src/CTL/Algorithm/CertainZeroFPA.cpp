@@ -32,7 +32,10 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
             if(vertex->isDone()) return vertex->assignment == ONE;
         }
 
-        if(vertex->isDone()) return vertex->assignment == ONE;
+        if(vertex->isDone()) {
+            graph->cleanUp();
+            return vertex->assignment == ONE;
+        }
 
         if(!strategy->trivialNegation())
         {

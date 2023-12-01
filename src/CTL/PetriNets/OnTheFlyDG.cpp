@@ -519,8 +519,9 @@ Configuration* OnTheFlyDG::initialConfiguration()
 {
     if(working_marking.marking() == nullptr)
     {
-        working_marking.setMarking  (net->makeInitialMarking());
-        query_marking.setMarking    (net->makeInitialMarking());
+        working_marking.setMarking(net->makeInitialMarking());
+        query_marking.setMarking(net->makeInitialMarking());
+        extrapolated_marking.setMarking(net->makeInitialMarking());
         auto o = owner(working_marking, this->query);
         initial_config = createConfiguration(working_marking, o, this->query);
     }
@@ -552,6 +553,28 @@ void OnTheFlyDG::nextStates(Marking& t_marking, Condition* ptr,
 
 void OnTheFlyDG::cleanUp()
 {
+    if (std::getenv("CZERO_CONF_DEBUG") != nullptr)
+    {
+        for (auto& c : trie)
+        {
+            for(auto& conf : c)
+            {
+                trie.unpack(conf->marking, encoder.scratchpad().raw());
+                encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
+
+                std::cout << "CONF M:";
+                for (uint32_t i = 0; i < n_places; i++)
+                {
+                    std::cout << query_marking[i];
+                }
+                std::cout << " Q:";
+                conf->query->toString(std::cout);
+                char ass = "0?%1"[conf->assignment + 2];
+                std::cout << " A:" << ass << std::endl;
+            }
+        }
+    }
+
     while(!recycle.empty())
     {
         assert(recycle.top()->refcnt == -1);
@@ -566,8 +589,10 @@ void OnTheFlyDG::setQuery(Condition* query)
     this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
+    delete[] extrapolated_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
+    extrapolated_marking.setMarking(nullptr);
     extrapolator->init(net, query);
     initialConfiguration();
     assert(this->query);
@@ -591,11 +616,12 @@ size_t OnTheFlyDG::tokensExtrapolated() const {
     return extrapolator->tokensExtrapolated();
 }
 
-PetriConfig *OnTheFlyDG::createConfiguration(Marking& marking, size_t own, Condition* t_query)
+PetriConfig *OnTheFlyDG::createConfiguration(const Marking& marking, size_t own, Condition* t_query)
 {
-    extrapolator->extrapolate(&marking, t_query);
+    extrapolated_marking.copy(marking.marking(), n_places);
+    extrapolator->extrapolate(&extrapolated_marking, t_query);
 
-    size_t encoded = createMarking(marking);
+    size_t encoded = createMarking(extrapolated_marking);
     auto& configs = trie.get_data(encoded);
     for(PetriConfig* c : configs){
         if(c->query == t_query)

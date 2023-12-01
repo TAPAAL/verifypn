@@ -165,7 +165,9 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
     query->toString(ss);
     std::cout << "Visible places : ";
     for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-        std::cout << *_ctx->net->placeNames()[i] << "#" << inQuery[i] << vis_inc[i] << vis_dec[i] << " ";
+        if (inQuery[i] || vis_inc[i] || vis_dec[i]) {
+            std::cout << *_ctx->net->placeNames()[i] << "#" << inQuery[i] << vis_inc[i] << vis_dec[i] << " ";
+        }
     }
     std::cout << ": " << ss.str() << "\n";
 
