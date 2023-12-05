@@ -88,6 +88,9 @@ namespace PetriEngine {
             }
 
             PetriNetBuilder strip_colors();
+            typedef std::unordered_map<std::string, const Color*> VariableValueMap;
+            typedef std::unordered_map<std::string, VariableValueMap> TransitionVarMap;
+            TransitionVarMap transitionVariableMap;
 
         };
     }

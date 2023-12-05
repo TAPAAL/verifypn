@@ -154,6 +154,8 @@ namespace PetriEngine {
                 bool hasBindings = false;
                 for (const auto &b : gen) {
                     auto name = std::make_shared<const_string>(*transition.name + "_" + std::to_string(i++));
+                    VariableValueMap variableValues;
+                    transitionVariableMap[*name] = variableValues; // Gets assigned to in unfoldArc
 
                     hasBindings = true;
                     ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
@@ -165,6 +167,12 @@ namespace PetriEngine {
                     for (auto& arc : transition.output_arcs) {
                         unfoldArc(ptBuilder, arc, b, name);
                     }
+
+                    std::cout << "transitionVars[\"" << *name << "\"] = {";
+                    for(auto var: transitionVariableMap[*name]) {
+                        std::cout << '"' << var.first << "': '" << var.second->getColorName() << "\", ";
+                    }
+                    std::cout << "}" << std::endl;
 
                     _pttransitionnames[transition.name].push_back(name);
                     unfoldInhibitorArc(ptBuilder, transition.name, name);
@@ -227,6 +235,16 @@ namespace PetriEngine {
             const Colored::ExpressionContext context{binding, _builder.colors(), _partition.partition()[arc.place]};
             const auto ms = Colored::EvaluationVisitor::evaluate(*arc.expr, context);
             int shadowWeight = 0;
+
+            VariableValueMap varValueMap;
+            for(auto const b: binding) {
+                const Variable* var = b.first;
+                std::string varName = var->name;
+                const Color* varValue = context.binding.find(var)->second;
+
+                varValueMap[varName] = varValue;
+            }
+            transitionVariableMap[*tName] = varValueMap;
 
             const Colored::Color *newColor;
             std::vector<uint32_t> tupleIds;
