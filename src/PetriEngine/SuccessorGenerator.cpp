@@ -88,6 +88,7 @@ namespace PetriEngine {
             if (n >= std::numeric_limits<uint32_t>::max()) {
                 throw base_error("Exceeded 2**32 limit of tokens in a single place (", n, ")");
             }
+            if(n > 1) n=1; // Intrinsic 1-safeness for planning engine
             write.marking()[_net._invariants[finv].place] = n;
         }
     }
