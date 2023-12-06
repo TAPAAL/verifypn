@@ -154,7 +154,7 @@ namespace PetriEngine {
         friend class Extrapolator;
         friend class AdaptiveExtrapolator;
         friend class SimpleReachExtrapolator;
-        friend class SmartReachExtrapolator;
+        friend class DynamicReachExtrapolator;
     };
 
 } // PetriEngine

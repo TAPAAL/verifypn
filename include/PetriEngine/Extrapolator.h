@@ -78,14 +78,26 @@ namespace PetriEngine {
     };
 
     /**
-     * The SmartReachExtrapolator removes tokens in places that are *effectively* not visible for the query,
+     * The DynamicReachExtrapolator removes tokens in places that are *effectively* not visible for the query,
      * neither directly or indirectly, by considering the current marking and
      * which places can never gain or lose tokens.
-     * The SimpleReachExtrapolator preserves reachability/safety properties.
+     * The DynamicReachExtrapolator preserves reachability/safety properties.
      */
-    class SmartReachExtrapolator : public Extrapolator {
+    class DynamicReachExtrapolator : public Extrapolator {
     public:
         void extrapolate(Marking *marking, Condition *query) override;
+
+    protected:
+        const uint8_t VIS_INC = 0b0001;
+        const uint8_t VIS_DEC = 0b0010;
+        const uint8_t CAN_INC = 0b0100;
+        const uint8_t CAN_DEC = 0b1000;
+
+        std::vector<uint8_t> _pflags;
+        std::vector<bool> _fireable;
+
+        void findDeadPlacesAndTransitions(const Marking *marking);
+        void findVisiblePlaces(Condition *query);
     };
 
     class AdaptiveExtrapolator : public Extrapolator {
@@ -98,7 +110,7 @@ namespace PetriEngine {
 
     protected:
         //CTLExtrapolator _ctl;
-        SimpleReachExtrapolator _simple;
+        DynamicReachExtrapolator _simple;
     };
 }
 
