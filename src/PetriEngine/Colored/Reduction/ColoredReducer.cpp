@@ -315,7 +315,8 @@ namespace PetriEngine::Colored::Reduction {
         }
 
         for (const auto& var : vars){
-            const Variable* newvar = new Variable {*transition.name + var->name, var->colorType};
+            const auto name = *transition.name + var->name;
+            const Variable* newvar = new Variable {name, name, var->colorType};
             varReplacementMap[var->name] = newvar;
             addVariable(newvar);
         }

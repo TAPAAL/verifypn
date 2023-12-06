@@ -142,6 +142,7 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(), "variabledecl") == 0) {
             auto var = new Variable {
                 it->first_attribute("id")->value(),
+                it->first_attribute("name")->value(),
                 parseUserSort(it)
             };
             variables[it->first_attribute("id")->value()] = var;

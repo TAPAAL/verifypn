@@ -286,6 +286,7 @@ namespace PetriEngine {
 
         struct Variable {
             std::string name;
+            std::string display_name;
             const ColorType* colorType;
         };
 

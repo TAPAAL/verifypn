@@ -383,7 +383,8 @@ namespace PetriEngine::Colored::Reduction {
                                 const Variable* prodVar = ((const VariableExpression *) prodTuples.at(1)[tupleIndex])->variable();
                                 const Variable* consVar = ((const VariableExpression *) consTuples.at(1)[tupleIndex])->variable();
                                 if (varReplacementMap[prodVar->name] == nullptr && varReplacementMap[consVar->name] == nullptr){
-                                    auto* newVar = new Variable{*producer.name + *consumer2.name + prodVar->name + consVar->name, prodVar->colorType};
+                                    auto name = *producer.name + *consumer2.name + prodVar->name + consVar->name;
+                                    auto* newVar = new Variable{name, name, prodVar->colorType};
                                     red.addVariable(newVar);
                                     varReplacementMap[prodVar->name] = newVar;
                                     varReplacementMap[consVar->name] = newVar;
@@ -406,7 +407,8 @@ namespace PetriEngine::Colored::Reduction {
                         } else {
                             for (auto& pvar : pairVars){
                                 if (varReplacementMap[pvar->name] == nullptr){
-                                    auto newVar = new Variable{*producer.name + *consumer2.name + pvar->name, pvar->colorType};
+                                    auto name = *producer.name + *consumer2.name + pvar->name;
+                                    auto newVar = new Variable{name, name, pvar->colorType};
                                     red.addVariable(newVar);
                                     varReplacementMap[pvar->name] = newVar;
                                     for (auto& cvar : consArcVars){
@@ -430,7 +432,8 @@ namespace PetriEngine::Colored::Reduction {
 
                         for (auto& var : pairVars){
                             if (varReplacementMap[var->name] == nullptr){
-                                auto* newVar = new Variable{*producer.name + *consumer2.name + var->name, var->colorType};
+                                const auto name = *producer.name + *consumer2.name + var->name;
+                                auto* newVar = new Variable{name, name, var->colorType};
                                 red.addVariable(newVar);
                                 varReplacementMap[var->name] = newVar;
                             }
@@ -459,7 +462,8 @@ namespace PetriEngine::Colored::Reduction {
                             // Separate variables for the k_i firing versions.
                             if (k_i > 1){
                                 for (auto& kvPair : varReplacementMap) {
-                                    auto* newVar = new Variable{kvPair.first + "k" + std::to_string(k_i), kvPair.second->colorType};
+                                    auto name = kvPair.first + "k" + std::to_string(k_i);
+                                    auto* newVar = new Variable{name, name, kvPair.second->colorType};
                                     red.addVariable(newVar);
                                     kvPair.second = newVar;
                                 }

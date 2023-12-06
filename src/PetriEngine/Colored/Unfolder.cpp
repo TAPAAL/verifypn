@@ -170,7 +170,7 @@ namespace PetriEngine {
 
                     std::cout << "transitionVars[\"" << *name << "\"] = {";
                     for(auto var: transitionVariableMap[*name]) {
-                        std::cout << '"' << var.first << "': '" << var.second->getColorName() << "\", ";
+                        std::cout << '"' << var.first << "\": \"" << var.second->getColorName() << "\", ";
                     }
                     std::cout << "}" << std::endl;
 
@@ -239,7 +239,7 @@ namespace PetriEngine {
             VariableValueMap varValueMap;
             for(auto const b: binding) {
                 const Variable* var = b.first;
-                std::string varName = var->name;
+                std::string varName = var->display_name;
                 const Color* varValue = context.binding.find(var)->second;
 
                 varValueMap[varName] = varValue;
