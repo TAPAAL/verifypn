@@ -176,6 +176,26 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
     return _cache.at(query);
 }
 
+void PetriEngine::DynamicReachExtrapolator::extrapolate(PetriEngine::Marking *marking, PetriEngine::Condition *query) {
+
+    if (PQL::isLoopSensitive(query->shared_from_this()) || !PQL::isReachability(query)) {
+        return;
+    }
+
+    findDeadPlacesAndTransitions(marking);
+    findVisiblePlaces(query);
+
+    for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
+        if ((_pflags[i] & (VIS_INC | VIS_DEC)) == 0) {
+            // Extrapolating below the upper bound may introduce behaviour
+            uint32_t cur = marking->marking()[i];
+            uint32_t ex = std::min(cur, _ctx->upperBounds[i]);
+            _tokensExtrapolated += cur - ex;
+            marking->marking()[i] = ex;
+        }
+    }
+}
+
 void PetriEngine::DynamicReachExtrapolator::findDeadPlacesAndTransitions(const PetriEngine::Marking *marking) {
 
     _pflags.resize(_ctx->net->_nplaces);
@@ -394,21 +414,6 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
         std::stringstream ss;
         query->toString(ss);
         std::cout << "| " << ss.str() << "\n";
-    }
-}
-
-void PetriEngine::DynamicReachExtrapolator::extrapolate(PetriEngine::Marking *marking, PetriEngine::Condition *query) {
-    findDeadPlacesAndTransitions(marking);
-    findVisiblePlaces(query);
-
-    for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-        if ((_pflags[i] & (VIS_INC | VIS_DEC)) == 0) {
-            // Extrapolating below the upper bound may introduce behaviour
-            uint32_t cur = marking->marking()[i];
-            uint32_t ex = std::min(cur, _ctx->upperBounds[i]);
-            _tokensExtrapolated += cur - ex;
-            marking->marking()[i] = ex;
-        }
     }
 }
 
