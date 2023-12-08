@@ -88,10 +88,11 @@ namespace PetriEngine {
         void extrapolate(Marking *marking, Condition *query) override;
 
     protected:
-        const uint8_t VIS_INC = 0b0001;
-        const uint8_t VIS_DEC = 0b0010;
-        const uint8_t CAN_INC = 0b0100;
-        const uint8_t CAN_DEC = 0b1000;
+        const uint8_t VIS_INC = 0b00001;
+        const uint8_t VIS_DEC = 0b00010;
+        const uint8_t MUST_KEEP = 0b00100;
+        const uint8_t CAN_INC = 0b01000;
+        const uint8_t CAN_DEC = 0b10000;
 
         std::vector<uint8_t> _pflags;
         std::vector<bool> _fireable;

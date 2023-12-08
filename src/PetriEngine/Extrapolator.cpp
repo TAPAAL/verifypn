@@ -182,17 +182,55 @@ void PetriEngine::DynamicReachExtrapolator::extrapolate(PetriEngine::Marking *ma
         return;
     }
 
+    std::stringstream before;
+    for (uint32_t i = 0; i < _ctx->net->_nplaces; i++)
+    {
+        before << (*marking)[i];
+    }
+
     findDeadPlacesAndTransitions(marking);
     findVisiblePlaces(query);
 
     for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-        if ((_pflags[i] & (VIS_INC | VIS_DEC)) == 0) {
+        if ((_pflags[i] & (VIS_INC | VIS_DEC | MUST_KEEP)) == 0) {
             // Extrapolating below the upper bound may introduce behaviour
             uint32_t cur = marking->marking()[i];
             uint32_t ex = std::min(cur, _ctx->upperBounds[i]);
             _tokensExtrapolated += cur - ex;
             marking->marking()[i] = ex;
         }
+    }
+
+    if (std::getenv("DYN_EXTRAP_DEBUG") != nullptr) {
+        std::stringstream after;
+        for (uint32_t i = 0; i < _ctx->net->_nplaces; i++)
+        {
+            after << (*marking)[i];
+        }
+        if (before.str() == after.str())
+            return;
+
+        PetriEngine::PQL::PlaceUseVisitor puv(_ctx->net->numberOfPlaces());
+        PetriEngine::PQL::Visitor::visit(&puv, query);
+        auto& inQuery = puv.in_use();
+
+        std::cout << before.str() << "->" << after.str() << " | Visible: ";
+        for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
+            if (inQuery[i] || (_pflags[i] & (VIS_INC | VIS_DEC | MUST_KEEP)) > 0) {
+                std::cout << *_ctx->net->placeNames()[i] << "#" << inQuery[i] << ((_pflags[i] & VIS_INC) > 0)
+                          << ((_pflags[i] & VIS_DEC) > 0) << ((_pflags[i] & MUST_KEEP) > 0) << " ";
+            }
+        }
+        std::cout << "| Live: ";
+        for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
+            if ((_pflags[i] & (CAN_INC | CAN_DEC)) > 0) {
+                std::cout << *_ctx->net->placeNames()[i] << "#" << ((_pflags[i] & CAN_INC) > 0)
+                          << ((_pflags[i] & CAN_DEC) > 0) << " ";
+            }
+        }
+        std::stringstream ss;
+        query->toString(ss);
+        std::cout << "| " << ss.str() << "\n";
     }
 }
 
@@ -392,28 +430,30 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
         }
     }
 
-    if (std::getenv("DYN_EXTRAP_DEBUG") != nullptr) {
-//        for (uint32_t i = 0; i < n_places; i++)
-//        {
-//            std::cout << marking[i];
-//        }
-        std::cout << " | Visible: ";
-        for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-            if (inQuery[i] || (_pflags[i] & (VIS_INC | VIS_DEC)) > 0) {
-                std::cout << *_ctx->net->placeNames()[i] << "#" << inQuery[i] << ((_pflags[i] & VIS_INC) > 0)
-                          << ((_pflags[i] & VIS_DEC) > 0) << " ";
+    // We cannot disable fireable transitions affecting visible places, so their preset must be preserved,
+    // even if their preset is effectively dead.
+    for (int t = 0; t < _ctx->net->_ntransitions; ++t) {
+        if (!_fireable[t]) continue;
+        uint32_t finv = _ctx->net->_transitions[t].inputs;
+        uint32_t linv = _ctx->net->_transitions[t+1].inputs;
+        bool affectsVisible = false;
+        for ( ; finv < linv; ++finv) {
+            const Invariant& arc = _ctx->net->_invariants[finv];
+            if ((_pflags[arc.place] & (VIS_INC | VIS_DEC)) > 0) {
+                affectsVisible = true;
+                break;
             }
         }
-        std::cout << "| Live: ";
-        for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-            if ((_pflags[i] & (CAN_INC | CAN_DEC)) > 0) {
-                std::cout << *_ctx->net->placeNames()[i] << "#" << ((_pflags[i] & CAN_INC) > 0)
-                          << ((_pflags[i] & CAN_DEC) > 0) << " ";
+        if (affectsVisible) {
+            finv = _ctx->net->_transitions[t].inputs;
+            linv = _ctx->net->_transitions[t].outputs;
+            for ( ; finv < linv; ++finv) {
+                const Invariant& arc = _ctx->net->_invariants[finv];
+                if (!arc.inhibitor) {
+                    _pflags[arc.place] |= MUST_KEEP;
+                }
             }
         }
-        std::stringstream ss;
-        query->toString(ss);
-        std::cout << "| " << ss.str() << "\n";
     }
 }
 
