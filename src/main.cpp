@@ -492,9 +492,6 @@ int main(int argc, const char** argv) {
 
             //----------------------- Reachability -----------------------//
 
-            // Change default place-holder to default strategy
-            if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
-
             // remove the prefix EF/AF (LEGACY, should not be handled here)
             for(uint32_t i = 0; i < results.size(); ++i)
             {

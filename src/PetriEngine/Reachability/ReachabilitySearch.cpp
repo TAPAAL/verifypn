@@ -128,10 +128,15 @@ namespace PetriEngine {
         }
 
 #define TRYREACHPAR    (queries, results, usequeries, printstats, seed, initPotencies)
-#define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
-                       else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
+#define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y> TRYREACHPAR ; \
+                       else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR ;
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
                        else TEMPPAR(X, SuccessorGenerator)
+#define TRYREACHPAR_RW  (queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk, initPotencies)
+#define TEMPPAR_RW(Y)  if(keep_trace) return tryReachRandomWalk<Structures::TracableRandomWalkStateSet, Y> TRYREACHPAR_RW ; \
+                       else return tryReachRandomWalk<Structures::RandomWalkStateSet, Y> TRYREACHPAR_RW ;
+#define TRYREACH_RW    if(stubbornreduction) TEMPPAR_RW(ReducingSuccessorGenerator) \
+                       else TEMPPAR_RW(SuccessorGenerator)
 
 
         size_t ReachabilitySearch::maxTokens() const {
@@ -173,13 +178,9 @@ namespace PetriEngine {
                 case Strategy::RPFS:
                     TRYREACH(RandomPotencyQueue)
                     break;
-                case Strategy::RandomWalk: {
-                    if (stubbornreduction)
-                        return tryReachRandomWalk<ReducingSuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk, initPotencies);
-                    else
-                        return tryReachRandomWalk<SuccessorGenerator>(queries, results, usequeries, printstats, seed, depthRandomWalk, incRandomWalk, initPotencies);
+                case Strategy::RandomWalk:
+                    TRYREACH_RW
                     break;
-                }
                 default:
                     throw base_error("Unsupported search strategy");
             }

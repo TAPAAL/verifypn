@@ -302,6 +302,8 @@ void printStats(PetriNetBuilder& builder, options_t& options) {
                 " seconds" << std::endl;
 
             std::cout << "\nNet reduction is enabled.\n";
+            if (options.trace != TraceLevel::None && options.enablereduction >= 1 && options.enablereduction <= 2)
+                std::cout << "Rule H, J, R, S, Q disabled when a trace is requested.\n";
             builder.printStats(std::cout);
         }
     }

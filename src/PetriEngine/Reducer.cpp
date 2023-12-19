@@ -2838,8 +2838,6 @@ namespace PetriEngine {
         constexpr uint32_t explosion_limiter = 6;
 
         this->reconstructTrace = reconstructTrace;
-        if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
-            std::cout << "Rule H, J, R, S, Q disabled when a trace is requested." << std::endl;
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
