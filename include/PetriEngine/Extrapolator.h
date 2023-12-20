@@ -13,6 +13,13 @@ namespace PetriEngine {
     using Condition_ptr = PQL::Condition_ptr;
     using Marking = Structures::State;
 
+    const static uint8_t IN_Q = 0b000001;
+    const static uint8_t VIS_INC = 0b000010;
+    const static uint8_t VIS_DEC = 0b000100;
+    const static uint8_t MUST_KEEP = 0b001000;
+    const static uint8_t CAN_INC = 0b010000;
+    const static uint8_t CAN_DEC = 0b100000;
+
     struct ExtrapolationContext {
         PetriNet const *net;
         std::vector<uint32_t> upperBounds;
@@ -21,11 +28,11 @@ namespace PetriEngine {
 
         explicit ExtrapolationContext(const PetriNet *net);
 
-    private:
-        static std::pair<std::vector<std::vector<uint32_t>>, std::vector<std::vector<uint32_t>>>
-        findProducersAndConsumers(const PetriNet *net);
+        [[nodiscard]] int effect(uint32_t t, uint32_t p) const;
 
-        static std::vector<uint32_t> findUpperBounds(const PetriNet *net);
+    private:
+        void setupProducersAndConsumers();
+        void setupUpperBounds();
     };
 
     using ExtrapolationContext_cptr = std::shared_ptr<const ExtrapolationContext>;
@@ -88,11 +95,6 @@ namespace PetriEngine {
         void extrapolate(Marking *marking, Condition *query) override;
 
     protected:
-        const uint8_t VIS_INC = 0b00001;
-        const uint8_t VIS_DEC = 0b00010;
-        const uint8_t MUST_KEEP = 0b00100;
-        const uint8_t CAN_INC = 0b01000;
-        const uint8_t CAN_DEC = 0b10000;
 
         std::vector<uint8_t> _pflags;
         std::vector<bool> _fireable;

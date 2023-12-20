@@ -2,19 +2,126 @@
 #include "PetriEngine/Extrapolator.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+namespace PetriEngine {
+    class PlaceReachabilityDirectionVisitor : public PQL::Visitor {
+    public:
+        explicit PlaceReachabilityDirectionVisitor(size_t n_places) : _in_use(n_places) {}
 
-PetriEngine::ExtrapolationContext::ExtrapolationContext(const PetriEngine::PetriNet *net) : net(net) {
-    std::tie(producers, consumers) = findProducersAndConsumers(net);
-    upperBounds = findUpperBounds(net);
+        uint32_t operator[](size_t id) const {
+            return _in_use[id];
+        }
+
+        [[nodiscard]] const std::vector<uint8_t>& get_result() const {
+            return _in_use;
+        }
+
+    protected:
+        void _accept(const PQL::NotCondition* element) override {
+            Visitor::visit(this, (*element)[0]);
+        }
+        void _accept(const PQL::AndCondition* element) override {
+            for (auto& e : *element) Visitor::visit(this, e);
+        }
+        void _accept(const PQL::OrCondition* element) override {
+            for (auto& e : *element) Visitor::visit(this, e);
+        }
+        void _accept(const PQL::LessThanCondition* element) override {
+            direction = VIS_DEC;
+            Visitor::visit(this, (*element)[0]);
+            direction = VIS_INC;
+            Visitor::visit(this, (*element)[1]);
+        }
+        void _accept(const PQL::LessThanOrEqualCondition* element) override {
+            direction = VIS_DEC;
+            Visitor::visit(this, (*element)[0]);
+            direction = VIS_INC;
+            Visitor::visit(this, (*element)[1]);
+        }
+        void _accept(const PQL::EqualCondition* element) override {
+            direction = VIS_INC | VIS_DEC;
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
+        }
+        void _accept(const PQL::NotEqualCondition* element) override {
+            direction = VIS_INC | VIS_DEC;
+            Visitor::visit(this, (*element)[0]);
+            Visitor::visit(this, (*element)[1]);
+        }
+        void _accept(const PQL::UnfoldedIdentifierExpr* element) override {
+            _in_use[element->offset()] |= direction | IN_Q;
+        }
+        void _accept(const PQL::PlusExpr* element) override {
+            // TODO: Test this
+            for(auto& p : element->places()) _in_use[p.first] |= direction | IN_Q;
+        }
+        void _accept(const PQL::MultiplyExpr* element) override {
+            // TODO: Test this. Especially negative values
+            for(auto& p : element->places()) _in_use[p.first] |= direction | IN_Q;
+        }
+        void _accept(const PQL::MinusExpr* element) override {
+            // TODO: Do we need to negate here?
+            Visitor::visit(this, (*element)[0]);
+        }
+        void _accept(const PQL::SubtractExpr* element) override {
+            // TODO: Do we need to negate here?
+            for(auto& e : element->expressions()) Visitor::visit(this, e);
+        }
+        void _accept(const PQL::CompareConjunction* element) override {
+            // TODO: What even is this?
+            for(auto& e : *element) _in_use[e._place] |= direction | IN_Q;
+        }
+        void _accept(const PQL::UnfoldedUpperBoundsCondition* element) override {
+            for(auto& p : element->places())
+                _in_use[p._place] |= VIS_INC | IN_Q;
+        }
+
+        void _accept(const PQL::EFCondition* el) override {
+            Visitor::visit(this, (*el)[0]);
+        }
+        void _accept(const PQL::EGCondition* el) override {
+            throw std::runtime_error("EGCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::AGCondition* el) override {
+            throw std::runtime_error("AGCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::AFCondition* el) override {
+            throw std::runtime_error("AFCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::EXCondition* el) override {
+            throw std::runtime_error("EXCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::AXCondition* el) override {
+            throw std::runtime_error("AXCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::EUCondition* el) override {
+            throw std::runtime_error("EUCondition should not exist in compiled reachability expression");
+        }
+        void _accept(const PQL::AUCondition* el) override {
+            throw std::runtime_error("AUCondition should not exist in compiled reachability expression");
+        }
+
+        // Shallow elements, neither of these should exist in a compiled expression
+        void _accept(const PQL::LiteralExpr* element) override {}
+        void _accept(const PQL::DeadlockCondition* element) override {}
+
+    private:
+        std::vector<uint8_t> _in_use;
+        bool negated = false;
+        uint8_t direction = 0;
+    };
 }
 
-std::pair<std::vector<std::vector<uint32_t>>, std::vector<std::vector<uint32_t>>>
-PetriEngine::ExtrapolationContext::findProducersAndConsumers(const PetriEngine::PetriNet *net) {
+PetriEngine::ExtrapolationContext::ExtrapolationContext(const PetriEngine::PetriNet *net) : net(net) {
+    setupProducersAndConsumers();
+    setupUpperBounds();
+}
+
+void PetriEngine::ExtrapolationContext::setupProducersAndConsumers() {
     // The PetriNet data structure does not allow us to go from a place to its producers and consumers.
     // We (re)construct that information here since we will need it a lot for extrapolation.
 
-    std::vector<std::vector<uint32_t>> producers(net->_nplaces);
-    std::vector<std::vector<uint32_t>> consumers(net->_nplaces);
+    producers.resize(net->_nplaces);
+    consumers.resize(net->_nplaces);
 
     for (uint32_t i = 0; i < net->_ntransitions; ++i) {
         uint32_t a = net->_transitions[i].inputs;
@@ -31,12 +138,10 @@ PetriEngine::ExtrapolationContext::findProducersAndConsumers(const PetriEngine::
             producers[inv.place].push_back(i);
         }
     }
-
-    return { producers, consumers };
 }
 
-std::vector<uint32_t> PetriEngine::ExtrapolationContext::findUpperBounds(const PetriEngine::PetriNet *net) {
-    std::vector<uint32_t> bounds(net->_nplaces);
+void PetriEngine::ExtrapolationContext::setupUpperBounds() {
+    upperBounds.resize(net->_nplaces);
     for (uint32_t i = 0; i < net->_ntransitions; ++i) {
         uint32_t finv = net->_transitions[i].inputs;
         uint32_t linv = net->_transitions[i].outputs;
@@ -44,12 +149,30 @@ std::vector<uint32_t> PetriEngine::ExtrapolationContext::findUpperBounds(const P
         for ( ; finv < linv; ++finv) {
             const Invariant& inv = net->_invariants[finv];
             if (inv.inhibitor) {
-                bounds[inv.place] = std::max(bounds[inv.place], inv.tokens);
+                upperBounds[inv.place] = std::max(upperBounds[inv.place], inv.tokens);
             }
         }
     }
+}
 
-    return bounds;
+int PetriEngine::ExtrapolationContext::effect(uint32_t t, uint32_t p) const {
+    uint32_t i = net->_transitions[t].inputs;
+    uint32_t fout = net->_transitions[t].outputs;
+    int64_t w_rem = 0;
+    for ( ; i < fout; ++i) {
+        if (net->_invariants[i].place == p) {
+            w_rem = net->_invariants[i].tokens;
+            break;
+        }
+    }
+    uint32_t j = fout;
+    uint32_t end = net->_transitions[t+1].inputs;
+    for ( ; j < end; ++j) {
+        if (net->_invariants[j].place == p) {
+            return net->_invariants[j].tokens - w_rem;
+        }
+    }
+    return -w_rem;
 }
 
 void PetriEngine::SimpleReachExtrapolator::extrapolate(PetriEngine::Marking *marking, PetriEngine::Condition *query) {
@@ -81,18 +204,18 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
         return _cache.at(query);
     }
 
-    PetriEngine::PQL::PlaceUseVisitor puv(_ctx->net->numberOfPlaces());
-    PetriEngine::PQL::Visitor::visit(&puv, query);
-    auto& inQuery = puv.in_use();
+    PlaceReachabilityDirectionVisitor puv(_ctx->net->numberOfPlaces());
+    PQL::Visitor::visit(&puv, query);
+    auto& use = puv.get_result();
 
     std::vector<bool> vis_inc(_ctx->net->_nplaces); // Places where token increment is visible to query
     std::vector<bool> vis_dec(_ctx->net->_nplaces); // Places where token decrement is visible to query
     std::vector<uint32_t> queue;
 
     for (uint32_t p = 0; p < _ctx->net->_nplaces; ++p) {
-        if (inQuery[p]) {
-            vis_inc[p] = inQuery[p];
-            vis_dec[p] = inQuery[p];
+        if (use[p] > 0) {
+            vis_inc[p] = (use[p] & VIS_INC) > 0;
+            vis_dec[p] = (use[p] & VIS_DEC) > 0;
             queue.push_back(p);
         }
     }
@@ -102,28 +225,29 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
         queue.pop_back();
 
         if (vis_dec[p]) {
-            // Put preset of postset in vis_inc,
-            // and inhibiting preset of postset in vis_dec
+            // Put pre-set of negative post-set in vis_inc,
+            // and inhibiting pre-set of post-set in vis_dec
             for (auto t : _ctx->consumers[p]) {
+                if (_ctx->effect(t, p) >= 0) continue;
                 const TransPtr &ptr = _ctx->net->_transitions[t];
-                uint32_t finv = ptr.inputs;
-                uint32_t linv = ptr.outputs;
-                for ( ; finv < linv; ++finv) {
-                    const Invariant& inv = _ctx->net->_invariants[finv];
-                    if (inv.place == p) {
+                uint32_t i = ptr.inputs;
+                uint32_t fout = ptr.outputs;
+                for ( ; i < fout; ++i) {
+                    const Invariant& arc = _ctx->net->_invariants[i];
+                    if (arc.place == p) {
                         continue;
                     }
-                    if (inv.inhibitor) {
-                        if (!vis_dec[inv.place]) {
-                            queue.push_back(inv.place);
-                            vis_dec[inv.place] = true;
+                    if (arc.inhibitor) {
+                        if (!vis_dec[arc.place]) {
+                            queue.push_back(arc.place);
+                            vis_dec[arc.place] = true;
                         }
                     } else {
-                        if (!vis_inc[inv.place]) {
-                            queue.push_back(inv.place);
-                            vis_inc[inv.place] = true;
+                        if (!vis_inc[arc.place]) {
+                            queue.push_back(arc.place);
+                            vis_inc[arc.place] = true;
                         }
-                        if (inv.tokens > 1) {
+                        if (arc.tokens > 1) {
                             // This consumer may need more tokens to fire, so increases are also visible
                             vis_inc[p] = true;
                         }
@@ -133,9 +257,10 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
         }
 
         if (vis_inc[p]) {
-            // Put preset of preset in vis_inc,
-            // and inhibiting preset of preset in vis_dec
+            // Put pre-set of positive pre-set in vis_inc,
+            // and inhibiting pre-set of pre-set in vis_dec
             for (auto t : _ctx->producers[p]) {
+                if (_ctx->effect(t, p) <= 0) continue;
                 const TransPtr &ptr = _ctx->net->_transitions[t];
                 uint32_t finv = ptr.inputs;
                 uint32_t linv = ptr.outputs;
@@ -166,8 +291,8 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
     query->toString(ss);
     std::cout << "Visible places : ";
     for (uint32_t i = 0; i < _ctx->net->_nplaces; ++i) {
-        if (inQuery[i] || vis_inc[i] || vis_dec[i]) {
-            std::cout << *_ctx->net->placeNames()[i] << "#" << inQuery[i] << vis_inc[i] << vis_dec[i] << " ";
+        if (use[i] > 0 || vis_inc[i] || vis_dec[i]) {
+            std::cout << *_ctx->net->placeNames()[i] << "#" << ((use[i] & IN_Q) > 0) << vis_inc[i] << vis_dec[i] << " ";
         }
     }
     std::cout << ": " << ss.str() << "\n";
@@ -267,7 +392,7 @@ void PetriEngine::DynamicReachExtrapolator::findDeadPlacesAndTransitions(const P
 
     auto processEnabled = [&](uint32_t t) {
         _fireable[t] = true;
-        // Find and process negative preset and positive postset
+        // Find and process negative pre-set and positive post-set
         uint32_t i = _ctx->net->_transitions[t].inputs;
         uint32_t fout = _ctx->net->_transitions[t].outputs;
         uint32_t j = fout;
@@ -354,16 +479,15 @@ void PetriEngine::DynamicReachExtrapolator::findDeadPlacesAndTransitions(const P
 
 void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condition *query) {
 
-    PetriEngine::PQL::PlaceUseVisitor puv(_ctx->net->numberOfPlaces());
-    PetriEngine::PQL::Visitor::visit(&puv, query);
-    auto& inQuery = puv.in_use();
+    PlaceReachabilityDirectionVisitor puv(_ctx->net->numberOfPlaces());
+    PQL::Visitor::visit(&puv, query);
+    auto& use = puv.get_result();
 
     std::queue<uint32_t> queue;
 
     for (uint32_t p = 0; p < _ctx->net->_nplaces; ++p) {
-        if (inQuery[p]) {
-            _pflags[p] |= VIS_INC;
-            _pflags[p] |= VIS_DEC;
+        if (use[p] > 0) {
+            _pflags[p] |= use[p];
             queue.push(p);
         }
     }
@@ -373,10 +497,10 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
         queue.pop();
 
         if ((_pflags[p] & VIS_DEC) > 0) {
-            // Put preset of postset in vis_inc,
-            // and inhibiting preset of postset in vis_dec
+            // Put pre-set of negative post-set in vis_inc,
+            // and inhibiting pre-set of post-set in vis_dec
             for (auto t : _ctx->consumers[p]) {
-                if (!_fireable[t]) continue;
+                if (!_fireable[t] || _ctx->effect(t, p) >= 0) continue;
                 const TransPtr &ptr = _ctx->net->_transitions[t];
                 uint32_t finv = ptr.inputs;
                 uint32_t linv = ptr.outputs;
@@ -405,10 +529,10 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
         }
 
         if ((_pflags[p] & VIS_INC) > 0) {
-            // Put preset of preset in vis_inc,
-            // and inhibiting preset of preset in vis_dec
+            // Put pre-set of positive pre-set in vis_inc,
+            // and inhibiting pre-set of pre-set in vis_dec
             for (auto t : _ctx->producers[p]) {
-                if (!_fireable[t]) continue;
+                if (!_fireable[t] || _ctx->effect(t, p) <= 0) continue;
                 const TransPtr &ptr = _ctx->net->_transitions[t];
                 uint32_t finv = ptr.inputs;
                 uint32_t linv = ptr.outputs;
@@ -430,9 +554,9 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
         }
     }
 
-    // We cannot disable fireable transitions affecting visible places, so their preset must be preserved,
-    // even if their preset is effectively dead.
-    for (int t = 0; t < _ctx->net->_ntransitions; ++t) {
+    // We cannot disable fireable transitions affecting visible places, so their pre-set must be preserved,
+    // even if their pre-set is effectively dead.
+    for (uint32_t t = 0; t < _ctx->net->_ntransitions; ++t) {
         if (!_fireable[t]) continue;
         uint32_t finv = _ctx->net->_transitions[t].inputs;
         uint32_t linv = _ctx->net->_transitions[t+1].inputs;
