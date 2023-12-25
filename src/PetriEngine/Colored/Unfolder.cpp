@@ -155,6 +155,8 @@ namespace PetriEngine {
                 for (const auto &b : gen) {
                     auto name = std::make_shared<const_string>(*transition.name + "_" + std::to_string(i++));
 
+                    storeBinding(name, b);
+                   
                     hasBindings = true;
                     ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                     offset += 15;
@@ -179,6 +181,8 @@ namespace PetriEngine {
                     auto name = std::make_shared<const_string>(*transition.name + "_" + std::to_string(i++));
                     ptBuilder.addTransition(name, transition._player, transition._x, transition._y + offset);
                     offset += 15;
+
+                    storeBinding(name, b);
 
                     for (const auto& arc : transition.input_arcs) {
                         unfoldArc(ptBuilder, arc, b, name);
@@ -227,7 +231,7 @@ namespace PetriEngine {
             const Colored::ExpressionContext context{binding, _builder.colors(), _partition.partition()[arc.place]};
             const auto ms = Colored::EvaluationVisitor::evaluate(*arc.expr, context);
             int shadowWeight = 0;
-
+            
             const Colored::Color *newColor;
             std::vector<uint32_t> tupleIds;
             for (const auto& color : ms) {
@@ -285,6 +289,33 @@ namespace PetriEngine {
                     }
                     ++_nptarcs;
                 }
+            }
+        }
+
+    
+        void Unfolder::storeBinding(const shared_const_string& name, const Colored::BindingMap& binding) {
+            if (_print_bindings) { 
+                Colored::BindingMap b;
+                for (auto var: binding) {
+                    b[var.first] = var.second;
+                } 
+                _transitionBinding[*name] = b;
+            }
+        }
+
+        void  Unfolder::printBinding(){
+            if (_print_bindings) {
+                std::cout << "<bindings>\n";
+                for (auto transition : _transitionBinding) {
+                    std::cout << "   <transition id=\"" << transition.first << "\">\n";    
+                    for(auto const var: transition.second) {
+                        std::cout << "      <variable id=\"" << var.first->name << "\">\n";
+                        std::cout << "         <value>" << var.second->getColorName() << "</value>\n";
+                        std::cout << "      </variable>\n";
+                    }
+                    std::cout << "   </transition>\n";
+                }
+                std::cout << "</bindings>\n";
             }
         }
     }

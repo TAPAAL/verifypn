@@ -159,7 +159,7 @@ int main(int argc, const char** argv) {
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,
             options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
-            options.intervalTimeout, options.cpnOverApprox);
+            options.intervalTimeout, options.cpnOverApprox, options.trace != TraceLevel::None);
 
         builder.sort();
         std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
