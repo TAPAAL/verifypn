@@ -130,7 +130,7 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
 
 std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
-    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx) {
+    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx, bool print_bindings) {
     Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
 
     if(!cpnBuilder.isColored())
@@ -149,7 +149,7 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         fixed_point.compute(max_intervals, intervals_reduced, interval_timeout);
     } else fixed_point.set_default();
 
-    Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point);
+    Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point, print_bindings);
     if(over_approx)
     {
         auto r = unfolder.strip_colors();
@@ -177,7 +177,10 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         if (compute_partiton) {
             out << "Partitioned in " << partition.time() << " seconds" << std::endl;
         }
-        out << "Unfolded in " << unfolder.time() << " seconds" << std::endl;
+        out << "Unfolded in " << unfolder.time() << " seconds\n" << std::endl;
+        
+        unfolder.printBinding();
+        
         return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
             (std::move(r),
             shared_name_name_map{unfolder.transition_names()},

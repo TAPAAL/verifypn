@@ -117,7 +117,7 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton,
        bool compute_symmetry, bool computed_fixed_point,
        std::ostream& out = std::cout, int32_t partitionTimeout = 0,
        int32_t max_intervals = 0, int32_t intervals_reduced = 0,
-       int32_t interval_timeout = 0, bool over_approx = false);
+       int32_t interval_timeout = 0, bool over_approx = false, bool print_bindings = false);
 
 ReturnValue contextAnalysis(bool colored, const shared_name_name_map& transition_names,
                             const shared_place_color_map& place_names,

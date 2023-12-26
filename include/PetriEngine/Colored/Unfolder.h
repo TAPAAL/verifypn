@@ -61,15 +61,19 @@ namespace PetriEngine {
             const VariableSymmetry& _symmetry;
             const PartitionBuilder& _partition;
             const ForwardFixedPoint& _fixed_point;
-
-
+            
+            bool _print_bindings;
+            std::unordered_map<std::string, Colored::BindingMap> _transitionBinding;
+            void storeBinding(const shared_const_string& name, const Colored::BindingMap& binding);
+            
         public:
-            Unfolder(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition, const VariableSymmetry& symmetry, const ForwardFixedPoint& fixed_point)
+            Unfolder(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition, const VariableSymmetry& symmetry, const ForwardFixedPoint& fixed_point, bool print_bindings)
             : _builder(b),
               _stable(b),
               _symmetry(symmetry),
               _partition(partition),
-              _fixed_point(fixed_point) {}
+              _fixed_point(fixed_point),
+              _print_bindings(print_bindings) {}
 
             PetriNetBuilder unfold();
 
@@ -88,6 +92,10 @@ namespace PetriEngine {
             }
 
             PetriNetBuilder strip_colors();
+
+        
+            void printBinding();
+
 
         };
     }
