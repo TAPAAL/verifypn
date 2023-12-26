@@ -306,7 +306,7 @@ namespace PetriEngine {
         void  Unfolder::printBinding(){
             if (_print_bindings) {
                 std::cout << "<bindings>\n";
-                for (auto transition : _transitionBinding) {
+                for (auto const transition : _transitionBinding) {
                     std::cout << "   <transition id=\"" << transition.first << "\">\n";    
                     for(auto const var: transition.second) {
                         std::cout << "      <variable id=\"" << var.first->name << "\">\n";
