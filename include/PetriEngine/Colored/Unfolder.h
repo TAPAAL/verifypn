@@ -72,7 +72,8 @@ namespace PetriEngine {
               _stable(b),
               _symmetry(symmetry),
               _partition(partition),
-              _fixed_point(fixed_point) {_print_bindings=print_bindings; }
+              _fixed_point(fixed_point),
+              _print_bindings(print_bindings) {}
 
             PetriNetBuilder unfold();
 

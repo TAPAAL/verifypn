@@ -310,7 +310,7 @@ namespace PetriEngine {
                     std::cout << "   <transition id=\"" << transition.first << "\">\n";    
                     for(auto const var: transition.second) {
                         std::cout << "      <variable id=\"" << var.first->name << "\">\n";
-                        std::cout << "         <value>" << var.second->getColorName() << "</value>\n";
+                        std::cout << "         <color>" << var.second->getColorName() << "</color>\n";
                         std::cout << "      </variable>\n";
                     }
                     std::cout << "   </transition>\n";
