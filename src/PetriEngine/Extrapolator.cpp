@@ -234,16 +234,13 @@ const std::vector<bool> &PetriEngine::SimpleReachExtrapolator::findVisiblePlaces
                 uint32_t fout = ptr.outputs;
                 for ( ; i < fout; ++i) {
                     const Invariant& arc = _ctx->net->_invariants[i];
-                    if (arc.place == p) {
-                        continue;
-                    }
                     if (arc.inhibitor) {
                         if (!vis_dec[arc.place]) {
                             queue.push_back(arc.place);
                             vis_dec[arc.place] = true;
                         }
                     } else {
-                        if (!vis_inc[arc.place]) {
+                        if (!vis_inc[arc.place] && arc.place != p) {
                             queue.push_back(arc.place);
                             vis_inc[arc.place] = true;
                         }
@@ -506,16 +503,13 @@ void PetriEngine::DynamicReachExtrapolator::findVisiblePlaces(PetriEngine::Condi
                 uint32_t linv = ptr.outputs;
                 for ( ; finv < linv; ++finv) {
                     const Invariant& arc = _ctx->net->_invariants[finv];
-                    if (arc.place == p) {
-                        continue;
-                    }
                     if (arc.inhibitor) {
                         if ((_pflags[arc.place] & VIS_DEC) == 0 && (_pflags[arc.place] & CAN_DEC) > 0) {
                             queue.push(arc.place);
                             _pflags[arc.place] |= VIS_DEC;
                         }
                     } else {
-                        if ((_pflags[arc.place] & VIS_INC) == 0 && (_pflags[arc.place] & CAN_INC) > 0) {
+                        if (arc.place != p && (_pflags[arc.place] & VIS_INC) == 0 && (_pflags[arc.place] & CAN_INC) > 0) {
                             queue.push(arc.place);
                             _pflags[arc.place] |= VIS_INC;
                         }
