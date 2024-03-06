@@ -98,6 +98,7 @@ namespace PetriEngine {
 
         std::vector<uint8_t> _pflags;
         std::vector<bool> _fireable;
+        bool _env_DYN_EXTRAP_DEBUG = std::getenv("DYN_EXTRAP_DEBUG") != nullptr;
 
         void findDeadPlacesAndTransitions(const Marking *marking);
         void findVisiblePlaces(Condition *query);

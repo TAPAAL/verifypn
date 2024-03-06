@@ -323,7 +323,7 @@ void PetriEngine::DynamicReachExtrapolator::extrapolate(PetriEngine::Marking *ma
         }
     }
 
-    if (std::getenv("DYN_EXTRAP_DEBUG") != nullptr) {
+    if (_env_DYN_EXTRAP_DEBUG) {
         std::stringstream after;
         for (uint32_t i = 0; i < _ctx->net->_nplaces; i++)
         {

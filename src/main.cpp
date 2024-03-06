@@ -93,6 +93,14 @@ int main(int argc, const char** argv) {
             std::cout << "Finished parsing model" << std::endl;
         }
 
+        auto workStart = std::chrono::high_resolution_clock::now();
+        // When this ptr goes out of scope it will print the time spent
+        std::shared_ptr<void> defer (nullptr, [&workStart](...){
+            auto workEnd = std::chrono::high_resolution_clock::now();
+            auto diff = std::chrono::duration_cast<std::chrono::microseconds>(workEnd - workStart).count() / 1000000.0;
+            std::cout << std::setprecision(6) << "Spent " << diff << " in total" << std::endl;
+        });
+
         //----------------------- Parse Query -----------------------//
         std::vector<std::string> querynames;
         auto ctlStarQueries = readQueries(string_set, options, querynames);
