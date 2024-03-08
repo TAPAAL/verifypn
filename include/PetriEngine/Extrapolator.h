@@ -13,12 +13,13 @@ namespace PetriEngine {
     using Condition_ptr = PQL::Condition_ptr;
     using Marking = Structures::State;
 
-    const static uint8_t IN_Q = 1 << 0;
-    const static uint8_t VIS_INC = 1 << 1;
-    const static uint8_t VIS_DEC = 1 << 2;
-    const static uint8_t MUST_KEEP = 1 << 3;
-    const static uint8_t CAN_INC = 1 << 4;
-    const static uint8_t CAN_DEC = 1 << 5;
+    const static uint8_t IN_Q_INC = 1 << 0;
+    const static uint8_t IN_Q_DEC = 1 << 1;
+    const static uint8_t VIS_INC = 1 << 2;
+    const static uint8_t VIS_DEC = 1 << 3;
+    const static uint8_t MUST_KEEP = 1 << 4;
+    const static uint8_t CAN_INC = 1 << 5;
+    const static uint8_t CAN_DEC = 1 << 6;
 
     class Extrapolator {
     public:
@@ -62,7 +63,7 @@ namespace PetriEngine {
     private:
         // === Settings
         bool _enabled = true;
-        bool _doDynamic = true;
+        bool _doDynamic = false;
         bool _env_DYN_EXTRAP_DEBUG = std::getenv("DYN_EXTRAP_DEBUG") != nullptr;
 
         // === Net
