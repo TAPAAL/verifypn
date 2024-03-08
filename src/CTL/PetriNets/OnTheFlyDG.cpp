@@ -26,7 +26,7 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encod
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-    extrapolator = new PetriEngine::AdaptiveExtrapolator();
+    extrapolator = new Extrapolator();
 }
 
 

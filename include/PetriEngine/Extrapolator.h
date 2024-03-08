@@ -13,108 +13,71 @@ namespace PetriEngine {
     using Condition_ptr = PQL::Condition_ptr;
     using Marking = Structures::State;
 
-    const static uint8_t IN_Q = 0b000001;
-    const static uint8_t VIS_INC = 0b000010;
-    const static uint8_t VIS_DEC = 0b000100;
-    const static uint8_t MUST_KEEP = 0b001000;
-    const static uint8_t CAN_INC = 0b010000;
-    const static uint8_t CAN_DEC = 0b100000;
-
-    struct ExtrapolationContext {
-        PetriNet const *net;
-        std::vector<uint32_t> upperBounds;
-        std::vector<std::vector<uint32_t>> producers;
-        std::vector<std::vector<uint32_t>> consumers;
-
-        explicit ExtrapolationContext(const PetriNet *net);
-
-        [[nodiscard]] int effect(uint32_t t, uint32_t p) const;
-
-    private:
-        void setupProducersAndConsumers();
-        void setupUpperBounds();
-    };
-
-    using ExtrapolationContext_cptr = std::shared_ptr<const ExtrapolationContext>;
+    const static uint8_t IN_Q = 1 << 0;
+    const static uint8_t VIS_INC = 1 << 1;
+    const static uint8_t VIS_DEC = 1 << 2;
+    const static uint8_t MUST_KEEP = 1 << 3;
+    const static uint8_t CAN_INC = 1 << 4;
+    const static uint8_t CAN_DEC = 1 << 5;
 
     class Extrapolator {
     public:
         virtual ~Extrapolator() = default;
 
-        virtual void init(const PetriNet *net, const Condition *query) {
-            if (!_ctx) {
-                _ctx = std::make_shared<ExtrapolationContext>(net);
-            }
-        };
+        void init(const PetriNet *net, const Condition *query);
 
-        virtual void initWithCtx(const ExtrapolationContext_cptr &ctx, const Condition *query) {
-            _ctx = ctx;
-            init(_ctx->net, query);
-        }
-
-        virtual void extrapolate(Marking *marking, Condition *query) = 0;
+        void extrapolate(Marking *marking, Condition *query);
 
         [[nodiscard]] virtual size_t tokensExtrapolated() const {
             return _tokensExtrapolated;
         }
 
-    protected:
-        ExtrapolationContext_cptr _ctx;
-        size_t _tokensExtrapolated = 0;
-    };
+        Extrapolator * disable() {
+            _enabled = false;
+            return this;
+        }
 
-    class NoExtrapolator : public Extrapolator {
-    public:
-        void extrapolate(Marking *marking, Condition *query) override {
-            // no-op
-        };
-    };
+        Extrapolator * setDynamic(bool dynamic) {
+            _doDynamic = dynamic;
+            return this;
+        }
 
-    /**
-     * The SimpleReachExtrapolator removes tokens in places that are not visible for the query,
-     * neither directly or indirectly. The SimpleReachExtrapolator preserves reachability/safety properties.
-     */
-    class SimpleReachExtrapolator : public Extrapolator {
-    public:
-        void extrapolate(Marking *marking, Condition *query) override;
+    private:
+        void setupProducersAndConsumers();
 
-    protected:
-        const std::vector<bool> &findVisiblePlaces(Condition *query);
+        void setupExtBounds();
 
-        std::unordered_map<const Condition *, const std::vector<bool>> _cache;
-    };
+        [[nodiscard]] int effect(uint32_t t, uint32_t p) const;
 
-    /**
-     * The DynamicReachExtrapolator removes tokens in places that are *effectively* not visible for the query,
-     * neither directly or indirectly, by considering the current marking and
-     * which places can never gain or lose tokens.
-     * The DynamicReachExtrapolator preserves reachability/safety properties.
-     */
-    class DynamicReachExtrapolator : public Extrapolator {
-    public:
-        void extrapolate(Marking *marking, Condition *query) override;
+        void findDeadPlacesAndTransitions(const PetriEngine::Marking *marking);
 
-    protected:
+        void extrapolateDynamicReachRelevance(PetriEngine::Marking *marking, PetriEngine::Condition *query);
 
-        std::vector<uint8_t> _pflags;
-        std::vector<bool> _fireable;
+        void findDynamicVisiblePlaces(PetriEngine::Condition *query);
+
+        void extrapolateStaticReachRelevance(PetriEngine::Marking *marking, PetriEngine::Condition *query);
+
+        const std::vector<bool> &findStaticVisiblePlaces(PetriEngine::Condition *query);
+
+    private:
+        // === Settings
+        bool _enabled = true;
+        bool _doDynamic = true;
         bool _env_DYN_EXTRAP_DEBUG = std::getenv("DYN_EXTRAP_DEBUG") != nullptr;
 
-        void findDeadPlacesAndTransitions(const Marking *marking);
-        void findVisiblePlaces(Condition *query);
-    };
+        // === Net
+        PetriNet const *_net;
+        std::vector<uint32_t> _extBounds;
+        std::vector<std::vector<uint32_t>> _producers;
+        std::vector<std::vector<uint32_t>> _consumers;
 
-    class AdaptiveExtrapolator : public Extrapolator {
-    public:
-        void init(const PetriNet *net, const Condition *query) override;
+        // === Cache and working flags
+        std::unordered_map<const Condition *, const std::vector<bool>> _cache;
+        std::vector<uint8_t> _pflags;
+        std::vector<bool> _fireable;
 
-        void extrapolate(Marking *marking, Condition *query) override;
-
-        size_t tokensExtrapolated() const override;
-
-    protected:
-        //CTLExtrapolator _ctl;
-        DynamicReachExtrapolator _simple;
+        // === Statistics
+        size_t _tokensExtrapolated = 0;
     };
 }
 

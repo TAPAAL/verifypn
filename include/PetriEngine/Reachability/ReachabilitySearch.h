@@ -183,10 +183,10 @@ namespace PetriEngine {
                 }
 
                 if (queries.size() == 1 && usequeries) {
-                    extrapolator = new DynamicReachExtrapolator();
+                    extrapolator = new Extrapolator();
                     extrapolator->init(&_net, queries[0].get());
                 } else {
-                    extrapolator = new NoExtrapolator();
+                    extrapolator = (new Extrapolator())->disable();
                 }
 
                 // Search!
