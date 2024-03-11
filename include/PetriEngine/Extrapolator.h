@@ -63,7 +63,7 @@ namespace PetriEngine {
     private:
         // === Settings
         bool _enabled = true;
-        bool _doDynamic = false;
+        bool _doDynamic = true;
         bool _env_DYN_EXTRAP_DEBUG = std::getenv("DYN_EXTRAP_DEBUG") != nullptr;
 
         // === Net

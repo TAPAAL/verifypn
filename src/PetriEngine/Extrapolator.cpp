@@ -38,11 +38,13 @@ namespace PetriEngine {
             Visitor::visit(this, (*element)[1]);
         }
         void _accept(const PQL::EqualCondition* element) override {
+            throw std::runtime_error("EqualCondition should not exist in compiled reachability expression");
             direction = IN_Q_INC | IN_Q_DEC;
             Visitor::visit(this, (*element)[0]);
             Visitor::visit(this, (*element)[1]);
         }
         void _accept(const PQL::NotEqualCondition* element) override {
+            throw std::runtime_error("NotEqualCondition should not exist in compiled reachability expression");
             direction = IN_Q_INC | IN_Q_DEC;
             Visitor::visit(this, (*element)[0]);
             Visitor::visit(this, (*element)[1]);
@@ -99,10 +101,12 @@ namespace PetriEngine {
         void _accept(const PQL::AUCondition* el) override {
             throw std::runtime_error("AUCondition should not exist in compiled reachability expression");
         }
-
-        // Shallow elements, neither of these should exist in a compiled expression
-        void _accept(const PQL::LiteralExpr* element) override {}
-        void _accept(const PQL::DeadlockCondition* element) override {}
+        void _accept(const PQL::LiteralExpr* element) override {
+            // no-op
+        }
+        void _accept(const PQL::DeadlockCondition* element) override {
+            // no-op, disallowed due to loop sensitivity
+        }
 
     private:
         std::vector<uint8_t> _in_use;
@@ -371,6 +375,7 @@ namespace PetriEngine {
 
         for (uint32_t p = 0; p < _net->_nplaces; ++p) {
             if (use[p] > 0) {
+                _pflags[p] |= use[p];
                 if ((_pflags[p] & IN_Q_DEC) > 0 && (_pflags[p] & CAN_DEC) > 0) {
                     _pflags[p] |= VIS_DEC;
                 }
