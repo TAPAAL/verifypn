@@ -32,6 +32,8 @@ jobs:
 
       - name: Test
         run: |
+          export CFLAGS="-Wp,-D_FORTIFY_SOURCE=2 -fstack-clash-protection -fcf-protection"
+          export CXXFLAGS="$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
           mkdir -p build
           cd build
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Debug -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=ON
