@@ -69,8 +69,18 @@ namespace PetriEngine {
             for(auto& e : element->expressions()) Visitor::visit(this, e);
         }
         void _accept(const PQL::CompareConjunction* element) override {
-            // TODO: What even is this?
-            for(auto& e : *element) _in_use[e._place] |= direction;
+            // Compiled fireability proposition
+            if (element->isNegated() == negated) {
+                for (auto& e : *element) {
+                    if (e._lower != 0) _in_use[e._place] |= IN_Q_INC;
+                    if (e._upper != std::numeric_limits<uint32_t>::max()) _in_use[e._place] |= IN_Q_DEC;
+                }
+            } else {
+                for (auto& e : *element) {
+                    if (e._lower != 0) _in_use[e._place] |= IN_Q_DEC;
+                    if (e._upper != std::numeric_limits<uint32_t>::max()) _in_use[e._place] |= IN_Q_INC;
+                }
+            }
         }
         void _accept(const PQL::UnfoldedUpperBoundsCondition* element) override {
             for(auto& p : element->places())
