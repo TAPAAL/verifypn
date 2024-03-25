@@ -163,13 +163,13 @@ namespace LTL {
         std::string tindent = ntraces <= 1 ? "" : "  ";
         std::string indent = tindent + "  ";
         std::string token_indent = indent + "  ";
-        if(ntraces > 1)
+        if(!_traces.empty())
             os << "<trace-list>\n";
         for(size_t j = 0; j < ntraces; ++j)
         {
             bool printed_deadlock = false;
             os << tindent << "<trace";
-            if(ntraces > 1)
+            if(!_traces.empty())
                 os << " name=\"" << _traces[j] << "\"";
             os << ">\n";
             reducer.initFire(os);
@@ -184,7 +184,7 @@ namespace LTL {
             }
             os << std::endl << tindent << "</trace>" << std::endl;
         }
-        if(ntraces > 1)
+        if(!_traces.empty())
             os << "</trace-list>\n";
     }
 
