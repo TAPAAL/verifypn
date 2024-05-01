@@ -13,5 +13,7 @@ For creating the VM remember:
 
 - to fix locales do: sudo apt-get purge locales
                      sudo apt-get install locales
+- alternative fix to locales: add to .profile and .bashrc the following:
+   export PERL_BADLANG=0
 
 - for running qemu, check the QEMU-README.txt file.
