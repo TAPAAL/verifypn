@@ -42,6 +42,23 @@ namespace PetriEngine {
             _doDynamic = dynamic;
             return this;
         }
+    private:
+        struct place_t {
+            uint32_t producers, consumers;
+        };
+
+        struct trans_t {
+            uint32_t index;
+            int8_t direction;
+
+            trans_t() = default;
+
+            trans_t(uint32_t id, int8_t dir) : index(id), direction(dir) {};
+
+            bool operator<(const trans_t &t) const {
+                return index < t.index;
+            }
+        };
 
     private:
         void setupProducersAndConsumers();
@@ -49,6 +66,9 @@ namespace PetriEngine {
         void setupExtBounds();
 
         [[nodiscard]] int effect(uint32_t t, uint32_t p) const;
+
+        [[nodiscard]] std::pair<const trans_t*, const trans_t*> producers(uint32_t p) const;
+        [[nodiscard]] std::pair<const trans_t*, const trans_t*> consumers(uint32_t p) const;
 
         void findDeadPlacesAndTransitions(const PetriEngine::Marking *marking);
 
@@ -64,13 +84,14 @@ namespace PetriEngine {
         // === Settings
         bool _enabled = true;
         bool _doDynamic = true;
-        bool _env_DYN_EXTRAP_DEBUG = std::getenv("DYN_EXTRAP_DEBUG") != nullptr;
+        bool _env_TOKEN_ELIM_DEBUG = std::getenv("TOKEN_ELIM_DEBUG") != nullptr;
 
         // === Net
         PetriNet const *_net;
         std::vector<uint32_t> _extBounds;
-        std::vector<std::vector<uint32_t>> _producers;
-        std::vector<std::vector<uint32_t>> _consumers;
+        std::unique_ptr<place_t[]> _prodcons;
+        std::unique_ptr<trans_t[]> _parcs;
+        std::vector<std::vector<uint32_t>> _inhibpost;
 
         // === Cache and working flags
         std::unordered_map<const Condition *, const std::vector<bool>> _cache;

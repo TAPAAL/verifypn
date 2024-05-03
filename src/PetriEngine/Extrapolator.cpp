@@ -131,27 +131,64 @@ namespace PetriEngine {
     }
 
     void Extrapolator::setupProducersAndConsumers() {
-        // The PetriNet data structure does not allow us to go from a place to its producers and consumers.
-        // We (re)construct that information here since we will need it a lot for extrapolation.
+        _inhibpost.resize(0);
+        _inhibpost.resize(_net->_nplaces);
+        std::vector<std::pair<std::vector<trans_t>, std::vector<trans_t>>> tmp_places(_net->_nplaces);
 
-        _producers.resize(_net->_nplaces);
-        _consumers.resize(_net->_nplaces);
-
-        for (uint32_t i = 0; i < _net->_ntransitions; ++i) {
-            uint32_t a = _net->_transitions[i].inputs;
-            uint32_t outs = _net->_transitions[i].outputs;
-            uint32_t last = _net->_transitions[i + 1].inputs;
-
-            for ( ; a < outs; ++a) {
-                const Invariant& inv = _net->_invariants[a];
-                _consumers[inv.place].push_back(i);
+        for (uint32_t t = 0; t < _net->_ntransitions; t++) {
+            const TransPtr &ptr = _net->_transitions[t];
+            uint32_t finv = ptr.inputs;
+            uint32_t linv = ptr.outputs;
+            for (; finv < linv; finv++) { // Post set of places
+                if (_net->_invariants[finv].inhibitor) {
+                    _inhibpost[_net->_invariants[finv].place].push_back(t);
+                } else {
+                    tmp_places[_net->_invariants[finv].place].second.emplace_back(t, _net->_invariants[finv].direction);
+                }
             }
 
-            for ( ; a < last; ++a) {
-                const Invariant& inv = _net->_invariants[a];
-                _producers[inv.place].push_back(i);
+            finv = linv;
+            linv = _net->_transitions[t + 1].inputs;
+            for (; finv < linv; finv++) { // Pre set of places
+                if (_net->_invariants[finv].direction > 0)
+                    tmp_places[_net->_invariants[finv].place].first.emplace_back(t, _net->_invariants[finv].direction);
             }
         }
+
+        // flatten
+        size_t ntrans = 0;
+        for (const auto& p : tmp_places) {
+            ntrans += p.first.size() + p.second.size();
+        }
+        _parcs = std::make_unique<trans_t[]>(ntrans);
+
+        _prodcons = std::make_unique<place_t[]>(_net->_nplaces + 1);
+        uint32_t offset = 0;
+        uint32_t p = 0;
+        for (; p < _net->_nplaces; ++p) {
+            auto &pre = tmp_places[p].first;
+            auto &post = tmp_places[p].second;
+
+            // keep things nice for caches
+            std::sort(pre.begin(), pre.end());
+            std::sort(post.begin(), post.end());
+
+            _prodcons[p].producers = offset;
+            offset += pre.size();
+            _prodcons[p].consumers = offset;
+            offset += post.size();
+            for (size_t tn = 0; tn < pre.size(); ++tn) {
+                _parcs[tn + _prodcons[p].producers] = pre[tn];
+            }
+
+            for (size_t tn = 0; tn < post.size(); ++tn) {
+                _parcs[tn + _prodcons[p].consumers] = post[tn];
+            }
+
+        }
+        assert(offset == ntrans);
+        _prodcons[p].producers = offset;
+        _prodcons[p].consumers = offset;
     }
 
     void Extrapolator::setupExtBounds() {
@@ -169,24 +206,13 @@ namespace PetriEngine {
         }
     }
 
-    int Extrapolator::effect(uint32_t t, uint32_t p) const {
-        uint32_t i = _net->_transitions[t].inputs;
-        uint32_t fout = _net->_transitions[t].outputs;
-        int64_t w_rem = 0;
-        for ( ; i < fout; ++i) {
-            if (_net->_invariants[i].place == p) {
-                w_rem = _net->_invariants[i].tokens;
-                break;
-            }
-        }
-        uint32_t j = fout;
-        uint32_t end = _net->_transitions[t+1].inputs;
-        for ( ; j < end; ++j) {
-            if (_net->_invariants[j].place == p) {
-                return _net->_invariants[j].tokens - w_rem;
-            }
-        }
-        return -w_rem;
+    std::pair<const Extrapolator::trans_t*, const Extrapolator::trans_t*> Extrapolator::producers(uint32_t p) const {
+        const place_t pmeta = _prodcons[p];
+        return std::make_pair(&_parcs[pmeta.producers], &_parcs[pmeta.consumers]);
+    }
+
+    std::pair<const Extrapolator::trans_t*, const Extrapolator::trans_t*> Extrapolator::consumers(uint32_t p) const {
+        return std::make_pair(&_parcs[_prodcons[p].consumers], &_parcs[_prodcons[p + 1].producers]);
     }
 
     void Extrapolator::extrapolate(Marking *marking, Condition *query) {
@@ -212,9 +238,9 @@ namespace PetriEngine {
         auto processIncPlace = [&](uint32_t p) {
             if ((_pflags[p] & CAN_INC) == 0) {
                 _pflags[p] |= CAN_INC;
-                for (uint32_t t : _consumers[p]) {
-                    if (!_fireable[t])
-                        queue.push(t);
+                for (auto [t, last] = consumers(p); t < last; ++t) {
+                    if (!_fireable[t->index])
+                        queue.push(t->index);
                 }
             }
         };
@@ -222,7 +248,7 @@ namespace PetriEngine {
         auto processDecPlace = [&](uint32_t p) {
             if ((_pflags[p] & CAN_DEC) == 0) {
                 _pflags[p] |= CAN_DEC;
-                for (uint32_t t : _consumers[p]) {
+                for (uint32_t t : _inhibpost[p]) {
                     if (!_fireable[t])
                         queue.push(t);
                 }
@@ -232,44 +258,13 @@ namespace PetriEngine {
         auto processEnabled = [&](uint32_t t) {
             _fireable[t] = true;
             // Find and process negative pre-set and positive post-set
-            uint32_t i = _net->_transitions[t].inputs;
-            uint32_t fout = _net->_transitions[t].outputs;
-            uint32_t j = fout;
-            uint32_t end = _net->_transitions[t+1].inputs;
-            while (i < fout && j < end)
-            {
-                const Invariant& preinv = _net->_invariants[i];
-                const Invariant& postinv = _net->_invariants[j];
-
-                if (preinv.place < postinv.place) {
-                    if (!preinv.inhibitor)
-                        processDecPlace(preinv.place);
-                    i++;
-                } else if (preinv.place > postinv.place) {
-                    processIncPlace(postinv.place);
-                    j++;
-                } else {
-                    if (preinv.inhibitor) {
-                        processIncPlace(postinv.place);
-                    } else {
-                        // There are both an in and an out arc to this place. Is the effect non-zero?
-                        if (preinv.tokens > postinv.tokens) {
-                            processDecPlace(preinv.place);
-                        } else if (preinv.tokens < postinv.tokens) {
-                            processIncPlace(postinv.place);
-                        }
-                    }
-
-                    i++; j++;
-                }
+            for (auto [finv, linv] = _net->preset(t); finv < linv; ++finv) {
+                if (finv->direction < 0)
+                    processDecPlace(finv->place);
             }
-            for ( ; i < fout; i++) {
-                const Invariant& preinv = _net->_invariants[i];
-                if (!preinv.inhibitor)
-                    processDecPlace(preinv.place);
-            }
-            for ( ; j < end; j++) {
-                processIncPlace(_net->_invariants[j].place);
+            for (auto [finv, linv] = _net->postset(t); finv < linv; ++finv) {
+                if (finv->direction > 0)
+                    processIncPlace(finv->place);
             }
         };
 
@@ -323,10 +318,14 @@ namespace PetriEngine {
         }
 
         std::stringstream before;
-        if (_env_DYN_EXTRAP_DEBUG) {
+        if (_env_TOKEN_ELIM_DEBUG) {
             for (uint32_t i = 0; i < _net->_nplaces; i++) {
                 before << (*marking)[i];
             }
+        }
+
+        if (before.str() == "00110000000010000000000000001100000000000000000000000101000000001") {
+            std::cout << "Debugging\n";
         }
 
         findDeadPlacesAndTransitions(marking);
@@ -342,7 +341,7 @@ namespace PetriEngine {
             }
         }
 
-        if (_env_DYN_EXTRAP_DEBUG) {
+        if (_env_TOKEN_ELIM_DEBUG) {
             std::stringstream after;
             for (uint32_t i = 0; i < _net->_nplaces; i++)
             {
@@ -401,15 +400,12 @@ namespace PetriEngine {
             queue.pop();
 
             if ((_pflags[p] & VIS_DEC) > 0) {
-                // Put pre-set of negative post-set in vis_inc,
-                // and inhibiting pre-set of post-set in vis_dec
-                for (auto t : _consumers[p]) {
-                    if (!_fireable[t] || effect(t, p) >= 0) continue;
-                    const TransPtr &ptr = _net->_transitions[t];
-                    uint32_t finv = ptr.inputs;
-                    uint32_t linv = ptr.outputs;
-                    for ( ; finv < linv; ++finv) {
-                        const Invariant& arc = _net->_invariants[finv];
+                // Put pre-set of negative consumers in vis_inc,
+                // and inhibiting pre-set of negative consumers in vis_dec
+                for (auto [t, last] = consumers(p); t < last; ++t) {
+                    if (!_fireable[t->index] || t->direction >= 0) continue;
+                    for (auto [finv, linv] = _net->preset(t->index) ; finv < linv; ++finv) {
+                        const Invariant& arc = *finv;
                         if (arc.inhibitor) {
                             if ((_pflags[arc.place] & VIS_DEC) == 0 && (_pflags[arc.place] & CAN_DEC) > 0) {
                                 queue.push(arc.place);
@@ -430,15 +426,12 @@ namespace PetriEngine {
             }
 
             if ((_pflags[p] & VIS_INC) > 0) {
-                // Put pre-set of positive pre-set in vis_inc,
-                // and inhibiting pre-set of pre-set in vis_dec
-                for (auto t : _producers[p]) {
-                    if (!_fireable[t] || effect(t, p) <= 0) continue;
-                    const TransPtr &ptr = _net->_transitions[t];
-                    uint32_t finv = ptr.inputs;
-                    uint32_t linv = ptr.outputs;
-                    for ( ; finv < linv; ++finv) {
-                        const Invariant& arc = _net->_invariants[finv];
+                // Put pre-set of positive producers in vis_inc,
+                // and inhibiting pre-set positive producers in vis_dec
+                for (auto [t, last] = producers(p); t < last; ++t) {
+                    if (!_fireable[t->index] || t->direction <= 0) continue;
+                    for (auto [finv, linv] = _net->preset(t->index) ; finv < linv; ++finv) {
+                        const Invariant& arc = *finv;
                         if (arc.inhibitor) {
                             if ((_pflags[arc.place] & VIS_DEC) == 0 && (_pflags[arc.place] & CAN_DEC) > 0) {
                                 queue.push(arc.place);
@@ -464,7 +457,11 @@ namespace PetriEngine {
             bool affectsVisible = false;
             for ( ; finv < linv; ++finv) {
                 const Invariant& arc = _net->_invariants[finv];
-                if ((_pflags[arc.place] & (VIS_INC | VIS_DEC | IN_Q_INC | IN_Q_DEC)) > 0) {
+                if (arc.direction > 0 && (_pflags[arc.place] & (VIS_INC | IN_Q_INC)) > 0) {
+                    affectsVisible = true;
+                    break;
+                }
+                if (arc.direction < 0 && (_pflags[arc.place] & (VIS_DEC | IN_Q_DEC)) > 0) {
                     affectsVisible = true;
                     break;
                 }
@@ -532,15 +529,12 @@ namespace PetriEngine {
             queue.pop_back();
 
             if (vis_dec[p]) {
-                // Put pre-set of negative post-set in vis_inc,
-                // and inhibiting pre-set of post-set in vis_dec
-                for (auto t : _consumers[p]) {
-                    if (effect(t, p) >= 0) continue;
-                    const TransPtr &ptr = _net->_transitions[t];
-                    uint32_t i = ptr.inputs;
-                    uint32_t fout = ptr.outputs;
-                    for ( ; i < fout; ++i) {
-                        const Invariant& arc = _net->_invariants[i];
+                // Put pre-set of negative consumers in vis_inc,
+                // and inhibiting pre-set of negative consumers in vis_dec
+                for (auto [t, last] = consumers(p); t < last; ++t) {
+                    if (t->direction >= 0) continue;
+                    for (auto [finv, fout] = _net->preset(t->index); finv < fout; ++finv) {
+                        const Invariant& arc = *finv;
                         if (arc.inhibitor) {
                             if (!vis_dec[arc.place]) {
                                 queue.push_back(arc.place);
@@ -561,24 +555,21 @@ namespace PetriEngine {
             }
 
             if (vis_inc[p]) {
-                // Put pre-set of positive pre-set in vis_inc,
-                // and inhibiting pre-set of pre-set in vis_dec
-                for (auto t : _producers[p]) {
-                    if (effect(t, p) <= 0) continue;
-                    const TransPtr &ptr = _net->_transitions[t];
-                    uint32_t finv = ptr.inputs;
-                    uint32_t linv = ptr.outputs;
-                    for ( ; finv < linv; ++finv) {
-                        const Invariant& inv = _net->_invariants[finv];
-                        if (inv.inhibitor) {
-                            if (!vis_dec[inv.place]) {
-                                queue.push_back(inv.place);
-                                vis_dec[inv.place] = true;
+                // Put pre-set of positive producers in vis_inc,
+                // and inhibiting pre-set of positive producers in vis_dec
+                for (auto [t, last] = producers(p); t < last; ++t) {
+                    if (t->direction <= 0) continue;
+                    for (auto [finv, linv] = _net->preset(t->index) ; finv < linv; ++finv) {
+                        const Invariant& arc = *finv;
+                        if (arc.inhibitor) {
+                            if (!vis_dec[arc.place]) {
+                                queue.push_back(arc.place);
+                                vis_dec[arc.place] = true;
                             }
                         } else {
-                            if (!vis_inc[inv.place]) {
-                                queue.push_back(inv.place);
-                                vis_inc[inv.place] = true;
+                            if (!vis_inc[arc.place]) {
+                                queue.push_back(arc.place);
+                                vis_inc[arc.place] = true;
                             }
                         }
                     }
@@ -591,15 +582,18 @@ namespace PetriEngine {
             visible[i] = vis_inc[i] || vis_dec[i];
         }
 
-        std::stringstream ss;
-        query->toString(ss);
-        std::cout << "Visible places : ";
-        for (uint32_t i = 0; i < _net->_nplaces; ++i) {
-            if (use[i] > 0 || vis_inc[i] || vis_dec[i]) {
-                std::cout << *_net->placeNames()[i] << "#" << ((use[i] & (IN_Q_INC | IN_Q_DEC)) > 0) << vis_inc[i] << vis_dec[i] << " ";
+        if (_env_TOKEN_ELIM_DEBUG) {
+            std::stringstream ss;
+            query->toString(ss);
+            std::cout << "Visible places : ";
+            for (uint32_t i = 0; i < _net->_nplaces; ++i) {
+                if (use[i] > 0 || vis_inc[i] || vis_dec[i]) {
+                    std::cout << *_net->placeNames()[i] << "#" << ((use[i] & (IN_Q_INC | IN_Q_DEC)) > 0) << vis_inc[i]
+                              << vis_dec[i] << " ";
+                }
             }
+            std::cout << ": " << ss.str() << "\n";
         }
-        std::cout << ": " << ss.str() << "\n";
 
         _cache.insert(std::make_pair(query, visible));
         return _cache.at(query);
