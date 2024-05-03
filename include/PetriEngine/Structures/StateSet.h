@@ -20,6 +20,7 @@
 #include <ptrie/ptrie_stable.h>
 #include <ptrie/ptrie_map.h>
 #include <unordered_map>
+#include <stack>
 #include <iostream>
 
 #include "State.h"
@@ -112,7 +113,7 @@ namespace PetriEngine {
              * @param query the query to check
              * @param t the transition
             */
-            void computeCandidate(const MarkVal* candidate, const PQL::Condition *query, uint32_t t) {
+            bool computeCandidate(const MarkVal* candidate, const PQL::Condition *query, uint32_t t) {
                 ++_discovered;
                 PQL::DistanceContext context(&_net, candidate);
 
@@ -121,7 +122,7 @@ namespace PetriEngine {
                     _maxTokens = sumMarking;
                 }
                 if (_kbound != 0 && sumMarking > _kbound)
-                    return;
+                    return false;
 
                 // Update the max token bound for each place in the net (only for newly discovered markings)
                 for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
@@ -145,9 +146,11 @@ namespace PetriEngine {
                 double r = (double)rand() / RAND_MAX;
                 double threshold = _potencies[t] / (double)_totalWeight;
                 if (r <= threshold) {
-                   setMarking(candidate, _nextMarking.get());
+                    setMarking(candidate, _nextMarking.get());
                     _nextStepDistance = dist;
+                    return true;
                 }
+                return false;
             }
 
             /**
@@ -157,7 +160,9 @@ namespace PetriEngine {
             */
             void newWalk() {
                 setMarking(_initialMarking.get(), _nextMarking.get());
-                _currentStepDistance = _initialDistance;
+                // _currentStepDistance is initialized by _nextStepDistance in nextStep
+                // which is called just after newWalk
+                _nextStepDistance = _initialDistance;
             }
 
             /**
@@ -177,17 +182,17 @@ namespace PetriEngine {
                 return true;
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 // _discovered is used here but not sure it is the right value
                 return discovered();
             }
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override {
+            std::pair<size_t, size_t> getHistory(size_t markingid) override {
                 assert(false);
                 return std::make_pair(0,0);
             }
 
-        private:
+        protected:
             std::unique_ptr<MarkVal[]> _initialMarking;
             // The best candidate so far to be the next marking
             std::unique_ptr<MarkVal[]> _nextMarking;
@@ -223,6 +228,75 @@ namespace PetriEngine {
                 }
                 return sum;
             }
+        };
+
+
+        class TracableRandomWalkStateSet : public RandomWalkStateSet
+        {
+
+        public:
+            TracableRandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query,
+                               const std::vector<MarkVal> &initPotencies, size_t seed, int nplaces = -1)
+                : RandomWalkStateSet(net, kbound, query, initPotencies, seed, nplaces)
+            {
+                _stackTrace = std::stack<size_t>();
+            }
+
+            /**
+             * Adds a step to the trace
+             * Adds one element to the stack trace. The value is not important,
+             * it will be set later by setHistory.
+            */
+            void addStepTrace() {
+                _stackTrace.push(0);
+            }
+
+            /**
+             * Sets the transition of the last element of the stack trace
+             * @param transition the id of the transition
+            */
+            void setHistory(size_t transition) {
+                _stackTrace.top() = transition;
+            }
+
+            void newWalk() {
+                // Resets the trace stack before calling the parent method
+                _stackTrace = std::stack<size_t>();
+                RandomWalkStateSet::newWalk();
+            }
+
+            /**
+             * Gets the last element of the trace stack and pops it
+             * Be careful, it pops the _stackTrace, so the element is lost
+             * @return a pair (size_t, size_t) where the first element is the remaining
+             *         size of the trace and the second element is the transition id
+            */
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
+            {
+                size_t transition = _stackTrace.top();
+                _stackTrace.pop();
+                return std::pair<size_t, size_t>(_stackTrace.size(), transition);
+            }
+
+            size_t traceSize() const {
+                return _stackTrace.size();
+            }
+
+            /**
+             * Saves the last transition of the stack trace in the _previousTransition variable
+             * Useful to restore the previous transition when computeCandidate returns false
+            */
+            void savePreviousTransition() {
+                _previousTransition = _stackTrace.top();
+            }
+
+            size_t getPreviousTransition() const {
+                return _previousTransition;
+            }
+
+        private:
+            std::stack<size_t> _stackTrace;
+            size_t _previousTransition;
         };
 
 
@@ -379,30 +453,30 @@ namespace PetriEngine {
         public:
             using EncodingStateSetInterface::EncodingStateSetInterface;
 
-            virtual std::pair<bool, size_t> add(const State& state) override
+            std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _decode(state, id, _trie);
             }
 
-            virtual std::pair<bool, size_t> lookup(State& state) override
+            std::pair<bool, size_t> lookup(State& state) override
             {
                 return _lookup(state, _trie);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override {}
+            void setHistory(size_t id, size_t transition) override {}
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 assert(false);
                 return std::make_pair(0,0);
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 return _trie.size();
             }
 
@@ -418,12 +492,12 @@ namespace PetriEngine {
         public:
             using EncodingStateSetInterface::EncodingStateSetInterface;
 
-            virtual std::pair<bool, size_t> add(const State& state) override
+            std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _decode(state, id, _trie);
             }
@@ -432,20 +506,20 @@ namespace PetriEngine {
                 return _trie.get_data(markingid);
             }
 
-            virtual std::pair<bool, size_t> lookup(State& state) override
+            std::pair<bool, size_t> lookup(State& state) override
             {
                 return _lookup(state, _trie);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override {}
+            void setHistory(size_t id, size_t transition) override {}
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 assert(false);
                 return std::make_pair(0,0);
             }
 
-            virtual size_t size() const override {
+            size_t size() const override {
                 return _trie.size();
             }
 
@@ -465,20 +539,20 @@ namespace PetriEngine {
         public:
             using AnnotatedStateSet<traceable_t>::AnnotatedStateSet;
 
-            virtual void decode(State& state, size_t id) override
+            void decode(State& state, size_t id) override
             {
                 _parent = id;
                 AnnotatedStateSet<traceable_t>::decode(state, id);
             }
 
-            virtual void setHistory(size_t id, size_t transition) override
+            void setHistory(size_t id, size_t transition) override
             {
                 traceable_t& t = get_data(id);
                 t.parent = _parent;
                 t.transition = transition;
             }
 
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 traceable_t& t = get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent, t.transition);

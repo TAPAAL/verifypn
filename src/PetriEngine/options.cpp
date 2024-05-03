@@ -48,6 +48,12 @@ void options_t::print(std::ostream& optionsOut) {
         optionsOut << ",Trace=DISABLED";
     }
 
+    if (print_bindings == true) {
+        optionsOut << ",PrintBidndings=ENABLED";
+    } else {
+        optionsOut << ",PrintBindings=DISABLED";
+    }
+
     if (kbound > 0) {
         optionsOut << ",Token_Bound=" << kbound;
     }
@@ -136,6 +142,7 @@ void printHelp() {
         "Options:\n"
         "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
         "  -t, --trace                          Provide XML-trace to stderr\n"
+        "  -b, --bindings                       Print bindings to stderr in XML format (only for CPNs, default is not to print)\n"
         "  -s, --search-strategy <strategy>     Search strategy:\n"
         "                                       - BestFS                        Heuristic search (default)\n"
         "                                       - BFS                           Breadth first search\n"
@@ -386,6 +393,8 @@ bool options_t::parse(int argc, const char** argv) {
             } else {
                 trace = TraceLevel::Full;
             }
+         } else if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--bindings") == 0) {
+            print_bindings = true;
         } else if (std::strcmp(argv[i], "-x") == 0 || std::strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));

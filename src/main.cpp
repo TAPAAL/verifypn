@@ -167,7 +167,7 @@ int main(int argc, const char** argv) {
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,
             options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
-            options.intervalTimeout, options.cpnOverApprox);
+            options.intervalTimeout, options.cpnOverApprox, options.print_bindings);
 
         builder.sort();
         std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
@@ -499,9 +499,6 @@ int main(int argc, const char** argv) {
             options.siphontrapTimeout = 0;
 
             //----------------------- Reachability -----------------------//
-
-            // Change default place-holder to default strategy
-            if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::HEUR;
 
             // remove the prefix EF/AF (LEGACY, should not be handled here)
             for(uint32_t i = 0; i < results.size(); ++i)

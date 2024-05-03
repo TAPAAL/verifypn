@@ -2838,8 +2838,6 @@ namespace PetriEngine {
         constexpr uint32_t explosion_limiter = 6;
 
         this->reconstructTrace = reconstructTrace;
-        if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
-            std::cout << "Rule H, J, R, S, Q disabled when a trace is requested." << std::endl;
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
@@ -2908,21 +2906,17 @@ restart:
             const char* rnames = "ABCDEFGHIJKLMNOPQRS";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
-                if(contains_next)
+                if (contains_next && (reduction[i] == 2 || reduction[i] == 4 || reduction[i] == 5 || reduction[i] == 8))
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
-                    {
-                        std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
-                        reduction.erase(reduction.begin() + i);
-			            continue;
-                    }
+                    std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
+                    reduction.erase(reduction.begin() + i);
                 }
-                if(!remove_loops && (reduction[i] == 5 || reduction[i] == 12))
+                else if (!remove_loops && (reduction[i] == 5 || reduction[i] == 8 || reduction[i] == 12))
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
                 }
-                if (!(all_ltl || all_reach) && (reduction[i] == 17 || reduction[i] == 18)) {
+                else if (!(all_ltl || all_reach) && (reduction[i] == 17 || reduction[i] == 18)) {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is not LTL" << std::endl;
                     reduction.erase(reduction.begin() + i);
                 }

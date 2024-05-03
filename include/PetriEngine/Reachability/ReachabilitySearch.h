@@ -77,7 +77,7 @@ namespace PetriEngine {
                 bool usequeries;
             };
 
-            template<typename G>
+            template<typename W = Structures::RandomWalkStateSet, typename G>
             bool tryReachRandomWalk(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
@@ -237,7 +237,7 @@ namespace PetriEngine {
             return false;
         }
 
-        template<typename G>
+        template<typename W, typename G>
         bool ReachabilitySearch::tryReachRandomWalk(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
@@ -260,7 +260,7 @@ namespace PetriEngine {
             candidate.setMarking(_net.makeInitialMarking());
             currentStepState.setMarking(_net.makeInitialMarking());
 
-            Structures::RandomWalkStateSet states(_net, _kbound, query, initPotencies, seed); // State set
+            W states(_net, _kbound, query, initPotencies, seed); // RandomWalk State Set
             G generator = _makeSucGen<G>(_net, queries); // Successor generator
 
             // Check initial marking
@@ -273,6 +273,11 @@ namespace PetriEngine {
                     _max_tokens = states.maxTokens();
                     return true;
                 }
+            }
+
+            if constexpr (std::is_same_v<W, Structures::TracableRandomWalkStateSet>) {
+                // Not to be 0 in case of a printTrace call
+                _satisfyingMarking = 1;
             }
 
             const int64_t maxDepthValue = std::numeric_limits<int64_t>::max() - incRandomWalk;
@@ -288,19 +293,41 @@ namespace PetriEngine {
                         break;
                     }
                     generator.prepare(&currentStepState);
+                    if constexpr (std::is_same_v<W, Structures::TracableRandomWalkStateSet>) {
+                        // Add one element to the trace. It will be modified using setHistory
+                        states.addStepTrace();
+                    }
 
                     while(generator.next(candidate)) {
                         ss.enabledTransitionsCount[generator.fired()]++;
                         ss.exploredStates++;
 
+                        if constexpr (std::is_same_v<W, Structures::TracableRandomWalkStateSet>) {
+                            // Save the current queued transition
+                            states.savePreviousTransition();
+
+                            // We have to pretend that the current candidate transition is fired.
+                            // Then checkQueries will work for this candidate. In particular, it will
+                            // be able to print the correct trace.
+                            states.setHistory(static_cast<size_t>(generator.fired()));
+                        }
+
                         if (checkQueries(queries, results, candidate, ss, &states)) {
                             if(statisticsLevel != StatisticsLevel::None)
                                 printStats(ss, &states, statisticsLevel);
                             _max_tokens = states.maxTokens();
-                            // _satisfyingMarking = (size_t)candidate.marking(); // This is bad, but _satisfyingMarking is only used for printing the trace
                             return true;
                         } else {
-                            states.computeCandidate(candidate.marking(), query, generator.fired());
+                            if constexpr (std::is_same_v<W, Structures::TracableRandomWalkStateSet>) {
+                                // Returns false if the candidate is not a better candidate to be the next marking
+                                if (!states.computeCandidate(candidate.marking(), query, generator.fired())) {
+                                    // The candidate does not satisfy the queries and is not marked as a better
+                                    // candidate to be the next marking, so we restore the previous queued transition
+                                    states.setHistory(states.getPreviousTransition());
+                                }
+                            } else {
+                                states.computeCandidate(candidate.marking(), query, generator.fired());
+                            }
                         }
                     }
                     ss.expandedStates++;

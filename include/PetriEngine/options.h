@@ -108,6 +108,7 @@ struct options_t {
     uint32_t seed_offset = 0;
     int max_intervals = 500; //0 disabled
     int max_intervals_reduced = 5;
+    bool print_bindings = false;
 
     std::string strategy_output;
 

@@ -143,7 +143,7 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const EXCondition *condition) {
-            os << "AF ";
+            os << "EX ";
             Visitor::visit(this, (*condition)[0]);
         }
 
