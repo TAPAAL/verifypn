@@ -65,8 +65,6 @@ namespace PetriEngine {
 
         void setupExtBounds();
 
-        [[nodiscard]] int effect(uint32_t t, uint32_t p) const;
-
         [[nodiscard]] std::pair<const trans_t*, const trans_t*> producers(uint32_t p) const;
         [[nodiscard]] std::pair<const trans_t*, const trans_t*> consumers(uint32_t p) const;
 
