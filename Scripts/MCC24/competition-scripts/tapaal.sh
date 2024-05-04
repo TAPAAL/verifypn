@@ -3,6 +3,8 @@
 # This is the initialization script for the participation of TAPAAL
 # untimed engine verifypn in the Petri net competition 2024.
 
+export PERL_BADLANG=0
+
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
 if [ -z "$MODEL_PATH" ] ; then
