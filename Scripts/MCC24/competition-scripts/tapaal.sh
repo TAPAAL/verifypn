@@ -453,14 +453,13 @@ function LTL {
 }
 
 function CTL {
-
     STRATEGIES_PAR[0]="-s BestFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[1]="-s RPFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[2]="-s BFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[3]="-s DFS -q 0 -l 0 -d $SHORTRED"
-    
+    unset STRATEGIES_SEQ
     STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
-
+    STRATEGIES_SEQ[1]="-tar -s DFS -q 0 -d $SHORTRED"
     verifyparallel
 }
 
