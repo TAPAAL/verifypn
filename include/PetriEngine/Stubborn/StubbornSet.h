@@ -185,7 +185,6 @@ namespace PetriEngine {
                     // for this transition.
                     for (; finv < linv; ++finv) {
                         if ((*_parent).marking()[finv->place] < finv->tokens && !finv->inhibitor) {
-                            inhib = false;
                             ok = (_places_seen[finv->place] & PresetSeen) != 0;
                             if(ok)
                                 cand = finv->place;
@@ -193,12 +192,12 @@ namespace PetriEngine {
                             {
                                 if(deps >= dependency(finv->place, false))
                                 {
+                                    inhib = false;
                                     cand = finv->place;
                                     deps = dependency(finv->place, false);
                                 }
                             }
                         } else if ((*_parent)[finv->place] >= finv->tokens && finv->inhibitor) {
-                            inhib = true;
                             ok = (_places_seen[finv->place] & PostsetSeen) != 0;
                             if(ok)
                                 cand = finv->place;
@@ -206,6 +205,7 @@ namespace PetriEngine {
                             {
                                 if(deps >= dependency(finv->place, true))
                                 {
+                                    inhib = true;
                                     cand = finv->place;
                                     deps = dependency(finv->place, true);
                                 }
