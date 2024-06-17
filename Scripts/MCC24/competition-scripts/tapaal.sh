@@ -466,6 +466,8 @@ function CTL {
 case "$BK_EXAMINATION" in
 
     StateSpace)
+    	echo "DO_NOT_COMPETE"  
+        exit 0
         echo        
         echo "*****************************************"
         echo "*  TAPAAL performing StateSpace search  *"
