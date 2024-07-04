@@ -45,11 +45,10 @@ jobs:
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=OFF
           make
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: verifypn-linux64
-          path: build/verifypn/bin/verifypn-linux64
+      - name: Deploy verifypn
+        run: |
+          mkdir -p website
+          cp build/verifypn/bin/verifypn-linux64 website/
 
       - name: BuildMCC
         run: |
@@ -58,8 +57,15 @@ jobs:
           CC=gcc-10 CXX=g++-10 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TEST=OFF
           make
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+      - name: Deploy verifypn-mcc
+        run: |
+          mkdir -p website
+          cp build/verifypn/bin/verifypn-linux64 website/verifypn-mcc-linux64
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4
         with:
-          name: verifypn-mcc-linux64
-          path: build/verifypn/bin/verifypn-linux64
+          branch: linux # The branch the action should deploy to.
+          folder: website # The folder the action should deploy.
+          clean: true # Automatically remove deleted files from the deploy branch
+          single-commit: true 
