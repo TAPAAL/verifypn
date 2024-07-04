@@ -63,7 +63,7 @@ jobs:
           cp build/verifypn/bin/verifypn-linux64 website/verifypn-mcc-linux64
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: linux # The branch the action should deploy to.
           folder: website # The folder the action should deploy.
