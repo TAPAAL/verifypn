@@ -80,9 +80,9 @@ namespace PetriEngine {
 
     private:
         // === Settings
-        bool _enabled = true;
-        bool _doDynamic = true;
-        bool _env_TOKEN_ELIM_DEBUG = std::getenv("TOKEN_ELIM_DEBUG") != nullptr;
+        bool _enabled = std::getenv("TAPAAL_TOKEN_ELIM") != nullptr;
+        bool _doDynamic = std::getenv("TAPAAL_TOKEN_ELIM_STATIC") == nullptr;
+        bool _env_TOKEN_ELIM_DEBUG = std::getenv("TAPAAL_TOKEN_ELIM_DEBUG") != nullptr;
 
         // === Net
         PetriNet const *_net;
