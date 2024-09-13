@@ -945,6 +945,7 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleEP(uint32_t* placeInQuery) {
         // Rule P is an extension on Rule E
+        std::cout << "HELLO" << std::endl;
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
@@ -971,42 +972,44 @@ namespace PetriEngine {
             }
 
             if(!ok) continue;
-            std::set<uint32_t> notenabled;
+            std::set<uint32_t> inhibitedOrInitiallyDisabled;
             // Out of the consumers, tally up those that are initially not enabled by place
             // Ensure all the enabled transitions that feed back into place are non-increasing on place.
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 const auto& in = getInArc(p, t);
-                if(in->weight <= parent->initialMarking[p])
-                {
-                    // This branch happening even once means notenabled.size() != consumers.size()
-                    // We already threw out all cases where in->inhib && out != t.post.end()
-                    if (!in->inhib) {
+                if (!in->inhib) {
+                    if (in->weight <= parent->initialMarking[p]) {
+                        // This branch happening even once means notenabled.size() != consumers.size()
+                        // We already threw out all cases where in->inhib && out != t.post.end()
                         const auto& out = getOutArc(t, p);
                         // Only increasing loops are not ok
                         if (out != t.post.end() && out->weight > in->weight) {
                             ok = false;
                             break;
                         }
+                    } else {
+                        inhibitedOrInitiallyDisabled.insert(cons);
                     }
-                }
-                else
-                {
-                    notenabled.insert(cons);
+                } else {
+                    inhibitedOrInitiallyDisabled.insert(cons);
                 }
             }
 
-            if(!ok || notenabled.empty()) continue;
+            if(!ok || inhibitedOrInitiallyDisabled.empty()) continue;
 
-            bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            bool E_used, P_used = false;
-            for(uint cons : notenabled) {
+            bool skipplace = (inhibitedOrInitiallyDisabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
+            bool E_used = false;
+            bool P_used = false;
+            for(uint cons : inhibitedOrInitiallyDisabled) {
                 Transition &t = getTransition(cons);
                 const auto& in = getInArc(p, t);
                 if (in->inhib) {
-                    skipInArc(p, cons);
-                    P_used = true;
+                    if (in->weight > parent->initialMarking[p]) {
+                        skipInArc(p, cons);
+                        P_used = true;
+                    }
                 } else {
                     skipTransition(cons);
                     E_used = true;
@@ -1020,7 +1023,7 @@ namespace PetriEngine {
 
             if (E_used) _ruleE++;
             if (P_used) _ruleP++;
-            continueReductions = true;
+            if (E_used || P_used) continueReductions = true;
 
         }
         assert(consistent());
@@ -2211,7 +2214,7 @@ namespace PetriEngine {
                             ++_ruleO;
                             continue_reductions = true;
                         }
-                        else if((_pflags[p] & CAN_INC) == 0)
+                        else if((_pflags[p] & CAN_INC) == 0 && inArc->weight > parent->initialMarking[p])
                         {
                             // inhibitor is useless
                             trans.pre.erase(inArc);
