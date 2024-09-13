@@ -972,59 +972,62 @@ namespace PetriEngine {
             }
 
             if(!ok) continue;
-            std::set<uint32_t> inhibitedOrInitiallyDisabled;
-            // Out of the consumers, tally up those that are initially not enabled by place
-            // Ensure all the enabled transitions that feed back into place are non-increasing on place.
+            std::unordered_set<uint32_t> initiallyDisabled;
+            std::unordered_set<uint32_t> inhibited;
+            // Collect transitions initially disabled by the place and transitions with inactive inhibitor arcs.
+            // Abort if we find an enabled transition with positive effect on the place
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 const auto& in = getInArc(p, t);
                 if (!in->inhib) {
                     if (in->weight <= parent->initialMarking[p]) {
-                        // This branch happening even once means notenabled.size() != consumers.size()
-                        // We already threw out all cases where in->inhib && out != t.post.end()
+                        // Check if positive effect on place. If positive, abort.
                         const auto& out = getOutArc(t, p);
-                        // Only increasing loops are not ok
                         if (out != t.post.end() && out->weight > in->weight) {
                             ok = false;
                             break;
                         }
                     } else {
-                        inhibitedOrInitiallyDisabled.insert(cons);
+                        initiallyDisabled.insert(cons);
                     }
                 } else {
-                    inhibitedOrInitiallyDisabled.insert(cons);
+                    if (in->weight > parent->initialMarking[p]) {
+                        // Inactive inhibitor arc
+                        inhibited.insert(cons);
+                    }
                 }
             }
 
-            if(!ok || inhibitedOrInitiallyDisabled.empty()) continue;
+            if(!ok || (initiallyDisabled.empty() && inhibited.empty())) continue;
 
-            bool skipplace = (inhibitedOrInitiallyDisabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            bool E_used = false;
-            bool P_used = false;
-            for(uint cons : inhibitedOrInitiallyDisabled) {
+            continueReductions = true;
+            if (!initiallyDisabled.empty()) _ruleE++;
+            if (!inhibited.empty()) _ruleP++;
+
+            bool allArcsRemoved = initiallyDisabled.size() + inhibited.size() == place.consumers.size();
+
+            // Can the place be removed entirely?
+            if(allArcsRemoved && (placeInQuery[p] == 0)) {
+                skipPlace(p);
+                continueReductions = true;
+                continue;
+            }
+
+            for(uint32_t cons : initiallyDisabled) {
                 Transition &t = getTransition(cons);
                 const auto& in = getInArc(p, t);
-                if (in->inhib) {
-                    if (in->weight > parent->initialMarking[p]) {
-                        skipInArc(p, cons);
-                        P_used = true;
-                    }
-                } else {
-                    skipTransition(cons);
-                    E_used = true;
-                }
+                assert(!in->inhib);
+                skipTransition(cons);
             }
 
-            if(skipplace) {
-                skipPlace(p);
-                E_used = true;
+            for (uint32_t tran : inhibited) {
+                Transition &t = getTransition(tran);
+                const auto& in = getInArc(p, t);
+                assert(in->inhib);
+                assert(in->weight > parent->initialMarking[p]);
+                skipInArc(p, tran);
             }
-
-            if (E_used) _ruleE++;
-            if (P_used) _ruleP++;
-            if (E_used || P_used) continueReductions = true;
-
         }
         assert(consistent());
         return continueReductions;
