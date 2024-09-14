@@ -37,8 +37,8 @@ jobs:
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'
         env:
-          CC: gcc-11
-          CXX: g++-11
+          CC: gcc-13
+          CXX: g++-13
           
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
