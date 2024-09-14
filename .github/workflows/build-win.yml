@@ -43,7 +43,7 @@ jobs:
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'     
       - name: Upload artifacts 
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: verifypn-win64
           path: '${{runner.workspace}}/build/verifypn/bin/verifypn-win64.exe'
