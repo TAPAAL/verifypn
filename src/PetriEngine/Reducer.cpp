@@ -1000,16 +1000,15 @@ namespace PetriEngine {
 
             if(!ok || (initiallyDisabled.empty() && inhibited.empty())) continue;
 
-            continueReductions = true;
             if (!initiallyDisabled.empty()) _ruleE++;
             if (!inhibited.empty()) _ruleP++;
+            continueReductions = true;  // Either rule E or P is for sure enabled at this point
 
             bool allArcsRemoved = initiallyDisabled.size() + inhibited.size() == place.consumers.size();
 
             // Can the place be removed entirely?
             if(allArcsRemoved && (placeInQuery[p] == 0)) {
                 skipPlace(p);
-                continueReductions = true;
                 continue;
             }
 
