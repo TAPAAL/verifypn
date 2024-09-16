@@ -945,7 +945,6 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleEP(uint32_t* placeInQuery) {
         // Rule P is an extension on Rule E
-        std::cout << "HELLO" << std::endl;
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
