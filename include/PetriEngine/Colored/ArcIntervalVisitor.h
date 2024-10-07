@@ -195,10 +195,12 @@ namespace PetriEngine {
                         return;
                     }
 
-                    old_intervals._intervalTupleVec.insert(
-                        old_intervals._intervalTupleVec.end(),
-                            _arcIntervals._intervalTupleVec.begin(), _arcIntervals._intervalTupleVec.end());
                 }
+
+                old_intervals._intervalTupleVec.insert(
+                    old_intervals._intervalTupleVec.end(),
+                        _arcIntervals._intervalTupleVec.begin(), _arcIntervals._intervalTupleVec.end());
+                        
                 std::swap(old_intervals, _arcIntervals);
             }
 
