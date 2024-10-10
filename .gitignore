@@ -14,3 +14,6 @@ src/LTL/SuccessorGeneration/HeuristicParser.parser.cpp
 src/LTL/SuccessorGeneration/HeuristicParser.parser.hpp
 build/
 
+
+results.csv
+.vscode/settings.json
