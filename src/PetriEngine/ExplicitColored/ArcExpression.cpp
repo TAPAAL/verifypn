@@ -88,13 +88,34 @@ namespace PetriEngine {
             {}
 
             void accept(const Colored::TupleExpression* expr) override {
-                std::vector<Color_t> colorSequence;
+                std::vector<std::vector<Color_t>> colorSequences;
+                colorSequences.push_back(std::vector<Color_t>());
+                
                 for (const auto& colorExpr : *expr) {
                     ColorVisitor visitor(*_variableMap, *_binding, *_colorTypeMap);
                     colorExpr->visit(visitor);
-                    colorSequence.push_back(visitor.color);
+                    if (visitor.color == ALL_COLOR) {
+                        for (auto& colorSequence : colorSequences) {
+                            colorSequence.push_back(0);
+                        }
+                        Color_t colorMax = expr->getColorType(*_colorTypeMap)->size() - 1;
+                        size_t originalColorSequencesBound = colorSequences.size();
+                        for (Color_t c = 1; c <= colorMax; c++) {
+                            for (size_t i = 0; i < originalColorSequencesBound; i++) {
+                                auto copy = colorSequences[i];
+                                copy.push_back(c);
+                                colorSequences.push_back(copy);
+                            }
+                        }
+                    } else {
+                        for (std::vector<Color_t>& colorSequence : colorSequences) {
+                            colorSequence.push_back(visitor.color);
+                        }
+                    }
                 }
-                result.SetCount(colorSequence, 1);
+                for (std::vector<Color_t>& colorSequence : colorSequences) {
+                    result.SetCount(std::move(colorSequence), 1);
+                }
             }
 
             void accept(const Colored::NumberOfExpression* expr) override {
