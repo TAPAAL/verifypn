@@ -9,7 +9,6 @@ namespace PetriEngine
         struct CPNMultiSet
         {
             int getCount(Color_t color);
-
         private:
             std::vector<MarkingCount_t> _counts;
         };

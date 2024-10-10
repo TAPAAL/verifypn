@@ -8,6 +8,7 @@ add_subdirectory(Reachability)
 add_subdirectory(PQL)
 add_subdirectory(TAR)
 add_subdirectory(Synthesis)
+add_subdirectory(ExplicitColored)
 
 add_library(PetriEngine ${HEADER_FILES}
     PetriNet.cpp
