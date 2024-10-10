@@ -30,24 +30,13 @@
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "MultiSet.h"
+#include "GuardExpression.h"
+#include "Binding.h"
 
 namespace PetriEngine
 {
     namespace ExplicitColored
     {
-        struct Binding
-        {
-            Color_t getValue(Variable_t variable);
-
-        private:
-            std::vector<Color_t> _values;
-        };
-
-        struct GuardExpression
-        {
-            virtual bool eval(const Binding &binding) = 0;
-        };
-
         struct ArcExpression
         {
             virtual CPNMultiSet eval(const Binding &binding) = 0;
@@ -67,7 +56,7 @@ namespace PetriEngine
         {
             int from;
             int to;
-            std::unique_ptr<ArcExpression> guardExpression;
+            std::unique_ptr<ArcExpression> arcExpression;
         };
 
         struct ColorType
