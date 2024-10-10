@@ -50,19 +50,19 @@ namespace PetriEngine {
                 colorTypeSequence.push_back(_binding->getValue(test->second));
             }
 
-            void accept(const Colored::DotConstantExpression*) override {}
-            void accept(const Colored::UserOperatorExpression*) override {}
-            void accept(const Colored::LessThanExpression*) override {}
-            void accept(const Colored::LessThanEqExpression*) override {}
-            void accept(const Colored::EqualityExpression*) override {}
-            void accept(const Colored::InequalityExpression*) override {}
-            void accept(const Colored::AndExpression*) override {}
-            void accept(const Colored::OrExpression*) override {}
-            void accept(const Colored::AllExpression*) override {}
-            void accept(const Colored::NumberOfExpression*) override {}
-            void accept(const Colored::AddExpression*) override {}
-            void accept(const Colored::SubtractExpression*) override {}
-            void accept(const Colored::ScalarProductExpression*) override {}
+            void accept(const Colored::DotConstantExpression*) override {unexpectedExpression();}
+            void accept(const Colored::UserOperatorExpression*) override {unexpectedExpression();}
+            void accept(const Colored::LessThanExpression*) override {unexpectedExpression();}
+            void accept(const Colored::LessThanEqExpression*) override {unexpectedExpression();}
+            void accept(const Colored::EqualityExpression*) override {unexpectedExpression();}
+            void accept(const Colored::InequalityExpression*) override {unexpectedExpression();}
+            void accept(const Colored::AndExpression*) override {unexpectedExpression();}
+            void accept(const Colored::OrExpression*) override {unexpectedExpression();}
+            void accept(const Colored::AllExpression*) override {unexpectedExpression();}
+            void accept(const Colored::NumberOfExpression*) override {unexpectedExpression();}
+            void accept(const Colored::AddExpression*) override {unexpectedExpression();}
+            void accept(const Colored::SubtractExpression*) override {unexpectedExpression();}
+            void accept(const Colored::ScalarProductExpression*) override {unexpectedExpression();}
 
             std::vector<Color_t> colorTypeSequence;
 
@@ -74,6 +74,10 @@ namespace PetriEngine {
             const Binding* const _binding;
             Color_t _currentColor;
             const std::unordered_map<std::string, Variable_t>* const _variableMap;
+            
+            void unexpectedExpression() {
+                throw base_error("unexpected exception");
+            }
         };
 
         class BooleanEvaluationVisitor : public Colored::ColorExpressionVisitor {
@@ -176,17 +180,17 @@ namespace PetriEngine {
                 (*expr)[1]->visit(*this);
             }
 
-            void accept(const Colored::DotConstantExpression*) override {}
-            void accept(const Colored::VariableExpression*) override {}
-            void accept(const Colored::UserOperatorExpression*) override {}
-            void accept(const Colored::SuccessorExpression*) override {}
-            void accept(const Colored::PredecessorExpression*) override {}
-            void accept(const Colored::TupleExpression*) override {}
-            void accept(const Colored::AllExpression*) override {}
-            void accept(const Colored::NumberOfExpression*) override {}
-            void accept(const Colored::AddExpression*) override {}
-            void accept(const Colored::SubtractExpression*) override {}
-            void accept(const Colored::ScalarProductExpression*) override {}
+            void accept(const Colored::DotConstantExpression*) override {unexpectedExpression();}
+            void accept(const Colored::VariableExpression*) override {unexpectedExpression();}
+            void accept(const Colored::UserOperatorExpression*) override {unexpectedExpression();}
+            void accept(const Colored::SuccessorExpression*) override {unexpectedExpression();}
+            void accept(const Colored::PredecessorExpression*) override {unexpectedExpression();}
+            void accept(const Colored::TupleExpression*) override {unexpectedExpression();}
+            void accept(const Colored::AllExpression*) override {unexpectedExpression();}
+            void accept(const Colored::NumberOfExpression*) override {unexpectedExpression();}
+            void accept(const Colored::AddExpression*) override {unexpectedExpression();}
+            void accept(const Colored::SubtractExpression*) override {unexpectedExpression();}
+            void accept(const Colored::ScalarProductExpression*) override {unexpectedExpression();}
 
             bool evaluation;
         private:
@@ -194,6 +198,10 @@ namespace PetriEngine {
             const Binding* const _binding;
             ColorSeqEvaluationVisitor _sequenceVisitor;
             const std::unordered_map<std::string, Variable_t>* const _variableMap;
+            
+            void unexpectedExpression() {
+                throw base_error("unexpected exception");
+            }
         };
 
         GuardExpression::GuardExpression(
