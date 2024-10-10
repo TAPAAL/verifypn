@@ -5,8 +5,8 @@ namespace PetriEngine {
 
         class ColorSeqEvaluationVisitor : public Colored::ColorExpressionVisitor {
         public:
-            ColorSeqEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding)
-                :_colorTypeMap(&colorTypeMap), _binding(&binding) 
+            ColorSeqEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding, const std::unordered_map<std::string, Variable_t>& variable_map)
+                :_colorTypeMap(&colorTypeMap), _binding(&binding), _variableMap(&variable_map)
             {
             }
 
@@ -44,7 +44,10 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::VariableExpression* expr) override {
-                colorTypeSequence.push_back(std::hash<std::string>{}(expr->variable()->name));
+                const auto test = _variableMap->find(expr->variable()->name);
+                if (test == _variableMap->end())
+                    throw base_error("Unknown variable");
+                colorTypeSequence.push_back(_binding->getValue(test->second));
             }
 
             void accept(const Colored::DotConstantExpression*) override {}
@@ -70,12 +73,16 @@ namespace PetriEngine {
             const Colored::ColorTypeMap* const _colorTypeMap;
             const Binding* const _binding;
             Color_t _currentColor;
+            const std::unordered_map<std::string, Variable_t>* const _variableMap;
         };
 
         class BooleanEvaluationVisitor : public Colored::ColorExpressionVisitor {
         public:
-            BooleanEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding)
-                : _colorTypeMap(&colorTypeMap), _binding(&binding), _sequenceVisitor(colorTypeMap, binding) {
+            BooleanEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding, const std::unordered_map<std::string, Variable_t>& variableMap)
+                : _colorTypeMap(&colorTypeMap),
+                _binding(&binding),
+                _sequenceVisitor(colorTypeMap, binding, variableMap),
+                _variableMap(&variableMap) {
                 evaluation = false;
             }
 
@@ -186,14 +193,20 @@ namespace PetriEngine {
             const Colored::ColorTypeMap* const _colorTypeMap;
             const Binding* const _binding;
             ColorSeqEvaluationVisitor _sequenceVisitor;
+            const std::unordered_map<std::string, Variable_t>* const _variableMap;
         };
 
-        GuardExpression::GuardExpression(std::shared_ptr<Colored::ColorTypeMap> colorTypeMap, Colored::GuardExpression_ptr guardExpression)
+        GuardExpression::GuardExpression(
+            std::shared_ptr<Colored::ColorTypeMap> colorTypeMap,
+            Colored::GuardExpression_ptr guardExpression,
+            std::shared_ptr<std::unordered_map<std::string, Variable_t>> variableMap
+        )
             : _colorTypeMap(std::move(colorTypeMap)),
-            _guardExpression(std::move(guardExpression)) {}
+            _guardExpression(std::move(guardExpression)),
+            _variableMap(std::move(variableMap)) {}
         
         bool GuardExpression::eval(const Binding &binding) {
-            BooleanEvaluationVisitor visitor(*_colorTypeMap, binding);
+            BooleanEvaluationVisitor visitor(*_colorTypeMap, binding, *_variableMap);
             _guardExpression->visit(visitor);
             return visitor.evaluation;
         }
