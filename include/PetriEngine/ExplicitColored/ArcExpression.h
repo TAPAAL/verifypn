@@ -18,7 +18,8 @@ namespace PetriEngine {
             CPNMultiSet eval(const Binding &binding);
         private:
             std::shared_ptr<Colored::ColorTypeMap> _colorTypeMap;
-            Colored::GuardExpression_ptr _guardExpression;
+            std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
+            Colored::GuardExpression_ptr _arcExpression;
         };
 
     }
