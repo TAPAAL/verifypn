@@ -9,6 +9,10 @@ namespace PetriEngine
         struct CPNMultiSet
         {
             int getCount(Color_t color);
+            CPNMultiSet operator+=(const CPNMultiSet& other);
+            CPNMultiSet operator-=(const CPNMultiSet& other);
+            CPNMultiSet operator*=(MarkingCount_t scalar);
+            void SetCount(Color_t color);
         private:
             std::vector<MarkingCount_t> _counts;
         };
