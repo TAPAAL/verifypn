@@ -5,8 +5,8 @@ namespace PetriEngine {
 
         class ColorSeqEvaluationVisitor : public Colored::ColorExpressionVisitor {
         public:
-            ColorSeqEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding)
-                :_colorTypeMap(&colorTypeMap), _binding(&binding) 
+            ColorSeqEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding, const std::unordered_map<std::string, Variable_t>& variable_map)
+                :_colorTypeMap(&colorTypeMap), _binding(&binding), _variableMap(&variable_map)
             {
             }
 
@@ -44,7 +44,10 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::VariableExpression* expr) override {
-                colorTypeSequence.push_back(std::hash<std::string>{}(expr->variable()->name));
+                const auto test = _variableMap->find(expr->variable()->name);
+                if (test == _variableMap->end())
+                    throw base_error("Unknown variable");
+                colorTypeSequence.push_back(_binding->getValue(test->second));
             }
 
             void accept(const Colored::DotConstantExpression*) override {}
@@ -62,24 +65,36 @@ namespace PetriEngine {
             void accept(const Colored::ScalarProductExpression*) override {}
 
             std::vector<Color_t> colorTypeSequence;
+
+            void reset() {
+                colorTypeSequence.clear();
+            }
         private:
             const Colored::ColorTypeMap* const _colorTypeMap;
             const Binding* const _binding;
             Color_t _currentColor;
+            const std::unordered_map<std::string, Variable_t>* const _variableMap;
         };
 
         class BooleanEvaluationVisitor : public Colored::ColorExpressionVisitor {
         public:
-            BooleanEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding)
-                : _colorTypeMap(&colorTypeMap), _binding(&binding), _sequenceVisitor(colorTypeMap, binding) {
+            BooleanEvaluationVisitor(const Colored::ColorTypeMap& colorTypeMap, const Binding& binding, const std::unordered_map<std::string, Variable_t>& variableMap)
+                : _colorTypeMap(&colorTypeMap),
+                _binding(&binding),
+                _sequenceVisitor(colorTypeMap, binding, variableMap),
+                _variableMap(&variableMap) {
                 evaluation = false;
             }
 
             void accept(const Colored::LessThanExpression* expr) override {
+                _sequenceVisitor.reset();
                 (*expr)[0]->visit(_sequenceVisitor);
                 auto left = std::move(_sequenceVisitor.colorTypeSequence);
+                
+                _sequenceVisitor.reset();
                 (*expr)[1]->visit(_sequenceVisitor);
                 auto right = std::move(_sequenceVisitor.colorTypeSequence);
+                
                 if (left.size() != 1 && right.size() != 1) {
                     throw base_error("Cannot do ordered comparison of non basic color types");
                 }
@@ -87,10 +102,14 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::LessThanEqExpression* expr) override {
+                _sequenceVisitor.reset();
                 (*expr)[0]->visit(_sequenceVisitor);
                 auto left = std::move(_sequenceVisitor.colorTypeSequence);
+                
+                _sequenceVisitor.reset();
                 (*expr)[1]->visit(_sequenceVisitor);
                 auto right = std::move(_sequenceVisitor.colorTypeSequence);
+                
                 if (left.size() != 1 && right.size() != 1) {
                     throw base_error("Cannot do ordered comparison of non basic color types");
                 }
@@ -98,10 +117,14 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::EqualityExpression* expr) override {
+                _sequenceVisitor.reset();
                 (*expr)[0]->visit(_sequenceVisitor);
                 auto left = std::move(_sequenceVisitor.colorTypeSequence);
+                
+                _sequenceVisitor.reset();
                 (*expr)[1]->visit(_sequenceVisitor);
                 auto right = std::move(_sequenceVisitor.colorTypeSequence);
+                
                 if (left.size() != right.size()) {
                     evaluation = false;
                     return;
@@ -117,10 +140,14 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::InequalityExpression* expr) override {
+                _sequenceVisitor.reset();
                 (*expr)[0]->visit(_sequenceVisitor);
                 auto left = std::move(_sequenceVisitor.colorTypeSequence);
+                
+                _sequenceVisitor.reset();
                 (*expr)[1]->visit(_sequenceVisitor);
                 auto right = std::move(_sequenceVisitor.colorTypeSequence);
+                
                 if (left.size() != right.size()) {
                     evaluation = true;
                     return;
@@ -166,14 +193,22 @@ namespace PetriEngine {
             const Colored::ColorTypeMap* const _colorTypeMap;
             const Binding* const _binding;
             ColorSeqEvaluationVisitor _sequenceVisitor;
+            const std::unordered_map<std::string, Variable_t>* const _variableMap;
         };
 
-        GuardExpression::GuardExpression(std::shared_ptr<Colored::ColorTypeMap> colorTypeMap, Colored::GuardExpression_ptr guardExpression)
+        GuardExpression::GuardExpression(
+            std::shared_ptr<Colored::ColorTypeMap> colorTypeMap,
+            Colored::GuardExpression_ptr guardExpression,
+            std::shared_ptr<std::unordered_map<std::string, Variable_t>> variableMap
+        )
             : _colorTypeMap(std::move(colorTypeMap)),
-            _guardExpression(std::move(guardExpression)) {}
+            _guardExpression(std::move(guardExpression)),
+            _variableMap(std::move(variableMap)) {}
         
-        bool eval(const Binding &binding) {
-            return false;
+        bool GuardExpression::eval(const Binding &binding) {
+            BooleanEvaluationVisitor visitor(*_colorTypeMap, binding, *_variableMap);
+            _guardExpression->visit(visitor);
+            return visitor.evaluation;
         }
     }
 }
