@@ -206,12 +206,12 @@ namespace PetriEngine {
             virtual void accept(const AddExpression* add)
             {
                 for (const auto& elem : *add) {
-                    for(auto& pair : _varModifiers){
-                        std::unordered_map<uint32_t, int32_t> newMap;
-                        pair.second.push_back(newMap);
-                    }
                     _index = 0;
+                    size_t _modifierSizeBefore = _varModifiers.size();
                     elem->visit(*this);
+                    for (auto it = std::next(_varModifiers.begin(), _modifierSizeBefore); it != _varModifiers.end(); ++it){
+                        it->second.emplace_back();
+                    }
                 }
             }
 
