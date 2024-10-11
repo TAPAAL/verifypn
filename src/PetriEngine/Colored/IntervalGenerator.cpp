@@ -26,6 +26,7 @@ namespace PetriEngine {
             varIntervals.emplace_back();
             for(uint32_t i = varPosition; i < varPosition + varColorTypes.size(); i++){
                 auto ctSize = varColorTypes[i - varPosition]->size();
+                assert(i < interval.size());
                 int32_t lower_val = ctSize + (interval[i]._lower + varModifier);
                 int32_t upper_val = ctSize + (interval[i]._upper + varModifier);
                 uint32_t lower = lower_val % ctSize;
