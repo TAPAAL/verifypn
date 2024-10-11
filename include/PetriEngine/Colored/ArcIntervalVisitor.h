@@ -199,7 +199,6 @@ namespace PetriEngine {
                         old_intervals._intervalTupleVec.end(),
                             _arcIntervals._intervalTupleVec.begin(), _arcIntervals._intervalTupleVec.end());
                 }
-                        
                 std::swap(old_intervals, _arcIntervals);
             }
 
