@@ -205,12 +205,23 @@ namespace PetriEngine {
 
             virtual void accept(const AddExpression* add)
             {
+                bool lastIsVarExpr = false;
                 for (const auto& elem : *add) {
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
+                    }
+
                     _index = 0;
-                    size_t _modifierSizeBefore = _varModifiers.size();
+                    size_t sizeBefore = _varModifiers.size();
                     elem->visit(*this);
-                    for (auto it = std::next(_varModifiers.begin(), _modifierSizeBefore); it != _varModifiers.end(); ++it){
-                        it->second.emplace_back();
+                    size_t sizeAfter = _varModifiers.size();
+
+                    lastIsVarExpr = sizeBefore != sizeAfter;
+                }
+
+                if (lastIsVarExpr) {
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
                     }
                 }
             }

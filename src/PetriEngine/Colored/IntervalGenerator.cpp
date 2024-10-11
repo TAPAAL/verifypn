@@ -24,9 +24,9 @@ namespace PetriEngine {
         std::vector<interval_t> IntervalGenerator::getIntervalsFromInterval(const interval_t &interval, uint32_t varPosition, int32_t varModifier, const std::vector<const ColorType*> &varColorTypes) {
             std::vector<interval_t> varIntervals;
             varIntervals.emplace_back();
+            assert(varPosition + varColorTypes.size() <= interval.size());
             for(uint32_t i = varPosition; i < varPosition + varColorTypes.size(); i++){
                 auto ctSize = varColorTypes[i - varPosition]->size();
-                assert(i < interval.size());
                 int32_t lower_val = ctSize + (interval[i]._lower + varModifier);
                 int32_t upper_val = ctSize + (interval[i]._upper + varModifier);
                 uint32_t lower = lower_val % ctSize;
@@ -89,6 +89,7 @@ namespace PetriEngine {
                 interval_vector_t varIntervals;
                 std::vector<const ColorType*> varColorTypes;
                 pair.first->colorType->getColortypes(varColorTypes);
+                assert(pair.second.size() > tuplePos);
 
                 getArcVarIntervals(varIntervals, pair.second[tuplePos], interval, varColorTypes);
 
