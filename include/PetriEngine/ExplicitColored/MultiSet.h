@@ -20,6 +20,8 @@ namespace PetriEngine
             CPNMultiSet& operator+=(const CPNMultiSet& other);
             CPNMultiSet& operator-=(const CPNMultiSet& other);
             CPNMultiSet& operator*=(MarkingCount_t scalar);
+            bool operator>=(const CPNMultiSet& other) const;
+            bool operator<=(const CPNMultiSet& other) const;
             void SetCount(std::vector<Color_t> color, MarkingCount_t count);
         private:
             std::vector<std::pair<std::vector<Color_t>, MarkingCount_t>> _counts;

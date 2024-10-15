@@ -43,6 +43,16 @@ namespace PetriEngine
             std::unique_ptr<GuardExpression> guardExpression;
         };
 
+        struct BaseColorType {
+            Color_t colors;
+        };
+
+        struct ColorType
+        {
+            uint32_t size;
+            std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
+        };
+
         struct ColoredPetriNetPlace
         {
             std::shared_ptr<ColorType> colorType;
@@ -53,11 +63,13 @@ namespace PetriEngine
             int from;
             int to;
             std::unique_ptr<ArcExpression> arcExpression;
+            std::shared_ptr<ColorType> colorType;
         };
 
-        struct ColorType
-        {
-            std::vector<int> colors;
+        struct ColoredPetriNetInhibitor {
+            int from;
+            int to;
+            MarkingCount_t weight;
         };
 
         struct ColoredPetriNetMarking
@@ -65,16 +77,27 @@ namespace PetriEngine
             std::vector<CPNMultiSet> markings;
         };
 
+        struct Variable {
+            std::shared_ptr<BaseColorType> colorType;
+            uint32_t id;
+        };
+
+        class ColoredPetriNetBuilder;
+
         class ColoredPetriNet
         {
+            friend ColoredPetriNetBuilder;
         public:
-            ColoredPetriNet();
-
+            ColoredPetriNet(ColoredPetriNet&&) = default;
+            ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
         private:
+            ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
-            std::vector<ColoredPetriNetArc> _transitionToPlaceArcs;
-            std::vector<ColoredPetriNetArc> _placeToTransitionArcs;
+            std::vector<ColoredPetriNetArc> _outputArcs;
+            std::vector<ColoredPetriNetArc> _inputArcs;
+            std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
+            std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
         };
     }

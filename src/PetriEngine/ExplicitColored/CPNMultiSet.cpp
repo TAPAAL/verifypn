@@ -52,7 +52,9 @@ namespace PetriEngine {
                     found = true;
                     break;
                 }
-                _counts.push_back(b);
+                if (!found) {
+                    _counts.push_back(b);
+                }
             }
             _cardinality += other._cardinality;
             return *this;
@@ -60,7 +62,6 @@ namespace PetriEngine {
 
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
              for (auto& b : other._counts) {
-                bool found = false;
                 for (auto& a : _counts) {
                 
                     if (a.first.size() != b.first.size())
@@ -79,7 +80,6 @@ namespace PetriEngine {
                     }
                     
                     a.second -= b.second;
-                    found = true;
                     break;
                 }
             }
@@ -91,6 +91,27 @@ namespace PetriEngine {
                 colorCount.second *= scalar;
             }
             _cardinality *= scalar;
+            return *this;
+        }
+
+        bool CPNMultiSet::operator>=(const CPNMultiSet& other) const {
+            if (_cardinality < other._cardinality)
+                return false;
+            for (const auto& count : other._counts) {
+                if (count.second > getCount(count.first))
+                    return false;
+            }
+            return true;
+        }
+
+        bool CPNMultiSet::operator<=(const CPNMultiSet& other) const {
+            if (_cardinality > other._cardinality)
+                return false;
+            for (const auto& count : other._counts) {
+                if (count.second < getCount(count.first))
+                    return false;
+            }
+            return true;
         }
     }
 }

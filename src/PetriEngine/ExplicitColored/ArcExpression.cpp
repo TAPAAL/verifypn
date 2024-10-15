@@ -52,7 +52,9 @@ namespace PetriEngine {
                 color = ALL_COLOR;
             }
 
-            void accept(const Colored::UserOperatorExpression*) override { unexpectedExpression(); }
+            void accept(const Colored::UserOperatorExpression* expr) override { 
+                color = expr->user_operator()->getId();
+            }
             void accept(const Colored::TupleExpression*) override { unexpectedExpression(); }
             void accept(const Colored::LessThanExpression*) override { unexpectedExpression(); }
             void accept(const Colored::LessThanEqExpression*) override { unexpectedExpression(); }
@@ -119,6 +121,7 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::NumberOfExpression* expr) override {
+                expr[0].visit(*this);
                 result *= expr->number();
             }
             
@@ -139,7 +142,12 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::ScalarProductExpression* expr) override {
+                expr->child()->visit(*this);
                 result *= expr->scalar();
+            }
+
+            void accept(const Colored::DotConstantExpression* expr) override {
+                result.SetCount({DOT_COLOR}, 1);
             }
 
             void accept(const Colored::LessThanExpression* expr) override {unexpectedExpression();}
@@ -149,7 +157,6 @@ namespace PetriEngine {
             void accept(const Colored::AllExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::AndExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::OrExpression* expr) override {unexpectedExpression();}
-            void accept(const Colored::DotConstantExpression* expr) override { unexpectedExpression(); }
             void accept(const Colored::VariableExpression* expr) override { unexpectedExpression(); }
             void accept(const Colored::UserOperatorExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::SuccessorExpression* expr) override {unexpectedExpression();}
@@ -166,7 +173,7 @@ namespace PetriEngine {
             }
         };
 
-        ArcExpression::ArcExpression(Colored::GuardExpression_ptr guardExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap)
+        ArcExpression::ArcExpression(Colored::ArcExpression_ptr guardExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap)
             : _colorTypeMap(std::move(colorTypeMap)), _arcExpression(std::move(guardExpression)) {
         }
 

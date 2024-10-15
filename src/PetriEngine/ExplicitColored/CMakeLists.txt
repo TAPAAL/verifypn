@@ -4,6 +4,7 @@ add_library(ExplicitColored
     GuardExpression.cpp
     ArcExpression.cpp
     CPNMultiSet.cpp
+    ColoredPetriNetBuilder.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)
