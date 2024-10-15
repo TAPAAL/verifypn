@@ -6,7 +6,7 @@ namespace PetriEngine {
             for (const auto& colorCount : _counts) {
                 if (color.size() != colorCount.first.size())
                     throw base_error("Tried to access multiset with mismatched types");
-                
+
                 for (size_t i = 0; i < color.size(); i++) {
                     if (color[i] != colorCount.first[i])
                         continue;

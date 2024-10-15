@@ -66,11 +66,9 @@ namespace PetriEngine {
 
         void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) {
             ColoredPetriNetPlace place;
-            place.colorType = _colorTypeMap.find(name)->second;
-            _currentNet._places.push_back(std::move(place));
-            
+            place.colorType = _colorTypeMap.find(type->getName())->second;
+
             CPNMultiSet multiSet;
-            
             for (const auto& token : tokens) {
                 std::vector<Color_t> colorSequrence;
                 for (const auto& color : token.first->getTupleColors()) {
@@ -78,6 +76,11 @@ namespace PetriEngine {
                 }
                 multiSet.SetCount(colorSequrence, token.second);
             }
+
+            _currentNet._places.push_back(std::move(place));
+            _currentNet._initialMarking.markings.push_back(multiSet);
+
+            _placeIndices[name] = _currentNet._places.size() - 1;
         }
 
         void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
@@ -136,6 +139,10 @@ namespace PetriEngine {
 
         void ColoredPetriNetBuilder::addVariable(const PetriEngine::Colored::Variable* variable) {
             (*_variableMap)[variable->name] = _variableMap->size();
+            Variable var;
+            var.id = _currentNet._variables.size();
+            var.colorType = _baseColorType.find(variable->colorType->getName())->second;
+            _currentNet._variables.emplace_back(std::move(var));
         }
 
         ColoredPetriNet ColoredPetriNetBuilder::build() {

@@ -70,8 +70,9 @@ int main2() {
 
 int main(int argc, const char** argv) {
     if (argc > 1 && strcmp(argv[1], "BIGTEST") == 0) {
-        main2();
+        return main2();
     }
+    printf("%s", argv[1]);
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
         options_t options;
