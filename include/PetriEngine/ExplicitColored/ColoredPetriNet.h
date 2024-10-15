@@ -32,6 +32,7 @@
 #include "MultiSet.h"
 #include "GuardExpression.h"
 #include "Binding.h"
+#include "ColoredPetriNetMarking.h"
 
 namespace PetriEngine
 {
@@ -39,6 +40,7 @@ namespace PetriEngine
     {
         struct ArcExpression
         {
+            std::vector<std::shared_ptr<Variable>> variables;
             virtual CPNMultiSet eval(const Binding &binding) = 0;
         };
 
@@ -56,30 +58,44 @@ namespace PetriEngine
         {
             int from;
             int to;
+            int inhib;
+            std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
         };
 
         struct ColorType
         {
-            std::vector<int> colors;
+            uint32_t size;
+            std::vector<std::shared_ptr<BaseColorType>> colorTypes;
         };
 
-        struct ColoredPetriNetMarking
+        struct BaseColorType
         {
-            std::vector<CPNMultiSet> markings;
+            Color_t colors;
+        };
+
+        struct Variable
+        {
+            std::shared_ptr<BaseColorType> colorType;
+            std::string id;
         };
 
         class ColoredPetriNet
         {
         public:
             ColoredPetriNet();
-
+            const ColoredPetriNetMarking& initial() const {
+                return _initialMarking;
+            }
         private:
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
             std::vector<ColoredPetriNetArc> _transitionToPlaceArcs;
             std::vector<ColoredPetriNetArc> _placeToTransitionArcs;
+            std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
+            uint32_t _ntransitions;
+            friend class ColoredSuccessorGenerator;
         };
     }
 } // PetriEngine
