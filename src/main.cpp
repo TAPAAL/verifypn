@@ -50,12 +50,28 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
+int main2() {
+    ExplicitColored::ColoredPetriNetBuilder builder;
+    std::ifstream stream("cpn_tests/FamilyReunion-COL-L00010M0001C001P001G001/model.pnml");
+
+    builder.parse_model(stream);
+    stream.close();
+
+    auto net =  builder.build();
+
+    return 0;
+}
+
 int main(int argc, const char** argv) {
+    if (argc > 1 && strcmp(argv[1], "BIGTEST") == 0) {
+        main2();
+    }
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
         options_t options;

@@ -8,7 +8,7 @@ namespace PetriEngine {
     namespace ExplicitColored {
         struct Binding
         {
-            Color_t getValue(Variable_t variable) const;
+            Color_t getValue(Variable_t variable) const { return 0;}
 
         private:
             std::vector<Color_t> _values;
