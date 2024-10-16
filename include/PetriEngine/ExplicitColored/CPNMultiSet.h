@@ -21,6 +21,7 @@ namespace PetriEngine
             CPNMultiSet& operator-=(const CPNMultiSet& other);
             CPNMultiSet& operator*=(MarkingCount_t scalar);
             void SetCount(std::vector<Color_t> color, MarkingCount_t count);
+            MarkingCount_t getTotalCount() const;
         private:
             std::vector<std::pair<std::vector<Color_t>, MarkingCount_t>> _counts;
             MarkingCount_t _cardinality;

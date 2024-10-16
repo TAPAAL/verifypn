@@ -7,10 +7,16 @@ namespace PetriEngine {
                 if (color.size() != colorCount.first.size())
                     throw base_error("Tried to access multiset with mismatched types");
                 
+                bool matches = true;
                 for (size_t i = 0; i < color.size(); i++) {
-                    if (color[i] != colorCount.first[i])
-                        continue;
+                    if (color[i] != colorCount.first[i]) {
+                        matches = false;
+                        break;
+                    }
                 }
+
+                if (!matches)
+                    continue;
 
                 return colorCount.second;
             }
@@ -21,10 +27,15 @@ namespace PetriEngine {
             for (auto& colorCount : _counts) {
                 if (color.size() != colorCount.first.size())
                     throw base_error("Tried to access multiset with mismatched types");
-                
+                bool found = false;
                 for (size_t i = 0; i < color.size(); i++) {
-                    if (color[i] != colorCount.first[i])
-                        continue;
+                    if (color[i] != colorCount.first[i]) {
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    continue;
                 }
                 _cardinality = (_cardinality + count) - colorCount.second;
                 
@@ -32,25 +43,28 @@ namespace PetriEngine {
                 return;
             }
             _cardinality += count;
-            _counts.push_back(std::make_pair(std::move(color), count));
+            _counts.emplace_back(std::make_pair(std::move(color), count));
         }
 
         CPNMultiSet& CPNMultiSet::operator+=(const CPNMultiSet& other) {
             for (auto& b : other._counts) {
-                bool found = false;
                 for (auto& a : _counts) {
-                
+                    bool found = false;
+
                     if (a.first.size() != b.first.size())
                         throw base_error("Tried to access multiset with mismatched types");
-                
+
                     for (size_t i = 0; i < a.first.size(); i++) {
-                        if (a.first[i] != b.first[i])
-                            continue;
+                        if (a.first[i] != b.first[i]) {
+                            found = true;
+                            break;
+                        }
                     }
 
+                    if (!found)
+                        continue;
+
                     a.second += b.second;
-                    found = true;
-                    break;
                 }
                 _counts.push_back(b);
             }
@@ -60,16 +74,22 @@ namespace PetriEngine {
 
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
              for (auto& b : other._counts) {
-                bool found = false;
+
                 for (auto& a : _counts) {
                 
                     if (a.first.size() != b.first.size())
                         throw base_error("Tried to access multiset with mismatched types");
-                
+                    bool found = false;
                     for (size_t i = 0; i < a.first.size(); i++) {
-                        if (a.first[i] != b.first[i])
-                            continue;
+                        if (a.first[i] != b.first[i]) {
+                            found = true;
+                            break;
+                        }
                     }
+                    if (found == false) {
+                        continue;
+                    }
+
                     if (b.second > a.second) {
                         _cardinality -= a.second;
                         a.second = 0;
@@ -91,6 +111,11 @@ namespace PetriEngine {
                 colorCount.second *= scalar;
             }
             _cardinality *= scalar;
+            return  *this;
+        }
+
+        MarkingCount_t CPNMultiSet::getTotalCount() const {
+            return _cardinality;
         }
     }
 }
