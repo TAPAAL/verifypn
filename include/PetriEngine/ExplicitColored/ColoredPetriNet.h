@@ -29,19 +29,15 @@
 
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
-#include "MultiSet.h"
+#include "CPNMultiSet.h"
 #include "GuardExpression.h"
 #include "Binding.h"
+#include "ArcExpression.h"
 
 namespace PetriEngine
 {
     namespace ExplicitColored
     {
-        struct ArcExpression
-        {
-            virtual CPNMultiSet eval(const Binding &binding) = 0;
-        };
-
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
