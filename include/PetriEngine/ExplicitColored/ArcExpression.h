@@ -1,6 +1,6 @@
 #ifndef ARC_EXPRESSION_H
 #define ARC_EXPRESSION_H
-#include "MultiSet.h"
+#include "CPNMultiSet.h"
 #include "Binding.h"
 #include <memory>
 #include "../Colored/Expressions.h"

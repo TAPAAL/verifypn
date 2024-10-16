@@ -116,7 +116,7 @@ namespace PetriEngine {
                     }
                 }
                 for (std::vector<Color_t>& colorSequence : colorSequences) {
-                    result.SetCount(std::move(colorSequence), 1);
+                    result.setCount(std::move(colorSequence), 1);
                 }
             }
 
