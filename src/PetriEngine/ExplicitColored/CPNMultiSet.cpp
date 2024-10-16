@@ -23,14 +23,17 @@ namespace PetriEngine {
             return 0;
         }
         
-        void CPNMultiSet::SetCount(std::vector<Color_t> color, MarkingCount_t count) {
+        void CPNMultiSet::setCount(std::vector<Color_t> color, MarkingCount_t count) {
             for (auto& colorCount : _counts) {
+                bool found = true;
+
                 if (color.size() != colorCount.first.size())
                     throw base_error("Tried to access multiset with mismatched types");
-                bool found = false;
+
                 for (size_t i = 0; i < color.size(); i++) {
                     if (color[i] != colorCount.first[i]) {
-                        found = true;
+                        found = false;
+                        break;
                     }
                 }
 
@@ -48,25 +51,28 @@ namespace PetriEngine {
 
         CPNMultiSet& CPNMultiSet::operator+=(const CPNMultiSet& other) {
             for (auto& b : other._counts) {
+                bool foundMatch = false;
                 for (auto& a : _counts) {
-                    bool found = false;
-
+                    foundMatch = true;
                     if (a.first.size() != b.first.size())
                         throw base_error("Tried to access multiset with mismatched types");
 
                     for (size_t i = 0; i < a.first.size(); i++) {
                         if (a.first[i] != b.first[i]) {
-                            found = true;
+                            foundMatch = false;
                             break;
                         }
                     }
 
-                    if (!found)
+                    if (!foundMatch) {
                         continue;
+                    }
 
                     a.second += b.second;
                 }
-                _counts.push_back(b);
+                if (!foundMatch) {
+                    _counts.push_back(b);
+                }
             }
             _cardinality += other._cardinality;
             return *this;
@@ -74,19 +80,18 @@ namespace PetriEngine {
 
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
              for (auto& b : other._counts) {
-
                 for (auto& a : _counts) {
-                
                     if (a.first.size() != b.first.size())
                         throw base_error("Tried to access multiset with mismatched types");
-                    bool found = false;
+
+                    bool found = true;
                     for (size_t i = 0; i < a.first.size(); i++) {
                         if (a.first[i] != b.first[i]) {
-                            found = true;
+                            found = false;
                             break;
                         }
                     }
-                    if (found == false) {
+                    if (!found) {
                         continue;
                     }
 
@@ -99,7 +104,6 @@ namespace PetriEngine {
                     }
                     
                     a.second -= b.second;
-                    found = true;
                     break;
                 }
             }
@@ -114,7 +118,7 @@ namespace PetriEngine {
             return  *this;
         }
 
-        MarkingCount_t CPNMultiSet::getTotalCount() const {
+        MarkingCount_t CPNMultiSet::totalCount() const {
             return _cardinality;
         }
     }
