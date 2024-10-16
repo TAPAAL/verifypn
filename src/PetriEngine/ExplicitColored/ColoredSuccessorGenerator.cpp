@@ -49,11 +49,10 @@ namespace PetriEngine{
             auto acceptableBindings = std::vector<Binding>{};
             for (auto&& b : bindings){
                 bool fireable = _net._transitions[tid].guardExpression->eval(b);
-
+                if (!fireable){
+                    continue;
+                }
                 for (auto&& a : ingoing){
-                    if (fireable = false){
-                        break;
-                    }
                     auto place = a->from;
                     if (a->inhib > 0){
                         if (state.markings[place].totalCount() >= a->inhib){
