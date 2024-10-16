@@ -9,12 +9,12 @@ namespace PetriEngine {
         struct ArcExpression
         {
             ArcExpression(Colored::GuardExpression_ptr guardExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap);
-            
+
             ArcExpression(const ArcExpression&) = default;
             ArcExpression(ArcExpression&&) = default;
             ArcExpression& operator=(const ArcExpression&) = default;
             ArcExpression& operator=(ArcExpression&&) = default;
-            
+
             CPNMultiSet eval(const Binding &binding);
         private:
             std::shared_ptr<Colored::ColorTypeMap> _colorTypeMap;

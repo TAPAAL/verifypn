@@ -39,15 +39,20 @@ namespace PetriEngine
 {
     namespace ExplicitColored
     {
-        struct ArcExpression
-        {
-            std::vector<std::shared_ptr<Variable>> variables;
-            virtual CPNMultiSet eval(const Binding &binding) = 0;
-        };
-
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
+        };
+
+        struct BaseColorType
+        {
+            Color_t colors;
+        };
+
+        struct ColorType
+        {
+            uint32_t size;
+            std::vector<std::shared_ptr<BaseColorType>> baseColorTypes;
         };
 
         struct ColoredPetriNetPlace
@@ -57,34 +62,23 @@ namespace PetriEngine
 
         struct ColoredPetriNetInhibitor
         {
-            int from;
-            int to;
+            uint32_t from;
+            uint32_t to;
             MarkingCount_t weight;
         };
 
         struct ColoredPetriNetArc
         {
-            int from;
-            int to;
+            uint32_t from;
+            uint32_t to;
+            std::vector<Variable_t> variables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
-        };
-
-        struct ColorType
-        {
-            uint32_t size;
-            std::vector<std::shared_ptr<BaseColorType>> colorTypes;
-        };
-
-        struct BaseColorType
-        {
-            Color_t colors;
         };
 
         struct Variable
         {
             std::shared_ptr<BaseColorType> colorType;
-            Variable_t id;
         };
 
         class ColoredPetriNet
