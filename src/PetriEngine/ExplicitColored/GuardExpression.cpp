@@ -28,9 +28,11 @@ namespace PetriEngine {
                 if (colorTypeSequence.size() != 1) {
                     throw base_error("Cannot get successor of product color");
                 }
-                auto ct = expr->getColorType(*_colorTypeMap);
-                const Colored::Color& color = (*ct)[colorTypeSequence[0]];
-                colorTypeSequence[0] = color.operator++().getId();
+                if (colorTypeSequence[0] >= expr->getColorType(*_colorTypeMap)->size()) {
+                    colorTypeSequence[0] = 0;
+                } else {
+                    colorTypeSequence[0] += 1;
+                }
             }
 
             void accept(const Colored::PredecessorExpression* expr) override {
@@ -38,9 +40,11 @@ namespace PetriEngine {
                 if (colorTypeSequence.size() != 1) {
                     throw base_error("Cannot get successor of product color");
                 }
-                auto ct = expr->getColorType(*_colorTypeMap);
-                const Colored::Color& color = (*ct)[colorTypeSequence[0]];
-                colorTypeSequence[0] = color.operator--().getId();
+                if (colorTypeSequence[0] > 0) {
+                    colorTypeSequence[0] -= 1;
+                } else {
+                    colorTypeSequence[0] = expr->getColorType(*_colorTypeMap)->size() - 1;
+                }
             }
 
             void accept(const Colored::VariableExpression* expr) override {

@@ -29,10 +29,11 @@
 
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
-#include "MultiSet.h"
+#include "CPNMultiSet.h"
 #include "GuardExpression.h"
 #include "Binding.h"
 #include "ColoredPetriNetMarking.h"
+#include "ArcExpression.h"
 
 namespace PetriEngine
 {
