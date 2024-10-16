@@ -1,4 +1,4 @@
-#include "PetriEngine/ExplicitColored/MultiSet.h"
+#include "PetriEngine/ExplicitColored/CPNMultiSet.h"
 #include "utils/errors.h"
 namespace PetriEngine {
     namespace ExplicitColored {
