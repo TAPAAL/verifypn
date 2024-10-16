@@ -19,13 +19,25 @@ namespace PetriEngine{
         std::vector<Binding> ColoredSuccessorGenerator::checkPreset(ColoredPetriNetMarking& state, uint32_t tid){
             auto& const arcs = _net._placeToTransitionArcs;
             auto relevantColors = std::vector<std::shared_ptr<ColorType>>{};
-            auto ingoing = std::vector<std::unique_ptr<ColoredPetriNetArc>>();
+            auto ingoing = std::vector<std::unique_ptr<ColoredPetriNetArc>>{};
+            auto inhibitors = std::vector<ColoredPetriNetInhibitor&>{};
             auto bindings = std::vector<Binding>{};
+
+            for (auto && i : _net._inhibitorToPlaceArcs){
+                if (i.to == tid){
+                    if (state.markings[i.from].totalCount() >= i.weight){
+                        return bindings;
+                    }
+                    break;
+                }
+            }
+
             for (auto &&a : arcs){
                 if (a.to == tid){
                     ingoing.push_back(std::make_unique<ColoredPetriNetArc>(a));
                 }
             }
+
             _ingoing = ingoing;
             //Get variables we need bindings for
             auto variables = std::vector<std::shared_ptr<Variable>>{};
@@ -54,12 +66,6 @@ namespace PetriEngine{
                 }
                 for (auto&& a : ingoing){
                     auto place = a->from;
-                    if (a->inhib > 0){
-                        if (state.markings[place].totalCount() >= a->inhib){
-                            fireable = false;
-                            break;
-                        }
-                    }
                     if (state.markings[place] >= a->arcExpression->eval(b)){
                         fireable = false;
                         break;
@@ -89,7 +95,7 @@ namespace PetriEngine{
         std::vector<Binding> convertVectorToBindings(std::vector<std::vector<Color_t>>& vecs, std::vector<std::shared_ptr<Variable>> vars){
             auto res = std::vector<Binding>{};
             for (auto&& vec : vecs){
-                auto map = std::map<std::string, Color_t>{};
+                auto map = std::map<Variable_t, Color_t>{};
                 for (auto i = 0; i < vars.size(); i++){
                     map[vars[i]->id] = vec[i];
                 }
@@ -100,10 +106,8 @@ namespace PetriEngine{
 
         void ColoredSuccessorGenerator::consumePreset(ColoredPetriNetMarking& state, uint32_t tid, Binding& b){
             for (auto&& a : _ingoing){
-                if (a->inhib == 0){
-                    auto p = a->from;
-                    state.markings[p] -= a->arcExpression->eval(b);
-                }
+                auto p = a->from;
+                state.markings[p] -= a->arcExpression->eval(b);
             }
         }
 

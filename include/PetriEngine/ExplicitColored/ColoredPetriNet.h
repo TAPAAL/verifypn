@@ -55,11 +55,17 @@ namespace PetriEngine
             std::shared_ptr<ColorType> colorType;
         };
 
+        struct ColoredPetriNetInhibitor
+        {
+            int from;
+            int to;
+            MarkingCount_t weight;
+        };
+
         struct ColoredPetriNetArc
         {
             int from;
             int to;
-            int inhib;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
         };
@@ -78,7 +84,7 @@ namespace PetriEngine
         struct Variable
         {
             std::shared_ptr<BaseColorType> colorType;
-            std::string id;
+            Variable_t id;
         };
 
         class ColoredPetriNet
@@ -92,6 +98,7 @@ namespace PetriEngine
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
             std::vector<ColoredPetriNetArc> _transitionToPlaceArcs;
+            std::vector<ColoredPetriNetInhibitor> _inhibitorToPlaceArcs;
             std::vector<ColoredPetriNetArc> _placeToTransitionArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
