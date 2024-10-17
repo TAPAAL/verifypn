@@ -34,6 +34,7 @@ namespace ColoredLTL {
 
         virtual ~ColoredModelChecker() = default;
 
+
     protected:
         const PetriEngine::ExplicitColored::ColoredPetriNet& _net;
         PetriEngine::PQL::Condition_ptr _formula;

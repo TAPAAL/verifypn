@@ -39,35 +39,9 @@ namespace PetriEngine
 {
     namespace ExplicitColored
     {
-        struct ArcExpression
-        {
-            std::vector<std::shared_ptr<Variable>> variables;
-            virtual CPNMultiSet eval(const Binding &binding) = 0;
-        };
-
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
-        };
-
-        struct ColoredPetriNetPlace
-        {
-            std::shared_ptr<ColorType> colorType;
-        };
-
-        struct ColoredPetriNetArc
-        {
-            int from;
-            int to;
-            int inhib;
-            std::shared_ptr<ColorType> colorType;
-            std::unique_ptr<ArcExpression> arcExpression;
-        };
-
-        struct ColorType
-        {
-            uint32_t size;
-            std::vector<std::shared_ptr<BaseColorType>> colorTypes;
         };
 
         struct BaseColorType
@@ -75,10 +49,36 @@ namespace PetriEngine
             Color_t colors;
         };
 
+        struct ColorType
+        {
+            uint32_t size;
+            std::vector<std::shared_ptr<BaseColorType>> baseColorTypes;
+        };
+
+        struct ColoredPetriNetPlace
+        {
+            std::shared_ptr<ColorType> colorType;
+        };
+
+        struct ColoredPetriNetInhibitor
+        {
+            uint32_t from;
+            uint32_t to;
+            MarkingCount_t weight;
+        };
+
+        struct ColoredPetriNetArc
+        {
+            uint32_t from;
+            uint32_t to;
+            std::vector<Variable_t> variables;
+            std::shared_ptr<ColorType> colorType;
+            std::unique_ptr<ArcExpression> arcExpression;
+        };
+
         struct Variable
         {
             std::shared_ptr<BaseColorType> colorType;
-            std::string id;
         };
 
         class ColoredPetriNet
@@ -92,6 +92,7 @@ namespace PetriEngine
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
             std::vector<ColoredPetriNetArc> _transitionToPlaceArcs;
+            std::vector<ColoredPetriNetInhibitor> _inhibitorToPlaceArcs;
             std::vector<ColoredPetriNetArc> _placeToTransitionArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
