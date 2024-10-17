@@ -1,7 +1,7 @@
-#ifndef NAIVEWORKLIST_H;
+#ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
-#include "ColoredPetriNet.h"
+#include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/Structures/Queue.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredModelChecker.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
@@ -16,15 +16,18 @@ namespace ColoredLTL{
 
             virtual bool check();
 
+            template<typename S>
+            bool check(S state);
+
         private:
             using State = PetriEngine::ExplicitColored::ColoredPetriNetMarking;
 
 
             template<typename S>
-            bool bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& states);
+            bool bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state);
 
             template<typename S>
-            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& states);
+            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state);
         };
 }
-#endif #NAIVEWORKLIST_H
+#endif //NAIVEWORKLIST_H

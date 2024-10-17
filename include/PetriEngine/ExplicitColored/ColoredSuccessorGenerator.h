@@ -26,19 +26,19 @@ namespace PetriEngine{
             void producePostset(ColoredPetriNetMarking& state, uint32_t tid, Binding& b);
         protected:
             const ColoredPetriNet& _net;
-            std::vector<std::unique_ptr<ColoredPetriNetArc>> _ingoing;
-            uint32_t _t_counter;
+            uint32_t _t_counter = 0;
+            std::vector<const ColoredPetriNetArc*> _ingoing;
 
             void _fire(ColoredPetriNetMarking& state, uint32_t tid, Binding& b);
 
             template<typename T>
             std::vector<ColoredPetriNetMarking> _next(ColoredPetriNetMarking& state, T&& predicate){
                 auto res = std::vector<ColoredPetriNetMarking>{};
-                for (auto i = _t_counter; i < ntransitions; i++){
-                    if (auto bindings = checkPreset(i); !bindings.empty()){
+                for (uint32_t i = _t_counter; i < _net._ntransitions; i++){
+                    if (auto bindings = checkPreset(state, i); !bindings.empty()){
                         for (auto&& b : bindings){
                             auto newState = state;
-                            _fire(newState, tid, b);
+                            _fire(newState, i, b);
                             res.push_back(newState);
                             _t_counter = i + 1;
                         }

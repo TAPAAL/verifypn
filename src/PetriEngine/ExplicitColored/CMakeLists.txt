@@ -5,6 +5,8 @@ add_library(ExplicitColored
     ArcExpression.cpp
     CPNMultiSet.cpp
     ColoredPetriNetBuilder.cpp
+    ColoredSuccessorGenerator.cpp
+    Algorithms/NaiveWorklist.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)

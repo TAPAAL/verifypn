@@ -146,7 +146,6 @@ namespace PetriEngine {
         void ColoredPetriNetBuilder::addVariable(const PetriEngine::Colored::Variable* variable) {
             (*_variableMap)[variable->name] = _variableMap->size();
             Variable var;
-            var.id = _currentNet._variables.size();
             var.colorType = _baseColorType.find(variable->colorType->getName())->second;
             _currentNet._variables.emplace_back(std::move(var));
         }

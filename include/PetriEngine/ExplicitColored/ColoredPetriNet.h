@@ -44,7 +44,8 @@ namespace PetriEngine
             std::unique_ptr<GuardExpression> guardExpression;
         };
 
-        struct BaseColorType {
+        struct BaseColorType
+        {
             Color_t colors;
         };
 
@@ -59,25 +60,28 @@ namespace PetriEngine
             std::shared_ptr<ColorType> colorType;
         };
 
-        struct ColoredPetriNetArc
+        struct ColoredPetriNetInhibitor
         {
-            int from;
-            int to;
-            std::shared_ptr<ColorType> colorType;
-            std::unique_ptr<ArcExpression> arcExpression;
+            uint32_t from;
+            uint32_t to;
+            MarkingCount_t weight;
         };
 
-        struct ColoredPetriNetInhibitor {
-            int from;
-            int to;
-            MarkingCount_t weight;
+        struct ColoredPetriNetArc
+        {
+            uint32_t from;
+            uint32_t to;
+            std::vector<Variable_t> variables;
+            std::shared_ptr<ColorType> colorType;
+            std::unique_ptr<ArcExpression> arcExpression;
         };
 
         struct Variable
         {
             std::shared_ptr<BaseColorType> colorType;
-            Variable_t id;
         };
+
+        class ColoredPetriNetBuilder;
 
         class ColoredPetriNet
         {
@@ -86,18 +90,6 @@ namespace PetriEngine
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
-            }
-
-            const ColoredPetriNetTransition& getTransition(uint32_t index) {
-                return _transitions[index];
-            }
-
-            const ColoredPetriNetArc& getInputArc(uint32_t index) const {
-                return _inputArcs[index];
-            }
-
-            const ColoredPetriNetPlace& getPlace(uint32_t index) const {
-                return _places[index];
             }
         private:
             friend class ColoredPetriNetBuilder;
