@@ -8,7 +8,7 @@ namespace PetriEngine {
     namespace ExplicitColored {
         struct ArcExpression
         {
-            ArcExpression(Colored::ArcExpression_ptr arcExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap);
+            ArcExpression(Colored::ArcExpression_ptr arcExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap, std::shared_ptr<std::unordered_map<std::string, Variable_t>> variableMap);
             
             ArcExpression(const ArcExpression&) = default;
             ArcExpression(ArcExpression&&) = default;

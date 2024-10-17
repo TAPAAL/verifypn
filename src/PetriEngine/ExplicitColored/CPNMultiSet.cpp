@@ -23,7 +23,7 @@ namespace PetriEngine {
             return 0;
         }
         
-        void CPNMultiSet::setCount(std::vector<Color_t> color, MarkingCount_t count) {
+        void CPNMultiSet::setCount(const std::vector<Color_t>& color, MarkingCount_t count) {
             for (auto& colorCount : _counts) {
                 bool found = true;
 
@@ -46,7 +46,7 @@ namespace PetriEngine {
                 return;
             }
             _cardinality += count;
-            _counts.emplace_back(std::make_pair(std::move(color), count));
+            _counts.emplace_back(std::make_pair(color, count));
         }
 
         CPNMultiSet& CPNMultiSet::operator+=(const CPNMultiSet& other) {
@@ -69,6 +69,7 @@ namespace PetriEngine {
                     }
 
                     a.second += b.second;
+                    break;
                 }
                 if (!foundMatch) {
                     _counts.push_back(b);
@@ -102,8 +103,7 @@ namespace PetriEngine {
                         _cardinality = (_cardinality + b.second) - a.second;
                         a.second -= b.second;
                     }
-                    
-                    a.second -= b.second;
+
                     break;
                 }
             }
@@ -120,7 +120,6 @@ namespace PetriEngine {
 
         MarkingCount_t CPNMultiSet::totalCount() const {
             return _cardinality;
-            return *this;
         }
 
         bool CPNMultiSet::operator>=(const CPNMultiSet& other) const {
@@ -138,6 +137,30 @@ namespace PetriEngine {
                 return false;
             for (const auto& count : other._counts) {
                 if (count.second < getCount(count.first))
+                    return false;
+            }
+            return true;
+        }
+
+        bool CPNMultiSet::operator==(const CPNMultiSet& other) const {
+            for (const auto& a : _counts) {
+                bool found = false;
+                for (const auto& b : other._counts) {
+                    found = true;
+                    for (size_t i = 0; i < a.first.size(); i++) {
+                        if (a.first[i] != b.first[i]) {
+                            found = false;
+                            break;
+                        }
+                    }
+
+                    if (!found || a.second != b.second) {
+                        continue;
+                    }
+
+                    break;
+                }
+                if (!found)
                     return false;
             }
             return true;

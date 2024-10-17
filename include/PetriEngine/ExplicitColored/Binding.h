@@ -10,6 +10,7 @@ namespace PetriEngine {
     namespace ExplicitColored {
         struct Binding
         {
+            Binding() = default;
             Binding(std::map<Variable_t, Color_t> map)
                 : _values(map) { };
 

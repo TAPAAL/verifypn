@@ -58,12 +58,33 @@ using namespace PetriEngine::Reachability;
 
 int main2() {
     ExplicitColored::ColoredPetriNetBuilder builder;
-    std::ifstream stream("cpn_tests/FamilyReunion-COL-L00010M0001C001P001G001/model.pnml");
+    std::ifstream stream("testnet.pnml");
 
     builder.parse_model(stream);
     stream.close();
 
     auto net =  builder.build();
+
+    const auto& a0 = net.getInputArc(0);
+    const auto& a1 = net.getInputArc(1);
+    const auto& a2 = net.getInputArc(2);
+    const auto& a3 = net.getInputArc(3);
+    const auto& a4 = net.getInputArc(4);
+    const auto& a5 = net.getInputArc(5);
+    const auto& a6 = net.getInputArc(6);
+    auto a0s = a0.arcExpression->eval({});
+    auto a1s = a1.arcExpression->eval({});
+    auto a2s = a2.arcExpression->eval({});
+    auto a3s = a3.arcExpression->eval({});
+    auto a4s = a4.arcExpression->eval({});
+    auto a5s = a5.arcExpression->eval({});
+    PetriEngine::ExplicitColored::Binding b = {
+        {{0, 1}}
+    };
+    auto a6s = a6.arcExpression->eval(b);
+
+    const auto& t = net.getTransition(6);
+    auto res = t.guardExpression->eval(b);
 
     return 0;
 }

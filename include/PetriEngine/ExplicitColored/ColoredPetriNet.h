@@ -39,12 +39,6 @@ namespace PetriEngine
 {
     namespace ExplicitColored
     {
-        struct ArcExpression
-        {
-            std::vector<std::shared_ptr<Variable>> variables;
-            virtual CPNMultiSet eval(const Binding &binding) = 0;
-        };
-
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
@@ -73,20 +67,10 @@ namespace PetriEngine
             std::unique_ptr<ArcExpression> arcExpression;
         };
 
-        struct ColorType {
-            uint32_t size;
-            std::vector<std::shared_ptr<BaseColorType>> colorTypes;
-        };
-
         struct ColoredPetriNetInhibitor {
             int from;
             int to;
             MarkingCount_t weight;
-        };
-
-        struct BaseColorType
-        {
-            Color_t colors;
         };
 
         struct Variable
@@ -97,14 +81,27 @@ namespace PetriEngine
 
         class ColoredPetriNet
         {
-            friend ColoredPetriNetBuilder;
         public:
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
+
+            const ColoredPetriNetTransition& getTransition(uint32_t index) {
+                return _transitions[index];
+            }
+
+            const ColoredPetriNetArc& getInputArc(uint32_t index) const {
+                return _inputArcs[index];
+            }
+
+            const ColoredPetriNetPlace& getPlace(uint32_t index) const {
+                return _places[index];
+            }
         private:
+            friend class ColoredPetriNetBuilder;
+            friend class ColoredSuccessorGenerator;
             ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
@@ -113,8 +110,7 @@ namespace PetriEngine
             std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
-            uint32_t _ntransitions;
-            friend class ColoredSuccessorGenerator;
+            uint32_t _ntransitions = 0;
         };
     }
 } // PetriEngine

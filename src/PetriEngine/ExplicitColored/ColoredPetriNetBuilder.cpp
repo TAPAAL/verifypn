@@ -21,7 +21,7 @@ namespace PetriEngine {
             _placeIndices[name] = _currentNet._places.size() - 1;
 
             auto multiSet = CPNMultiSet();
-            multiSet.SetCount({DOT_COLOR}, tokens);
+            multiSet.setCount({DOT_COLOR}, tokens);
 
             _currentNet._initialMarking.markings.push_back(multiSet);
         }
@@ -47,7 +47,7 @@ namespace PetriEngine {
                 },
                 weight
             );
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors);
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
             
 
             _currentNet._inputArcs.push_back(std::move(arc));
@@ -69,12 +69,17 @@ namespace PetriEngine {
             place.colorType = _colorTypeMap.find(type->getName())->second;
 
             CPNMultiSet multiSet;
-            for (const auto& token : tokens) {
-                std::vector<Color_t> colorSequrence;
-                for (const auto& color : token.first->getTupleColors()) {
-                    colorSequrence.push_back(color->getId());
+            for (const auto& [tokenColor, count] : tokens) {
+                std::vector<Color_t> colorSequence;
+                if (tokenColor->isTuple()) {
+                    for (const auto& color : tokenColor->getTupleColors()) {
+                        colorSequence.push_back(color->getId());
+                    }
+                } else {
+                    colorSequence.push_back(tokenColor->getId());
                 }
-                multiSet.SetCount(colorSequrence, token.second);
+
+                multiSet.setCount(colorSequence, count);
             }
 
             _currentNet._places.push_back(std::move(place));
@@ -88,6 +93,7 @@ namespace PetriEngine {
             transition.guardExpression = std::make_unique<GuardExpression>(_colors, guard, _variableMap);
             _currentNet._transitions.emplace_back(std::move(transition));
             _transitionIndices.emplace(std::make_pair(name, _currentNet._transitions.size() - 1));
+            _currentNet._ntransitions += 1;
         }
 
         void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {    
@@ -97,7 +103,7 @@ namespace PetriEngine {
             arc.from = placeIndex;
             arc.to = _transitionIndices.find(transition)->second;
             arc.colorType = _currentNet._places[placeIndex].colorType;
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors);
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
             
             _currentNet._inputArcs.push_back(std::move(arc));
         }
@@ -109,7 +115,7 @@ namespace PetriEngine {
             arc.from = _transitionIndices.find(transition)->second;
             arc.to = placeIndex;
             arc.colorType = _currentNet._places[placeIndex].colorType;
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors);
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
             _currentNet._outputArcs.push_back(std::move(arc));
         }
@@ -148,6 +154,7 @@ namespace PetriEngine {
         ColoredPetriNet ColoredPetriNetBuilder::build() {
             for (const auto& productColor : _productTypes) {
                 ColorType colorType;
+                colorType.size = 0;
                 for (const std::string& colorId : productColor.second) {
                     const auto colorTypeIt = _baseColorType.find(colorId);
                     if (colorTypeIt != _baseColorType.cend()) {
