@@ -79,13 +79,21 @@ int main2() {
     auto a4s = a4.arcExpression->eval({});
     auto a5s = a5.arcExpression->eval({});
     PetriEngine::ExplicitColored::Binding b = {
-        {{0, 1}}
+        {{0, 0}}
     };
     auto a6s = a6.arcExpression->eval(b);
 
     const auto& t = net.getTransition(6);
     auto res = t.guardExpression->eval(b);
 
+    const auto& t2 = net.getTransition(7);
+    for (PetriEngine::ExplicitColored::Color_t i = 0; i < 4; i++) {
+        PetriEngine::ExplicitColored::Binding b2 = {
+            {{0, i}}
+        };
+        res = t2.guardExpression->eval(b2);
+        printf("%i\n", res);
+    }
     return 0;
 }
 

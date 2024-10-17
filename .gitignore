@@ -17,3 +17,6 @@ build/
 
 results.csv
 .vscode/settings.json
+build-release/
+testnet.pnml
+sbatch_job.sh
