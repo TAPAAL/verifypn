@@ -228,12 +228,28 @@ namespace PetriEngine {
 
             virtual void accept(const SubtractExpression* sub)
             {
+                for (auto& pair : _varModifiers) {
+                    pair.second.emplace_back();
+                }
                 _index = 0;
                 (*sub)[0]->visit(*this);
                 //We ignore the restrictions imposed by the subtraction for now
                 if(_include_subtracts){
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
+                    }
                     _index = 0;
+                    size_t sizeBefore = _varModifiers.size();
                     (*sub)[1]->visit(*this);
+                    size_t sizeAfter = _varModifiers.size();
+
+                    bool lastIsVarExpr = sizeBefore != sizeAfter;
+
+                    if (lastIsVarExpr) {
+                        for (auto& pair : _varModifiers) {
+                            pair.second.emplace_back();
+                        }
+                    }
                 }
             }
 
