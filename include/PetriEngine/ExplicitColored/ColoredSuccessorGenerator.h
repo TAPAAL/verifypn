@@ -35,7 +35,8 @@ namespace PetriEngine{
             std::vector<ColoredPetriNetMarking> _next(ColoredPetriNetMarking& state, T&& predicate){
                 auto res = std::vector<ColoredPetriNetMarking>{};
                 for (uint32_t i = _t_counter; i < _net._ntransitions; i++){
-                    if (auto bindings = checkPreset(state, i); !bindings.empty()){
+                    auto bindings = checkPreset(state, i);
+                    if (!bindings.empty()){
                         for (auto&& b : bindings){
                             auto newState = state;
                             _fire(newState, i, b);
@@ -44,6 +45,7 @@ namespace PetriEngine{
                         }
                         return res;
                     }
+                    _ingoing.clear();
                 }
                 return res;
             }

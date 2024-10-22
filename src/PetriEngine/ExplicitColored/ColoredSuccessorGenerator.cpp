@@ -21,32 +21,59 @@ namespace PetriEngine{
         //Generate every combination that can be made from adding a range onto a vector
         std::vector<std::vector<Color_t>> combineTwo(std::vector<std::vector<Color_t>>& vecs, uint32_t n){
             auto output = std::vector<std::vector<Color_t>>{};
-            auto i = 0;
             for (auto& vec : vecs){
                 for (uint32_t j = 0; j < n; j++){
-                    output[i] = vec;
-                    output[i].push_back(j);
-                    i++;
+                    auto copy = vec;
+                    copy.push_back(j);
+                    output.emplace_back(std::move(copy));
                 }
             }
             return output;
         }
 
-        std::vector<Binding> convertVectorToBindings(const std::vector<std::vector<Color_t>>& vecs, const std::vector<Variable_t>& vars){
+        std::vector<Binding> convertVectorToBindings(const std::vector<std::vector<Color_t>>& vecs, const std::set<Variable_t>& vars){
             auto res = std::vector<Binding>{};
             for (auto&& vec : vecs){
                 auto map = std::map<Variable_t, Color_t>{};
-                for (uint32_t i = 0; i < vars.size(); i++){
-                    map[vars[i]] = vec[i];
+                size_t i = 0;
+                for (const Variable_t var : vars) {
+                    map[var] = vec[i++];
                 }
                 res.push_back(Binding{map});
             }
             return res;
         }
 
+        std::vector<Binding> generateBindings(const std::vector<std::pair<Variable_t, const Variable&>>& variables, size_t index) {
+            if (index == 0) {
+                std::vector<Binding> bindings;
+                for (Color_t c = 0; c < variables[index].second.colorType->colors; c++) {
+                    bindings.push_back({{{variables[index].first, c}}});
+                }
+                return bindings;
+            }
+            std::vector<Binding> bindings = generateBindings(variables, index - 1);
+
+            for (auto& binding : bindings) {
+                binding.setValue(variables[index].first, 0);
+            }
+
+            size_t oldBindingCount = bindings.size();
+
+            for (Color_t c = 1; c < variables[index].second.colorType->colors; c++) {
+                for (size_t i = 0; i < oldBindingCount; i++) {
+                    Binding copy = bindings[i];
+                    copy.setValue(variables[index].first, c);
+                    bindings.emplace_back(std::move(copy));
+                }
+            }
+            return bindings;
+        }
+
         std::vector<Binding> ColoredSuccessorGenerator::checkPreset(ColoredPetriNetMarking& state, uint32_t tid){
             auto relevantColors = std::vector<std::shared_ptr<ColorType>>{};
             auto bindings = std::vector<Binding>{};
+            const auto& transition = _net._transitions[tid];
 
             for (auto && i : _net._inhibitorArcs) {
                 if (i.to == tid){
@@ -65,47 +92,55 @@ namespace PetriEngine{
 
             //Get variables we need bindings for
             //Slightly more efficient to split ingoing/outgoing to when outgoing is needed
-            auto variables = std::vector<uint32_t>{};
+            auto variables = std::set<Variable_t>{};
             for (auto && a : _ingoing){
-                for (auto&& v : a->variables){
-                    if (std::find(variables.begin(),variables.end(), v) == variables.end()){
-                        variables.push_back(v);
-                    };
-                }
+                std::set<Variable_t> vars = a->arcExpression->getVariables();
+                variables.merge(vars);
             }
 
             for (auto&& a : _net._outputArcs){
                 if (a.from == tid){
-                    for (auto&& v : a.variables){
-                        if (std::find(variables.begin(),variables.end(), v) == variables.end()){
-                            variables.push_back(v);
-                        };
-                    }
+                    std::set<Variable_t> vars = a.arcExpression->getVariables();
+                    variables.merge(vars);
                 }
             }
 
-            //Generate every possible binding
-            auto bindingVector = std::vector<std::vector<Color_t>>{{}};
-            for (auto&& v : variables){
-               bindingVector = combineTwo(bindingVector, _net._variables[v].colorType->colors);
+            if (transition.guardExpression != nullptr) {
+                std::set<Variable_t> vars = transition.guardExpression->getVariables();
+                variables.merge(vars);
             }
 
-            bindings = convertVectorToBindings(bindingVector, variables);
+            std::vector<std::pair<Variable_t, const Variable&>> variableList;
+
+            for (Variable_t varId : variables) {
+                variableList.emplace_back(varId, _net._variables[varId]);
+            }
+
+            if (variableList.empty()) {
+                bindings = {{}};
+            } else {
+                bindings = generateBindings(variableList, variables.size() - 1);
+            }
+
             auto acceptableBindings = std::vector<Binding>{};
-            for (auto&& b : bindings){
-                bool fireable = _net._transitions[tid].guardExpression->eval(b);
+            for (const auto& binding : bindings){
+                bool fireable = transition.guardExpression == nullptr
+                    || _net._transitions[tid].guardExpression->eval(binding);
+
                 if (!fireable){
                     continue;
                 }
                 for (auto&& a : _ingoing){
                     auto place = a->from;
-                    if (state.markings[place] >= a->arcExpression->eval(b)){
+                    const auto& currentMarking = state.markings[place];
+                    auto arcEvaluation = a->arcExpression->eval(binding);
+                    if (!(currentMarking >= arcEvaluation)){
                         fireable = false;
                         break;
                     }
                 }
                 if (fireable){
-                    acceptableBindings.push_back(b);
+                    acceptableBindings.push_back(binding);
                 }
             }
             return acceptableBindings;
