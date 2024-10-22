@@ -268,22 +268,23 @@ namespace ColoredLTL {
                 for (auto&& s : successors){
                     if (!passed.contains(s)) {
                         if (check(s)){
+                            std::cout << "Checked " << passed.size() << " states" << std::endl;
                             return true;
                         }
                         passed.add(s);
                         waiting.push_back(s);
-
                     }
                 }
             }
         }
+        std::cout << "Checked " << passed.size() << " states" << std::endl;
         return false;
     }
 
     template<typename S>
     bool NaiveWorklist::dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state){
         auto waiting = std::queue<S>{state};
-        auto passed = std::queue<S>{state};
+        auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
         if (_formula(state)){
             return true;
         }
@@ -297,19 +298,13 @@ namespace ColoredLTL {
                     break;
                 }
                 for (auto&& s : successors){
-                    auto cont = false;
-                    for (auto&& p : passed){
-                        if (s == p){
-                            cont = true;
-                            break;
-                        }
-                    }
-                    if (!cont){
-                        if (_check(next)){
+                    if (!passed.contains(s)) {
+                        if (check(s)){
+                            std::cout << "Checked " << passed.size() << " states" << std::endl;
                             return true;
                         }
-                        passed.push(s);
-                        waiting.push(s);
+                        passed.add(s);
+                        waiting.push_back(s);
                     }
                 }
             }
