@@ -81,7 +81,7 @@ class ModelCheckingJob:
         return f"{self.model.name()} {self.queryFile.name()}:{self.queryIndex}"
 
     def getCommand(self):
-        command = ["-x", str(self.queryIndex)]
+        command = ["-C", "-x", str(self.queryIndex)]
         if ("LTL" in str(self.queryFile.queryPath)):
             command.extend(["-ltl", "tarjan"])
         command.extend([str(self.model.modelPath), str(self.queryFile.queryPath)])
@@ -111,7 +111,7 @@ models: List[Model] = []
 
 for modelRoot in Path(MODELS_PATH).iterdir():
     modelPnml = modelRoot / "model.pnml"
-    queryFiles = [QueryFile(x) for x in modelRoot.glob('*.xml') if "GenericProperties" not in x.name]
+    queryFiles = [QueryFile(x) for x in modelRoot.glob('ReachabilityCardinality.xml') if "GenericProperties" not in x.name]
     models.append(Model(modelRoot, modelPnml, queryFiles))
 
 print(f"Found {models.__len__()} models")
@@ -123,7 +123,7 @@ def extractResultFromOutput(out):
     elif (QUERY_IS_NOT_SATISFIED in out):
         return QueryResult.UNSATISFIED
     else:
-        raise RuntimeError("unknown result of query")
+        return QueryResult.ERROR
 
 modelCheckingJobs: List[ModelCheckingJob] = []
 

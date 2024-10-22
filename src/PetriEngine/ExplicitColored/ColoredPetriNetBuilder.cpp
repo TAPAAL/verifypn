@@ -21,7 +21,7 @@ namespace PetriEngine {
             _placeIndices[name] = _currentNet._places.size() - 1;
 
             auto multiSet = CPNMultiSet();
-            multiSet.setCount({DOT_COLOR}, tokens);
+            multiSet.setCount(ColorSequence({DOT_COLOR}), tokens);
 
             _currentNet._initialMarking.markings.push_back(multiSet);
         }
@@ -79,7 +79,7 @@ namespace PetriEngine {
                     colorSequence.push_back(tokenColor->getId());
                 }
 
-                multiSet.setCount(colorSequence, count);
+                multiSet.setCount(ColorSequence(colorSequence), count);
             }
 
             _currentNet._places.push_back(std::move(place));
@@ -90,7 +90,9 @@ namespace PetriEngine {
 
         void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
             ColoredPetriNetTransition transition;
-            transition.guardExpression = std::make_unique<GuardExpression>(_colors, guard, _variableMap);
+            transition.guardExpression = guard == nullptr
+                ? nullptr
+                : std::make_unique<GuardExpression>(_colors, guard, _variableMap);
             _currentNet._transitions.emplace_back(std::move(transition));
             _transitionIndices.emplace(std::make_pair(name, _currentNet._transitions.size() - 1));
             _currentNet._ntransitions += 1;
@@ -168,6 +170,10 @@ namespace PetriEngine {
 
         void ColoredPetriNetBuilder::sort() {
             
+        }
+
+        std::unordered_map<std::string, uint32_t> ColoredPetriNetBuilder::takePlaceIndices() {
+            return std::move(_placeIndices);
         }
     }
 }

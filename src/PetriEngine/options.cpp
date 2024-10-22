@@ -544,6 +544,9 @@ bool options_t::parse(int argc, const char** argv) {
         } else if (std::strcmp(argv[i], "--trace-replay") == 0) {
             replay_trace = true;
             replay_file = std::string(argv[++i]);
+        } else if (std::strcmp(argv[i], "-C") == 0) {
+            std::cout << "bing bong" << std::endl;
+            explicit_colored = true;
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (std::strcmp(argv[i], "-z") == 0) {
