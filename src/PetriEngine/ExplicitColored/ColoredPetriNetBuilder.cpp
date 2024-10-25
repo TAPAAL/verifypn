@@ -30,7 +30,8 @@ namespace PetriEngine {
             _currentNet._transitions.push_back({
                 nullptr
             });
-            _transitionIndices[name] = _currentNet._transitions.size();
+            _transitionIndices[name] = _currentNet._transitions.size() - 1;
+            _currentNet._ntransitions += 1;
         }
 
          void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
