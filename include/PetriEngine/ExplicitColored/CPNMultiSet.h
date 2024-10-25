@@ -17,14 +17,17 @@ namespace PetriEngine
             CPNMultiSet& operator=(CPNMultiSet&&) = default;
 
             MarkingCount_t getCount(const std::vector<Color_t>& color) const;
-            void setCount(std::vector<Color_t> color, MarkingCount_t count);
-			CPNMultiSet& operator+=(const CPNMultiSet& other);
+            void setCount(const std::vector<Color_t>& color, MarkingCount_t count);
+            MarkingCount_t totalCount() const;
+            CPNMultiSet& operator+=(const CPNMultiSet& other);
             CPNMultiSet& operator-=(const CPNMultiSet& other);
             CPNMultiSet& operator*=(MarkingCount_t scalar);
-            MarkingCount_t totalCount() const;
+            bool operator==(const CPNMultiSet& other) const;
+            bool operator>=(const CPNMultiSet& other) const;
+            bool operator<=(const CPNMultiSet& other) const;
         private:
             std::vector<std::pair<std::vector<Color_t>, MarkingCount_t>> _counts;
-            MarkingCount_t _cardinality;
+            MarkingCount_t _cardinality = 0;
         };
     }
 }

@@ -10,13 +10,14 @@ namespace PetriEngine {
     namespace ExplicitColored {
         struct Binding
         {
-            Binding(std::map<Variable_t, Color_t> map) : _values(map){
-            };
+            Binding() = default;
+            Binding(std::map<Variable_t, Color_t> map)
+                : _values(map) { };
 
             Color_t getValue(const Variable_t v) const{
-                if (auto ret = _values.find(v); ret != _values.end()){
+                if (auto ret = _values.find(v); ret != _values.end()) {
                     return ret->second;
-                }else{
+                } else {
                     return std::numeric_limits<Color_t>::max();
                 }
             }

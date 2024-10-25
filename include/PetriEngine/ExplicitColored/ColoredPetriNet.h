@@ -52,7 +52,7 @@ namespace PetriEngine
         struct ColorType
         {
             uint32_t size;
-            std::vector<std::shared_ptr<BaseColorType>> baseColorTypes;
+            std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
         };
 
         struct ColoredPetriNetPlace
@@ -81,23 +81,28 @@ namespace PetriEngine
             std::shared_ptr<BaseColorType> colorType;
         };
 
+        class ColoredPetriNetBuilder;
+
         class ColoredPetriNet
         {
         public:
-            ColoredPetriNet();
+            ColoredPetriNet(ColoredPetriNet&&) = default;
+            ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
         private:
+            friend class ColoredPetriNetBuilder;
+            friend class ColoredSuccessorGenerator;
+            ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
-            std::vector<ColoredPetriNetArc> _transitionToPlaceArcs;
-            std::vector<ColoredPetriNetInhibitor> _inhibitorToPlaceArcs;
-            std::vector<ColoredPetriNetArc> _placeToTransitionArcs;
+            std::vector<ColoredPetriNetArc> _outputArcs;
+            std::vector<ColoredPetriNetArc> _inputArcs;
+            std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
-            uint32_t _ntransitions;
-            friend class ColoredSuccessorGenerator;
+            uint32_t _ntransitions = 0;
         };
     }
 } // PetriEngine

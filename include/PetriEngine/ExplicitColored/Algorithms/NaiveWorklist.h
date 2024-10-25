@@ -1,4 +1,4 @@
-#ifndef NAIVEWORKLIST_H;
+#ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"

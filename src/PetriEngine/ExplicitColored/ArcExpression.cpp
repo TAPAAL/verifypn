@@ -52,7 +52,9 @@ namespace PetriEngine {
                 color = ALL_COLOR;
             }
 
-            void accept(const Colored::UserOperatorExpression*) override { unexpectedExpression(); }
+            void accept(const Colored::UserOperatorExpression* expr) override { 
+                color = expr->user_operator()->getId();
+            }
             void accept(const Colored::TupleExpression*) override { unexpectedExpression(); }
             void accept(const Colored::LessThanExpression*) override { unexpectedExpression(); }
             void accept(const Colored::LessThanEqExpression*) override { unexpectedExpression(); }
@@ -119,15 +121,18 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::NumberOfExpression* expr) override {
+                (*expr)[0]->visit(*this);
                 result *= expr->number();
             }
             
             void accept(const Colored::AddExpression* expr) override {
-                (*expr)[0]->visit(*this);
-                auto lhs = std::move(result);
-                result = CPNMultiSet();
-                (*expr)[1]->visit(*this);
-                result += lhs;
+                CPNMultiSet sum;
+                for (auto constituent : *expr) {
+                    constituent->visit(*this);
+                    sum += result;
+                    result = CPNMultiSet();
+                }
+                result = std::move(sum);
             }
 
             void accept(const Colored::SubtractExpression* expr) override {
@@ -139,7 +144,20 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::ScalarProductExpression* expr) override {
+                expr->child()->visit(*this);
                 result *= expr->scalar();
+            }
+
+            void accept(const Colored::DotConstantExpression* expr) override {
+                result.setCount({DOT_COLOR}, 1);
+            }
+
+            void accept(const Colored::UserOperatorExpression* expr) override {
+                result.setCount({expr->user_operator()->getId()}, 1);
+            }
+
+            void accept(const Colored::VariableExpression* expr) override {
+                result.setCount({_variableMap->find(expr->variable()->name)->second}, 1);
             }
 
             void accept(const Colored::LessThanExpression* expr) override {unexpectedExpression();}
@@ -149,9 +167,6 @@ namespace PetriEngine {
             void accept(const Colored::AllExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::AndExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::OrExpression* expr) override {unexpectedExpression();}
-            void accept(const Colored::DotConstantExpression* expr) override { unexpectedExpression(); }
-            void accept(const Colored::VariableExpression* expr) override { unexpectedExpression(); }
-            void accept(const Colored::UserOperatorExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::SuccessorExpression* expr) override {unexpectedExpression();}
             void accept(const Colored::PredecessorExpression* expr) override {unexpectedExpression();}
 
@@ -166,8 +181,8 @@ namespace PetriEngine {
             }
         };
 
-        ArcExpression::ArcExpression(Colored::GuardExpression_ptr guardExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap)
-            : _colorTypeMap(std::move(colorTypeMap)), _arcExpression(std::move(guardExpression)) {
+        ArcExpression::ArcExpression(Colored::ArcExpression_ptr guardExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap, std::shared_ptr<std::unordered_map<std::string, Variable_t>> variableMap)
+            : _colorTypeMap(std::move(colorTypeMap)), _arcExpression(std::move(guardExpression)), _variableMap(std::move(variableMap)) {
         }
 
         CPNMultiSet ArcExpression::eval(const Binding& binding) {

@@ -54,8 +54,11 @@ namespace PetriEngine {
                 colorTypeSequence.push_back(_binding->getValue(test->second));
             }
 
+            void accept(const Colored::UserOperatorExpression* expr) override {
+                colorTypeSequence.push_back(expr->user_operator()->getId());
+            }
+
             void accept(const Colored::DotConstantExpression*) override {unexpectedExpression();}
-            void accept(const Colored::UserOperatorExpression*) override {unexpectedExpression();}
             void accept(const Colored::LessThanExpression*) override {unexpectedExpression();}
             void accept(const Colored::LessThanEqExpression*) override {unexpectedExpression();}
             void accept(const Colored::EqualityExpression*) override {unexpectedExpression();}

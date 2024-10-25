@@ -46,19 +46,18 @@ namespace PetriEngine{
 
         std::vector<Binding> ColoredSuccessorGenerator::checkPreset(ColoredPetriNetMarking& state, uint32_t tid){
             auto relevantColors = std::vector<std::shared_ptr<ColorType>>{};
-            auto inhibitors = std::vector<ColoredPetriNetInhibitor&>{};
             auto bindings = std::vector<Binding>{};
 
-            for (auto && i : _net._inhibitorToPlaceArcs){
+            for (auto && i : _net._inhibitorArcs) {
                 if (i.to == tid){
-                    if (state.markings[i.from].totalCount() >= i.weight){
+                    if (state.markings[i.from].totalCount() >= i.weight) {
                         return bindings;
                     }
                     break;
                 }
             }
 
-            for (auto&& a : _net._placeToTransitionArcs){
+            for (auto&& a : _net._inputArcs) {
                 if (a.to == tid){
                     _ingoing.push_back(&a);
                 }
@@ -75,7 +74,7 @@ namespace PetriEngine{
                 }
             }
 
-            for (auto&& a : _net._transitionToPlaceArcs){
+            for (auto&& a : _net._outputArcs){
                 if (a.from == tid){
                     for (auto&& v : a.variables){
                         if (std::find(variables.begin(),variables.end(), v) == variables.end()){
@@ -120,7 +119,7 @@ namespace PetriEngine{
         }
 
         void ColoredSuccessorGenerator::producePostset(ColoredPetriNetMarking& state, uint32_t tid, Binding& b){
-            for (auto &&a : _net._transitionToPlaceArcs){
+            for (auto &&a : _net._outputArcs){
                 if (a.from == tid){
                     state.markings[a.to] += a.arcExpression->eval(b);
                 }

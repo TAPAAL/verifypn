@@ -50,6 +50,7 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
