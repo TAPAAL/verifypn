@@ -2,77 +2,32 @@
 #include "utils/errors.h"
 namespace PetriEngine {
     namespace ExplicitColored {
-        MarkingCount_t CPNMultiSet::getCount(const std::vector<Color_t>& color) const {
-            for (const auto& colorCount : _counts) {
-                if (color.size() != colorCount.first.size())
-                    throw base_error("Tried to access multiset with mismatched types");
-
-                bool matches = true;
-                for (size_t i = 0; i < color.size(); i++) {
-                    if (color[i] != colorCount.first[i]) {
-                        matches = false;
-                        break;
-                    }
-                }
-
-                if (!matches)
-                    continue;
-
-                return colorCount.second;
+        MarkingCount_t CPNMultiSet::getCount(const ColorSequence& color) const {
+            const auto colorIt = _counts.find(color);
+            if (colorIt == _counts.end()) {
+                return 0;
             }
-            return 0;
+            return colorIt->second;
         }
         
-        void CPNMultiSet::setCount(const std::vector<Color_t>& color, MarkingCount_t count) {
-            for (auto& colorCount : _counts) {
-                bool found = true;
-
-                if (color.size() != colorCount.first.size())
-                    throw base_error("Tried to access multiset with mismatched types");
-
-                for (size_t i = 0; i < color.size(); i++) {
-                    if (color[i] != colorCount.first[i]) {
-                        found = false;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    continue;
-                }
-                _cardinality = (_cardinality + count) - colorCount.second;
-                
-                colorCount.second = count;
+        void CPNMultiSet::setCount(const ColorSequence& color, MarkingCount_t count) {
+            auto it = _counts.find(color);
+            if (it == _counts.end()) {
+                _counts.emplace(color, count);
+                _cardinality += count;
                 return;
             }
-            _cardinality += count;
-            _counts.emplace_back(std::make_pair(color, count));
+            _cardinality = (_cardinality + count) - it->second;
+            it->second = count;
         }
 
         CPNMultiSet& CPNMultiSet::operator+=(const CPNMultiSet& other) {
-            for (auto& b : other._counts) {
-                bool foundMatch = false;
-                for (auto& a : _counts) {
-                    foundMatch = true;
-                    if (a.first.size() != b.first.size())
-                        throw base_error("Tried to access multiset with mismatched types");
-
-                    for (size_t i = 0; i < a.first.size(); i++) {
-                        if (a.first[i] != b.first[i]) {
-                            foundMatch = false;
-                            break;
-                        }
-                    }
-
-                    if (!foundMatch) {
-                        continue;
-                    }
-
-                    a.second += b.second;
-                    break;
-                }
-                if (!foundMatch) {
-                    _counts.push_back(b);
+            for (auto& otherCount : other._counts) {
+                auto it = _counts.find(otherCount.first);
+                if (it == _counts.end()) {
+                    _counts.emplace(otherCount);
+                } else {
+                    it->second += otherCount.second;
                 }
             }
             _cardinality += other._cardinality;
@@ -80,31 +35,14 @@ namespace PetriEngine {
         }
 
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
-             for (auto& b : other._counts) {
-                for (auto& a : _counts) {
-                    if (a.first.size() != b.first.size())
-                        throw base_error("Tried to access multiset with mismatched types");
-
-                    bool found = true;
-                    for (size_t i = 0; i < a.first.size(); i++) {
-                        if (a.first[i] != b.first[i]) {
-                            found = false;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        continue;
-                    }
-
-                    if (b.second > a.second) {
-                        _cardinality -= a.second;
-                        a.second = 0;
-                    } else {
-                        _cardinality = (_cardinality + b.second) - a.second;
-                        a.second -= b.second;
-                    }
-
-                    break;
+            for (auto& otherCount : other._counts) {
+                auto it = _counts.find(otherCount.first);
+                if (otherCount.second > it->second) {
+                    _cardinality -= it->second;
+                    it->second = 0;
+                } else {
+                    _cardinality -= otherCount.second;
+                    it->second -= otherCount.second;
                 }
             }
             return *this;
@@ -144,26 +82,26 @@ namespace PetriEngine {
 
         bool CPNMultiSet::operator==(const CPNMultiSet& other) const {
             for (const auto& a : _counts) {
-                bool found = false;
-                for (const auto& b : other._counts) {
-                    found = true;
-                    for (size_t i = 0; i < a.first.size(); i++) {
-                        if (a.first[i] != b.first[i]) {
-                            found = false;
-                            break;
-                        }
-                    }
-
-                    if (!found || a.second != b.second) {
-                        continue;
-                    }
-
-                    break;
-                }
-                if (!found)
+                auto otherCount = other.getCount(a.first);
+                if (otherCount != a.second) {
                     return false;
+                }
             }
             return true;
+        }
+
+        void CPNMultiSet::stableEncode(std::ostream& out) const {
+            for (const auto& count : _counts) {
+                if (count.second == 0) {
+                    continue;
+                }
+
+                out << count.second << "'" << "(";
+                for (const auto& color : count.first.getSequence()) {
+                    out << color << ",";
+                }
+                out << ")";
+            }
         }
     }
 }

@@ -10,11 +10,11 @@ namespace ColoredLTL{
         class NaiveWorklist : public ColoredModelChecker {
         public:
             NaiveWorklist(const PetriEngine::ExplicitColored::ColoredPetriNet& net,
-            const PetriEngine::PQL::Condition_ptr &query)
-            : ColoredModelChecker(net, query){
-            }
+            const PetriEngine::PQL::Condition_ptr &query,
+            std::unordered_map<std::string, uint32_t> placeNameIndices)
+                : ColoredModelChecker(net, query), _placeNameIndices(std::move(placeNameIndices)) { }
 
-            virtual bool check();
+            bool check() override;
 
             template<typename S>
             bool check(S state);
@@ -28,6 +28,8 @@ namespace ColoredLTL{
 
             template<typename S>
             bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state);
+
+            const std::unordered_map<std::string, uint32_t> _placeNameIndices;
         };
 }
 #endif //NAIVEWORKLIST_H

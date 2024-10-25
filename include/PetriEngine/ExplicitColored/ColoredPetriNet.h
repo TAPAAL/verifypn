@@ -71,7 +71,6 @@ namespace PetriEngine
         {
             uint32_t from;
             uint32_t to;
-            std::vector<Variable_t> variables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
         };

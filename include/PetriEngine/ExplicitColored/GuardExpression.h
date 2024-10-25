@@ -14,12 +14,14 @@ namespace PetriEngine {
             GuardExpression(GuardExpression&&) = default;
             GuardExpression& operator=(const GuardExpression&) = default;
             GuardExpression& operator=(GuardExpression&&) = default;
-            
-            bool eval(const Binding &binding);
+
+            bool eval(const Binding &binding) const;
+            const std::set<Variable_t>& getVariables() const;
         private:
             std::shared_ptr<Colored::ColorTypeMap> _colorTypeMap;
             Colored::GuardExpression_ptr _guardExpression;
             std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
+            std::set<Variable_t> _variables;
         };
     }
 }
