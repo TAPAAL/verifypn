@@ -44,8 +44,8 @@ namespace PetriEngine {
                         _cardinality -= it->second;
                         it->second = 0;
                     } else {
-                        _cardinality -= it->second;
-                        it->second -= it->second;
+                        _cardinality -= otherCount.second;
+                        it->second -= otherCount.second;
                     }
                 }
             }
