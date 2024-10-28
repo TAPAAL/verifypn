@@ -29,6 +29,8 @@
 #ifndef VARIABLESVISITOR_H
 #define VARIABLESVISITOR_H
 
+#include <stack>
+
 #include "Expressions.h"
 #include "Colors.h"
 
@@ -205,23 +207,28 @@ namespace PetriEngine {
 
             virtual void accept(const AddExpression* add)
             {
-                bool lastIsVarExpr = false;
-                for (const auto& elem : *add) {
-                    for (auto& pair : _varModifiers) {
-                        pair.second.emplace_back();
-                    }
-
-                    _index = 0;
-                    size_t sizeBefore = _varModifiers.size();
-                    elem->visit(*this);
-                    size_t sizeAfter = _varModifiers.size();
-
-                    lastIsVarExpr = sizeBefore != sizeAfter;
+                for (auto& pair : _varModifiers) {
+                    pair.second.emplace_back();
                 }
 
-                if (lastIsVarExpr) {
-                    for (auto& pair : _varModifiers) {
-                        pair.second.emplace_back();
+                _index = 0;
+                (*add)[0]->visit(*this);
+
+                for (auto& pair : _varModifiers) {
+                    pair.second.emplace_back();
+                }
+                
+                if (add->size() < 2) return;
+
+                _index = 0;
+                (*add)[1]->visit(*this);
+
+                if ((*add)[1]->is_number_of()) {
+                    auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*add)[1]);
+                    if (is_last_variable_expr(numberOfExpr->back())) {
+                        for (auto& pair : _varModifiers) {
+                            pair.second.emplace_back();
+                        }
                     }
                 }
             }
@@ -239,15 +246,14 @@ namespace PetriEngine {
                         pair.second.emplace_back();
                     }
                     _index = 0;
-                    size_t sizeBefore = _varModifiers.size();
                     (*sub)[1]->visit(*this);
-                    size_t sizeAfter = _varModifiers.size();
 
-                    bool lastIsVarExpr = sizeBefore != sizeAfter;
-
-                    if (lastIsVarExpr) {
-                        for (auto& pair : _varModifiers) {
-                            pair.second.emplace_back();
+                    if ((*sub)[1]->is_number_of()) {
+                        auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*sub)[1]);
+                        if (is_last_variable_expr(numberOfExpr->back())) {
+                            for (auto& pair : _varModifiers) {
+                                pair.second.emplace_back();
+                            }
                         }
                     }
                 }
@@ -288,6 +294,32 @@ namespace PetriEngine {
                 VariableModifierMap varModifierMap;
 
                 get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+            }
+
+        private:
+            bool is_last_variable_expr(const std::shared_ptr<const ColorExpression> expr) const {
+                std::stack<std::shared_ptr<const ColorExpression>> stack;
+                stack.push(expr);
+
+                while (!stack.empty()) {
+                    auto currentExpr = stack.top();
+                    stack.pop();
+
+                    if (currentExpr->is_variable()) {
+                        return true;
+                    } else if (currentExpr->is_predecessor()) {
+                        stack.push(std::static_pointer_cast<const PredecessorExpression>(currentExpr)->child());
+                    } else if (currentExpr->is_successor()) {
+                        stack.push(std::static_pointer_cast<const SuccessorExpression>(currentExpr)->child());
+                    } else if (currentExpr->is_tuple()) {
+                        auto tupleExpr = std::static_pointer_cast<const TupleExpression>(currentExpr);
+                        for (const auto& tupleElem : *tupleExpr) {
+                            stack.push(tupleElem);
+                        }
+                    }
+                }
+
+                return false;
             }
         };
     }

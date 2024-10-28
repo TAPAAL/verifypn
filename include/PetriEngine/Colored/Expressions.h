@@ -55,6 +55,10 @@ namespace PetriEngine {
             ColorExpression() {}
             virtual ~ColorExpression() {}
             virtual const ColorType* getColorType(const ColorTypeMap& colorTypes) const = 0;
+            virtual bool is_variable() const { return false; }
+            virtual bool is_predecessor() const { return false; }
+            virtual bool is_successor() const { return false; }
+            virtual bool is_tuple() const { return false; }
         };
 
         class DotConstantExpression : public ColorExpression {
@@ -85,6 +89,7 @@ namespace PetriEngine {
                 return _variable->colorType;
             }
 
+            bool is_variable() const override { return true; }
         };
 
         class UserOperatorExpression : public ColorExpression {
@@ -113,6 +118,8 @@ namespace PetriEngine {
                 return _color;
             }
 
+            bool is_successor() const override { return true; }
+
             SuccessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
 
@@ -130,6 +137,8 @@ namespace PetriEngine {
             const ColorExpression_ptr& child() const {
                 return _color;
             }
+
+            bool is_predecessor() const override { return true; }
 
             PredecessorExpression(ColorExpression_ptr&& color)
                     : _color(std::move(color)) {}
@@ -150,6 +159,8 @@ namespace PetriEngine {
             size_t size() const {
                 return _colors.size();
             }
+
+            bool is_tuple() const override { return true; }
 
             auto begin() const {
                 return _colors.begin();
@@ -285,6 +296,7 @@ namespace PetriEngine {
             virtual void visit(ColorExpressionVisitor& visitor) const = 0;
             virtual uint32_t weight() const = 0;
             virtual bool is_single_color() const = 0;
+            virtual bool is_number_of() const { return false; }
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
@@ -322,9 +334,11 @@ namespace PetriEngine {
                 return _number * _color.size();
             }
 
-            bool is_single_color() const {
+            bool is_single_color() const override {
                 return _color.size() == 1;
             }
+
+            bool is_number_of() const override { return true; }
 
             uint32_t number() const {
                 return _number;
@@ -344,6 +358,10 @@ namespace PetriEngine {
 
             auto end() const {
                 return _color.end();
+            }
+
+            auto back() const {
+                return _color.back();
             }
 
             NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint32_t number = 1)
@@ -368,7 +386,7 @@ namespace PetriEngine {
                 return res;
             }
 
-            bool is_single_color() const {
+            bool is_single_color() const override {
                 return _constituents.size() == 1 && _constituents[0]->is_single_color();
             }
 
@@ -404,7 +422,7 @@ namespace PetriEngine {
                 return _left->weight() - _right->weight();
             }
 
-            bool is_single_color() const {
+            bool is_single_color() const override {
                 return false;
             }
 
@@ -434,7 +452,7 @@ namespace PetriEngine {
                 return _scalar * _expr->weight();
             }
 
-            bool is_single_color() const {
+            bool is_single_color() const override {
                 return _expr->is_single_color();
             }
 
