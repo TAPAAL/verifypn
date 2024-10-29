@@ -406,6 +406,10 @@ namespace PetriEngine {
                 return _constituents.end();
             }
 
+            auto back() const {
+                return _constituents.back();
+            }
+
             AddExpression(std::vector<ArcExpression_ptr> &&constituents)
                     : _constituents(std::move(constituents)) {}
 

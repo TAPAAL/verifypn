@@ -207,24 +207,17 @@ namespace PetriEngine {
 
             virtual void accept(const AddExpression* add)
             {
-                for (auto& pair : _varModifiers) {
-                    pair.second.emplace_back();
+                for (const auto& elem : *add) {
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
+                    }
+                    
+                    _index = 0;
+                    elem->visit(*this);
                 }
 
-                _index = 0;
-                (*add)[0]->visit(*this);
-
-                for (auto& pair : _varModifiers) {
-                    pair.second.emplace_back();
-                }
-                
-                if (add->size() < 2) return;
-
-                _index = 0;
-                (*add)[1]->visit(*this);
-
-                if ((*add)[1]->is_number_of()) {
-                    auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*add)[1]);
+                if (add->back()->is_number_of()) {
+                    auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>(add->back());
                     if (is_last_variable_expr(numberOfExpr->back())) {
                         for (auto& pair : _varModifiers) {
                             pair.second.emplace_back();
