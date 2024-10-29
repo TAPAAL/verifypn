@@ -49,6 +49,7 @@ namespace PetriEngine {
                 weight
             );
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+
             
 
             _currentNet._inputArcs.push_back(std::move(arc));
@@ -59,7 +60,7 @@ namespace PetriEngine {
             size_t placeIndex = _placeIndices.find(place)->second;
                 
             arc.from = _transitionIndices.find(transition)->second;
-            arc.to  = placeIndex;
+            arc.to = placeIndex;
             arc.colorType = _currentNet._places[placeIndex].colorType;
 
             _currentNet._outputArcs.push_back(std::move(arc));
@@ -95,7 +96,7 @@ namespace PetriEngine {
                 ? nullptr
                 : std::make_unique<GuardExpression>(_colors, guard, _variableMap);
             _currentNet._transitions.emplace_back(std::move(transition));
-            _transitionIndices.emplace(std::make_pair(name, _currentNet._transitions.size() - 1));
+            _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
             _currentNet._ntransitions += 1;
         }
 

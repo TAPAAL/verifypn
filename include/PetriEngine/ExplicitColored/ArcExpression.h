@@ -15,8 +15,8 @@ namespace PetriEngine {
             ArcExpression& operator=(const ArcExpression&) = default;
             ArcExpression& operator=(ArcExpression&&) = default;
             
-            CPNMultiSet eval(const Binding &binding) const;
-            const std::set<Variable_t>& getVariables() const;
+            [[nodiscard]] CPNMultiSet eval(const Binding &binding) const;
+            [[nodiscard]] const std::set<Variable_t>& getVariables() const;
         private:
             std::shared_ptr<Colored::ColorTypeMap> _colorTypeMap;
             std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;

@@ -42,6 +42,7 @@ namespace PetriEngine
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
+            std::map<Variable_t,std::vector<uint32_t>> validVariables;
         };
 
         struct BaseColorType
@@ -71,6 +72,7 @@ namespace PetriEngine
         {
             uint32_t from;
             uint32_t to;
+            std::map<Variable_t,std::vector<uint32_t>> validVariables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
         };

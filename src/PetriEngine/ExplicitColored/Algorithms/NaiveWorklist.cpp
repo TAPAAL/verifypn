@@ -1,6 +1,7 @@
 #ifndef NAIVEWORKLIST_CPP
 #define NAIVEWORKLIST_CPP
 
+#include <limits>
 #include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
@@ -248,69 +249,39 @@ namespace ColoredLTL {
 
     template<typename S>
     bool NaiveWorklist::bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state){
-        auto waiting = light_deque<S>{64};
+        auto waiting = light_deque<PetriEngine::ExplicitColored::ColoredPetriNetState>{64};
         auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
-        waiting.push_back(state);
+        waiting.push_back(PetriEngine::ExplicitColored::ColoredPetriNetState{state});
         passed.add(state);
         if (check(state)){
+            std::cout << "Inital state satisfies the formula " << std::endl;
             return true;
         }
         while (!waiting.empty()){
+            std::cout << "in there" << std::endl;
             auto next = waiting.front();
             waiting.pop_front();
 
             while (true) {
-                auto successors = successor_generator.next(next);
-                if (successors.empty()){
-                    successor_generator.reset();
+                std::cout << next.lastBinding << next.lastTrans << std::endl;
+                auto successor = successor_generator.next(next);
+                std::cout << successor.lastBinding << successor.lastTrans << std::endl;
+                if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()){
                     break;
                 }
-                for (auto&& s : successors){
-                    if (!passed.contains(s)) {
-                        if (check(s)){
-                            std::cout << "Checked " << passed.size() << " states" << std::endl;
-                            return true;
-                        }
-                        passed.add(s);
-                        waiting.push_back(s);
+                auto& marking = successor.marking;
+                if (!passed.contains(marking)){
+                    if (check(marking)){
+                        std::cout << "Checked " << passed.size() << " states" << std::endl;
+                        return true;
                     }
+                    passed.add(marking);
+                    waiting.push_back(successor);
                 }
             }
         }
         std::cout << "Checked " << passed.size() << " states" << std::endl;
         return false;
     }
-
-    template<typename S>
-    bool NaiveWorklist::dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state){
-        auto waiting = std::queue<S>{state};
-        auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
-        if (_formula(state)){
-            return true;
-        }
-        while (!waiting.empty()){
-            auto next = waiting.pop();
-
-            while(true){
-                auto successors = successor_generator.next(next);
-                if (successors.empty()){
-                    successor_generator.reset();
-                    break;
-                }
-                for (auto&& s : successors){
-                    if (!passed.contains(s)) {
-                        if (check(s)){
-                            std::cout << "Checked " << passed.size() << " states" << std::endl;
-                            return true;
-                        }
-                        passed.add(s);
-                        waiting.push_back(s);
-                    }
-                }
-            }
-        }
-        return false;
-    }
 }
-
 #endif //NAIVEWORKLIST_CPP
