@@ -17,7 +17,7 @@ namespace PetriEngine{
             }
 
             void stableEncode(std::ostream& out) const {
-                for (const auto marking : markings) {
+                for (const auto& marking : markings) {
                     marking.stableEncode(out);
                     out << ".";
                 }

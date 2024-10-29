@@ -37,6 +37,9 @@ namespace PetriEngine {
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
             for (auto& otherCount : other._counts) {
                 auto it = _counts.find(otherCount.first);
+                if (it == _counts.end()) {
+                    continue;
+                }
                 if (otherCount.second > it->second) {
                     _cardinality -= it->second;
                     it->second = 0;
