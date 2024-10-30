@@ -7,6 +7,20 @@
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
 namespace ColoredLTL{
+        enum class CheckStatus {
+            UNSATISFIED,
+            UNSATISFIED_CONTINUE,
+            SATISIFIED,
+            SATISFIED_CONTINUE
+        };
+        
+        enum class DeadlockValue {
+            FALSE,
+            TRUE,
+            UNKNOWN
+        };
+
+
         class NaiveWorklist : public ColoredModelChecker {
         public:
             NaiveWorklist(const PetriEngine::ExplicitColored::ColoredPetriNet& net,
@@ -17,7 +31,7 @@ namespace ColoredLTL{
             bool check() override;
 
             template<typename S>
-            bool check(S state);
+            CheckStatus check(S state, DeadlockValue deadlockValue);
 
         private:
             using State = PetriEngine::ExplicitColored::ColoredPetriNetMarking;

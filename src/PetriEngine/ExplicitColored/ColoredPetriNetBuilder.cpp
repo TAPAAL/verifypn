@@ -49,7 +49,6 @@ namespace PetriEngine {
                 weight
             );
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
-            
 
             _currentNet._inputArcs.push_back(std::move(arc));
         }
@@ -61,6 +60,14 @@ namespace PetriEngine {
             arc.from = _transitionIndices.find(transition)->second;
             arc.to  = placeIndex;
             arc.colorType = _currentNet._places[placeIndex].colorType;
+
+            auto expr = std::make_shared<Colored::NumberOfExpression>(
+                std::vector<Colored::ColorExpression_ptr>{
+                    std::make_shared<Colored::DotConstantExpression>()
+                },
+                weight
+            );
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
             _currentNet._outputArcs.push_back(std::move(arc));
         }

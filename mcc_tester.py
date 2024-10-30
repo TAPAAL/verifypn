@@ -6,9 +6,9 @@ import time
 import asyncio
 
 parser = ArgumentParser(prog="Petri net query tester")
-parser.add_argument('-m', '--models', help="Path to directory containing the mcc models", default='../colored-models')
+parser.add_argument('-m', '--models', help="Path to directory containing the mcc models", default='/usr/local/share/mcc/')
 parser.add_argument('-t', '--timeout', help="Timeout for each query of a model in seconds", type=int, default=2)
-parser.add_argument('-b', '--binary', help="Path to verifypn", default='build/verifypn/bin/verifypn-linux64')
+parser.add_argument('-b', '--binary', help="Path to verifypn", default='build-release/verifypn/bin/verifypn-linux64')
 parser.add_argument('-o', '--out', help="Name of csv file containing the results", default='results.csv')
 parser.add_argument('-n', '--threads', help="Amount of threads started", type=int, default=1)
 parser.add_argument('-w', '--worker-count', help="The amount of workers", type=int, default=1)
