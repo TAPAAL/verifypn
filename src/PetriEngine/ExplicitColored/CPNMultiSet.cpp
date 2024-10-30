@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "PetriEngine/ExplicitColored/CPNMultiSet.h"
 #include "utils/errors.h"
 namespace PetriEngine {
@@ -67,27 +66,34 @@ namespace PetriEngine {
         bool CPNMultiSet::operator>=(const CPNMultiSet& other) const {
             if (_cardinality < other._cardinality)
                 return false;
-            return std::all_of(other._counts.begin(), other._counts.end(),[&](auto& count){
-                return count.second <= getCount(count.first);
-            });
+            for (const auto& count : other._counts) {
+                if (count.second > getCount(count.first))
+                    return false;
+            }
+            return true;
         }
 
         bool CPNMultiSet::operator<=(const CPNMultiSet& other) const {
-            if (_cardinality > other._cardinality){
+            if (_cardinality > other._cardinality)
                 return false;
+            for (const auto& count : other._counts) {
+                if (count.second < getCount(count.first))
+                    return false;
             }
-            return std::all_of(other._counts.begin(), other._counts.end(),[&](auto& count){
-                return count.second >= getCount(count.first);
-            });
+            return true;
         }
 
         bool CPNMultiSet::operator==(const CPNMultiSet& other) const {
             if (_cardinality != other._cardinality){
                 return false;
             }
-            return std::all_of(other._counts.begin(), other._counts.end(),[&](auto& count){
-                return count.second == getCount(count.first);
-            });
+            for (const auto& a : _counts) {
+                auto otherCount = other.getCount(a.first);
+                if (otherCount != a.second) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         void CPNMultiSet::stableEncode(std::ostream& out) const {

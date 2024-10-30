@@ -258,26 +258,20 @@ namespace ColoredLTL {
             return true;
         }
         while (!waiting.empty()){
-            std::cout << "in there" << std::endl;
-            auto next = waiting.front();
-            waiting.pop_front();
-
-            while (true) {
-                std::cout << next.lastBinding << next.lastTrans << std::endl;
-                auto successor = successor_generator.next(next);
-                std::cout << successor.lastBinding << successor.lastTrans << std::endl;
-                if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()){
-                    break;
+            auto& next = waiting.front();
+            auto successor = successor_generator.next(next);
+            if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()){
+                waiting.pop_front();
+                continue;
+            }
+            auto& marking = successor.marking;
+            if (!passed.contains(marking)){
+                if (check(marking)){
+                    std::cout << "Checked " << passed.size() << " states" << std::endl;
+                    return true;
                 }
-                auto& marking = successor.marking;
-                if (!passed.contains(marking)){
-                    if (check(marking)){
-                        std::cout << "Checked " << passed.size() << " states" << std::endl;
-                        return true;
-                    }
-                    passed.add(marking);
-                    waiting.push_back(successor);
-                }
+                passed.add(marking);
+                waiting.push_back(std::move(successor));
             }
         }
         std::cout << "Checked " << passed.size() << " states" << std::endl;

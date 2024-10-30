@@ -75,6 +75,8 @@ namespace PetriEngine
             std::map<Variable_t,std::vector<uint32_t>> validVariables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
+        private:
+            std::map<Variable_t,std::vector<uint32_t>> validVariablesMap = std::map<Variable_t,std::vector<uint32_t>>{};
         };
 
         struct Variable
@@ -89,8 +91,38 @@ namespace PetriEngine
         public:
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
-            const ColoredPetriNetMarking& initial() const {
+            [[nodiscard]] const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
+            }
+
+            //This could/should use reduction to reduce possible bindings
+            void fillValidVariables() {
+                for (auto&& arc : _inputArcs) {
+                    std::map<Variable_t, std::vector<uint32_t>> map = std::map<Variable_t, std::vector<uint32_t>>{};
+                    auto vars = arc.arcExpression->getVariables();
+                    for (auto &&var: vars) {
+                        auto nValues = _variables[var].colorType->colors;
+                        std::vector<uint32_t> values = std::vector<uint32_t>{};
+                        for (uint32_t i = 0; i < nValues; i++) {
+                            values.push_back(i);
+                        }
+                        map.emplace(var, values);
+                    }
+                    arc.validVariables = map;
+                }
+                for (auto&& arc : _outputArcs) {
+                    std::map<Variable_t, std::vector<uint32_t>> map = std::map<Variable_t, std::vector<uint32_t>>{};
+                    auto vars = arc.arcExpression->getVariables();
+                    for (const size_t var : vars) {
+                        auto nValues = _variables[var].colorType->colors;
+                        std::vector<uint32_t> values = std::vector<uint32_t>{};
+                        for (size_t i = 0; i < nValues; i++) {
+                           values.push_back(i);
+                        }
+                       map.emplace(var, values);
+                   }
+                   arc.validVariables = map;
+                }
             }
         private:
             friend class ColoredPetriNetBuilder;
@@ -103,7 +135,6 @@ namespace PetriEngine
             std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
-            uint32_t _ntransitions = 0;
         };
     }
 } // PetriEngine
