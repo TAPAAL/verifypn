@@ -24,10 +24,7 @@ namespace ColoredLTL{
 
 
             template<typename S>
-            bool bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state);
-
-            template<typename S>
-            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state);
+            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state);
 
             const std::unordered_map<std::string, uint32_t> _placeNameIndices;
         };

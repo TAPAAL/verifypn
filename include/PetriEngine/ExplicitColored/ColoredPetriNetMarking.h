@@ -7,9 +7,7 @@ namespace PetriEngine{
     namespace ExplicitColored{
         struct ColoredPetriNetMarking{
             ColoredPetriNetMarking() = default;
-            ColoredPetriNetMarking(const ColoredPetriNetMarking& marking) {
-                markings = marking.markings;
-            };
+            ColoredPetriNetMarking(const ColoredPetriNetMarking& marking) = default;
             ColoredPetriNetMarking(ColoredPetriNetMarking&&) = default;
             ColoredPetriNetMarking& operator=(const ColoredPetriNetMarking& marking) {
                 auto vec = std::vector<CPNMultiSet>{};

@@ -34,11 +34,11 @@ namespace PetriEngine{
             const ColoredPetriNet& _net;
             std::map<Transition_t, TransitionVariables> _variables = std::map<Transition_t,TransitionVariables>{};
             std::map<Transition_t, std::vector<const ColoredPetriNetArc*>> _ingoing = std::map<Transition_t, std::vector<const ColoredPetriNetArc*>>{};
-            void _fire(ColoredPetriNetMarking& state, Transition_t tid, Binding& b);
+            void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
 
             template<typename T>
             ColoredPetriNetState _next(ColoredPetriNetState& state, T&& predicate){
-                auto newState = ColoredPetriNetState{state}; // This is the issue
+                auto newState = ColoredPetriNetState{state};
                 for (auto tid = state.lastTrans; tid <_net._transitions.size(); tid++){
                     auto bid = state.lastBinding;
                     getVariables(tid);
@@ -49,8 +49,8 @@ namespace PetriEngine{
                             _fire(newState.marking, tid, binding);
                             newState.lastBinding = 0;
                             newState.lastTrans = 0;
-                            state.lastBinding = bid;
-                            state.lastTrans = tid;
+                            state.lastBinding = 0;
+                            state.lastTrans = tid + 1;
                             return newState;
                         }
                     }else{

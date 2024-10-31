@@ -105,7 +105,7 @@ namespace PetriEngine{
             }
         }
 
-        void ColoredSuccessorGenerator::_fire(ColoredPetriNetMarking& state, Transition_t tid, Binding& b){
+        void ColoredSuccessorGenerator::_fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b){
             consumePreset(state, tid, b);
             producePostset(state, tid, b);
         }

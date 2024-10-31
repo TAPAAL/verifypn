@@ -2,6 +2,7 @@
 #define NAIVEWORKLIST_CPP
 
 #include <limits>
+#include <stack>
 #include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
@@ -239,7 +240,7 @@ namespace ColoredLTL {
 
     bool NaiveWorklist::check(){
         auto gen = PetriEngine::ExplicitColored::ColoredSuccessorGenerator(_net);
-        return bfs(gen, _net.initial());
+        return dfs(gen, _net.initial());
     }
 
     template<typename S>
@@ -248,20 +249,20 @@ namespace ColoredLTL {
     }
 
     template<typename S>
-    bool NaiveWorklist::bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state){
-        auto waiting = light_deque<PetriEngine::ExplicitColored::ColoredPetriNetState>{64};
+    bool NaiveWorklist::dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state){
+        auto waiting = std::stack<PetriEngine::ExplicitColored::ColoredPetriNetState>{};
         auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
-        waiting.push_back(PetriEngine::ExplicitColored::ColoredPetriNetState{state});
+        waiting.push(PetriEngine::ExplicitColored::ColoredPetriNetState{state});
         passed.add(state);
         if (check(state)){
             std::cout << "Inital state satisfies the formula " << std::endl;
             return true;
         }
         while (!waiting.empty()){
-            auto& next = waiting.front();
+            auto& next = waiting.top();
             auto successor = successor_generator.next(next);
             if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()){
-                waiting.pop_front();
+                waiting.pop();
                 continue;
             }
             auto& marking = successor.marking;
@@ -271,7 +272,7 @@ namespace ColoredLTL {
                     return true;
                 }
                 passed.add(marking);
-                waiting.push_back(std::move(successor));
+                waiting.push(std::move(successor));
             }
         }
         std::cout << "Checked " << passed.size() << " states" << std::endl;

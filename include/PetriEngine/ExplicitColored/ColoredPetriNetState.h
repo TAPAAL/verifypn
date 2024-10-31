@@ -9,12 +9,8 @@ namespace PetriEngine{
         struct ColoredPetriNetState{
 
             ColoredPetriNetState() = default;
-            ColoredPetriNetState(const ColoredPetriNetState& oldState) {
-                lastBinding = oldState.lastBinding;
-                lastTrans = oldState.lastBinding;
-                marking = oldState.marking;
-            };
-            explicit ColoredPetriNetState(ColoredPetriNetMarking  marking) : marking(std::move(marking)) {};
+            ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
+            explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
             ColoredPetriNetState(ColoredPetriNetState&&) = default;
             ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;
             ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
