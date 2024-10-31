@@ -1,13 +1,10 @@
 #ifndef COLOREDPETRINETSTATE_H
 #define COLOREDPETRINETSTATE_H
 
-#include <utility>
-
 #include "ColoredPetriNetMarking.h"
 namespace PetriEngine{
     namespace ExplicitColored{
         struct ColoredPetriNetState{
-
             ColoredPetriNetState() = default;
             ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
             explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};

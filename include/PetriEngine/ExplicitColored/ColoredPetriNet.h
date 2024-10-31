@@ -91,7 +91,7 @@ namespace PetriEngine
         public:
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
-            [[nodiscard]] const ColoredPetriNetMarking& initial() const {
+            const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
 

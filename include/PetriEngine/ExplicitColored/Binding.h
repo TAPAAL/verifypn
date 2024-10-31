@@ -5,7 +5,6 @@
 #include <map>
 #include <string>
 #include <limits>
-#include <utility>
 
 namespace PetriEngine {
     namespace ExplicitColored {

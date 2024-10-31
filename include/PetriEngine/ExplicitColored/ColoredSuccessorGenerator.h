@@ -21,7 +21,7 @@ namespace PetriEngine{
                 return _next(state, [](size_t){ return true; });
             }
 
-            [[nodiscard]] const ColoredPetriNet& net() const {
+            const ColoredPetriNet& net() const {
                 return _net;
             }
 

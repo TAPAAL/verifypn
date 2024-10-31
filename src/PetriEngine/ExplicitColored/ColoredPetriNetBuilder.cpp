@@ -49,8 +49,6 @@ namespace PetriEngine {
             );
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-            
-
             _currentNet._inputArcs.push_back(std::move(arc));
         }
 
