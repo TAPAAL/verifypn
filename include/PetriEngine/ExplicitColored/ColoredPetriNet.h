@@ -75,8 +75,6 @@ namespace PetriEngine
             std::map<Variable_t,std::vector<uint32_t>> validVariables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
-        private:
-            std::map<Variable_t,std::vector<uint32_t>> validVariablesMap = std::map<Variable_t,std::vector<uint32_t>>{};
         };
 
         struct Variable
@@ -94,6 +92,18 @@ namespace PetriEngine
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
+
+        private:
+            friend class ColoredPetriNetBuilder;
+            friend class ColoredSuccessorGenerator;
+            ColoredPetriNet() = default;
+            std::vector<ColoredPetriNetTransition> _transitions;
+            std::vector<ColoredPetriNetPlace> _places;
+            std::vector<ColoredPetriNetArc> _outputArcs;
+            std::vector<ColoredPetriNetArc> _inputArcs;
+            std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
+            std::vector<Variable> _variables;
+            ColoredPetriNetMarking _initialMarking;
 
             //This could/should use reduction to reduce possible bindings
             void fillValidVariables() {
@@ -117,24 +127,13 @@ namespace PetriEngine
                         auto nValues = _variables[var].colorType->colors;
                         std::vector<uint32_t> values = std::vector<uint32_t>{};
                         for (size_t i = 0; i < nValues; i++) {
-                           values.push_back(i);
+                            values.push_back(i);
                         }
-                       map.emplace(var, values);
-                   }
-                   arc.validVariables = map;
+                        map.emplace(var, values);
+                    }
+                    arc.validVariables = map;
                 }
             }
-        private:
-            friend class ColoredPetriNetBuilder;
-            friend class ColoredSuccessorGenerator;
-            ColoredPetriNet() = default;
-            std::vector<ColoredPetriNetTransition> _transitions;
-            std::vector<ColoredPetriNetPlace> _places;
-            std::vector<ColoredPetriNetArc> _outputArcs;
-            std::vector<ColoredPetriNetArc> _inputArcs;
-            std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
-            std::vector<Variable> _variables;
-            ColoredPetriNetMarking _initialMarking;
         };
     }
 } // PetriEngine

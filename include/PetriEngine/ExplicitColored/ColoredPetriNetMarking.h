@@ -19,7 +19,7 @@ namespace PetriEngine{
             };
             ColoredPetriNetMarking& operator=(ColoredPetriNetMarking&&) = default;
 
-            std::vector<CPNMultiSet> markings = std::vector<CPNMultiSet>{};
+            std::vector<CPNMultiSet> markings;
 
             bool operator==(ColoredPetriNetMarking& other) const{
                 return markings == other.markings;
