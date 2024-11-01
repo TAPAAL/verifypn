@@ -31,7 +31,6 @@ namespace PetriEngine {
                 nullptr
             });
             _transitionIndices[name] = _currentNet._transitions.size() - 1;
-            _currentNet._ntransitions += 1;
         }
 
          void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
@@ -58,7 +57,7 @@ namespace PetriEngine {
             size_t placeIndex = _placeIndices.find(place)->second;
                 
             arc.from = _transitionIndices.find(transition)->second;
-            arc.to  = placeIndex;
+            arc.to = placeIndex;
             arc.colorType = _currentNet._places[placeIndex].colorType;
 
             auto expr = std::make_shared<Colored::NumberOfExpression>(
@@ -102,8 +101,7 @@ namespace PetriEngine {
                 ? nullptr
                 : std::make_unique<GuardExpression>(_colors, guard, _variableMap);
             _currentNet._transitions.emplace_back(std::move(transition));
-            _transitionIndices.emplace(std::make_pair(name, _currentNet._transitions.size() - 1));
-            _currentNet._ntransitions += 1;
+            _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
         }
 
         void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {    
@@ -138,7 +136,7 @@ namespace PetriEngine {
                     productColorType->basicColorTypes.push_back(std::move(baseColorType));
                     productColorType->size++;
                 }
-                _colorTypeMap.emplace(std::make_pair(id, std::move(productColorType)));
+                _colorTypeMap.emplace(id, std::move(productColorType));
             } else {
                 auto colorType = std::make_shared<ColorType>();
                 auto baseColorType = std::make_shared<BaseColorType>();
@@ -173,6 +171,7 @@ namespace PetriEngine {
                     colorType.size += 1;
                 }
             }
+            _currentNet.fillValidVariables();
             return std::move(_currentNet);
         }
 

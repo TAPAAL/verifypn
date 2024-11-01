@@ -44,9 +44,13 @@ namespace PetriEngine
         struct CPNMultiSet
         {
             CPNMultiSet() = default;
-            CPNMultiSet(const CPNMultiSet&) = default;
+            CPNMultiSet(const CPNMultiSet& multiSet) {
+                    _counts = multiSet._counts;
+                    _cardinality = multiSet._cardinality;
+            };
+            CPNMultiSet(const std::map<ColorSequence, MarkingCount_t>& map, uint32_t cardinality) : _counts(map),_cardinality(cardinality) {};
             CPNMultiSet(CPNMultiSet&&) = default;
-            CPNMultiSet& operator=(const CPNMultiSet&) = default;
+            CPNMultiSet& operator=(const CPNMultiSet& other) = default;
             CPNMultiSet& operator=(CPNMultiSet&&) = default;
 
             MarkingCount_t getCount(const ColorSequence& color) const;
@@ -61,7 +65,7 @@ namespace PetriEngine
 
             void stableEncode(std::ostream& out) const;
         private:
-            std::map<ColorSequence, MarkingCount_t> _counts;
+            std::map<ColorSequence, MarkingCount_t> _counts = std::map<ColorSequence, MarkingCount_t>{};
             MarkingCount_t _cardinality = 0;
         };
     }

@@ -1,6 +1,8 @@
 #ifndef NAIVEWORKLIST_CPP
 #define NAIVEWORKLIST_CPP
 
+#include <limits>
+#include <stack>
 #include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
@@ -89,7 +91,7 @@ namespace ColoredLTL {
         void notSupported() {
             throw base_error("Not supported");
         }
-        
+
         void notSupported(const std::string& type) {
             throw base_error("Not supported ", type);
         }
@@ -102,45 +104,28 @@ namespace ColoredLTL {
         const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
     };
 
-    class ColoredQueryVisitor : public PetriEngine::PQL::Visitor {
+    class GammaQueryVisitor : public PetriEngine::PQL::Visitor {
     public:
-        static CheckStatus eval(
+        static ConditionalBool eval(
             const PetriEngine::PQL::Condition_ptr& expr,
             const PetriEngine::ExplicitColored::ColoredPetriNetMarking& marking,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-            DeadlockValue deadlockValue
+            ConditionalBool deadlockValue
         ) {
-            ColoredQueryVisitor visitor{marking, placeNameIndices, deadlockValue};
-            
-            if (auto cond = dynamic_cast<PetriEngine::PQL::EFCondition*>(expr.get())) {
-                visit(visitor, cond->getCond());
-                if (visitor._dependsOnDeadlock) {
-                    return CheckStatus::UNSATISFIED_CONTINUE;
-                } else {
-                    return visitor._answer ? CheckStatus::SATISIFIED : CheckStatus::UNSATISFIED_CONTINUE;
-                }
-            } else if (auto cond = dynamic_cast<PetriEngine::PQL::AGCondition*>(expr.get())) {
-                visit(visitor, cond->getCond());
-                if (visitor._dependsOnDeadlock) {
-                    return CheckStatus::SATISFIED_CONTINUE;
-                } else {
-                    return visitor._answer ? CheckStatus::SATISFIED_CONTINUE : CheckStatus::UNSATISFIED;
-                }
-            } else {
-                visit(visitor, expr);
-                if (visitor._dependsOnDeadlock) {
-                    return CheckStatus::UNSATISFIED_CONTINUE;
-                }
-                return visitor._answer ? CheckStatus::SATISIFIED : CheckStatus::UNSATISFIED;
-            }
+            GammaQueryVisitor visitor{marking, placeNameIndices, deadlockValue};
+            visit(visitor, expr);
+
+            return visitor._dependsOnDeadlock
+                ? ConditionalBool::UNKNOWN
+                : (visitor._answer ? ConditionalBool::TRUE : ConditionalBool::FALSE);
         }
     protected:
-        explicit ColoredQueryVisitor(
+        explicit GammaQueryVisitor(
             const PetriEngine::ExplicitColored::ColoredPetriNetMarking& marking,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-            DeadlockValue deadlockValue
+            ConditionalBool deadlockValue
         )
-            : _answer(true), _marking(marking), _placeNameIndices(placeNameIndices), _deadlockValue(deadlockValue) { }
+            : _deadlockValue(deadlockValue), _marking(marking), _placeNameIndices(placeNameIndices) { }
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override {
             visit(this, element->getCond().get());
@@ -190,9 +175,9 @@ namespace ColoredLTL {
         }
 
         void _accept(const PetriEngine::PQL::DeadlockCondition *element) override {
-            if (_deadlockValue == DeadlockValue::TRUE) {
+            if (_deadlockValue == ConditionalBool::TRUE) {
                 _answer = true;
-            } else if (_deadlockValue == DeadlockValue::FALSE) {
+            } else if (_deadlockValue == ConditionalBool::FALSE) {
                 _answer = false;
             } else {
                 _dependsOnDeadlock = true;
@@ -206,7 +191,7 @@ namespace ColoredLTL {
         void _accept(const PetriEngine::PQL::EFCondition *condition) override {
             notSupported("Does not supported nested quantifiers");
         }
-        
+
         void _accept(const PetriEngine::PQL::AGCondition *condition) override {
             notSupported("Does not supported nested quantifiers");
         }
@@ -269,98 +254,84 @@ namespace ColoredLTL {
             throw base_error("Invalid expression");
         }
 
-        bool _answer;
+        bool _answer = true;
+        ConditionalBool _deadlockValue;
         bool _dependsOnDeadlock = false;
-        DeadlockValue _deadlockValue;
         const PetriEngine::ExplicitColored::ColoredPetriNetMarking& _marking;
         const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
     };
 
+    NaiveWorklist::NaiveWorklist(
+        const PetriEngine::ExplicitColored::ColoredPetriNet& net,
+        const PetriEngine::PQL::Condition_ptr &query,
+        std::unordered_map<std::string, uint32_t> placeNameIndices
+    ) : _net(std::move(net)),
+        _placeNameIndices(std::move(placeNameIndices))
+    {
+        if (const auto efGammaQuery = dynamic_cast<PetriEngine::PQL::EFCondition*>(query.get())) {
+            _quantifier = Quantifier::EF;
+            _gammaQuery = efGammaQuery->getCond();
+        } else if (const auto agGammaQuery = dynamic_cast<PetriEngine::PQL::AGCondition*>(query.get())) {
+            _quantifier = Quantifier::AG;
+            _gammaQuery = agGammaQuery->getCond();
+        } else {
+            throw base_error("Unsupported query quantifier");
+        }
+    }
+
     bool NaiveWorklist::check(){
         auto gen = PetriEngine::ExplicitColored::ColoredSuccessorGenerator(_net);
-        return bfs(gen, _net.initial());
+        return dfs(gen, _net.initial());
     }
 
-    template<typename S>
-    CheckStatus NaiveWorklist::check(S state, DeadlockValue deadlockValue) {
-        return ColoredQueryVisitor::eval(_formula, state, _placeNameIndices, deadlockValue);
+    ConditionalBool NaiveWorklist::check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue) {
+        return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, deadlockValue);
     }
 
-    template<typename S>
-    bool NaiveWorklist::bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state){
-        auto waiting = light_deque<S>{64};
+    bool NaiveWorklist::dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state) {
+        auto waiting = std::stack<PetriEngine::ExplicitColored::ColoredPetriNetState>{};
         auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
-        waiting.push_back(state);
+
+        waiting.emplace(state);
         passed.add(state);
-        auto lastCheck = check(state, DeadlockValue::UNKNOWN);
-        if (lastCheck == CheckStatus::SATISIFIED || lastCheck == CheckStatus::UNSATISFIED){
-            return lastCheck == CheckStatus::SATISIFIED;
-        }
+
+        const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
+            ? ConditionalBool::TRUE
+            : ConditionalBool::FALSE;
+
         while (!waiting.empty()){
-            auto next = waiting.front();
-            waiting.pop_front();
+            auto& next = waiting.top();
+            bool isFirstCheck = next.lastBinding == 0 && next.lastTrans == 0;
+            auto successor = successor_generator.next(next);
 
-            auto successors = successor_generator.next(next);
+            if (isFirstCheck) {
+                const auto deadlockValue = successor.lastTrans == std::numeric_limits<uint32_t>::max();
+                const auto checkValue = check(successor.marking, deadlockValue ? ConditionalBool::TRUE : ConditionalBool::FALSE);
 
-            if (successors.empty()) {
-                lastCheck = check(next, DeadlockValue::TRUE);
-            } else {
-                lastCheck = check(next, DeadlockValue::FALSE);
-            }
-            if (lastCheck == CheckStatus::SATISIFIED || lastCheck == CheckStatus::UNSATISFIED){
-                std::cout << "Checked " << passed.size() << " states" << std::endl;
-                return lastCheck == CheckStatus::SATISIFIED;
-            }
-            for (;!successors.empty(); successors = successor_generator.next(next)) {
-                for (auto&& s : successors){
-                    if (!passed.contains(s)) {
-                        lastCheck = check(state, DeadlockValue::UNKNOWN);
-                        if (lastCheck == CheckStatus::SATISIFIED || lastCheck == CheckStatus::UNSATISFIED){
-                            std::cout << "Checked " << passed.size() << " states" << std::endl;
-                            return lastCheck == CheckStatus::SATISIFIED;
-                        }
-                        passed.add(s);
-                        waiting.push_back(s);
-                    }
+                if (checkValue == earlyTerminationCondition) {
+                    std::cout << "Passed " << passed.size() << " states" << std::endl;
+                    return _quantifier == Quantifier::EF;
                 }
             }
 
-            successor_generator.reset();
+            if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()) {
+                waiting.pop();
+                continue;
+            }
+
+            auto& marking = successor.marking;
+
+            if (!passed.contains(marking)) {
+                if (check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                    std::cout << "Passed " << passed.size() << " states" << std::endl;
+                    return _quantifier == Quantifier::EF;
+                }
+                passed.add(marking);
+                waiting.push(std::move(successor));
+            }
         }
         std::cout << "Checked " << passed.size() << " states" << std::endl;
-        return lastCheck == CheckStatus::SATISFIED_CONTINUE;
-    }
-
-    template<typename S>
-    bool NaiveWorklist::dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state){
-        auto waiting = std::queue<S>{state};
-        auto passed = PetriEngine::ExplicitColored::ColoredMarkingSet {};
-        if (_formula(state)){
-            return true;
-        }
-        while (!waiting.empty()){
-            auto next = waiting.pop();
-
-            while(true){
-                auto successors = successor_generator.next(next);
-                if (successors.empty()){
-                    successor_generator.reset();
-                    break;
-                }
-                for (auto&& s : successors){
-                    if (!passed.contains(s)) {
-                        if (check(s)){
-                            std::cout << "Checked " << passed.size() << " states" << std::endl;
-                            return true;
-                        }
-                        passed.add(s);
-                        waiting.push_back(s);
-                    }
-                }
-            }
-        }
-        return false;
+        return _quantifier == Quantifier::AG;
     }
 }
-
 #endif //NAIVEWORKLIST_CPP

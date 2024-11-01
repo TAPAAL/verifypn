@@ -7,6 +7,7 @@ namespace PetriEngine
     namespace ExplicitColored
     {
         using Color_t = uint32_t;
+        using Transition_t = uint32_t;
         using Variable_t = uint32_t;
         using MarkingCount_t = uint32_t;
         constexpr Color_t DOT_COLOR = 0;

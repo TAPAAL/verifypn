@@ -7,43 +7,36 @@
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
 namespace ColoredLTL{
-        enum class CheckStatus {
-            UNSATISFIED,
-            UNSATISFIED_CONTINUE,
-            SATISIFIED,
-            SATISFIED_CONTINUE
-        };
-        
-        enum class DeadlockValue {
+        enum class ConditionalBool {
             FALSE,
             TRUE,
             UNKNOWN
         };
 
+        enum class Quantifier {
+            EF,
+            AG
+        };
 
-        class NaiveWorklist : public ColoredModelChecker {
+        class NaiveWorklist {
         public:
-            NaiveWorklist(const PetriEngine::ExplicitColored::ColoredPetriNet& net,
-            const PetriEngine::PQL::Condition_ptr &query,
-            std::unordered_map<std::string, uint32_t> placeNameIndices)
-                : ColoredModelChecker(net, query), _placeNameIndices(std::move(placeNameIndices)) { }
+            NaiveWorklist(
+                const PetriEngine::ExplicitColored::ColoredPetriNet& net,
+                const PetriEngine::PQL::Condition_ptr &query,
+                std::unordered_map<std::string, uint32_t> placeNameIndices
+            );
 
-            bool check() override;
+            bool check();
 
-            template<typename S>
-            CheckStatus check(S state, DeadlockValue deadlockValue);
+            ConditionalBool check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
 
         private:
-            using State = PetriEngine::ExplicitColored::ColoredPetriNetMarking;
-
-
-            template<typename S>
-            bool bfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const S& state);
-
-            template<typename S>
-            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, S& state);
-
+            PetriEngine::PQL::Condition_ptr _gammaQuery;
+            Quantifier _quantifier;
             const std::unordered_map<std::string, uint32_t> _placeNameIndices;
+            const PetriEngine::ExplicitColored::ColoredPetriNet& _net;
+
+            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state);
         };
 }
 #endif //NAIVEWORKLIST_H

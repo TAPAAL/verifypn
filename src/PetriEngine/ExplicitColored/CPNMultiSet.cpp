@@ -84,6 +84,9 @@ namespace PetriEngine {
         }
 
         bool CPNMultiSet::operator==(const CPNMultiSet& other) const {
+            if (_cardinality != other._cardinality){
+                return false;
+            }
             for (const auto& a : _counts) {
                 auto otherCount = other.getCount(a.first);
                 if (otherCount != a.second) {

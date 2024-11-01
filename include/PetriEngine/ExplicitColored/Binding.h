@@ -11,8 +11,8 @@ namespace PetriEngine {
         struct Binding
         {
             Binding() = default;
-            Binding(std::map<Variable_t, Color_t> map)
-                : _values(map) { };
+            explicit Binding(std::map<Variable_t, Color_t> map)
+                : _values(std::move(map)) { };
 
             Color_t getValue(const Variable_t v) const{
                 if (auto ret = _values.find(v); ret != _values.end()) {
