@@ -15,9 +15,9 @@ namespace PetriEngine{
         class ColoredSuccessorGenerator {
         public:
             explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
-            virtual ~ColoredSuccessorGenerator();
+            ~ColoredSuccessorGenerator();
 
-            virtual ColoredPetriNetState next(ColoredPetriNetState& state){
+            ColoredPetriNetState next(ColoredPetriNetState& state){
                 return _next(state, [](size_t){ return true; });
             }
 
@@ -54,17 +54,17 @@ namespace PetriEngine{
                         }
                     }else{
                         //Can check whether its impossible before iterating through bindings
-                        while (++bid <= totalBindings){
-                        auto binding = getBinding(tid, bid);
-                        if (checkPreset(state.marking, tid, binding)){
-                            _fire(newState.marking, tid, binding);
-                            newState.lastBinding = 0;
-                            newState.lastTrans = 0;
-                            state.lastBinding = bid;
-                            state.lastTrans = tid;
-                            return newState;
+                        while (++bid <= totalBindings) {
+                            auto binding = getBinding(tid, bid);
+                            if (checkPreset(state.marking, tid, binding)) {
+                                _fire(newState.marking, tid, binding);
+                                newState.lastBinding = 0;
+                                newState.lastTrans = 0;
+                                state.lastBinding = bid;
+                                state.lastTrans = tid;
+                                return newState;
+                            }
                         }
-                    }
                     }
                 }
                 newState.lastTrans = std::numeric_limits<uint32_t>::max();
