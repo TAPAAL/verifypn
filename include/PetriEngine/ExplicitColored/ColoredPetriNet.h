@@ -63,6 +63,8 @@ namespace PetriEngine
 
         struct ColoredPetriNetInhibitor
         {
+            ColoredPetriNetInhibitor(size_t from, size_t to, MarkingCount_t weight)
+                : from(from), to(to), weight(weight){}
             uint32_t from;
             uint32_t to;
             MarkingCount_t weight;
@@ -106,6 +108,7 @@ namespace PetriEngine
             ColoredPetriNetMarking _initialMarking;
             std::vector<ColoredPetriNetArc*> _invariants; //Pointers to input/output arcs
             std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _invariants
+            std::vector<uint32_t> _transitionInhibitors; //Index is transition and value is beginning index in _inhibitorArcs
 
             //This could/should use reduction to reduce possible bindings
             void fillValidVariables() {

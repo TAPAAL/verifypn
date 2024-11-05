@@ -59,21 +59,26 @@ namespace PetriEngine{
             return Binding{map};
         }
 
-        bool ColoredSuccessorGenerator::checkPreset(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
-            for (auto&& inhib : _net._inhibitorArcs){
-                if (inhib.to == tid){
-                    if (inhib.weight <= state.markings[inhib.from].totalCount()){
-                        return false;
-                    }
-                    break;
-                }
-            }
+        bool ColoredSuccessorGenerator::check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
+            return checkInhibitor(state, tid) && checkPresetAndGuard(state, tid, binding);
+        }
+        bool ColoredSuccessorGenerator::checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
             if (_net._transitions[tid].guardExpression != nullptr && !_net._transitions[tid].guardExpression->eval(binding)){
                 return false;
             }
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._invariants[i];
                 if (!(state.markings[arc->from] >= arc->arcExpression->eval(binding))){
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool ColoredSuccessorGenerator::checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid){
+            for (size_t i = _net._transitionInhibitors[tid]; i < _net._transitionInhibitors[tid + 1]; i++){
+                auto& inhib = _net._inhibitorArcs[i];
+                if (inhib.weight <= state.markings[inhib.from].totalCount()){
                     return false;
                 }
             }

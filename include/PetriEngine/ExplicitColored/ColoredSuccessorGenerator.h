@@ -27,7 +27,9 @@ namespace PetriEngine{
 
             Binding getBinding(Transition_t tid, uint32_t bid);
             void getVariables(Transition_t tid);
-            bool checkPreset(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
+            bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
+            bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid);
+            bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
             void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
             void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
         protected:
@@ -44,7 +46,7 @@ namespace PetriEngine{
                     auto totalBindings = _variables[tid].totalBindings;
                     if (totalBindings == 0){
                         auto binding = Binding{};
-                        if (checkPreset(state.marking, tid, binding)){
+                        if (check(state.marking, tid, binding)){
                             _fire(newState.marking, tid, binding);
                             newState.lastBinding = 0;
                             newState.lastTrans = 0;
@@ -54,9 +56,12 @@ namespace PetriEngine{
                         }
                     }else{
                         //Can check whether its impossible before iterating through bindings
+                        if (!checkInhibitor(state.marking, tid)){
+                            continue;
+                        }
                         while (++bid <= totalBindings) {
                             auto binding = getBinding(tid, bid);
-                            if (checkPreset(state.marking, tid, binding)) {
+                            if (checkPresetAndGuard(state.marking, tid, binding)) {
                                 _fire(newState.marking, tid, binding);
                                 newState.lastBinding = 0;
                                 newState.lastTrans = 0;
