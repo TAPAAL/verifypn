@@ -33,7 +33,6 @@ namespace PetriEngine{
         protected:
             const ColoredPetriNet& _net;
             std::map<Transition_t, TransitionVariables> _variables = std::map<Transition_t,TransitionVariables>{};
-            std::map<Transition_t, std::vector<const ColoredPetriNetArc*>> _ingoing = std::map<Transition_t, std::vector<const ColoredPetriNetArc*>>{};
             void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
 
             template<typename T>
@@ -54,6 +53,7 @@ namespace PetriEngine{
                             return newState;
                         }
                     }else{
+                        //Can check whether its impossible before iterating through bindings
                         while (++bid <= totalBindings){
                         auto binding = getBinding(tid, bid);
                         if (checkPreset(state.marking, tid, binding)){

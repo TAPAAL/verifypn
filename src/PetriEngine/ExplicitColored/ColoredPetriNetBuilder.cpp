@@ -99,7 +99,7 @@ namespace PetriEngine {
         void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {    
             ColoredPetriNetArc arc;
             size_t placeIndex = _placeIndices.find(place)->second;
-                
+
             arc.from = placeIndex;
             arc.to = _transitionIndices.find(transition)->second;
             arc.colorType = _currentNet._places[placeIndex].colorType;
@@ -154,7 +154,7 @@ namespace PetriEngine {
             for (const auto& productColor : _productTypes) {
                 ColorType colorType;
                 colorType.size = 0;
-                for (const std::string& colorId : productColor.second) {
+                for (const std::string& colorId : productColor.second) {//HMM
                     const auto colorTypeIt = _baseColorType.find(colorId);
                     if (colorTypeIt != _baseColorType.cend()) {
                         throw base_error("Product color uses unknown color type ", colorId);
@@ -164,6 +164,45 @@ namespace PetriEngine {
                 }
             }
             _currentNet.fillValidVariables();
+            auto transitions = _currentNet._transitions.size();
+            std::vector<std::pair<uint32_t,uint32_t>> transIndices = std::vector<std::pair<uint32_t,uint32_t>>(transitions + 1);
+            std::vector<ColoredPetriNetArc*> arcPointers = std::vector<ColoredPetriNetArc*>(_currentNet._outputArcs.size() + _currentNet._inputArcs.size());
+            auto arcIndex = 0;
+            for (size_t i = 0; i < transitions; i++){
+                auto inputIndex= arcIndex;
+                for (auto& a : _currentNet._inputArcs){
+                    if (a.to == i){
+                        arcPointers[arcIndex]= &a;
+                        arcIndex++;
+                    }
+                }
+                transIndices[i] = std::pair{inputIndex, arcIndex};
+                //The fewest possible variable combinations are sorted first to hopefully minimize the testing of bindings
+                if (arcIndex - inputIndex > 1){
+                    std::sort(arcPointers.begin() + inputIndex, arcPointers.begin() + arcIndex - 1,
+                              [](const ColoredPetriNetArc* a, const ColoredPetriNetArc* b){
+                        uint32_t aPossible = 1;
+                        uint32_t bPossible = 1;
+                        for (auto& v : a->validVariables){
+                            aPossible *= v.second.size();
+                        }
+                        for (auto& v : b->validVariables){
+                            bPossible *= v.second.size();
+                        }
+                        return aPossible < bPossible;
+                    });
+                }
+
+                for (auto& a : _currentNet._outputArcs){
+                    if (a.from == i){
+                        arcPointers[arcIndex]= &a;
+                        arcIndex++;
+                    }
+                }
+            }
+            transIndices.back() = std::pair(arcIndex,arcIndex);
+            _currentNet._invariants = std::move(arcPointers);
+            _currentNet._transitionArcs = std::move(transIndices);
             return std::move(_currentNet);
         }
 

@@ -104,6 +104,8 @@ namespace PetriEngine
             std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
+            std::vector<ColoredPetriNetArc*> _invariants; //Pointers to input/output arcs
+            std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _invariants
 
             //This could/should use reduction to reduce possible bindings
             void fillValidVariables() {

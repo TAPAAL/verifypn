@@ -27,36 +27,22 @@ namespace PetriEngine{
         }
 
         void ColoredSuccessorGenerator::getVariables(Transition_t tid){
-            if (_ingoing.find(tid) != _ingoing.end()){
+            if (_variables.find(tid) != _variables.end()){
                 return;
             }
             auto variableMap = std::map<Variable_t, std::vector<uint32_t>>{};
 
-            auto ingoing = std::vector<const ColoredPetriNetArc*>{};
-            for (auto&& arc : _net._inputArcs) {
-                if (arc.to == tid){
-                    ingoing.push_back(&arc);
-                }
-            }
-
             //Gets possible values of all variables, will overestimate possible values
-            for (auto && arc : ingoing){
-                updateVariableMap(variableMap, arc->validVariables);
-            }
-
-            for (auto&& arc : _net._outputArcs){
-                if (arc.from == tid){
-                   updateVariableMap(variableMap, arc.validVariables);
-                }
+            for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid + 1].first; i++){
+                updateVariableMap(variableMap, _net._invariants[i]->validVariables);
             }
 
             updateVariableMap(variableMap, _net._transitions[tid].validVariables);
-            uint32_t totalSize = variableMap.empty() ? 0 : 1;
+            uint32_t totalSize = variableMap.empty() ? 0 : 1;//Gets possible values of all variables, will overestimate possible values
             for (auto&& var : variableMap){
                 totalSize *= var.second.size();
             }
             _variables[tid] = TransitionVariables{std::move(variableMap),totalSize};
-            _ingoing[tid] = std::move(ingoing);
         }
 
         Binding ColoredSuccessorGenerator::getBinding(Transition_t tid, uint32_t bid){
@@ -85,23 +71,27 @@ namespace PetriEngine{
             if (_net._transitions[tid].guardExpression != nullptr && !_net._transitions[tid].guardExpression->eval(binding)){
                 return false;
             }
-            return std::all_of(_ingoing[tid].begin(), _ingoing[tid].end(),[&](auto& arc){
-                return state.markings[arc->from] >= arc->arcExpression->eval(binding);
-            });
+            for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
+                auto& arc = _net._invariants[i];
+                if (!(state.markings[arc->from] >= arc->arcExpression->eval(binding))){
+                    return false;
+                }
+            }
+            return true;
         }
 
         void ColoredSuccessorGenerator::consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
-            for (auto&& arc : _ingoing[tid]){
+            for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
+                auto& arc = _net._invariants[i];
                 auto place = arc->from;
                 state.markings[place] -= arc->arcExpression->eval(binding);
             }
         }
 
         void ColoredSuccessorGenerator::producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
-            for (auto &&arc : _net._outputArcs){
-                if (arc.from == tid){
-                    state.markings[arc.to] += arc.arcExpression->eval(binding);
-                }
+            for (auto i = _net._transitionArcs[tid].second; i < _net._transitionArcs[tid + 1].first; i++){
+                auto& arc = _net._invariants[i];
+                state.markings[arc->to] += arc->arcExpression->eval(binding);
             }
         }
 
