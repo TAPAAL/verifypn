@@ -360,7 +360,7 @@ namespace PetriEngine {
                 return _color.end();
             }
 
-            auto back() const {
+            auto& back() const {
                 return _color.back();
             }
 
@@ -406,7 +406,7 @@ namespace PetriEngine {
                 return _constituents.end();
             }
 
-            auto back() const {
+            auto& back() const {
                 return _constituents.back();
             }
 

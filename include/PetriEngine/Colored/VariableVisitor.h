@@ -217,8 +217,8 @@ namespace PetriEngine {
                 }
 
                 if (add->back()->is_number_of()) {
-                    auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>(add->back());
-                    if (is_last_variable_expr(numberOfExpr->back())) {
+                    const auto& numberOfExpr = std::static_pointer_cast<const NumberOfExpression>(add->back());
+                    if (is_last_variable_expr(*numberOfExpr->back())) {
                         for (auto& pair : _varModifiers) {
                             pair.second.emplace_back();
                         }
@@ -242,8 +242,8 @@ namespace PetriEngine {
                     (*sub)[1]->visit(*this);
 
                     if ((*sub)[1]->is_number_of()) {
-                        auto numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*sub)[1]);
-                        if (is_last_variable_expr(numberOfExpr->back())) {
+                        const auto& numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*sub)[1]);
+                        if (is_last_variable_expr(*numberOfExpr->back())) {
                             for (auto& pair : _varModifiers) {
                                 pair.second.emplace_back();
                             }
@@ -290,24 +290,24 @@ namespace PetriEngine {
             }
 
         private:
-            bool is_last_variable_expr(const std::shared_ptr<const ColorExpression> expr) const {
-                std::stack<std::shared_ptr<const ColorExpression>> stack;
-                stack.push(expr);
+            bool is_last_variable_expr(const ColorExpression& expr) const {
+                std::stack<const ColorExpression*> stack;
+                stack.push(&expr);
 
                 while (!stack.empty()) {
-                    auto currentExpr = stack.top();
+                    const auto* currentExpr = stack.top();
                     stack.pop();
 
                     if (currentExpr->is_variable()) {
                         return true;
                     } else if (currentExpr->is_predecessor()) {
-                        stack.push(std::static_pointer_cast<const PredecessorExpression>(currentExpr)->child());
+                        stack.push(static_cast<const PredecessorExpression*>(currentExpr)->child().get());
                     } else if (currentExpr->is_successor()) {
-                        stack.push(std::static_pointer_cast<const SuccessorExpression>(currentExpr)->child());
+                        stack.push(static_cast<const SuccessorExpression*>(currentExpr)->child().get());
                     } else if (currentExpr->is_tuple()) {
-                        auto tupleExpr = std::static_pointer_cast<const TupleExpression>(currentExpr);
+                        const auto* tupleExpr = static_cast<const TupleExpression*>(currentExpr);
                         for (const auto& tupleElem : *tupleExpr) {
-                            stack.push(tupleElem);
+                            stack.push(tupleElem.get());
                         }
                     }
                 }
