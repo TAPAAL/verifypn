@@ -63,6 +63,26 @@ namespace PetriEngine{
         bool ColoredSuccessorGenerator::check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
             return checkInhibitor(state, tid) && checkPresetAndGuard(state, tid, binding);
         }
+        CheckingBool ColoredSuccessorGenerator::firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
+            if (_net._transitions[tid].guardExpression != nullptr && !_net._transitions[tid].guardExpression->eval(binding)){
+                if (_net._transitions[tid].guardExpression->getVariables().empty()){
+                    return CheckingBool::NEVERTRUE;
+                }
+                return CheckingBool::FALSE;
+            }
+            for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
+                auto& arc = _net._arcs[i];
+                auto arcExpr = arc.arcExpression->eval(binding);
+                if (!(state.markings[arc.from] >= arcExpr)){
+                    if (state.getPlaceCount(arc.from) < arcExpr.totalCount()){
+                        return CheckingBool::NEVERTRUE;
+                    }
+                    return CheckingBool::FALSE;
+                }
+            }
+            return CheckingBool::TRUE;
+        }
+
         bool ColoredSuccessorGenerator::checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding){
             if (_net._transitions[tid].guardExpression != nullptr && !_net._transitions[tid].guardExpression->eval(binding)){
                 return false;
