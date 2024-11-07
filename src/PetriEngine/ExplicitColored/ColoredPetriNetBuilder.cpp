@@ -1,4 +1,5 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/ValidVariableGenerator.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -53,7 +54,7 @@ namespace PetriEngine {
                  );
                  arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-                 _currentNet._inputArcs.push_back(std::move(arc));
+                 _inputArcs.push_back(std::move(arc));
              }
         }
 
@@ -70,7 +71,7 @@ namespace PetriEngine {
                 arc.colorType = _currentNet._places[from].colorType;
                 arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-                _currentNet._inputArcs.push_back(std::move(arc));
+                _inputArcs.push_back(std::move(arc));
             }
 
         }
@@ -92,7 +93,7 @@ namespace PetriEngine {
             );
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-            _currentNet._outputArcs.push_back(std::move(arc));
+            _outputArcs.push_back(std::move(arc));
         }
 
         //Colored output arc
@@ -105,7 +106,7 @@ namespace PetriEngine {
             arc.colorType = _currentNet._places[placeIndex].colorType;
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-            _currentNet._outputArcs.push_back(std::move(arc));
+            _outputArcs.push_back(std::move(arc));
         }
 
         void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) {
@@ -170,10 +171,9 @@ namespace PetriEngine {
         }
 
         ColoredPetriNet ColoredPetriNetBuilder::build() {
-            _currentNet.fillValidVariables();
             auto transitions = _currentNet._transitions.size();
             std::vector<std::pair<uint32_t,uint32_t>> transIndices = std::vector<std::pair<uint32_t,uint32_t>>(transitions + 1);
-            std::vector<ColoredPetriNetArc*> arcPointers = std::vector<ColoredPetriNetArc*>(_currentNet._outputArcs.size() + _currentNet._inputArcs.size());
+            std::vector<ColoredPetriNetArc> arcs = std::vector<ColoredPetriNetArc>{};
             std::vector<uint32_t> inhibIndices = std::vector<uint32_t>(transitions + 1, _currentNet._inhibitorArcs.size());
 
             std::sort(_currentNet._inhibitorArcs.begin(), _currentNet._inhibitorArcs.end(),
@@ -183,32 +183,16 @@ namespace PetriEngine {
             auto arcIndex = 0;
             for (size_t i = 0; i < transitions; i++){
                 auto inputIndex= arcIndex;
-                for (auto& a : _currentNet._inputArcs){
+                for (auto& a : _inputArcs){
                     if (a.to == i){
-                        arcPointers[arcIndex]= &a;
+                        arcs.push_back(std::move(a));
                         arcIndex++;
                     }
                 }
                 transIndices[i] = std::pair{inputIndex, arcIndex};
-                //The fewest possible variable combinations are sorted first to hopefully minimize the testing of bindings
-                if (arcIndex - inputIndex > 1){
-                    std::sort(arcPointers.begin() + inputIndex, arcPointers.begin() + arcIndex - 1,
-                              [](const ColoredPetriNetArc* a, const ColoredPetriNetArc* b){
-                        uint32_t aPossible = 1;
-                        uint32_t bPossible = 1;
-                        for (auto& v : a->validVariables){
-                            aPossible *= v.second.size();
-                        }
-                        for (auto& v : b->validVariables){
-                            bPossible *= v.second.size();
-                        }
-                        return aPossible < bPossible;
-                    });
-                }
-
-                for (auto& a : _currentNet._outputArcs){
+                for (auto& a : _outputArcs){
                     if (a.from == i){
-                        arcPointers[arcIndex]= &a;
+                        arcs.push_back(std::move(a));
                         arcIndex++;
                     }
                 }
@@ -226,9 +210,10 @@ namespace PetriEngine {
 
             transIndices.back() = std::pair(arcIndex,arcIndex);
             _currentNet._transitionInhibitors = std::move(inhibIndices);
-            _currentNet._invariants = std::move(arcPointers);
+            _currentNet._arcs = std::move(arcs);
             _currentNet._transitionArcs = std::move(transIndices);
-            return std::move(_currentNet);
+            ValidVariableGenerator{_currentNet}.generateValidColorsForTransitions();
+                return std::move(_currentNet);
         }
 
         void ColoredPetriNetBuilder::sort() {

@@ -34,7 +34,8 @@ namespace PetriEngine {
             std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
             std::unordered_map<std::string, std::shared_ptr<ColorType>> _colorTypeMap;
             std::unordered_map<std::string, std::shared_ptr<BaseColorType>> _baseColorType;
-            std::unordered_map<std::string, std::vector<std::string>> _productTypes;
+            std::vector<ColoredPetriNetArc> _outputArcs;
+            std::vector<ColoredPetriNetArc> _inputArcs;
             ColoredPetriNet _currentNet;
             std::shared_ptr<ColorType> _dotColorType;
             std::shared_ptr<Colored::ColorTypeMap> _colors;
