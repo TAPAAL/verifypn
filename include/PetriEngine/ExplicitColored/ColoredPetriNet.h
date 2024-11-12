@@ -42,7 +42,7 @@ namespace PetriEngine
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
-            std::map<Variable_t,std::vector<uint32_t>> validVariables;
+            std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint32_t> validVariables;
         };
 
         struct BaseColorType
@@ -63,6 +63,8 @@ namespace PetriEngine
 
         struct ColoredPetriNetInhibitor
         {
+            ColoredPetriNetInhibitor(size_t from, size_t to, MarkingCount_t weight)
+                : from(from), to(to), weight(weight){}
             uint32_t from;
             uint32_t to;
             MarkingCount_t weight;
@@ -72,7 +74,6 @@ namespace PetriEngine
         {
             uint32_t from;
             uint32_t to;
-            std::map<Variable_t,std::vector<uint32_t>> validVariables;
             std::shared_ptr<ColorType> colorType;
             std::unique_ptr<ArcExpression> arcExpression;
         };
@@ -96,44 +97,16 @@ namespace PetriEngine
         private:
             friend class ColoredPetriNetBuilder;
             friend class ColoredSuccessorGenerator;
+            friend class ValidVariableGenerator;
             ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
-            std::vector<ColoredPetriNetArc> _outputArcs;
-            std::vector<ColoredPetriNetArc> _inputArcs;
+            std::vector<ColoredPetriNetArc> _arcs;
             std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
             std::vector<Variable> _variables;
             ColoredPetriNetMarking _initialMarking;
-
-            //This could/should use reduction to reduce possible bindings
-            void fillValidVariables() {
-                for (auto&& arc : _inputArcs) {
-                    std::map<Variable_t, std::vector<uint32_t>> map = std::map<Variable_t, std::vector<uint32_t>>{};
-                    auto vars = arc.arcExpression->getVariables();
-                    for (auto &&var: vars) {
-                        auto nValues = _variables[var].colorType->colors;
-                        std::vector<uint32_t> values = std::vector<uint32_t>{};
-                        for (uint32_t i = 0; i < nValues; i++) {
-                            values.push_back(i);
-                        }
-                        map.emplace(var, values);
-                    }
-                    arc.validVariables = map;
-                }
-                for (auto&& arc : _outputArcs) {
-                    std::map<Variable_t, std::vector<uint32_t>> map = std::map<Variable_t, std::vector<uint32_t>>{};
-                    auto vars = arc.arcExpression->getVariables();
-                    for (const size_t var : vars) {
-                        auto nValues = _variables[var].colorType->colors;
-                        std::vector<uint32_t> values = std::vector<uint32_t>{};
-                        for (size_t i = 0; i < nValues; i++) {
-                            values.push_back(i);
-                        }
-                        map.emplace(var, values);
-                    }
-                    arc.validVariables = map;
-                }
-            }
+            std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _arcs
+            std::vector<uint32_t> _transitionInhibitors; //Index is transition and value is beginning index in _inhibitorArcs
         };
     }
 } // PetriEngine

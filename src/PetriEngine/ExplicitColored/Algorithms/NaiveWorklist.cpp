@@ -88,6 +88,10 @@ namespace ColoredLTL {
         void _accept(const PetriEngine::PQL::NaryExpr *element) override  { notSupported("NaryExpr"); }
         void _accept(const PetriEngine::PQL::SubtractExpr *element) override { notSupported("SubtractExpr"); }
     private:
+        PetriEngine::ExplicitColored::MarkingCount_t _evaluated;
+        const PetriEngine::ExplicitColored::ColoredPetriNetMarking& _marking;
+        const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+
         void notSupported() {
             throw base_error("Not supported");
         }
@@ -99,9 +103,6 @@ namespace ColoredLTL {
         void invalid() {
             throw base_error("Invalid expression");
         }
-        PetriEngine::ExplicitColored::MarkingCount_t _evaluated;
-        const PetriEngine::ExplicitColored::ColoredPetriNetMarking& _marking;
-        const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
     };
 
     class GammaQueryVisitor : public PetriEngine::PQL::Visitor {

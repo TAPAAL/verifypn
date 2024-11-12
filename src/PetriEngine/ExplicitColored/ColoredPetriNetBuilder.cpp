@@ -1,4 +1,5 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/ValidVariableGenerator.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -33,25 +34,49 @@ namespace PetriEngine {
             _transitionIndices[name] = _currentNet._transitions.size() - 1;
         }
 
+        //Dot color input arc
          void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
-            ColoredPetriNetArc arc;
-            size_t placeIndex = _placeIndices.find(place)->second;
-                
-            arc.from = placeIndex;
-            arc.to = _transitionIndices.find(transition)->second;
-            arc.colorType = _currentNet._places[placeIndex].colorType;
+             size_t from = _placeIndices.find(place)->second;
+             auto to = _transitionIndices.find(transition)->second;
+             if (inhibitor){
+                 _currentNet._inhibitorArcs.emplace_back(from, to, weight);
+             }else{
+                 ColoredPetriNetArc arc;
+                 arc.from = from;
+                 arc.to = to;
+                 arc.colorType = _currentNet._places[from].colorType;
 
-            auto expr = std::make_shared<Colored::NumberOfExpression>(
-                std::vector<Colored::ColorExpression_ptr>{
-                    std::make_shared<Colored::DotConstantExpression>()
-                },
-                weight
-            );
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+                 auto expr = std::make_shared<Colored::NumberOfExpression>(
+                         std::vector<Colored::ColorExpression_ptr>{
+                                 std::make_shared<Colored::DotConstantExpression>()
+                         },
+                         weight
+                 );
+                 arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-            _currentNet._inputArcs.push_back(std::move(arc));
+                 _inputArcs.push_back(std::move(arc));
+             }
         }
 
+        //Colored input arc
+        void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {
+            size_t from = _placeIndices.find(place)->second;
+            size_t to = _transitionIndices.find(transition)->second;
+            if (inhib_weight != 0){
+                _currentNet._inhibitorArcs.emplace_back(from, to, inhib_weight);
+            }else{
+                ColoredPetriNetArc arc{};
+                arc.from = from;
+                arc.to = to;
+                arc.colorType = _currentNet._places[from].colorType;
+                arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+
+                _inputArcs.push_back(std::move(arc));
+            }
+
+        }
+
+        //Non colored output arc
         void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
             ColoredPetriNetArc arc;
             size_t placeIndex = _placeIndices.find(place)->second;
@@ -68,7 +93,20 @@ namespace PetriEngine {
             );
             arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
 
-            _currentNet._outputArcs.push_back(std::move(arc));
+            _outputArcs.push_back(std::move(arc));
+        }
+
+        //Colored output arc
+        void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
+            ColoredPetriNetArc arc;
+            size_t placeIndex = _placeIndices.find(place)->second;
+
+            arc.from = _transitionIndices.find(transition)->second;
+            arc.to = placeIndex;
+            arc.colorType = _currentNet._places[placeIndex].colorType;
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+
+            _outputArcs.push_back(std::move(arc));
         }
 
         void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) {
@@ -104,30 +142,6 @@ namespace PetriEngine {
             _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
         }
 
-        void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {    
-            ColoredPetriNetArc arc;
-            size_t placeIndex = _placeIndices.find(place)->second;
-                
-            arc.from = placeIndex;
-            arc.to = _transitionIndices.find(transition)->second;
-            arc.colorType = _currentNet._places[placeIndex].colorType;
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
-            
-            _currentNet._inputArcs.push_back(std::move(arc));
-        }
-
-        void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
-            ColoredPetriNetArc arc;
-            size_t placeIndex = _placeIndices.find(place)->second;
-
-            arc.from = _transitionIndices.find(transition)->second;
-            arc.to = placeIndex;
-            arc.colorType = _currentNet._places[placeIndex].colorType;
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
-
-            _currentNet._outputArcs.push_back(std::move(arc));
-        }
-
         void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
             if (auto productType = dynamic_cast<const Colored::ProductType*>(type)) {
                 auto productColorType = std::make_shared<ColorType>();
@@ -140,10 +154,8 @@ namespace PetriEngine {
             } else {
                 auto colorType = std::make_shared<ColorType>();
                 auto baseColorType = std::make_shared<BaseColorType>();
-                for (const auto& color : *type) {
-                    baseColorType->colors += 1;
-                }
-                colorType->size += 1;
+                baseColorType->colors = type->size();
+                colorType->size = 1;
                 _baseColorType[id] = baseColorType;
                 colorType->basicColorTypes.push_back(std::move(baseColorType));
                 _colorTypeMap[id] = std::move(colorType);
@@ -159,20 +171,49 @@ namespace PetriEngine {
         }
 
         ColoredPetriNet ColoredPetriNetBuilder::build() {
-            for (const auto& productColor : _productTypes) {
-                ColorType colorType;
-                colorType.size = 0;
-                for (const std::string& colorId : productColor.second) {
-                    const auto colorTypeIt = _baseColorType.find(colorId);
-                    if (colorTypeIt != _baseColorType.cend()) {
-                        throw base_error("Product color uses unknown color type ", colorId);
+            auto transitions = _currentNet._transitions.size();
+            std::vector<std::pair<uint32_t,uint32_t>> transIndices = std::vector<std::pair<uint32_t,uint32_t>>(transitions + 1);
+            std::vector<ColoredPetriNetArc> arcs = std::vector<ColoredPetriNetArc>{};
+            std::vector<uint32_t> inhibIndices = std::vector<uint32_t>(transitions + 1, _currentNet._inhibitorArcs.size());
+
+            std::sort(_currentNet._inhibitorArcs.begin(), _currentNet._inhibitorArcs.end(),
+                      [](ColoredPetriNetInhibitor a, ColoredPetriNetInhibitor b){
+                return a.to < b.to;
+            });
+            auto arcIndex = 0;
+            for (size_t i = 0; i < transitions; i++){
+                auto inputIndex= arcIndex;
+                for (auto& a : _inputArcs){
+                    if (a.to == i){
+                        arcs.push_back(std::move(a));
+                        arcIndex++;
                     }
-                    colorType.basicColorTypes.push_back(colorTypeIt->second);
-                    colorType.size += 1;
+                }
+                transIndices[i] = std::pair{inputIndex, arcIndex};
+                for (auto& a : _outputArcs){
+                    if (a.from == i){
+                        arcs.push_back(std::move(a));
+                        arcIndex++;
+                    }
                 }
             }
-            _currentNet.fillValidVariables();
-            return std::move(_currentNet);
+            size_t transIndex = 0;
+            size_t inhibIndex = 0;
+            while (transIndex < transitions && inhibIndex < _currentNet._inhibitorArcs.size()){
+                auto to = _currentNet._inhibitorArcs[inhibIndex].to;
+                while (transIndex <= to){
+                    inhibIndices[transIndex] = inhibIndex;
+                    transIndex++;
+                }
+                inhibIndex++;
+            }
+
+            transIndices.back() = std::pair(arcIndex,arcIndex);
+            _currentNet._transitionInhibitors = std::move(inhibIndices);
+            _currentNet._arcs = std::move(arcs);
+            _currentNet._transitionArcs = std::move(transIndices);
+            ValidVariableGenerator{_currentNet}.generateValidColorsForTransitions();
+                return std::move(_currentNet);
         }
 
         void ColoredPetriNetBuilder::sort() {
