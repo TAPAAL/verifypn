@@ -82,13 +82,25 @@ int main(int argc, const char** argv) {
 
         if (options.explicit_colored) {
             std::cout << "Using explicit colored" << std::endl;
-            PetriEngine::ExplicitColored::ColoredPetriNetBuilder builder;
+            ExplicitColored::ColoredPetriNetBuilder builder;
             builder.parse_model(options.modelfile);
             auto net = builder.build();
 
             for (size_t i = 0; i < queries.size(); i++) {
-                ColoredLTL::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
-                auto result = naiveWorkList.check();
+                ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
+                bool result;
+                switch (options.strategy) {
+                    case Strategy::DFS:
+                        result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS);
+                        break;
+                    case Strategy::BFS:
+                        result  = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS);
+                        break;
+                    default:
+                        std::cerr << "Strategy is not supported for explicit colored engine" << std::endl;
+                        std::cout << "UNSUPPORTED STRATEGY" << std::endl;
+                        exit(1);
+                }
                 std::cout << "Query " << i << ": " << (result ? "Query is satisfied" : "Query is NOT satisfied") << std::endl;
             }
 
