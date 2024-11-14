@@ -33,8 +33,9 @@ namespace ColoredLTL{
         private:
             PetriEngine::PQL::Condition_ptr _gammaQuery;
             Quantifier _quantifier;
-            const std::unordered_map<std::string, uint32_t> _placeNameIndices;
             const PetriEngine::ExplicitColored::ColoredPetriNet& _net;
+            const std::unordered_map<std::string, uint32_t> _placeNameIndices;
+
 
             bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state);
         };

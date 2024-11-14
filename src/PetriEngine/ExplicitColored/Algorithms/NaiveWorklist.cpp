@@ -299,6 +299,10 @@ namespace ColoredLTL {
         const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
             ? ConditionalBool::TRUE
             : ConditionalBool::FALSE;
+        if (check(state, ConditionalBool::UNKNOWN) == earlyTerminationCondition){
+            std::cout << "Passed 1 state" << std::endl;
+            return _quantifier == Quantifier::EF;
+        }
 
         while (!waiting.empty()){
             auto& next = waiting.top();
