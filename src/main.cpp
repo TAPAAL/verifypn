@@ -50,6 +50,8 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -70,6 +72,28 @@ int main(int argc, const char** argv) {
             std::cout << std::endl;
         }
         options.print();
+
+        //----------------------- Parse Query -----------------------//
+        std::vector<std::string> querynames;
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
+        auto queries = options.logic == TemporalLogic::CTL
+                       ? getCTLQueries(ctlStarQueries)
+                       : getLTLQueries(ctlStarQueries);
+
+        if (options.explicit_colored) {
+            std::cout << "Using explicit colored" << std::endl;
+            PetriEngine::ExplicitColored::ColoredPetriNetBuilder builder;
+            builder.parse_model(options.modelfile);
+            auto net = builder.build();
+
+            for (size_t i = 0; i < queries.size(); i++) {
+                ColoredLTL::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
+                auto result = naiveWorkList.check();
+                std::cout << "Query " << i << ": " << (result ? "Query is satisfied" : "Query is NOT satisfied") << std::endl;
+            }
+
+            return 0;
+        }
 
         ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
@@ -92,13 +116,6 @@ int main(int argc, const char** argv) {
         if (options.printstatistics == StatisticsLevel::Full) {
             std::cout << "Finished parsing model" << std::endl;
         }
-
-        //----------------------- Parse Query -----------------------//
-        std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(string_set, options, querynames);
-        auto queries = options.logic == TemporalLogic::CTL
-                       ? getCTLQueries(ctlStarQueries)
-                       : getLTLQueries(ctlStarQueries);
 
         if (options.printstatistics == StatisticsLevel::Full && options.queryReductionTimeout > 0) {
             negstat_t stats;
