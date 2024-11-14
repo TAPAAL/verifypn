@@ -170,7 +170,7 @@ namespace PetriEngine {
             _currentNet._variables.emplace_back(std::move(var));
         }
 
-        ColoredPetriNet ColoredPetriNetBuilder::build() {
+        ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
             auto transitions = _currentNet._transitions.size();
             std::vector<std::pair<uint32_t,uint32_t>> transIndices = std::vector<std::pair<uint32_t,uint32_t>>(transitions + 1);
             std::vector<ColoredPetriNetArc> arcs = std::vector<ColoredPetriNetArc>{};
@@ -212,8 +212,15 @@ namespace PetriEngine {
             _currentNet._transitionInhibitors = std::move(inhibIndices);
             _currentNet._arcs = std::move(arcs);
             _currentNet._transitionArcs = std::move(transIndices);
-            ValidVariableGenerator{_currentNet}.generateValidColorsForTransitions();
-                return std::move(_currentNet);
+            auto result = ValidVariableGenerator{_currentNet}.generateValidColorsForTransitions();
+            if (result == ValidVariableGeneratorStatus::TOO_MANY_BINDINGS) {
+                return ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS;
+            }
+            return ColoredPetriNetBuilderStatus::OK;
+        }
+
+        ColoredPetriNet ColoredPetriNetBuilder::takeNet() {
+            return std::move(_currentNet);
         }
 
         void ColoredPetriNetBuilder::sort() {

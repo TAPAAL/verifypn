@@ -4,10 +4,15 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 namespace PetriEngine{
     namespace ExplicitColored {
+        enum class ValidVariableGeneratorStatus {
+            OK,
+            TOO_MANY_BINDINGS
+        };
+
         class ValidVariableGenerator {
         public:
             explicit ValidVariableGenerator(ColoredPetriNet& net) : _net(net) {}
-            void generateValidColorsForTransitions() {
+            ValidVariableGeneratorStatus generateValidColorsForTransitions() {
                 for (size_t tid = 0; tid < _net._transitionArcs.size() - 1; tid++) {
                     auto variableMap = std::map<Variable_t, std::vector<uint32_t>>{};
                     //Guard valid variables
@@ -19,10 +24,14 @@ namespace PetriEngine{
 
                     uint32_t totalSize = variableMap.empty() ? 0 : 1;//Gets possible values of all variables, will overestimate possible values
                     for (auto&& var : variableMap){
+                        if (totalSize > std::numeric_limits<uint32_t>::max() / var.second.size()) {
+                            return ValidVariableGeneratorStatus::TOO_MANY_BINDINGS;
+                        }
                         totalSize *= var.second.size();
                     }
                     _net._transitions[tid].validVariables = std::pair(std::move(variableMap),totalSize);
                 }
+                return ValidVariableGeneratorStatus::OK;
             }
         private:
             ColoredPetriNet &_net;

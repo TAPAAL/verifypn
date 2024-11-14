@@ -84,7 +84,22 @@ int main(int argc, const char** argv) {
             std::cout << "Using explicit colored" << std::endl;
             PetriEngine::ExplicitColored::ColoredPetriNetBuilder builder;
             builder.parse_model(options.modelfile);
-            auto net = builder.build();
+            auto result = builder.build();
+
+            switch (result) {
+                case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
+                    break;
+                case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+                    std::cerr << "The colored petri net has too many bindings to be represented" << std::endl;
+                    std::cout << "TOO_MANY_BINDINGS" << std::endl;
+                    exit(1);
+                default:
+                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(result) << std::endl;
+                    std::cout << "Unknown builder error " << static_cast<int>(result) << std::endl;
+                    exit(1);
+            }
+
+            auto net = builder.takeNet();
 
             for (size_t i = 0; i < queries.size(); i++) {
                 ColoredLTL::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
