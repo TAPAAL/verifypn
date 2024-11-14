@@ -89,7 +89,7 @@ int main(int argc, const char** argv) {
             for (size_t i = 0; i < queries.size(); i++) {
                 ColoredLTL::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
                 auto result = naiveWorkList.check();
-                std::cout << "Query " << i << ": " << (result ? "SATISFIED" : "UNSATISFIED") << std::endl;
+                std::cout << "Query " << i << ": " << (result ? "Query is satisfied" : "Query is NOT satisfied") << std::endl;
             }
 
             return 0;
