@@ -372,7 +372,6 @@ namespace PetriEngine {
         }
 
         bool NaiveWorklist::_rdfs(size_t seed) {
-            std::cout << "seed: " << seed << std::endl;
             return _genericSearch<RDFSStructure>(RDFSStructure(seed));
         }
     }
