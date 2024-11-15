@@ -286,6 +286,10 @@ namespace PetriEngine {
             bool empty() {
                 return waiting.empty();
             }
+
+            uint32_t size() {
+                return waiting.size();
+            }
         private:
             std::stack<ColoredPetriNetState> waiting;
         };
@@ -311,8 +315,59 @@ namespace PetriEngine {
             bool empty() {
                 return waiting.empty();
             }
+
+            uint32_t size() {
+                return waiting.size();
+            }
         private:
             std::queue<ColoredPetriNetState> waiting;
+        };
+
+        class RDFSStructure {
+        public:
+            RDFSStructure(size_t seed) : _rng(seed), _has_removed(true) { }
+
+            size_t nextIndex() {
+                return 0;
+            }
+
+            ColoredPetriNetState& get(size_t index) {
+                if (!_has_removed || _cache.empty()) {
+                    return _stack.top();
+                }
+
+                _has_removed = false;
+                std::shuffle(_cache.begin(), _cache.end(), _rng);
+
+                for (auto it = _cache.begin(); _cache.end() != it; ++it) {
+                    _stack.emplace(std::move(*it));
+                }
+
+                _cache.clear();
+                return _stack.top();
+            }
+
+            void remove(size_t index) {
+                _has_removed = true;
+                _stack.pop();
+            }
+
+            void add(ColoredPetriNetState state) {
+                _cache.push_back(std::move(state));
+            }
+
+            bool empty() const {
+                return _stack.empty() && _cache.empty();
+            }
+
+            uint32_t size() {
+                return _stack.size() + _cache.size();
+            }
+        private:
+            std::stack<ColoredPetriNetState> _stack;
+            std::vector<ColoredPetriNetState> _cache;
+            std::default_random_engine _rng;
+            bool _has_removed = false;
         };
 
 
@@ -334,15 +389,21 @@ namespace PetriEngine {
             }
         }
 
-        bool NaiveWorklist::check(SearchStrategy searchStrategy) {
+        bool NaiveWorklist::check(SearchStrategy searchStrategy, size_t randomSeed) {
             switch (searchStrategy) {
                 case SearchStrategy::DFS:
                     return _dfs();
                 case SearchStrategy::BFS:
                     return _bfs();
+                case SearchStrategy::RDFS:
+                    return _rdfs(randomSeed);
                 default:
                     throw base_error("Unsupported exploration type");
             }
+        }
+
+        const SearchStatistics & NaiveWorklist::GetSearchStatistics() const {
+            return _searchStatistics;
         }
 
         ConditionalBool NaiveWorklist::_check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue) {
@@ -350,20 +411,20 @@ namespace PetriEngine {
         }
 
         template<typename WaitingList>
-        bool NaiveWorklist::_genericSearch() {
-            WaitingList waiting;
+        bool NaiveWorklist::_genericSearch(WaitingList waiting) {
             auto passed = ColoredMarkingSet {};
             const auto& initialState = _net.initial();
             ColoredSuccessorGenerator successorGenerator(_net);
-
+            size_t check_count = 0;
             waiting.add(ColoredPetriNetState { initialState });
+
             passed.add(initialState);
+            _searchStatistics.passedCount = passed.size();
 
             const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
                 ? ConditionalBool::TRUE
                 : ConditionalBool::FALSE;
             if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition){
-                std::cout << "Passed 1 state" << std::endl;
                 return _quantifier == Quantifier::EF;
             }
 
@@ -379,7 +440,6 @@ namespace PetriEngine {
                     const auto checkValue = _check(successor.marking, deadlockValue ? ConditionalBool::TRUE : ConditionalBool::FALSE);
 
                     if (checkValue == earlyTerminationCondition) {
-                        std::cout << "Passed " << passed.size() << " states" << std::endl;
                         return _quantifier == Quantifier::EF;
                     }
                 }
@@ -391,25 +451,35 @@ namespace PetriEngine {
 
                 auto& marking = successor.marking;
 
+                _searchStatistics.exploredStates++;
+
                 if (!passed.contains(marking)) {
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
-                        std::cout << "Passed " << passed.size() << " states" << std::endl;
                         return _quantifier == Quantifier::EF;
                     }
+                    _searchStatistics.checkedStates += 1;
+                    check_count += 1;
                     passed.add(marking);
+                    _searchStatistics.passedCount = passed.size();
                     waiting.add(std::move(successor));
+                    _searchStatistics.endWaitingStates = waiting.size();
+                    _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }
-            std::cout << "Checked " << passed.size() << " states" << std::endl;
             return _quantifier == Quantifier::AG;
         }
 
         bool NaiveWorklist::_dfs() {
-            return _genericSearch<DFSStructure>();
+            return _genericSearch<DFSStructure>(DFSStructure {});
         }
 
         bool NaiveWorklist::_bfs() {
-            return _genericSearch<DFSStructure>();
+            return _genericSearch<BFSStructure>(BFSStructure {});
+        }
+
+        bool NaiveWorklist::_rdfs(size_t seed) {
+            std::cout << "seed: " << seed << std::endl;
+            return _genericSearch<RDFSStructure>(RDFSStructure(seed));
         }
     }
 }

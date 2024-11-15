@@ -20,7 +20,16 @@ namespace PetriEngine {
 
         enum class SearchStrategy {
             DFS,
-            BFS
+            BFS,
+            RDFS
+        };
+
+        struct SearchStatistics {
+            uint32_t passedCount = 0;
+            uint32_t checkedStates = 0;
+            uint32_t endWaitingStates = 0;
+            uint32_t peakWaitingStates = 0;
+            uint32_t exploredStates = 0;
         };
 
         class NaiveWorklist {
@@ -31,7 +40,8 @@ namespace PetriEngine {
                 std::unordered_map<std::string, uint32_t> placeNameIndices
             );
 
-            bool check(SearchStrategy searchStrategy);
+            bool check(SearchStrategy searchStrategy, size_t randomSeed);
+            const SearchStatistics& GetSearchStatistics() const;
         private:
             PQL::Condition_ptr _gammaQuery;
             Quantifier _quantifier;
@@ -42,9 +52,11 @@ namespace PetriEngine {
 
             bool _dfs();
             bool _bfs();
+            bool _rdfs(size_t seed);
 
             template<typename WaitingList>
-            bool _genericSearch();
+            bool _genericSearch(WaitingList waiting);
+            SearchStatistics _searchStatistics;
         };
     }
 }
