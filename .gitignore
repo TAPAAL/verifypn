@@ -15,3 +15,7 @@ src/LTL/SuccessorGeneration/HeuristicParser.parser.cpp
 src/LTL/SuccessorGeneration/HeuristicParser.parser.hpp
 build/
 
+
+build-release/
+.vscode/
+build-release-deb-info/

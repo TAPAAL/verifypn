@@ -50,6 +50,8 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -70,6 +72,64 @@ int main(int argc, const char** argv) {
             std::cout << std::endl;
         }
         options.print();
+
+        //----------------------- Parse Query -----------------------//
+        std::vector<std::string> querynames;
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
+        auto queries = options.logic == TemporalLogic::CTL
+                       ? getCTLQueries(ctlStarQueries)
+                       : getLTLQueries(ctlStarQueries);
+
+        if (options.explicit_colored) {
+            std::cout << "Using explicit colored" << std::endl;
+            ExplicitColored::ColoredPetriNetBuilder builder;
+            builder.parse_model(options.modelfile);
+            auto result = builder.build();
+
+            switch (result) {
+                case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
+                    break;
+                case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+                    std::cerr << "The colored petri net has too many bindings to be represented" << std::endl;
+                    std::cout << "TOO_MANY_BINDINGS" << std::endl;
+                    exit(1);
+                default:
+                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(result) << std::endl;
+                    std::cout << "Unknown builder error " << static_cast<int>(result) << std::endl;
+                    exit(1);
+            }
+
+            auto net = builder.takeNet();
+
+            for (size_t i = 0; i < queries.size(); i++) {
+                ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
+                bool result;
+                switch (options.strategy) {
+                    case Strategy::DFS:
+                        result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());
+                        break;
+                    case Strategy::BFS:
+                        result  = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS, options.seed());
+                        break;
+                    case Strategy::RDFS:
+                        result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, options.seed());
+                        break;
+                    default:
+                        std::cerr << "Strategy is not supported for explicit colored engine" << std::endl;
+                        std::cout << "UNSUPPORTED STRATEGY" << std::endl;
+                        exit(1);
+                }
+
+                std::cout << "Query " << i << ": " << (result ? "Query is satisfied" : "Query is NOT satisfied") << std::endl;
+                std::cout << "passed: " << naiveWorkList.GetSearchStatistics().passedCount << std::endl;
+                std::cout << "explored: " << naiveWorkList.GetSearchStatistics().exploredStates << std::endl;
+                std::cout << "checked_states: " << naiveWorkList.GetSearchStatistics().checkedStates << std::endl;
+                std::cout << "peak_waiting_states: " << naiveWorkList.GetSearchStatistics().peakWaitingStates << std::endl;
+                std::cout << "end_waiting_states: " << naiveWorkList.GetSearchStatistics().endWaitingStates << std::endl;
+            }
+
+            return 0;
+        }
 
         ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
@@ -92,13 +152,6 @@ int main(int argc, const char** argv) {
         if (options.printstatistics == StatisticsLevel::Full) {
             std::cout << "Finished parsing model" << std::endl;
         }
-
-        //----------------------- Parse Query -----------------------//
-        std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(string_set, options, querynames);
-        auto queries = options.logic == TemporalLogic::CTL
-                       ? getCTLQueries(ctlStarQueries)
-                       : getLTLQueries(ctlStarQueries);
 
         if (options.printstatistics == StatisticsLevel::Full && options.queryReductionTimeout > 0) {
             negstat_t stats;
