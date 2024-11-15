@@ -3,10 +3,10 @@
 
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/Structures/Queue.h"
-#include "PetriEngine/ExplicitColored/Algorithms/ColoredModelChecker.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
-namespace ColoredLTL{
+namespace PetriEngine {
+    namespace ExplicitColored {
         enum class ConditionalBool {
             FALSE,
             TRUE,
@@ -18,26 +18,46 @@ namespace ColoredLTL{
             AG
         };
 
+        enum class SearchStrategy {
+            DFS,
+            BFS,
+            RDFS
+        };
+
+        struct SearchStatistics {
+            uint32_t passedCount = 0;
+            uint32_t checkedStates = 0;
+            uint32_t endWaitingStates = 0;
+            uint32_t peakWaitingStates = 0;
+            uint32_t exploredStates = 0;
+        };
+
         class NaiveWorklist {
         public:
             NaiveWorklist(
-                const PetriEngine::ExplicitColored::ColoredPetriNet& net,
-                const PetriEngine::PQL::Condition_ptr &query,
+                const ColoredPetriNet& net,
+                const PQL::Condition_ptr &query,
                 std::unordered_map<std::string, uint32_t> placeNameIndices
             );
 
-            bool check();
-
-            ConditionalBool check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
-
+            bool check(SearchStrategy searchStrategy, size_t randomSeed);
+            const SearchStatistics& GetSearchStatistics() const;
         private:
-            PetriEngine::PQL::Condition_ptr _gammaQuery;
+            PQL::Condition_ptr _gammaQuery;
             Quantifier _quantifier;
-            const PetriEngine::ExplicitColored::ColoredPetriNet& _net;
+            const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t> _placeNameIndices;
 
+            ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
 
-            bool dfs(PetriEngine::ExplicitColored::ColoredSuccessorGenerator& successor_generator, const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state);
+            bool _dfs();
+            bool _bfs();
+            bool _rdfs(size_t seed);
+
+            template<typename WaitingList>
+            bool _genericSearch(WaitingList waiting);
+            SearchStatistics _searchStatistics;
         };
+    }
 }
 #endif //NAIVEWORKLIST_H

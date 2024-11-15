@@ -23,7 +23,7 @@ namespace PetriEngine{
             ~ColoredSuccessorGenerator();
 
             ColoredPetriNetState next(ColoredPetriNetState& state){
-                return _next(state, [](size_t){ return true; });
+                return _next(state);
             }
 
             const ColoredPetriNet& net() const {
@@ -41,8 +41,7 @@ namespace PetriEngine{
             const ColoredPetriNet& _net;
             void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
 
-            template<typename T>
-            ColoredPetriNetState _next(ColoredPetriNetState& state, T&& predicate){
+            ColoredPetriNetState _next(ColoredPetriNetState& state){
                 auto newState = ColoredPetriNetState{state};
                 for (auto tid = state.lastTrans; tid <_net._transitions.size(); tid++){
                     auto bid = tid == state.lastTrans ? state.lastBinding : 0;
