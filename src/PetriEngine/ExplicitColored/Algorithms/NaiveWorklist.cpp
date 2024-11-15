@@ -9,6 +9,7 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
+#include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -265,112 +266,6 @@ namespace PetriEngine {
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
         };
 
-        class DFSStructure {
-        public:
-            size_t nextIndex() {
-                return 0;
-            }
-
-            ColoredPetriNetState& get(size_t index) {
-                return waiting.top();
-            }
-
-            void remove(size_t index) {
-                waiting.pop();
-            }
-
-            void add(ColoredPetriNetState state) {
-                waiting.emplace(std::move(state));
-            }
-
-            bool empty() {
-                return waiting.empty();
-            }
-
-            uint32_t size() {
-                return waiting.size();
-            }
-        private:
-            std::stack<ColoredPetriNetState> waiting;
-        };
-
-        class BFSStructure {
-        public:
-            size_t nextIndex() {
-                return 0;
-            }
-
-            ColoredPetriNetState& get(size_t index) {
-                return waiting.front();
-            }
-
-            void remove(size_t index) {
-                waiting.pop();
-            }
-
-            void add(ColoredPetriNetState state) {
-                waiting.emplace(std::move(state));
-            }
-
-            bool empty() {
-                return waiting.empty();
-            }
-
-            uint32_t size() {
-                return waiting.size();
-            }
-        private:
-            std::queue<ColoredPetriNetState> waiting;
-        };
-
-        class RDFSStructure {
-        public:
-            RDFSStructure(size_t seed) : _rng(seed), _has_removed(true) { }
-
-            size_t nextIndex() {
-                return 0;
-            }
-
-            ColoredPetriNetState& get(size_t index) {
-                if (!_has_removed || _cache.empty()) {
-                    return _stack.top();
-                }
-
-                _has_removed = false;
-                std::shuffle(_cache.begin(), _cache.end(), _rng);
-
-                for (auto it = _cache.begin(); _cache.end() != it; ++it) {
-                    _stack.emplace(std::move(*it));
-                }
-
-                _cache.clear();
-                return _stack.top();
-            }
-
-            void remove(size_t index) {
-                _has_removed = true;
-                _stack.pop();
-            }
-
-            void add(ColoredPetriNetState state) {
-                _cache.push_back(std::move(state));
-            }
-
-            bool empty() const {
-                return _stack.empty() && _cache.empty();
-            }
-
-            uint32_t size() {
-                return _stack.size() + _cache.size();
-            }
-        private:
-            std::stack<ColoredPetriNetState> _stack;
-            std::vector<ColoredPetriNetState> _cache;
-            std::default_random_engine _rng;
-            bool _has_removed = false;
-        };
-
-
         NaiveWorklist::NaiveWorklist(
             const ColoredPetriNet& net,
             const PQL::Condition_ptr &query,
@@ -429,8 +324,7 @@ namespace PetriEngine {
             }
 
             while (!waiting.empty()){
-                auto nextIndex = waiting.nextIndex();
-                auto& next = waiting.get(nextIndex);
+                auto& next = waiting.next();
 
                 bool isFirstCheck = next.lastBinding == 0 && next.lastTrans == 0;
                 auto successor = successorGenerator.next(next);
@@ -445,7 +339,7 @@ namespace PetriEngine {
                 }
 
                 if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()) {
-                    waiting.remove(nextIndex);
+                    waiting.remove();
                     continue;
                 }
 
