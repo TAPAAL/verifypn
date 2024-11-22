@@ -83,12 +83,23 @@ int main(int argc, const char** argv) {
         if (options.explicit_colored) {
             std::cout << "Using explicit colored" << std::endl;
             ExplicitColored::ColoredPetriNetBuilder builder;
-            builder.parse_model(options.modelfile);
+
+            ColoredPetriNetBuilder cpnBuilder(string_set);
+            cpnBuilder.parse_model(options.modelfile);
+            {
+                std::stringstream ss;
+                std::stringstream out;
+                reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
+                PetriEngine::Colored::PnmlWriter writer(cpnBuilder, ss);
+                writer.toColPNML();
+                builder.parse_model(ss);
+            }
             auto net = builder.build();
 
             for (size_t i = 0; i < queries.size(); i++) {
                 ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
                 bool result;
+                if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
                 switch (options.strategy) {
                     case Strategy::DFS:
                         result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());

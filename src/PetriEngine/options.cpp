@@ -211,6 +211,8 @@ void printHelp() {
         "  --nounfold                           Stops after colored structural reductions and writing the reduced net\n"
         "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
+        "  -C                                   Uses explicit state exploration for answering queries."
+        "                                       Only supports reachability-cardinality queries and -R and -s options."
         "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
         "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
         "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"

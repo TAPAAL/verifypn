@@ -90,6 +90,7 @@ namespace PetriEngine
         public:
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
+            ColoredPetriNet& operator=(const ColoredPetriNet&) = default;
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
