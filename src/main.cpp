@@ -83,10 +83,19 @@ int main(int argc, const char** argv) {
         if (options.explicit_colored) {
             std::cout << "Using explicit colored" << std::endl;
             ExplicitColored::ColoredPetriNetBuilder builder;
-            builder.parse_model(options.modelfile);
-            auto result = builder.build();
+            ColoredPetriNetBuilder cpnBuilder(string_set);
+            cpnBuilder.parse_model(options.modelfile);
+            {
+                std::stringstream ss;
+                std::stringstream out;
+                reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
+                PetriEngine::Colored::PnmlWriter writer(cpnBuilder, ss);
+                writer.toColPNML();
+                builder.parse_model(ss);
+            }
+            auto buildStatus = builder.build();
 
-            switch (result) {
+            switch (buildStatus) {
                 case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
                     break;
                 case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
@@ -94,8 +103,8 @@ int main(int argc, const char** argv) {
                     std::cout << "TOO_MANY_BINDINGS" << std::endl;
                     exit(1);
                 default:
-                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(result) << std::endl;
-                    std::cout << "Unknown builder error " << static_cast<int>(result) << std::endl;
+                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(buildStatus) << std::endl;
+                    std::cout << "Unknown builder error " << static_cast<int>(buildStatus) << std::endl;
                     exit(1);
             }
 
@@ -105,6 +114,7 @@ int main(int argc, const char** argv) {
                 ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
                 bool result;
                 switch (options.strategy) {
+                    case Strategy::DEFAULT:
                     case Strategy::DFS:
                         result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());
                         break;
