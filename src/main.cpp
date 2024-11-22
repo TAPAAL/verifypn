@@ -113,10 +113,8 @@ int main(int argc, const char** argv) {
             for (size_t i = 0; i < queries.size(); i++) {
                 ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
                 bool result;
-                if (options.strategy == Strategy::DEFAULT) {
-                    options.strategy = Strategy::DFS;
-                }
                 switch (options.strategy) {
+                    case Strategy::DEFAULT:
                     case Strategy::DFS:
                         result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());
                         break;
