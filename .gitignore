@@ -15,9 +15,6 @@ src/LTL/SuccessorGeneration/HeuristicParser.parser.hpp
 build/
 
 
-results.csv
 build-release/
-testnet.pnml
-sbatch_job.sh
 .vscode/
 build-release-deb-info/

@@ -83,7 +83,6 @@ int main(int argc, const char** argv) {
         if (options.explicit_colored) {
             std::cout << "Using explicit colored" << std::endl;
             ExplicitColored::ColoredPetriNetBuilder builder;
-
             ColoredPetriNetBuilder cpnBuilder(string_set);
             cpnBuilder.parse_model(options.modelfile);
             {
@@ -94,12 +93,26 @@ int main(int argc, const char** argv) {
                 writer.toColPNML();
                 builder.parse_model(ss);
             }
-            auto net = builder.build();
+            auto buildStatus = builder.build();
+
+            switch (buildStatus) {
+                case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
+                    break;
+                case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+                    std::cerr << "The colored petri net has too many bindings to be represented" << std::endl;
+                    std::cout << "TOO_MANY_BINDINGS" << std::endl;
+                    exit(1);
+                default:
+                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(result) << std::endl;
+                    std::cout << "Unknown builder error " << static_cast<int>(result) << std::endl;
+                    exit(1);
+            }
+
+            auto net = builder.takeNet();
 
             for (size_t i = 0; i < queries.size(); i++) {
                 ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
                 bool result;
-                if (options.strategy == Strategy::DEFAULT) options.strategy = Strategy::DFS;
                 switch (options.strategy) {
                     case Strategy::DFS:
                         result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());

@@ -5,6 +5,10 @@
 
 namespace PetriEngine {
     namespace ExplicitColored {
+        enum class ColoredPetriNetBuilderStatus {
+            OK,
+            TOO_MANY_BINDINGS
+        };
         class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
         public:
             ColoredPetriNetBuilder();
@@ -26,7 +30,8 @@ namespace PetriEngine {
             void sort() override;
 
             std::unordered_map<std::string, uint32_t> takePlaceIndices();
-            ColoredPetriNet build();
+            ColoredPetriNetBuilderStatus build();
+            ColoredPetriNet takeNet();
         private:
             std::unordered_map<std::string, uint32_t> _placeIndices;
             std::unordered_map<std::string, uint32_t> _transitionIndices;
