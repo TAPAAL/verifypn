@@ -94,5 +94,5 @@ namespace PetriEngine{
             }
         };
     }
-};
+}
 #endif /* COLOREDSUCCESSORGENERATOR_H */
