@@ -92,8 +92,9 @@ namespace PetriEngine {
         private:
             std::stack<ColoredPetriNetState> _stack;
             std::vector<ColoredPetriNetState> _cache;
-            std::default_random_engine _rng;
             bool _has_removed = false;
+            std::default_random_engine _rng;
+
         };
     }
 }

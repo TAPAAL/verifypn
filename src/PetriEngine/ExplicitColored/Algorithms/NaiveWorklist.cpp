@@ -92,9 +92,10 @@ namespace PetriEngine {
             void _accept(const PetriEngine::PQL::NaryExpr *element) override  { notSupported("NaryExpr"); }
             void _accept(const PetriEngine::PQL::SubtractExpr *element) override { notSupported("SubtractExpr"); }
         private:
+            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             PetriEngine::ExplicitColored::MarkingCount_t _evaluated;
             const PetriEngine::ExplicitColored::ColoredPetriNetMarking& _marking;
-            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+
 
             void notSupported() {
                 throw base_error("Not supported");
