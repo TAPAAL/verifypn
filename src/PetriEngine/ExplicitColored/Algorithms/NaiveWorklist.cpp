@@ -270,10 +270,10 @@ namespace PetriEngine {
         NaiveWorklist::NaiveWorklist(
             const ColoredPetriNet& net,
             const PQL::Condition_ptr &query,
-            std::unordered_map<std::string, uint32_t> placeNameIndices,
+            const std::unordered_map<std::string, uint32_t>& placeNameIndices,
             const IColoredResultPrinter& coloredResultPrinter
         ) : _net(std::move(net)),
-            _placeNameIndices(std::move(placeNameIndices)),
+            _placeNameIndices(placeNameIndices),
             _coloredResultPrinter(coloredResultPrinter)
         {
             if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {

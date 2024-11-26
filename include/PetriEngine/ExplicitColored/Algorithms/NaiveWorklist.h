@@ -33,7 +33,7 @@ namespace PetriEngine {
             NaiveWorklist(
                 const ColoredPetriNet& net,
                 const PQL::Condition_ptr &query,
-                std::unordered_map<std::string, uint32_t> placeNameIndices,
+                const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
@@ -43,7 +43,7 @@ namespace PetriEngine {
             PQL::Condition_ptr _gammaQuery;
             Quantifier _quantifier;
             const ColoredPetriNet& _net;
-            const std::unordered_map<std::string, uint32_t> _placeNameIndices;
+            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
 
             ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
 
