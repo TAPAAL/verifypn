@@ -1,12 +1,16 @@
 #ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
+
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/Structures/Queue.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
+#include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
+#include "PetriEngine/ExplicitColored/SearchStatistics.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
+        class ColoredResultPrinter;
         enum class ConditionalBool {
             FALSE,
             TRUE,
@@ -24,20 +28,13 @@ namespace PetriEngine {
             RDFS
         };
 
-        struct SearchStatistics {
-            uint32_t passedCount = 0;
-            uint32_t checkedStates = 0;
-            uint32_t endWaitingStates = 0;
-            uint32_t peakWaitingStates = 0;
-            uint32_t exploredStates = 0;
-        };
-
         class NaiveWorklist {
         public:
             NaiveWorklist(
                 const ColoredPetriNet& net,
                 const PQL::Condition_ptr &query,
-                std::unordered_map<std::string, uint32_t> placeNameIndices
+                std::unordered_map<std::string, uint32_t> placeNameIndices,
+                const IColoredResultPrinter& coloredResultPrinter
             );
 
             bool check(SearchStrategy searchStrategy, size_t randomSeed);
@@ -56,7 +53,11 @@ namespace PetriEngine {
 
             template<typename WaitingList>
             bool _genericSearch(WaitingList waiting);
+
+            bool getResult(bool found);
+
             SearchStatistics _searchStatistics;
+            const IColoredResultPrinter& _coloredResultPrinter;
         };
     }
 }
