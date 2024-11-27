@@ -10,6 +10,10 @@ public:
 
 class NullStream : public std::ostream {
 public:
+    NullStream(const NullStream&) = delete;
+    NullStream& operator=(const NullStream&) = delete;
+    NullStream(NullStream&&) = delete;
+    NullStream& operator=(NullStream&&) = delete;
     NullStream() : std::ostream(&_nullBuffer) {}
 private:
     NullBuffer _nullBuffer;
