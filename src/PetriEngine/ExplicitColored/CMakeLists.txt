@@ -7,6 +7,7 @@ add_library(ExplicitColored
     ColoredPetriNetBuilder.cpp
     ColoredSuccessorGenerator.cpp
     Algorithms/NaiveWorklist.cpp
+    ColoredResultPrinter.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)

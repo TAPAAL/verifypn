@@ -52,10 +52,12 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h"
-
+#include "utils/NullStream.h"
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
+
+int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, std::vector<std::string> queryNames);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -81,64 +83,7 @@ int main(int argc, const char** argv) {
                        : getLTLQueries(ctlStarQueries);
 
         if (options.explicit_colored) {
-            std::cout << "Using explicit colored" << std::endl;
-            ExplicitColored::ColoredPetriNetBuilder builder;
-            ColoredPetriNetBuilder cpnBuilder(string_set);
-            cpnBuilder.parse_model(options.modelfile);
-            {
-                std::stringstream ss;
-                std::stringstream out;
-                reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, out, options.enablecolreduction, options.colreductions);
-                PetriEngine::Colored::PnmlWriter writer(cpnBuilder, ss);
-                writer.toColPNML();
-                builder.parse_model(ss);
-            }
-            auto buildStatus = builder.build();
-
-            switch (buildStatus) {
-                case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
-                    break;
-                case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
-                    std::cerr << "The colored petri net has too many bindings to be represented" << std::endl;
-                    std::cout << "TOO_MANY_BINDINGS" << std::endl;
-                    exit(1);
-                default:
-                    std::cerr << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(buildStatus) << std::endl;
-                    std::cout << "Unknown builder error " << static_cast<int>(buildStatus) << std::endl;
-                    exit(1);
-            }
-
-            auto net = builder.takeNet();
-
-            for (size_t i = 0; i < queries.size(); i++) {
-                ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], builder.takePlaceIndices());
-                bool result;
-                switch (options.strategy) {
-                    case Strategy::DEFAULT:
-                    case Strategy::DFS:
-                        result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.seed());
-                        break;
-                    case Strategy::BFS:
-                        result  = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS, options.seed());
-                        break;
-                    case Strategy::RDFS:
-                        result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, options.seed());
-                        break;
-                    default:
-                        std::cerr << "Strategy is not supported for explicit colored engine" << std::endl;
-                        std::cout << "UNSUPPORTED STRATEGY" << std::endl;
-                        exit(1);
-                }
-
-                std::cout << "Query " << i << ": " << (result ? "Query is satisfied" : "Query is NOT satisfied") << std::endl;
-                std::cout << "passed: " << naiveWorkList.GetSearchStatistics().passedCount << std::endl;
-                std::cout << "explored: " << naiveWorkList.GetSearchStatistics().exploredStates << std::endl;
-                std::cout << "checked_states: " << naiveWorkList.GetSearchStatistics().checkedStates << std::endl;
-                std::cout << "peak_waiting_states: " << naiveWorkList.GetSearchStatistics().peakWaitingStates << std::endl;
-                std::cout << "end_waiting_states: " << naiveWorkList.GetSearchStatistics().endWaitingStates << std::endl;
-            }
-
-            return 0;
+            return explicitColored(options, string_set, queries, querynames);
         }
 
         ColoredPetriNetBuilder cpnBuilder(string_set);
@@ -618,4 +563,67 @@ int main(int argc, const char** argv) {
     }
 
     return to_underlying(ReturnValue::SuccessCode);
+}
+
+int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, std::vector<std::string> queryNames) {
+    std::cout << "Using explicit colored" << std::endl;
+    NullStream nullStream;
+    std::ostream &fullStatisticOut = options.printstatistics == StatisticsLevel::Full ? std::cout : nullStream;
+
+    ExplicitColored::ColoredPetriNetBuilder builder;
+    {
+        ColoredPetriNetBuilder cpnBuilder(string_set);
+        cpnBuilder.parse_model(options.modelfile);
+        std::stringstream cpnOut;
+        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
+                      options.enablecolreduction, options.colreductions);
+        Colored::PnmlWriter writer(cpnBuilder, cpnOut);
+        writer.toColPNML();
+        builder.parse_model(cpnOut);
+        fullStatisticOut << std::endl;
+    }
+    auto buildStatus = builder.build();
+
+    switch (buildStatus) {
+        case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
+            break;
+        case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+            std::cout << "The colored petri net has too many bindings to be represented" << std::endl
+                    << "TOO_MANY_BINDINGS" << std::endl;
+            return to_underlying(ReturnValue::UnknownCode);
+        default:
+            std::cout << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(
+                        buildStatus) << std::endl
+                    << "Unknown builder error " << static_cast<int>(buildStatus) << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+    }
+
+    auto net = builder.takeNet();
+    bool result = false;
+    auto placeIndices = builder.takePlaceIndices();
+    for (size_t i = 0; i < queries.size(); i++) {
+        const auto seed = options.seed();
+        ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
+        ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], placeIndices, resultPrinter);
+        switch (options.strategy) {
+            case Strategy::DEFAULT:
+            case Strategy::DFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, seed);
+                break;
+            case Strategy::BFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS, seed);
+                break;
+            case Strategy::RDFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, seed);
+                break;
+            default:
+                std::cout << "Strategy is not supported for explicit colored engine" << std::endl
+                        << "UNSUPPORTED STRATEGY" << std::endl;
+                return to_underlying(ReturnValue::ErrorCode);
+        }
+    }
+    if (result) {
+        return to_underlying(ReturnValue::SuccessCode);
+    }
+    return to_underlying(ReturnValue::FailedCode);
 }

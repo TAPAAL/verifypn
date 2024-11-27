@@ -299,8 +299,8 @@ namespace PetriEngine {
             }
             else
             {
-                const std::string& thePnmlColorType = _namedSortTypes.find(c->getColorType()->getName())->second;
-                if (thePnmlColorType == "finite range") {
+                const auto thePnmlColorTypeIt = _namedSortTypes.find(c->getColorType()->getName());
+                if (thePnmlColorTypeIt != _namedSortTypes.end() && thePnmlColorTypeIt->second == "finite range") {
                     const std::string& start = c->getColorType()->operator[](size_t{0}).getColorName();
                     const std::string& end = c->getColorType()->operator[](
                             c->getColorType()->size() - 1).getColorName();
