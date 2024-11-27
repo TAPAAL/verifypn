@@ -572,7 +572,8 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
 
     ExplicitColored::ColoredPetriNetBuilder builder;
     ColoredPetriNetBuilder cpnBuilder(string_set);
-    cpnBuilder.parse_model(options.modelfile); {
+    cpnBuilder.parse_model(options.modelfile);
+    {
         std::stringstream cpnOut;
         reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
                       options.enablecolreduction, options.colreductions);
