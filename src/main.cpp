@@ -571,17 +571,18 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     std::ostream &fullStatisticOut = options.printstatistics == StatisticsLevel::Full ? std::cout : nullStream;
 
     ExplicitColored::ColoredPetriNetBuilder builder;
-    {
-        ColoredPetriNetBuilder cpnBuilder(string_set);
-        cpnBuilder.parse_model(options.modelfile);
-        std::stringstream cpnOut;
-        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
-                      options.enablecolreduction, options.colreductions);
-        Colored::PnmlWriter writer(cpnBuilder, cpnOut);
-        writer.toColPNML();
-        builder.parse_model(cpnOut);
-        fullStatisticOut << std::endl;
-    }
+//    {
+//        ColoredPetriNetBuilder cpnBuilder(string_set);
+//        cpnBuilder.parse_model(options.modelfile);
+//        std::stringstream cpnOut;
+//        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
+//                      options.enablecolreduction, options.colreductions);
+//        Colored::PnmlWriter writer(cpnBuilder, cpnOut);
+//        writer.toColPNML();
+//        builder.parse_model(cpnOut);
+//        fullStatisticOut << std::endl;
+//    }
+    builder.parse_model(options.modelfile);
     auto buildStatus = builder.build();
 
     switch (buildStatus) {
