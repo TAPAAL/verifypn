@@ -195,11 +195,14 @@ namespace PetriEngine {
                 _out << decreaseTabs() << "</graphics>\n";
                 handleType(place);
 
-                bool ok = !place.marking.empty();
+                bool ok = false;
                 for (const auto &p: place.marking) {
-                    if (p.second > 0) continue;
-                    ok = false;
+                    if (p.second > 0) {
+                        ok = true;
+                        break;
+                    }
                 }
+
                 if (ok) handlehlinitialMarking(place.marking);
 
                 _out << decreaseTabs() << "</place>\n";
