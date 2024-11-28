@@ -29,12 +29,13 @@ namespace PetriEngine {
                 return;
             } else {
                 if (static_cast<int64_t>(it->second) + count < 0) {
-                    it->second = 0                                                                                                                                  ;
+                    it->second = 0;
+                    _cardinality -= it->second;
                 } else {
                     it->second += count;
+                    _cardinality += count;
                 }
             }
-            _cardinality = (_cardinality + count) - it->second;
             it->second = count;
         }
 

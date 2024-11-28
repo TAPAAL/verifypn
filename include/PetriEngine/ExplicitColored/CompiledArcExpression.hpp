@@ -164,7 +164,8 @@ namespace PetriEngine {
             ) : color(ParameterizedColor::fromColor(DOT_COLOR)),
                 _variableMap(&variableMap),
                 _colorTypeMap(&colorTypeMap),
-                maxColor(0)
+                maxColor(0),
+                constant(true)
             {}
 
             void accept(const Colored::DotConstantExpression* expr) override {
@@ -178,6 +179,7 @@ namespace PetriEngine {
                     throw base_error("Unknown variable");
                 color = ParameterizedColor::fromVariable(varIt->second);
                 maxColor = expr->getColorType(*_colorTypeMap)->size();
+                constant = false;
             }
 
             void accept(const Colored::SuccessorExpression* expr) override {
@@ -219,6 +221,7 @@ namespace PetriEngine {
 
             ParameterizedColor color;
             Color_t maxColor;
+            bool constant;
         private:
             const std::unordered_map<std::string, Variable_t>* const _variableMap;
             const Colored::ColorTypeMap* const _colorTypeMap;
@@ -234,7 +237,8 @@ namespace PetriEngine {
                 const Colored::ColorTypeMap& colorTypeMap,
                 const std::unordered_map<std::string, Variable_t>& variableMap
             ) : _variableMap(&variableMap),
-                _colorTypeMap(colorTypeMap)
+                _colorTypeMap(colorTypeMap),
+                constant(true)
             {}
 
             void accept(const Colored::TupleExpression* expr) override {
@@ -244,8 +248,10 @@ namespace PetriEngine {
                 for (const auto& colorExpr : *expr) {
                     ColorPreprocessor visitor(*_variableMap, _colorTypeMap);
                     colorExpr->visit(visitor);
+                    constant = constant && visitor.constant;
                     result.setColorSize(index, visitor.maxColor);
                     if (visitor.color.isAll()) {
+                        std::cout << "uses all" << std::endl;
                         for (auto& colorSequence : colorSequences) {
                             colorSequence.push_back(ParameterizedColor::fromColor(0));
                         }
@@ -302,6 +308,7 @@ namespace PetriEngine {
                 expr->visit(visitor);
                 result.setColorSize(0, 1);
                 result.add(std::vector { visitor.color }, 1);
+                constant = constant && visitor.constant;
             }
 
             void accept(const Colored::UserOperatorExpression* expr) override {
@@ -309,6 +316,7 @@ namespace PetriEngine {
                 expr->visit(visitor);
                 result.setColorSize(0, visitor.maxColor);
                 result.add(std::vector { visitor.color }, 1);
+                constant = constant && visitor.constant;
             }
 
             void accept(const Colored::VariableExpression* expr) override {
@@ -316,18 +324,21 @@ namespace PetriEngine {
                 expr->visit(visitor);
                 result.setColorSize(0, visitor.maxColor);
                 result.add(std::vector { visitor.color }, 1);
+                constant = constant && visitor.constant;
             }
 
             void accept(const Colored::SuccessorExpression* expr) override {
                 ColorPreprocessor visitor(*_variableMap, _colorTypeMap);
                 expr->visit(visitor);
                 result.add(std::vector { visitor.color }, 1);
+                constant = constant && visitor.constant;
             }
 
             void accept(const Colored::PredecessorExpression* expr) override {
                 ColorPreprocessor visitor(*_variableMap, _colorTypeMap);
                 expr->visit(visitor);
                 result.add(std::vector { visitor.color }, 1);
+                constant = constant && visitor.constant;
             }
 
             void accept(const Colored::LessThanExpression* expr) override {unexpectedExpression();}
@@ -339,6 +350,7 @@ namespace PetriEngine {
             void accept(const Colored::OrExpression* expr) override {unexpectedExpression();}
 
              ParameterizedColorSequenceMultiSet result;
+             bool constant;
         private:
             const std::unordered_map<std::string, Variable_t>* const _variableMap;
             const Colored::ColorTypeMap& _colorTypeMap;
@@ -346,6 +358,31 @@ namespace PetriEngine {
             void unexpectedExpression() {
                 throw base_error("Unexpected expression");
             }
+        };
+
+        class CompiledArc {
+        public:
+            CompiledArc(const Colored::ArcExpression_ptr& arcExpression, const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap) {
+                ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
+                arcExpression->visit(colorTypePreprocessor);
+                parameterizedColorSequenceMultiSet = std::move(colorTypePreprocessor.result);
+                _isConstant = colorTypePreprocessor.constant;
+                if (_isConstant) {
+                    constantValue = parameterizedColorSequenceMultiSet.eval(Binding{});
+                }
+            }
+
+            CPNMultiSet eval(const Binding& binding) const {
+                if (_isConstant) {
+                    return constantValue;
+                } else {
+                    return parameterizedColorSequenceMultiSet.eval(binding);
+                }
+            }
+        private:
+            bool _isConstant;
+            CPNMultiSet constantValue;
+            ParameterizedColorSequenceMultiSet parameterizedColorSequenceMultiSet;
         };
     }
 }

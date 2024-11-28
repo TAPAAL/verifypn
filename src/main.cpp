@@ -601,6 +601,7 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
 
     auto net = builder.takeNet();
     bool result = false;
+    std::cout << "starting verification" << std::endl;
     auto placeIndices = builder.takePlaceIndices();
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();

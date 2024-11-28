@@ -25,7 +25,7 @@ namespace PetriEngine {
             CPNMultiSet eval(const Binding &binding) const;
             const std::set<Variable_t>& getVariables() const;
         private:
-            ParameterizedColorSequenceMultiSet _parameterizedColorSequenceMultiSet;
+            CompiledArc _compiledArc;
             std::set<Variable_t> _variables;
         };
 

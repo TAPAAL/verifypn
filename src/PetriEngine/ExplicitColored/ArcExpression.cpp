@@ -193,17 +193,15 @@ namespace PetriEngine {
             }
         };
 
-        ArcExpression::ArcExpression(const Colored::ArcExpression_ptr& arcExpression, const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap) {
+        ArcExpression::ArcExpression(const Colored::ArcExpression_ptr& arcExpression, const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap)
+            : _compiledArc(arcExpression, colorTypeMap, variableMap) {
             VariableExtractorVisitor variableExtractor(variableMap);
             arcExpression->visit(variableExtractor);
             _variables = std::move(variableExtractor.collectedVariables);
-            ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
-            arcExpression->visit(colorTypePreprocessor);
-            _parameterizedColorSequenceMultiSet = std::move(colorTypePreprocessor.result);
         }
 
         CPNMultiSet ArcExpression::eval(const Binding& binding) const {
-            return _parameterizedColorSequenceMultiSet.eval(binding);
+            return _compiledArc.eval(binding);
         }
 
         const std::set<Variable_t>& ArcExpression::getVariables() const {
