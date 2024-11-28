@@ -1,5 +1,6 @@
 #include "PetriEngine/ExplicitColored/ArcExpression.h"
 #include "PetriEngine/ExplicitColored/VariableExtractorVisitor.h"
+#include "PetriEngine/ExplicitColored/CompiledArcExpression.hpp"
 namespace PetriEngine {
     namespace ExplicitColored {
         class ColorVisitor : public Colored::ColorExpressionVisitor {
@@ -186,23 +187,23 @@ namespace PetriEngine {
             const std::unordered_map<std::string, Variable_t>* const _variableMap;
             const Binding* const _binding;
             const Colored::ColorTypeMap* const _colorTypeMap;
-            
+
             void unexpectedExpression() {
                 throw base_error("Unexpected expression");   
             }
         };
 
-        ArcExpression::ArcExpression(Colored::ArcExpression_ptr arcExpression, std::shared_ptr<Colored::ColorTypeMap> colorTypeMap, std::shared_ptr<std::unordered_map<std::string, Variable_t>> variableMap)
-            : _colorTypeMap(std::move(colorTypeMap)), _variableMap(std::move(variableMap)), _arcExpression(std::move(arcExpression)) {
-            VariableExtractorVisitor variableExtractor(*_variableMap);
-            _arcExpression->visit(variableExtractor);
+        ArcExpression::ArcExpression(const Colored::ArcExpression_ptr& arcExpression, const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap) {
+            VariableExtractorVisitor variableExtractor(variableMap);
+            arcExpression->visit(variableExtractor);
             _variables = std::move(variableExtractor.collectedVariables);
+            ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
+            arcExpression->visit(colorTypePreprocessor);
+            _parameterizedColorSequenceMultiSet = std::move(colorTypePreprocessor.result);
         }
 
         CPNMultiSet ArcExpression::eval(const Binding& binding) const {
-            ColorTypeVisitor colorTypeVisitor(*_variableMap, binding, *_colorTypeMap);
-            _arcExpression->visit(colorTypeVisitor);
-            return colorTypeVisitor.result;
+            return _parameterizedColorSequenceMultiSet.eval(binding);
         }
 
         const std::set<Variable_t>& ArcExpression::getVariables() const {

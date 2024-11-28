@@ -52,7 +52,7 @@ namespace PetriEngine {
                          },
                          weight
                  );
-                 arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+                 arc.arcExpression = std::make_unique<ArcExpression>(expr, *_colors, *_variableMap);
 
                  _inputArcs.push_back(std::move(arc));
              }
@@ -69,7 +69,7 @@ namespace PetriEngine {
                 arc.from = from;
                 arc.to = to;
                 arc.colorType = _currentNet._places[from].colorType;
-                arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+                arc.arcExpression = std::make_unique<ArcExpression>(expr, *_colors, *_variableMap);
 
                 _inputArcs.push_back(std::move(arc));
             }
@@ -91,7 +91,7 @@ namespace PetriEngine {
                 },
                 weight
             );
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, *_colors, *_variableMap);
 
             _outputArcs.push_back(std::move(arc));
         }
@@ -104,7 +104,7 @@ namespace PetriEngine {
             arc.from = _transitionIndices.find(transition)->second;
             arc.to = placeIndex;
             arc.colorType = _currentNet._places[placeIndex].colorType;
-            arc.arcExpression = std::make_unique<ArcExpression>(expr, _colors, _variableMap);
+            arc.arcExpression = std::make_unique<ArcExpression>(expr, *_colors, *_variableMap);
 
             _outputArcs.push_back(std::move(arc));
         }

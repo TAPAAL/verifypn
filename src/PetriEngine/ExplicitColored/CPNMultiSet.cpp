@@ -21,6 +21,23 @@ namespace PetriEngine {
             it->second = count;
         }
 
+        void CPNMultiSet::addCount(const ColorSequence& color, int64_t count) {
+            auto it = _counts.find(color);
+            if (it == _counts.end()) {
+                _counts.emplace(color, count);
+                _cardinality += count;
+                return;
+            } else {
+                if (static_cast<int64_t>(it->second) + count < 0) {
+                    it->second = 0                                                                                                                                  ;
+                } else {
+                    it->second += count;
+                }
+            }
+            _cardinality = (_cardinality + count) - it->second;
+            it->second = count;
+        }
+
         CPNMultiSet& CPNMultiSet::operator+=(const CPNMultiSet& other) {
             for (auto& otherCount : other._counts) {
                 auto it = _counts.find(otherCount.first);
