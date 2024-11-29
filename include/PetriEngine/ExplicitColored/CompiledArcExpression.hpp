@@ -1,6 +1,7 @@
 #ifndef COMPILED_ARC_EXPRESSION
 #define COMPILED_ARC_EXPRESSION
 #include "../Colored/Expressions.h"
+#include "SequenceMultiSet.h"
 namespace PetriEngine {
     namespace ExplicitColored {
         union ColorOrVariable {
@@ -74,6 +75,43 @@ namespace PetriEngine {
                     result.addCount(ColorSequence(std::move(colorSequence)), count);
                 }
                 return result;
+            }
+
+            void addToExisting(CPNMultiSet& existing, const Binding& binding) const {
+                for (auto [parameterizedColorSequence, count] : _parameterizedColorSequenceCounts) {
+                    std::vector<Color_t> colorSequence;
+                    for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
+                        const ParameterizedColor& color = parameterizedColorSequence[colori];
+                        Color_t colorValue;
+                        if (color.isVariable) {
+                            colorValue = binding.getValue(color.value.variable);
+                        } else {
+                            colorValue = (color.value.color);
+                        }
+                        //Keeps the value between 0 - max with correct wrap around handling
+                        colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
+                    }
+                    existing.addCount(ColorSequence(std::move(colorSequence)), count);
+                }
+            }
+
+            void subFromExisting(CPNMultiSet& existing, const Binding& binding) const {
+                for (auto [parameterizedColorSequence, count] : _parameterizedColorSequenceCounts) {
+                    std::vector<Color_t> colorSequence;
+                    colorSequence.reserve(parameterizedColorSequence.size());
+                    for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
+                        const ParameterizedColor& color = parameterizedColorSequence[colori];
+                        Color_t colorValue;
+                        if (color.isVariable) {
+                            colorValue = binding.getValue(color.value.variable);
+                        } else {
+                            colorValue = (color.value.color);
+                        }
+                        //Keeps the value between 0 - max with correct wrap around handling
+                        colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
+                    }
+                    existing.addCount(ColorSequence(std::move(colorSequence)), count);
+                }
             }
 
             ParameterizedColorSequenceMultiSet& operator*=(MarkingCount_t factor) {
@@ -375,8 +413,31 @@ namespace PetriEngine {
             CPNMultiSet eval(const Binding& binding) const {
                 if (_isConstant) {
                     return constantValue;
+                }
+                return parameterizedColorSequenceMultiSet.eval(binding);
+            }
+
+            void addToExisting(CPNMultiSet& existing, const Binding& binding) const {
+                if (_isConstant) {
+                    existing += constantValue;
                 } else {
-                    return parameterizedColorSequenceMultiSet.eval(binding);
+                    parameterizedColorSequenceMultiSet.addToExisting(existing, binding);
+                }
+            }
+
+            void subFromExisting(CPNMultiSet& existing, const Binding& binding) const {
+                if (_isConstant) {
+                    existing -= constantValue;
+                } else {
+                    parameterizedColorSequenceMultiSet.subFromExisting(existing, binding);
+                }
+            }
+
+            bool isSubSet(const CPNMultiSet& superSet, const Binding& binding) const {
+                if (_isConstant) {
+                    return superSet >= constantValue;
+                } else {
+                    return superSet >= parameterizedColorSequenceMultiSet.eval(binding);
                 }
             }
         private:

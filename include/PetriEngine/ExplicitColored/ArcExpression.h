@@ -23,6 +23,9 @@ namespace PetriEngine {
             ArcExpression& operator=(ArcExpression&&) = default;
             
             CPNMultiSet eval(const Binding &binding) const;
+            void addToExisting(CPNMultiSet& existing, const Binding& binding) const;
+            void subFromExisting(CPNMultiSet& existing, const Binding& binding) const;
+            bool isSubSet(const CPNMultiSet& superset, const Binding& binding) const;
             const std::set<Variable_t>& getVariables() const;
         private:
             CompiledArc _compiledArc;

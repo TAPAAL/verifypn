@@ -204,6 +204,18 @@ namespace PetriEngine {
             return _compiledArc.eval(binding);
         }
 
+        void ArcExpression::addToExisting(CPNMultiSet &existing, const Binding &binding) const {
+            _compiledArc.addToExisting(existing, binding);
+        }
+
+        void ArcExpression::subFromExisting(CPNMultiSet &existing, const Binding &binding) const {
+            _compiledArc.subFromExisting(existing, binding);
+        }
+
+        bool ArcExpression::isSubSet(const CPNMultiSet &superset, const Binding &binding) const {
+            return _compiledArc.isSubSet(superset, binding);
+        }
+
         const std::set<Variable_t>& ArcExpression::getVariables() const {
             return _variables;
         }
