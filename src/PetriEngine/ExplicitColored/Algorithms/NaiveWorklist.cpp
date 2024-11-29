@@ -10,6 +10,7 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include <fstream>
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -351,6 +352,8 @@ namespace PetriEngine {
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }
+            std::ofstream testOutFile("passedlist.txt");
+            passed.printHashes(testOutFile);
             return getResult(false);
         }
 

@@ -27,6 +27,12 @@ namespace PetriEngine {
             size_t size() {
                 return _set.size();
             }
+
+            void printHashes(std::ostream& stream) {
+                for (const auto& hash : _set) {
+                    stream << hash << std::endl;
+                }
+            }
         private:
             std::unordered_set<std::string> _set;
         };

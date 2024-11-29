@@ -2,7 +2,7 @@
 #define COLOREDPETRINETMARKING_H
 
 #include "vector"
-#include "MultiSet.h"
+#include "CPNMultiSet.h"
 namespace PetriEngine{
     namespace ExplicitColored{
         struct ColoredPetriNetMarking{
@@ -31,7 +31,15 @@ namespace PetriEngine{
 
             void stableEncode(std::ostream& out) const {
                 for (const auto& marking : markings) {
-                    marking.stableEncode(out);
+                    for (const auto& pair : marking.counts()) {
+                        if (pair.second > 0) {
+                            out << pair.second << "'(";
+                            for (auto c : pair.first.getSequence()) {
+                                out << c << ",";
+                            }
+                            out << ")";
+                        }
+                    }
                     out << ".";
                 }
             }
