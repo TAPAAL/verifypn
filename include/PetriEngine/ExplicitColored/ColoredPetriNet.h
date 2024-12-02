@@ -20,16 +20,12 @@
 #ifndef COLOREDPETRINET_H
 #define COLOREDPETRINET_H
 
-#include <string>
+#include <random>
 #include <vector>
-#include <climits>
-#include <limits>
 #include <memory>
-#include <iostream>
 
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
-#include "CPNMultiSet.h"
 #include "GuardExpression.h"
 #include "Binding.h"
 #include "ColoredPetriNetMarking.h"
@@ -42,7 +38,7 @@ namespace PetriEngine
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
-            std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint32_t> validVariables;
+            std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint64_t> validVariables;
         };
 
         struct BaseColorType
@@ -63,7 +59,7 @@ namespace PetriEngine
 
         struct ColoredPetriNetInhibitor
         {
-            ColoredPetriNetInhibitor(size_t from, size_t to, MarkingCount_t weight)
+            ColoredPetriNetInhibitor(const size_t from, const size_t to, const MarkingCount_t weight)
                 : from(from), to(to), weight(weight){}
             uint32_t from;
             uint32_t to;
@@ -91,6 +87,17 @@ namespace PetriEngine
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(const ColoredPetriNet&) = default;
+            // Should maybe be for each state instead of once for every net
+            void randomizeBindingOrder(const size_t seed){
+                auto rng = std::default_random_engine {seed};
+                for (auto&& t : _transitions){
+                    auto& varMap = t.validVariables.first;
+                    for (auto && v : varMap){
+                        auto& validVars = v.second;
+                        std::shuffle(validVars.begin(),validVars.end(), rng);
+                    }
+                }
+            }
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }

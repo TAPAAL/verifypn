@@ -45,7 +45,7 @@ namespace PetriEngine {
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
 
-            ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
+            ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue) const;
 
             bool _dfs();
             bool _bfs();
@@ -54,10 +54,14 @@ namespace PetriEngine {
             template<typename WaitingList>
             bool _genericSearch(WaitingList waiting);
 
-            bool getResult(bool found);
+            template<typename WaitingList>
+            bool _rdfsSearch(WaitingList waiting);
+            bool getResult(bool found) const;
 
             SearchStatistics _searchStatistics;
             const IColoredResultPrinter& _coloredResultPrinter;
+
+
         };
     }
 }

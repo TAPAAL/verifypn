@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <limits>
+#include <PetriEngine/Colored/CExprToString.h>
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -25,9 +26,23 @@ namespace PetriEngine {
             void setValue(const Variable_t v, const Color_t color) {
                 _values.insert(std::make_pair(v, color));
             }
+
+            friend std::ostream & operator<<(std::ostream & Str, Binding const & binding) {
+                Str << "[";
+                for (const auto&[var, val] : binding._values) {
+                    Str << var << " -> " << val << ", ";
+                }
+                Str << "]";
+                return Str;
+            }
+
         private:
             std::map<Variable_t, Color_t> _values;
         };
+
+
+
+
     }
 }
 

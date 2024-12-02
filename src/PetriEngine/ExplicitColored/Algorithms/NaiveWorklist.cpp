@@ -97,15 +97,15 @@ namespace PetriEngine {
             const PetriEngine::ExplicitColored::ColoredPetriNetMarking& _marking;
 
 
-            void notSupported() {
+            static void notSupported() {
                 throw base_error("Not supported");
             }
 
-            void notSupported(const std::string& type) {
+            static void notSupported(const std::string& type) {
                 throw base_error("Not supported ", type);
             }
 
-            void invalid() {
+            static void invalid() {
                 throw base_error("Invalid expression");
             }
         };
@@ -304,7 +304,7 @@ namespace PetriEngine {
             return _searchStatistics;
         }
 
-        ConditionalBool NaiveWorklist::_check(const ColoredPetriNetMarking& state, ConditionalBool deadlockValue) {
+        ConditionalBool NaiveWorklist::_check(const ColoredPetriNetMarking& state, ConditionalBool deadlockValue) const {
             return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, deadlockValue);
         }
 
@@ -313,15 +313,15 @@ namespace PetriEngine {
             auto passed = ColoredMarkingSet {};
             const auto& initialState = _net.initial();
             ColoredSuccessorGenerator successorGenerator(_net);
-            size_t check_count = 0;
             waiting.add(ColoredPetriNetState { initialState });
 
             passed.add(initialState);
             _searchStatistics.passedCount = passed.size();
-
+            _searchStatistics.checkedStates = 1;
             const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
                 ? ConditionalBool::TRUE
                 : ConditionalBool::FALSE;
+
             if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                 return getResult(true);
             }
@@ -339,18 +339,87 @@ namespace PetriEngine {
                 _searchStatistics.exploredStates++;
 
                 if (!passed.contains(marking)) {
+                    _searchStatistics.checkedStates += 1;
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                        _searchStatistics.passedCount = passed.size();
+                        _searchStatistics.endWaitingStates = waiting.size();
                         return getResult(true);
                     }
-                    _searchStatistics.checkedStates += 1;
-                    check_count += 1;
+
                     passed.add(marking);
-                    _searchStatistics.passedCount = passed.size();
+
                     waiting.add(std::move(successor));
-                    _searchStatistics.endWaitingStates = waiting.size();
+                    _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
+
+                }
+            }
+            _searchStatistics.passedCount = passed.size();
+            _searchStatistics.endWaitingStates = waiting.size();
+            return getResult(false);
+        }
+
+        template<typename WaitingList>
+        bool NaiveWorklist::_rdfsSearch(WaitingList waiting) {
+            auto passed = ColoredMarkingSet{};
+            const auto &initialState = _net.initial();
+            ColoredSuccessorGenerator successorGenerator(_net);
+            waiting.add(ColoredPetriNetStateRandom{initialState});
+            passed.add(initialState);
+            _searchStatistics.passedCount = 1;
+            _searchStatistics.checkedStates = 1;
+            const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
+                                                   ? ConditionalBool::TRUE
+                                                   : ConditionalBool::FALSE;
+            if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                return getResult(true);
+            }
+
+            while (!waiting.empty()) {
+                auto &next = waiting.next();
+                auto successor = successorGenerator.nextRdfs(next);
+                if (successor.lastBinding == std::numeric_limits<uint32_t>::max() && successor.lastTrans == std::numeric_limits<uint32_t>::max()){
+                    waiting.remove();
+                    waiting.shuffle();
+                    continue;
+                }
+                if (successor.lastTrans == std::numeric_limits<uint32_t>::max()) {
+                    if (!next.hasAdded) {
+                        auto newState = ColoredPetriNetStateRandom(next);
+                        ++newState.lastTrans;
+                        newState.lastBinding = 0;
+                        waiting.remove();
+                        waiting.add(newState);
+                    }else {
+                        waiting.remove();
+                    }
+                   continue;
+                }
+
+                auto &marking = successor.marking;
+                _searchStatistics.exploredStates++;
+                if (!passed.contains(marking)) {
+                    _searchStatistics.checkedStates++;
+
+                    if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                        _searchStatistics.passedCount = passed.size();
+                        _searchStatistics.endWaitingStates = waiting.size();
+                        return getResult(true);
+                    }
+                    passed.add(marking);
+                    successor.hasAdded = false;
+                    waiting.addToFrontier(successor);
+                    if (!next.hasAdded) {
+                        auto newState = ColoredPetriNetStateRandom(next);
+                        ++newState.lastTrans;
+                        newState.lastBinding = 0;
+                        next.hasAdded = true;
+                        waiting.add(newState);
+                    }
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }
+            _searchStatistics.passedCount = passed.size();
+            _searchStatistics.endWaitingStates = 0;
             return getResult(false);
         }
 
@@ -363,10 +432,10 @@ namespace PetriEngine {
         }
 
         bool NaiveWorklist::_rdfs(const size_t seed) {
-            return _genericSearch<RDFSStructure>(RDFSStructure(seed));
+            return _rdfsSearch<RDFSStructure>(RDFSStructure(seed));
         }
 
-        bool NaiveWorklist::getResult(const bool found) {
+        bool NaiveWorklist::getResult(const bool found) const {
             const auto res = (
                 (!found && _quantifier == Quantifier::AG) ||
                 (found && _quantifier == Quantifier::EF))

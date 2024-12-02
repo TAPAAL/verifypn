@@ -35,25 +35,25 @@ namespace PetriEngine {
         }
 
         CPNMultiSet& CPNMultiSet::operator-=(const CPNMultiSet& other) {
-            for (auto& otherCount : other._counts) {
-                auto it = _counts.find(otherCount.first);
+            for (const auto&[fst, snd] : other._counts) {
+                auto it = _counts.find(fst);
                 if (it == _counts.end()) {
                     continue;
                 }
-                if (otherCount.second > it->second) {
+                if (snd > it->second) {
                     _cardinality -= it->second;
                     it->second = 0;
                 } else {
-                    _cardinality -= otherCount.second;
-                    it->second -= otherCount.second;
+                    _cardinality -= snd;
+                    it->second -= snd;
                 }
             }
             return *this;
         }
 
-        CPNMultiSet& CPNMultiSet::operator*=(MarkingCount_t scalar) {
-            for (auto& colorCount : _counts) {
-                colorCount.second *= scalar;
+        CPNMultiSet& CPNMultiSet::operator*=(const MarkingCount_t scalar) {
+            for (auto&[fst, snd] : _counts) {
+                snd *= scalar;
             }
             _cardinality *= scalar;
             return  *this;
@@ -76,8 +76,8 @@ namespace PetriEngine {
         bool CPNMultiSet::operator<=(const CPNMultiSet& other) const {
             if (_cardinality > other._cardinality)
                 return false;
-            for (const auto& count : other._counts) {
-                if (count.second < getCount(count.first))
+            for (const auto&[fst, snd] : other._counts) {
+                if (snd < getCount(fst))
                     return false;
             }
             return true;
@@ -87,9 +87,9 @@ namespace PetriEngine {
             if (_cardinality != other._cardinality){
                 return false;
             }
-            for (const auto& a : _counts) {
-                auto otherCount = other.getCount(a.first);
-                if (otherCount != a.second) {
+            for (const auto&[fst, snd] : _counts) {
+                auto otherCount = other.getCount(fst);
+                if (otherCount != snd) {
                     return false;
                 }
             }
@@ -97,13 +97,13 @@ namespace PetriEngine {
         }
 
         void CPNMultiSet::stableEncode(std::ostream& out) const {
-            for (const auto& count : _counts) {
-                if (count.second == 0) {
+            for (const auto&[fst, snd] : _counts) {
+                if (snd == 0) {
                     continue;
                 }
 
-                out << count.second << "'" << "(";
-                for (const auto& color : count.first.getSequence()) {
+                out << snd << "'" << "(";
+                for (const auto& color : fst.getSequence()) {
                     out << color << ",";
                 }
                 out << ")";

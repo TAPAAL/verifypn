@@ -57,7 +57,7 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, std::vector<std::string> queryNames);
+int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -565,7 +565,7 @@ int main(int argc, const char** argv) {
     return to_underlying(ReturnValue::SuccessCode);
 }
 
-int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, std::vector<std::string> queryNames) {
+int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames) {
     std::cout << "Using explicit colored" << std::endl;
     NullStream nullStream;
     std::ostream &fullStatisticOut = options.printstatistics == StatisticsLevel::Full ? std::cout : nullStream;
@@ -601,7 +601,11 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
 
     auto net = builder.takeNet();
     bool result = false;
+    bool randomize = true;
     auto placeIndices = builder.takePlaceIndices();
+    if (randomize){
+        net.randomizeBindingOrder(options.seed());
+    }
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();
         ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
