@@ -313,10 +313,9 @@ namespace PetriEngine {
             auto passed = ColoredMarkingSet {};
             const auto& initialState = _net.initial();
             ColoredSuccessorGenerator successorGenerator(_net);
-            waiting.add(ColoredPetriNetState { initialState });
-
+            waiting.add(ColoredPetriNetState {initialState});
             passed.add(initialState);
-            _searchStatistics.passedCount = passed.size();
+            _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
             const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
                 ? ConditionalBool::TRUE
@@ -325,7 +324,6 @@ namespace PetriEngine {
             if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                 return getResult(true);
             }
-
             while (!waiting.empty()){
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
@@ -333,11 +331,8 @@ namespace PetriEngine {
                     waiting.remove();
                     continue;
                 }
-
                 auto& marking = successor.marking;
-
                 _searchStatistics.exploredStates++;
-
                 if (!passed.contains(marking)) {
                     _searchStatistics.checkedStates += 1;
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
@@ -347,10 +342,8 @@ namespace PetriEngine {
                     }
 
                     passed.add(marking);
-
                     waiting.add(std::move(successor));
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
-
                 }
             }
             _searchStatistics.passedCount = passed.size();
@@ -358,12 +351,13 @@ namespace PetriEngine {
             return getResult(false);
         }
 
-        template<typename WaitingList>
-        bool NaiveWorklist::_rdfsSearch(WaitingList waiting) {
+        bool NaiveWorklist::_rdfsSearch(RDFSStructure waiting) {
             auto passed = ColoredMarkingSet{};
             const auto &initialState = _net.initial();
-            ColoredSuccessorGenerator successorGenerator(_net);
-            waiting.add(ColoredPetriNetStateRandom{initialState});
+            const ColoredSuccessorGenerator successorGenerator(_net);
+            auto initial = ColoredPetriNetState{initialState};
+            initial.forRDFS = true;
+            waiting.add(initial);
             passed.add(initialState);
             _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
@@ -384,7 +378,7 @@ namespace PetriEngine {
                 }
                 if (successor.lastTrans == std::numeric_limits<uint32_t>::max()) {
                     if (!next.hasAdded) {
-                        auto newState = ColoredPetriNetStateRandom(next);
+                        auto newState = ColoredPetriNetState(next);
                         ++newState.lastTrans;
                         newState.lastBinding = 0;
                         waiting.remove();
@@ -394,12 +388,10 @@ namespace PetriEngine {
                     }
                    continue;
                 }
-
                 auto &marking = successor.marking;
                 _searchStatistics.exploredStates++;
                 if (!passed.contains(marking)) {
                     _searchStatistics.checkedStates++;
-
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                         _searchStatistics.passedCount = passed.size();
                         _searchStatistics.endWaitingStates = waiting.size();
@@ -409,7 +401,7 @@ namespace PetriEngine {
                     successor.hasAdded = false;
                     waiting.addToFrontier(successor);
                     if (!next.hasAdded) {
-                        auto newState = ColoredPetriNetStateRandom(next);
+                        auto newState = ColoredPetriNetState(next);
                         ++newState.lastTrans;
                         newState.lastBinding = 0;
                         next.hasAdded = true;
@@ -432,7 +424,7 @@ namespace PetriEngine {
         }
 
         bool NaiveWorklist::_rdfs(const size_t seed) {
-            return _rdfsSearch<RDFSStructure>(RDFSStructure(seed));
+            return _rdfsSearch(RDFSStructure(seed));
         }
 
         bool NaiveWorklist::getResult(const bool found) const {

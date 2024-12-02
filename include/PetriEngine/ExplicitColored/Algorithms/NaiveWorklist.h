@@ -10,6 +10,7 @@
 
 namespace PetriEngine {
     namespace ExplicitColored {
+        class RDFSStructure;
         class ColoredResultPrinter;
         enum class ConditionalBool {
             FALSE,
@@ -45,7 +46,7 @@ namespace PetriEngine {
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
 
-            ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue) const;
+            ConditionalBool _check(const ColoredPetriNetMarking& state, ConditionalBool deadlockValue) const;
 
             bool _dfs();
             bool _bfs();
@@ -53,9 +54,7 @@ namespace PetriEngine {
 
             template<typename WaitingList>
             bool _genericSearch(WaitingList waiting);
-
-            template<typename WaitingList>
-            bool _rdfsSearch(WaitingList waiting);
+            bool _rdfsSearch(RDFSStructure waiting);
             bool getResult(bool found) const;
 
             SearchStatistics _searchStatistics;

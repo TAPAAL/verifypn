@@ -26,7 +26,7 @@ namespace PetriEngine{
                 return _next(state);
             }
 
-            ColoredPetriNetStateRandom nextRdfs(ColoredPetriNetStateRandom& state) const {
+            ColoredPetriNetState nextRdfs(ColoredPetriNetState& state) const {
                 return _nextOneTrans(state);
             }
 
@@ -47,17 +47,21 @@ namespace PetriEngine{
 
             ColoredPetriNetState _next(ColoredPetriNetState &state) const {
                 auto newState = ColoredPetriNetState{state};
-                for (auto tid = state.lastTrans; tid < _net._transitions.size(); tid++) {
+                const size_t maxTrans = state.forRDFS ? state.lastTrans + 1 : _net._transitions.size();
+                for (auto tid = state.lastTrans; tid < maxTrans; tid++) {
                     auto bid = tid == state.lastTrans ? state.lastBinding : 0;
-                    auto totalBindings = _net._transitions[tid].validVariables.second;
+                    const auto totalBindings = _net._transitions[tid].validVariables.second;
                     if (totalBindings == 0) {
-                        auto binding = Binding{};
+                        if (bid != 0) {
+                            continue;
+                        }
+                        const auto binding = Binding{};
                         if (check(state.marking, tid, binding)) {
                             _fire(newState.marking, tid, binding);
                             newState.lastBinding = 0;
                             newState.lastTrans = 0;
-                            state.lastBinding = 0;
-                            state.lastTrans = tid + 1;
+                            state.lastBinding++;
+                            state.lastTrans = tid;
                             return newState;
                         }
                     } else {
@@ -81,7 +85,7 @@ namespace PetriEngine{
                             }
                         }
                         while (++bid <= totalBindings) {
-                            auto binding = getBinding(tid, bid);
+                            const auto binding = getBinding(tid, bid);
                             if (checkPresetAndGuard(state.marking, tid, binding)) {
                                 _fire(newState.marking, tid, binding);
                                 newState.lastBinding = 0;
@@ -97,14 +101,19 @@ namespace PetriEngine{
                 return newState;
             }
 
-            ColoredPetriNetStateRandom _nextOneTrans(ColoredPetriNetStateRandom &state) const {
-                auto newState = ColoredPetriNetStateRandom{state};
-                const auto tid = state.lastTrans;
-                if (tid >= _net._transitions.size()) {
+            // Successorgenerator but only considers current transition
+            // If returned successor has trans and binding == uint_max it means the state is fully explored
+            // If returned successor has trans == uint_max it means the transition is fully explored
+            ColoredPetriNetState _nextOneTrans(ColoredPetriNetState &state) const {
+                auto newState = ColoredPetriNetState{state};
+                auto tid = state.lastTrans;
+                if (state.lastTrans >= _net._transitions.size()) {
                     newState.lastTrans = std::numeric_limits<uint32_t>::max();
                     newState.lastBinding = std::numeric_limits<uint32_t>::max();
                     return newState;
                 }
+                return _next(state);
+
                 auto bid =  state.lastBinding;
                 auto totalBindings = _net._transitions[tid].validVariables.second;
                 if (totalBindings == 0) {

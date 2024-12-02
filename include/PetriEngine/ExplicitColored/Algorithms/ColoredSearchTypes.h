@@ -57,7 +57,7 @@ namespace PetriEngine {
         public:
             explicit RDFSStructure(const size_t seed) : _rng(seed) {}
 
-            ColoredPetriNetStateRandom& next() {
+            ColoredPetriNetState& next() {
                 if (_stack.empty()) {
                     shuffle();
                 }
@@ -76,11 +76,11 @@ namespace PetriEngine {
                 _cache.clear();
             }
 
-            void add(ColoredPetriNetStateRandom state) {
+            void add(ColoredPetriNetState state) {
                 _stack.push(std::move(state));
             }
 
-            void addToFrontier(ColoredPetriNetStateRandom state) {
+            void addToFrontier(ColoredPetriNetState state) {
                 _cache.push_back(std::move(state));
             }
 
@@ -88,12 +88,12 @@ namespace PetriEngine {
                 return _stack.empty() && _cache.empty();
             }
 
-            uint32_t size() const {
+            size_t size() const {
                 return _stack.size() + _cache.size();
             }
         private:
-            std::stack<ColoredPetriNetStateRandom> _stack;
-            std::vector<ColoredPetriNetStateRandom> _cache;
+            std::stack<ColoredPetriNetState> _stack;
+            std::vector<ColoredPetriNetState> _cache;
             std::default_random_engine _rng;
         };
     }
