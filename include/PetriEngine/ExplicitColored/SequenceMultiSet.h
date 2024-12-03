@@ -5,6 +5,10 @@
 #ifndef SEQUENCEMULTISET_H
 #define SEQUENCEMULTISET_H
 #include <algorithm>
+#include <iostream>
+#include <PetriEngine/Colored/Colors.h>
+
+#include "CPNMultiSet.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -18,7 +22,7 @@ namespace PetriEngine {
             SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
 
             MarkingCount_t getCount(const K& color) const {
-                auto it = lower_bound(color);
+                auto it = clower_bound(color);
                 if (it != _counts.end() && it->first == color) {
                     return it->second;
                 }
@@ -27,8 +31,9 @@ namespace PetriEngine {
 
             void setCount(const K& color, MarkingCount_t count) {
                 auto it = lower_bound(color);
+                _cardinality += count;
+
                 if (it != _counts.end() && it->first == color) {
-                    _cardinality = (_cardinality + count) - it->second;
                     it->second = count;
                     return;
                 }
@@ -36,20 +41,14 @@ namespace PetriEngine {
                 _cardinality += count;
             }
 
-            void addCount(const K& color, int32_t count) {
+            void addCount(const K& color, sMarkingCount_t count) {
                 auto it = lower_bound(color);
+                _cardinality += count;
                 if (it != _counts.end() && it->first == color) {
-                    if (static_cast<int32_t>(it->second) + count < 0) {
-                        _cardinality -= it->second;
-                        it->second = 0;
-                    } else {
-                        it->second += count;
-                        _cardinality += count;
-                    }
+                    it->second += count;
                     return;
                 }
                 _counts.insert(it, {color, count});
-                _cardinality += count;
             }
 
             MarkingCount_t totalCount() const {
@@ -75,6 +74,7 @@ namespace PetriEngine {
                 }
                 for (; bIt != other._counts.end(); ++bIt) {
                     _counts.push_back(*bIt);
+                    _cardinality += bIt->second;
                 }
                 return *this;
             }
@@ -84,13 +84,8 @@ namespace PetriEngine {
                 auto bIt = other._counts.begin();
                 while (aIt != _counts.end() && bIt != other._counts.end()) {
                     if (aIt->first == bIt->first) {
-                        if (bIt->second > aIt->second) {
-                            _cardinality -= aIt->second;
-                            aIt->second = 0;
-                        } else {
-                            aIt->second -= bIt->second;
-                            _cardinality -= bIt->second;
-                        }
+                        aIt->second -= bIt->second;
+                        _cardinality -= bIt->second;
                         ++aIt;
                         ++bIt;
                     } else if (aIt->first < bIt->first) {
@@ -106,16 +101,25 @@ namespace PetriEngine {
                 for (auto& pair : _counts) {
                     pair.second *= scalar;
                 }
+                _cardinality *= scalar;
                 return *this;
             }
 
             bool operator==(const SequenceMultiSet& other) const {
-                if (_cardinality != other._cardinality || _counts.size() != other._counts.size()) {
+                if (_cardinality != other._cardinality) {
                     return false;
                 }
                 auto aIt = _counts.begin();
                 auto bIt = other._counts.begin();
                 while (aIt != _counts.end() && bIt != other._counts.end()) {
+                    if (aIt->second == 0) {
+                        ++aIt;
+                        continue;
+                    }
+                    if (bIt->second == 0) {
+                        ++bIt;
+                        continue;
+                    }
                     if (aIt->first != bIt->first || aIt->second != bIt->second) {
                         return false;
                     }
@@ -127,12 +131,20 @@ namespace PetriEngine {
             }
 
             bool operator>=(const SequenceMultiSet& other) const {
-                if (_cardinality < other._cardinality || _counts.size() < other._counts.size()) {
+                if (_cardinality < other._cardinality) {
                     return false;
                 }
                 auto aIt = _counts.begin();
                 auto bIt = other._counts.begin();
                 while (aIt != _counts.end() && bIt != other._counts.end()) {
+                    if (aIt->second <= 0) {
+                        ++aIt;
+                        continue;
+                    }
+                    if (bIt->second <= 0) {
+                        ++bIt;
+                        continue;
+                    }
                     if (aIt->first == bIt->first) {
                         if (aIt->second < bIt->second) {
                             return false;
@@ -145,6 +157,9 @@ namespace PetriEngine {
                         return false;
                     }
                 }
+                while (bIt != other._counts.end() && bIt->second == 0) {
+                    ++bIt;
+                }
                 if (bIt != other._counts.end()) {
                     return false;
                 }
@@ -152,12 +167,20 @@ namespace PetriEngine {
             }
 
             bool operator<=(const SequenceMultiSet& other) const {
-                if (_cardinality > other._cardinality || _counts.size() > other._counts.size()) {
+                if (_cardinality > other._cardinality) {
                     return false;
                 }
                 auto aIt = _counts.begin();
                 auto bIt = other._counts.begin();
                 while (aIt != _counts.end() && bIt != other._counts.end()) {
+                    if (aIt->second <= 0) {
+                        ++aIt;
+                        continue;
+                    }
+                    if (bIt->second <= 0) {
+                        ++bIt;
+                        continue;
+                    }
                     if (aIt->first == bIt->first) {
                         if (aIt->second > bIt->second) {
                             return false;
@@ -170,18 +193,44 @@ namespace PetriEngine {
                         ++bIt;
                     }
                 }
-
+                while (aIt != _counts.end() && aIt->second == 0) {
+                    ++aIt;
+                }
                 if (aIt != _counts.end()) {
                     return false;
                 }
                 return true;
             }
 
-            const std::vector<std::pair<K, MarkingCount_t>>& counts() const {
+            const std::vector<std::pair<K, sMarkingCount_t>>& counts() const {
                 return _counts;
             }
+
+            void shrink() {
+                auto keepIt = _counts.begin();
+                for (auto cursorIt = _counts.begin(); cursorIt != _counts.end(); ++cursorIt) {
+                    if (cursorIt->second > 0) {
+                        if (keepIt != cursorIt) {
+                            keepIt->first = std::move(cursorIt->first);
+                            keepIt->second = cursorIt->second;
+                        }
+                        ++keepIt;
+                    }
+                }
+                _counts.resize(std::distance(_counts.begin(), keepIt));
+                _counts.shrink_to_fit();
+            }
+
+            void fixNegative() {
+                for (auto& count : _counts) {
+                    if (count.second < 0) {
+                        _cardinality += -count.second;
+                        count.second = 0;
+                    }
+                }
+            }
         private:
-            typename std::vector<std::pair<K, MarkingCount_t>>::iterator lower_bound(const K& key) {
+            typename std::vector<std::pair<K, sMarkingCount_t>>::iterator lower_bound(const K& key) {
                 return std::lower_bound(
                      _counts.begin(),
                      _counts.end(),
@@ -191,8 +240,19 @@ namespace PetriEngine {
                      }
                 );
             }
-            std::vector<std::pair<K, MarkingCount_t>> _counts;
-            MarkingCount_t _cardinality = 0;
+
+            typename std::vector<std::pair<K, sMarkingCount_t>>::const_iterator clower_bound(const K& key) const {
+                return std::lower_bound(
+                     _counts.cbegin(),
+                     _counts.cend(),
+                     key,
+                     [](const auto& a, const auto& b) {
+                         return a.first < b;
+                     }
+                );
+            }
+            std::vector<std::pair<K, sMarkingCount_t>> _counts;
+            sMarkingCount_t _cardinality = 0;
         };
     }
 }

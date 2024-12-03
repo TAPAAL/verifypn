@@ -12,6 +12,10 @@ namespace PetriEngine{
             ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;
             ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
 
+            void shrink() {
+                marking.shrink();
+            }
+
             ColoredPetriNetMarking marking;
             uint32_t lastTrans = 0;
             uint32_t lastBinding = 0;

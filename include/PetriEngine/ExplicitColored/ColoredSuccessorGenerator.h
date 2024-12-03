@@ -30,13 +30,13 @@ namespace PetriEngine{
                 return _net;
             }
 
-            Binding getBinding(Transition_t tid, uint32_t bid);
-            bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
-            bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid);
-            bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
-            CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding);
-            void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
-            void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);
+            Binding getBinding(Transition_t tid, uint32_t bid) const;
+            bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+            bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
+            bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+            CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+            void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b) const;
+            void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b) const;
         protected:
             const ColoredPetriNet& _net;
             void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& b);

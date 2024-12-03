@@ -33,7 +33,7 @@
 #include "GuardExpression.h"
 #include "Binding.h"
 #include "ColoredPetriNetMarking.h"
-#include "ArcExpression.h"
+#include "CompiledArc.h"
 
 namespace PetriEngine
 {
@@ -75,7 +75,7 @@ namespace PetriEngine
             uint32_t from;
             uint32_t to;
             std::shared_ptr<ColorType> colorType;
-            std::unique_ptr<ArcExpression> arcExpression;
+            CompiledArc expression;
         };
 
         struct Variable

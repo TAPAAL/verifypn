@@ -12,6 +12,7 @@ namespace PetriEngine
     {
         class ColorSequence {
         public:
+            ColorSequence() = default;
             ColorSequence(const ColorSequence&) = default;
             ColorSequence(ColorSequence&&) = default;
             ColorSequence& operator=(const ColorSequence&) = default;

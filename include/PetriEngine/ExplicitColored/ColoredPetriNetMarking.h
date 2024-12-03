@@ -29,6 +29,12 @@ namespace PetriEngine{
                 return markings[placeIndex].totalCount();
             }
 
+            void shrink() {
+                for (auto& place : markings) {
+                    place.shrink();
+                }
+            }
+
             void stableEncode(std::ostream& out) const {
                 for (const auto& marking : markings) {
                     for (const auto& pair : marking.counts()) {

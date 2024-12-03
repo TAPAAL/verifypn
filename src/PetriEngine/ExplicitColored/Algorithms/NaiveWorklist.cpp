@@ -347,13 +347,12 @@ namespace PetriEngine {
                     check_count += 1;
                     passed.add(marking);
                     _searchStatistics.passedCount = passed.size();
+                    successor.shrink();
                     waiting.add(std::move(successor));
                     _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }
-            std::ofstream testOutFile("passedlist.txt");
-            passed.printHashes(testOutFile);
             return getResult(false);
         }
 

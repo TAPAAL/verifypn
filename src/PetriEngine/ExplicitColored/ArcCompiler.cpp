@@ -1,60 +1,7 @@
-#ifndef COMPILED_ARC_EXPRESSION
-#define COMPILED_ARC_EXPRESSION
-#include "../Colored/Expressions.h"
-#include "SequenceMultiSet.h"
+#include "PetriEngine/ExplicitColored/ArcCompiler.h"
+#include "PetriEngine/ExplicitColored/VariableExtractorVisitor.h"
 namespace PetriEngine {
     namespace ExplicitColored {
-        union ColorOrVariable {
-            Color_t color;
-            Variable_t variable;
-        };
-
-        struct ParameterizedColor {
-            int64_t _offset;
-            bool isVariable;
-            //perhaps include "all" value so we dont need to materialize all colors
-            ColorOrVariable value;
-            bool operator==(const ParameterizedColor &other) const {
-                return isVariable == other.isVariable
-                    && (isVariable
-                        ? (value.variable == other.value.variable)
-                        : (value.color == other.value.color)
-                        );
-            }
-
-            bool operator!=(const ParameterizedColor &other) const {
-                return !(*this == other);
-            }
-
-            bool isAll() const {
-                return !isVariable && value.color == ALL_COLOR;
-            }
-
-            static ParameterizedColor fromColor(const Color_t color) {
-                ParameterizedColor rv;
-                rv.isVariable = false;
-                rv._offset = 0;
-                rv.value.color = color;
-                return rv;
-            }
-
-            static ParameterizedColor fromVariable(const Variable_t variable) {
-                ParameterizedColor rv;
-                rv.isVariable = true;
-                rv._offset = 0;
-                rv.value.variable = variable;
-                return rv;
-            }
-
-            static ParameterizedColor fromAll() {
-                ParameterizedColor rv;
-                rv.isVariable = false;
-                rv._offset = 0;
-                rv.value.color = ALL_COLOR;
-                return rv;
-            }
-        };
-
         class ParameterizedColorSequenceMultiSet {
         public:
             CPNMultiSet eval(const Binding& binding) const {
@@ -63,11 +10,11 @@ namespace PetriEngine {
                     std::vector<Color_t> colorSequence;
                     for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
                         const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        Color_t colorValue;
+                        int64_t colorValue;
                         if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable);
+                            colorValue = binding.getValue(color.value.variable) + color.offset;
                         } else {
-                            colorValue = (color.value.color);
+                            colorValue = (color.value.color) + color.offset;
                         }
                         //Keeps the value between 0 - max with correct wrap around handling
                         colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
@@ -82,11 +29,11 @@ namespace PetriEngine {
                     std::vector<Color_t> colorSequence;
                     for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
                         const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        Color_t colorValue;
+                        int64_t colorValue;
                         if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable);
+                            colorValue = binding.getValue(color.value.variable) + color.offset;
                         } else {
-                            colorValue = (color.value.color);
+                            colorValue = color.value.color + color.offset;
                         }
                         //Keeps the value between 0 - max with correct wrap around handling
                         colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
@@ -101,28 +48,28 @@ namespace PetriEngine {
                     colorSequence.reserve(parameterizedColorSequence.size());
                     for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
                         const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        Color_t colorValue;
+                        int64_t colorValue;
                         if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable);
+                            colorValue = binding.getValue(color.value.variable) + color.offset;
                         } else {
-                            colorValue = (color.value.color);
+                            colorValue = color.value.color  + color.offset;
                         }
                         //Keeps the value between 0 - max with correct wrap around handling
                         colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
                     }
-                    existing.addCount(ColorSequence(std::move(colorSequence)), count);
+                    existing.addCount(ColorSequence(std::move(colorSequence)), -count);
                 }
             }
 
             ParameterizedColorSequenceMultiSet& operator*=(MarkingCount_t factor) {
-                for (auto parameterizedColorSequenceCount : _parameterizedColorSequenceCounts) {
+                for (auto& parameterizedColorSequenceCount : _parameterizedColorSequenceCounts) {
                     parameterizedColorSequenceCount.second *= factor;
                 }
                 return *this;
             }
 
             void operator+=(ParameterizedColorSequenceMultiSet& other) {
-                for (auto otherParameterizedColorSequenceCount : other._parameterizedColorSequenceCounts) {
+                for (const auto& otherParameterizedColorSequenceCount : other._parameterizedColorSequenceCounts) {
                     auto local = get(otherParameterizedColorSequenceCount.first);
                     if (local == nullptr) {
                         _parameterizedColorSequenceCounts.push_back(otherParameterizedColorSequenceCount);
@@ -139,7 +86,7 @@ namespace PetriEngine {
             }
 
             void operator-=(ParameterizedColorSequenceMultiSet& other) {
-                for (auto otherParameterizedColorSequenceCount : other._parameterizedColorSequenceCounts) {
+                for (const auto& otherParameterizedColorSequenceCount : other._parameterizedColorSequenceCounts) {
                     auto local = get(otherParameterizedColorSequenceCount.first);
                     if (local == nullptr) {
                         _parameterizedColorSequenceCounts.push_back(otherParameterizedColorSequenceCount);
@@ -155,7 +102,7 @@ namespace PetriEngine {
                 }
             }
 
-            void add(const std::vector<ParameterizedColor>& parametrizedColorSequence, int64_t count) {
+            void add(const std::vector<ParameterizedColor>& parametrizedColorSequence, sMarkingCount_t count) {
                 auto local = get(parametrizedColorSequence);
                 if (local == nullptr) {
                     _parameterizedColorSequenceCounts.push_back(std::make_pair(parametrizedColorSequence, count));
@@ -170,8 +117,35 @@ namespace PetriEngine {
                     _colorSizes[colorIndex] = size;
                 }
             }
+
+            std::tuple<std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>>, CPNMultiSet, std::vector<Color_t>> compileArc() {
+                CPNMultiSet constant;
+                std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>> variableMarkings;
+                bool allConstant = true;
+                for (auto& [sequence, count] : _parameterizedColorSequenceCounts) {
+                    const bool hasVariable = std::any_of(
+                        sequence.begin(), sequence.end(),
+                        [&](const auto& color) {return color.isVariable;}
+                    );
+                    if (hasVariable) {
+                        allConstant = false;
+                        variableMarkings.emplace_back(std::move(sequence), count);
+                    } else {
+                        std::vector<Color_t> colorSequence;
+                        colorSequence.reserve(sequence.size());
+                        for (size_t i = 0; i < sequence.size(); ++i) {
+                            colorSequence.push_back(signed_wrap(sequence[i].value.color + sequence[i].offset, _colorSizes[i]));
+                        }
+                        constant.addCount(ColorSequence{std::move(colorSequence)}, count);
+                    }
+                }
+                if (allConstant) {
+                    constant.fixNegative();
+                }
+                return std::make_tuple(std::move(variableMarkings), std::move(constant), std::move(_colorSizes));
+            }
         private:
-            std::pair<std::vector<ParameterizedColor>, int64_t>* get(const std::vector<ParameterizedColor>& key) {
+            std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>* get(const std::vector<ParameterizedColor>& key) {
                 for (auto& parameterizedColorSequenceCount : _parameterizedColorSequenceCounts) {
                     if (key.size() != parameterizedColorSequenceCount.first.size()) {
                         continue;
@@ -190,7 +164,7 @@ namespace PetriEngine {
                 return nullptr;
             }
 
-            std::vector<std::pair<std::vector<ParameterizedColor>, int64_t>> _parameterizedColorSequenceCounts;
+            std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>> _parameterizedColorSequenceCounts;
             std::vector<MarkingCount_t> _colorSizes;
         };
 
@@ -225,7 +199,7 @@ namespace PetriEngine {
                 if (color.isAll()) {
                     return;
                 }
-                color._offset++;
+                color.offset++;
             }
 
             void accept(const Colored::PredecessorExpression* expr) override {
@@ -233,7 +207,7 @@ namespace PetriEngine {
                 if (color.isAll()) {
                     return;
                 }
-                color._offset--;
+                color.offset--;
             }
 
             void accept(const Colored::AllExpression* expr) override {
@@ -320,7 +294,7 @@ namespace PetriEngine {
 
             void accept(const Colored::AddExpression* expr) override {
                 ParameterizedColorSequenceMultiSet sum;
-                for (auto constituent : *expr) {
+                for (auto& constituent : *expr) {
                     constituent->visit(*this);
                     sum += result;
                     result = ParameterizedColorSequenceMultiSet();
@@ -398,54 +372,25 @@ namespace PetriEngine {
             }
         };
 
-        class CompiledArc {
-        public:
-            CompiledArc(const Colored::ArcExpression_ptr& arcExpression, const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap) {
-                ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
-                arcExpression->visit(colorTypePreprocessor);
-                parameterizedColorSequenceMultiSet = std::move(colorTypePreprocessor.result);
-                _isConstant = colorTypePreprocessor.constant;
-                if (_isConstant) {
-                    constantValue = parameterizedColorSequenceMultiSet.eval(Binding{});
-                }
-            }
+        CompiledArc ArcCompiler::compileArc(
+            const Colored::ArcExpression_ptr& arcExpression,
+            const std::unordered_map<std::string, Variable_t>& variableMap,
+            const Colored::ColorTypeMap& colorTypeMap
+        ) {
+            VariableExtractorVisitor variableExtractor(variableMap);
+            arcExpression->visit(variableExtractor);
+            std::set<Variable_t> variables = std::move(variableExtractor.collectedVariables);
 
-            CPNMultiSet eval(const Binding& binding) const {
-                if (_isConstant) {
-                    return constantValue;
-                }
-                return parameterizedColorSequenceMultiSet.eval(binding);
-            }
+            ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
+            arcExpression->visit(colorTypePreprocessor);
+            auto [variableColors, constant, colorSizes] = colorTypePreprocessor.result.compileArc();
 
-            void addToExisting(CPNMultiSet& existing, const Binding& binding) const {
-                if (_isConstant) {
-                    existing += constantValue;
-                } else {
-                    parameterizedColorSequenceMultiSet.addToExisting(existing, binding);
-                }
-            }
-
-            void subFromExisting(CPNMultiSet& existing, const Binding& binding) const {
-                if (_isConstant) {
-                    existing -= constantValue;
-                } else {
-                    parameterizedColorSequenceMultiSet.subFromExisting(existing, binding);
-                }
-            }
-
-            bool isSubSet(const CPNMultiSet& superSet, const Binding& binding) const {
-                if (_isConstant) {
-                    return superSet >= constantValue;
-                } else {
-                    return superSet >= parameterizedColorSequenceMultiSet.eval(binding);
-                }
-            }
-        private:
-            bool _isConstant;
-            CPNMultiSet constantValue;
-            ParameterizedColorSequenceMultiSet parameterizedColorSequenceMultiSet;
-        };
+            return CompiledArc(
+                std::move(variableColors),
+                std::move(constant),
+                std::move(colorSizes),
+                std::move(variables)
+            );
+        }
     }
 }
-
-#endif
