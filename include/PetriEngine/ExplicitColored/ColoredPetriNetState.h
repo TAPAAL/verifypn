@@ -17,6 +17,7 @@ namespace PetriEngine{
             ColoredPetriNetMarking marking;
             uint32_t lastTrans = 0;
             uint32_t lastBinding = 0;
+
             bool forRDFS = false;
             bool hasAdded = false;
         };

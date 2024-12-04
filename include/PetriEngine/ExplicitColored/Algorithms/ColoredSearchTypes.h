@@ -88,7 +88,7 @@ namespace PetriEngine {
                 return _stack.empty() && _cache.empty();
             }
 
-            size_t size() const {
+            uint32_t size() const {
                 return _stack.size() + _cache.size();
             }
         private:

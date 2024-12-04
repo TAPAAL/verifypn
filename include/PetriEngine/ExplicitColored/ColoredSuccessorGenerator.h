@@ -101,68 +101,17 @@ namespace PetriEngine{
                 return newState;
             }
 
-            // Successorgenerator but only considers current transition
+            // SuccessorGenerator but only considers current transition
             // If returned successor has trans and binding == uint_max it means the state is fully explored
             // If returned successor has trans == uint_max it means the transition is fully explored
             ColoredPetriNetState _nextOneTrans(ColoredPetriNetState &state) const {
-                auto newState = ColoredPetriNetState{state};
-                auto tid = state.lastTrans;
                 if (state.lastTrans >= _net._transitions.size()) {
+                    auto newState = ColoredPetriNetState{state};
                     newState.lastTrans = std::numeric_limits<uint32_t>::max();
                     newState.lastBinding = std::numeric_limits<uint32_t>::max();
                     return newState;
                 }
                 return _next(state);
-
-                auto bid =  state.lastBinding;
-                auto totalBindings = _net._transitions[tid].validVariables.second;
-                if (totalBindings == 0) {
-                    if (bid != 0) {
-                        newState.lastTrans = std::numeric_limits<uint32_t>::max();
-                        return newState;
-                    }
-                    const auto binding = Binding{};
-                    if (check(state.marking, tid, binding)) {
-                        _fire(newState.marking, tid, binding);
-                        newState.lastBinding = 0;
-                        newState.lastTrans = 0;
-                        state.lastBinding = bid++;
-                        return newState;
-                    }
-                } else {
-                    //Checking whether its impossible before iterating through bindings
-                    if (!checkInhibitor(state.marking, tid)) {
-                        newState.lastTrans = std::numeric_limits<uint32_t>::max();
-                        return newState;
-                    }
-                    if (bid == 0) {
-                        bid++;
-                        const auto binding = getBinding(tid, bid);
-                        const auto check = firstCheckPresetAndGuard(state.marking, tid, binding);
-                        if (check == CheckingBool::TRUE) {
-                            _fire(newState.marking, tid, binding);
-                            newState.lastBinding = 0;
-                            newState.lastTrans = 0;
-                            state.lastBinding = bid;
-                            return newState;
-                        } else if (check == CheckingBool::NEVERTRUE) {
-                            newState.lastTrans = std::numeric_limits<uint32_t>::max();
-                            return newState;
-                        }
-                    }
-                    while (++bid <= totalBindings) {
-                        auto binding = getBinding(tid, bid);
-                        if (checkPresetAndGuard(state.marking, tid, binding)) {
-                            _fire(newState.marking, tid, binding);
-                            newState.lastBinding = 0;
-                            newState.lastTrans = 0;
-                            state.lastBinding = bid;
-                            return newState;
-                        }
-                    }
-                }
-                newState.lastTrans = std::numeric_limits<uint32_t>::max();
-                return newState;
             }
         };
     }
