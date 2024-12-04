@@ -70,12 +70,13 @@ namespace PetriEngine{
                 }
                 return CheckingBool::FALSE;
             }
+
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
+                if (state.markings[arc.from].totalCount() < arc.expression.getMinimalMarkingCount()) {
+                    return CheckingBool::NEVERTRUE;
+                }
                 if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
-                    if (state.getPlaceCount(arc.from) < arcExpr.totalCount()){
-                        return CheckingBool::NEVERTRUE;
-                    }
                     return CheckingBool::FALSE;
                 }
             }

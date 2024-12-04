@@ -54,6 +54,10 @@ namespace PetriEngine
             const std::vector<Color_t>& getSequence() const {
                 return _sequence;
             }
+
+            std::vector<Color_t>& getSequence() {
+                return _sequence;
+            }
         private:
             std::vector<Color_t> _sequence;
         };

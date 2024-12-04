@@ -61,15 +61,11 @@ namespace PetriEngine {
         class CompiledArc {
         public:
             explicit CompiledArc(
-                std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>> _variableSequences,
-                CPNMultiSet _constantValue,
+                std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>> variableSequences,
+                CPNMultiSet constantValue,
                 std::vector<Color_t> sequenceColorSizes,
                 std::set<Variable_t> variables
-            ) : _variableSequences(std::move(_variableSequences)),
-                _constantValue(std::move(_constantValue)),
-                _sequenceColorSizes(std::move(sequenceColorSizes)),
-                _variables(std::move(variables))
-             { }
+            );
 
             [[nodiscard]] CPNMultiSet eval(const Binding& binding) const;
             void produce(CPNMultiSet& existing, const Binding& binding) const;
@@ -78,13 +74,18 @@ namespace PetriEngine {
             [[nodiscard]] const std::set<Variable_t>& getVariables() const {
                 return _variables;
             }
+            MarkingCount_t getMinimalMarkingCount() const;
         private:
-            [[nodiscard]] std::vector<Color_t> getColorSequence(const std::vector<ParameterizedColor>& parameterizedColorSequence, const Binding& binding) const;
+            void setBurnerSequence(const std::vector<ParameterizedColor>& parameterizedColorSequence, const Binding& binding) const;
+            void addVariables(CPNMultiSet& target, const Binding& binding) const;
 
             std::vector<std::pair<std::vector<ParameterizedColor>, sMarkingCount_t>> _variableSequences;
             CPNMultiSet _constantValue;
             std::vector<Color_t> _sequenceColorSizes;
             std::set<Variable_t> _variables;
+            bool hasNegative;
+            mutable ColorSequence _burner;
+            MarkingCount_t _minimalMarkingCount;
         };
     }
 }

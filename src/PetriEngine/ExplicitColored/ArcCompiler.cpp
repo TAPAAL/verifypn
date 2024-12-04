@@ -86,12 +86,12 @@ namespace PetriEngine {
             }
 
             void operator-=(ParameterizedColorSequenceMultiSet& other) {
-                for (const auto& otherParameterizedColorSequenceCount : other._parameterizedColorSequenceCounts) {
-                    auto local = get(otherParameterizedColorSequenceCount.first);
+                for (const auto& [otherParameterizedColorSequence, otherCount] : other._parameterizedColorSequenceCounts) {
+                    auto local = get(otherParameterizedColorSequence);
                     if (local == nullptr) {
-                        _parameterizedColorSequenceCounts.push_back(otherParameterizedColorSequenceCount);
+                        _parameterizedColorSequenceCounts.push_back({otherParameterizedColorSequence, -otherCount });
                     } else {
-                        local->second -= otherParameterizedColorSequenceCount.second;
+                        local->second -= otherCount;
                     }
                 }
 
