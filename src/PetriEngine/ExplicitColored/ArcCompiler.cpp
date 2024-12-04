@@ -4,63 +4,6 @@ namespace PetriEngine {
     namespace ExplicitColored {
         class ParameterizedColorSequenceMultiSet {
         public:
-            CPNMultiSet eval(const Binding& binding) const {
-                CPNMultiSet result;
-                for (auto [parameterizedColorSequence, count] : _parameterizedColorSequenceCounts) {
-                    std::vector<Color_t> colorSequence;
-                    for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
-                        const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        int64_t colorValue;
-                        if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable) + color.offset;
-                        } else {
-                            colorValue = (color.value.color) + color.offset;
-                        }
-                        //Keeps the value between 0 - max with correct wrap around handling
-                        colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
-                    }
-                    result.addCount(ColorSequence(std::move(colorSequence)), count);
-                }
-                return result;
-            }
-
-            void addToExisting(CPNMultiSet& existing, const Binding& binding) const {
-                for (auto [parameterizedColorSequence, count] : _parameterizedColorSequenceCounts) {
-                    std::vector<Color_t> colorSequence;
-                    for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
-                        const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        int64_t colorValue;
-                        if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable) + color.offset;
-                        } else {
-                            colorValue = color.value.color + color.offset;
-                        }
-                        //Keeps the value between 0 - max with correct wrap around handling
-                        colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
-                    }
-                    existing.addCount(ColorSequence(std::move(colorSequence)), count);
-                }
-            }
-
-            void subFromExisting(CPNMultiSet& existing, const Binding& binding) const {
-                for (auto [parameterizedColorSequence, count] : _parameterizedColorSequenceCounts) {
-                    std::vector<Color_t> colorSequence;
-                    colorSequence.reserve(parameterizedColorSequence.size());
-                    for (size_t colori = 0; colori < parameterizedColorSequence.size(); colori++) {
-                        const ParameterizedColor& color = parameterizedColorSequence[colori];
-                        int64_t colorValue;
-                        if (color.isVariable) {
-                            colorValue = binding.getValue(color.value.variable) + color.offset;
-                        } else {
-                            colorValue = color.value.color  + color.offset;
-                        }
-                        //Keeps the value between 0 - max with correct wrap around handling
-                        colorSequence.push_back(((colorValue % _colorSizes[colori]) + _colorSizes[colori]) % _colorSizes[colori]);
-                    }
-                    existing.addCount(ColorSequence(std::move(colorSequence)), -count);
-                }
-            }
-
             ParameterizedColorSequenceMultiSet& operator*=(MarkingCount_t factor) {
                 for (auto& parameterizedColorSequenceCount : _parameterizedColorSequenceCounts) {
                     parameterizedColorSequenceCount.second *= factor;

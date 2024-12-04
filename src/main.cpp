@@ -599,33 +599,9 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
             return to_underlying(ReturnValue::ErrorCode);
     }
 
-    ExplicitColored::CPNMultiSet multiSet;
-    ExplicitColored::CPNMultiSet s1;
-    s1.addCount(ExplicitColored::ColorSequence {{8,8}}, 1);
-    s1.addCount(ExplicitColored::ColorSequence {{7,7}}, 1);
-    s1.addCount(ExplicitColored::ColorSequence {{6,6}}, 1);
-    s1.addCount(ExplicitColored::ColorSequence {{5,5}}, 1);
-    s1.addCount(ExplicitColored::ColorSequence {{4,4}}, 1);
-    s1.addCount(ExplicitColored::ColorSequence {{4,4}}, -1);
-    s1.addCount(ExplicitColored::ColorSequence {{5,5}}, -1);
-    s1.addCount(ExplicitColored::ColorSequence {{6,6}}, -1);
-    s1.addCount(ExplicitColored::ColorSequence {{8,8}}, -1);
-    ExplicitColored::CPNMultiSet s2;
-    s2.addCount(ExplicitColored::ColorSequence {{8,8}}, 1);
-    s2.addCount(ExplicitColored::ColorSequence {{7,7}}, 1);
-    s2.addCount(ExplicitColored::ColorSequence {{6,6}}, 1);
-    s2.addCount(ExplicitColored::ColorSequence {{5,5}}, 1);
-    s2.addCount(ExplicitColored::ColorSequence {{4,4}}, 1);
-    s2.addCount(ExplicitColored::ColorSequence {{4,4}}, -1);
-    s2.addCount(ExplicitColored::ColorSequence {{5,5}}, -1);
-    s2.addCount(ExplicitColored::ColorSequence {{6,6}}, -1);
-    s2.addCount(ExplicitColored::ColorSequence {{8,8}}, -1);
-    bool test = s2 <= s1;
-    bool test2 = s2 >= s1;
-
     auto net = builder.takeNet();
     bool result = false;
-    std::cout << "starting verification" << std::endl;
+
     auto placeIndices = builder.takePlaceIndices();
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();
