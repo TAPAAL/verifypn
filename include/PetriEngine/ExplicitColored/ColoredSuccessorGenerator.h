@@ -23,11 +23,10 @@ namespace PetriEngine{
             ~ColoredSuccessorGenerator();
 
             ColoredPetriNetState next(ColoredPetriNetState& state) const {
+                if (state.forRDFS) {
+                    return _nextOneTrans(state);
+                }
                 return _next(state);
-            }
-
-            ColoredPetriNetState nextRdfs(ColoredPetriNetState& state) const {
-                return _nextOneTrans(state);
             }
 
             const ColoredPetriNet& net() const {

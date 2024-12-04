@@ -9,6 +9,7 @@ namespace PetriEngine{
             ColoredPetriNetState() = default;
             ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
             explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+            explicit ColoredPetriNetState(ColoredPetriNetMarking marking, bool forRDFS) : marking(std::move(marking)), forRDFS(forRDFS) {};
             ColoredPetriNetState(ColoredPetriNetState&&) = default;
 
             ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;

@@ -92,9 +92,9 @@ namespace PetriEngine
                 auto rng = std::default_random_engine {seed};
                 for (auto&& t : _transitions){
                     auto& varMap = t.validVariables.first;
-                    for (auto && v : varMap){
-                        auto& validVars = v.second;
-                        std::shuffle(validVars.begin(),validVars.end(), rng);
+                    for (auto &[var, values] : varMap){
+                        auto& validValues = values;
+                        std::shuffle(validValues.begin(),validValues.end(), rng);
                     }
                 }
             }

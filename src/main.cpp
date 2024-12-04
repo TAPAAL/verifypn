@@ -621,6 +621,9 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
             case Strategy::RDFS:
                 result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, seed);
                 break;
+            case Strategy::HEUR:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::BESTFS, seed);
+                break;
             default:
                 std::cout << "Strategy is not supported for explicit colored engine" << std::endl
                         << "UNSUPPORTED STRATEGY" << std::endl;

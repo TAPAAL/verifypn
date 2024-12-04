@@ -3,8 +3,6 @@
 
 
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
-#include "PetriEngine/Structures/Queue.h"
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
 
@@ -26,7 +24,9 @@ namespace PetriEngine {
         enum class SearchStrategy {
             DFS,
             BFS,
-            RDFS
+            RDFS,
+            BESTFS,
+            RPFS,
         };
 
         class NaiveWorklist {
@@ -38,7 +38,7 @@ namespace PetriEngine {
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
-            bool check(SearchStrategy searchStrategy, size_t randomSeed);
+            bool check(SearchStrategy searchStrategy, size_t seed);
             const SearchStatistics& GetSearchStatistics() const;
         private:
             PQL::Condition_ptr _gammaQuery;
@@ -51,6 +51,7 @@ namespace PetriEngine {
             bool _dfs();
             bool _bfs();
             bool _rdfs(size_t seed);
+            bool _bestfs(size_t seed);
 
             template<typename WaitingList>
             bool _genericSearch(WaitingList waiting);
