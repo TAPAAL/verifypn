@@ -195,21 +195,23 @@ namespace PetriEngine {
                 _out << decreaseTabs() << "</graphics>\n";
                 handleType(place);
 
-                bool ok = false;
-                for (const auto &p: place.marking) {
-                    if (p.second > 0) {
-                        ok = true;
-                        break;
-                    }
-                }
-
-                if (ok) handlehlinitialMarking(place.marking);
+                handlehlinitialMarking(place.marking);
 
                 _out << decreaseTabs() << "</place>\n";
             }
         }
 
         void PnmlWriter::handlehlinitialMarking(Multiset marking) {
+            bool hasAnyTokens = false;
+            for (const auto& [_, count] : marking) {
+                if (count > 0) {
+                    hasAnyTokens = true;
+                    break;
+                }
+            }
+            if (!hasAnyTokens) {
+                return;
+            }
             _out << getTabs() << "<hlinitialMarking>\n";
             _out << increaseTabs() << "<text>" << marking.toString() << "</text>\n";
             _out << getTabs() << "<structure>\n";

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="type" name="type">
+                        <cyclicenumeration>
+                            <feconstant id="a" name="type"/>
+                            <feconstant id="b" name="type"/>
+                            <feconstant id="c" name="type"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="P0">
+                <name>
+                    <text>P0</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="285" y="315"/>
+                </graphics>
+                <type>
+                    <text>type</text>
+                    <structure>
+                        <usersort declaration="type"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'type.all - 1'a)</text>
+                    <structure>
+                        <subtract>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="type"/>
+                                        </all>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <useroperator declaration="a"/>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </subtract>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <place id="P2">
+                <name>
+                    <text>P2</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="465" y="315"/>
+                </graphics>
+                <type>
+                    <text>type</text>
+                    <structure>
+                        <usersort declaration="type"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'type.all)</text>
+                    <structure>
+                        <subtract>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="type"/>
+                                        </all>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <all>
+                                            <usersort declaration="type"/>
+                                        </all>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </subtract>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+            <place id="P3">
+                <name>
+                    <text>P3</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="360" y="210"/>
+                </graphics>
+                <type>
+                    <text>type</text>
+                    <structure>
+                        <usersort declaration="type"/>
+                    </structure>
+                </type>
+                <hlinitialMarking>
+                    <text>(1'a + 1'type.all - 1'a)</text>
+                    <structure>
+                        <subtract>
+                            <subterm>
+                                <add>
+                                    <subterm>
+                                        <numberof>
+                                            <subterm>
+                                                <numberconstant value="1">
+                                                    <positive/>
+                                                </numberconstant>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="a"/>
+                                            </subterm>
+                                        </numberof>
+                                    </subterm>
+                                    <subterm>
+                                        <numberof>
+                                            <subterm>
+                                                <numberconstant value="1">
+                                                    <positive/>
+                                                </numberconstant>
+                                            </subterm>
+                                            <subterm>
+                                                <all>
+                                                    <usersort declaration="type"/>
+                                                </all>
+                                            </subterm>
+                                        </numberof>
+                                    </subterm>
+                                </add>
+                            </subterm>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <useroperator declaration="a"/>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </subtract>
+                    </structure>
+                </hlinitialMarking>
+            </place>
+        </page>
+    </net>
+</pnml>
