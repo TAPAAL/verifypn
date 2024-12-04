@@ -88,7 +88,7 @@
                     </structure>
                 </type>
                 <hlinitialMarking>
-                    <text>(1'type.all)</text>
+                    <text>(1'type.all - 1'type.all)</text>
                     <structure>
                         <subtract>
                             <subterm>

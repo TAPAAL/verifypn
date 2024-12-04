@@ -63,7 +63,7 @@ namespace PetriEngine {
                     _namedSortTypes.emplace(colortype->getName(), "finite range");
                     handleFiniteRange(types);
                 } else {
-                    //_namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
+                    _namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
                     if (types[0]->getName() == "dot") {
                         _out << increaseTabs() << "<dot/>\n";
                     } else {
