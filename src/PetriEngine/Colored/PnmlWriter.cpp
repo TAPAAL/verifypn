@@ -60,10 +60,10 @@ namespace PetriEngine {
 
                 //this is a hack, better way to find if a color is a finite int range?
                 if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
-                    _namedSortTypes.insert(
-                            std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
+                    _namedSortTypes.emplace(colortype->getName(), "finite range");
                     handleFiniteRange(types);
                 } else {
+                    //_namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
                     if (types[0]->getName() == "dot") {
                         _out << increaseTabs() << "<dot/>\n";
                     } else {
@@ -305,7 +305,10 @@ namespace PetriEngine {
             else
             {
                 const auto thePnmlColorTypeIt = _namedSortTypes.find(c->getColorType()->getName());
-                if (thePnmlColorTypeIt != _namedSortTypes.end() && thePnmlColorTypeIt->second == "finite range") {
+                if (thePnmlColorTypeIt == _namedSortTypes.end()) {
+                    throw base_error("_namedSortTypes is missing a color type");
+                }
+                if (thePnmlColorTypeIt->second == "finite range") {
                     const std::string& start = c->getColorType()->operator[](size_t{0}).getColorName();
                     const std::string& end = c->getColorType()->operator[](
                             c->getColorType()->size() - 1).getColorName();
