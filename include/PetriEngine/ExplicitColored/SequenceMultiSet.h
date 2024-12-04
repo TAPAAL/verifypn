@@ -1,7 +1,3 @@
-//
-// Created by joms on 11/29/24.
-//
-
 #ifndef SEQUENCEMULTISET_H
 #define SEQUENCEMULTISET_H
 #include <algorithm>

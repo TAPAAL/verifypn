@@ -1,7 +1,3 @@
-//
-// Created by joms on 12/3/24.
-//
-
 #ifndef ARCCOMPILER_H
 #define ARCCOMPILER_H
 

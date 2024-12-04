@@ -1,7 +1,3 @@
-//
-// Created by joms on 12/3/24.
-//
-
 #include "PetriEngine/ExplicitColored/CompiledArc.h"
 
 #include <numeric>
