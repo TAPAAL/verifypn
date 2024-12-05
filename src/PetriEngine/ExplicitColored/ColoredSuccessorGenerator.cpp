@@ -12,12 +12,12 @@ namespace PetriEngine{
 
         ColoredSuccessorGenerator::~ColoredSuccessorGenerator() = default;
 
-        Binding ColoredSuccessorGenerator::getBinding(const Transition_t tid, const uint32_t bid) const {
+        Binding ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid) const {
             auto map = std::map<Variable_t, Color_t>{};
             const auto& possibleValues = _net._transitions[tid].validVariables.second;
             if (possibleValues != 0){
                 auto& variables = _net._transitions[tid].validVariables.first;
-                uint32_t interval = possibleValues;
+                auto interval = possibleValues;
                 for (const auto&[varName, varValues] : variables){
                     const auto size = varValues.size();
                     interval /= size;

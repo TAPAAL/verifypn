@@ -33,7 +33,7 @@ namespace PetriEngine{
                 return _net;
             }
 
-            Binding getBinding(Transition_t tid, uint32_t bid) const;
+            Binding getBinding(Transition_t tid, Binding_t bid) const;
             bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
             bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
             bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;

@@ -27,8 +27,6 @@ namespace PetriEngine {
             uint32_t size() const {
                 return waiting.size();
             }
-
-            static void shuffle(){};
         private:
             std::stack<ColoredPetriNetState> waiting;
         };
@@ -54,7 +52,6 @@ namespace PetriEngine {
             uint32_t size() const {
                 return waiting.size();
             }
-            static void shuffle(){};
         private:
             std::queue<ColoredPetriNetState> waiting;
         };
@@ -145,7 +142,6 @@ namespace PetriEngine {
             uint32_t size() const {
                 return _queue.size();
             }
-            static void shuffle() {};
         private:
             std::priority_queue<WeightedState> _queue;
             std::default_random_engine _rng;

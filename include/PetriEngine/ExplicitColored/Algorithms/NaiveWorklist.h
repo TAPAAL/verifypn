@@ -56,7 +56,7 @@ namespace PetriEngine {
             template<typename WaitingList>
             bool _genericSearch(WaitingList waiting);
             bool _rdfsSearch(RDFSStructure waiting);
-            bool getResult(bool found) const;
+            bool _getResult(bool found) const;
 
             SearchStatistics _searchStatistics;
             const IColoredResultPrinter& _coloredResultPrinter;

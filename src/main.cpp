@@ -601,7 +601,7 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
 
     auto net = builder.takeNet();
     bool result = false;
-    bool randomize = true;
+    bool randomize = false;
     auto placeIndices = builder.takePlaceIndices();
     if (randomize){
         net.randomizeBindingOrder(options.seed());

@@ -16,8 +16,8 @@ namespace PetriEngine{
             ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
 
             ColoredPetriNetMarking marking;
-            uint32_t lastTrans = 0;
-            uint32_t lastBinding = 0;
+            Transition_t lastTrans = 0;
+            Binding_t lastBinding = 0;
 
             bool forRDFS = false;
             bool hasAdded = false;

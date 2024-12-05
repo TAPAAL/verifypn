@@ -38,7 +38,7 @@ namespace PetriEngine
         struct ColoredPetriNetTransition
         {
             std::unique_ptr<GuardExpression> guardExpression;
-            std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint64_t> validVariables;
+            std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
         };
 
         struct BaseColorType

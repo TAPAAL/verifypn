@@ -59,9 +59,8 @@ namespace PetriEngine {
         template<typename WaitingList>
         bool NaiveWorklist::_genericSearch(WaitingList waiting) {
             auto passed = ColoredMarkingSet {};
-            const bool isRDFS = std::is_same_v<WaitingList, RDFSStructure>;
             const auto& initialState = _net.initial();
-            auto initial = ColoredPetriNetState{initialState, isRDFS};
+            auto initial = ColoredPetriNetState{initialState, std::is_same_v<WaitingList, RDFSStructure>};
             ColoredSuccessorGenerator successorGenerator(_net);
             waiting.add(initial);
             passed.add(initialState);
@@ -72,12 +71,12 @@ namespace PetriEngine {
                 : ConditionalBool::FALSE;
 
             if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
-                return getResult(true);
+                return _getResult(true);
             }
             while (!waiting.empty()){
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
-                if (isRDFS) {
+                if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
                     if (successor.lastBinding == std::numeric_limits<uint32_t>::max() && successor.lastTrans == std::numeric_limits<uint32_t>::max()){
                         waiting.remove();
                         waiting.shuffle();
@@ -108,10 +107,10 @@ namespace PetriEngine {
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                         _searchStatistics.passedCount = passed.size();
                         _searchStatistics.endWaitingStates = waiting.size();
-                        return getResult(true);
+                        return _getResult(true);
                     }
                     passed.add(marking);
-                    if (isRDFS) {
+                    if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
                         successor.hasAdded = false;
                         waiting.add(successor);
                         if (!next.hasAdded) {
@@ -129,7 +128,7 @@ namespace PetriEngine {
             }
             _searchStatistics.passedCount = passed.size();
             _searchStatistics.endWaitingStates = waiting.size(); //0
-            return getResult(false);
+            return _getResult(false);
         }
 
         bool NaiveWorklist::_dfs() {
@@ -155,7 +154,7 @@ namespace PetriEngine {
                 );
         }
 
-        bool NaiveWorklist::getResult(const bool found) const {
+        bool NaiveWorklist::_getResult(const bool found) const {
             const auto res = (
                 (!found && _quantifier == Quantifier::AG) ||
                 (found && _quantifier == Quantifier::EF))
