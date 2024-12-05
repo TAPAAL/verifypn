@@ -77,11 +77,6 @@ namespace PetriEngine {
             if (_variableSequences.empty()) {
                 return superSet >= _constantValue;
             }
-            if (!hasNegative) {
-                CPNMultiSet newValue;
-                addVariables(newValue, binding);
-                return superSet >= _constantValue && superSet >= newValue;
-            }
             CPNMultiSet newValue = _constantValue;
             addVariables(newValue, binding);
             return superSet >= newValue;
