@@ -34,7 +34,6 @@ namespace PetriEngine {
                     return;
                 }
                 _counts.insert(it, {color, count});
-                _cardinality += count;
             }
 
             void addCount(const K& color, sMarkingCount_t count) {
@@ -87,8 +86,14 @@ namespace PetriEngine {
                     } else if (aIt->first < bIt->first) {
                         ++aIt;
                     } else {
+                        aIt = _counts.insert(aIt, {bIt->first, -bIt->second});
+                        _cardinality -= bIt->second;
                         ++bIt;
                     }
+                }
+                for (; bIt != other._counts.end(); ++bIt) {
+                    _counts.push_back(*bIt);
+                    _cardinality -= bIt->second;
                 }
                 return *this;
             }
