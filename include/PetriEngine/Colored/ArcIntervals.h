@@ -39,7 +39,7 @@ namespace PetriEngine {
             : _varIndexModMap(std::move(varIndexModMap)), _intervalTupleVec(std::move(ranges)) {
             };
 
-            void print() {
+            void print() const {
                 std::cout << "[ ";
                 for(auto& varModifierPair : _varIndexModMap){
                     std::cout << "(" << varModifierPair.first->name << ", " << varModifierPair.first->colorType->productSize() <<  ") ";

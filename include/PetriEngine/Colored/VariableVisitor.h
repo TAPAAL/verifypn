@@ -29,6 +29,8 @@
 #ifndef VARIABLESVISITOR_H
 #define VARIABLESVISITOR_H
 
+#include <stack>
+
 #include "Expressions.h"
 #include "Colors.h"
 
@@ -206,23 +208,47 @@ namespace PetriEngine {
             virtual void accept(const AddExpression* add)
             {
                 for (const auto& elem : *add) {
-                    for(auto& pair : _varModifiers){
-                        std::unordered_map<uint32_t, int32_t> newMap;
-                        pair.second.push_back(newMap);
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
                     }
+                    
                     _index = 0;
                     elem->visit(*this);
+                }
+
+                if (add->back()->is_number_of()) {
+                    const auto& numberOfExpr = std::static_pointer_cast<const NumberOfExpression>(add->back());
+                    if (is_last_variable_expr(*numberOfExpr->back())) {
+                        for (auto& pair : _varModifiers) {
+                            pair.second.emplace_back();
+                        }
+                    }
                 }
             }
 
             virtual void accept(const SubtractExpression* sub)
             {
+                for (auto& pair : _varModifiers) {
+                    pair.second.emplace_back();
+                }
                 _index = 0;
                 (*sub)[0]->visit(*this);
                 //We ignore the restrictions imposed by the subtraction for now
                 if(_include_subtracts){
+                    for (auto& pair : _varModifiers) {
+                        pair.second.emplace_back();
+                    }
                     _index = 0;
                     (*sub)[1]->visit(*this);
+
+                    if ((*sub)[1]->is_number_of()) {
+                        const auto& numberOfExpr = std::static_pointer_cast<const NumberOfExpression>((*sub)[1]);
+                        if (is_last_variable_expr(*numberOfExpr->back())) {
+                            for (auto& pair : _varModifiers) {
+                                pair.second.emplace_back();
+                            }
+                        }
+                    }
                 }
             }
 
@@ -261,6 +287,32 @@ namespace PetriEngine {
                 VariableModifierMap varModifierMap;
 
                 get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+            }
+
+        private:
+            bool is_last_variable_expr(const ColorExpression& expr) const {
+                std::stack<const ColorExpression*> stack;
+                stack.push(&expr);
+
+                while (!stack.empty()) {
+                    const auto* currentExpr = stack.top();
+                    stack.pop();
+
+                    if (currentExpr->is_variable()) {
+                        return true;
+                    } else if (currentExpr->is_predecessor()) {
+                        stack.push(static_cast<const PredecessorExpression*>(currentExpr)->child().get());
+                    } else if (currentExpr->is_successor()) {
+                        stack.push(static_cast<const SuccessorExpression*>(currentExpr)->child().get());
+                    } else if (currentExpr->is_tuple()) {
+                        const auto* tupleExpr = static_cast<const TupleExpression*>(currentExpr);
+                        for (const auto& tupleElem : *tupleExpr) {
+                            stack.push(tupleElem.get());
+                        }
+                    }
+                }
+
+                return false;
             }
         };
     }
