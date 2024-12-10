@@ -306,7 +306,7 @@ namespace PetriEngine {
             {
                 const auto thePnmlColorTypeIt = _namedSortTypes.find(c->getColorType()->getName());
                 if (thePnmlColorTypeIt == _namedSortTypes.end()) {
-                    throw base_error("_namedSortTypes is missing a color type: '", c->getColorType()->getName(), "'");
+                    throw base_error("_namedSortTypes is missing color type: '", c->getColorType()->getName(), "'");
                 }
                 if (thePnmlColorTypeIt->second == "finite range") {
                     const std::string& start = c->getColorType()->operator[](size_t{0}).getColorName();
