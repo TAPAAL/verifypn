@@ -22,7 +22,7 @@ namespace PetriEngine {
                     && (isVariable
                         ? (value.variable == other.value.variable)
                         : (value.color == other.value.color)
-                        );
+                        ) && offset == other.offset;
             }
 
             bool operator!=(const ParameterizedColor &other) const {
@@ -75,6 +75,21 @@ namespace PetriEngine {
                 return _variables;
             }
             MarkingCount_t getMinimalMarkingCount() const;
+
+            friend std::ostream& operator<<(std::ostream& out, const CompiledArc& arc) {
+                out << "constant: " << arc._constantValue << " variables: ";
+                for (const auto& [colorSequence, count] : arc._variableSequences) {
+                    std::cout << count << "'(";
+                    for (auto color : colorSequence) {
+                        if (color.isVariable) {
+                            std::cout << "v";
+                        }
+                        std::cout << color.value.color << "+" << color.offset << ",";
+                    }
+                    std::cout << ")";
+                }
+                return out;
+            }
         private:
             void setBurnerSequence(const std::vector<ParameterizedColor>& parameterizedColorSequence, const Binding& binding) const;
             void addVariables(CPNMultiSet& target, const Binding& binding) const;

@@ -230,6 +230,15 @@ namespace PetriEngine {
                     }
                 }
             }
+
+            friend std::ostream& operator<<(std::ostream& out, const SequenceMultiSet& sequence) {
+                for (const auto& [color, count] : sequence._counts) {
+                    if (count > 0) {
+                        out << count << "'" << color << " + ";
+                    }
+                }
+                return out;
+            }
         private:
             typename std::vector<std::pair<K, sMarkingCount_t>>::iterator lower_bound(const K& key) {
                 return std::lower_bound(

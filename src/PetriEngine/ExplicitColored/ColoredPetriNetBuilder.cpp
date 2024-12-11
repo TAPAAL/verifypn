@@ -67,11 +67,13 @@ namespace PetriEngine {
             if (inhib_weight != 0) {
                 _currentNet._inhibitorArcs.emplace_back(from, to, inhib_weight);
             } else {
+                auto arc = ArcCompiler::compileArc(expr, *_variableMap, *_colors);
+
                 _inputArcs.push_back(ColoredPetriNetArc {
                     from,
                     to,
                     _currentNet._places[from].colorType,
-                    ArcCompiler::compileArc(expr, *_variableMap, *_colors)
+                    std::move(arc)
                 });
             }
 
@@ -87,7 +89,6 @@ namespace PetriEngine {
                 },
                 weight
             );
-
             _outputArcs.push_back(ColoredPetriNetArc {
                 _transitionIndices.find(transition)->second,
                 placeIndex,
@@ -99,12 +100,13 @@ namespace PetriEngine {
         //Colored output arc
         void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
             auto placeIndex = _placeIndices.find(place)->second;
+            auto arc = ArcCompiler::compileArc(expr, *_variableMap, *_colors);
 
             _outputArcs.push_back(ColoredPetriNetArc {
                 _transitionIndices.find(transition)->second,
                 placeIndex,
                 _currentNet._places[placeIndex].colorType,
-                ArcCompiler::compileArc(expr, *_variableMap, *_colors)
+                std::move(arc)
             });
         }
 

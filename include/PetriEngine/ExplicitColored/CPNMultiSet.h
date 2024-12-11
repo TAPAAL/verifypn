@@ -58,6 +58,13 @@ namespace PetriEngine
             std::vector<Color_t>& getSequence() {
                 return _sequence;
             }
+
+            friend std::ostream& operator<<(std::ostream& os, const ColorSequence& colorSequence) {
+                for (auto color : colorSequence._sequence) {
+                    os << color << ",";
+                }
+                return os;
+            }
         private:
             std::vector<Color_t> _sequence;
         };

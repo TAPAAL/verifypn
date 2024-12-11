@@ -321,7 +321,6 @@ namespace PetriEngine {
             ColorTypePreprocessor colorTypePreprocessor(colorTypeMap, variableMap);
             arcExpression->visit(colorTypePreprocessor);
             auto [variableColors, constant, colorSizes] = colorTypePreprocessor.result.compileArc();
-
             return CompiledArc(
                 std::move(variableColors),
                 std::move(constant),
