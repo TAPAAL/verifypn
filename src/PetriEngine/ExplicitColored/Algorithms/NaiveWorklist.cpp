@@ -10,6 +10,7 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include <fstream>
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -109,6 +110,7 @@ namespace PetriEngine {
                         _searchStatistics.endWaitingStates = waiting.size();
                         return _getResult(true);
                     }
+                    successor.shrink();
                     passed.add(std::move(marking));
                     if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
                         successor.hasAdded = false;
@@ -123,6 +125,9 @@ namespace PetriEngine {
                     }else {
                         waiting.add(std::move(successor));
                     }
+                    passed.add(marking);
+                    _searchStatistics.passedCount = passed.size();
+                    _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }

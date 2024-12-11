@@ -12,6 +12,20 @@ namespace PetriEngine{
 
         ColoredSuccessorGenerator::~ColoredSuccessorGenerator() = default;
 
+        void updateVariableMap(std::map<Variable_t, std::vector<uint32_t>>& map, const std::map<Variable_t, std::vector<uint32_t>>& newMap){
+            for (auto&& pair : newMap){
+                if (map.find(pair.first) != map.end()){
+                    auto& values = map[pair.first];
+                    auto newSet = std::vector<uint32_t>{};
+                    std::set_intersection(values.begin(), values.end(),
+                        pair.second.begin(), pair.second.end(), std::back_inserter(newSet));
+                    map[pair.first] = std::move(newSet);
+                }else{
+                    map.insert(pair);
+                }
+            }
+        }
+
         Binding ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid) const {
             auto map = std::map<Variable_t, Color_t>{};
             const auto& possibleValues = _net._transitions[tid].validVariables.second;
@@ -37,13 +51,17 @@ namespace PetriEngine{
                 }
                 return CheckingBool::FALSE;
             }
+
+            for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++) {
+                auto& arc = _net._arcs[i];
+                if (state.markings[arc.from].totalCount() < arc.expression.getMinimalMarkingCount()) {
+                    return CheckingBool::NEVERTRUE;
+                }
+            }
+
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                auto arcExpr = arc.arcExpression->eval(binding);
-                if (!(state.markings[arc.from] >= arcExpr)){
-                    if (state.getPlaceCount(arc.from) < arcExpr.totalCount()){
-                        return CheckingBool::NEVERTRUE;
-                    }
+                if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
                     return CheckingBool::FALSE;
                 }
             }
@@ -56,7 +74,7 @@ namespace PetriEngine{
             }
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                if (!(state.markings[arc.from] >= arc.arcExpression->eval(binding))){
+                if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
                     return false;
                 }
             }
@@ -76,14 +94,14 @@ namespace PetriEngine{
         void ColoredSuccessorGenerator::consumePreset(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const {
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                state.markings[arc.from] -= arc.arcExpression->eval(binding);
+                arc.expression.consume(state.markings[arc.from], binding);
             }
         }
 
         void ColoredSuccessorGenerator::producePostset(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const {
             for (auto i = _net._transitionArcs[tid].second; i < _net._transitionArcs[tid + 1].first; i++){
                 auto& arc = _net._arcs[i];
-                state.markings[arc.to] += arc.arcExpression->eval(binding);
+                arc.expression.produce(state.markings[arc.to], binding);
             }
         }
 
