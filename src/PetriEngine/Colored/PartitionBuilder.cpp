@@ -422,8 +422,7 @@ namespace PetriEngine {
                     const VariableModifierMap &varModifierMap,
                     const EquivalenceClass& eqClass , const Arc *arc, uint32_t placeId){
             std::vector<VariableIntervalMap> varMaps;
-            VariableIntervalMap varMap;
-            varMaps.push_back(varMap);
+            varMaps.emplace_back();
             std::unordered_map<uint32_t, ArcIntervals> placeArcIntervals;
             ColorFixpoint postPlaceFixpoint;
             postPlaceFixpoint.constraints = eqClass.intervals();
