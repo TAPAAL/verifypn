@@ -62,7 +62,7 @@ namespace PetriEngine {
             const auto& initialState = _net.initial();
             auto initial = ColoredPetriNetState{initialState, std::is_same_v<WaitingList, RDFSStructure>};
             ColoredSuccessorGenerator successorGenerator(_net);
-            waiting.add(initial);
+            waiting.add(std::move(initial));
             passed.add(initialState);
             _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
@@ -88,7 +88,7 @@ namespace PetriEngine {
                             ++newState.lastTrans;
                             newState.lastBinding = 0;
                             waiting.remove();
-                            waiting.add(newState);
+                            waiting.add(std::move(newState));
                         }else {
                             waiting.remove();
                         }
@@ -109,19 +109,19 @@ namespace PetriEngine {
                         _searchStatistics.endWaitingStates = waiting.size();
                         return _getResult(true);
                     }
-                    passed.add(marking);
+                    passed.add(std::move(marking));
                     if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
                         successor.hasAdded = false;
-                        waiting.add(successor);
+                        waiting.add(std::move(successor));
                         if (!next.hasAdded) {
                             auto newState = ColoredPetriNetState(next);
                             ++newState.lastTrans;
                             newState.lastBinding = 0;
                             next.hasAdded = true;
-                            waiting.add(newState);
+                            waiting.add(std::move(newState));
                         }
                     }else {
-                        waiting.add(successor);
+                        waiting.add(std::move(successor));
                     }
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
