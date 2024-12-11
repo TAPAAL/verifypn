@@ -10,6 +10,7 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include <fstream>
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -346,6 +347,7 @@ namespace PetriEngine {
                     check_count += 1;
                     passed.add(marking);
                     _searchStatistics.passedCount = passed.size();
+                    successor.shrink();
                     waiting.add(std::move(successor));
                     _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);

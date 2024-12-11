@@ -24,8 +24,15 @@ namespace PetriEngine {
                 return _set.find(stream.str()) != _set.end();
             }
 
-            size_t size() {
+            size_t size() const {
                 return _set.size();
+            }
+
+            friend std::ostream& operator<<(std::ostream& stream, const ColoredMarkingSet &marking) {
+                for (const auto& hash : marking._set) {
+                    stream << hash << std::endl;
+                }
+                return stream;
             }
         private:
             std::unordered_set<std::string> _set;
