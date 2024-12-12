@@ -94,11 +94,14 @@ namespace PetriEngine
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
-
+            uint32_t getTransitionCount() const {
+                return _transitions.size();
+            }
         private:
             friend class ColoredPetriNetBuilder;
             friend class ColoredSuccessorGenerator;
             friend class ValidVariableGenerator;
+            friend class FireabilityChecker;
             ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;

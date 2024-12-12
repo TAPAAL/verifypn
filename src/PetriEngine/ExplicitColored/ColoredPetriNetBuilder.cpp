@@ -231,5 +231,9 @@ namespace PetriEngine {
         std::unordered_map<std::string, uint32_t> ColoredPetriNetBuilder::takePlaceIndices() {
             return std::move(_placeIndices);
         }
+
+        std::unordered_map<std::string, Transition_t> ColoredPetriNetBuilder::takeTransitionIndices() {
+            return std::move(_transitionIndices);
+        }
     }
 }
