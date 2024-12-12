@@ -607,7 +607,6 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
         const auto seed = options.seed();
         ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
         ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], placeIndices, resultPrinter);
-        queries[0]->toString(std::cout);
         switch (options.strategy) {
             case Strategy::DEFAULT:
             case Strategy::DFS:
