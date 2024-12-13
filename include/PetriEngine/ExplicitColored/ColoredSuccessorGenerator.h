@@ -96,7 +96,7 @@ namespace PetriEngine{
                         }
                     }
                 }
-                newState.lastTrans = std::numeric_limits<uint32_t>::max();
+                newState.lastTrans = std::numeric_limits<Transition_t>::max();
                 return newState;
             }
 
@@ -106,8 +106,8 @@ namespace PetriEngine{
             ColoredPetriNetState _nextOneTrans(ColoredPetriNetState &state) const {
                 if (state.lastTrans >= _net._transitions.size()) {
                     auto newState = ColoredPetriNetState{state};
-                    newState.lastTrans = std::numeric_limits<uint32_t>::max();
-                    newState.lastBinding = std::numeric_limits<uint32_t>::max();
+                    newState.lastTrans = std::numeric_limits<Transition_t>::max();
+                    newState.lastBinding = std::numeric_limits<Binding_t>::max();
                     return newState;
                 }
                 return _next(state);

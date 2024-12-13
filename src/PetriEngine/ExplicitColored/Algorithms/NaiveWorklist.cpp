@@ -78,12 +78,12 @@ namespace PetriEngine {
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
                 if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
-                    if (successor.lastBinding == std::numeric_limits<uint32_t>::max() && successor.lastTrans == std::numeric_limits<uint32_t>::max()){
+                    if (successor.lastBinding == std::numeric_limits<Binding_t>::max() && successor.lastTrans == std::numeric_limits<Transition_t>::max()){
                         waiting.remove();
                         waiting.shuffle();
                         continue;
                     }
-                    if (successor.lastTrans == std::numeric_limits<uint32_t>::max()) {
+                    if (successor.lastTrans == std::numeric_limits<Transition_t>::max()) {
                         if (!next.hasAdded) {
                             auto newState = ColoredPetriNetState(next);
                             ++newState.lastTrans;
@@ -96,7 +96,7 @@ namespace PetriEngine {
                         continue;
                     }
                 }else {
-                    if (successor.lastTrans ==  std::numeric_limits<uint32_t>::max()) {
+                    if (successor.lastTrans ==  std::numeric_limits<Transition_t>::max()) {
                         waiting.remove();
                         continue;
                     }
