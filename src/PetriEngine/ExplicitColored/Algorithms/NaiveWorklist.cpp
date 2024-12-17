@@ -311,14 +311,17 @@ namespace PetriEngine {
 
         template<typename WaitingList>
         bool NaiveWorklist::_genericSearch(WaitingList waiting) {
-            auto passed = ColoredMarkingSet {};
+            ptrie::set<uint8_t> passed;
+            std::vector<uint8_t> scratchpad;
             const auto& initialState = _net.initial();
             ColoredSuccessorGenerator successorGenerator(_net);
             size_t check_count = 0;
             waiting.add(ColoredPetriNetState { initialState });
 
-            passed.add(initialState);
-            _searchStatistics.passedCount = passed.size();
+            size_t size = initialState.compressedEncode(scratchpad);
+            passed.insert(scratchpad.data(), size);
+
+            _searchStatistics.passedCount = 1;
 
             const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
                 ? ConditionalBool::TRUE
@@ -336,19 +339,21 @@ namespace PetriEngine {
                 }
 
                 auto& marking = successor.marking;
+                size = marking.compressedEncode(scratchpad);
 
                 _searchStatistics.exploredStates++;
 
-                if (!passed.contains(marking)) {
+                if (!passed.exists(scratchpad.data(), size).first) {
                     if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                         return getResult(true);
                     }
                     _searchStatistics.checkedStates += 1;
                     check_count += 1;
-                    passed.add(marking);
-                    _searchStatistics.passedCount = passed.size();
+
+                    passed.insert(scratchpad.data(), size);
                     successor.shrink();
                     waiting.add(std::move(successor));
+
                     _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
