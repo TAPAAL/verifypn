@@ -238,7 +238,7 @@ namespace PetriEngine {
 
             void accept(const Colored::InequalityExpression* expr) override {
                 auto [lhs, lhsIsVar] = ParseSequence(*(*expr)[0]);
-                auto [rhs, rhsIsVar] = ParseSequence(*(*expr)[0]);
+                auto [rhs, rhsIsVar] = ParseSequence(*(*expr)[1]);
 
                 if (lhs.size() != rhs.size() || lhs.size() != lhsIsVar.size() || lhs.size() != rhsIsVar.size()) {
                     throw base_error("Sequence size mismatch in equality expression");
