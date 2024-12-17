@@ -203,7 +203,7 @@ namespace PetriEngine {
             const Colored::ColorTypeMap& _colorTypeMap;
             const std::unordered_map<std::string, Variable_t>& _variableMap;
             static void unexpectedExpression() {
-                throw base_error("unexpected exception");
+                throw base_error("unexpected expression");
             }
         };
 
@@ -335,7 +335,7 @@ namespace PetriEngine {
             std::unique_ptr<CompiledGuardExpression> _top;
             VarOrColorVisitor _innerVisitor;
             static void unexpectedExpression() {
-                throw base_error("unexpected exception");
+                throw base_error("unexpected expression");
             }
         };
 
