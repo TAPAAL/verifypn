@@ -3,6 +3,35 @@
 #include <algorithm>
 namespace PetriEngine {
     namespace ExplicitColored {
+        typedef uint8_t TypeFlag_t;
+        struct TypeFlag {
+            static const uint8_t LHS_VAR = 1 << 0;
+            static const uint8_t RHS_VAR = 1 << 1;
+        };
+
+        union VarOrColor {
+            Variable_t variable;
+            Color_t color;
+        };
+
+        struct VarOrColorWithOffset {
+            VarOrColor value;
+            ColorOffset_t offset;
+            Color_t color_max;
+
+            [[nodiscard]] Color_t getLhs(const Binding& binding, const TypeFlag_t typeFlag) const {
+                return (typeFlag & TypeFlag::LHS_VAR)
+                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                    : value.color;
+            }
+
+            [[nodiscard]] Color_t getRhs(const Binding& binding, const TypeFlag_t typeFlag) const {
+                return (typeFlag & TypeFlag::RHS_VAR)
+                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                    : value.color;
+            }
+        };
+
         class CompiledGuardAndExpression : public CompiledGuardExpression {
         public:
             explicit CompiledGuardAndExpression(std::vector<std::unique_ptr<CompiledGuardExpression>> copmiledGuardExpressions)
@@ -33,35 +62,6 @@ namespace PetriEngine {
             }
         private:
             std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
-        };
-
-        typedef uint8_t TypeFlag_t;
-        struct TypeFlag {
-            static const uint8_t LHS_VAR = 1 << 0;
-            static const uint8_t RHS_VAR = 1 << 1;
-        };
-
-        union VarOrColor {
-            Variable_t variable;
-            Color_t color;
-        };
-
-        struct VarOrColorWithOffset {
-            VarOrColor value;
-            ColorOffset_t offset;
-            Color_t color_max;
-
-            [[nodiscard]] Color_t getLhs(const Binding& binding, const TypeFlag_t typeFlag) const {
-                return (typeFlag & TypeFlag::LHS_VAR)
-                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
-                    : value.color;
-            }
-
-            [[nodiscard]] Color_t getRhs(const Binding& binding, const TypeFlag_t typeFlag) const {
-                return (typeFlag & TypeFlag::RHS_VAR)
-                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
-                    : value.color;
-            }
         };
 
         class CompiledGuardLessThanExpression : public CompiledGuardExpression {
