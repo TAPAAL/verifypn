@@ -9,6 +9,7 @@ add_library(ExplicitColored
     Algorithms/NaiveWorklist.cpp
     ColoredResultPrinter.cpp
     CompiledArc.cpp
+    GuardCompiler.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)
