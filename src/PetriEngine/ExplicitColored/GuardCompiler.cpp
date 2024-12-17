@@ -1,5 +1,6 @@
 #include "PetriEngine/ExplicitColored/GuardCompiler.h"
 #include "utils/MathExt.h"
+#include <algorithm>
 namespace PetriEngine {
     namespace ExplicitColored {
         class CompiledGuardAndExpression : public CompiledGuardExpression {
@@ -207,9 +208,9 @@ namespace PetriEngine {
         };
 
 
-        class TopLevelVisitor : public Colored::ColorExpressionVisitor {
+        class ColorExpressionCompilerVisitor : public Colored::ColorExpressionVisitor {
         public:
-            TopLevelVisitor(const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap)
+            ColorExpressionCompilerVisitor(const Colored::ColorTypeMap& colorTypeMap, const std::unordered_map<std::string, Variable_t>& variableMap)
                 : _colorTypeMap(colorTypeMap),
                 _variableMap(variableMap),
                 _innerVisitor(colorTypeMap, variableMap) { }
@@ -225,83 +226,25 @@ namespace PetriEngine {
             }
 
             void accept(const Colored::EqualityExpression* expr) override {
-                std::vector<VarOrColorWithOffset> lhs;
-                std::vector<TypeFlag_t> flags;
+                auto [lhs, lhsIsVar] = ParseSequence(*(*expr)[0]);
+                auto [rhs, rhsIsVar] = ParseSequence(*(*expr)[1]);
 
-                if (const auto& tuple = std::dynamic_pointer_cast<const Colored::TupleExpression>((*expr)[0])) {
-                    for (const auto& colorExpr : *tuple) {
-                        colorExpr->visit(_innerVisitor);
-                        lhs.push_back(_innerVisitor.getResult());
-                        flags.push_back(_innerVisitor.isVar() ? TypeFlag::LHS_VAR : 0);
-                    }
-                } else {
-                    (*expr)[0]->visit(_innerVisitor);
-                    lhs.push_back(_innerVisitor.getResult());
-                    flags.push_back(_innerVisitor.isVar() ? TypeFlag::LHS_VAR : 0);
+                if (lhs.size() != rhs.size() || lhs.size() != lhsIsVar.size() || lhs.size() != rhsIsVar.size()) {
+                    throw base_error("Sequence size mismatch in equality expression");
                 }
 
-                std::vector<VarOrColorWithOffset> rhs;
-
-                if (const auto& tuple = std::dynamic_pointer_cast<const Colored::TupleExpression>((*expr)[1])) {
-                    if (tuple->size() != rhs.size()) {
-                        throw base_error("tuple size mismatch");
-                    }
-                    size_t i = 0;
-                    for (const auto& colorExpr : *tuple) {
-                        colorExpr->visit(_innerVisitor);
-                        rhs.push_back(_innerVisitor.getResult());
-                        flags[i++] |= _innerVisitor.isVar() ? TypeFlag::RHS_VAR : 0;
-                    }
-                } else {
-                    (*expr)[1]->visit(_innerVisitor);
-                    rhs.push_back(_innerVisitor.getResult());
-                    flags[0] |= _innerVisitor.isVar() ? TypeFlag::RHS_VAR : 0;
-                }
-
-                if (rhs.size() != lhs.size() || lhs.size() != flags.size()) {
-                    throw base_error("tuple size mismatch");
-                }
-                _top = std::make_unique<CompiledGuardEqualityExpression>(std::move(flags), std::move(lhs), std::move(rhs));
+                _top = std::make_unique<CompiledGuardEqualityExpression>(zipFlags(lhsIsVar, rhsIsVar), std::move(lhs), std::move(rhs));
             }
 
             void accept(const Colored::InequalityExpression* expr) override {
-                std::vector<VarOrColorWithOffset> lhs;
-                std::vector<TypeFlag_t> flags;
+                auto [lhs, lhsIsVar] = ParseSequence(*(*expr)[0]);
+                auto [rhs, rhsIsVar] = ParseSequence(*(*expr)[0]);
 
-                if (const auto& tuple = std::dynamic_pointer_cast<const Colored::TupleExpression>((*expr)[0])) {
-                    for (const auto& colorExpr : *tuple) {
-                        colorExpr->visit(_innerVisitor);
-                        lhs.push_back(_innerVisitor.getResult());
-                        flags.push_back(_innerVisitor.isVar() ? TypeFlag::LHS_VAR : 0);
-                    }
-                } else {
-                    (*expr)[0]->visit(_innerVisitor);
-                    lhs.push_back(_innerVisitor.getResult());
-                    flags.push_back(_innerVisitor.isVar() ? TypeFlag::LHS_VAR : 0);
+                if (lhs.size() != rhs.size() || lhs.size() != lhsIsVar.size() || lhs.size() != rhsIsVar.size()) {
+                    throw base_error("Sequence size mismatch in equality expression");
                 }
 
-                std::vector<VarOrColorWithOffset> rhs;
-
-                if (const auto& tuple = std::dynamic_pointer_cast<const Colored::TupleExpression>((*expr)[1])) {
-                    if (tuple->size() != rhs.size()) {
-                        throw base_error("tuple size mismatch");
-                    }
-                    size_t i = 0;
-                    for (const auto& colorExpr : *tuple) {
-                        colorExpr->visit(_innerVisitor);
-                        rhs.push_back(_innerVisitor.getResult());
-                        flags[i++] |= _innerVisitor.isVar() ? TypeFlag::RHS_VAR : 0;
-                    }
-                } else {
-                    (*expr)[1]->visit(_innerVisitor);
-                    rhs.push_back(_innerVisitor.getResult());
-                    flags[0] |= _innerVisitor.isVar() ? TypeFlag::RHS_VAR : 0;
-                }
-
-                if (rhs.size() != lhs.size() || lhs.size() != flags.size()) {
-                    throw base_error("tuple size mismatch");
-                }
-                _top = std::make_unique<CompiledGuardInequalityExpression>(std::move(flags), std::move(lhs), std::move(rhs));
+                _top = std::make_unique<CompiledGuardInequalityExpression>(zipFlags(lhsIsVar, rhsIsVar), std::move(lhs), std::move(rhs));
             }
 
             void accept(const Colored::AndExpression* expr) override {
@@ -340,6 +283,7 @@ namespace PetriEngine {
             std::unique_ptr<CompiledGuardExpression> takeCompiled() {
                 return std::move(_top);
             }
+
         private:
             std::tuple<VarOrColorWithOffset, VarOrColorWithOffset, TypeFlag_t>
                 parseColorValue(const Colored::Expression& lhs, const Colored::Expression& rhs) {
@@ -356,6 +300,34 @@ namespace PetriEngine {
 
                 _top = std::make_unique<CompiledGuardLessThanExpression>(std::move(lhsParsed), std::move(rhsParsed), flag);
                 return std::make_tuple(std::move(lhsParsed), std::move(rhsParsed), flag);
+            }
+
+            static std::vector<TypeFlag_t> zipFlags(const std::vector<bool>& lhsIsVar, const std::vector<bool>& rhsIsVar) {
+                std::vector<TypeFlag_t> flags;
+                std::transform(lhsIsVar.cbegin(), lhsIsVar.cend(), rhsIsVar.cbegin(), std::back_inserter(flags),
+                    [](const bool l, const bool r) -> TypeFlag_t {
+                        return (l ? TypeFlag::LHS_VAR : 0) | (r ? TypeFlag::RHS_VAR : 0);
+                    }
+                );
+                return std::move(flags);
+            }
+
+            std::pair<std::vector<VarOrColorWithOffset>, std::vector<bool>> ParseSequence(const Colored::ColorExpression& expr) {
+                std::vector<VarOrColorWithOffset> lhs;
+                std::vector<bool> isBool;
+
+                if (const auto tuple = dynamic_cast<const Colored::TupleExpression*>(&expr)) {
+                    for (const auto& colorExpr : *tuple) {
+                        colorExpr->visit(_innerVisitor);
+                        lhs.push_back(_innerVisitor.getResult());
+                        isBool.push_back(_innerVisitor.isVar());
+                    }
+                } else {
+                    expr.visit(_innerVisitor);
+                    lhs.push_back(_innerVisitor.getResult());
+                    isBool.push_back(_innerVisitor.isVar());
+                }
+                return std::make_pair(std::move(lhs), std::move(isBool));
             }
 
             const Colored::ColorTypeMap& _colorTypeMap;
@@ -375,7 +347,7 @@ namespace PetriEngine {
             colorExpression.visit(variableExtractor);
             auto variables = std::move(variableExtractor.collectedVariables);
 
-            TopLevelVisitor topLevelVisitor(_colorTypeMap, _variableMap);
+            ColorExpressionCompilerVisitor topLevelVisitor(_colorTypeMap, _variableMap);
             colorExpression.visit(topLevelVisitor);
             return {topLevelVisitor.takeCompiled(), std::move(variables)};
         }
