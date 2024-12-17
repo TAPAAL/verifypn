@@ -37,13 +37,13 @@ namespace PetriEngine {
         bool NaiveWorklist::check(const SearchStrategy searchStrategy, const size_t seed) {
             switch (searchStrategy) {
                 case SearchStrategy::DFS:
-                    return _dfs();
+                    return _dfs<ColoredPetriNetState>();
                 case SearchStrategy::BFS:
-                    return _bfs();
+                    return _bfs<ColoredPetriNetState>();
                 case SearchStrategy::RDFS:
-                    return _rdfs(seed);
+                    return _rdfs<ColoredPetriNetStateOneTrans>(seed);
                 case SearchStrategy::BESTFS:
-                    return _bestfs(seed);
+                    return _bestfs<ColoredPetriNetState>(seed);
                 default:
                     throw base_error("Unsupported exploration type");
             }
@@ -57,13 +57,19 @@ namespace PetriEngine {
             return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, deadlockValue);
         }
 
-        template<typename WaitingList>
-        bool NaiveWorklist::_genericSearch(WaitingList waiting) {
+        template <template <typename> typename WaitingList, typename T>
+        bool NaiveWorklist::_genericSearch(WaitingList<T> waiting) {
             auto passed = ColoredMarkingSet {};
-            const auto& initialState = _net.initial();
-            auto initial = ColoredPetriNetState{initialState, std::is_same_v<WaitingList, RDFSStructure>};
             ColoredSuccessorGenerator successorGenerator(_net);
-            waiting.add(std::move(initial));
+            const auto& initialState = _net.initial();
+
+            if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
+                auto initial = ColoredPetriNetStateOneTrans{initialState, _net.nTransitions()};
+                waiting.add(std::move(initial));
+            }else {
+                auto initial = ColoredPetriNetState{initialState};
+                waiting.add(std::move(initial));
+            }
             passed.add(initialState);
             _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
@@ -74,34 +80,34 @@ namespace PetriEngine {
             if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
                 return _getResult(true);
             }
-            while (!waiting.empty()){
+            while (!waiting.empty()) {
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
-                if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
-                    if (successor.lastBinding == std::numeric_limits<Binding_t>::max() && successor.lastTrans == std::numeric_limits<Transition_t>::max()){
-                        waiting.remove();
+
+                if (next.done){
+                    waiting.remove();
+                    if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
+                        waiting.shuffle();
+                    }
+                    continue;
+                }
+
+                if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
+                    if (next.shuffle){
+                        next.shuffle = false;
+                        next.skip = false;
                         waiting.shuffle();
                         continue;
                     }
-                    if (successor.lastTrans == std::numeric_limits<Transition_t>::max()) {
-                        if (!next.hasAdded) {
-                            auto newState = ColoredPetriNetState(next);
-                            ++newState.lastTrans;
-                            newState.lastBinding = 0;
-                            waiting.remove();
-                            waiting.add(std::move(newState));
-                        }else {
-                            waiting.remove();
-                        }
-                        continue;
-                    }
-                }else {
-                    if (successor.lastTrans ==  std::numeric_limits<Transition_t>::max()) {
-                        waiting.remove();
+                }
+
+                if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
+                    if (next.skip) {
+                        next.skip = false;
                         continue;
                     }
                 }
-                auto& marking = successor.marking;
+                auto marking = successor.marking;
                 _searchStatistics.exploredStates++;
                 if (!passed.contains(marking)) {
                     _searchStatistics.checkedStates += 1;
@@ -112,20 +118,7 @@ namespace PetriEngine {
                     }
                     successor.shrink();
                     passed.add(std::move(marking));
-                    if constexpr (std::is_same_v<WaitingList, RDFSStructure>) {
-                        successor.hasAdded = false;
-                        waiting.add(std::move(successor));
-                        if (!next.hasAdded) {
-                            auto newState = ColoredPetriNetState(next);
-                            ++newState.lastTrans;
-                            newState.lastBinding = 0;
-                            next.hasAdded = true;
-                            waiting.add(std::move(newState));
-                        }
-                    }else {
-                        waiting.add(std::move(successor));
-                    }
-                    passed.add(marking);
+                    waiting.add(std::move(successor));
                     _searchStatistics.passedCount = passed.size();
                     _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
@@ -136,21 +129,25 @@ namespace PetriEngine {
             return _getResult(false);
         }
 
+        template <typename T>
         bool NaiveWorklist::_dfs() {
-            return _genericSearch<DFSStructure>(DFSStructure {});
+            return _genericSearch<DFSStructure>(DFSStructure<T> {});
         }
 
+        template <typename T>
         bool NaiveWorklist::_bfs() {
-            return _genericSearch<BFSStructure>(BFSStructure {});
+            return _genericSearch<BFSStructure>(BFSStructure<T> {});
         }
 
+        template <typename T>
         bool NaiveWorklist::_rdfs(const size_t seed) {
-            return _genericSearch<RDFSStructure>(RDFSStructure(seed));
+            return _genericSearch<RDFSStructure>(RDFSStructure<T>(seed));
         }
 
+        template <typename T>
         bool NaiveWorklist::_bestfs(const size_t seed) {
             return _genericSearch<BestFSStructure>(
-                BestFSStructure(
+                BestFSStructure<T>(
                     seed,
                     _gammaQuery,
                     _placeNameIndices,

@@ -6,9 +6,10 @@
 
 namespace PetriEngine {
     namespace ExplicitColored {
+        template <typename T>
         class DFSStructure {
         public:
-            ColoredPetriNetState& next() {
+            T& next() {
                 return waiting.top();
             }
 
@@ -16,7 +17,7 @@ namespace PetriEngine {
                 waiting.pop();
             }
 
-            void add(ColoredPetriNetState state) {
+            void add(T state) {
                 waiting.emplace(std::move(state));
             }
 
@@ -27,13 +28,16 @@ namespace PetriEngine {
             uint32_t size() const {
                 return waiting.size();
             }
+
+            void shuffle() {}
         private:
-            std::stack<ColoredPetriNetState> waiting;
+            std::stack<T> waiting;
         };
 
+        template <typename T>
         class BFSStructure {
         public:
-            ColoredPetriNetState& next() {
+            T& next() {
                 return waiting.front();
             }
 
@@ -41,7 +45,7 @@ namespace PetriEngine {
                 waiting.pop();
             }
 
-            void add(ColoredPetriNetState state) {
+            void add(T state) {
                 waiting.emplace(std::move(state));
             }
 
@@ -52,15 +56,17 @@ namespace PetriEngine {
             uint32_t size() const {
                 return waiting.size();
             }
+
+            void shuffle() {}
         private:
-            std::queue<ColoredPetriNetState> waiting;
+            std::queue<T> waiting;
         };
 
+        template<typename T>
         class RDFSStructure {
         public:
             explicit RDFSStructure(const size_t seed) : _rng(seed) {}
-
-            ColoredPetriNetState& next() {
+            T& next() {
                 if (_stack.empty()) {
                     shuffle();
                 }
@@ -79,12 +85,8 @@ namespace PetriEngine {
                 _cache.clear();
             }
 
-            void add(ColoredPetriNetState state) {
-                if (state.lastBinding == 0 && state.lastTrans == 0) {
-                    _cache.push_back(std::move(state));
-                }else {
-                    _stack.push(std::move(state));
-                }
+            void add(T state) {
+                _cache.push_back(std::move(state));
             }
 
             bool empty() const {
@@ -95,8 +97,8 @@ namespace PetriEngine {
                 return _stack.size() + _cache.size();
             }
         private:
-            std::stack<ColoredPetriNetState> _stack;
-            std::vector<ColoredPetriNetState> _cache;
+            std::stack<T> _stack;
+            std::vector<T> _cache;
             std::default_random_engine _rng;
         };
 
@@ -108,6 +110,7 @@ namespace PetriEngine {
             }
         };
 
+        template <typename T>
         class BestFSStructure {
         public:
             explicit BestFSStructure(
@@ -116,7 +119,7 @@ namespace PetriEngine {
                 )
                 : _rng(seed), _query(std::move(query)), _negQuery(negQuery), _placeNameIndices(placeNameIndices) {}
 
-            ColoredPetriNetState& next() const {
+            T& next() const {
                 return _queue.top().cpn;
             }
 
@@ -124,7 +127,7 @@ namespace PetriEngine {
                 _queue.pop();
             }
 
-            void add(ColoredPetriNetState state) {
+            void add(T state) {
                 const MarkingCount_t weight = DistQueryVisitor::eval(_query, state.marking, _placeNameIndices, _negQuery);
                 if (weight <_minDist) {
                     _minDist = weight; //Why
@@ -142,6 +145,7 @@ namespace PetriEngine {
             uint32_t size() const {
                 return _queue.size();
             }
+            void shuffle() {}
         private:
             std::priority_queue<WeightedState> _queue;
             std::default_random_engine _rng;

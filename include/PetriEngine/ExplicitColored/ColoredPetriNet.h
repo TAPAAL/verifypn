@@ -83,6 +83,9 @@ namespace PetriEngine
                 return _initialMarking;
             }
 
+            Transition_t nTransitions() const {
+                return _transitions.size();
+            }
         private:
             friend class ColoredPetriNetBuilder;
             friend class ColoredSuccessorGenerator;
