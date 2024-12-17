@@ -351,6 +351,8 @@ namespace PetriEngine {
                     check_count += 1;
 
                     passed.insert(scratchpad.data(), size);
+                    _searchStatistics.passedCount += 1;
+
                     successor.shrink();
                     waiting.add(std::move(successor));
 

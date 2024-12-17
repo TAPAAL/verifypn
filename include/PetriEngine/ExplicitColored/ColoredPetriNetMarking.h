@@ -37,39 +37,6 @@ namespace PetriEngine{
                 }
             }
 
-            template<typename T>
-            static void encodeVarInt(std::vector<uint8_t>& out, size_t& cursor, T value) {
-                const uint8_t bitCount = std::floor(std::log2(value)) + 1;
-                const uint8_t bytesNeeded = bitCount / 7 + (bitCount % 7 != 0 ? 1 : 0);
-                if (out.size() < cursor + bytesNeeded) {
-                    out.resize(cursor + bytesNeeded);
-                }
-                for (size_t i = 0; i < bytesNeeded; ++i) {
-                    uint8_t byte = value & 0x7F;
-                    if (i != bytesNeeded - 1) {
-                        byte = byte | 0x80;
-                    }
-                    out[cursor++] = byte;
-                    value = value >> 7;
-                }
-            }
-
-            template<typename T>
-            static T decodeVarInt(std::vector<uint8_t>::const_iterator& cursor, const std::vector<uint8_t>::const_iterator end) {
-                T out = 0;
-                size_t bits = 0;
-                while (cursor != end) {
-                    out |= static_cast<T>(*cursor & 0x7F) << bits;
-                    bits += 7;
-                    if (!(*cursor & 0x80)) {
-                        break;
-                    }
-                    ++cursor;
-                }
-                ++cursor;
-                return out;
-            }
-
             static ColoredPetriNetMarking constructFromEncoding(std::vector<uint8_t>& bytes, size_t size) {
                 ColoredPetriNetMarking marking;
                 auto cursor = bytes.cbegin();
@@ -128,6 +95,39 @@ namespace PetriEngine{
                     }
                     out << ".";
                 }
+            }
+        private:
+            template<typename T>
+            static void encodeVarInt(std::vector<uint8_t>& out, size_t& cursor, T value) {
+                const uint8_t bitCount = std::floor(std::log2(value)) + 1;
+                const uint8_t bytesNeeded = bitCount / 7 + (bitCount % 7 != 0 ? 1 : 0);
+                if (out.size() < cursor + bytesNeeded) {
+                    out.resize(cursor + bytesNeeded);
+                }
+                for (size_t i = 0; i < bytesNeeded; ++i) {
+                    uint8_t byte = value & 0x7F;
+                    if (i != bytesNeeded - 1) {
+                        byte = byte | 0x80;
+                    }
+                    out[cursor++] = byte;
+                    value = value >> 7;
+                }
+            }
+
+            template<typename T>
+            static T decodeVarInt(std::vector<uint8_t>::const_iterator& cursor, const std::vector<uint8_t>::const_iterator end) {
+                T out = 0;
+                size_t bits = 0;
+                while (cursor != end) {
+                    out |= static_cast<T>(*cursor & 0x7F) << bits;
+                    bits += 7;
+                    if (!(*cursor & 0x80)) {
+                        break;
+                    }
+                    ++cursor;
+                }
+                ++cursor;
+                return out;
             }
         };
     }
