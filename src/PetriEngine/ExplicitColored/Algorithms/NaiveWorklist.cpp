@@ -62,9 +62,12 @@ namespace PetriEngine {
 
         template <template <typename> typename WaitingList, typename T>
         bool NaiveWorklist::_genericSearch(WaitingList<T> waiting) {
-            auto passed = ColoredMarkingSet {};
             ColoredSuccessorGenerator successorGenerator(_net);
+            ptrie::set<uint8_t> passed;
+            std::vector<uint8_t> scratchpad;
             const auto& initialState = _net.initial();
+            const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
+            size_t size = initialState.compressedEncode(scratchpad);
 
             if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
@@ -73,18 +76,17 @@ namespace PetriEngine {
                 auto initial = ColoredPetriNetState{initialState};
                 waiting.add(std::move(initial));
             }
-            passed.add(initialState);
+            passed.insert(scratchpad.data(), size);
             _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
-            const auto earlyTerminationCondition= _quantifier == Quantifier::EF;
 
             if (_check(initialState) == earlyTerminationCondition) {
                 return _getResult(true);
             }
-            while (!waiting.empty()) {
+
+            while (!waiting.empty()){
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
-
                 if (next.done){
                     waiting.remove();
                     if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
@@ -108,25 +110,23 @@ namespace PetriEngine {
                         continue;
                     }
                 }
-                auto marking = successor.marking;
+                auto& marking = successor.marking;
+                size = marking.compressedEncode(scratchpad);
                 _searchStatistics.exploredStates++;
-                if (!passed.contains(marking)) {
+                if (!passed.exists(scratchpad.data(), size).first) {
                     _searchStatistics.checkedStates += 1;
                     if (_check(marking) == earlyTerminationCondition) {
-                        _searchStatistics.passedCount = passed.size();
                         _searchStatistics.endWaitingStates = waiting.size();
                         return _getResult(true);
                     }
                     successor.shrink();
-                    passed.add(std::move(marking));
                     waiting.add(std::move(successor));
-                    _searchStatistics.passedCount = passed.size();
-                    _searchStatistics.endWaitingStates = waiting.size();
+                    passed.insert(scratchpad.data(), size);
+                    _searchStatistics.passedCount += 1;
                     _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
                 }
             }
-            _searchStatistics.passedCount = passed.size();
-            _searchStatistics.endWaitingStates = waiting.size(); //0
+            _searchStatistics.endWaitingStates = waiting.size();
             return _getResult(false);
         }
 
