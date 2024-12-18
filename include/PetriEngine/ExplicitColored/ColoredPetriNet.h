@@ -94,7 +94,7 @@ namespace PetriEngine
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
-            uint32_t getTransitionCount() const {
+            Transition_t getTransitionCount() const {
                 return _transitions.size();
             }
         private:
