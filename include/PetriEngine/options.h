@@ -110,6 +110,8 @@ struct options_t {
     int max_intervals_reduced = 5;
     bool print_bindings = false;
 
+    bool explicit_colored = false;
+
     std::string strategy_output;
 
     size_t seed() { return ++seed_offset; }

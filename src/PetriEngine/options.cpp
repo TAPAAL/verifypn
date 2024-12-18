@@ -211,6 +211,8 @@ void printHelp() {
         "  --nounfold                           Stops after colored structural reductions and writing the reduced net\n"
         "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
+        "  -C                                   Uses explicit state exploration for answering reachability-cardinality queries (CPN only).\n"
+        "                                       Only supports -R and -s options.\n"
         "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
         "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
         "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
@@ -544,6 +546,8 @@ bool options_t::parse(int argc, const char** argv) {
         } else if (std::strcmp(argv[i], "--trace-replay") == 0) {
             replay_trace = true;
             replay_file = std::string(argv[++i]);
+        } else if (std::strcmp(argv[i], "-C") == 0) {
+            explicit_colored = true;
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (std::strcmp(argv[i], "-z") == 0) {
