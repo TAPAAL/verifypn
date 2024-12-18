@@ -10,6 +10,7 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include "PetriEngine/ExplicitColored/FireabilityChecker.h"
 #include <fstream>
 
 namespace PetriEngine {
@@ -113,26 +114,26 @@ namespace PetriEngine {
 
         class GammaQueryVisitor : public PQL::Visitor {
         public:
-            static ConditionalBool eval(
+            static bool eval(
                 const PQL::Condition_ptr& expr,
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-                ConditionalBool deadlockValue
+                const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
+                const ColoredPetriNet& cpn
             ) {
-                GammaQueryVisitor visitor{marking, placeNameIndices, deadlockValue};
+                GammaQueryVisitor visitor{marking, placeNameIndices, transitionNameIndices, cpn};
                 visit(visitor, expr);
 
-                return visitor._dependsOnDeadlock
-                    ? ConditionalBool::UNKNOWN
-                    : (visitor._answer ? ConditionalBool::TRUE : ConditionalBool::FALSE);
+                return visitor._answer;
             }
         protected:
             explicit GammaQueryVisitor(
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-                ConditionalBool deadlockValue
+                const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
+                const ColoredPetriNet& cpn
             )
-                : _deadlockValue(deadlockValue), _marking(marking), _placeNameIndices(placeNameIndices) { }
+                : _marking(marking), _cpn(cpn), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
 
             void _accept(const PetriEngine::PQL::NotCondition *element) override {
                 visit(this, element->getCond().get());
@@ -182,17 +183,17 @@ namespace PetriEngine {
             }
 
             void _accept(const PetriEngine::PQL::DeadlockCondition *element) override {
-                if (_deadlockValue == ConditionalBool::TRUE) {
-                    _answer = true;
-                } else if (_deadlockValue == ConditionalBool::FALSE) {
-                    _answer = false;
-                } else {
-                    _dependsOnDeadlock = true;
+                for (auto tid = 0; tid < _cpn.getTransitionCount(); tid++) {
+                    if (FireabilityChecker::CanFire(_cpn, tid, _marking)) {
+                        _answer = false;
+                        return;
+                    }
                 }
+                _answer = true;
             }
 
             void _accept(const PetriEngine::PQL::FireableCondition *element) override {
-                notSupported("Does not support fireable");
+                _answer = FireabilityChecker::CanFire(_cpn, _transitionNameIndices.find(*element->getName())->second, _marking);
             }
 
             void _accept(const PetriEngine::PQL::EFCondition *condition) override {
@@ -262,19 +263,21 @@ namespace PetriEngine {
             }
 
             bool _answer = true;
-            ConditionalBool _deadlockValue;
-            bool _dependsOnDeadlock = false;
             const ColoredPetriNetMarking& _marking;
+            const ColoredPetriNet& _cpn;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+            const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;
         };
 
         NaiveWorklist::NaiveWorklist(
             const ColoredPetriNet& net,
             const PQL::Condition_ptr &query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
+            const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
             const IColoredResultPrinter& coloredResultPrinter
         ) : _net(std::move(net)),
             _placeNameIndices(placeNameIndices),
+            _transitionNameIndices(transitionNameIndices),
             _coloredResultPrinter(coloredResultPrinter)
         {
             if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -305,8 +308,8 @@ namespace PetriEngine {
             return _searchStatistics;
         }
 
-        ConditionalBool NaiveWorklist::_check(const ColoredPetriNetMarking& state, ConditionalBool deadlockValue) {
-            return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, deadlockValue);
+        bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) {
+            return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, _transitionNameIndices, _net);
         }
 
         template<typename WaitingList>
@@ -320,10 +323,8 @@ namespace PetriEngine {
             passed.add(initialState);
             _searchStatistics.passedCount = passed.size();
 
-            const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
-                ? ConditionalBool::TRUE
-                : ConditionalBool::FALSE;
-            if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+            const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
+            if (_check(initialState) == earlyTerminationCondition) {
                 return getResult(true);
             }
 
@@ -340,7 +341,7 @@ namespace PetriEngine {
                 _searchStatistics.exploredStates++;
 
                 if (!passed.contains(marking)) {
-                    if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                    if (_check(marking) == earlyTerminationCondition) {
                         return getResult(true);
                     }
                     _searchStatistics.checkedStates += 1;
