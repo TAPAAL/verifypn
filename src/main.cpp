@@ -604,13 +604,16 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     bool result = false;
     bool randomize = false;
     auto placeIndices = builder.takePlaceIndices();
+    auto transitionIndices = builder.takeTransitionIndices();
     if (randomize){
         net.randomizeBindingOrder(options.seed());
     }
+
+
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();
         ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
-        ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], placeIndices, resultPrinter);
+        ExplicitColored::NaiveWorklist naiveWorkList(net, queries[i], placeIndices, transitionIndices, resultPrinter);
         switch (options.strategy) {
             case Strategy::DEFAULT:
             case Strategy::DFS:

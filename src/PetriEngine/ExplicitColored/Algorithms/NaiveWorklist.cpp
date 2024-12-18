@@ -10,6 +10,7 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include "PetriEngine/ExplicitColored/FireabilityChecker.h"
 #include <fstream>
 
 namespace PetriEngine {
@@ -18,9 +19,11 @@ namespace PetriEngine {
             const ColoredPetriNet& net,
             const PQL::Condition_ptr &query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
+            const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
             const IColoredResultPrinter& coloredResultPrinter
         ) : _net(std::move(net)),
             _placeNameIndices(placeNameIndices),
+            _transitionNameIndices(transitionNameIndices),
             _coloredResultPrinter(coloredResultPrinter)
         {
             if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -53,8 +56,8 @@ namespace PetriEngine {
             return _searchStatistics;
         }
 
-        ConditionalBool NaiveWorklist::_check(const ColoredPetriNetMarking& state, const ConditionalBool deadlockValue) const {
-            return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, deadlockValue);
+        bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) {
+            return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, _transitionNameIndices, _net);
         }
 
         template <template <typename> typename WaitingList, typename T>
@@ -64,7 +67,7 @@ namespace PetriEngine {
             const auto& initialState = _net.initial();
 
             if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
-                auto initial = ColoredPetriNetStateOneTrans{initialState, _net.nTransitions()};
+                auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
             }else {
                 auto initial = ColoredPetriNetState{initialState};
@@ -73,11 +76,9 @@ namespace PetriEngine {
             passed.add(initialState);
             _searchStatistics.passedCount = 1;
             _searchStatistics.checkedStates = 1;
-            const auto earlyTerminationCondition = (_quantifier == Quantifier::EF)
-                ? ConditionalBool::TRUE
-                : ConditionalBool::FALSE;
+            const auto earlyTerminationCondition= _quantifier == Quantifier::EF;
 
-            if (_check(initialState, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+            if (_check(initialState) == earlyTerminationCondition) {
                 return _getResult(true);
             }
             while (!waiting.empty()) {
@@ -111,7 +112,7 @@ namespace PetriEngine {
                 _searchStatistics.exploredStates++;
                 if (!passed.contains(marking)) {
                     _searchStatistics.checkedStates += 1;
-                    if (_check(marking, ConditionalBool::UNKNOWN) == earlyTerminationCondition) {
+                    if (_check(marking) == earlyTerminationCondition) {
                         _searchStatistics.passedCount = passed.size();
                         _searchStatistics.endWaitingStates = waiting.size();
                         return _getResult(true);

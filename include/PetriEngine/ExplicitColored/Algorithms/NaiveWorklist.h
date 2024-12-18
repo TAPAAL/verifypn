@@ -11,11 +11,6 @@ namespace PetriEngine {
         template <typename T>
         class RDFSStructure;
         class ColoredResultPrinter;
-        enum class ConditionalBool {
-            FALSE,
-            TRUE,
-            UNKNOWN
-        };
 
         enum class Quantifier {
             EF,
@@ -36,6 +31,7 @@ namespace PetriEngine {
                 const ColoredPetriNet& net,
                 const PQL::Condition_ptr &query,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
+                const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
@@ -46,9 +42,9 @@ namespace PetriEngine {
             Quantifier _quantifier;
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+            const std::unordered_map<std::string, Transition_t> _transitionNameIndices;
 
-            ConditionalBool _check(const ColoredPetriNetMarking& state, ConditionalBool deadlockValue) const;
-
+            bool _check(const ColoredPetriNetMarking& state);
 
             template <typename T>
             bool _dfs();
@@ -65,8 +61,6 @@ namespace PetriEngine {
 
             SearchStatistics _searchStatistics;
             const IColoredResultPrinter& _coloredResultPrinter;
-
-
         };
     }
 }

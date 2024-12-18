@@ -54,7 +54,7 @@ namespace PetriEngine{
                 if (transition.guardExpression == nullptr){
                     return;
                 }
-                auto vars = transition.guardExpression->getVariables();
+                auto vars = transition.variables;
                 for (auto &&var: vars) {
                     auto nValues = _net._variables[var].colorType->colors;
                     std::vector<uint32_t> values = std::vector<uint32_t>(nValues);

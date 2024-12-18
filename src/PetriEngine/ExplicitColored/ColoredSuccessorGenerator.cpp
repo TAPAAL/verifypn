@@ -46,7 +46,7 @@ namespace PetriEngine{
         }
         CheckingBool ColoredSuccessorGenerator::firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const {
             if (_net._transitions[tid].guardExpression != nullptr && !_net._transitions[tid].guardExpression->eval(binding)){
-                if (_net._transitions[tid].guardExpression->getVariables().empty()){
+                if (_net._transitions[tid].variables.empty()){
                     return CheckingBool::NEVERTRUE;
                 }
                 return CheckingBool::FALSE;

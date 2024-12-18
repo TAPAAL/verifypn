@@ -100,7 +100,7 @@ namespace PetriEngine{
                     state.skip = true;
                     return {{},0};
                 }
-                auto newState = ColoredPetriNetStateOneTrans{state, _net.nTransitions()};
+                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
                     const auto totalBindings = _net._transitions[tid].validVariables.second;
                     if (totalBindings == 0) {
                         if (bid == 0) {

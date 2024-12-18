@@ -4,6 +4,7 @@
 
 #ifndef GAMMAQUERYVISITOR_H
 #define GAMMAQUERYVISITOR_H
+#include <PetriEngine/ExplicitColored/FireabilityChecker.h>
 #include <PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h>
 #include <PetriEngine/PQL/Visitor.h>
 #include "ColoredExpressionVisitor.h"
@@ -12,26 +13,26 @@ namespace PetriEngine {
     namespace ExplicitColored {
         class GammaQueryVisitor : public PQL::Visitor {
         public:
-            static ConditionalBool eval(
+            static bool eval(
                 const PQL::Condition_ptr& expr,
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-                const ConditionalBool deadlockValue
+                const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
+                const ColoredPetriNet& cpn
             ) {
-                GammaQueryVisitor visitor{marking, placeNameIndices, deadlockValue};
+                GammaQueryVisitor visitor{marking, placeNameIndices, transitionNameIndices, cpn};
                 visit(visitor, expr);
 
-                return visitor._dependsOnDeadlock
-                    ? ConditionalBool::UNKNOWN
-                    : (visitor._answer ? ConditionalBool::TRUE : ConditionalBool::FALSE);
+                return visitor._answer;
             }
         protected:
             explicit GammaQueryVisitor(
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
-                const ConditionalBool deadlockValue
+                const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
+                const ColoredPetriNet& cpn
             )
-                : _deadlockValue(deadlockValue), _marking(marking), _placeNameIndices(placeNameIndices) { }
+                : _marking(marking), _cpn(cpn), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
 
             void _accept(const PQL::NotCondition *element) override {
                 visit(this, element->getCond().get());
@@ -81,13 +82,13 @@ namespace PetriEngine {
             }
 
             void _accept(const PQL::DeadlockCondition *element) override {
-                if (_deadlockValue == ConditionalBool::TRUE) {
-                    _answer = true;
-                } else if (_deadlockValue == ConditionalBool::FALSE) {
-                    _answer = false;
-                } else {
-                    _dependsOnDeadlock = true;
+                for (uint32_t tid = 0; tid < _cpn.getTransitionCount(); tid++) {
+                    if (FireabilityChecker::CanFire(_cpn, tid, _marking)) {
+                        _answer = false;
+                        return;
+                    }
                 }
+                _answer = true;
             }
 
             void _accept(const PQL::FireableCondition *element) override {
@@ -149,22 +150,22 @@ namespace PetriEngine {
             void _accept(const PQL::NaryExpr *element) override  { notSupported("NaryExpr"); }
             void _accept(const PQL::SubtractExpr *element) override { notSupported("SubtractExpr"); }
         private:
-            static void notSupported() {
+            void notSupported() {
                 throw base_error("Not supported");
             }
-            static void notSupported(const std::string& type) {
+            void notSupported(const std::string& type) {
                 throw base_error("Not supported ", type);
             }
 
-            static void invalid() {
+            void invalid() {
                 throw base_error("Invalid expression");
             }
 
             bool _answer = true;
-            ConditionalBool _deadlockValue;
-            bool _dependsOnDeadlock = false;
             const ColoredPetriNetMarking& _marking;
+            const ColoredPetriNet& _cpn;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+            const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;
         };
     }
 }
