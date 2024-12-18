@@ -30,10 +30,10 @@
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "CPNMultiSet.h"
-#include "GuardExpression.h"
 #include "Binding.h"
 #include "ColoredPetriNetMarking.h"
 #include "CompiledArc.h"
+#include "GuardCompiler.h"
 
 namespace PetriEngine
 {
@@ -41,7 +41,8 @@ namespace PetriEngine
     {
         struct ColoredPetriNetTransition
         {
-            std::unique_ptr<GuardExpression> guardExpression;
+            std::unique_ptr<CompiledGuardExpression> guardExpression;
+            std::set<Variable_t> variables;
             std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint32_t> validVariables;
         };
 
@@ -94,11 +95,14 @@ namespace PetriEngine
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
-
+            Transition_t getTransitionCount() const {
+                return _transitions.size();
+            }
         private:
             friend class ColoredPetriNetBuilder;
             friend class ColoredSuccessorGenerator;
             friend class ValidVariableGenerator;
+            friend class FireabilityChecker;
             ColoredPetriNet() = default;
             std::vector<ColoredPetriNetTransition> _transitions;
             std::vector<ColoredPetriNetPlace> _places;
