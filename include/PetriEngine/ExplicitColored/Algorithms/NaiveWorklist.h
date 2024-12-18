@@ -11,11 +11,6 @@
 namespace PetriEngine {
     namespace ExplicitColored {
         class ColoredResultPrinter;
-        enum class ConditionalBool {
-            FALSE,
-            TRUE,
-            UNKNOWN
-        };
 
         enum class Quantifier {
             EF,
@@ -34,6 +29,7 @@ namespace PetriEngine {
                 const ColoredPetriNet& net,
                 const PQL::Condition_ptr &query,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
+                const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
@@ -44,8 +40,9 @@ namespace PetriEngine {
             Quantifier _quantifier;
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
+            const std::unordered_map<std::string, Transition_t> _transitionNameIndices;
 
-            ConditionalBool _check(const PetriEngine::ExplicitColored::ColoredPetriNetMarking& state, ConditionalBool deadlockValue);
+            bool _check(const ColoredPetriNetMarking& state);
 
             bool _dfs();
             bool _bfs();

@@ -23,7 +23,7 @@ namespace PetriEngine {
             }
 
             void setValue(const Variable_t v, const Color_t color) {
-                _values.insert(std::make_pair(v, color));
+                _values.insert_or_assign(v, color);
             }
         private:
             std::map<Variable_t, Color_t> _values;

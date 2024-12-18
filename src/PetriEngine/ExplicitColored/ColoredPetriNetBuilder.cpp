@@ -1,8 +1,7 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
-
 #include <PetriEngine/ExplicitColored/ArcCompiler.h>
-
 #include "PetriEngine/ExplicitColored/ValidVariableGenerator.h"
+#include "PetriEngine/ExplicitColored/GuardCompiler.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
@@ -136,9 +135,14 @@ namespace PetriEngine {
 
         void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
             ColoredPetriNetTransition transition;
-            transition.guardExpression = guard == nullptr
-                ? nullptr
-                : std::make_unique<GuardExpression>(_colors, guard, _variableMap);
+            GuardCompiler compiler(*_variableMap, *_colors);
+            if (guard != nullptr) {
+                auto compiled = compiler.compile(*guard);
+                transition.guardExpression = std::move(compiled.first);
+                transition.variables = std::move(compiled.second);
+            } else {
+                transition.guardExpression = nullptr;
+            }
             _currentNet._transitions.emplace_back(std::move(transition));
             _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
         }
@@ -230,6 +234,10 @@ namespace PetriEngine {
 
         std::unordered_map<std::string, uint32_t> ColoredPetriNetBuilder::takePlaceIndices() {
             return std::move(_placeIndices);
+        }
+
+        std::unordered_map<std::string, Transition_t> ColoredPetriNetBuilder::takeTransitionIndices() {
+            return std::move(_transitionIndices);
         }
     }
 }
