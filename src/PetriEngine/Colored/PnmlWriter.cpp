@@ -60,10 +60,10 @@ namespace PetriEngine {
 
                 //this is a hack, better way to find if a color is a finite int range?
                 if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
-                    _namedSortTypes.insert(
-                            std::pair<std::string, std::string>(colortype->getName(), std::string("finite range")));
+                    _namedSortTypes.emplace(colortype->getName(), "finite range");
                     handleFiniteRange(types);
                 } else {
+                    _namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
                     if (types[0]->getName() == "dot") {
                         _out << increaseTabs() << "<dot/>\n";
                     } else {
@@ -195,21 +195,23 @@ namespace PetriEngine {
                 _out << decreaseTabs() << "</graphics>\n";
                 handleType(place);
 
-                bool ok = false;
-                for (const auto &p: place.marking) {
-                    if (p.second > 0) {
-                        ok = true;
-                        break;
-                    }
-                }
-
-                if (ok) handlehlinitialMarking(place.marking);
+                handlehlinitialMarking(place.marking);
 
                 _out << decreaseTabs() << "</place>\n";
             }
         }
 
         void PnmlWriter::handlehlinitialMarking(Multiset marking) {
+            bool hasAnyTokens = false;
+            for (const auto& [_, count] : marking) {
+                if (count > 0) {
+                    hasAnyTokens = true;
+                    break;
+                }
+            }
+            if (!hasAnyTokens) {
+                return;
+            }
             _out << getTabs() << "<hlinitialMarking>\n";
             _out << increaseTabs() << "<text>" << marking.toString() << "</text>\n";
             _out << getTabs() << "<structure>\n";
@@ -303,7 +305,10 @@ namespace PetriEngine {
             else
             {
                 const auto thePnmlColorTypeIt = _namedSortTypes.find(c->getColorType()->getName());
-                if (thePnmlColorTypeIt != _namedSortTypes.end() && thePnmlColorTypeIt->second == "finite range") {
+                if (thePnmlColorTypeIt == _namedSortTypes.end()) {
+                    throw base_error("_namedSortTypes is missing color type: '", c->getColorType()->getName(), "'");
+                }
+                if (thePnmlColorTypeIt->second == "finite range") {
                     const std::string& start = c->getColorType()->operator[](size_t{0}).getColorName();
                     const std::string& end = c->getColorType()->operator[](
                             c->getColorType()->size() - 1).getColorName();

@@ -91,5 +91,32 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
 }
 
+class IntialMarkingCollector : public AbstractPetriNetBuilder {
+public:
+    Multiset getInitialMarking(std::string placeName) {
+        auto it = _initialMarkings.find(placeName);
+        if (it == _initialMarkings.end()) {
+            return Multiset();
+        }
+        return it->second;
+    }
+
+    void addPlace(const std::string& name, uint32_t tokens, double x, double y) override {}
+    void addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) override {
+        _initialMarkings.emplace(name, std::move(tokens));
+    }
+    void addTransition(const std::string& name, int32_t player, double x, double y) override {}
+    void addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) override {}
+    void addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) override {}
+    void addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr &expr, uint32_t inhib_weight) override {}
+    void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override {}
+    void addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) override {}
+    void addColorType(const std::string& id, const Colored::ColorType* type) override {}
+    void sort() override {}
+private:
+    std::map<std::string, Colored::Multiset> _initialMarkings;
+};
+
+
 #endif /* UTILS_H */
 
