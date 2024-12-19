@@ -48,27 +48,27 @@ namespace PetriEngine{
             ColoredPetriNetStateOneTrans(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking)){
                 _map = std::vector<Binding_t>(numberOfTransitions);
             }
+            ColoredPetriNetStateOneTrans(ColoredPetriNetStateOneTrans&& state) = default;
+
+            ColoredPetriNetStateOneTrans& operator=(const ColoredPetriNetStateOneTrans&) = default;
+            ColoredPetriNetStateOneTrans& operator=(ColoredPetriNetStateOneTrans&&) = default;
             std::pair<Transition_t, Binding_t> getNextPair() {
-                Transition_t tid;
-                Binding_t bid;
-                if (_completedTransitions == _map.size()) {
-                    tid = std::numeric_limits<Transition_t>::max();
-                    bid = std::numeric_limits<Binding_t>::max();
+                Transition_t tid = _currentIndex;
+                Binding_t bid = std::numeric_limits<Binding_t>::max();
+                if (done) {
+                    return {tid,bid};
                 }
-                else if (_map.size() <= _currentIndex) {
+                auto it = _map.begin() + _currentIndex;
+                while (it != _map.end() && *it == std::numeric_limits<Transition_t>::max()) {
+                    ++it;
+                    ++_currentIndex;
+                }
+                if (it == _map.end()) {
                     _currentIndex = 0;
-                    tid = std::numeric_limits<Transition_t>::max();
-                    bid = std::numeric_limits<Binding_t>::max();
                     shuffle = true;
-                }
-                else {
-                    auto binding = _map[_currentIndex];
-                    while (binding == std::numeric_limits<Binding_t>::max() && _currentIndex + 1 < _map.size()) {
-                        ++_currentIndex;
-                        binding = _map[_currentIndex];
-                    }
+                }else {
                     tid = _currentIndex;
-                    bid = binding;
+                    bid = *it;
                     ++_currentIndex;
                 }
                 return {tid,bid};
@@ -81,8 +81,6 @@ namespace PetriEngine{
                         _completedTransitions += 1;
                         if (_completedTransitions == _map.size()) {
                             done = true;
-                        }else {
-                            skip = true;
                         }
                     }
                 }
@@ -95,7 +93,6 @@ namespace PetriEngine{
             ColoredPetriNetMarking marking;
             bool done = false;
             bool shuffle = false;
-            bool skip = false;
         private:
             std::vector<Binding_t> _map;
             uint32_t _currentIndex = 0;

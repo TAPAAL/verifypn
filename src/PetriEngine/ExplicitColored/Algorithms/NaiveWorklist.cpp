@@ -89,27 +89,17 @@ namespace PetriEngine {
                 auto successor = successorGenerator.next(next);
                 if (next.done){
                     waiting.remove();
-                    if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
-                        waiting.shuffle();
-                    }
                     continue;
                 }
 
                 if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
                     if (next.shuffle){
                         next.shuffle = false;
-                        next.skip = false;
                         waiting.shuffle();
                         continue;
                     }
                 }
 
-                if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
-                    if (next.skip) {
-                        next.skip = false;
-                        continue;
-                    }
-                }
                 auto& marking = successor.marking;
                 size = marking.compressedEncode(scratchpad);
                 _searchStatistics.exploredStates++;

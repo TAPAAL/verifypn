@@ -75,6 +75,7 @@ namespace PetriEngine {
 
             void remove() {
                 _stack.pop();
+                shuffle();
             }
 
             void shuffle() {

@@ -96,16 +96,13 @@ namespace PetriEngine{
             // SuccessorGenerator but only considers current transition
             ColoredPetriNetStateOneTrans _nextOneTrans(ColoredPetriNetStateOneTrans &state) const {
                 auto [tid, bid] = state.getNextPair();
-                if (bid == std::numeric_limits<Binding_t>::max()) {
-                    state.skip = true;
-                    return {{},0};
-                }
-                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
+                while (bid != std::numeric_limits<Binding_t>::max()) {
                     const auto totalBindings = _net._transitions[tid].validVariables.second;
                     if (totalBindings == 0) {
                         if (bid == 0) {
                             const auto binding = Binding{};
                             if (check(state.marking, tid, binding)) {
+                                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
                                 _fire(newState.marking, tid, binding);
                                 state.updatePair(tid, ++bid);
                                 return newState;
@@ -119,18 +116,23 @@ namespace PetriEngine{
                                 const auto binding = getBinding(tid, bid);
                                 const auto check = firstCheckPresetAndGuard(state.marking, tid, binding);
                                 if (check == CheckingBool::TRUE) {
+                                    auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
                                     _fire(newState.marking, tid, binding);
                                     state.updatePair(tid,bid);
                                     return newState;
                                 }
                                 if (check == CheckingBool::NEVERTRUE) {
                                     state.updatePair(tid, std::numeric_limits<Binding_t>::max());
-                                    return newState;
+                                    auto [nextTid, nextBid] = state.getNextPair();
+                                    tid = nextTid;
+                                    bid = nextBid;
+                                    continue;
                                 }
                             }
                             while (++bid <= totalBindings) {
                                 const auto binding = getBinding(tid, bid);
                                 if (checkPresetAndGuard(state.marking, tid, binding)) {
+                                    auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
                                     _fire(newState.marking, tid, binding);
                                     state.updatePair(tid, bid);
                                     return newState;
@@ -138,8 +140,12 @@ namespace PetriEngine{
                             }
                         }
                     }
-                state.updatePair(tid, std::numeric_limits<Binding_t>::max());
-                return newState;
+                    state.updatePair(tid, std::numeric_limits<Binding_t>::max());
+                    auto [nextTid, nextBid] = state.getNextPair();
+                    tid = nextTid;
+                    bid = nextBid;
+                }
+            return {{},0};
             }
         };
     }
