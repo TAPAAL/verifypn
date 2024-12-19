@@ -92,7 +92,7 @@ namespace PetriEngine {
             }
 
             void _accept(const PQL::FireableCondition *element) override {
-                notSupported("Does not support fireable");
+                _answer = FireabilityChecker::CanFire(_cpn, _transitionNameIndices.find(*element->getName())->second, _marking);
             }
 
             void _accept(const PQL::EFCondition *condition) override {
