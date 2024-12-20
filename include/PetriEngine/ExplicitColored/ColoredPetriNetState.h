@@ -23,7 +23,6 @@ namespace PetriEngine{
                     _currentBinding = bid;
                     _currentTransition = tid;
                 }else {
-                    shuffle = true;
                     done = true;
                 }
             }
@@ -33,7 +32,6 @@ namespace PetriEngine{
             }
 
             ColoredPetriNetMarking marking;
-            bool shuffle = false;
             bool done = false;
             private:
                 Binding_t _currentBinding = 0;
