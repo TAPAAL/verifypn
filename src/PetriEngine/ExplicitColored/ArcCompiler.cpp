@@ -117,10 +117,10 @@ namespace PetriEngine {
                 const std::unordered_map<std::string, Variable_t>& variableMap,
                 const Colored::ColorTypeMap& colorTypeMap
             ) : color(ParameterizedColor::fromColor(DOT_COLOR)),
-                _variableMap(&variableMap),
-                _colorTypeMap(&colorTypeMap),
                 maxColor(0),
-                constant(true)
+                constant(true),
+                _colorTypeMap(&colorTypeMap),
+                _variableMap(&variableMap)
             {}
 
             void accept(const Colored::DotConstantExpression* expr) override {
@@ -178,8 +178,9 @@ namespace PetriEngine {
             Color_t maxColor;
             bool constant;
         private:
-            const std::unordered_map<std::string, Variable_t>* const _variableMap;
             const Colored::ColorTypeMap* const _colorTypeMap;
+            const std::unordered_map<std::string, Variable_t>* const _variableMap;
+
 
             void unexpectedExpression() {
                 throw base_error("Unexpected expression");

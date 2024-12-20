@@ -23,11 +23,11 @@ namespace PetriEngine{
 
             std::vector<CPNMultiSet> markings;
 
-            bool operator==(ColoredPetriNetMarking& other) const{
+            bool operator==(const ColoredPetriNetMarking& other) const{
                 return markings == other.markings;
             }
 
-            MarkingCount_t getPlaceCount(uint32_t placeIndex) const {
+            MarkingCount_t getPlaceCount(const uint32_t placeIndex) const {
                 return markings[placeIndex].totalCount();
             }
 

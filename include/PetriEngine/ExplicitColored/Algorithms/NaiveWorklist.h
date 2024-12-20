@@ -3,13 +3,13 @@
 
 
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
-#include "PetriEngine/Structures/Queue.h"
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
 
 namespace PetriEngine {
     namespace ExplicitColored {
+        template <typename T>
+        class RDFSStructure;
         class ColoredResultPrinter;
 
         enum class Quantifier {
@@ -20,7 +20,9 @@ namespace PetriEngine {
         enum class SearchStrategy {
             DFS,
             BFS,
-            RDFS
+            RDFS,
+            BESTFS,
+            RPFS,
         };
 
         class NaiveWorklist {
@@ -33,7 +35,7 @@ namespace PetriEngine {
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
-            bool check(SearchStrategy searchStrategy, size_t randomSeed);
+            bool check(SearchStrategy searchStrategy, size_t seed);
             const SearchStatistics& GetSearchStatistics() const;
         private:
             PQL::Condition_ptr _gammaQuery;
@@ -44,14 +46,18 @@ namespace PetriEngine {
 
             bool _check(const ColoredPetriNetMarking& state);
 
+            template <typename T>
             bool _dfs();
+            template <typename T>
             bool _bfs();
+            template <typename T>
             bool _rdfs(size_t seed);
+            template <typename T>
+            bool _bestfs(size_t seed);
 
-            template<typename WaitingList>
-            bool _genericSearch(WaitingList waiting);
-
-            bool getResult(bool found);
+            template <template <typename> typename WaitingList, typename T>
+            bool _genericSearch(WaitingList<T> waiting);
+            bool _getResult(bool found) const;
 
             SearchStatistics _searchStatistics;
             const IColoredResultPrinter& _coloredResultPrinter;

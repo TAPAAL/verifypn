@@ -1,37 +1,13 @@
-/* PeTe - Petri Engine exTremE
- * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
- *                     Peter Gjøl Jensen <root@petergjoel.dk>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 #ifndef COLOREDPETRINET_H
 #define COLOREDPETRINET_H
 
-#include <string>
+#include <random>
 #include <vector>
-#include <climits>
-#include <limits>
 #include <memory>
-#include <iostream>
-
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
-#include "CPNMultiSet.h"
-#include "Binding.h"
 #include "ColoredPetriNetMarking.h"
+#include "CPNMultiSet.h"
 #include "CompiledArc.h"
 #include "GuardCompiler.h"
 
@@ -43,7 +19,7 @@ namespace PetriEngine
         {
             std::unique_ptr<CompiledGuardExpression> guardExpression;
             std::set<Variable_t> variables;
-            std::pair<std::map<Variable_t,std::vector<uint32_t>>, uint32_t> validVariables;
+            std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
         };
 
         struct BaseColorType
@@ -64,7 +40,7 @@ namespace PetriEngine
 
         struct ColoredPetriNetInhibitor
         {
-            ColoredPetriNetInhibitor(size_t from, size_t to, MarkingCount_t weight)
+            ColoredPetriNetInhibitor(const size_t from, const size_t to, const MarkingCount_t weight)
                 : from(from), to(to), weight(weight){}
             uint32_t from;
             uint32_t to;
@@ -92,9 +68,21 @@ namespace PetriEngine
             ColoredPetriNet(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
             ColoredPetriNet& operator=(const ColoredPetriNet&) = default;
+            // Should maybe be for each state instead of once for every net
+            void randomizeBindingOrder(const size_t seed){
+                auto rng = std::default_random_engine {seed};
+                for (auto&& t : _transitions){
+                    auto& varMap = t.validVariables.first;
+                    for (auto &[var, values] : varMap){
+                        auto& validValues = values;
+                        std::shuffle(validValues.begin(),validValues.end(), rng);
+                    }
+                }
+            }
             const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
+
             Transition_t getTransitionCount() const {
                 return _transitions.size();
             }

@@ -22,12 +22,12 @@ namespace PetriEngine{
                         _updateVariableMap(variableMap, _net._arcs[aid]);
                     }
 
-                    uint32_t totalSize = variableMap.empty() ? 0 : 1;//Gets possible values of all variables, will overestimate possible values
-                    for (auto&& var : variableMap){
-                        if (totalSize > std::numeric_limits<uint32_t>::max() / var.second.size()) {
+                    uint64_t totalSize = variableMap.empty() ? 0 : 1;//Gets possible values of all variables, will overestimate possible values
+                    for (auto&[fst, snd] : variableMap){
+                        if (totalSize > std::numeric_limits<uint64_t>::max() / snd.size()) {
                             return ValidVariableGeneratorStatus::TOO_MANY_BINDINGS;
                         }
-                        totalSize *= var.second.size();
+                        totalSize *= snd.size();
                     }
                     _net._transitions[tid].validVariables = std::pair(std::move(variableMap),totalSize);
                 }
