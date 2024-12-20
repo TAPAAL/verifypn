@@ -200,7 +200,7 @@ namespace PetriEngine {
                 }
 
                 void _accept(const PQL::FireableCondition *element) override {
-                    notSupported("Does not support fireable");
+                    _dist = 1000000;
                 }
 
                 void _accept(const PQL::EFCondition *condition) override {
