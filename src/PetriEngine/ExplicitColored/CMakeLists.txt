@@ -6,7 +6,6 @@ add_library(ExplicitColored
     ColoredSuccessorGenerator.cpp
     Algorithms/NaiveWorklist.cpp
     ColoredResultPrinter.cpp
-    CompiledArc.cpp
     GuardCompiler.cpp
 )
 

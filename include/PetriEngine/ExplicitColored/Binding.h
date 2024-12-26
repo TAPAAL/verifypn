@@ -25,6 +25,15 @@ namespace PetriEngine {
             void setValue(const Variable_t v, const Color_t color) {
                 _values.insert_or_assign(v, color);
             }
+
+            friend std::ostream& operator<<(std::ostream& out, const Binding& binding) {
+                out << "[";
+                for (const auto& val : binding._values) {
+                    out << val.first << "=" << val.second << ",";
+                }
+                out << "]";
+                return out;
+            }
         private:
             std::map<Variable_t, Color_t> _values;
         };

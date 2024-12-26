@@ -25,7 +25,7 @@ namespace PetriEngine {
 
                 for (auto i = cpn._transitionArcs[tid].first; i < cpn._transitionArcs[tid].second; i++) {
                     auto& arc = cpn._arcs[i];
-                    if (state.markings[arc.from].totalCount() < arc.expression.getMinimalMarkingCount()) {
+                    if (state.markings[arc.from].totalCount() < arc.expression->getMinimalMarkingCount()) {
                         return false;
                     }
                 }
@@ -44,10 +44,10 @@ namespace PetriEngine {
             }
         private:
             static void updateBinding(Binding& binding, const ColoredPetriNet& cpn, const Transition_t tid, const uint32_t bid) {
-                auto& possibleValues = cpn._transitions[tid].validVariables.second;
+                const auto possibleValues = cpn._transitions[tid].validVariables.second;
                 if (possibleValues != 0){
-                    auto& variables = cpn._transitions[tid].validVariables.first;
-                    uint32_t interval = possibleValues;
+                    const auto& variables = cpn._transitions[tid].validVariables.first;
+                    auto interval = possibleValues;
                     for (const auto& pair : variables){
                         auto size = pair.second.size();
                         interval /= size;
@@ -62,7 +62,7 @@ namespace PetriEngine {
                 }
                 for (auto i = cpn._transitionArcs[tid].first; i < cpn._transitionArcs[tid].second; i++){
                     auto& arc = cpn._arcs[i];
-                    if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
+                    if (!arc.expression->isSubSet(state.markings[arc.from], binding)) {
                         return false;
                     }
                 }

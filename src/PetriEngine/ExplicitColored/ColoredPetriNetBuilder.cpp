@@ -49,12 +49,12 @@ namespace PetriEngine {
                     },
                     weight
                 );
-
+                const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
                  _inputArcs.push_back(ColoredPetriNetArc {
                      from,
                      to,
                      _currentNet._places[from].colorType,
-                     ArcCompiler::compileArc(expr, *_variableMap, *_colors)
+                     arcCompiler.compile(expr)
                  });
              }
         }
@@ -66,7 +66,8 @@ namespace PetriEngine {
             if (inhib_weight != 0) {
                 _currentNet._inhibitorArcs.emplace_back(from, to, inhib_weight);
             } else {
-                auto arc = ArcCompiler::compileArc(expr, *_variableMap, *_colors);
+                const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+                auto arc = arcCompiler.compile(expr);
 
                 _inputArcs.push_back(ColoredPetriNetArc {
                     from,
@@ -88,18 +89,24 @@ namespace PetriEngine {
                 },
                 weight
             );
+
+            const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+
             _outputArcs.push_back(ColoredPetriNetArc {
                 _transitionIndices.find(transition)->second,
                 placeIndex,
                 _currentNet._places[placeIndex].colorType,
-                ArcCompiler::compileArc(expr, *_variableMap, *_colors)
+                arcCompiler.compile(expr)
             });
         }
 
         //Colored output arc
         void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
             auto placeIndex = _placeIndices.find(place)->second;
-            auto arc = ArcCompiler::compileArc(expr, *_variableMap, *_colors);
+
+            const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+
+            auto arc = arcCompiler.compile(expr);
 
             _outputArcs.push_back(ColoredPetriNetArc {
                 _transitionIndices.find(transition)->second,

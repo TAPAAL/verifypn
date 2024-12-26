@@ -4,11 +4,12 @@
 #include <random>
 #include <vector>
 #include <memory>
+
+#include "ArcCompiler.h"
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "ColoredPetriNetMarking.h"
 #include "CPNMultiSet.h"
-#include "CompiledArc.h"
 #include "GuardCompiler.h"
 
 namespace PetriEngine
@@ -52,7 +53,7 @@ namespace PetriEngine
             uint32_t from;
             uint32_t to;
             std::shared_ptr<ColorType> colorType;
-            CompiledArc expression;
+            std::unique_ptr<CompiledArcExpression> expression;
         };
 
         struct Variable
