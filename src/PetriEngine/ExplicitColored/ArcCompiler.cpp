@@ -79,9 +79,6 @@ namespace PetriEngine {
                 const auto& result = eval(binding);
                 const auto beforeCount = out.totalCount();
                 out += result;
-                if (beforeCount + 3 != out.totalCount()) {
-                    std::cout << "Something else happened" << std::endl;
-                }
             }
 
             void consume(CPNMultiSet &out, const Binding &binding) const override {
