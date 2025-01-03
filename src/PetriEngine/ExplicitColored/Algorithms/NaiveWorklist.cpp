@@ -106,11 +106,6 @@ namespace PetriEngine {
                 if (!passed.exists(scratchpad.data(), size).first) {
                     _searchStatistics.checkedStates += 1;
 
-                    auto sum = 0;
-                    for (auto& m : marking.markings) {
-                        sum += m.totalCount();
-                    }
-
                     if (_check(marking) == earlyTerminationCondition) {
                         _searchStatistics.endWaitingStates = waiting.size();
                         return _getResult(true);
