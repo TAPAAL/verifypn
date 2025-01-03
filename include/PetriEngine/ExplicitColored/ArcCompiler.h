@@ -72,9 +72,9 @@ namespace PetriEngine {
             virtual ~CompiledArcExpression() = default;
         };
 
-        class ArcCompiler2 {
+        class ArcCompiler {
         public:
-            ArcCompiler2(
+            ArcCompiler(
                 const std::unordered_map<std::string, Variable_t>& variableMap,
                 const Colored::ColorTypeMap& colorTypeMap
             ) : _variableMap(std::move(variableMap)), _colorTypeMap(std::move(colorTypeMap)) {}

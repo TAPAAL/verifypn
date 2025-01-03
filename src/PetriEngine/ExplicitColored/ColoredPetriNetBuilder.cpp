@@ -49,7 +49,7 @@ namespace PetriEngine {
                     },
                     weight
                 );
-                const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+                const ArcCompiler arcCompiler(*_variableMap, *_colors);
                  _inputArcs.push_back(ColoredPetriNetArc {
                      from,
                      to,
@@ -66,7 +66,7 @@ namespace PetriEngine {
             if (inhib_weight != 0) {
                 _currentNet._inhibitorArcs.emplace_back(from, to, inhib_weight);
             } else {
-                const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+                const ArcCompiler arcCompiler(*_variableMap, *_colors);
                 auto arc = arcCompiler.compile(expr);
 
                 _inputArcs.push_back(ColoredPetriNetArc {
@@ -90,7 +90,7 @@ namespace PetriEngine {
                 weight
             );
 
-            const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+            const ArcCompiler arcCompiler(*_variableMap, *_colors);
 
             _outputArcs.push_back(ColoredPetriNetArc {
                 _transitionIndices.find(transition)->second,
@@ -104,7 +104,7 @@ namespace PetriEngine {
         void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
             auto placeIndex = _placeIndices.find(place)->second;
 
-            const ArcCompiler2 arcCompiler(*_variableMap, *_colors);
+            const ArcCompiler arcCompiler(*_variableMap, *_colors);
 
             auto arc = arcCompiler.compile(expr);
 

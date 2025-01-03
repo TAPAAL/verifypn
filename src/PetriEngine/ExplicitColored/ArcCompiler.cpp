@@ -496,7 +496,7 @@ namespace PetriEngine {
             }
         };
 
-        std::unique_ptr<CompiledArcExpression> ArcCompiler2::compile(const Colored::ArcExpression_ptr &arcExpression) const {
+        std::unique_ptr<CompiledArcExpression> ArcCompiler::compile(const Colored::ArcExpression_ptr &arcExpression) const {
             ArcExpressionCompilerVisitor visitor(_colorTypeMap, _variableMap);
             arcExpression->visit(visitor);
 
@@ -507,7 +507,7 @@ namespace PetriEngine {
             return top;
         }
 
-        std::unique_ptr<CompiledArcExpression> ArcCompiler2::testCompile() {
+        std::unique_ptr<CompiledArcExpression> ArcCompiler::testCompile() {
             std::unique_ptr<CompiledArcExpression> top = std::make_unique<ArcExpressionSubtraction>(
                 std::make_unique<ArcExpressionAddition>(
                     std::make_unique<ArcExpressionVariableCollection>(
@@ -571,7 +571,7 @@ namespace PetriEngine {
             return top;
         }
 
-        void ArcCompiler2::replaceConstants(std::unique_ptr<CompiledArcExpression> &top) {
+        void ArcCompiler::replaceConstants(std::unique_ptr<CompiledArcExpression> &top) {
             std::vector<std::unique_ptr<CompiledArcExpression>*> waiting;
             waiting.push_back(&top);
 
@@ -629,7 +629,7 @@ namespace PetriEngine {
             }
         }
 
-        void ArcCompiler2::preCalculate(std::unique_ptr<CompiledArcExpression> &top) {
+        void ArcCompiler::preCalculate(std::unique_ptr<CompiledArcExpression> &top) {
             std::vector<std::unique_ptr<CompiledArcExpression>*> waiting;
             waiting.push_back(&top);
             bool appliedOptimization = true;
