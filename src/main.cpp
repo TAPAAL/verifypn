@@ -580,7 +580,7 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
         writer.toColPNML();
         builder.parse_model(cpnOut);
         fullStatisticOut << std::endl;
-    }else {
+    } else {
         builder.parse_model(options.modelfile);
     }
 

@@ -64,7 +64,7 @@ namespace PetriEngine {
                     } else {
                         aIt = _counts.insert(aIt, *bIt);
                         _cardinality += bIt->second;
-                        ++aIt;
+                        ++bIt;
                     }
                 }
                 for (; bIt != other._counts.end(); ++bIt) {

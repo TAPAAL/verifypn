@@ -37,7 +37,7 @@ namespace PetriEngine{
             ColoredPetriNet &_net;
             void _updateVariableMap(std::map<Variable_t, std::vector<uint32_t>> &map, const ColoredPetriNetArc &arc) {
                 std::map<Variable_t, std::vector<uint32_t>> newMap = std::map<Variable_t, std::vector<uint32_t>>{};
-                auto vars = arc.expression.getVariables();
+                auto vars = arc.expression->getVariables();
                 for (auto &&var: vars) {
                     auto nValues = _net._variables[var].colorType->colors;
                     std::vector<uint32_t> values = std::vector<uint32_t>{};

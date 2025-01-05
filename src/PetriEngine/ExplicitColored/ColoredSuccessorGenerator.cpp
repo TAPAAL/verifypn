@@ -54,14 +54,14 @@ namespace PetriEngine{
 
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++) {
                 auto& arc = _net._arcs[i];
-                if (state.markings[arc.from].totalCount() < arc.expression.getMinimalMarkingCount()) {
+                if (state.markings[arc.from].totalCount() < arc.expression->getMinimalMarkingCount()) {
                     return CheckingBool::NEVERTRUE;
                 }
             }
 
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
+                if (!arc.expression->isSubSet(state.markings[arc.from], binding)) {
                     return CheckingBool::FALSE;
                 }
             }
@@ -74,7 +74,7 @@ namespace PetriEngine{
             }
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                if (!arc.expression.isSubSet(state.markings[arc.from], binding)) {
+                if (!arc.expression->isSubSet(state.markings[arc.from], binding)) {
                     return false;
                 }
             }
@@ -94,14 +94,14 @@ namespace PetriEngine{
         void ColoredSuccessorGenerator::consumePreset(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const {
             for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++){
                 auto& arc = _net._arcs[i];
-                arc.expression.consume(state.markings[arc.from], binding);
+                arc.expression->consume(state.markings[arc.from], binding);
             }
         }
 
         void ColoredSuccessorGenerator::producePostset(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const {
             for (auto i = _net._transitionArcs[tid].second; i < _net._transitionArcs[tid + 1].first; i++){
                 auto& arc = _net._arcs[i];
-                arc.expression.produce(state.markings[arc.to], binding);
+                arc.expression->produce(state.markings[arc.to], binding);
             }
         }
 
