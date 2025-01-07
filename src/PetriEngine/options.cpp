@@ -323,6 +323,14 @@ bool options_t::parse(int argc, const char** argv) {
                 }
             } else if (std::strcmp(s, "OverApprox") == 0)
                 strategy = Strategy::OverApprox;
+            else if (std::strcmp(s, "EBFS") == 0)
+                strategy = Strategy::EBFS;
+            else if (std::strcmp(s, "EHEUR") == 0)
+                strategy = Strategy::EHEUR;
+            else if (std::strcmp(s, "EDFS") == 0)
+                strategy = Strategy::EDFS;
+            else if (std::strcmp(s, "ERDFS") == 0)
+                strategy = Strategy::ERDFS;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
             }

@@ -25,6 +25,8 @@ namespace PetriEngine {
                 return waiting.empty();
             }
 
+            void shuffle() {}
+
             uint32_t size() const {
                 return waiting.size();
             }
@@ -50,6 +52,8 @@ namespace PetriEngine {
             bool empty() const {
                 return waiting.empty();
             }
+
+            void shuffle() {}
 
             uint32_t size() const {
                 return waiting.size();
@@ -99,8 +103,9 @@ namespace PetriEngine {
             std::default_random_engine _rng;
         };
 
+        template<typename T>
         struct WeightedState {
-            mutable ColoredPetriNetState cpn;
+            mutable T cpn;
             MarkingCount_t weight;
             bool operator<(const WeightedState& other) const {
                 return weight < other.weight;
@@ -126,14 +131,14 @@ namespace PetriEngine {
 
             void add(T state) {
                 const MarkingCount_t weight = DistQueryVisitor::eval(_query, state.marking, _placeNameIndices, _negQuery);
-                if (weight <_minDist) {
-                    _minDist = weight; //Why
-                }
-                _queue.push(WeightedState {
+
+                _queue.push(WeightedState<T> {
                     std::move(state),
                     weight
                 });
             }
+
+            void shuffle() {}
 
             bool empty() const {
                 return _queue.empty();
@@ -143,12 +148,11 @@ namespace PetriEngine {
                 return _queue.size();
             }
         private:
-            std::priority_queue<WeightedState> _queue;
+            std::priority_queue<WeightedState<T>> _queue;
             std::default_random_engine _rng;
             PQL::Condition_ptr _query;
             bool _negQuery;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
-            MarkingCount_t _minDist = std::numeric_limits<MarkingCount_t>::max();
         };
     }
 }

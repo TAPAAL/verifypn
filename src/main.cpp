@@ -626,7 +626,19 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
                 result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, seed);
                 break;
             case Strategy::HEUR:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::BESTFS, seed);
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::HEUR, seed);
+                break;
+            case Strategy::EDFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EDFS, seed);
+                break;
+            case Strategy::EBFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EBFS, seed);
+                break;
+            case Strategy::ERDFS:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::ERDFS, seed);
+                break;
+            case Strategy::EHEUR:
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EHEUR, seed);
                 break;
             default:
                 std::cout << "Strategy is not supported for explicit colored engine" << std::endl

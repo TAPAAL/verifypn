@@ -21,8 +21,11 @@ namespace PetriEngine {
             DFS,
             BFS,
             RDFS,
-            BESTFS,
-            RPFS,
+            HEUR,
+            EDFS,
+            EBFS,
+            ERDFS,
+            EHEUR,
         };
 
         class NaiveWorklist {
