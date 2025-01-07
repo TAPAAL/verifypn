@@ -22,7 +22,11 @@ enum class Strategy {
     OverApprox,
     RPFS,
     RandomWalk,
-    DEFAULT
+    DEFAULT,
+    EBFS,
+    EHEUR,
+    ERDFS,
+    EDFS,
 };
 
 enum class TraceLevel {

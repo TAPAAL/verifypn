@@ -44,9 +44,17 @@ namespace PetriEngine {
                 case SearchStrategy::BFS:
                     return _bfs<ColoredPetriNetState>();
                 case SearchStrategy::RDFS:
-                    return _rdfs<ColoredPetriNetStateOneTrans>(seed);
-                case SearchStrategy::BESTFS:
+                    return _rdfs<ColoredPetriNetState>(seed);
+                case SearchStrategy::HEUR:
                     return _bestfs<ColoredPetriNetState>(seed);
+                case SearchStrategy::EDFS:
+                    return _dfs<ColoredPetriNetStateOneTrans>();
+                case SearchStrategy::EBFS:
+                    return _bfs<ColoredPetriNetStateOneTrans>();
+                case SearchStrategy::ERDFS:
+                    return _rdfs<ColoredPetriNetStateOneTrans>(seed);
+                case SearchStrategy::EHEUR:
+                    return _bestfs<ColoredPetriNetStateOneTrans>(seed);
                 default:
                     throw base_error("Unsupported exploration type");
             }
@@ -69,10 +77,12 @@ namespace PetriEngine {
             const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
             size_t size = initialState.compressedEncode(scratchpad);
 
-            if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
+            if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
+                std::cout << "EVEN" << std::endl;
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
             }else {
+                std::cout << "FIXED" << std::endl;
                 auto initial = ColoredPetriNetState{initialState};
                 waiting.add(std::move(initial));
             }
@@ -92,7 +102,7 @@ namespace PetriEngine {
                     continue;
                 }
 
-                if constexpr (std::is_same_v<WaitingList<T>, RDFSStructure<T>>) {
+                if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
                     if (next.shuffle){
                         next.shuffle = false;
                         waiting.shuffle();
