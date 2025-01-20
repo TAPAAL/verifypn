@@ -91,11 +91,11 @@ namespace PetriEngine {
             if (statisticsLevel == StatisticsLevel::None)
                 return;
 
-            std::cout   << "STATS:\n"
-                        << "\tdiscovered states: " << states->discovered() << std::endl
-                        << "\texplored states:   " << ss.exploredStates << std::endl
-                        << "\texpanded states:   " << ss.expandedStates << std::endl
-                        << "\tTokens Extrapolated: " << extrapolator->tokensExtrapolated() << std::endl
+            std::cout << "STATS:\n"
+                      << "\tdiscovered states: " << states->discovered() << std::endl
+                      << "\texplored states:   " << ss.exploredStates << std::endl
+                      << "\texpanded states:   " << ss.expandedStates << std::endl
+                      << "\tTokens Eliminated: " << token_elim->tokensEliminated() << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
 
             if (statisticsLevel != StatisticsLevel::Full)

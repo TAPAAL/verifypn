@@ -1,5 +1,5 @@
 #include <queue>
-#include "PetriEngine/Extrapolator.h"
+#include "PetriEngine/TokenEliminator.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 namespace PetriEngine {
@@ -124,13 +124,13 @@ namespace PetriEngine {
         uint8_t direction = 0;
     };
 
-    void Extrapolator::init(const PetriNet *net, const Condition *query) {
+    void TokenEliminator::init(const PetriNet *net, const Condition *query) {
         _net = net;
         setupProducersAndConsumers();
         setupExtBounds();
     }
 
-    void Extrapolator::setupProducersAndConsumers() {
+    void TokenEliminator::setupProducersAndConsumers() {
         _inhibpost.resize(0);
         _inhibpost.resize(_net->_nplaces);
         std::vector<std::pair<std::vector<trans_t>, std::vector<trans_t>>> tmp_places(_net->_nplaces);
@@ -191,7 +191,7 @@ namespace PetriEngine {
         _prodcons[p].consumers = offset;
     }
 
-    void Extrapolator::setupExtBounds() {
+    void TokenEliminator::setupExtBounds() {
         _extBounds.assign(_net->_nplaces, 0);
         for (uint32_t i = 0; i < _net->_ntransitions; ++i) {
             uint32_t finv = _net->_transitions[i].inputs;
@@ -206,25 +206,25 @@ namespace PetriEngine {
         }
     }
 
-    std::pair<const Extrapolator::trans_t*, const Extrapolator::trans_t*> Extrapolator::producers(uint32_t p) const {
+    std::pair<const TokenEliminator::trans_t*, const TokenEliminator::trans_t*> TokenEliminator::producers(uint32_t p) const {
         const place_t pmeta = _prodcons[p];
         return std::make_pair(&_parcs[pmeta.producers], &_parcs[pmeta.consumers]);
     }
 
-    std::pair<const Extrapolator::trans_t*, const Extrapolator::trans_t*> Extrapolator::consumers(uint32_t p) const {
+    std::pair<const TokenEliminator::trans_t*, const TokenEliminator::trans_t*> TokenEliminator::consumers(uint32_t p) const {
         return std::make_pair(&_parcs[_prodcons[p].consumers], &_parcs[_prodcons[p + 1].producers]);
     }
 
-    void Extrapolator::extrapolate(Marking *marking, Condition *query) {
+    void TokenEliminator::eliminate(Marking *marking, Condition *query) {
         if (!_enabled) return;
         if (_doDynamic) {
-            extrapolateDynamicReachRelevance(marking, query);
+            eliminateDynamic(marking, query);
         } else {
-            extrapolateStaticReachRelevance(marking, query);
+            eliminateStatic(marking, query);
         }
     }
 
-    void Extrapolator::findDeadPlacesAndTransitions(const Marking *marking) {
+    void TokenEliminator::findDeadPlacesAndTransitions(const Marking *marking) {
 
         _pflags.resize(_net->_nplaces);
         std::fill(_pflags.begin(), _pflags.end(), 0);
@@ -311,7 +311,7 @@ namespace PetriEngine {
         }
     }
 
-    void Extrapolator::extrapolateDynamicReachRelevance(Marking *marking, Condition *query) {
+    void TokenEliminator::eliminateDynamic(Marking * marking, Condition * query) {
 
         if (PQL::isLoopSensitive(query->shared_from_this()) || !PQL::isReachability(query)) {
             return;
@@ -333,10 +333,10 @@ namespace PetriEngine {
 
         for (uint32_t i = 0; i < _net->_nplaces; ++i) {
             if ((_pflags[i] & (VIS_INC | VIS_DEC | MUST_KEEP | IN_Q_INC | IN_Q_DEC)) == 0) {
-                // Extrapolating below the upper bound may introduce behaviour
+                // Going below the upper bound may introduce behaviour
                 uint32_t cur = marking->marking()[i];
                 uint32_t ex = std::min(cur, _extBounds[i]);
-                _tokensExtrapolated += cur - ex;
+                _tokensEliminated += cur - ex;
                 marking->marking()[i] = ex;
             }
         }
@@ -374,7 +374,7 @@ namespace PetriEngine {
         }
     }
 
-    void Extrapolator::findDynamicVisiblePlaces(Condition *query) {
+    void TokenEliminator::findDynamicVisiblePlaces(Condition *query) {
 
         PlaceReachabilityDirectionVisitor pv(_net->numberOfPlaces());
         PQL::Visitor::visit(&pv, query);
@@ -479,7 +479,7 @@ namespace PetriEngine {
         }
     }
 
-    void Extrapolator::extrapolateStaticReachRelevance(Marking *marking, Condition *query) {
+    void TokenEliminator::eliminateStatic(Marking * marking, Condition * query) {
         const std::vector<bool> *visible;
         auto it = _cache.find(query);
         if (it != _cache.end()) {
@@ -491,17 +491,17 @@ namespace PetriEngine {
         if (!visible->empty()) {
             for (uint32_t i = 0; i < _net->_nplaces; ++i) {
                 if (!(*visible)[i]) {
-                    // Extrapolating below the upper bound may introduce behaviour
+                    // Going below below the upper bound may introduce behaviour
                     uint32_t cur = marking->marking()[i];
                     uint32_t ex = std::min(cur, _extBounds[i]);
-                    _tokensExtrapolated += cur - ex;
+                    _tokensEliminated += cur - ex;
                     marking->marking()[i] = ex;
                 }
             }
         }
     }
 
-    const std::vector<bool> &Extrapolator::findStaticVisiblePlaces(Condition *query) {
+    const std::vector<bool> &TokenEliminator::findStaticVisiblePlaces(Condition *query) {
 
         if (PQL::isLoopSensitive(query->shared_from_this()) || !PQL::isReachability(query)) {
             _cache.insert(std::make_pair(query, std::vector<bool>()));

@@ -32,7 +32,7 @@
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 
 #include "PetriEngine/options.h"
-#include "PetriEngine/Extrapolator.h"
+#include "PetriEngine/TokenEliminator.h"
 
 #include <memory>
 #include <vector>
@@ -114,7 +114,7 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
             AbstractHandler& _callback;
-            Extrapolator* extrapolator = nullptr; // FIXME: Leaked
+            TokenEliminator* token_elim = nullptr; // FIXME: Leaked
             size_t _max_tokens = 0;
         };
 
@@ -183,10 +183,10 @@ namespace PetriEngine {
                 }
 
                 if (queries.size() == 1 && usequeries) {
-                    extrapolator = new Extrapolator();
-                    extrapolator->init(&_net, queries[0].get());
+                    token_elim = new TokenEliminator();
+                    token_elim->init(&_net, queries[0].get());
                 } else {
-                    extrapolator = (new Extrapolator())->disable();
+                    token_elim = (new TokenEliminator())->disable();
                 }
 
                 // Search!
@@ -196,7 +196,7 @@ namespace PetriEngine {
 
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
-                        extrapolator->extrapolate(&working, queries[ss.heurquery].get());
+                        token_elim->eliminate(&working, queries[ss.heurquery].get());
                         auto res = states.add(working);
                         // If we have not seen this state before
                         if (res.first) {

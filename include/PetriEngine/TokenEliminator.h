@@ -1,5 +1,5 @@
-#ifndef VERIFYPN_EXTRAPOLATOR_H
-#define VERIFYPN_EXTRAPOLATOR_H
+#ifndef VERIFYPN_TOKENELIMINATOR_H
+#define VERIFYPN_TOKENELIMINATOR_H
 
 
 #include <utility>
@@ -21,24 +21,37 @@ namespace PetriEngine {
     const static uint8_t CAN_INC = 1 << 5;
     const static uint8_t CAN_DEC = 1 << 6;
 
-    class Extrapolator {
+    /**
+     * The TokenEliminator removes tokens from a marking based on impossible, visible, and directional effects
+     * while preserving reachability properties. It will do nothing when given a query of a different kind.
+     * The static setting does not take the current marking into account and will often be much faster
+     * (but less effective) on repeated invocations involving the same reachability queries due to caching.
+     *
+     * The abstraction provided through token elimination is similar to that of structural reduction rule I+M
+     * as well as stubborn reductions, but can additionally be used on-the-fly in state space searches to
+     * simplify states and thus reduce the size of the state space.
+     *
+     * The TokenEliminator is based on the work in 'Token Elimination in Model Checking of Petri Nets' (TACAS'25)
+     * by Nicolaj Ø. Jensen, Kim G. Larsen, and Jiri Srba.
+     */
+    class TokenEliminator {
     public:
-        virtual ~Extrapolator() = default;
+        virtual ~TokenEliminator() = default;
 
         void init(const PetriNet *net, const Condition *query);
 
-        void extrapolate(Marking *marking, Condition *query);
+        void eliminate(Marking *marking, Condition *query);
 
-        [[nodiscard]] virtual size_t tokensExtrapolated() const {
-            return _tokensExtrapolated;
+        [[nodiscard]] virtual size_t tokensEliminated() const {
+            return _tokensEliminated;
         }
 
-        Extrapolator * disable() {
+        TokenEliminator * disable() {
             _enabled = false;
             return this;
         }
 
-        Extrapolator * setDynamic(bool dynamic) {
+        TokenEliminator * setDynamic(bool dynamic) {
             _doDynamic = dynamic;
             return this;
         }
@@ -70,11 +83,11 @@ namespace PetriEngine {
 
         void findDeadPlacesAndTransitions(const PetriEngine::Marking *marking);
 
-        void extrapolateDynamicReachRelevance(PetriEngine::Marking *marking, PetriEngine::Condition *query);
+        void eliminateDynamic(PetriEngine::Marking * marking, PetriEngine::Condition * query);
 
         void findDynamicVisiblePlaces(PetriEngine::Condition *query);
 
-        void extrapolateStaticReachRelevance(PetriEngine::Marking *marking, PetriEngine::Condition *query);
+        void eliminateStatic(PetriEngine::Marking * marking, PetriEngine::Condition * query);
 
         const std::vector<bool> &findStaticVisiblePlaces(PetriEngine::Condition *query);
 
@@ -97,8 +110,8 @@ namespace PetriEngine {
         std::vector<bool> _fireable;
 
         // === Statistics
-        size_t _tokensExtrapolated = 0;
+        size_t _tokensEliminated = 0;
     };
 }
 
-#endif //VERIFYPN_EXTRAPOLATOR_H
+#endif //VERIFYPN_TOKENELIMINATOR_H

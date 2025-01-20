@@ -26,7 +26,7 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encod
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-    extrapolator = new Extrapolator();
+    token_elim = new TokenEliminator();
 }
 
 
@@ -42,7 +42,7 @@ OnTheFlyDG::~OnTheFlyDG()
     }
     delete conf_alloc;
     delete edge_alloc;
-    delete extrapolator;
+    delete token_elim;
 }
 
 Condition::Result OnTheFlyDG::initialEval()
@@ -521,7 +521,7 @@ Configuration* OnTheFlyDG::initialConfiguration()
     {
         working_marking.setMarking(net->makeInitialMarking());
         query_marking.setMarking(net->makeInitialMarking());
-        extrapolated_marking.setMarking(net->makeInitialMarking());
+        abstracted_marking.setMarking(net->makeInitialMarking());
         auto o = owner(working_marking, this->query);
         initial_config = createConfiguration(working_marking, o, this->query);
     }
@@ -589,11 +589,11 @@ void OnTheFlyDG::setQuery(Condition* query)
     this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
-    delete[] extrapolated_marking.marking();
+    delete[] abstracted_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
-    extrapolated_marking.setMarking(nullptr);
-    extrapolator->init(net, query);
+    abstracted_marking.setMarking(nullptr);
+    token_elim->init(net, query);
     initialConfiguration();
     assert(this->query);
 }
@@ -612,16 +612,16 @@ size_t OnTheFlyDG::maxTokens() const {
     return _maxTokens;
 }
 
-size_t OnTheFlyDG::tokensExtrapolated() const {
-    return extrapolator->tokensExtrapolated();
+size_t OnTheFlyDG::tokensEliminated() const {
+    return token_elim->tokensEliminated();
 }
 
 PetriConfig *OnTheFlyDG::createConfiguration(const Marking& marking, size_t own, Condition* t_query)
 {
-    extrapolated_marking.copy(marking.marking(), n_places);
-    extrapolator->extrapolate(&extrapolated_marking, t_query);
+    abstracted_marking.copy(marking.marking(), n_places);
+    token_elim->eliminate(&abstracted_marking, t_query);
 
-    size_t encoded = createMarking(extrapolated_marking);
+    size_t encoded = createMarking(abstracted_marking);
     auto& configs = trie.get_data(encoded);
     for(PetriConfig* c : configs){
         if(c->query == t_query)
