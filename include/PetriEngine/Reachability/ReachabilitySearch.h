@@ -117,6 +117,7 @@ namespace PetriEngine {
             Structures::State _initial;
             AbstractHandler& _callback;
             size_t _max_tokens = 0;
+            TokenEliminator token_elim{};
         };
 
         template <typename G>
@@ -183,13 +184,9 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
-                TokenEliminator token_elim;
-                if (usequeries && tokenElim != TokenEliminationMethod::Disabled) {
-                    token_elim.setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
-                    token_elim.init(&_net);
-                } else {
-                    token_elim.setEnabled(false);
-                }
+                token_elim.init(&_net);
+                token_elim.setEnabled(tokenElim != TokenEliminationMethod::Disabled);
+                token_elim.setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
 
                 // Search!
                 for(auto nid = queue.pop(); nid != Structures::Queue::EMPTY; nid = queue.pop()) {

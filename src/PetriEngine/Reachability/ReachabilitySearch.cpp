@@ -95,7 +95,7 @@ namespace PetriEngine {
                       << "\tdiscovered states: " << states->discovered() << std::endl
                       << "\texplored states:   " << ss.exploredStates << std::endl
                       << "\texpanded states:   " << ss.expandedStates << std::endl
-                      << "\tTokens Eliminated: " << token_elim->tokensEliminated() << std::endl
+                      << "\tTokens Eliminated: " << token_elim.tokensEliminated() << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
 
             if (statisticsLevel != StatisticsLevel::Full)
