@@ -110,6 +110,21 @@ void options_t::print(std::ostream& optionsOut) {
 
     optionsOut << ",LPSolve_Timeout=" << lpsolveTimeout;
 
+    if (tokenElimMethodReach == TokenEliminationMethod::Disabled) {
+        optionsOut << ",TokenElim_Reach=DISABLED";
+    } else if (tokenElimMethodReach == TokenEliminationMethod::Static) {
+        optionsOut << ",TokenElim_Reach=STATIC";
+    } else if (tokenElimMethodReach == TokenEliminationMethod::Dynamic) {
+        optionsOut << ",TokenElim_Reach=DYNAMIC";
+    }
+
+    if (tokenElimMethodCTL == TokenEliminationMethod::Disabled) {
+        optionsOut << ",TokenElim_CTL=DISABLED";
+    } else if (tokenElimMethodCTL == TokenEliminationMethod::Static) {
+        optionsOut << ",TokenElim_CTL=STATIC";
+    } else if (tokenElimMethodCTL == TokenEliminationMethod::Dynamic) {
+        optionsOut << ",TokenElim_CTL=DYNAMIC";
+    }
 
     if (usedctl) {
         if (ctlalgorithm == CTL::CZero) {

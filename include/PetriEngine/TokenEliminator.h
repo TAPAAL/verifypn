@@ -38,7 +38,7 @@ namespace PetriEngine {
     public:
         virtual ~TokenEliminator() = default;
 
-        void init(const PetriNet *net, const Condition *query);
+        void init(const PetriNet *net);
 
         void eliminate(Marking *marking, Condition *query);
 
@@ -74,6 +74,7 @@ namespace PetriEngine {
         };
 
     private:
+        /** Built data structure that makes it faster to go from places to transitions */
         void setupProducersAndConsumers();
 
         void setupExtBounds();
@@ -81,21 +82,25 @@ namespace PetriEngine {
         [[nodiscard]] std::pair<const trans_t*, const trans_t*> producers(uint32_t p) const;
         [[nodiscard]] std::pair<const trans_t*, const trans_t*> consumers(uint32_t p) const;
 
+        /** Compute which places cannot increase and/or decrease as well as which transitions cannot be enabled.
+         * This is an over-approximation. */
         void findDeadPlacesAndTransitions(const PetriEngine::Marking *marking);
 
         void eliminateDynamic(PetriEngine::Marking * marking, PetriEngine::Condition * query);
 
+        /** Compute fixed point of visibility respecting dead places and transitions in the current marking. */
         void findDynamicVisiblePlaces(PetriEngine::Condition *query);
 
         void eliminateStatic(PetriEngine::Marking * marking, PetriEngine::Condition * query);
 
+        /** Compute fixed point of visibility by net structure alone. Subsequent calls with same query is faster. */
         const std::vector<bool> &findStaticVisiblePlaces(PetriEngine::Condition *query);
 
     private:
         // === Settings
-        bool _enabled = std::getenv("TAPAAL_TOKEN_ELIM") != nullptr;
-        bool _doDynamic = std::getenv("TAPAAL_TOKEN_ELIM_STATIC") == nullptr;
-        bool _env_TOKEN_ELIM_DEBUG = std::getenv("TAPAAL_TOKEN_ELIM_DEBUG") != nullptr;
+        bool _enabled = true;
+        bool _doDynamic = false;
+        bool _env_TOKEN_ELIM_DEBUG = false; //std::getenv("TAPAAL_TOKEN_ELIM_DEBUG") != nullptr;
 
         // === Net
         PetriNet const *_net;

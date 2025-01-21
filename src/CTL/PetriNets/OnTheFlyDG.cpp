@@ -20,9 +20,10 @@ using namespace DependencyGraph;
 namespace PetriNets {
 
 OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order, TokenEliminator& token_elim) : encoder(t_net->numberOfPlaces(), 0),
+        token_elim(token_elim),
         edge_alloc(new linked_bucket_t<DependencyGraph::Edge,1024*10>(1)),
         conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)),
-        _redgen(*t_net, std::make_shared<PetriEngine::ReachabilityStubbornSet>(*t_net)), _partial_order(partial_order), token_elim(token_elim) {
+        _redgen(*t_net, std::make_shared<PetriEngine::ReachabilityStubbornSet>(*t_net)), _partial_order(partial_order) {
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
@@ -591,7 +592,7 @@ void OnTheFlyDG::setQuery(Condition* query)
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
     abstracted_marking.setMarking(nullptr);
-    token_elim.init(net, query);
+    token_elim.init(net);
     initialConfiguration();
     assert(this->query);
 }

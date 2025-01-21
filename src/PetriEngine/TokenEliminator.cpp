@@ -3,6 +3,12 @@
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
 namespace PetriEngine {
+    /***
+     * The PlaceReachabilityDirectionVisitor analyzes which places are part of a a reachability query
+     * and whether increases or decreases will bring us closer to satisfying the query.
+     * The result is a vector of bytes where the IN_Q_DEC bit and/or the IN_Q_INC indicates if
+     * and what direction is relevant.
+     */
     class PlaceReachabilityDirectionVisitor : public PQL::Visitor {
     public:
         explicit PlaceReachabilityDirectionVisitor(size_t n_places) : _in_use(n_places) {}
@@ -124,7 +130,8 @@ namespace PetriEngine {
         uint8_t direction = 0;
     };
 
-    void TokenEliminator::init(const PetriNet *net, const Condition *query) {
+    void TokenEliminator::init(const PetriNet *net) {
+        _cache.clear();
         _net = net;
         setupProducersAndConsumers();
         setupExtBounds();
@@ -324,10 +331,6 @@ namespace PetriEngine {
             }
         }
 
-        if (before.str() == "00110000000010000000000000001100000000000000000000000101000000001") {
-            std::cout << "Debugging\n";
-        }
-
         findDeadPlacesAndTransitions(marking);
         findDynamicVisiblePlaces(query);
 
@@ -382,6 +385,7 @@ namespace PetriEngine {
 
         std::queue<uint32_t> queue;
 
+        // Places in query are visible
         for (uint32_t p = 0; p < _net->_nplaces; ++p) {
             if (use[p] > 0) {
                 _pflags[p] |= use[p];
@@ -395,6 +399,7 @@ namespace PetriEngine {
             }
         }
 
+        // Propagate visibility
         while (!queue.empty()) {
             uint32_t p = queue.front();
             queue.pop();
@@ -425,6 +430,7 @@ namespace PetriEngine {
                 }
             }
 
+            // This case is checker last since the first case may set VIS_INC for p
             if ((_pflags[p] & VIS_INC) > 0) {
                 // Put pre-set of positive producers in vis_inc,
                 // and inhibiting pre-set positive producers in vis_dec
@@ -491,7 +497,7 @@ namespace PetriEngine {
         if (!visible->empty()) {
             for (uint32_t i = 0; i < _net->_nplaces; ++i) {
                 if (!(*visible)[i]) {
-                    // Going below below the upper bound may introduce behaviour
+                    // Going below the upper bound may introduce behaviour
                     uint32_t cur = marking->marking()[i];
                     uint32_t ex = std::min(cur, _extBounds[i]);
                     _tokensEliminated += cur - ex;
@@ -516,6 +522,7 @@ namespace PetriEngine {
         std::vector<bool> vis_dec(_net->_nplaces); // Places where token decrement is visible to query
         std::vector<uint32_t> queue;
 
+        // Places in query are visible
         for (uint32_t p = 0; p < _net->_nplaces; ++p) {
             if (use[p] > 0) {
                 vis_inc[p] = (use[p] & IN_Q_INC) > 0;
@@ -524,6 +531,7 @@ namespace PetriEngine {
             }
         }
 
+        // Propagate visibility
         while (!queue.empty()) {
             uint32_t p = queue.back();
             queue.pop_back();
@@ -554,6 +562,7 @@ namespace PetriEngine {
                 }
             }
 
+            // This case is checker last since the first case may set VIS_INC for p
             if (vis_inc[p]) {
                 // Put pre-set of positive producers in vis_inc,
                 // and inhibiting pre-set of positive producers in vis_dec

@@ -185,9 +185,9 @@ namespace PetriEngine {
                 }
 
                 token_elim = new TokenEliminator();
-                if (queries.size() == 1 && usequeries && tokenElim != TokenEliminationMethod::Disabled) {
+                if (usequeries && tokenElim != TokenEliminationMethod::Disabled) {
                     token_elim->setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
-                    token_elim->init(&_net, queries[0].get());
+                    token_elim->init(&_net);
                 } else {
                     token_elim->setEnabled(false);
                 }
