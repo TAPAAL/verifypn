@@ -66,7 +66,8 @@ namespace PetriEngine {
                     size_t seed,
                     int64_t depthRandomWalk = 50000,
                     const int64_t incRandomWalk = 5000,
-                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>());
+                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>(),
+                    TokenEliminationMethod tokenElim = TokenEliminationMethod::Disabled);
             size_t maxTokens() const;
         private:
             struct searchstate_t {
@@ -95,7 +96,8 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
                 size_t seed,
-                const std::vector<MarkVal>& initPotencies);
+                const std::vector<MarkVal>& initPotencies,
+                TokenEliminationMethod tokenElim);
 
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
 
@@ -133,7 +135,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReach(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
                                         StatisticsLevel statisticsLevel, size_t seed,
-                                        const std::vector<MarkVal>& initPotencies)
+                                        const std::vector<MarkVal>& initPotencies, TokenEliminationMethod tokenElim)
         {
 
             // set up state
@@ -182,11 +184,12 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
-                if (queries.size() == 1 && usequeries) {
-                    token_elim = new TokenEliminator();
+                token_elim = new TokenEliminator();
+                if (queries.size() == 1 && usequeries && tokenElim != TokenEliminationMethod::Disabled) {
+                    token_elim->setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
                     token_elim->init(&_net, queries[0].get());
                 } else {
-                    token_elim = (new TokenEliminator())->disable();
+                    token_elim->setEnabled(false);
                 }
 
                 // Search!

@@ -206,6 +206,11 @@ void printHelp() {
         "                                       - none      Run preprocessing steps only.\n"
         "  --noweak                             Disable optimizations for weak Büchi automata when doing \n"
         "                                       LTL model checking. Not recommended.\n"
+        "  --token-elim-reach <type>            Simplify markings by removing tokens in reachability engine (see --token-elim-ctl for options).\n"
+        "  --token-elim-ctl <type>              Simplify markings by removing tokens in certain zero engine.\n"
+        "                                       - none     No token elimination (default)\n"
+        "                                       - static   Elimination based on net structure with caching\n"
+        "                                       - dynamic  Aggressive elimination based on net structure and current marking\n"
         "  --noreach                            Force use of CTL/LTL engine, even when queries are reachability.\n"
         "                                       Not recommended since the reachability engine is faster.\n"
         "  --nounfold                           Stops after colored structural reductions and writing the reduced net\n"
@@ -637,6 +642,34 @@ bool options_t::parse(int argc, const char** argv) {
             }
             ++i;
             strategy_output = argv[i];
+        }
+        else if (std::strcmp(argv[i], "--token-elim-reach") == 0) {
+            if (argc == i + 1) {
+                throw base_error("Missing argument to --token-elim-reach");
+            } else if (std::strcmp(argv[i + 1], "none") == 0) {
+                tokenElimMethodReach = TokenEliminationMethod::Disabled;
+            } else if (std::strcmp(argv[i + 1], "static") == 0) {
+                tokenElimMethodReach = TokenEliminationMethod::Static;
+            } else if (std::strcmp(argv[i + 1], "dynamic") == 0) {
+                tokenElimMethodReach = TokenEliminationMethod::Dynamic;
+            } else {
+                throw base_error("Unrecognized argument ", std::quoted(argv[i + 1]), " to --token-elim-reach\n");
+            }
+            ++i;
+        }
+        else if (std::strcmp(argv[i], "--token-elim-ctl") == 0) {
+            if (argc == i + 1) {
+                throw base_error("Missing argument to --token-elim-ctl");
+            } else if (std::strcmp(argv[i + 1], "none") == 0) {
+                tokenElimMethodCTL = TokenEliminationMethod::Disabled;
+            } else if (std::strcmp(argv[i + 1], "static") == 0) {
+                tokenElimMethodCTL = TokenEliminationMethod::Static;
+            } else if (std::strcmp(argv[i + 1], "dynamic") == 0) {
+                tokenElimMethodCTL = TokenEliminationMethod::Dynamic;
+            } else {
+                throw base_error("Unrecognized argument ", std::quoted(argv[i + 1]), " to --token-elim-ctl\n");
+            }
+            ++i;
         }
         else if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
             printHelp();

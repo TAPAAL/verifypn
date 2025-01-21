@@ -128,7 +128,7 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
 
-#define TRYREACHPAR    (queries, results, usequeries, printstats, seed, initPotencies)
+#define TRYREACHPAR    (queries, results, usequeries, printstats, seed, initPotencies, tokenElim)
 #define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y> TRYREACHPAR ; \
                        else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR ;
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
@@ -155,7 +155,8 @@ namespace PetriEngine {
                     size_t seed,
                     int64_t depthRandomWalk,
                     const int64_t incRandomWalk,
-                    const std::vector<MarkVal>& initPotencies)
+                    const std::vector<MarkVal>& initPotencies,
+                    const TokenEliminationMethod tokenElim)
         {
             bool usequeries = !statespacesearch;
 

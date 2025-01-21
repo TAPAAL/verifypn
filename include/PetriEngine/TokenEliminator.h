@@ -46,8 +46,8 @@ namespace PetriEngine {
             return _tokensEliminated;
         }
 
-        TokenEliminator * disable() {
-            _enabled = false;
+        TokenEliminator * setEnabled(bool enabled) {
+            _enabled = enabled;
             return this;
         }
 

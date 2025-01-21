@@ -24,7 +24,7 @@ public:
     using Condition_ptr = PetriEngine::PQL::Condition_ptr;
     using Marking = PetriEngine::Structures::State;
     using TokenEliminator = PetriEngine::TokenEliminator;
-    OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order);
+    OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order, TokenEliminator& token_elim);
 
     virtual ~OnTheFlyDG();
 
@@ -59,7 +59,7 @@ protected:
     Marking working_marking;
     Marking query_marking;
     Marking abstracted_marking;
-    TokenEliminator* token_elim = nullptr;
+    TokenEliminator& token_elim;
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
     size_t _markingCount = 0;

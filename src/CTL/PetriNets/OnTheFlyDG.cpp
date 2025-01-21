@@ -19,14 +19,13 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encoder(t_net->numberOfPlaces(), 0),
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order, TokenEliminator& token_elim) : encoder(t_net->numberOfPlaces(), 0),
         edge_alloc(new linked_bucket_t<DependencyGraph::Edge,1024*10>(1)),
         conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)),
-        _redgen(*t_net, std::make_shared<PetriEngine::ReachabilityStubbornSet>(*t_net)), _partial_order(partial_order) {
+        _redgen(*t_net, std::make_shared<PetriEngine::ReachabilityStubbornSet>(*t_net)), _partial_order(partial_order), token_elim(token_elim) {
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-    token_elim = new TokenEliminator();
 }
 
 
@@ -42,7 +41,6 @@ OnTheFlyDG::~OnTheFlyDG()
     }
     delete conf_alloc;
     delete edge_alloc;
-    delete token_elim;
 }
 
 Condition::Result OnTheFlyDG::initialEval()
@@ -593,7 +591,7 @@ void OnTheFlyDG::setQuery(Condition* query)
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
     abstracted_marking.setMarking(nullptr);
-    token_elim->init(net, query);
+    token_elim.init(net, query);
     initialConfiguration();
     assert(this->query);
 }
@@ -613,13 +611,13 @@ size_t OnTheFlyDG::maxTokens() const {
 }
 
 size_t OnTheFlyDG::tokensEliminated() const {
-    return token_elim->tokensEliminated();
+    return token_elim.tokensEliminated();
 }
 
 PetriConfig *OnTheFlyDG::createConfiguration(const Marking& marking, size_t own, Condition* t_query)
 {
     abstracted_marking.copy(marking.marking(), n_places);
-    token_elim->eliminate(&abstracted_marking, t_query);
+    token_elim.eliminate(&abstracted_marking, t_query);
 
     size_t encoded = createMarking(abstracted_marking);
     auto& configs = trie.get_data(encoded);
