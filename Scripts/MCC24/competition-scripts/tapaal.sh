@@ -3,6 +3,8 @@
 # This is the initialization script for the participation of TAPAAL
 # untimed engine verifypn in the Petri net competition 2024.
 
+export PERL_BADLANG=0
+
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
 if [ -z "$MODEL_PATH" ] ; then
@@ -451,20 +453,21 @@ function LTL {
 }
 
 function CTL {
-
     STRATEGIES_PAR[0]="-s BestFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[1]="-s RPFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[2]="-s BFS -q 0 -l 0 -d $SHORTRED"
     STRATEGIES_PAR[3]="-s DFS -q 0 -l 0 -d $SHORTRED"
-    
+    unset STRATEGIES_SEQ
     STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
-
+    STRATEGIES_SEQ[1]="-tar -s DFS -q 0 -d $SHORTRED"
     verifyparallel
 }
 
 case "$BK_EXAMINATION" in
 
     StateSpace)
+    	echo "DO_NOT_COMPETE"  
+        exit 0
         echo        
         echo "*****************************************"
         echo "*  TAPAAL performing StateSpace search  *"

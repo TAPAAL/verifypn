@@ -971,57 +971,61 @@ namespace PetriEngine {
             }
 
             if(!ok) continue;
-            std::set<uint32_t> notenabled;
-            // Out of the consumers, tally up those that are initially not enabled by place
-            // Ensure all the enabled transitions that feed back into place are non-increasing on place.
+            std::unordered_set<uint32_t> initiallyDisabled;
+            std::unordered_set<uint32_t> inhibited;
+            // Collect transitions initially disabled by the place and transitions with inactive inhibitor arcs.
+            // Abort if we find an enabled transition with positive effect on the place
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
                 const auto& in = getInArc(p, t);
-                if(in->weight <= parent->initialMarking[p])
-                {
-                    // This branch happening even once means notenabled.size() != consumers.size()
-                    // We already threw out all cases where in->inhib && out != t.post.end()
-                    if (!in->inhib) {
+                if (!in->inhib) {
+                    if (in->weight <= parent->initialMarking[p]) {
+                        // Check if positive effect on place. If positive, abort.
                         const auto& out = getOutArc(t, p);
-                        // Only increasing loops are not ok
                         if (out != t.post.end() && out->weight > in->weight) {
                             ok = false;
                             break;
                         }
+                    } else {
+                        initiallyDisabled.insert(cons);
+                    }
+                } else {
+                    if (in->weight > parent->initialMarking[p]) {
+                        // Inactive inhibitor arc
+                        inhibited.insert(cons);
                     }
                 }
-                else
-                {
-                    notenabled.insert(cons);
-                }
             }
 
-            if(!ok || notenabled.empty()) continue;
+            if(!ok || (initiallyDisabled.empty() && inhibited.empty())) continue;
 
-            bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
-            bool E_used, P_used = false;
-            for(uint cons : notenabled) {
+            if (!initiallyDisabled.empty()) _ruleE++;
+            if (!inhibited.empty()) _ruleP++;
+            continueReductions = true;  // Either rule E or P is for sure enabled at this point
+
+            bool allArcsRemoved = initiallyDisabled.size() + inhibited.size() == place.consumers.size();
+
+            // Can the place be removed entirely?
+            if(allArcsRemoved && (placeInQuery[p] == 0)) {
+                skipPlace(p);
+                continue;
+            }
+
+            for(uint32_t cons : initiallyDisabled) {
                 Transition &t = getTransition(cons);
                 const auto& in = getInArc(p, t);
-                if (in->inhib) {
-                    skipInArc(p, cons);
-                    P_used = true;
-                } else {
-                    skipTransition(cons);
-                    E_used = true;
-                }
+                assert(!in->inhib);
+                skipTransition(cons);
             }
 
-            if(skipplace) {
-                skipPlace(p);
-                E_used = true;
+            for (uint32_t tran : inhibited) {
+                Transition &t = getTransition(tran);
+                const auto& in = getInArc(p, t);
+                assert(in->inhib);
+                assert(in->weight > parent->initialMarking[p]);
+                skipInArc(p, tran);
             }
-
-            if (E_used) _ruleE++;
-            if (P_used) _ruleP++;
-            continueReductions = true;
-
         }
         assert(consistent());
         return continueReductions;
@@ -2211,7 +2215,7 @@ namespace PetriEngine {
                             ++_ruleO;
                             continue_reductions = true;
                         }
-                        else if((_pflags[p] & CAN_INC) == 0)
+                        else if((_pflags[p] & CAN_INC) == 0 && inArc->weight > parent->initialMarking[p])
                         {
                             // inhibitor is useless
                             trans.pre.erase(inArc);

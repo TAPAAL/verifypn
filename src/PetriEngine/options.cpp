@@ -694,11 +694,13 @@ bool options_t::parse(int argc, const char** argv) {
             printf("Copyright (C) 2011-2023\n");
             printf("                        Alexander Bilgram <alexander@bilgram.dk>\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
+            printf("                        Emil Normann Brandt <emilnormannbrandt@gmail.com>\n");
             printf("                        Jesper Adriaan van Diepen <jespoke@hotmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>\n");
             printf("                        Emil Gybel Henriksen <emil-g-h@hotmail.com>\n");
+            printf("                        Jens Emil Fink Højriis <jens.emil@live.dk>\n");
             printf("                        Lasse Steen Jensen <lassjen88@gmail.com>\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("                        Nicolaj Østerby Jensen <nicoesterby@gmail.com>\n");

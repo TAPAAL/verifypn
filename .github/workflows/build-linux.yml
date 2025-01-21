@@ -46,7 +46,7 @@ jobs:
           make
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: verifypn-linux64
           path: build/verifypn/bin/verifypn-linux64
@@ -59,7 +59,7 @@ jobs:
           make
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: verifypn-mcc-linux64
           path: build/verifypn/bin/verifypn-linux64

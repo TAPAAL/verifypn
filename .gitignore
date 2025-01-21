@@ -6,6 +6,7 @@
 nbproject/
 cmake-build-*
 .idea/
+.vscode
 src/PetriEngine/PQL/PQLQueryParser.parser.cpp
 src/PetriEngine/PQL/PQLQueryParser.parser.hpp
 src/PetriEngine/PQL/PQLQueryTokens.lexer.cpp

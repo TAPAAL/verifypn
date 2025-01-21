@@ -1,4 +1,4 @@
-name: Build MacOS
+name: Build MacOS for ARM processor
 
 on:
   push:
@@ -9,21 +9,21 @@ on:
   workflow_dispatch:
 
 concurrency: 
-  group: build-MacOS-${{ github.head_ref }}
+  group: build-MacOS-ARM${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     if: github.event.pull_request.draft == false
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Packages
         run: |
-          brew install flex bison autoconf automake libtool m4
-          echo 'export PATH="/usr/local/opt/bison/bin:$PATH"' >> /Users/runner/.bash_profile
-          echo 'export PATH="/usr/local/opt/flex/bin:$PATH"' >> /Users/runner/.bash_profile
+          brew install flex bison autoconf automake libtool
+          echo 'export PATH="/opt/homebrew/opt/bison/bin:$PATH"' >> /Users/runner/.bash_profile
+          echo 'export PATH="/opt/homebrew/opt/flex/bin:$PATH"' >> /Users/runner/.bash_profile
       - name: Build 
         uses: lukka/run-cmake@v2.5
         with:
@@ -31,8 +31,8 @@ jobs:
           cmakeAppendedArgs: >-
             -DVERIFYPN_Static=ON 
             -DVERIFYPN_MC_Simplification=OFF 
-            -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison 
-            -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex
+            -DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison
+            -DFLEX_EXECUTABLE=/opt/homebrew/opt/flex/bin/flex
           cmakeBuildType: Release
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'
@@ -43,5 +43,5 @@ jobs:
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
-          name: verifypn-osx64
+          name: verifypn-arm64
           path: '${{runner.workspace}}/build/verifypn/bin/verifypn-osx64'

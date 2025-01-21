@@ -22,8 +22,10 @@
 #include <sstream>
 #include <set>
 #include <vector>
+#include <map>
 
 #include "utils.h"
+#include "PetriEngine/Colored/PnmlWriter.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
@@ -61,6 +63,67 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(10)) {
         BOOST_REQUIRE_GE(pn->numberOfPlaces(), 5);
 
         BOOST_REQUIRE_GE(pn->numberOfTransitions(), 5);
+    } catch(base_error& ex)
+    {
+        saw_exception = true;
+    }
+
+    BOOST_REQUIRE(!saw_exception);
+}
+
+BOOST_AUTO_TEST_CASE(InitialMarkingAllSubtractionHandled, * utf::timeout(10)) {
+
+    std::string model("/models/initial-all-expression.pnml");
+
+    std::set<size_t> qnums{1};
+    bool saw_exception = false;
+    try {
+        shared_string_set sset;
+        ColoredPetriNetBuilder originalCpnBuilder(sset);
+        auto modelStream = loadFile(model.c_str());
+        originalCpnBuilder.parse_model(modelStream);
+        originalCpnBuilder.sort();
+
+        std::stringstream writtenNet;
+        PnmlWriter writer(originalCpnBuilder, writtenNet);
+        writer.toColPNML();
+
+        IntialMarkingCollector initialMarkingCollector;
+        initialMarkingCollector.parse_model(writtenNet);
+        auto p0 = initialMarkingCollector.getInitialMarking("P0");
+        auto p2 = initialMarkingCollector.getInitialMarking("P2");
+        auto p3 = initialMarkingCollector.getInitialMarking("P3");
+
+        //test P0
+        BOOST_REQUIRE_EQUAL(p0.size(), 2);
+        for (const auto& [color, count] : p0) {
+            if (color->getColorName() == "a") {
+                BOOST_REQUIRE_EQUAL(count, 0);
+            } else if (color->getColorName() == "b") {
+                BOOST_REQUIRE_EQUAL(count, 1);
+            } else if (color->getColorName() == "c") {
+                BOOST_REQUIRE_EQUAL(count, 1);
+            } else {
+                BOOST_REQUIRE(false);
+            }
+        }
+
+        //test P2
+        BOOST_REQUIRE_EQUAL(p2.size(), 0);
+
+        //test P3
+        BOOST_REQUIRE_EQUAL(p3.size(), 3);
+        for (const auto& [color, count] : p3) {
+            if (color->getColorName() == "a") {
+                BOOST_REQUIRE_EQUAL(count, 1);
+            } else if (color->getColorName() == "b") {
+                BOOST_REQUIRE_EQUAL(count, 1);
+            } else if (color->getColorName() == "c") {
+                BOOST_REQUIRE_EQUAL(count, 1);
+            } else {
+                BOOST_REQUIRE(false);
+            }
+        }
     } catch(base_error& ex)
     {
         saw_exception = true;
