@@ -116,7 +116,6 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
             AbstractHandler& _callback;
-            TokenEliminator* token_elim = nullptr; // FIXME: Leaked
             size_t _max_tokens = 0;
         };
 
@@ -184,12 +183,12 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
-                token_elim = new TokenEliminator();
+                TokenEliminator token_elim;
                 if (usequeries && tokenElim != TokenEliminationMethod::Disabled) {
-                    token_elim->setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
-                    token_elim->init(&_net);
+                    token_elim.setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
+                    token_elim.init(&_net);
                 } else {
-                    token_elim->setEnabled(false);
+                    token_elim.setEnabled(false);
                 }
 
                 // Search!
@@ -199,7 +198,7 @@ namespace PetriEngine {
 
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
-                        token_elim->eliminate(&working, queries[ss.heurquery].get());
+                        token_elim.eliminate(&working, queries[ss.heurquery].get());
                         auto res = states.add(working);
                         // If we have not seen this state before
                         if (res.first) {
