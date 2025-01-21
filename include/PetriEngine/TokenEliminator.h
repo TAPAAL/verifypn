@@ -1,3 +1,8 @@
+/**
+ * Original author(s):
+ *      Nicolaj Ø. Jensen <noje@cs.aau.dk>
+ */
+
 #ifndef VERIFYPN_TOKENELIMINATOR_H
 #define VERIFYPN_TOKENELIMINATOR_H
 

@@ -1,7 +1,13 @@
+/**
+ * Original author(s):
+ *      Nicolaj Ø. Jensen <noje@cs.aau.dk>
+ */
+
 #include <queue>
 #include "PetriEngine/TokenEliminator.h"
 #include "PetriEngine/PQL/PlaceUseVisitor.h"
 #include "PetriEngine/PQL/PredicateCheckers.h"
+
 namespace PetriEngine {
     /***
      * The PlaceReachabilityDirectionVisitor analyzes which places are part of a a reachability query
