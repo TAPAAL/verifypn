@@ -1,6 +1,7 @@
 #ifndef COLOREDPETRINETSTATE_H
 #define COLOREDPETRINETSTATE_H
 
+#include <queue>
 #include <utility>
 
 #include "ColoredPetriNetMarking.h"
@@ -22,8 +23,8 @@ namespace PetriEngine{
                 if (tid != std::numeric_limits<Transition_t>::max()) {
                     _currentBinding = bid;
                     _currentTransition = tid;
-                }else {
-                    done = true;
+                } else {
+                    _done = true;
                 }
             }
             
@@ -31,11 +32,16 @@ namespace PetriEngine{
                 marking.shrink();
             }
 
+            [[nodiscard]] bool done() const {
+                return _done;
+            }
+
             ColoredPetriNetMarking marking;
-            bool done = false;
-            private:
-                Binding_t _currentBinding = 0;
-                Transition_t _currentTransition = 0;
+        private:
+            bool _done = false;
+
+            Binding_t _currentBinding = 0;
+            Transition_t _currentTransition = 0;
         };
 
         struct ColoredPetriNetStateOneTrans {
@@ -53,7 +59,7 @@ namespace PetriEngine{
             std::pair<Transition_t, Binding_t> getNextPair() {
                 Transition_t tid = _currentIndex;
                 Binding_t bid = std::numeric_limits<Binding_t>::max();
-                if (done) {
+                if (done()) {
                     return {tid,bid};
                 }
                 auto it = _map.begin() + _currentIndex;
@@ -78,7 +84,7 @@ namespace PetriEngine{
                     if (bid == std::numeric_limits<Binding_t>::max()) {
                         _completedTransitions += 1;
                         if (_completedTransitions == _map.size()) {
-                            done = true;
+                            _done = true;
                         }
                     }
                 }
@@ -88,14 +94,67 @@ namespace PetriEngine{
                 marking.shrink();
             }
 
+            [[nodiscard]] bool done() const {
+                return _done;
+            }
+
             ColoredPetriNetMarking marking;
-            bool done = false;
             bool shuffle = false;
         private:
+            bool _done = false;
             std::vector<Binding_t> _map;
             uint32_t _currentIndex = 0;
             uint32_t _completedTransitions = 0;
+        };
 
+
+        struct ColoredPetriNetStateRandom {
+            explicit ColoredPetriNetStateRandom(ColoredPetriNetMarking marking, std::queue<Transition_t> transitions)
+                : marking(std::move(marking)), _remainingTransitions(std::move(transitions)) {};
+
+            ColoredPetriNetStateRandom(const ColoredPetriNetStateRandom& oldState) = default;
+            ColoredPetriNetStateRandom(ColoredPetriNetStateRandom&&) = default;
+
+            ColoredPetriNetStateRandom& operator=(const ColoredPetriNetStateRandom&) = default;
+            ColoredPetriNetStateRandom& operator=(ColoredPetriNetStateRandom&&) = default;
+
+            [[nodiscard]] Transition_t getCurrentTransition() const {
+                if (_remainingTransitions.empty()) {
+                    return std::numeric_limits<Transition_t>::max();
+                }
+                return _remainingTransitions.front();
+            }
+
+            [[nodiscard]] Binding_t getCurrentBinding() const {
+                return _currentBinding;
+            }
+
+            void nextTransition() {
+                if (_remainingTransitions.empty()) {
+                    _currentBinding = 0;
+                    return;
+                }
+                _remainingTransitions.pop();
+                _currentBinding = 0;
+            }
+
+            void nextBinding() {
+                _currentBinding++;
+            }
+
+            void shrink() {
+                marking.shrink();
+            }1
+
+            [[nodiscard]] bool done() const {
+                return _remainingTransitions.empty();
+            }
+
+            ColoredPetriNetMarking marking;
+        private:
+            Binding_t _currentBinding = 0;
+            std::queue<Transition_t> _remainingTransitions;
+            bool first = true;
         };
     }
 }

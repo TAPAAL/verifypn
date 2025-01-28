@@ -331,6 +331,14 @@ bool options_t::parse(int argc, const char** argv) {
                 strategy = Strategy::EDFS;
             else if (std::strcmp(s, "ERDFS") == 0)
                 strategy = Strategy::ERDFS;
+            else if (std::strcmp(s, "SDFS") == 0)
+                strategy = Strategy::SDFS;
+            else if (std::strcmp(s, "SBFS") == 0)
+                strategy = Strategy::SBFS;
+            else if (std::strcmp(s, "SRDFS") == 0)
+                strategy = Strategy::SRDFS;
+            else if (std::strcmp(s, "SHEUR") == 0)
+                strategy = Strategy::SHEUR;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
             }

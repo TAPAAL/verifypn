@@ -19,7 +19,7 @@ namespace PetriEngine{
 
         class ColoredSuccessorGenerator {
         public:
-            explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
+            explicit ColoredSuccessorGenerator(const ColoredPetriNet& net, const size_t seed);
             ~ColoredSuccessorGenerator();
 
             ColoredPetriNetState next(ColoredPetriNetState& state) const {
@@ -28,6 +28,10 @@ namespace PetriEngine{
 
             ColoredPetriNetStateOneTrans next(ColoredPetriNetStateOneTrans& state) const {
                 return _nextOneTrans(state);
+            }
+
+            ColoredPetriNetStateRandom next(ColoredPetriNetStateRandom& state) {
+                return _next(state);
             }
 
             const ColoredPetriNet& net() const {
@@ -41,8 +45,11 @@ namespace PetriEngine{
             CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
             void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
             void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+
+            ColoredPetriNetStateRandom getInitialStateRandom(ColoredPetriNetMarking marking);
         protected:
             const ColoredPetriNet& _net;
+            std::default_random_engine _random_engine;
             void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
 
             ColoredPetriNetState _next(ColoredPetriNetState &state) const {
@@ -147,6 +154,60 @@ namespace PetriEngine{
                 }
             return {{},0};
             }
+
+            [[nodiscard]] ColoredPetriNetStateRandom createNewRandomState(ColoredPetriNetMarking previousMarking) {
+                std::deque<Transition_t> transitions(_net.getTransitionCount());
+                std::iota(transitions.begin(), transitions.end(), 0);
+                std::shuffle(transitions.begin(), transitions.end(), _random_engine);
+                return ColoredPetriNetStateRandom{std::move(previousMarking), std::queue(std::move(transitions))};
+            }
+
+            bool shouldEarlyTerminateTransition(const ColoredPetriNetStateRandom& state) {
+                if (!checkInhibitor(state.marking, state.getCurrentTransition()))
+                    return true;
+                if (!hasMinimalCardinality(state.marking, state.getCurrentTransition()))
+                    return true;
+                if (_net._transitions[state.getCurrentTransition()].guardExpression != nullptr && _net._transitions[state.getCurrentTransition()].variables.empty()) {
+                    return true;
+                }
+                return false;
+            }
+
+            ColoredPetriNetStateRandom _next(ColoredPetriNetStateRandom &state) {
+                while (state.getCurrentTransition() < _net.getTransitionCount()) {
+                    const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
+                    if (state.getCurrentBinding() == 0) {
+                        if (totalBindings == 0) {
+                            state.nextTransition();
+                            if (check(state.marking, state.getCurrentTransition(), Binding{})) {
+                                auto newState = createNewRandomState(state.marking);
+                                _fire(newState.marking, state.getCurrentTransition(), Binding{});
+                                return newState;
+                            }
+                            continue;
+                        }
+                        if (shouldEarlyTerminateTransition(state)) {
+                            state.nextTransition();
+                            continue;
+                        }
+                    }
+                    while (state.getCurrentBinding() <= totalBindings) {
+                        const auto binding = getBinding(state.getCurrentTransition(), state.getCurrentBinding());
+                        state.nextBinding();
+                        if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
+                            auto newState = createNewRandomState(state.marking);
+                            _fire(newState.marking, state.getCurrentTransition(), binding);
+                            return newState;
+                        }
+                    }
+
+                    state.nextTransition();
+                }
+                return ColoredPetriNetStateRandom{{}, {}};
+            }
+
+        private:
+            [[nodiscard]] bool hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t transition) const;
         };
     }
 }
