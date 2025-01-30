@@ -20,15 +20,15 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Check architecture
-      shell: bash
-      run: |
-        echo "The runner is of type $(uname -m)."
-        if [ $(uname -m) != "x86_64" ] 
-        then 
+        shell: bash
+        run: |
+          echo "The runner is of type $(uname -m)."
+          if [ $(uname -m) != "x86_64" ] 
+          then 
             echo "$(uname -m) detected. This test must be run on x86_64"
             exit -1
-        fi
-        exit 0
+          fi
+          exit 0
 
       - name: Install Packages
         run: |
