@@ -42,7 +42,8 @@ namespace PetriEngine {
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             const std::unordered_map<std::string, Transition_t> _transitionNameIndices;
-
+            template<typename SuccessorGeneratorState>
+            bool _search(SearchStrategy searchStrategy, size_t seed);
             bool _check(const ColoredPetriNetMarking& state);
 
             template <typename T>
