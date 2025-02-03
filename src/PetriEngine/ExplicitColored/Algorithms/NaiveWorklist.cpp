@@ -55,14 +55,6 @@ namespace PetriEngine {
                     return _rdfs<ColoredPetriNetStateOneTrans>(seed);
                 case SearchStrategy::EHEUR:
                     return _bestfs<ColoredPetriNetStateOneTrans>(seed);
-                case SearchStrategy::SDFS:
-                    return _dfs<ColoredPetriNetStateRandom>(seed);
-                case SearchStrategy::SBFS:
-                    return _bfs<ColoredPetriNetStateRandom>(seed);
-                case SearchStrategy::SRDFS:
-                    return _rdfs<ColoredPetriNetStateRandom>(seed);
-                case SearchStrategy::SHEUR:
-                    return _bestfs<ColoredPetriNetStateRandom>(seed);
                 default:
                     throw base_error("Unsupported exploration type");
             }
@@ -89,10 +81,6 @@ namespace PetriEngine {
                 std::cout << "EVEN" << std::endl;
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
-            }
-            else if constexpr (std::is_same_v<T, ColoredPetriNetStateRandom>) {
-                std::cout << "RANDOM" << std::endl;
-                waiting.add(std::move(successorGenerator.getInitialStateRandom(initialState)));
             }
             else {
                 std::cout << "FIXED" << std::endl;

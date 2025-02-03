@@ -105,10 +105,6 @@ namespace PetriEngine{
             }
         }
 
-        ColoredPetriNetStateRandom ColoredSuccessorGenerator::getInitialStateRandom(ColoredPetriNetMarking marking) {
-            return createNewRandomState(std::move(marking));
-        }
-
         void ColoredSuccessorGenerator::_fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const{
             consumePreset(state, tid, binding);
             producePostset(state, tid, binding);

@@ -25,11 +25,7 @@ namespace PetriEngine {
             EDFS,
             EBFS,
             ERDFS,
-            EHEUR,
-            SDFS,
-            SBFS,
-            SRDFS,
-            SHEUR
+            EHEUR
         };
 
         class NaiveWorklist {

@@ -30,10 +30,6 @@ namespace PetriEngine{
                 return _nextOneTrans(state);
             }
 
-            ColoredPetriNetStateRandom next(ColoredPetriNetStateRandom& state) {
-                return _next(state);
-            }
-
             const ColoredPetriNet& net() const {
                 return _net;
             }
@@ -45,8 +41,6 @@ namespace PetriEngine{
             CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
             void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
             void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-
-            ColoredPetriNetStateRandom getInitialStateRandom(ColoredPetriNetMarking marking);
         protected:
             const ColoredPetriNet& _net;
             std::default_random_engine _random_engine;

@@ -26,11 +26,7 @@ enum class Strategy {
     EBFS,
     EHEUR,
     ERDFS,
-    EDFS,
-    SBFS,
-    SDFS,
-    SRDFS,
-    SHEUR
+    EDFS
 };
 
 enum class TraceLevel {
