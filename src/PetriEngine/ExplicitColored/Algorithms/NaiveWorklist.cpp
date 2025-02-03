@@ -37,27 +37,36 @@ namespace PetriEngine {
             }
         }
 
-        bool NaiveWorklist::check(const SearchStrategy searchStrategy, const size_t seed) {
-            switch (searchStrategy) {
-                case SearchStrategy::DFS:
-                    return _dfs<ColoredPetriNetState>();
-                case SearchStrategy::BFS:
-                    return _bfs<ColoredPetriNetState>();
-                case SearchStrategy::RDFS:
-                    return _rdfs<ColoredPetriNetState>(seed);
-                case SearchStrategy::HEUR:
-                    return _bestfs<ColoredPetriNetState>(seed);
-                case SearchStrategy::EDFS:
-                    return _dfs<ColoredPetriNetStateOneTrans>();
-                case SearchStrategy::EBFS:
-                    return _bfs<ColoredPetriNetStateOneTrans>();
-                case SearchStrategy::ERDFS:
-                    return _rdfs<ColoredPetriNetStateOneTrans>(seed);
-                case SearchStrategy::EHEUR:
-                    return _bestfs<ColoredPetriNetStateOneTrans>(seed);
-                default:
-                    throw base_error("Unsupported exploration type");
+        bool NaiveWorklist::check(const SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option, const size_t seed) {
+            if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::FIXED) {
+                switch (searchStrategy) {
+                    case SearchStrategy::DFS:
+                        return _dfs<ColoredPetriNetState>();
+                    case SearchStrategy::BFS:
+                        return _bfs<ColoredPetriNetState>();
+                    case SearchStrategy::RDFS:
+                        return _rdfs<ColoredPetriNetState>(seed);
+                    case SearchStrategy::HEUR:
+                        return _bestfs<ColoredPetriNetState>(seed);
+                    default:
+                        throw base_error("Unsupported exploration type");
+                }
             }
+            if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
+                switch (searchStrategy) {
+                    case SearchStrategy::DFS:
+                        return _dfs<ColoredPetriNetStateOneTrans>();
+                    case SearchStrategy::BFS:
+                        return _bfs<ColoredPetriNetStateOneTrans>();
+                    case SearchStrategy::RDFS:
+                        return _rdfs<ColoredPetriNetStateOneTrans>(seed);
+                    case SearchStrategy::HEUR:
+                        return _bestfs<ColoredPetriNetStateOneTrans>(seed);
+                    default:
+                        throw base_error("Unsupported exploration type");
+                }
+            }
+            throw base_error("Unsupported successor generator");
         }
 
         const SearchStatistics & NaiveWorklist::GetSearchStatistics() const {
@@ -78,11 +87,9 @@ namespace PetriEngine {
             size_t size = initialState.compressedEncode(scratchpad);
 
             if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
-                std::cout << "EVEN" << std::endl;
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
-            }else {
-                std::cout << "FIXED" << std::endl;
+            } else {
                 auto initial = ColoredPetriNetState{initialState};
                 waiting.add(std::move(initial));
             }

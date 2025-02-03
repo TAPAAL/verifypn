@@ -617,28 +617,16 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
         switch (options.strategy) {
             case Strategy::DEFAULT:
             case Strategy::DFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, seed);
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::DFS, options.colored_sucessor_generator, seed);
                 break;
             case Strategy::BFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS, seed);
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::BFS, options.colored_sucessor_generator, seed);
                 break;
             case Strategy::RDFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, seed);
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::RDFS, options.colored_sucessor_generator, seed);
                 break;
             case Strategy::HEUR:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::HEUR, seed);
-                break;
-            case Strategy::EDFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EDFS, seed);
-                break;
-            case Strategy::EBFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EBFS, seed);
-                break;
-            case Strategy::ERDFS:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::ERDFS, seed);
-                break;
-            case Strategy::EHEUR:
-                result = naiveWorkList.check(ExplicitColored::SearchStrategy::EHEUR, seed);
+                result = naiveWorkList.check(ExplicitColored::SearchStrategy::HEUR, options.colored_sucessor_generator, seed);
                 break;
             default:
                 std::cout << "Strategy is not supported for explicit colored engine" << std::endl

@@ -21,11 +21,7 @@ namespace PetriEngine {
             DFS,
             BFS,
             RDFS,
-            HEUR,
-            EDFS,
-            EBFS,
-            ERDFS,
-            EHEUR,
+            HEUR
         };
 
         class NaiveWorklist {
@@ -38,7 +34,7 @@ namespace PetriEngine {
                 const IColoredResultPrinter& coloredResultPrinter
             );
 
-            bool check(SearchStrategy searchStrategy, size_t seed);
+            bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option, size_t seed);
             const SearchStatistics& GetSearchStatistics() const;
         private:
             PQL::Condition_ptr _gammaQuery;
