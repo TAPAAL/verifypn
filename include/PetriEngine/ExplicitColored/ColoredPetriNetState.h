@@ -9,38 +9,46 @@ namespace PetriEngine{
     namespace ExplicitColored{
 
         struct ColoredPetriNetState{
-            ColoredPetriNetState(const ColoredPetriNetState& oldState) : marking(oldState.marking){};
             explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+            ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
             ColoredPetriNetState(ColoredPetriNetState&&) = default;
             ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;
             ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
-
-            std::pair<Transition_t, Binding_t> getNextPair() {
-                return {_currentTransition,_currentBinding};
-            }
-
-            void updatePair(const Transition_t tid, const Binding_t bid) {
-                if (tid != std::numeric_limits<Transition_t>::max()) {
-                    _currentBinding = bid;
-                    _currentTransition = tid;
-                } else {
-                    _done = true;
-                }
-            }
             
             void shrink() {
                 marking.shrink();
+            }
+
+            void setDone() {
+                _done = true;
             }
 
             [[nodiscard]] bool done() const {
                 return _done;
             }
 
+            [[nodiscard]] Transition_t getCurrentTransition() const {
+                return _currentTransition;
+            }
+
+            [[nodiscard]] Binding_t getCurrentBinding() const {
+                return _currentBinding;
+            }
+
+            void nextTransition() {
+                _currentTransition += 1;
+                _currentBinding = 1;
+            }
+
+            void nextBinding() {
+                _currentBinding += 1;
+            }
+
             ColoredPetriNetMarking marking;
         private:
             bool _done = false;
 
-            Binding_t _currentBinding = 0;
+            Binding_t _currentBinding = 1;
             Transition_t _currentTransition = 0;
         };
 
@@ -105,56 +113,6 @@ namespace PetriEngine{
             std::vector<Binding_t> _map;
             uint32_t _currentIndex = 0;
             uint32_t _completedTransitions = 0;
-        };
-
-
-        struct ColoredPetriNetStateRandom {
-            explicit ColoredPetriNetStateRandom(ColoredPetriNetMarking marking, std::queue<Transition_t> transitions)
-                : marking(std::move(marking)), _remainingTransitions(std::move(transitions)) {};
-
-            ColoredPetriNetStateRandom(const ColoredPetriNetStateRandom& oldState) = default;
-            ColoredPetriNetStateRandom(ColoredPetriNetStateRandom&&) = default;
-
-            ColoredPetriNetStateRandom& operator=(const ColoredPetriNetStateRandom&) = default;
-            ColoredPetriNetStateRandom& operator=(ColoredPetriNetStateRandom&&) = default;
-
-            [[nodiscard]] Transition_t getCurrentTransition() const {
-                if (_remainingTransitions.empty()) {
-                    return std::numeric_limits<Transition_t>::max();
-                }
-                return _remainingTransitions.front();
-            }
-
-            [[nodiscard]] Binding_t getCurrentBinding() const {
-                return _currentBinding;
-            }
-
-            void nextTransition() {
-                if (_remainingTransitions.empty()) {
-                    _currentBinding = 0;
-                    return;
-                }
-                _remainingTransitions.pop();
-                _currentBinding = 0;
-            }
-
-            void nextBinding() {
-                _currentBinding++;
-            }
-
-            void shrink() {
-                marking.shrink();
-            }1
-
-            [[nodiscard]] bool done() const {
-                return _remainingTransitions.empty();
-            }
-
-            ColoredPetriNetMarking marking;
-        private:
-            Binding_t _currentBinding = 0;
-            std::queue<Transition_t> _remainingTransitions;
-            bool first = true;
         };
     }
 }
