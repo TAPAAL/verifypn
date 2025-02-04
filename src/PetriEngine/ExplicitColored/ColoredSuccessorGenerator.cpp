@@ -109,6 +109,16 @@ namespace PetriEngine{
             consumePreset(state, tid, binding);
             producePostset(state, tid, binding);
         }
+
+        bool ColoredSuccessorGenerator::hasMinimalCardinality(const ColoredPetriNetMarking &marking, Transition_t transition) const {
+            for (auto i = _net._transitionArcs[transition].first; i < _net._transitionArcs[transition].second; i++) {
+                auto& arc = _net._arcs[i];
+                if (marking.markings[arc.from].totalCount() < arc.expression->getMinimalMarkingCount()) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }
 #endif /* COLOREDSUCCESSORGENERATOR_CPP */

@@ -43,54 +43,41 @@ namespace PetriEngine{
             void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         protected:
             const ColoredPetriNet& _net;
+            std::default_random_engine _random_engine;
             void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
 
             ColoredPetriNetState _next(ColoredPetriNetState &state) const {
-                auto newState = ColoredPetriNetState{state};
-                const auto [nextTid, nextBid] = state.getNextPair();
-                for (auto tid = nextTid;tid < _net._transitions.size(); tid++) {
-                    auto bid = tid == nextTid ? nextBid : 0;
-                    const auto totalBindings = _net._transitions[tid].validVariables.second;
-                    if (totalBindings == 0) {
-                        if (bid != 0) {
-                            continue;
-                        }
-                        const auto binding = Binding{};
-                        if (check(state.marking, tid, binding)) {
-                            _fire(newState.marking, tid, binding);
-                            state.updatePair(tid, ++bid);
-                            return newState;
-                        }
-                    } else {
-                        //Checking whether its impossible before iterating through bindings
-                        if (!checkInhibitor(state.marking, tid)) {
-                            continue;
-                        }
-                        if (bid == 0) {
-                            bid++;
-                            auto binding = getBinding(tid, bid);
-                            const auto check = firstCheckPresetAndGuard(state.marking, tid, binding);
-                            if (check == CheckingBool::TRUE) {
-                                _fire(newState.marking, tid, binding);
-                                state.updatePair(tid, bid);
-                                return newState;
-                            } else if (check == CheckingBool::NEVERTRUE) {
-                                continue;
-                            }
-                        }
-                        while (++bid <= totalBindings) {
-                            const auto binding = getBinding(tid, bid);
-                            if (checkPresetAndGuard(state.marking, tid, binding)) {
-                                _fire(newState.marking, tid, binding);
-                                state.updatePair(tid, bid);
-
+                while (state.getCurrentTransition() < _net.getTransitionCount()) {
+                    const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
+                    if (state.getCurrentBinding() == 1) {
+                        if (totalBindings == 0) {
+                            if (check(state.marking, state.getCurrentTransition(), Binding{})) {
+                                auto newState = ColoredPetriNetState(state.marking);
+                                _fire(newState.marking, state.getCurrentTransition(), Binding{});
+                                state.nextTransition();
                                 return newState;
                             }
+                            state.nextTransition();
+                            continue;
+                        }
+                        if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
+                            state.nextTransition();
+                            continue;
                         }
                     }
+                    while (state.getCurrentBinding() <= totalBindings) {
+                        const auto binding = getBinding(state.getCurrentTransition(), state.getCurrentBinding());
+                        state.nextBinding();
+                        if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
+                            auto newState = ColoredPetriNetState(state.marking);
+                            _fire(newState.marking, state.getCurrentTransition(), binding);
+                            return newState;
+                        }
+                    }
+                    state.nextTransition();
                 }
-                state.updatePair(std::numeric_limits<Transition_t>::max(), std::numeric_limits<Binding_t>::max());
-                return newState;
+                state.setDone();
+                return ColoredPetriNetState{{}};
             }
 
             // SuccessorGenerator but only considers current transition
@@ -110,33 +97,20 @@ namespace PetriEngine{
                         }
                     } else {
                         //Checking whether its impossible before iterating through bindings
-                        if (checkInhibitor(state.marking, tid)) {
-                            if (bid == 0) {
-                                bid++;
-                                const auto binding = getBinding(tid, bid);
-                                const auto check = firstCheckPresetAndGuard(state.marking, tid, binding);
-                                if (check == CheckingBool::TRUE) {
-                                    auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
-                                    _fire(newState.marking, tid, binding);
-                                    state.updatePair(tid,bid);
-                                    return newState;
-                                }
-                                if (check == CheckingBool::NEVERTRUE) {
-                                    state.updatePair(tid, std::numeric_limits<Binding_t>::max());
-                                    auto [nextTid, nextBid] = state.getNextPair();
-                                    tid = nextTid;
-                                    bid = nextBid;
-                                    continue;
-                                }
-                            }
-                            while (++bid <= totalBindings) {
-                                const auto binding = getBinding(tid, bid);
-                                if (checkPresetAndGuard(state.marking, tid, binding)) {
-                                    auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
-                                    _fire(newState.marking, tid, binding);
-                                    state.updatePair(tid, bid);
-                                    return newState;
-                                }
+                        if (bid == 0 && shouldEarlyTerminateTransition(state.marking, tid)) {
+                            state.updatePair(tid, std::numeric_limits<Binding_t>::max());
+                            auto [nextTid, nextBid] = state.getNextPair();
+                            tid = nextTid;
+                            bid = nextBid;
+                            continue;
+                        }
+                        while (++bid <= totalBindings) {
+                            const auto binding = getBinding(tid, bid);
+                            if (checkPresetAndGuard(state.marking, tid, binding)) {
+                                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
+                                _fire(newState.marking, tid, binding);
+                                state.updatePair(tid, bid);
+                                return newState;
                             }
                         }
                     }
@@ -145,8 +119,18 @@ namespace PetriEngine{
                     tid = nextTid;
                     bid = nextBid;
                 }
-            return {{},0};
+                return {{},0};
             }
+
+            [[nodiscard]] bool shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t transition) const {
+                if (!checkInhibitor(marking, transition))
+                    return true;
+                if (!hasMinimalCardinality(marking, transition))
+                    return true;
+                return false;
+            }
+        private:
+            [[nodiscard]] bool hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t transition) const;
         };
     }
 }

@@ -72,7 +72,6 @@ namespace PetriEngine {
             } else {
                 auto initial = ColoredPetriNetState{initialState};
                 waiting.add(std::move(initial));
-
             }
             passed.insert(scratchpad.data(), size);
             _searchStatistics.passedCount = 1;
@@ -85,7 +84,7 @@ namespace PetriEngine {
             while (!waiting.empty()){
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
-                if (next.done){
+                if (next.done()) {
                     waiting.remove();
                     continue;
                 }
