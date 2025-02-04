@@ -31,10 +31,11 @@ namespace PetriEngine {
                 const PQL::Condition_ptr &query,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-                const IColoredResultPrinter& coloredResultPrinter
+                const IColoredResultPrinter& coloredResultPrinter,
+                size_t seed
             );
 
-            bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option, size_t seed);
+            bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option);
             const SearchStatistics& GetSearchStatistics() const;
         private:
             PQL::Condition_ptr _gammaQuery;
@@ -42,18 +43,20 @@ namespace PetriEngine {
             const ColoredPetriNet& _net;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             const std::unordered_map<std::string, Transition_t> _transitionNameIndices;
+            const size_t _seed;
+
             template<typename SuccessorGeneratorState>
-            bool _search(SearchStrategy searchStrategy, size_t seed);
-            bool _check(const ColoredPetriNetMarking& state);
+            bool _search(SearchStrategy searchStrategy);
+            bool _check(const ColoredPetriNetMarking& state) const;
 
             template <typename T>
             bool _dfs();
             template <typename T>
             bool _bfs();
             template <typename T>
-            bool _rdfs(size_t seed);
+            bool _rdfs();
             template <typename T>
-            bool _bestfs(size_t seed);
+            bool _bestfs();
 
             template <template <typename> typename WaitingList, typename T>
             bool _genericSearch(WaitingList<T> waiting);

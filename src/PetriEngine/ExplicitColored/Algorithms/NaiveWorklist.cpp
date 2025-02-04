@@ -20,10 +20,12 @@ namespace PetriEngine {
             const PQL::Condition_ptr &query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
             const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-            const IColoredResultPrinter& coloredResultPrinter
+            const IColoredResultPrinter& coloredResultPrinter,
+            const size_t seed
         ) : _net(std::move(net)),
             _placeNameIndices(placeNameIndices),
             _transitionNameIndices(transitionNameIndices),
+            _seed(seed),
             _coloredResultPrinter(coloredResultPrinter)
         {
             if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -37,12 +39,12 @@ namespace PetriEngine {
             }
         }
 
-        bool NaiveWorklist::check(const SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option, const size_t seed) {
+        bool NaiveWorklist::check(const SearchStrategy searchStrategy, const ColoredSuccessorGeneratorOption colored_successor_generator_option) {
             if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::FIXED) {
-                return _search<ColoredPetriNetState>(searchStrategy, seed);
+                return _search<ColoredPetriNetState>(searchStrategy);
             }
             if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
-                return _search<ColoredPetriNetStateOneTrans>(searchStrategy, seed);
+                return _search<ColoredPetriNetStateOneTrans>(searchStrategy);
             }
             throw base_error("Unsupported successor generator");
         }
@@ -51,7 +53,7 @@ namespace PetriEngine {
             return _searchStatistics;
         }
 
-        bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) {
+        bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) const {
             return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, _transitionNameIndices, _net);
         }
 
@@ -118,16 +120,16 @@ namespace PetriEngine {
         }
 
         template<typename SuccessorGeneratorState>
-        bool NaiveWorklist::_search(const SearchStrategy searchStrategy, const size_t seed) {
+        bool NaiveWorklist::_search(const SearchStrategy searchStrategy) {
             switch (searchStrategy) {
                 case SearchStrategy::DFS:
                     return _dfs<SuccessorGeneratorState>();
                 case SearchStrategy::BFS:
                     return _bfs<SuccessorGeneratorState>();
                 case SearchStrategy::RDFS:
-                    return _rdfs<SuccessorGeneratorState>(seed);
+                    return _rdfs<SuccessorGeneratorState>();
                 case SearchStrategy::HEUR:
-                    return _bestfs<SuccessorGeneratorState>(seed);
+                    return _bestfs<SuccessorGeneratorState>();
                 default:
                     throw base_error("Unsupported exploration type");
             }
@@ -144,15 +146,15 @@ namespace PetriEngine {
         }
 
         template <typename T>
-        bool NaiveWorklist::_rdfs(const size_t seed) {
-            return _genericSearch<RDFSStructure>(RDFSStructure<T>(seed));
+        bool NaiveWorklist::_rdfs() {
+            return _genericSearch<RDFSStructure>(RDFSStructure<T>(_seed));
         }
 
         template <typename T>
-        bool NaiveWorklist::_bestfs(const size_t seed) {
+        bool NaiveWorklist::_bestfs() {
             return _genericSearch<BestFSStructure>(
                 BestFSStructure<T>(
-                    seed,
+                    _seed,
                     _gammaQuery,
                     _placeNameIndices,
                     _quantifier == Quantifier::AG
