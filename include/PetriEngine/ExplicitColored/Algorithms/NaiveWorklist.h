@@ -2,6 +2,8 @@
 #define NAIVEWORKLIST_H
 
 
+#include <PetriEngine/ExplicitColored/GammaQueryCompiler.h>
+
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
@@ -39,15 +41,14 @@ namespace PetriEngine {
             );
 
             bool check(SearchStrategy searchStrategy, size_t seed);
-            const SearchStatistics& GetSearchStatistics() const;
+            [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
         private:
-            PQL::Condition_ptr _gammaQuery;
+            std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
+            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             Quantifier _quantifier;
             const ColoredPetriNet& _net;
-            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
-            const std::unordered_map<std::string, Transition_t> _transitionNameIndices;
 
-            bool _check(const ColoredPetriNetMarking& state);
+            [[nodiscard]] bool _check(const ColoredPetriNetMarking& state) const;
 
             template <typename T>
             bool _dfs();

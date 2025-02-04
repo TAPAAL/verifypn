@@ -80,11 +80,12 @@ namespace PetriEngine
                     }
                 }
             }
-            const ColoredPetriNetMarking& initial() const {
+
+            [[nodiscard]] const ColoredPetriNetMarking& initial() const {
                 return _initialMarking;
             }
 
-            Transition_t getTransitionCount() const {
+            [[nodiscard]] Transition_t getTransitionCount() const {
                 return _transitions.size();
             }
         private:
