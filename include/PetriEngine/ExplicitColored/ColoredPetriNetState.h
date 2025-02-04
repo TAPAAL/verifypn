@@ -1,6 +1,7 @@
 #ifndef COLOREDPETRINETSTATE_H
 #define COLOREDPETRINETSTATE_H
 
+#include <queue>
 #include <utility>
 
 #include "ColoredPetriNetMarking.h"
@@ -8,34 +9,47 @@ namespace PetriEngine{
     namespace ExplicitColored{
 
         struct ColoredPetriNetState{
-            ColoredPetriNetState(const ColoredPetriNetState& oldState) : marking(oldState.marking){};
             explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+            ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
             ColoredPetriNetState(ColoredPetriNetState&&) = default;
             ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;
             ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
-
-            std::pair<Transition_t, Binding_t> getNextPair() {
-                return {_currentTransition,_currentBinding};
-            }
-
-            void updatePair(const Transition_t tid, const Binding_t bid) {
-                if (tid != std::numeric_limits<Transition_t>::max()) {
-                    _currentBinding = bid;
-                    _currentTransition = tid;
-                }else {
-                    done = true;
-                }
-            }
             
             void shrink() {
                 marking.shrink();
             }
 
+            void setDone() {
+                _done = true;
+            }
+
+            [[nodiscard]] bool done() const {
+                return _done;
+            }
+
+            [[nodiscard]] Transition_t getCurrentTransition() const {
+                return _currentTransition;
+            }
+
+            [[nodiscard]] Binding_t getCurrentBinding() const {
+                return _currentBinding;
+            }
+
+            void nextTransition() {
+                _currentTransition += 1;
+                _currentBinding = 1;
+            }
+
+            void nextBinding() {
+                _currentBinding += 1;
+            }
+
             ColoredPetriNetMarking marking;
-            bool done = false;
-            private:
-                Binding_t _currentBinding = 0;
-                Transition_t _currentTransition = 0;
+        private:
+            bool _done = false;
+
+            Binding_t _currentBinding = 1;
+            Transition_t _currentTransition = 0;
         };
 
         struct ColoredPetriNetStateOneTrans {
@@ -53,7 +67,7 @@ namespace PetriEngine{
             std::pair<Transition_t, Binding_t> getNextPair() {
                 Transition_t tid = _currentIndex;
                 Binding_t bid = std::numeric_limits<Binding_t>::max();
-                if (done) {
+                if (done()) {
                     return {tid,bid};
                 }
                 auto it = _map.begin() + _currentIndex;
@@ -78,7 +92,7 @@ namespace PetriEngine{
                     if (bid == std::numeric_limits<Binding_t>::max()) {
                         _completedTransitions += 1;
                         if (_completedTransitions == _map.size()) {
-                            done = true;
+                            _done = true;
                         }
                     }
                 }
@@ -88,14 +102,17 @@ namespace PetriEngine{
                 marking.shrink();
             }
 
+            [[nodiscard]] bool done() const {
+                return _done;
+            }
+
             ColoredPetriNetMarking marking;
-            bool done = false;
             bool shuffle = false;
         private:
+            bool _done = false;
             std::vector<Binding_t> _map;
             uint32_t _currentIndex = 0;
             uint32_t _completedTransitions = 0;
-
         };
     }
 }

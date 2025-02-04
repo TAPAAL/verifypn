@@ -79,7 +79,8 @@ namespace PetriEngine {
                 std::cout << "EVEN" << std::endl;
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
-            }else {
+            }
+            else {
                 std::cout << "FIXED" << std::endl;
                 auto initial = ColoredPetriNetState{initialState};
                 waiting.add(std::move(initial));
@@ -95,7 +96,7 @@ namespace PetriEngine {
             while (!waiting.empty()){
                 auto& next = waiting.next();
                 auto successor = successorGenerator.next(next);
-                if (next.done){
+                if (next.done()) {
                     waiting.remove();
                     continue;
                 }
