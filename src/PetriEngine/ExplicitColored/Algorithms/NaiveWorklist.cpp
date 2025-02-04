@@ -40,17 +40,17 @@ namespace PetriEngine {
         bool NaiveWorklist::check(const SearchStrategy searchStrategy, const size_t seed) {
             switch (searchStrategy) {
                 case SearchStrategy::DFS:
-                    return _dfs<ColoredPetriNetState>(seed);
+                    return _dfs<ColoredPetriNetState>();
                 case SearchStrategy::BFS:
-                    return _bfs<ColoredPetriNetState>(seed);
+                    return _bfs<ColoredPetriNetState>();
                 case SearchStrategy::RDFS:
                     return _rdfs<ColoredPetriNetState>(seed);
                 case SearchStrategy::HEUR:
                     return _bestfs<ColoredPetriNetState>(seed);
                 case SearchStrategy::EDFS:
-                    return _dfs<ColoredPetriNetStateOneTrans>(seed);
+                    return _dfs<ColoredPetriNetStateOneTrans>();
                 case SearchStrategy::EBFS:
-                    return _bfs<ColoredPetriNetStateOneTrans>(seed);
+                    return _bfs<ColoredPetriNetStateOneTrans>();
                 case SearchStrategy::ERDFS:
                     return _rdfs<ColoredPetriNetStateOneTrans>(seed);
                 case SearchStrategy::EHEUR:
@@ -69,8 +69,8 @@ namespace PetriEngine {
         }
 
         template <template <typename> typename WaitingList, typename T>
-        bool NaiveWorklist::_genericSearch(WaitingList<T> waiting, size_t seed) {
-            ColoredSuccessorGenerator successorGenerator(_net, seed);
+        bool NaiveWorklist::_genericSearch(WaitingList<T> waiting) {
+            ColoredSuccessorGenerator successorGenerator(_net);
             ptrie::set<uint8_t> passed;
             std::vector<uint8_t> scratchpad;
             const auto& initialState = _net.initial();
@@ -133,18 +133,18 @@ namespace PetriEngine {
         }
 
         template <typename T>
-        bool NaiveWorklist::_dfs(size_t seed) {
-            return _genericSearch<DFSStructure>(DFSStructure<T> {}, seed);
+        bool NaiveWorklist::_dfs() {
+            return _genericSearch<DFSStructure>(DFSStructure<T> {});
         }
 
         template <typename T>
-        bool NaiveWorklist::_bfs(size_t seed) {
-            return _genericSearch<BFSStructure>(BFSStructure<T> {}, seed);
+        bool NaiveWorklist::_bfs() {
+            return _genericSearch<BFSStructure>(BFSStructure<T> {});
         }
 
         template <typename T>
         bool NaiveWorklist::_rdfs(const size_t seed) {
-            return _genericSearch<RDFSStructure>(RDFSStructure<T>(seed), seed);
+            return _genericSearch<RDFSStructure>(RDFSStructure<T>(seed));
         }
 
         template <typename T>
@@ -155,7 +155,7 @@ namespace PetriEngine {
                     _gammaQuery,
                     _placeNameIndices,
                     _quantifier == Quantifier::AG
-                    ), seed
+                    )
                 );
         }
 

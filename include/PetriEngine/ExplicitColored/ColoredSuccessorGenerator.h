@@ -19,7 +19,7 @@ namespace PetriEngine{
 
         class ColoredSuccessorGenerator {
         public:
-            explicit ColoredSuccessorGenerator(const ColoredPetriNet& net, const size_t seed);
+            explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
             ~ColoredSuccessorGenerator();
 
             ColoredPetriNetState next(ColoredPetriNetState& state) const {

@@ -7,8 +7,8 @@
 
 namespace PetriEngine{
     namespace ExplicitColored{
-        ColoredSuccessorGenerator::ColoredSuccessorGenerator(const ColoredPetriNet& net, const size_t seed)
-        : _net(net), _random_engine(seed) {}
+        ColoredSuccessorGenerator::ColoredSuccessorGenerator(const ColoredPetriNet& net)
+        : _net(net) {}
 
         ColoredSuccessorGenerator::~ColoredSuccessorGenerator() = default;
 
