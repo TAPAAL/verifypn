@@ -38,13 +38,13 @@ namespace PetriEngine {
         bool NaiveWorklist::check(const SearchStrategy searchStrategy, const size_t seed) {
             switch (searchStrategy) {
                 case SearchStrategy::DFS:
-                    return _dfs<ColoredPetriNetState>();
+                    return _dfs<ColoredPetriNetStateV2>();
                 case SearchStrategy::BFS:
-                    return _bfs<ColoredPetriNetState>();
+                    return _bfs<ColoredPetriNetStateV2>();
                 case SearchStrategy::RDFS:
-                    return _rdfs<ColoredPetriNetState>(seed);
+                    return _rdfs<ColoredPetriNetStateV2>(seed);
                 case SearchStrategy::HEUR:
-                    return _bestfs<ColoredPetriNetState>(seed);
+                    return _bestfs<ColoredPetriNetStateV2>(seed);
                 case SearchStrategy::EDFS:
                     return _dfs<ColoredPetriNetStateOneTrans>();
                 case SearchStrategy::EBFS:
@@ -80,9 +80,10 @@ namespace PetriEngine {
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
                 waiting.add(std::move(initial));
             }
-            else {
-                std::cout << "FIXED" << std::endl;
-                auto initial = ColoredPetriNetState{initialState};
+            else
+            {
+                std::cout << "FIXED V2" << std::endl;
+                auto initial = ColoredPetriNetStateV2{initialState};
                 waiting.add(std::move(initial));
             }
             passed.insert(scratchpad.data(), size);

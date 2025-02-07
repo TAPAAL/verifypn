@@ -26,6 +26,10 @@ namespace PetriEngine{
                 return _next(state);
             }
 
+            ColoredPetriNetStateV2 next(ColoredPetriNetStateV2& state) const {
+                return _nextV2(state);
+            }
+
             ColoredPetriNetStateOneTrans next(ColoredPetriNetStateOneTrans& state) const {
                 return _nextOneTrans(state);
             }
@@ -122,6 +126,72 @@ namespace PetriEngine{
                 return {{},0};
             }
 
+            ColoredPetriNetStateV2 _nextV2(ColoredPetriNetStateV2 &state) const {
+transitionLoop:
+                while (state.getCurrentTransition() < _net.getTransitionCount()) {
+                    if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
+                        state.nextTransition();
+                        continue;
+                    }
+                    std::vector<std::vector<Color_t>> variableBindings;
+                    std::vector<Variable_t> variables;
+                    for (const auto&[key, _] : _net._transitions[state.getCurrentTransition()].validVariables.first) {
+                        variables.push_back(key);
+                    }
+                    variableBindings.resize(variables.size());
+                    size_t index = 0;
+                    for (auto arcIndex = _net._transitionArcs[state.getCurrentTransition()].first; arcIndex < _net._transitionArcs[state.getCurrentTransition()].second; arcIndex++){
+                        for (const auto variable : variables) {
+                            const auto& arc = _net._arcs[arcIndex];
+                            auto possibleBindings = arc.expression->getPossibleBindings(variable, state.marking.markings[arc.from]);
+                            if (arcIndex == _net._transitionArcs[state.getCurrentTransition()].first)
+                                variableBindings[index] = std::vector(possibleBindings.begin(), possibleBindings.end());
+                            else {
+                                std::vector<Color_t> intersected;
+                                std::set_intersection(
+                                    possibleBindings.begin(),
+                                    possibleBindings.end(),
+                                    variableBindings[index].begin(),
+                                    variableBindings[index].end(),
+                                    std::back_inserter(intersected)
+                                );
+                                variableBindings[index] = std::move(intersected);
+                                if (variableBindings[index].empty()) {
+                                    state.nextTransition();
+                                    goto transitionLoop;
+                                }
+                            }
+                            index++;
+                        }
+                    }
+                    Binding_t totalBindings = 1;
+                    for (const auto& variableBinding : variableBindings) {
+                        totalBindings *= variableBinding.size();
+                    }
+                    while (state.getCurrentBinding() <= totalBindings) {
+                        Binding binding;
+                        Binding_t remainder = state.getCurrentBinding();
+                        Binding_t totalBindings2 = totalBindings;
+                        size_t variableIndex = 0;
+                        for (const Variable_t variable : variables) {
+                            totalBindings2 = totalBindings2 / variableBindings[variableIndex].size();
+                            binding.setValue(variable, variableBindings[variableIndex][(remainder / totalBindings2) % variableBindings[variableIndex].size()]);
+                            remainder %= totalBindings2;
+                            variableIndex++;
+                        }
+                        state.nextBinding();
+                        if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
+                            auto newState = ColoredPetriNetStateV2(state.marking);
+                            _fire(newState.marking, state.getCurrentTransition(), binding);
+                            return newState;
+                        }
+                    }
+                    state.nextTransition();
+                }
+                state.setDone();
+                return ColoredPetriNetStateV2{{}};
+            }
+
             [[nodiscard]] bool shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t transition) const {
                 if (!checkInhibitor(marking, transition))
                     return true;
@@ -129,6 +199,7 @@ namespace PetriEngine{
                     return true;
                 return false;
             }
+
         private:
             [[nodiscard]] bool hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t transition) const;
         };

@@ -114,6 +114,50 @@ namespace PetriEngine{
             uint32_t _currentIndex = 0;
             uint32_t _completedTransitions = 0;
         };
+
+        struct ColoredPetriNetStateV2 {
+            explicit ColoredPetriNetStateV2(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+            ColoredPetriNetStateV2(const ColoredPetriNetStateV2& oldState) = default;
+            ColoredPetriNetStateV2(ColoredPetriNetStateV2&&) = default;
+            ColoredPetriNetStateV2& operator=(const ColoredPetriNetStateV2&) = default;
+            ColoredPetriNetStateV2& operator=(ColoredPetriNetStateV2&&) = default;
+
+            void shrink() {
+                marking.shrink();
+            }
+
+            void setDone() {
+                _done = true;
+            }
+
+            [[nodiscard]] bool done() const {
+                return _done;
+            }
+
+            [[nodiscard]] Transition_t getCurrentTransition() const {
+                return _currentTransition;
+            }
+
+            [[nodiscard]] Binding_t getCurrentBinding() const {
+                return _currentBinding;
+            }
+
+            void nextTransition() {
+                _currentTransition += 1;
+                _currentBinding = 1;
+            }
+
+            void nextBinding() {
+                _currentBinding += 1;
+            }
+
+            ColoredPetriNetMarking marking;
+        private:
+            bool _done = false;
+
+            Binding_t _currentBinding = 1;
+            Transition_t _currentTransition = 0;
+        };
     }
 }
 #endif //COLOREDPETRINETSTATE_H
