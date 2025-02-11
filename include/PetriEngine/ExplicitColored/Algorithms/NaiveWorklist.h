@@ -3,7 +3,6 @@
 
 
 #include <PetriEngine/ExplicitColored/GammaQueryCompiler.h>
-
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
@@ -23,11 +22,7 @@ namespace PetriEngine {
             DFS,
             BFS,
             RDFS,
-            HEUR,
-            EDFS,
-            EBFS,
-            ERDFS,
-            EHEUR
+            HEUR
         };
 
         class NaiveWorklist {
@@ -37,17 +32,20 @@ namespace PetriEngine {
                 const PQL::Condition_ptr &query,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-                const IColoredResultPrinter& coloredResultPrinter
+                const IColoredResultPrinter& coloredResultPrinter,
+                size_t seed
             );
 
-            bool check(SearchStrategy searchStrategy, size_t seed);
-            [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
+            bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option);
+            const SearchStatistics& GetSearchStatistics() const;
         private:
             std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
-            const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             Quantifier _quantifier;
             const ColoredPetriNet& _net;
+            const size_t _seed;
 
+            template<typename SuccessorGeneratorState>
+            bool _search(SearchStrategy searchStrategy);
             [[nodiscard]] bool _check(const ColoredPetriNetMarking& state) const;
 
             template <typename T>
@@ -55,9 +53,9 @@ namespace PetriEngine {
             template <typename T>
             bool _bfs();
             template <typename T>
-            bool _rdfs(size_t seed);
+            bool _rdfs();
             template <typename T>
-            bool _bestfs(size_t seed);
+            bool _bestfs();
 
             template <template <typename> typename WaitingList, typename T>
             bool _genericSearch(WaitingList<T> waiting);
