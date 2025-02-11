@@ -45,6 +45,9 @@ namespace PetriEngine {
             if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
                 return _search<ColoredPetriNetStateOneTrans>(searchStrategy);
             }
+            if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::CONSTRAINED) {
+                return _search<ColoredPetriNetStateV2>(searchStrategy);
+            }
             throw base_error("Unsupported successor generator");
         }
 
@@ -67,6 +70,9 @@ namespace PetriEngine {
 
             if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
                 auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
+                waiting.add(std::move(initial));
+            } else if constexpr (std::is_same_v<T, ColoredPetriNetStateV2>) {
+                auto initial = ColoredPetriNetStateV2 {initialState};
                 waiting.add(std::move(initial));
             } else {
                 auto initial = ColoredPetriNetState{initialState};
