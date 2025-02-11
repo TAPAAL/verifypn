@@ -21,13 +21,13 @@ namespace PetriEngine {
 
             [[nodiscard]] Color_t getLhs(const Binding& binding, const TypeFlag_t typeFlag) const {
                 return (typeFlag & TypeFlag::LHS_VAR)
-                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                    ? signed_wrap(static_cast<ColorOffset_t>(binding.getValue(value.variable)) + offset, static_cast<ColorOffset_t>(color_max))
                     : value.color;
             }
 
             [[nodiscard]] Color_t getRhs(const Binding& binding, const TypeFlag_t typeFlag) const {
                 return (typeFlag & TypeFlag::RHS_VAR)
-                    ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                    ? signed_wrap(static_cast<ColorOffset_t>(binding.getValue(value.variable)) + offset, static_cast<ColorOffset_t>(color_max))
                     : value.color;
             }
         };
@@ -43,6 +43,12 @@ namespace PetriEngine {
                     }
                 }
                 return true;
+            }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                for (const auto& expression : _expressions) {
+                    expression->collectVariables(out);
+                }
             }
         private:
             std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
@@ -60,6 +66,12 @@ namespace PetriEngine {
                 }
                 return false;
             }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                for (const auto& expression : _expressions) {
+                    expression->collectVariables(out);
+                }
+            }
         private:
             std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
         };
@@ -71,6 +83,15 @@ namespace PetriEngine {
 
             bool eval(const Binding& binding) override {
                 return _lhs.getLhs(binding, _typeFlag) < _rhs.getRhs(binding, _typeFlag);
+            }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                if (_typeFlag & TypeFlag::LHS_VAR) {
+                    out.insert(_lhs.value.variable);
+                }
+                if (_typeFlag & TypeFlag::RHS_VAR) {
+                    out.insert(_rhs.value.variable);
+                }
             }
         private:
             VarOrColorWithOffset _lhs;
@@ -85,6 +106,15 @@ namespace PetriEngine {
 
             bool eval(const Binding& binding) override {
                 return _lhs.getLhs(binding, _typeFlag) <= _rhs.getRhs(binding, _typeFlag);
+            }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                if (_typeFlag & TypeFlag::LHS_VAR) {
+                    out.insert(_lhs.value.variable);
+                }
+                if (_typeFlag & TypeFlag::RHS_VAR) {
+                    out.insert(_rhs.value.variable);
+                }
             }
         private:
             VarOrColorWithOffset _lhs;
@@ -111,6 +141,17 @@ namespace PetriEngine {
                 }
                 return true;
             }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                for (auto i = 0; i < _typeFlags.size(); ++i) {
+                    if (_typeFlags[i] & TypeFlag::LHS_VAR) {
+                        out.insert(_lhs[i].value.variable);
+                    }
+                    if (_typeFlags[i] & TypeFlag::RHS_VAR) {
+                        out.insert(_rhs[i].value.variable);
+                    }
+                }
+            }
         private:
             std::vector<TypeFlag_t> _typeFlags;
             std::vector<VarOrColorWithOffset> _lhs;
@@ -135,6 +176,17 @@ namespace PetriEngine {
                     ++typeFlagIt;
                 }
                 return false;
+            }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                for (auto i = 0; i < _typeFlags.size(); ++i) {
+                    if (_typeFlags[i] & TypeFlag::LHS_VAR) {
+                        out.insert(_lhs[i].value.variable);
+                    }
+                    if (_typeFlags[i] & TypeFlag::RHS_VAR) {
+                        out.insert(_rhs[i].value.variable);
+                    }
+                }
             }
         private:
             std::vector<TypeFlag_t> _typeFlags;
@@ -190,7 +242,10 @@ namespace PetriEngine {
             VarOrColorWithOffset getResult() {
                 if (_isVar)
                     return std::move(_result);
-                _result.value.color = signed_wrap((_result.value.color + _result.offset), _result.color_max);
+                _result.value.color = signed_wrap(static_cast<ColorOffset_t>(
+                    _result.value.color + _result.offset),
+                    static_cast<ColorOffset_t>(_result.color_max)
+                );
                 return std::move(_result);
             }
 

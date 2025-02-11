@@ -14,6 +14,7 @@ namespace PetriEngine {
         class CompiledGuardExpression {
         public:
             virtual bool eval(const Binding& binding) = 0;
+            virtual void collectVariables(std::set<Variable_t>& out) const = 0;
             virtual ~CompiledGuardExpression() = default;
         };
 

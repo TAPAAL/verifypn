@@ -132,6 +132,9 @@ namespace PetriEngine {
             [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
                 std::set<Color_t> result = _lhs->getPossibleBindings(variable, inputPlaceTokens);
                 std::set<Color_t> rhs = _rhs->getPossibleBindings(variable, inputPlaceTokens);
+                if (rhs.find(variable) != rhs.end()) {
+                    return {ALL_COLOR};
+                }
                 result.insert(rhs.begin(), rhs.end());
                 return result;
             }
@@ -342,7 +345,10 @@ namespace PetriEngine {
                     for (size_t colorIndex = 0; colorIndex < colorSequence.size(); ++colorIndex) {
                         if (colorSequence[colorIndex].isVariable && colorSequence[colorIndex].value.variable == variable) {
                             for (const auto& count : inputPlaceTokens.counts()) {
-                                result.insert(signed_wrap(count.first.getSequence()[colorIndex] - colorSequence[colorIndex].offset, _colorSizes[colorIndex]));
+                                result.insert(
+                                    signed_wrap(static_cast<ColorOffset_t>(count.first.getSequence()[colorIndex]
+                                        - colorSequence[colorIndex].offset),
+                                        static_cast<ColorOffset_t>(_colorSizes[colorIndex])));
                             }
                         }
                     }
@@ -358,7 +364,7 @@ namespace PetriEngine {
                         const size_t colorIndex = iteratorState[iteratorIndex + 1];
                         if (colorSequence[colorIndex].isVariable && colorSequence[colorIndex].value.variable == variable) {
                             const auto& count = inputPlaceTokens.counts()[iteratorState[iteratorIndex + 2]++];
-                            return signed_wrap(count.first.getSequence()[colorIndex] - colorSequence[colorIndex].offset, _colorSizes[colorIndex]);
+                            return signed_wrap(static_cast<ColorOffset_t>(count.first.getSequence()[colorIndex]) - colorSequence[colorIndex].offset, static_cast<ColorOffset_t>(_colorSizes[colorIndex]));
                         }
                     }
                 }
@@ -375,11 +381,11 @@ namespace PetriEngine {
                     const auto& parameterizedColor = sequence[i];
                     if (sequence[i].isVariable) {
                         colorSequence.push_back(
-                             signed_wrap(binding.getValue(parameterizedColor.value.variable) + parameterizedColor.offset, _colorSizes[i])
+                             signed_wrap(static_cast<ColorOffset_t>(binding.getValue(parameterizedColor.value.variable)) + parameterizedColor.offset, static_cast<ColorOffset_t>(_colorSizes[i]))
                         );
                     } else {
                         colorSequence.push_back(
-                             signed_wrap(parameterizedColor.value.color + parameterizedColor.offset, _colorSizes[i])
+                             signed_wrap(static_cast<ColorOffset_t>(parameterizedColor.value.color) + parameterizedColor.offset, static_cast<ColorOffset_t>(_colorSizes[i]))
                         );
                     }
                 }
@@ -710,7 +716,7 @@ namespace PetriEngine {
                                 hasVariable = true;
                                 break;
                             }
-                            newColorSequence.push_back(signed_wrap(color.value.color + color.offset, expr->getColorMaxes()[i]));
+                            newColorSequence.push_back(signed_wrap(static_cast<ColorOffset_t>(color.value.color) + color.offset, static_cast<ColorOffset_t>(expr->getColorMaxes()[i])));
                         }
                         if (!hasVariable) {
                             constantMultiSet.addCount(ColorSequence { newColorSequence }, expr->getCount());

@@ -138,24 +138,36 @@ namespace PetriEngine{
                 return _currentTransition;
             }
 
-            [[nodiscard]] Binding_t getCurrentBinding() const {
-                return _currentBinding;
-            }
-
             void nextTransition() {
                 _currentTransition += 1;
-                _currentBinding = 1;
+                _checkedEarlyTermination = false;
             }
 
-            void nextBinding() {
-                _currentBinding += 1;
+            void checkedEarlyTermination() {
+                _checkedEarlyTermination = true;
             }
 
+            [[nodiscard]] bool shouldCheckEarlyTermination() const {
+                return !_checkedEarlyTermination;
+            }
+
+            bool incrementVariableIndices(const std::vector<size_t>& stateMaxes, const size_t startIndex = 0) {
+                variableIndices[startIndex] += 1;
+                if (variableIndices[startIndex] >= stateMaxes[startIndex]) {
+                    if (startIndex + 1 >= variableIndices.size()) {
+                        return true;
+                    }
+                    variableIndices[startIndex] = 0;
+                    return incrementVariableIndices(stateMaxes, startIndex + 1);
+                }
+                return false;
+            }
+
+            std::vector<size_t> variableIndices;
             ColoredPetriNetMarking marking;
         private:
             bool _done = false;
-
-            Binding_t _currentBinding = 1;
+            bool _checkedEarlyTermination = false;
             Transition_t _currentTransition = 0;
         };
     }
