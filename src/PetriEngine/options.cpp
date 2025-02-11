@@ -131,6 +131,15 @@ void options_t::print(std::ostream& optionsOut) {
         }
     }
 
+    if (explicit_colored) {
+        optionsOut << ",ExplicitColored=ENABLED";
+        if (colored_sucessor_generator == ColoredSuccessorGeneratorOption::EVEN) {
+            optionsOut << ",ColoredSuccessorGenerator=EVEN";
+        } else if (colored_sucessor_generator == ColoredSuccessorGeneratorOption::FIXED) {
+            optionsOut << ",ColoredSuccessorGenerator=FIXED";
+        }
+    }
+
     optionsOut << "\n";
 }
 
@@ -211,8 +220,11 @@ void printHelp() {
         "  --nounfold                           Stops after colored structural reductions and writing the reduced net\n"
         "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
-        "  -C                                   Uses explicit state exploration for answering reachability-cardinality queries (CPN only).\n"
-        "                                       Only supports -R and -s options.\n"
+        "  -C                                   Use explicit colored engine to answer query (CPN only).\n"
+        "                                       Only supports -R, --colored-successor-generator and -s options.\n"
+        "  --colored-successor-generator        Sets the the successor generator used in the explicit colored engine\n"
+        "                                       - fixed   transitions and bindings are traversed in a fixed order\n"
+        "                                       - even    transitions and bindings are checked evenly (default)\n"
         "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
         "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
         "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
@@ -323,14 +335,6 @@ bool options_t::parse(int argc, const char** argv) {
                 }
             } else if (std::strcmp(s, "OverApprox") == 0)
                 strategy = Strategy::OverApprox;
-            else if (std::strcmp(s, "EBFS") == 0)
-                strategy = Strategy::EBFS;
-            else if (std::strcmp(s, "EHEUR") == 0)
-                strategy = Strategy::EHEUR;
-            else if (std::strcmp(s, "EDFS") == 0)
-                strategy = Strategy::EDFS;
-            else if (std::strcmp(s, "ERDFS") == 0)
-                strategy = Strategy::ERDFS;
             else {
                 throw base_error("Argument Error: Unrecognized search strategy ", std::quoted(s));
             }
@@ -556,6 +560,18 @@ bool options_t::parse(int argc, const char** argv) {
             replay_file = std::string(argv[++i]);
         } else if (std::strcmp(argv[i], "-C") == 0) {
             explicit_colored = true;
+        } else if (std::strcmp(argv[i], "--colored-successor-generator") == 0) {
+            if (argc == i + 1) {
+                throw base_error("Missing argument to --colored-successor-generator");
+            }
+            if (std::strcmp(argv[i + 1], "fixed") == 0) {
+                colored_sucessor_generator = ColoredSuccessorGeneratorOption::FIXED;
+            } else if (std::strcmp(argv[i + 1], "even") == 0) {
+                colored_sucessor_generator = ColoredSuccessorGeneratorOption::EVEN;
+            } else {
+                throw base_error("Invalid argument ", std::quoted(argv[i + 1]), " to --colored-successor-generator");
+            }
+            ++i;
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (std::strcmp(argv[i], "-z") == 0) {

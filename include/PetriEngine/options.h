@@ -22,11 +22,12 @@ enum class Strategy {
     OverApprox,
     RPFS,
     RandomWalk,
-    DEFAULT,
-    EBFS,
-    EHEUR,
-    ERDFS,
-    EDFS
+    DEFAULT
+};
+
+enum class ColoredSuccessorGeneratorOption {
+    FIXED,
+    EVEN
 };
 
 enum class TraceLevel {
@@ -115,6 +116,7 @@ struct options_t {
     bool print_bindings = false;
 
     bool explicit_colored = false;
+    ColoredSuccessorGeneratorOption colored_sucessor_generator = ColoredSuccessorGeneratorOption::EVEN;
 
     std::string strategy_output;
 
