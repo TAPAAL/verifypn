@@ -602,13 +602,8 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
 
     auto net = builder.takeNet();
     bool result = false;
-    bool randomize = false;
     auto placeIndices = builder.takePlaceIndices();
     auto transitionIndices = builder.takeTransitionIndices();
-    if (randomize){
-        net.randomizeBindingOrder(options.seed());
-    }
-
 
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();

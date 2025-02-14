@@ -3,40 +3,38 @@
 
 #include "ColoredPetriNetMarking.h"
 #include <unordered_set>
-#include <vector>
 #include <sstream>
 #include <string>
 #include <algorithm>
 
-namespace PetriEngine {
-    namespace ExplicitColored {
-        class ColoredMarkingSet {
-        public:
-            void add(const ColoredPetriNetMarking &marking) {
-                std::stringstream stream;
-                marking.stableEncode(stream);
-                _set.insert(stream.str());
-            }
+namespace PetriEngine::ExplicitColored {
+    class ColoredMarkingSet {
+    public:
+        void add(const ColoredPetriNetMarking &marking) {
+            std::stringstream stream;
+            marking.stableEncode(stream);
+            _set.insert(stream.str());
+        }
 
-            bool contains(const ColoredPetriNetMarking &marking) {
-                std::stringstream stream;
-                marking.stableEncode(stream);
-                return _set.find(stream.str()) != _set.end();
-            }
+        bool contains(const ColoredPetriNetMarking &marking) {
+            std::stringstream stream;
+            marking.stableEncode(stream);
+            return _set.find(stream.str()) != _set.end();
+        }
 
-            size_t size() const {
-                return _set.size();
-            }
+        size_t size() const {
+            return _set.size();
+        }
 
-            friend std::ostream& operator<<(std::ostream& stream, const ColoredMarkingSet &marking) {
-                for (const auto& hash : marking._set) {
-                    stream << hash << std::endl;
-                }
-                return stream;
+        friend std::ostream& operator<<(std::ostream& stream, const ColoredMarkingSet &marking) {
+            for (const auto& hash : marking._set) {
+                stream << hash << std::endl;
             }
-        private:
-            std::unordered_set<std::string> _set;
-        };
-    }
+            return stream;
+        }
+    private:
+        std::unordered_set<std::string> _set;
+    };
 }
+
 #endif
