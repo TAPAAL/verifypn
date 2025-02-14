@@ -267,11 +267,11 @@ namespace PetriEngine::ExplicitColored {
                 const auto& parameterizedColor = sequence[i];
                 if (sequence[i].isVariable) {
                     colorSequence.push_back(
-                         signed_wrap(binding.getValue(parameterizedColor.value.variable) + parameterizedColor.offset, _colorSizes[i])
+                        add_color_offset(binding.getValue(parameterizedColor.value.variable), parameterizedColor.offset, _colorSizes[i])
                     );
                 } else {
                     colorSequence.push_back(
-                         signed_wrap(parameterizedColor.value.color + parameterizedColor.offset, _colorSizes[i])
+                        add_color_offset(parameterizedColor.value.color, parameterizedColor.offset, _colorSizes[i])
                     );
                 }
             }
@@ -540,7 +540,7 @@ namespace PetriEngine::ExplicitColored {
                             hasVariable = true;
                             break;
                         }
-                        newColorSequence.push_back(signed_wrap(color.value.color + color.offset, expr->getColorMaxes()[i]));
+                        newColorSequence.push_back(add_color_offset( color.value.color, color.offset, expr->getColorMaxes()[i]));
                     }
                     if (!hasVariable) {
                         constantMultiSet.addCount(ColorSequence { newColorSequence }, expr->getSignedCount());

@@ -1,5 +1,6 @@
-#ifndef NAIVEWORKLIST_CPP
-#define NAIVEWORKLIST_CPP
+#ifndef EXPLICITWORKLIST_CPP
+#define EXPLICITWORKLIST_CPP
+#include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 
 #include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/Visitors/GammaQueryVisitor.h"
@@ -11,7 +12,7 @@
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
 
 namespace PetriEngine::ExplicitColored {
-    NaiveWorklist::NaiveWorklist(
+    ExplicitWorklist::ExplicitWorklist(
         const ColoredPetriNet& net,
         const PQL::Condition_ptr &query,
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
@@ -35,26 +36,26 @@ namespace PetriEngine::ExplicitColored {
         }
     }
 
-    bool NaiveWorklist::check(const SearchStrategy searchStrategy, const ColoredSuccessorGeneratorOption colored_successor_generator_option) {
+    bool ExplicitWorklist::check(const SearchStrategy searchStrategy, const ColoredSuccessorGeneratorOption colored_successor_generator_option) {
         if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::FIXED) {
-            return _search<ColoredPetriNetState>(searchStrategy);
+            return _search<ColoredPetriNetStateFixed>(searchStrategy);
         }
         if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
-            return _search<ColoredPetriNetStateOneTrans>(searchStrategy);
+            return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
         throw base_error("Unsupported successor generator");
     }
 
-    const SearchStatistics & NaiveWorklist::GetSearchStatistics() const {
+    const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {
         return _searchStatistics;
     }
 
-    bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) const {
+    bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state) const {
         return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, _transitionNameIndices, _net);
     }
 
     template <template <typename> typename WaitingList, typename T>
-    bool NaiveWorklist::_genericSearch(WaitingList<T> waiting) {
+    bool ExplicitWorklist::_genericSearch(WaitingList<T> waiting) {
         ColoredSuccessorGenerator successorGenerator(_net);
         ptrie::set<uint8_t> passed;
         std::vector<uint8_t> scratchpad;
@@ -62,11 +63,11 @@ namespace PetriEngine::ExplicitColored {
         const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
         size_t size = initialState.compressedEncode(scratchpad);
 
-        if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
-            auto initial = ColoredPetriNetStateOneTrans{initialState, _net.getTransitionCount()};
+        if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
+            auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
             waiting.add(std::move(initial));
         } else {
-            auto initial = ColoredPetriNetState{initialState};
+            auto initial = ColoredPetriNetStateFixed{initialState};
             waiting.add(std::move(initial));
         }
         passed.insert(scratchpad.data(), size);
@@ -85,7 +86,7 @@ namespace PetriEngine::ExplicitColored {
                 continue;
             }
 
-            if constexpr (std::is_same_v<T, ColoredPetriNetStateOneTrans>) {
+            if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
                 if (next.shuffle){
                     next.shuffle = false;
                     waiting.shuffle();
@@ -115,7 +116,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     template<typename SuccessorGeneratorState>
-    bool NaiveWorklist::_search(const SearchStrategy searchStrategy) {
+    bool ExplicitWorklist::_search(const SearchStrategy searchStrategy) {
         switch (searchStrategy) {
             case SearchStrategy::DFS:
                 return _dfs<SuccessorGeneratorState>();
@@ -131,22 +132,22 @@ namespace PetriEngine::ExplicitColored {
     }
 
     template <typename T>
-    bool NaiveWorklist::_dfs() {
+    bool ExplicitWorklist::_dfs() {
         return _genericSearch<DFSStructure>(DFSStructure<T> {});
     }
 
     template <typename T>
-    bool NaiveWorklist::_bfs() {
+    bool ExplicitWorklist::_bfs() {
         return _genericSearch<BFSStructure>(BFSStructure<T> {});
     }
 
     template <typename T>
-    bool NaiveWorklist::_rdfs() {
+    bool ExplicitWorklist::_rdfs() {
         return _genericSearch<RDFSStructure>(RDFSStructure<T>(_seed));
     }
 
     template <typename T>
-    bool NaiveWorklist::_bestfs() {
+    bool ExplicitWorklist::_bestfs() {
         return _genericSearch<BestFSStructure>(
             BestFSStructure<T>(
                 _seed,
@@ -157,7 +158,7 @@ namespace PetriEngine::ExplicitColored {
             );
     }
 
-    bool NaiveWorklist::_getResult(const bool found) const {
+    bool ExplicitWorklist::_getResult(const bool found) const {
         const auto res = (
             (!found && _quantifier == Quantifier::AG) ||
             (found && _quantifier == Quantifier::EF))

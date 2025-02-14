@@ -21,13 +21,13 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] Color_t getLhs(const Binding& binding, const TypeFlag_t typeFlag) const {
             return (typeFlag & TypeFlag::LHS_VAR)
-                ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                ? add_color_offset(binding.getValue(value.variable), offset, color_max)
                 : value.color;
         }
 
         [[nodiscard]] Color_t getRhs(const Binding& binding, const TypeFlag_t typeFlag) const {
             return (typeFlag & TypeFlag::RHS_VAR)
-                ? signed_wrap(binding.getValue(value.variable) + offset, color_max)
+                ? add_color_offset(binding.getValue(value.variable), offset, color_max)
                 : value.color;
         }
     };
@@ -190,7 +190,7 @@ namespace PetriEngine::ExplicitColored {
         VarOrColorWithOffset getResult() {
             if (_isVar)
                 return _result;
-            _result.value.color = signed_wrap(_result.value.color + _result.offset, _result.color_max);
+            _result.value.color = add_color_offset(_result.value.color, _result.offset, _result.color_max);
             return _result;
         }
 
