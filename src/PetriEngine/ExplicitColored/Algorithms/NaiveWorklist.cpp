@@ -19,17 +19,16 @@ namespace PetriEngine::ExplicitColored {
         const IColoredResultPrinter& coloredResultPrinter,
         const size_t seed
     ) : _net(std::move(net)),
-        _placeNameIndices(placeNameIndices),
-        _transitionNameIndices(transitionNameIndices),
         _seed(seed),
         _coloredResultPrinter(coloredResultPrinter)
     {
+        const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _net);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
             _quantifier = Quantifier::EF;
-            _gammaQuery = efGammaQuery->getCond();
+            _gammaQuery = queryCompiler.compile(efGammaQuery->getCond());
         } else if (const auto agGammaQuery = dynamic_cast<PQL::AGCondition*>(query.get())) {
             _quantifier = Quantifier::AG;
-            _gammaQuery = agGammaQuery->getCond();
+            _gammaQuery = queryCompiler.compile(agGammaQuery->getCond());
         } else {
             throw base_error("Unsupported query quantifier");
         }
@@ -50,7 +49,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     bool NaiveWorklist::_check(const ColoredPetriNetMarking& state) const {
-        return GammaQueryVisitor::eval(_gammaQuery, state, _placeNameIndices, _transitionNameIndices, _net);
+        return _gammaQuery->eval(_net, state);
     }
 
     template <template <typename> typename WaitingList, typename T>
@@ -151,7 +150,6 @@ namespace PetriEngine::ExplicitColored {
             BestFSStructure<T>(
                 _seed,
                 _gammaQuery,
-                _placeNameIndices,
                 _quantifier == Quantifier::AG
                 )
             );
@@ -167,5 +165,4 @@ namespace PetriEngine::ExplicitColored {
         return res == Reachability::ResultPrinter::Result::Satisfied;
     }
 }
-
 #endif //NAIVEWORKLIST_CPP

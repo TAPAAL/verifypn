@@ -1,9 +1,12 @@
 #ifndef COLOREDPETRINET_H
 #define COLOREDPETRINET_H
 
+#include <random>
 #include <vector>
 #include <memory>
+
 #include "ArcCompiler.h"
+#include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "ColoredPetriNetMarking.h"
 #include "GuardCompiler.h"
