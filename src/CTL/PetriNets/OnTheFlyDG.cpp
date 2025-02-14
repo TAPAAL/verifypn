@@ -19,7 +19,8 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encoder(t_net->numberOfPlaces(), 0),
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order, TokenEliminator& token_elim) : encoder(t_net->numberOfPlaces(), 0),
+        token_elim(token_elim),
         edge_alloc(new linked_bucket_t<DependencyGraph::Edge,1024*10>(1)),
         conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)),
         _redgen(*t_net, std::make_shared<PetriEngine::ReachabilityStubbornSet>(*t_net)), _partial_order(partial_order) {
@@ -69,14 +70,14 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
         assert(false);
         //assert(false && "Someone told me, this was a bad place to be.");
         if (fastEval(query, &query_marking) == Condition::RTRUE){
-            succs.push_back(newEdge(*v, 0));///*v->query->distance(context))*/0);
+            succs.push_back(newEdge(*v, 0));///*v->query->distance(context))*/0);F
         }
     }
     else if (query_type == LOPERATOR){
         if(v->query->getQuantifier() == NEG){
             // no need to try to evaluate here -- this is already transient in other evaluations.
             auto cond = static_cast<NotCondition*>(v->query);
-            Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
+            Configuration* c = createConfiguration(query_marking, v->getOwner(), (*cond)[0]);
             Edge* e = newEdge(*v, /*v->query->distance(context)*/0);
             e->is_negated = true;
             if (!e->addTarget(c)) {
@@ -112,7 +113,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             for(auto c : conds)
             {
                 assert(PetriEngine::PQL::isTemporal(c));
-                if (e->addTarget(createConfiguration(v->marking, v->getOwner(), c)))
+                if (e->addTarget(createConfiguration(query_marking, v->getOwner(), c)))
                     break;
             }
             if (e->handled) {
@@ -147,7 +148,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             {
                 assert(PetriEngine::PQL::isTemporal(c));
                 Edge *e = newEdge(*v, /*cond->distance(context)*/0);
-                if (e->addTarget(createConfiguration(v->marking, v->getOwner(), c))) {
+                if (e->addTarget(createConfiguration(query_marking, v->getOwner(), c))) {
                     --e->refcnt;
                     release(e);
                 }
@@ -174,7 +175,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
                 else {
                     //right side is temporal, we need to evaluate it as normal
-                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[1]);
+                    Configuration* c = createConfiguration(query_marking, v->getOwner(), (*cond)[1]);
                     right = newEdge(*v, /*(*cond)[1]->distance(context)*/0);
                     right->addTarget(c);
                 }
@@ -186,7 +187,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     valid = r0 == Condition::RTRUE;
                 } else {
                     //left side is temporal, include it in the edge
-                    left = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
+                    left = createConfiguration(query_marking, v->getOwner(), (*cond)[0]);
                 }
                 if (valid || left != nullptr) {
                     //if left side is guaranteed to be not satisfied, skip successor generation
@@ -205,7 +206,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                         return false;
                                     }
                                     context.setMarking(mark.marking());
-                                    Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
+                                    Configuration* c = createConfiguration(mark, owner(mark, cond), cond);
                                     return !leftEdge->addTarget(c);
                                 },
                                 [&]()
@@ -248,7 +249,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     }
                 } else {
                     subquery = newEdge(*v, /*cond->distance(context)*/0);
-                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
+                    Configuration* c = createConfiguration(query_marking, v->getOwner(), (*cond)[0]);
                     subquery->addTarget(c); // cannot be self-loop since the formula is smaller
                 }
                 Edge* e1 = nullptr;
@@ -270,7 +271,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 return false;
                             }
                             context.setMarking(mark.marking());
-                            Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
+                            Configuration* c = createConfiguration(mark, owner(mark, cond), cond);
                             return !e1->addTarget(c);
                         },
                         [&]()
@@ -308,7 +309,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             {
                                 allValid = Condition::RUNKNOWN;
                                 context.setMarking(mark.marking());
-                                Configuration* c = createConfiguration(createMarking(mark), v->getOwner(), (*cond)[0]);
+                                Configuration* c = createConfiguration(mark, v->getOwner(), (*cond)[0]);
                                 e->addTarget(c);
                             }
                             return true;
@@ -340,7 +341,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 Edge *right = nullptr;
                 auto r1 = fastEval((*cond)[1], &query_marking);
                 if (r1 == Condition::RUNKNOWN) {
-                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[1]);
+                    Configuration* c = createConfiguration(query_marking, v->getOwner(), (*cond)[1]);
                     right = newEdge(*v, /*(*cond)[1]->distance(context)*/0);
                     right->addTarget(c);
                 } else {
@@ -358,7 +359,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     [&](){
                         auto r0 = fastEval((*cond)[0], &query_marking);
                         if (r0 == Condition::RUNKNOWN) {
-                            left = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
+                            left = createConfiguration(query_marking, v->getOwner(), (*cond)[0]);
                         } else {
                             valid = r0 == Condition::RTRUE;
                         }
@@ -389,7 +390,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                         }
                         context.setMarking(marking.marking());
                         Edge* e = newEdge(*v, /*cond->distance(context)*/0);
-                        Configuration* c1 = createConfiguration(createMarking(marking), owner(marking, cond), cond);
+                        Configuration* c1 = createConfiguration(marking, owner(marking, cond), cond);
                         e->addTarget(c1);
                         if (left != nullptr) {
                             e->addTarget(left);
@@ -424,7 +425,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                         return succs;
                     }
                 } else {
-                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
+                    Configuration* c = createConfiguration(query_marking, v->getOwner(), (*cond)[0]);
                     subquery = newEdge(*v, /*cond->distance(context)*/0);
                     subquery->addTarget(c);
                 }
@@ -449,7 +450,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 }
                                 context.setMarking(mark.marking());
                                 Edge* e = newEdge(*v, /*cond->distance(context)*/0);
-                                Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
+                                Configuration* c = createConfiguration(mark, owner(mark, cond), cond);
                                 e->addTarget(c);
                                 if (!e->handled)
                                     succs.push_back(e);
@@ -484,7 +485,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             {
                                 context.setMarking(marking.marking());
                                 Edge* e = newEdge(*v, /*(*cond)[0]->distance(context)*/0);
-                                Configuration* c = createConfiguration(createMarking(marking), v->getOwner(), query);
+                                Configuration* c = createConfiguration(marking, v->getOwner(), query);
                                 e->addTarget(c);
                                 succs.push_back(e);
                             }
@@ -517,10 +518,11 @@ Configuration* OnTheFlyDG::initialConfiguration()
 {
     if(working_marking.marking() == nullptr)
     {
-        working_marking.setMarking  (net->makeInitialMarking());
-        query_marking.setMarking    (net->makeInitialMarking());
+        working_marking.setMarking(net->makeInitialMarking());
+        query_marking.setMarking(net->makeInitialMarking());
+        abstracted_marking.setMarking(net->makeInitialMarking());
         auto o = owner(working_marking, this->query);
-        initial_config = createConfiguration(createMarking(working_marking), o, this->query);
+        initial_config = createConfiguration(working_marking, o, this->query);
     }
     return initial_config;
 }
@@ -550,6 +552,28 @@ void OnTheFlyDG::nextStates(Marking& t_marking, Condition* ptr,
 
 void OnTheFlyDG::cleanUp()
 {
+    if (std::getenv("CZERO_CONF_DEBUG") != nullptr)
+    {
+        for (auto& c : trie)
+        {
+            for(auto& conf : c)
+            {
+                trie.unpack(conf->marking, encoder.scratchpad().raw());
+                encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
+
+                std::cout << "CONF M:";
+                for (uint32_t i = 0; i < n_places; i++)
+                {
+                    std::cout << query_marking[i];
+                }
+                std::cout << " Q:";
+                conf->query->toString(std::cout);
+                char ass = "0?%1"[conf->assignment + 2];
+                std::cout << " A:" << ass << std::endl;
+            }
+        }
+    }
+
     while(!recycle.empty())
     {
         assert(recycle.top()->refcnt == -1);
@@ -564,8 +588,11 @@ void OnTheFlyDG::setQuery(Condition* query)
     this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
+    delete[] abstracted_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
+    abstracted_marking.setMarking(nullptr);
+    token_elim.init(net);
     initialConfiguration();
     assert(this->query);
 }
@@ -584,9 +611,17 @@ size_t OnTheFlyDG::maxTokens() const {
     return _maxTokens;
 }
 
-PetriConfig *OnTheFlyDG::createConfiguration(size_t marking, size_t own, Condition* t_query)
+size_t OnTheFlyDG::tokensEliminated() const {
+    return token_elim.tokensEliminated();
+}
+
+PetriConfig *OnTheFlyDG::createConfiguration(const Marking& marking, size_t own, Condition* t_query)
 {
-    auto& configs = trie.get_data(marking);
+    abstracted_marking.copy(marking.marking(), n_places);
+    token_elim.eliminate(&abstracted_marking, t_query);
+
+    size_t encoded = createMarking(abstracted_marking);
+    auto& configs = trie.get_data(encoded);
     for(PetriConfig* c : configs){
         if(c->query == t_query)
             return c;
@@ -596,7 +631,7 @@ PetriConfig *OnTheFlyDG::createConfiguration(size_t marking, size_t own, Conditi
     size_t id = conf_alloc->next(0);
     char* mem = (*conf_alloc)[id];
     PetriConfig* newConfig = new (mem) PetriConfig();
-    newConfig->marking = marking;
+    newConfig->marking = encoded;
     newConfig->query = t_query;
     newConfig->setOwner(own);
     configs.push_back(newConfig);
