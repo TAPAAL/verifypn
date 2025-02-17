@@ -6,14 +6,14 @@
 
 #include "ColoredPetriNetMarking.h"
 
-namespace PetriEngine::ExplicitColored{
+namespace PetriEngine::ExplicitColored {
 
-    struct ColoredPetriNetState{
-        explicit ColoredPetriNetState(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
-        ColoredPetriNetState(const ColoredPetriNetState& oldState) = default;
-        ColoredPetriNetState(ColoredPetriNetState&&) = default;
-        ColoredPetriNetState& operator=(const ColoredPetriNetState&) = default;
-        ColoredPetriNetState& operator=(ColoredPetriNetState&&) = default;
+    struct ColoredPetriNetStateFixed {
+        explicit ColoredPetriNetStateFixed(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+        ColoredPetriNetStateFixed(const ColoredPetriNetStateFixed& oldState) = default;
+        ColoredPetriNetStateFixed(ColoredPetriNetStateFixed&&) = default;
+        ColoredPetriNetStateFixed& operator=(const ColoredPetriNetStateFixed&) = default;
+        ColoredPetriNetStateFixed& operator=(ColoredPetriNetStateFixed&&) = default;
 
         void shrink() {
             marking.shrink();
@@ -52,18 +52,18 @@ namespace PetriEngine::ExplicitColored{
         Transition_t _currentTransition = 0;
     };
 
-    struct ColoredPetriNetStateOneTrans {
-        ColoredPetriNetStateOneTrans(const ColoredPetriNetStateOneTrans& state) : marking(state.marking), _map(state._map), _currentIndex(state._currentIndex) {};
-        ColoredPetriNetStateOneTrans(const ColoredPetriNetStateOneTrans& oldState, const size_t& numberOfTransitions) : marking(oldState.marking) {
+    struct ColoredPetriNetStateEven {
+        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& state) : marking(state.marking), _map(state._map), _currentIndex(state._currentIndex) {};
+        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& oldState, const size_t& numberOfTransitions) : marking(oldState.marking) {
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
-        ColoredPetriNetStateOneTrans(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking)){
+        ColoredPetriNetStateEven(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking)){
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
-        ColoredPetriNetStateOneTrans(ColoredPetriNetStateOneTrans&& state) = default;
+        ColoredPetriNetStateEven(ColoredPetriNetStateEven&& state) = default;
 
-        ColoredPetriNetStateOneTrans& operator=(const ColoredPetriNetStateOneTrans&) = default;
-        ColoredPetriNetStateOneTrans& operator=(ColoredPetriNetStateOneTrans&&) = default;
+        ColoredPetriNetStateEven& operator=(const ColoredPetriNetStateEven&) = default;
+        ColoredPetriNetStateEven& operator=(ColoredPetriNetStateEven&&) = default;
         std::pair<Transition_t, Binding_t> getNextPair() {
             Transition_t tid = _currentIndex;
             Binding_t bid = std::numeric_limits<Binding_t>::max();

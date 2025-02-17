@@ -5,7 +5,7 @@
 #ifndef GAMMAQUERYVISITOR_H
 #define GAMMAQUERYVISITOR_H
 #include <PetriEngine/ExplicitColored/FireabilityChecker.h>
-#include <PetriEngine/ExplicitColored/Algorithms/NaiveWorklist.h>
+#include <PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h>
 #include <PetriEngine/PQL/Visitor.h>
 #include "ColoredExpressionVisitor.h"
 

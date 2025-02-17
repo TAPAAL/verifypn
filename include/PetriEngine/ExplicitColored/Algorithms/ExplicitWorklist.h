@@ -3,6 +3,7 @@
 
 
 #include <PetriEngine/ExplicitColored/GammaQueryCompiler.h>
+#include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
@@ -25,9 +26,9 @@ namespace PetriEngine::ExplicitColored {
         HEUR
     };
 
-    class NaiveWorklist {
+    class ExplicitWorklist {
     public:
-        NaiveWorklist(
+        ExplicitWorklist(
             const ColoredPetriNet& net,
             const PQL::Condition_ptr &query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
