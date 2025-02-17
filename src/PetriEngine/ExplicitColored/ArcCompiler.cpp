@@ -275,23 +275,23 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-            std::pair<CPNMultiSet, MarkingCount_t> getMinimalColorCount() const override {
-                _minimalColorCount = {};
-                _minimalColorCount.first = _result;
-                _minimalColorCount.second = 0;
-                for (const auto& colorSequence : _parameterizedColorSequence) {
-                    for (const auto& parameterizedColor : colorSequence) {
-                        if (parameterizedColor.isVariable) {
-                            _minimalColorCount.second += _count;
-                        }
+        std::pair<CPNMultiSet, MarkingCount_t> getMinimalColorCount() const override {
+            _minimalColorCount = {};
+            _minimalColorCount.first = _result;
+            _minimalColorCount.second = 0;
+            for (const auto& colorSequence : _parameterizedColorSequence) {
+                for (const auto& parameterizedColor : colorSequence) {
+                    if (parameterizedColor.isVariable) {
+                        _minimalColorCount.second += _count;
                     }
                 }
-                return _minimalColorCount;
             }
+            return _minimalColorCount;
+        }
 
-            const std::set<Variable_t> & getVariables() const override {
-                return _variables;
-            }
+        const std::set<Variable_t> & getVariables() const override {
+            return _variables;
+        }
 
         const std::vector<std::vector<ParameterizedColor>>& getParameterizedColorSequences() const {
             return _parameterizedColorSequence;
