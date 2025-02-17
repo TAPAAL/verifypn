@@ -5,159 +5,166 @@
 #include "ColoredPetriNetState.h"
 #include <limits>
 
-namespace PetriEngine{
-    namespace ExplicitColored{
-        enum class CheckingBool {
-            FALSE,
-            TRUE,
-            NEVERTRUE
-        };
-        struct TransitionVariables{
-            std::map<Variable_t, std::vector<uint32_t>> possibleValues = std::map<Variable_t, std::vector<uint32_t>>{};
-            uint32_t totalBindings = 0;
-        };
+namespace PetriEngine::ExplicitColored {
+    enum class CheckingBool {
+        FALSE,
+        TRUE,
+        NEVERTRUE
+    };
+    struct TransitionVariables{
+        std::map<Variable_t, std::vector<uint32_t>> possibleValues = std::map<Variable_t, std::vector<uint32_t>>{};
+        uint32_t totalBindings = 0;
+    };
 
-        class ColoredSuccessorGenerator {
-        public:
-            explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
-            ~ColoredSuccessorGenerator();
+    class ColoredSuccessorGenerator {
+    public:
+        explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
+        ~ColoredSuccessorGenerator() = default;
 
-            ColoredPetriNetState next(ColoredPetriNetState& state) const {
-                return _next(state);
-            }
+        ColoredPetriNetStateFixed next(ColoredPetriNetStateFixed& state) const {
+            return _nextFixed(state);
+        }
 
-            ColoredPetriNetStateV2 next(ColoredPetriNetStateV2& state) const {
-                return _nextV2(state);
-            }
+        ColoredPetriNetStateEven next(ColoredPetriNetStateEven& state) const {
+            return _nextEven(state);
+        }
 
-            ColoredPetriNetStateOneTrans next(ColoredPetriNetStateOneTrans& state) const {
-                return _nextOneTrans(state);
-            }
+        ColoredPetriNetStateConstrained next(ColoredPetriNetStateConstrained& state) const {
+            return _nextV2(state);
+        }
 
-            const ColoredPetriNet& net() const {
-                return _net;
-            }
+        [[nodiscard]] const ColoredPetriNet& net() const {
+            return _net;
+        }
 
-            Binding getBinding(Transition_t tid, Binding_t bid) const;
-            bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-            bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
-            bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-            CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-            void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-            void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
-        protected:
-            const ColoredPetriNet& _net;
-            std::default_random_engine _random_engine;
-            void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        [[nodiscard]] Binding getBinding(Transition_t tid, Binding_t bid) const;
+        [[nodiscard]] bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        [[nodiscard]] bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
+        [[nodiscard]] bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        [[nodiscard]] CheckingBool firstCheckPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+    protected:
+        const ColoredPetriNet& _net;
+        void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
 
-            ColoredPetriNetState _next(ColoredPetriNetState &state) const {
-                while (state.getCurrentTransition() < _net.getTransitionCount()) {
-                    const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
-                    if (state.getCurrentBinding() == 1) {
-                        if (totalBindings == 0) {
-                            if (check(state.marking, state.getCurrentTransition(), Binding{})) {
-                                auto newState = ColoredPetriNetState(state.marking);
-                                _fire(newState.marking, state.getCurrentTransition(), Binding{});
-                                state.nextTransition();
-                                return newState;
-                            }
+        ColoredPetriNetStateFixed _nextFixed(ColoredPetriNetStateFixed &state) const {
+            while (state.getCurrentTransition() < _net.getTransitionCount()) {
+                const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
+                if (state.getCurrentBinding() == 1) {
+                    if (totalBindings == 0) {
+                        if (check(state.marking, state.getCurrentTransition(), Binding{})) {
+                            auto newState = ColoredPetriNetStateFixed(state.marking);
+                            _fire(newState.marking, state.getCurrentTransition(), Binding{});
                             state.nextTransition();
-                            continue;
+                            return newState;
                         }
-                        if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
-                            state.nextTransition();
-                            continue;
-                        }
+                        state.nextTransition();
+                        continue;
                     }
-                    while (state.getCurrentBinding() <= totalBindings) {
-                        const auto binding = getBinding(state.getCurrentTransition(), state.getCurrentBinding());
-                        state.nextBinding();
-                        if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
-                            auto newState = ColoredPetriNetState(state.marking);
-                            _fire(newState.marking, state.getCurrentTransition(), binding);
+                    if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
+                        state.nextTransition();
+                        continue;
+                    }
+                }
+                while (state.getCurrentBinding() <= totalBindings) {
+                    const auto binding = getBinding(state.getCurrentTransition(), state.getCurrentBinding());
+                    state.nextBinding();
+                    if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
+                        auto newState = ColoredPetriNetStateFixed(state.marking);
+                        _fire(newState.marking, state.getCurrentTransition(), binding);
+                        return newState;
+                    }
+                }
+                state.nextTransition();
+            }
+            state.setDone();
+            return ColoredPetriNetStateFixed{{}};
+        }
+
+        // SuccessorGenerator but only considers current transition
+        ColoredPetriNetStateEven _nextEven(ColoredPetriNetStateEven &state) const {
+            auto [tid, bid] = state.getNextPair();
+            while (bid != std::numeric_limits<Binding_t>::max()) {
+                const auto totalBindings = _net._transitions[tid].validVariables.second;
+                if (totalBindings == 0) {
+                    if (bid == 0) {
+                        const auto binding = Binding{};
+                        if (check(state.marking, tid, binding)) {
+                            auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
+                            _fire(newState.marking, tid, binding);
+                            state.updatePair(tid, ++bid);
                             return newState;
                         }
                     }
-                    state.nextTransition();
-                }
-                state.setDone();
-                return ColoredPetriNetState{{}};
-            }
-
-            // SuccessorGenerator but only considers current transition
-            ColoredPetriNetStateOneTrans _nextOneTrans(ColoredPetriNetStateOneTrans &state) const {
-                auto [tid, bid] = state.getNextPair();
-                while (bid != std::numeric_limits<Binding_t>::max()) {
-                    const auto totalBindings = _net._transitions[tid].validVariables.second;
-                    if (totalBindings == 0) {
-                        if (bid == 0) {
-                            const auto binding = Binding{};
-                            if (check(state.marking, tid, binding)) {
-                                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
-                                _fire(newState.marking, tid, binding);
-                                state.updatePair(tid, ++bid);
-                                return newState;
-                            }
-                        }
-                    } else {
-                        //Checking whether its impossible before iterating through bindings
-                        if (bid == 0 && shouldEarlyTerminateTransition(state.marking, tid)) {
-                            state.updatePair(tid, std::numeric_limits<Binding_t>::max());
-                            auto [nextTid, nextBid] = state.getNextPair();
-                            tid = nextTid;
-                            bid = nextBid;
-                            continue;
-                        }
-                        while (++bid <= totalBindings) {
-                            const auto binding = getBinding(tid, bid);
-                            if (checkPresetAndGuard(state.marking, tid, binding)) {
-                                auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
-                                _fire(newState.marking, tid, binding);
-                                state.updatePair(tid, bid);
-                                return newState;
-                            }
+                } else {
+                    //Checking whether its impossible before iterating through bindings
+                    if (bid == 0 && shouldEarlyTerminateTransition(state.marking, tid)) {
+                        state.updatePair(tid, std::numeric_limits<Binding_t>::max());
+                        auto [nextTid, nextBid] = state.getNextPair();
+                        tid = nextTid;
+                        bid = nextBid;
+                        continue;
+                    }
+                    while (++bid <= totalBindings) {
+                        const auto binding = getBinding(tid, bid);
+                        if (checkPresetAndGuard(state.marking, tid, binding)) {
+                            auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
+                            _fire(newState.marking, tid, binding);
+                            state.updatePair(tid, bid);
+                            return newState;
                         }
                     }
-                    state.updatePair(tid, std::numeric_limits<Binding_t>::max());
-                    auto [nextTid, nextBid] = state.getNextPair();
-                    tid = nextTid;
-                    bid = nextBid;
                 }
-                return {{},0};
+                state.updatePair(tid, std::numeric_limits<Binding_t>::max());
+                auto [nextTid, nextBid] = state.getNextPair();
+                tid = nextTid;
+                bid = nextBid;
             }
+            return {{},0};
+        }
 
-            ColoredPetriNetStateV2 _nextV2(ColoredPetriNetStateV2 &state) const {
+        [[nodiscard]] bool shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t transition) const {
+            if (!checkInhibitor(marking, transition))
+                return true;
+            if (!hasMinimalCardinality(marking, transition))
+                return true;
+            return false;
+        }
+
+        ColoredPetriNetStateConstrained _nextV2(ColoredPetriNetStateConstrained &state) const {
 transitionLoop:
-                while (state.getCurrentTransition() < _net.getTransitionCount()) {
-                    if (state.shouldCheckEarlyTermination()) {
-                        const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
-                        if (totalBindings == 0) {
-                            if (check(state.marking, state.getCurrentTransition(), Binding{})) {
-                                auto newState = ColoredPetriNetStateV2(state.marking);
-                                _fire(newState.marking, state.getCurrentTransition(), Binding{});
-                                state.nextTransition();
-                                return newState;
-                            }
+            while (state.getCurrentTransition() < _net.getTransitionCount()) {
+                if (state.shouldCheckEarlyTermination()) {
+                    const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
+                    if (totalBindings == 0) {
+                        if (check(state.marking, state.getCurrentTransition(), Binding{})) {
+                            auto newState = ColoredPetriNetStateConstrained(state.marking);
+                            _fire(newState.marking, state.getCurrentTransition(), Binding{});
                             state.nextTransition();
-                            continue;
+                            return newState;
                         }
-
-                        if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
-                            state.nextTransition();
-                            continue;
-                        }
+                        state.nextTransition();
+                        continue;
                     }
 
+                    if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
+                        state.nextTransition();
+                        continue;
+                    }
+                }
+
+                if (state.shouldCheckEarlyTermination()) {
                     std::set<Variable_t> allVariables;
                     std::set<Variable_t> inputArcVariables;
                     _net.getInputVariables(state.getCurrentTransition(), allVariables);
                     _net.getInputVariables(state.getCurrentTransition(), inputArcVariables);
                     _net.getOutputVariables(state.getCurrentTransition(), allVariables);
                     _net.getGuardVariables(state.getCurrentTransition(), allVariables);
-                    std::vector<std::pair<Variable_t, std::vector<Color_t>>> variableValues;
                     for (Variable_t variable : allVariables) {
                         if (inputArcVariables.find(variable) == inputArcVariables.end()) {
-                            variableValues.emplace_back(variable, std::vector { ALL_COLOR });
+                            state.variableValues.emplace_back(variable, std::vector { ALL_COLOR });
+                            continue;
                         }
                         std::vector<Color_t> possibleColors = {ALL_COLOR};
                         for (
@@ -182,73 +189,59 @@ transitionLoop:
                                 possibleColors = std::move(newPossibleColors);
                             }
                         }
-                        variableValues.emplace_back(variable, std::move(possibleColors));
+                        state.variableValues.emplace_back(variable, std::move(possibleColors));
                     }
-
-                    if (state.shouldCheckEarlyTermination()) {
-                        state.variableIndices.clear();
-                        for (const auto& variableValue : variableValues) {
-                            if (variableValue.second.empty()) {
-                                state.nextTransition();
-                                goto transitionLoop;
-                            }
-                            state.variableIndices.push_back(0);
-                        }
-                    }
-
-                    std::vector<size_t> stateMaxes;
-                    for (const auto& variableValue : variableValues) {
-                        if (std::binary_search(variableValue.second.begin(), variableValue.second.end(), ALL_COLOR)) {
-                            stateMaxes.push_back(_net._variables[variableValue.first].colorType->colors);
-                        } else {
-                            stateMaxes.push_back(variableValue.second.size());
-                        }
-                    }
-                    state.checkedEarlyTermination();
-                    Binding binding {};
-                    while (true) {
-                        for (auto variableIndex = 0; variableIndex < variableValues.size(); ++variableIndex) {
-                            if (std::binary_search(variableValues[variableIndex].second.begin(), variableValues[variableIndex].second.end(), ALL_COLOR)) {
-                                binding.setValue(
-                                    variableValues[variableIndex].first,
-                                    state.variableIndices[variableIndex]
-                                );
-                            } else {
-                                binding.setValue(
-                                   variableValues[variableIndex].first,
-                                   variableValues[variableIndex].second[state.variableIndices[variableIndex]]
-                               );
-                            }
-                        }
-                        if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
-                            auto newState = ColoredPetriNetStateV2{state.marking};
-                            _fire(newState.marking, state.getCurrentTransition(), binding);
-                            if (state.incrementVariableIndices(stateMaxes)) {
-                                state.nextTransition();
-                            }
-                            return newState;
-                        }
-                        if (state.incrementVariableIndices(stateMaxes)) {
+                    for (const auto& variableValue : state.variableValues) {
+                        if (variableValue.second.empty()) {
                             state.nextTransition();
                             goto transitionLoop;
                         }
+                        state.variableIndices.push_back(0);
+                    }
+                    for (const auto&[variableIndex, variableValues] : state.variableValues) {
+                        if (std::binary_search(variableValues.begin(), variableValues.end(), ALL_COLOR)) {
+                            state.stateMaxes.push_back(_net._variables[variableIndex].colorType->colors);
+                        } else {
+                            state.stateMaxes.push_back(variableValues.size());
+                        }
                     }
                 }
-                state.setDone();
-                return ColoredPetriNetStateV2{{}};
-            }
 
-            [[nodiscard]] bool shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t transition) const {
-                if (!checkInhibitor(marking, transition))
-                    return true;
-                if (!hasMinimalCardinality(marking, transition))
-                    return true;
-                return false;
+                state.checkedEarlyTermination();
+                Binding binding {};
+                while (true) {
+                    for (auto variableIndex = 0; variableIndex < state.variableValues.size(); ++variableIndex) {
+                        if (std::binary_search(state.variableValues[variableIndex].second.begin(), state.variableValues[variableIndex].second.end(), ALL_COLOR)) {
+                            binding.setValue(
+                                state.variableValues[variableIndex].first,
+                                state.variableIndices[variableIndex]
+                            );
+                        } else {
+                            binding.setValue(
+                               state.variableValues[variableIndex].first,
+                               state.variableValues[variableIndex].second[state.variableIndices[variableIndex]]
+                           );
+                        }
+                    }
+                    if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
+                        auto newState = ColoredPetriNetStateConstrained{state.marking};
+                        _fire(newState.marking, state.getCurrentTransition(), binding);
+                        if (state.incrementVariableIndices(state.stateMaxes)) {
+                            state.nextTransition();
+                        }
+                        return newState;
+                    }
+                    if (state.incrementVariableIndices(state.stateMaxes)) {
+                        state.nextTransition();
+                        goto transitionLoop;
+                    }
+                }
             }
-
-        private:
-            [[nodiscard]] bool hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t transition) const;
-        };
-    }
+            state.setDone();
+            return ColoredPetriNetStateConstrained{{}};
+        }
+    private:
+        [[nodiscard]] bool hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t transition) const;
+    };
 }
 #endif /* COLOREDSUCCESSORGENERATOR_H */

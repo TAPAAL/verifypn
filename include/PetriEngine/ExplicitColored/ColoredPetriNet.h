@@ -9,122 +9,108 @@
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "ColoredPetriNetMarking.h"
-#include "CPNMultiSet.h"
 #include "GuardCompiler.h"
 
-namespace PetriEngine
+namespace PetriEngine::ExplicitColored
 {
-    namespace ExplicitColored
+    struct ColoredPetriNetTransition
     {
-        struct ColoredPetriNetTransition
-        {
-            std::unique_ptr<CompiledGuardExpression> guardExpression;
-            std::set<Variable_t> variables;
-            std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
-        };
+        std::unique_ptr<CompiledGuardExpression> guardExpression;
+        std::set<Variable_t> variables;
+        std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
+    };
 
-        struct BaseColorType
-        {
-            Color_t colors;
-        };
+    struct BaseColorType
+    {
+        Color_t colors;
+    };
 
-        struct ColorType
-        {
-            uint32_t size;
-            std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
-        };
+    struct ColorType
+    {
+        uint32_t size;
+        std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
+    };
 
-        struct ColoredPetriNetPlace
-        {
-            std::shared_ptr<ColorType> colorType;
-        };
+    struct ColoredPetriNetPlace
+    {
+        std::shared_ptr<ColorType> colorType;
+    };
 
-        struct ColoredPetriNetInhibitor
-        {
-            ColoredPetriNetInhibitor(const size_t from, const size_t to, const MarkingCount_t weight)
-                : from(from), to(to), weight(weight){}
-            uint32_t from;
-            uint32_t to;
-            MarkingCount_t weight;
-        };
+    struct ColoredPetriNetInhibitor
+    {
+        ColoredPetriNetInhibitor(const size_t from, const size_t to, const MarkingCount_t weight)
+            : from(from), to(to), weight(weight){}
+        uint32_t from;
+        uint32_t to;
+        MarkingCount_t weight;
+    };
 
-        struct ColoredPetriNetArc
-        {
-            uint32_t from;
-            uint32_t to;
-            std::shared_ptr<ColorType> colorType;
-            std::unique_ptr<CompiledArcExpression> expression;
-        };
+    struct ColoredPetriNetArc
+    {
+        uint32_t from;
+        uint32_t to;
+        std::shared_ptr<ColorType> colorType;
+        std::unique_ptr<CompiledArcExpression> expression;
+    };
 
-        struct Variable
-        {
-            std::shared_ptr<BaseColorType> colorType;
-        };
+    struct Variable
+    {
+        std::shared_ptr<BaseColorType> colorType;
+    };
 
-        class ColoredPetriNetBuilder;
+    class ColoredPetriNetBuilder;
 
-        class ColoredPetriNet
-        {
-        public:
-            ColoredPetriNet(ColoredPetriNet&&) = default;
-            ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
-            ColoredPetriNet& operator=(const ColoredPetriNet&) = default;
-            // Should maybe be for each state instead of once for every net
-            void randomizeBindingOrder(const size_t seed){
-                auto rng = std::default_random_engine {seed};
-                for (auto&& t : _transitions){
-                    auto& varMap = t.validVariables.first;
-                    for (auto &[var, values] : varMap){
-                        auto& validValues = values;
-                        std::shuffle(validValues.begin(),validValues.end(), rng);
-                    }
-                }
+    class ColoredPetriNet
+    {
+    public:
+        ColoredPetriNet(ColoredPetriNet&&) = default;
+        ColoredPetriNet& operator=(ColoredPetriNet&&) = default;
+        ColoredPetriNet& operator=(const ColoredPetriNet&) = default;
+
+        [[nodiscard]] const ColoredPetriNetMarking& initial() const {
+            return _initialMarking;
+        }
+
+        [[nodiscard]] Transition_t getTransitionCount() const {
+            return _transitions.size();
+        }
+
+        void getInputVariables(const Transition_t transition, std::set<Variable_t>& out) const {
+            for (auto i = _transitionArcs[transition].first; i < _transitionArcs[transition].second; i++) {
+                const auto& vars = _arcs[i].expression->getVariables();
+                out.insert(vars.begin(), vars.end());
             }
+        }
 
-            [[nodiscard]] const ColoredPetriNetMarking& initial() const {
-                return _initialMarking;
+        void getGuardVariables(const Transition_t transition, std::set<Variable_t>& out) const {
+            if (_transitions[transition].guardExpression == nullptr) {
+                return;
             }
+            _transitions[transition].guardExpression->collectVariables(out);
+        }
 
-            [[nodiscard]] Transition_t getTransitionCount() const {
-                return _transitions.size();
+        void getOutputVariables(const Transition_t transition, std::set<Variable_t>& out) const {
+            for (auto i = _transitionArcs[transition].second; i < _transitionArcs[transition + 1].first; i++){
+                const auto& vars = _arcs[i].expression->getVariables();
+                out.insert(vars.begin(), vars.end());
             }
-
-            void getInputVariables(const Transition_t transition, std::set<Variable_t>& out) const {
-                for (auto i = _transitionArcs[transition].first; i < _transitionArcs[transition].second; i++) {
-                    const auto& vars = _arcs[i].expression->getVariables();
-                    out.insert(vars.begin(), vars.end());
-                }
-            }
-
-            void getGuardVariables(const Transition_t transition, std::set<Variable_t>& out) const {
-                if (_transitions[transition].guardExpression == nullptr) {
-                    return;
-                }
-                _transitions[transition].guardExpression->collectVariables(out);
-            }
-
-            void getOutputVariables(const Transition_t transition, std::set<Variable_t>& out) const {
-                for (auto i = _transitionArcs[transition].second; i < _transitionArcs[transition + 1].first; i++){
-                    const auto& vars = _arcs[i].expression->getVariables();
-                    out.insert(vars.begin(), vars.end());
-                }
-            }
-        private:
-            friend class ColoredPetriNetBuilder;
-            friend class ColoredSuccessorGenerator;
-            friend class ValidVariableGenerator;
-            friend class FireabilityChecker;
-            ColoredPetriNet() = default;
-            std::vector<ColoredPetriNetTransition> _transitions;
-            std::vector<ColoredPetriNetPlace> _places;
-            std::vector<ColoredPetriNetArc> _arcs;
-            std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
-            std::vector<Variable> _variables;
-            ColoredPetriNetMarking _initialMarking;
-            std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _arcs
-            std::vector<uint32_t> _transitionInhibitors; //Index is transition and value is beginning index in _inhibitorArcs
-        };
-    }
-} // PetriEngine
+        }
+    private:
+        friend class ColoredPetriNetBuilder;
+        friend class ColoredSuccessorGenerator;
+        friend class ValidVariableGenerator;
+        friend class FireabilityChecker;
+        ColoredPetriNet() = default;
+        std::vector<ColoredPetriNetTransition> _transitions;
+        std::vector<ColoredPetriNetPlace> _places;
+        std::vector<ColoredPetriNetArc> _arcs;
+        std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
+        std::vector<Variable> _variables;
+        ColoredPetriNetMarking _initialMarking;
+        std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _arcs
+        std::vector<uint32_t> _transitionInhibitors; //Index is transition and value is beginning index in _inhibitorArcs
+    };
+}
+// PetriEngine
 
 #endif // COLOREDPETRINET_H
