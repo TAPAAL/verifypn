@@ -7,6 +7,7 @@ add_library(ExplicitColored
     Algorithms/ExplicitWorklist.cpp
     ColoredResultPrinter.cpp
     GuardCompiler.cpp
+    GammaQueryCompiler.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)
