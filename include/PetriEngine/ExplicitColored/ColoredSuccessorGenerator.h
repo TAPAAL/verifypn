@@ -21,12 +21,12 @@ namespace PetriEngine::ExplicitColored {
         explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
         ~ColoredSuccessorGenerator() = default;
 
-        ColoredPetriNetState next(ColoredPetriNetState& state) const {
-            return _next(state);
+        ColoredPetriNetStateFixed next(ColoredPetriNetStateFixed& state) const {
+            return _nextFixed(state);
         }
 
-        ColoredPetriNetStateOneTrans next(ColoredPetriNetStateOneTrans& state) const {
-            return _nextOneTrans(state);
+        ColoredPetriNetStateEven next(ColoredPetriNetStateEven& state) const {
+            return _nextEven(state);
         }
 
         [[nodiscard]] const ColoredPetriNet& net() const {
@@ -44,13 +44,13 @@ namespace PetriEngine::ExplicitColored {
         const ColoredPetriNet& _net;
         void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
 
-        ColoredPetriNetState _next(ColoredPetriNetState &state) const {
+        ColoredPetriNetStateFixed _nextFixed(ColoredPetriNetStateFixed &state) const {
             while (state.getCurrentTransition() < _net.getTransitionCount()) {
                 const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
                 if (state.getCurrentBinding() == 1) {
                     if (totalBindings == 0) {
                         if (check(state.marking, state.getCurrentTransition(), Binding{})) {
-                            auto newState = ColoredPetriNetState(state.marking);
+                            auto newState = ColoredPetriNetStateFixed(state.marking);
                             _fire(newState.marking, state.getCurrentTransition(), Binding{});
                             state.nextTransition();
                             return newState;
@@ -67,7 +67,7 @@ namespace PetriEngine::ExplicitColored {
                     const auto binding = getBinding(state.getCurrentTransition(), state.getCurrentBinding());
                     state.nextBinding();
                     if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
-                        auto newState = ColoredPetriNetState(state.marking);
+                        auto newState = ColoredPetriNetStateFixed(state.marking);
                         _fire(newState.marking, state.getCurrentTransition(), binding);
                         return newState;
                     }
@@ -75,11 +75,11 @@ namespace PetriEngine::ExplicitColored {
                 state.nextTransition();
             }
             state.setDone();
-            return ColoredPetriNetState{{}};
+            return ColoredPetriNetStateFixed{{}};
         }
 
         // SuccessorGenerator but only considers current transition
-        ColoredPetriNetStateOneTrans _nextOneTrans(ColoredPetriNetStateOneTrans &state) const {
+        ColoredPetriNetStateEven _nextEven(ColoredPetriNetStateEven &state) const {
             auto [tid, bid] = state.getNextPair();
             while (bid != std::numeric_limits<Binding_t>::max()) {
                 const auto totalBindings = _net._transitions[tid].validVariables.second;
@@ -87,7 +87,7 @@ namespace PetriEngine::ExplicitColored {
                     if (bid == 0) {
                         const auto binding = Binding{};
                         if (check(state.marking, tid, binding)) {
-                            auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
+                            auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
                             _fire(newState.marking, tid, binding);
                             state.updatePair(tid, ++bid);
                             return newState;
@@ -105,7 +105,7 @@ namespace PetriEngine::ExplicitColored {
                     while (++bid <= totalBindings) {
                         const auto binding = getBinding(tid, bid);
                         if (checkPresetAndGuard(state.marking, tid, binding)) {
-                            auto newState = ColoredPetriNetStateOneTrans{state, _net.getTransitionCount()};
+                            auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
                             _fire(newState.marking, tid, binding);
                             state.updatePair(tid, bid);
                             return newState;

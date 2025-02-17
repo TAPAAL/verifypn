@@ -4,9 +4,10 @@ add_library(ExplicitColored
     ArcCompiler.cpp
     ColoredPetriNetBuilder.cpp
     ColoredSuccessorGenerator.cpp
-    Algorithms/NaiveWorklist.cpp
+    Algorithms/ExplicitWorklist.cpp
     ColoredResultPrinter.cpp
     GuardCompiler.cpp
+    GammaQueryCompiler.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)

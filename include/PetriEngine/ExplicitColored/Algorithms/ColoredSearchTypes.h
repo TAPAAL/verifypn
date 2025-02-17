@@ -116,10 +116,8 @@ namespace PetriEngine::ExplicitColored {
     class BestFSStructure {
     public:
         explicit BestFSStructure(
-            const size_t seed, PQL::Condition_ptr query, const std::unordered_map<std::string,
-            uint32_t>& placeNameIndices, const bool negQuery
-            )
-            : _rng(seed), _query(std::move(query)), _negQuery(negQuery), _placeNameIndices(placeNameIndices) {}
+            const size_t seed, std::shared_ptr<CompiledGammaQueryExpression> query, const bool negQuery)
+            : _rng(seed), _query(std::move(query)), _negQuery(negQuery) {}
 
         T& next() const {
             return _queue.top().cpn;
@@ -130,7 +128,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void add(T state) {
-            const MarkingCount_t weight = DistQueryVisitor::eval(_query, state.marking, _placeNameIndices, _negQuery);
+            const MarkingCount_t weight = _query->distance(state.marking, _negQuery);
 
             _queue.push(WeightedState<T> {
                 std::move(state),
@@ -150,11 +148,9 @@ namespace PetriEngine::ExplicitColored {
     private:
         std::priority_queue<WeightedState<T>> _queue;
         std::default_random_engine _rng;
-        PQL::Condition_ptr _query;
+        std::shared_ptr<CompiledGammaQueryExpression> _query;
         bool _negQuery;
-        const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
     };
 }
-
 
 #endif
