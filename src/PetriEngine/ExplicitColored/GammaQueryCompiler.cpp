@@ -28,9 +28,9 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryAndExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
             : _expressions(std::move(expressions)) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             for (const auto& expression : _expressions) {
-                if (!expression->eval(cpn, marking)) {
+                if (!expression->eval(successorGenerator, marking)) {
                     return false;
                 }
             }
@@ -58,9 +58,9 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryOrExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
             : _expressions(std::move(expressions)) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             for (const auto& expression : _expressions) {
-                if (expression->eval(cpn, marking)) {
+                if (expression->eval(successorGenerator, marking)) {
                     return true;
                 }
             }
@@ -88,8 +88,8 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryNotExpression(std::unique_ptr<CompiledGammaQueryExpression> inner)
             : _inner(std::move(inner)){}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
-            return !_inner->eval(cpn, marking);
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+            return !_inner->eval(successorGenerator, marking);
         }
 
         [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
@@ -152,7 +152,7 @@ namespace PetriEngine::ExplicitColored {
         GammaQueryLessThanExpression(QueryValue lhs, QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             return _lhs.getCount(marking) < _rhs.getCount(marking);
         }
 
@@ -179,10 +179,10 @@ namespace PetriEngine::ExplicitColored {
 
     class GammaQueryLessThanOrEqualExpression final : public CompiledGammaQueryExpression {
     public:
-        GammaQueryLessThanOrEqualExpression(QueryValue lhs, QueryValue rhs)
+        GammaQueryLessThanOrEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             return _lhs.getCount(marking) <= _rhs.getCount(marking);
         }
 
@@ -209,15 +209,14 @@ namespace PetriEngine::ExplicitColored {
 
     class GammaQueryEqualExpression final : public CompiledGammaQueryExpression {
     public:
-        GammaQueryEqualExpression(QueryValue lhs, QueryValue rhs)
+        GammaQueryEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             return _lhs.getCount(marking) == _rhs.getCount(marking);
         }
 
-        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
-            bool neg) const override {
+        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, const bool neg) const override {
             const auto lhs = _lhs.getCount(marking);
             const auto rhs = _rhs.getCount(marking);
             if (neg)
@@ -232,15 +231,14 @@ namespace PetriEngine::ExplicitColored {
 
     class GammaQueryNotEqualExpression final : public CompiledGammaQueryExpression {
     public:
-        GammaQueryNotEqualExpression(QueryValue lhs, QueryValue rhs)
+        GammaQueryNotEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
             return _lhs.getCount(marking) != _rhs.getCount(marking);
         }
 
-        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
-            bool neg) const override {
+        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, const bool neg) const override {
             const auto lhs = _lhs.getCount(marking);
             const auto rhs = _rhs.getCount(marking);
             if (neg)
@@ -255,32 +253,25 @@ namespace PetriEngine::ExplicitColored {
 
     class GammaQueryDeadlockExpression final : public CompiledGammaQueryExpression {
     public:
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
-            for (uint32_t tid = 0; tid < cpn.getTransitionCount(); tid++) {
-                if (FireabilityChecker::CanFire(cpn, tid, marking)) {
-                    return false;
-                }
-            }
-            return true;
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+           return FireabilityChecker::hasDeadlock(successorGenerator, marking);
         }
 
-        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
-            bool neg) const override {
+        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, const bool neg) const override {
             return 0;
         }
     };
 
     class GammaQueryFireabilityExpression final : public CompiledGammaQueryExpression {
     public:
-        explicit GammaQueryFireabilityExpression(Transition_t transitionId)
+        explicit GammaQueryFireabilityExpression(const Transition_t transitionId)
             : _transitionId(transitionId) {}
 
-        [[nodiscard]] bool eval(const ColoredPetriNet& cpn, const ColoredPetriNetMarking &marking) const override {
-            return FireabilityChecker::CanFire(cpn, _transitionId, marking);
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+            return FireabilityChecker::canFire(successorGenerator, _transitionId, marking);
         }
 
-        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
-            bool neg) const override {
+        [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, bool neg) const override {
             return 0;
         }
 
@@ -294,9 +285,9 @@ namespace PetriEngine::ExplicitColored {
                 const PQL::Condition_ptr& expr,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
-                const ColoredPetriNet& cpn
+                const ColoredSuccessorGenerator& successorGenerator
             ) {
-                GammaQueryCompilerVisitor visitor{placeNameIndices, transitionNameIndices, cpn};
+                GammaQueryCompilerVisitor visitor{placeNameIndices, transitionNameIndices, successorGenerator};
                 visit(visitor, expr);
 
                 return std::move(visitor._compiled);
@@ -305,9 +296,9 @@ namespace PetriEngine::ExplicitColored {
             explicit GammaQueryCompilerVisitor(
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
-                const ColoredPetriNet& cpn
+                const ColoredSuccessorGenerator& successorGenerator
             )
-                : _cpn(cpn), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
+                : _successorGenerator(successorGenerator), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
 
             void _accept(const PQL::NotCondition *element) override {
                 visit(this, element->getCond().get());
@@ -427,18 +418,19 @@ namespace PetriEngine::ExplicitColored {
             void _accept(const PQL::NaryExpr *element) override  { notSupported("NaryExpr"); }
             void _accept(const PQL::SubtractExpr *element) override { notSupported("SubtractExpr"); }
         private:
-            void notSupported() {
+            static void notSupported() {
                 throw base_error("Not supported");
             }
-            void notSupported(const std::string& type) {
+
+            static void notSupported(const std::string& type) {
                 throw base_error("Not supported ", type);
             }
 
-            void invalid() {
+            static void invalid() {
                 throw base_error("Invalid expression");
             }
 
-            const ColoredPetriNet& _cpn;
+            const ColoredSuccessorGenerator& _successorGenerator;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;
             std::unique_ptr<CompiledGammaQueryExpression> _compiled;
@@ -448,10 +440,10 @@ namespace PetriEngine::ExplicitColored {
     GammaQueryCompiler::GammaQueryCompiler(
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
         const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
-        const ColoredPetriNet& cpn
-    ) : _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices), _cpn(cpn) {}
+        const ColoredSuccessorGenerator& successorGenerator
+    ) : _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices), _successorGenerator(successorGenerator) {}
 
     std::unique_ptr<CompiledGammaQueryExpression> GammaQueryCompiler::compile(const PQL::Condition_ptr &expression) const {
-        return GammaQueryCompilerVisitor::compile(expression, _placeNameIndices, _transitionNameIndices, _cpn);
+        return GammaQueryCompilerVisitor::compile(expression, _placeNameIndices, _transitionNameIndices, _successorGenerator);
     }
 }

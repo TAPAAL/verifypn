@@ -1,8 +1,8 @@
 #ifndef COLOREDSUCCESSORGENERATOR_CPP
 #define COLOREDSUCCESSORGENERATOR_CPP
 
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include <memory>
+#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
 
 namespace PetriEngine::ExplicitColored{
@@ -23,7 +23,7 @@ namespace PetriEngine::ExplicitColored{
         }
     }
 
-    Binding ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid) const {
+    void ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid, Binding& binding) const {
         auto map = std::map<Variable_t, Color_t>{};
         const auto& possibleValues = _net._transitions[tid].validVariables.second;
         if (possibleValues != 0){
@@ -34,8 +34,11 @@ namespace PetriEngine::ExplicitColored{
                 interval /= size;
                 map.emplace(varName, varValues.at((bid / interval) % size));
             }
+            binding = std::move(map);
+        }else {
+            binding = std::move(Binding{});
         }
-        return Binding{std::move(map)};
+
     }
 
     bool ColoredSuccessorGenerator::check(const ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const{
@@ -84,8 +87,8 @@ namespace PetriEngine::ExplicitColored{
         producePostset(state, tid, binding);
     }
 
-    bool ColoredSuccessorGenerator::hasMinimalCardinality(const ColoredPetriNetMarking &marking, const Transition_t transition) const {
-        for (auto i = _net._transitionArcs[transition].first; i < _net._transitionArcs[transition].second; i++) {
+    bool ColoredSuccessorGenerator::_hasMinimalCardinality(const ColoredPetriNetMarking &marking, const Transition_t tid) const {
+        for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++) {
             auto& arc = _net._arcs[i];
             if (marking.markings[arc.from].totalCount() < arc.expression->getMinimalMarkingCount()) {
                 return false;
@@ -95,6 +98,24 @@ namespace PetriEngine::ExplicitColored{
             }
         }
         return true;
+    }
+
+    [[nodiscard]] Binding_t ColoredSuccessorGenerator::findNextValidBinding(const ColoredPetriNetMarking& marking, const Transition_t tid, const Binding_t bid, const uint64_t totalBindings, Binding& binding) const {
+        if (!(bid == 0 && _shouldEarlyTerminateTransition(marking, tid))) {
+            if (totalBindings == 0) {
+                if (bid == 0 && checkPresetAndGuard(marking, tid, Binding{})) {
+                    return bid;
+                }
+            }else {
+                for (auto i = bid; i < totalBindings; i++) {
+                    getBinding(tid, i, binding);
+                    if (checkPresetAndGuard(marking, tid, binding)) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return std::numeric_limits<Binding_t>::max();
     }
 }
 
