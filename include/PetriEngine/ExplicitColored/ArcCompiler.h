@@ -68,7 +68,7 @@ namespace PetriEngine::ExplicitColored {
             return result <= superSet;
         }
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
-        [[nodiscard]] virtual std::pair<CPNMultiSet, MarkingCount_t> getMinimalColorCount() const = 0;
+        [[nodiscard]] virtual const std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
