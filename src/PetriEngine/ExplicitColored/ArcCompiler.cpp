@@ -12,6 +12,9 @@ namespace PetriEngine::ExplicitColored {
             _variables = _lhs->getVariables();
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
+            _preprocessedArc = _lhs->getPreprocessed();
+            const auto& rhs = _rhs->getPreprocessed();
+            _preprocessedArc.insert(_lhs.)
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -54,12 +57,17 @@ namespace PetriEngine::ExplicitColored {
             return result;
         }
 
+        [[nodiscard]] const std::vector<PreprocessedArc> & getPreprocessed() const override {
+            return _preprocessedArc;
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
         MarkingCount_t _minimalMarkingCount;
         std::set<Variable_t> _variables;
         mutable CPNMultiSet _result;
+        std::vector<PreprocessedArc> _preprocessedArc;
     };
 
     class ArcExpressionSubtraction final : public CompiledArcExpression {

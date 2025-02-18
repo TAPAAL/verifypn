@@ -58,6 +58,12 @@ namespace PetriEngine::ExplicitColored {
         }
     };
 
+    struct PreprocessedArc {
+        uint32_t colorIndex;
+        uint32_t colorOffset;
+        Place_t placeIndex;
+    };
+
     class CompiledArcExpression {
     public:
         [[nodiscard]] virtual const CPNMultiSet& eval(const Binding& binding) const = 0;
@@ -70,6 +76,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         [[nodiscard]] virtual std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const = 0;
+        [[nodiscard]] virtual const std::vector<PreprocessedArc>& getPreprocessed() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
 
