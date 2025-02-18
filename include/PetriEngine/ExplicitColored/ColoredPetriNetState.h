@@ -7,7 +7,6 @@
 #include "ColoredPetriNetMarking.h"
 
 namespace PetriEngine::ExplicitColored {
-
     struct ColoredPetriNetStateFixed {
         explicit ColoredPetriNetStateFixed(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
         ColoredPetriNetStateFixed(const ColoredPetriNetStateFixed& oldState) = default;
@@ -27,28 +26,32 @@ namespace PetriEngine::ExplicitColored {
             return _done;
         }
 
-        [[nodiscard]] Transition_t getCurrentTransition() const {
+        [[nodiscard]] const Transition_t& getCurrentTransition() const {
             return _currentTransition;
         }
 
-        [[nodiscard]] Binding_t getCurrentBinding() const {
+        [[nodiscard]] const Binding_t& getCurrentBinding() const {
             return _currentBinding;
         }
 
         void nextTransition() {
             _currentTransition += 1;
-            _currentBinding = 1;
+            _currentBinding = 0;
         }
 
         void nextBinding() {
             _currentBinding += 1;
         }
 
+        void nextBinding(const Binding_t bid) {
+            _currentBinding = bid + 1;
+        }
+
         ColoredPetriNetMarking marking;
     private:
         bool _done = false;
 
-        Binding_t _currentBinding = 1;
+        Binding_t _currentBinding = 0;
         Transition_t _currentTransition = 0;
     };
 
@@ -86,14 +89,20 @@ namespace PetriEngine::ExplicitColored {
             return {tid,bid};
         }
 
+        //Takes last fired transition-binding pair, so next binding is bid + 1
         void updatePair(const Transition_t tid, const Binding_t bid) {
-            if (tid < _map.size() && bid != _map[tid]) {
-                _map[tid] = bid;
+            if (tid < _map.size()) {
+                auto& oldBid = _map[tid];
                 if (bid == std::numeric_limits<Binding_t>::max()) {
-                    _completedTransitions += 1;
-                    if (_completedTransitions == _map.size()) {
-                        _done = true;
+                    if (bid != _map[tid]) {
+                        oldBid = bid;
+                        _completedTransitions += 1;
+                        if (_completedTransitions == _map.size()) {
+                            _done = true;
+                        }
                     }
+                } else {
+                    oldBid = bid + 1;
                 }
             }
         }

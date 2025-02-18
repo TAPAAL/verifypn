@@ -18,9 +18,9 @@ namespace PetriEngine {
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
-                const ColoredPetriNet& cpn
+                const ColoredSuccessorGenerator& successorGenerator
             ) {
-                GammaQueryVisitor visitor{marking, placeNameIndices, transitionNameIndices, cpn};
+                GammaQueryVisitor visitor{marking, placeNameIndices, transitionNameIndices, successorGenerator};
                 visit(visitor, expr);
 
                 return visitor._answer;
@@ -30,9 +30,9 @@ namespace PetriEngine {
                 const ColoredPetriNetMarking& marking,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
-                const ColoredPetriNet& cpn
+                const ColoredSuccessorGenerator& successorGenerator
             )
-                : _marking(marking), _cpn(cpn), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
+                : _marking(marking), _successorGenerator(successorGenerator), _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices) { }
 
             void _accept(const PQL::NotCondition *element) override {
                 visit(this, element->getCond().get());
@@ -82,17 +82,11 @@ namespace PetriEngine {
             }
 
             void _accept(const PQL::DeadlockCondition *element) override {
-                for (uint32_t tid = 0; tid < _cpn.getTransitionCount(); tid++) {
-                    if (FireabilityChecker::CanFire(_cpn, tid, _marking)) {
-                        _answer = false;
-                        return;
-                    }
-                }
-                _answer = true;
+                _answer = FireabilityChecker::hasDeadlock(_successorGenerator, _marking);
             }
 
             void _accept(const PQL::FireableCondition *element) override {
-                _answer = FireabilityChecker::CanFire(_cpn, _transitionNameIndices.find(*element->getName())->second, _marking);
+                _answer = FireabilityChecker::canFire(_successorGenerator, _transitionNameIndices.find(*element->getName())->second, _marking);
             }
 
             void _accept(const PQL::EFCondition *condition) override {
@@ -163,7 +157,7 @@ namespace PetriEngine {
 
             bool _answer = true;
             const ColoredPetriNetMarking& _marking;
-            const ColoredPetriNet& _cpn;
+            const ColoredSuccessorGenerator& _successorGenerator;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;
         };
