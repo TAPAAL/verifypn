@@ -3,7 +3,6 @@
 
 #include "AtomicTypes.h"
 #include <map>
-#include <string>
 #include <limits>
 
 namespace PetriEngine::ExplicitColored {
@@ -22,6 +21,11 @@ namespace PetriEngine::ExplicitColored {
 
         void setValue(const Variable_t v, const Color_t color) {
             _values.insert_or_assign(v, color);
+        }
+
+        Binding& operator=(std::map<Variable_t, Color_t>&& map) {
+            this->_values = std::move(map);
+            return *this;
         }
 
         friend std::ostream& operator<<(std::ostream& out, const Binding& binding) {

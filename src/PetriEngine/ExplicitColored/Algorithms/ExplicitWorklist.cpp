@@ -1,7 +1,7 @@
 #ifndef EXPLICITWORKLIST_CPP
 #define EXPLICITWORKLIST_CPP
-#include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 
+#include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/Visitors/GammaQueryVisitor.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
@@ -10,6 +10,8 @@
 #include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
+#include "PetriEngine/ExplicitColored/FireabilityChecker.h"
+#include "PetriEngine/ExplicitColored/ExplicitErrors.h"
 
 namespace PetriEngine::ExplicitColored {
     ExplicitWorklist::ExplicitWorklist(
@@ -20,10 +22,11 @@ namespace PetriEngine::ExplicitColored {
         const IColoredResultPrinter& coloredResultPrinter,
         const size_t seed
     ) : _net(std::move(net)),
+        _successorGenerator(ColoredSuccessorGenerator{_net}),
         _seed(seed),
         _coloredResultPrinter(coloredResultPrinter)
     {
-        const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _net);
+        const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
             _quantifier = Quantifier::EF;
             _gammaQuery = queryCompiler.compile(efGammaQuery->getCond());
@@ -31,7 +34,7 @@ namespace PetriEngine::ExplicitColored {
             _quantifier = Quantifier::AG;
             _gammaQuery = queryCompiler.compile(agGammaQuery->getCond());
         } else {
-            throw base_error("Unsupported query quantifier");
+            throw explicit_error{unsupported_query};
         }
     }
 
@@ -42,7 +45,7 @@ namespace PetriEngine::ExplicitColored {
         if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
-        throw base_error("Unsupported successor generator");
+        throw explicit_error(unsupported_generator);
     }
 
     const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {
@@ -50,17 +53,17 @@ namespace PetriEngine::ExplicitColored {
     }
 
     bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state) const {
-        return _gammaQuery->eval(_net, state);
+        return _gammaQuery->eval(_successorGenerator, state);
     }
 
     template <template <typename> typename WaitingList, typename T>
     bool ExplicitWorklist::_genericSearch(WaitingList<T> waiting) {
-        ColoredSuccessorGenerator successorGenerator(_net);
         ptrie::set<uint8_t> passed;
         std::vector<uint8_t> scratchpad;
+        _fullStatespace = true;
         const auto& initialState = _net.initial();
         const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
-        size_t size = initialState.compressedEncode(scratchpad);
+        size_t size = initialState.compressedEncode(scratchpad, _fullStatespace);
 
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
@@ -76,10 +79,13 @@ namespace PetriEngine::ExplicitColored {
         if (_check(initialState) == earlyTerminationCondition) {
             return _getResult(true);
         }
+        if (_net.getTransitionCount() == 0) {
+            return _getResult(false);
+        }
 
         while (!waiting.empty()){
             auto& next = waiting.next();
-            auto successor = successorGenerator.next(next);
+            auto successor = _successorGenerator.next(next);
             if (next.done()) {
                 waiting.remove();
                 continue;
@@ -94,11 +100,10 @@ namespace PetriEngine::ExplicitColored {
             }
 
             auto& marking = successor.marking;
-            size = marking.compressedEncode(scratchpad);
+            size = marking.compressedEncode(scratchpad, _fullStatespace);
             _searchStatistics.exploredStates++;
             if (!passed.exists(scratchpad.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
-
                 if (_check(marking) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
                     return _getResult(true);
@@ -157,11 +162,16 @@ namespace PetriEngine::ExplicitColored {
     }
 
     bool ExplicitWorklist::_getResult(const bool found) const {
-        const auto res = (
-            (!found && _quantifier == Quantifier::AG) ||
-            (found && _quantifier == Quantifier::EF))
-                ? Reachability::ResultPrinter::Result::Satisfied
-                : Reachability::ResultPrinter::Result::NotSatisfied;
+        Reachability::ResultPrinter::Result res;
+        if (!found && !_fullStatespace) {
+            res = Reachability::ResultPrinter::Result::Unknown;
+        }else {
+            res = (
+           (!found && _quantifier == Quantifier::AG) ||
+           (found && _quantifier == Quantifier::EF))
+               ? Reachability::ResultPrinter::Result::Satisfied
+               : Reachability::ResultPrinter::Result::NotSatisfied;
+        }
         _coloredResultPrinter.printResults(_searchStatistics, res);
         return res == Reachability::ResultPrinter::Result::Satisfied;
     }

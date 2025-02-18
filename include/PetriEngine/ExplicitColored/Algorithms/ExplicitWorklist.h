@@ -7,6 +7,7 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
+#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
 
 namespace PetriEngine::ExplicitColored {
@@ -38,32 +39,34 @@ namespace PetriEngine::ExplicitColored {
         );
 
         bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option);
-        const SearchStatistics& GetSearchStatistics() const;
+        [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
     private:
         std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
         Quantifier _quantifier;
         const ColoredPetriNet& _net;
+        const ColoredSuccessorGenerator _successorGenerator;
         const size_t _seed;
-
+        bool _fullStatespace = true;
+        SearchStatistics _searchStatistics;
+        const IColoredResultPrinter& _coloredResultPrinter;
         template<typename SuccessorGeneratorState>
-        bool _search(SearchStrategy searchStrategy);
+        [[nodiscard]] bool _search(SearchStrategy searchStrategy);
         [[nodiscard]] bool _check(const ColoredPetriNetMarking& state) const;
 
         template <typename T>
-        bool _dfs();
+        [[nodiscard]] bool _dfs();
         template <typename T>
-        bool _bfs();
+        [[nodiscard]] bool _bfs();
         template <typename T>
-        bool _rdfs();
+        [[nodiscard]] bool _rdfs();
         template <typename T>
-        bool _bestfs();
+        [[nodiscard]] bool _bestfs();
 
         template <template <typename> typename WaitingList, typename T>
-        bool _genericSearch(WaitingList<T> waiting);
-        bool _getResult(bool found) const;
+        [[nodiscard]] bool _genericSearch(WaitingList<T> waiting);
+        [[nodiscard]] bool _getResult(bool found) const;
 
-        SearchStatistics _searchStatistics;
-        const IColoredResultPrinter& _coloredResultPrinter;
+
     };
 }
 

@@ -1,4 +1,5 @@
 #include "PetriEngine/ExplicitColored/ArcCompiler.h"
+#include <PetriEngine/ExplicitColored/ExplicitErrors.h>
 #include "PetriEngine/ExplicitColored/VariableExtractorVisitor.h"
 #include "utils/MathExt.h"
 
@@ -255,8 +256,7 @@ namespace PetriEngine::ExplicitColored {
 
         sMarkingCount_t getSignedCount() const {
             if (_count > std::numeric_limits<int32_t>::max()) {
-                std::cout << "Too many markings to represent" << std::endl;
-                return to_underlying(ReturnValue::UnknownCode);
+                throw explicit_error{too_many_tokens};
             }
             return static_cast<int32_t>(_count);
         }
@@ -301,7 +301,7 @@ namespace PetriEngine::ExplicitColored {
         void accept(const Colored::VariableExpression* expr) override {
             const auto varIt = _variableMap.find(expr->variable()->name);
             if (varIt == _variableMap.end())
-                throw base_error("Unknown variable");
+                throw explicit_error{unknown_variable};
             _parameterizedColor = ParameterizedColor::fromVariable(varIt->second);
             _maxColor = expr->getColorType(_colorTypeMap)->size();
         }
@@ -358,7 +358,7 @@ namespace PetriEngine::ExplicitColored {
         Color_t _maxColor;
 
         static void unexpectedExpression() {
-            throw base_error("Unexpected expression");
+            throw explicit_error{unexpected_expression};
         }
     };
 
@@ -407,7 +407,7 @@ namespace PetriEngine::ExplicitColored {
         void accept(const Colored::NumberOfExpression* expr) override {
             _scale *= expr->number();
             if (expr->size() > 1) {
-                throw base_error("Unsupported net");
+                throw explicit_error{unsupported_net};
             }
             (*expr)[0]->visit(*this);
         }
@@ -499,7 +499,7 @@ namespace PetriEngine::ExplicitColored {
         MarkingCount_t _scale;
 
         static void unexpectedExpression() {
-            throw base_error("Unexpected expression");
+            throw explicit_error{unexpected_expression};
         }
     };
 
@@ -566,7 +566,8 @@ namespace PetriEngine::ExplicitColored {
                         expr->getCount()
                     );
                 } else {
-                    throw base_error("arc optimization failed");
+
+                    throw explicit_error{unsupported_net};
                 }
             }
         }
