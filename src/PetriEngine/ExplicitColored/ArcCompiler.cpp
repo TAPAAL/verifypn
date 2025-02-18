@@ -54,23 +54,6 @@ namespace PetriEngine::ExplicitColored {
             return result;
         }
 
-        [[nodiscard]] Color_t getNextPossibleBinding(const Variable_t variable,
-            const CPNMultiSet &inputPlaceTokens, std::vector<size_t> &iteratorState,
-            const size_t iteratorIndex) override {
-            for (; iteratorState[iteratorIndex] < 2; ++iteratorState[iteratorIndex]) {
-                Color_t color = iteratorState[iteratorIndex] == 0
-                    ? _lhs->getNextPossibleBinding(variable, inputPlaceTokens, iteratorState, iteratorIndex + 1)
-                    : _rhs->getNextPossibleBinding(variable, inputPlaceTokens, iteratorState, iteratorIndex + 1);
-                if (color != std::numeric_limits<Color_t>::max()) {
-                    return color;
-                }
-            }
-            return std::numeric_limits<Color_t>::max();
-        }
-
-        [[nodiscard]] size_t getIteratorStateSize() override {
-            return 1 + std::max(_lhs->getIteratorStateSize(), _rhs->getIteratorStateSize());
-        }
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
@@ -137,24 +120,6 @@ namespace PetriEngine::ExplicitColored {
             result.insert(rhs.begin(), rhs.end());
             return result;
         }
-
-        [[nodiscard]] Color_t getNextPossibleBinding(const Variable_t variable,
-            const CPNMultiSet &inputPlaceTokens, std::vector<size_t> &iteratorState,
-            const size_t iteratorIndex) override {
-            for (; iteratorState[iteratorIndex] < 2; ++iteratorState[iteratorIndex]) {
-                Color_t color = iteratorState[iteratorIndex] == 0
-                    ? _lhs->getNextPossibleBinding(variable, inputPlaceTokens, iteratorState, iteratorIndex + 1)
-                    : _rhs->getNextPossibleBinding(variable, inputPlaceTokens, iteratorState, iteratorIndex + 1);
-                if (color != std::numeric_limits<Color_t>::max()) {
-                    return color;
-                }
-            }
-            return std::numeric_limits<Color_t>::max();
-        }
-
-        [[nodiscard]] size_t getIteratorStateSize() override {
-            return 1 + std::max(_lhs->getIteratorStateSize(), _rhs->getIteratorStateSize());
-        }
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
@@ -209,16 +174,6 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
             return _expr->getPossibleBindings(variable, inputPlaceTokens);
         }
-
-        [[nodiscard]] Color_t getNextPossibleBinding(const Variable_t variable,
-            const CPNMultiSet &inputPLaceTokens, std::vector<size_t> &iteratorState,
-            const size_t iteratorIndex) override {
-            return _expr->getNextPossibleBinding(variable, inputPLaceTokens, iteratorState, iteratorIndex);
-        }
-
-        [[nodiscard]] size_t getIteratorStateSize() override {
-            return _expr->getIteratorStateSize();
-        }
     private:
         std::unique_ptr<CompiledArcExpression> _expr;
         MarkingCount_t _scale;
@@ -265,16 +220,6 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
             return std::set<Color_t>{};
-        }
-
-        [[nodiscard]] Color_t getNextPossibleBinding(Variable_t variable,
-            const CPNMultiSet &inputPLaceTokens, std::vector<size_t> &iteratorState,
-            size_t iteratorIndex) override {
-            return std::numeric_limits<Color_t>::max();
-        }
-
-        [[nodiscard]] size_t getIteratorStateSize() override {
-            return 0;
         }
     private:
         CPNMultiSet _constant;
@@ -350,24 +295,6 @@ namespace PetriEngine::ExplicitColored {
                 }
             }
             return result;
-        }
-
-        [[nodiscard]] Color_t getNextPossibleBinding(const Variable_t variable, const CPNMultiSet &inputPlaceTokens,
-            std::vector<size_t> &iteratorState, const size_t iteratorIndex) override {
-            for (;iteratorState[iteratorIndex] < _parameterizedColorSequence.size(); ++iteratorState[iteratorIndex]) {
-               const auto& colorSequence = _parameterizedColorSequence[iteratorState[iteratorIndex]];
-                for (;iteratorState[iteratorIndex + 1]; ++iteratorState[iteratorIndex + 1]) {
-                    const size_t colorIndex = iteratorState[iteratorIndex + 1];
-                    if (colorSequence[colorIndex].isVariable && colorSequence[colorIndex].value.variable == variable) {
-                        const auto& count = inputPlaceTokens.counts()[iteratorState[iteratorIndex + 2]++];
-                        return signed_wrap(static_cast<ColorOffset_t>(count.first.getSequence()[colorIndex]) - colorSequence[colorIndex].offset, static_cast<ColorOffset_t>(_colorSizes[colorIndex]));
-                    }
-                }
-            }
-        }
-
-        [[nodiscard]] size_t getIteratorStateSize() override {
-            return 3;
         }
 
         sMarkingCount_t getSignedCount() const {
