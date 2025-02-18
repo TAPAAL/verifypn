@@ -80,11 +80,11 @@ namespace PetriEngine::ExplicitColored{
                 }
                 bytes[cursor++] = 0;
             }
+            //If state is too big for the ptrie we will not explore full statespace,
+            //but counterexamples found are still valid
             if (cursor >= std::numeric_limits<uint16_t>::max()) {
-                if (success) {
-                    std::cout << "Too big for ptrie, not exploring full statespace" << std::endl;
-                }
                 success = false;
+                return std::numeric_limits<uint16_t>::max();
             }
             return cursor;
         }
