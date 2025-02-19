@@ -125,14 +125,14 @@ namespace PetriEngine::ExplicitColored {
         std::unique_ptr<CompiledArcExpression>& getRhs() {
             return _rhs;
         }
-        private:
-            std::unique_ptr<CompiledArcExpression> _lhs;
-            std::unique_ptr<CompiledArcExpression> _rhs;
-            MarkingCount_t _minimalMarkingCount;
-            mutable ColoredMinimalMarking _minimalColorMarking;
-            mutable CPNMultiSet _result;
-            std::set<Variable_t> _variables;
-        };
+    private:
+        std::unique_ptr<CompiledArcExpression> _lhs;
+        std::unique_ptr<CompiledArcExpression> _rhs;
+        MarkingCount_t _minimalMarkingCount;
+        mutable ColoredMinimalMarking _minimalColorMarking;
+        mutable CPNMultiSet _result;
+        std::set<Variable_t> _variables;
+    };
 
     class ArcExpressionScale final : public CompiledArcExpression {
     public:
