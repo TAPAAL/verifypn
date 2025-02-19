@@ -58,9 +58,9 @@ namespace PetriEngine::ExplicitColored {
         }
     };
 
-    class ColorCount {
+    class ColoredMinimalMarking {
     public:
-        CPNMultiSet colorSet;
+        CPNMultiSet minimalMarkingMultiSet;
         MarkingCount_t variableCount;
     };
 
@@ -75,7 +75,7 @@ namespace PetriEngine::ExplicitColored {
             return result <= superSet;
         }
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
-        [[nodiscard]] virtual const ColorCount& getMinimalColorCount() const = 0;
+        [[nodiscard]] virtual const ColoredMinimalMarking& getMinimalColorMarking() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
