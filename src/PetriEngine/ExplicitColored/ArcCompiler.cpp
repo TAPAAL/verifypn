@@ -13,9 +13,9 @@ namespace PetriEngine::ExplicitColored {
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
             _minimalColorCount = _lhs->getMinimalColorCount();
-            auto minColRhs = _rhs->getMinimalColorCount();
-            _minimalColorCount.first += minColRhs.first;
-            _minimalColorCount.second += minColRhs.second;
+            const auto& minColRhs = _rhs->getMinimalColorCount();
+            _minimalColorCount.colorSet += minColRhs.colorSet;
+            _minimalColorCount.variableCount += minColRhs.variableCount;
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -39,7 +39,7 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-        std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const override {
+        ColorCount& getMinimalColorCount() const override {
             return _minimalColorCount;
         }
 
@@ -58,7 +58,7 @@ namespace PetriEngine::ExplicitColored {
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
         MarkingCount_t _minimalMarkingCount;
-        mutable std::pair<CPNMultiSet, MarkingCount_t> _minimalColorCount;
+        mutable ColorCount _minimalColorCount;
         std::set<Variable_t> _variables;
         mutable CPNMultiSet _result;
     };
@@ -78,14 +78,14 @@ namespace PetriEngine::ExplicitColored {
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
             _minimalColorCount = _lhs->getMinimalColorCount();
-            auto minColRhs = _rhs->getMinimalColorCount();
-            if(minColRhs.second != 0){
-                for (auto colorSequence :_minimalColorCount.first.counts()) {
-                    colorSequence.second -= minColRhs.second;
+            const auto& minColRhs = _rhs->getMinimalColorCount();
+            if (minColRhs.variableCount != 0) {
+                for (auto colorSequence : _minimalColorCount.colorSet.counts()) {
+                    colorSequence.second -= minColRhs.variableCount;
                 }
             }
-            else{
-                _minimalColorCount.first -= minColRhs.first;
+            else {
+                _minimalColorCount.colorSet -= minColRhs.colorSet;
             }
         }
 
@@ -110,7 +110,7 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-        std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const override {
+        ColorCount& getMinimalColorCount() const override {
             return _minimalColorCount;
         }
 
@@ -129,7 +129,7 @@ namespace PetriEngine::ExplicitColored {
             std::unique_ptr<CompiledArcExpression> _lhs;
             std::unique_ptr<CompiledArcExpression> _rhs;
             MarkingCount_t _minimalMarkingCount;
-            mutable std::pair<CPNMultiSet, MarkingCount_t> _minimalColorCount;
+            mutable ColorCount _minimalColorCount;
             mutable CPNMultiSet _result;
             std::set<Variable_t> _variables;
         };
@@ -141,8 +141,8 @@ namespace PetriEngine::ExplicitColored {
             _minimalMarkingCount = _expr->getMinimalMarkingCount() * n;
             _variables = _expr->getVariables();
             _minimalColorCount = _expr->getMinimalColorCount();
-            _minimalColorCount.first *= _scale;
-            _minimalColorCount.second *= _scale;
+            _minimalColorCount.colorSet *= _scale;
+            _minimalColorCount.variableCount *= _scale;
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -168,7 +168,7 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-        std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const override {
+        ColorCount& getMinimalColorCount() const override {
             return _minimalColorCount;
         }
 
@@ -187,7 +187,7 @@ namespace PetriEngine::ExplicitColored {
         std::unique_ptr<CompiledArcExpression> _expr;
         MarkingCount_t _scale;
         MarkingCount_t _minimalMarkingCount;
-        mutable std::pair<CPNMultiSet,MarkingCount_t> _minimalColorCount;
+        mutable ColorCount _minimalColorCount;
         mutable CPNMultiSet _result;
         std::set<Variable_t> _variables;
     };
@@ -197,7 +197,8 @@ namespace PetriEngine::ExplicitColored {
         explicit ArcExpressionConstant(CPNMultiSet constant)
             : _constant(std::move(constant)) {
             _minimalMarkingCount = _constant.totalCount();
-            _minimalColorCount = std::make_pair(_constant,0);
+            _minimalColorCount.colorSet = _constant;
+            _minimalColorCount.variableCount = 0;
         }
 
         [[nodiscard]] const CPNMultiSet& eval(const Binding& binding) const override {
@@ -217,7 +218,7 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-        std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const override {
+        ColorCount& getMinimalColorCount() const override {
             return _minimalColorCount;
         }
 
@@ -235,7 +236,7 @@ namespace PetriEngine::ExplicitColored {
     private:
         CPNMultiSet _constant;
         MarkingCount_t _minimalMarkingCount;
-        mutable std::pair<CPNMultiSet,MarkingCount_t> _minimalColorCount;
+        mutable ColorCount _minimalColorCount;
         std::set<Variable_t> _variables;
     };
 
@@ -251,8 +252,8 @@ namespace PetriEngine::ExplicitColored {
                     }
                 }
             }
-            _minimalColorCount = {};
-            _minimalColorCount.second = 0;
+            _minimalColorCount.colorSet = {};
+            _minimalColorCount.variableCount = 0;
             for (const auto& colorSequence : _parameterizedColorSequence) {
                 auto hasVariable = false;
                 for (const auto& parameterizedColor : colorSequence) {
@@ -260,11 +261,11 @@ namespace PetriEngine::ExplicitColored {
                         hasVariable = true;
                     }
                 }
-                if (hasVariable){
-                    _minimalColorCount.second += _count;
+                if (hasVariable) {
+                    _minimalColorCount.variableCount += _count;
                 }
-                else{
-                    _minimalColorCount.first.addCount(getColorSequence(colorSequence,{}), _count);
+                else {
+                    _minimalColorCount.colorSet.addCount(getColorSequence(colorSequence,{}), _count);
                 }
             }
         }
@@ -292,7 +293,7 @@ namespace PetriEngine::ExplicitColored {
             return _minimalMarkingCount;
         }
 
-        std::pair<CPNMultiSet, MarkingCount_t>& getMinimalColorCount() const override {
+        ColorCount& getMinimalColorCount() const override {
             return _minimalColorCount;
         }
 
@@ -340,10 +341,10 @@ namespace PetriEngine::ExplicitColored {
         std::vector<std::vector<ParameterizedColor>> _parameterizedColorSequence;
         MarkingCount_t _count;
         MarkingCount_t _minimalMarkingCount;
-        mutable std::pair<CPNMultiSet, MarkingCount_t> _minimalColorCount;
+        mutable ColorCount _minimalColorCount;
         std::set<Variable_t> _variables;
         mutable CPNMultiSet _result;
-        };
+    };
 
     class ArcExpressionColorVisitor final : public Colored::ColorExpressionVisitor {
     public:
