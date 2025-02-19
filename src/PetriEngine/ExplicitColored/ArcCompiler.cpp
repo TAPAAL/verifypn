@@ -12,9 +12,6 @@ namespace PetriEngine::ExplicitColored {
             _variables = _lhs->getVariables();
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
-            _preprocessedArc = _lhs->getPreprocessed();
-            const auto& rhs = _rhs->getPreprocessed();
-            _preprocessedArc.insert(_lhs.)
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -57,8 +54,11 @@ namespace PetriEngine::ExplicitColored {
             return result;
         }
 
-        [[nodiscard]] const std::vector<PreprocessedArc> & getPreprocessed() const override {
-            return _preprocessedArc;
+        [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
+            auto constraints = _lhs->calculateVariableConstraints(var, place);
+            const auto rhsConstraints = _rhs->calculateVariableConstraints(var, place);
+            constraints.insert(constraints.begin(), rhsConstraints.begin(), rhsConstraints.end());
+            return constraints;
         }
 
     private:
@@ -67,7 +67,6 @@ namespace PetriEngine::ExplicitColored {
         MarkingCount_t _minimalMarkingCount;
         std::set<Variable_t> _variables;
         mutable CPNMultiSet _result;
-        std::vector<PreprocessedArc> _preprocessedArc;
     };
 
     class ArcExpressionSubtraction final : public CompiledArcExpression {
@@ -128,6 +127,14 @@ namespace PetriEngine::ExplicitColored {
             result.insert(rhs.begin(), rhs.end());
             return result;
         }
+
+        [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t place) const override {
+            if (_rhs->getVariables().find(var) != _rhs->getVariables().end()) {
+                return {VariableConstraint::getTop()};
+            }
+            return _lhs->calculateVariableConstraints(var, place);
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
@@ -179,9 +186,14 @@ namespace PetriEngine::ExplicitColored {
             return _scale;
         }
 
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
+        [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
             return _expr->getPossibleBindings(variable, inputPlaceTokens);
         }
+
+        [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
+            return _expr->calculateVariableConstraints(var, place);
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _expr;
         MarkingCount_t _scale;
@@ -229,6 +241,11 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
             return std::set<Color_t>{};
         }
+
+        [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
+            return {};
+        }
+
     private:
         CPNMultiSet _constant;
         MarkingCount_t _minimalMarkingCount;
@@ -237,10 +254,10 @@ namespace PetriEngine::ExplicitColored {
 
     class ArcExpressionVariableCollection final : public CompiledArcExpression {
     public:
-        ArcExpressionVariableCollection(std::vector<std::vector<ParameterizedColor>> parameterizedColorSequence, std::vector<Color_t> colorSizes, const MarkingCount_t count)
-            : _colorSizes(std::move(colorSizes)), _parameterizedColorSequence(std::move(parameterizedColorSequence)), _count(count) {
-            _minimalMarkingCount = _parameterizedColorSequence.size() * _count;
-            for (const auto& colorSequence : _parameterizedColorSequence) {
+        ArcExpressionVariableCollection(std::vector<std::vector<ParameterizedColor>> parameterizedColorSequences, std::vector<Color_t> colorSizes, const MarkingCount_t count)
+            : _colorSizes(std::move(colorSizes)), _parameterizedColorSequences(std::move(parameterizedColorSequences)), _count(count) {
+            _minimalMarkingCount = _parameterizedColorSequences.size() * _count;
+            for (const auto& colorSequence : _parameterizedColorSequences) {
                 for (const auto& color : colorSequence) {
                     if (color.isVariable) {
                         _variables.emplace(color.value.variable);
@@ -256,13 +273,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void produce(CPNMultiSet &out, const Binding &binding) const override {
-            for (const auto& colorSequence : _parameterizedColorSequence) {
+            for (const auto& colorSequence : _parameterizedColorSequences) {
                 out.addCount(getColorSequence(colorSequence, binding), getSignedCount());
             }
         }
 
         void consume(CPNMultiSet &out, const Binding &binding) const override {
-            for (const auto& colorSequence : _parameterizedColorSequence) {
+            for (const auto& colorSequence : _parameterizedColorSequences) {
                 out.addCount(getColorSequence(colorSequence, binding), -getSignedCount());
             }
             out.fixNegative();
@@ -277,7 +294,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         const std::vector<std::vector<ParameterizedColor>>& getParameterizedColorSequences() const {
-            return _parameterizedColorSequence;
+            return _parameterizedColorSequences;
         }
 
         const std::vector<Color_t>& getColorMaxes() const {
@@ -290,7 +307,7 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
             std::set<Color_t> result;
-            for (const auto& colorSequence : _parameterizedColorSequence) {
+            for (const auto& colorSequence : _parameterizedColorSequences) {
                 for (size_t colorIndex = 0; colorIndex < colorSequence.size(); ++colorIndex) {
                     if (colorSequence[colorIndex].isVariable && colorSequence[colorIndex].value.variable == variable) {
                         for (const auto& count : inputPlaceTokens.counts()) {
@@ -311,6 +328,23 @@ namespace PetriEngine::ExplicitColored {
             }
             return static_cast<int32_t>(_count);
         }
+
+        [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
+            std::vector<VariableConstraint> constraints;
+            for (const auto& parameterizedColorSequence : _parameterizedColorSequences) {
+                for (size_t colorIndex = 0; colorIndex < parameterizedColorSequence.size(); colorIndex++) {
+                    const auto& parameterizedColor = parameterizedColorSequence[colorIndex];
+                    if (colorIndex > std::numeric_limits<uint32_t>::max()) {
+                        throw base_error("Too big product color");
+                    }
+                    if (parameterizedColor.isVariable && parameterizedColor.value.variable == var) {
+                        constraints.push_back({static_cast<uint32_t>(colorIndex), parameterizedColor.offset, place});
+                    }
+                }
+            }
+            return constraints;
+        }
+
     private:
         ColorSequence getColorSequence(const std::vector<ParameterizedColor>& sequence, const Binding& binding) const {
             std::vector<Color_t> colorSequence;
@@ -330,7 +364,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         std::vector<Color_t> _colorSizes;
-        std::vector<std::vector<ParameterizedColor>> _parameterizedColorSequence;
+        std::vector<std::vector<ParameterizedColor>> _parameterizedColorSequences;
         MarkingCount_t _count;
         MarkingCount_t _minimalMarkingCount;
         std::set<Variable_t> _variables;

@@ -227,6 +227,23 @@ namespace PetriEngine::ExplicitColored {
         if (result == ValidVariableGeneratorStatus::TOO_MANY_BINDINGS) {
             return ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS;
         }
+
+        //create preplace constraints for transitions
+        for (Transition_t tid = 0; tid < _currentNet._transitions.size(); tid++) {
+            auto& transition = _currentNet._transitions[tid];
+            for (auto i = _currentNet._transitionArcs[tid].first; i < _currentNet._transitionArcs[tid].second; i++) {
+                auto& arc = _currentNet._arcs[i];
+                for (Variable_t var : arc.expression->getVariables()) {
+                    const auto constraints = arc.expression->calculateVariableConstraints(var, arc.from);
+                    auto entry = transition.preplacesVariableConstraints.find(var);
+                    if (entry == transition.preplacesVariableConstraints.end()) {
+                        entry = transition.preplacesVariableConstraints.emplace(var, std::vector<VariableConstraint> {}).first;
+                    }
+                    entry->second.insert(entry->second.begin(), constraints.cbegin(), constraints.cend());
+                }
+            }
+        }
+
         return ColoredPetriNetBuilderStatus::OK;
     }
 

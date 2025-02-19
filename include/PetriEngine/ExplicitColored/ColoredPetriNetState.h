@@ -151,7 +151,6 @@ namespace PetriEngine::ExplicitColored {
             _currentTransition += 1;
             _checkedEarlyTermination = false;
             variableIndices.clear();
-            variableValues.clear();
             stateMaxes.clear();
         }
 
@@ -163,24 +162,26 @@ namespace PetriEngine::ExplicitColored {
             return !_checkedEarlyTermination;
         }
 
-        bool incrementVariableIndices(const std::vector<size_t>& stateMaxes, const size_t startIndex = 0) {
-            variableIndices[startIndex] += 1;
-            if (variableIndices[startIndex] >= stateMaxes[startIndex]) {
-                if (startIndex + 1 >= variableIndices.size()) {
+        [[nodiscard]] bool incrementVariableIndices() {
+            return _incrementVariableIndices(variableIndices.begin());
+        }
+
+        std::map<Variable_t, size_t> variableIndices;
+        std::map<Variable_t, size_t> stateMaxes;
+        ColoredPetriNetMarking marking;
+    private:
+        bool _incrementVariableIndices(std::map<Variable_t, size_t>::iterator variableIndex) {
+            variableIndex->second += 1;
+            if (variableIndex->second >= stateMaxes[variableIndex->first]) {
+                variableIndex->second = 0;
+                if (++variableIndex == variableIndices.end()) {
                     return true;
                 }
-                variableIndices[startIndex] = 0;
-                return incrementVariableIndices(stateMaxes, startIndex + 1);
+                return _incrementVariableIndices(variableIndex);
             }
             return false;
         }
 
-        std::vector<size_t> variableIndices;
-        ColoredPetriNetMarking marking;
-        std::vector<size_t> stateMaxes;
-        std::vector<std::pair<Variable_t, std::vector<Color_t>>> variableValues;
-
-    private:
         bool _done = false;
         bool _checkedEarlyTermination = false;
         Transition_t _currentTransition = 0;

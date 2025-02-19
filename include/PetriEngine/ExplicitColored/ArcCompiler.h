@@ -58,10 +58,21 @@ namespace PetriEngine::ExplicitColored {
         }
     };
 
-    struct PreprocessedArc {
+    struct VariableConstraint {
         uint32_t colorIndex;
-        uint32_t colorOffset;
-        Place_t placeIndex;
+        ColorOffset_t colorOffset;
+        Place_t place;
+
+        static VariableConstraint getTop() {
+            return VariableConstraint{
+                std::numeric_limits<uint32_t>::max(),
+                0
+            };
+        }
+
+        [[nodiscard]] bool isTop() const {
+            return colorIndex == std::numeric_limits<Place_t>::max();
+        }
     };
 
     class CompiledArcExpression {
@@ -76,7 +87,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         [[nodiscard]] virtual std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const = 0;
-        [[nodiscard]] virtual const std::vector<PreprocessedArc>& getPreprocessed() const = 0;
+        [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t fromPlace) const = 0;
         virtual ~CompiledArcExpression() = default;
     };
 

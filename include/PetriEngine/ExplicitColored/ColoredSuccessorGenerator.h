@@ -4,6 +4,7 @@
 #include "ColoredPetriNet.h"
 #include "ColoredPetriNetState.h"
 #include <limits>
+#include <utils/MathExt.h>
 
 namespace PetriEngine::ExplicitColored {
     struct TransitionVariables{
@@ -101,7 +102,69 @@ namespace PetriEngine::ExplicitColored {
                 return true;
             return false;
         }
+        struct PossibleValues {
+            explicit PossibleValues(std::vector<Color_t> colors)
+                : colors(std::move(colors)), allColors(false) {}
 
+            explicit PossibleValues(const std::set<Color_t>& colors)
+                : colors(colors.begin(), colors.end()), allColors(false) {}
+
+            static PossibleValues getAll() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = true;
+                return rv;
+            }
+
+            static PossibleValues getEmpty() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = false;
+                return rv;
+            }
+
+            void sort() {
+                std::sort(colors.begin(), colors.end());
+            }
+
+            void intersect(const PossibleValues& other) {
+                if (other.allColors) {
+                    return;
+                }
+                if (allColors) {
+                    colors = other.colors;
+                    return;
+                }
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.colors.cbegin(),
+                    other.colors.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            void intersect(const std::set<Color_t>& other) {
+                if (allColors) {
+                    colors.clear();
+                    colors.insert(colors.begin(), other.cbegin(), other.cend());
+                    return;
+                }
+
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.cbegin(),
+                    other.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            std::vector<Color_t> colors;
+            bool allColors;
+        };
         ColoredPetriNetStateConstrained _nextV2(ColoredPetriNetStateConstrained &state) const {
 transitionLoop:
             while (state.getCurrentTransition() < _net.getTransitionCount()) {
@@ -124,84 +187,86 @@ transitionLoop:
                     }
                 }
 
-                if (state.shouldCheckEarlyTermination()) {
+                //if (state.shouldCheckEarlyTermination()) {
                     std::set<Variable_t> allVariables;
                     std::set<Variable_t> inputArcVariables;
                     _net.getInputVariables(state.getCurrentTransition(), allVariables);
                     _net.getInputVariables(state.getCurrentTransition(), inputArcVariables);
                     _net.getOutputVariables(state.getCurrentTransition(), allVariables);
                     _net.getGuardVariables(state.getCurrentTransition(), allVariables);
+                    std::map<Variable_t, PossibleValues> possibleVariableValues;
                     for (Variable_t variable : allVariables) {
-                        if (inputArcVariables.find(variable) == inputArcVariables.end()) {
-                            state.variableValues.emplace_back(variable, std::vector { ALL_COLOR });
+                        auto& values = *possibleVariableValues.emplace(variable, PossibleValues::getAll()).first;
+                        const auto& constraints = _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.find(variable);
+                        if (constraints == _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.end()) {
                             continue;
                         }
-                        std::vector<Color_t> possibleColors = {ALL_COLOR};
-                        for (
-                            auto i = _net._transitionArcs[state.getCurrentTransition()].first;
-                            i < _net._transitionArcs[state.getCurrentTransition()].second;
-                            i++
-                        ) {
-                            auto& arc = _net._arcs[i];
-                            const auto& arcVariables = arc.expression->getVariables();
-                            if (arcVariables.find(variable) == arcVariables.end()) {
+                        for (const auto& constraint : constraints->second) {
+                            const auto& place = state.marking.markings[constraint.place];
+
+                            if (constraint.isTop()) {
                                 continue;
                             }
-                            auto arcPossibleColors = arc.expression->getPossibleBindings(variable, state.marking.markings[arc.from]);
-                            if (arcPossibleColors.find(ALL_COLOR) != arcPossibleColors.end()) {
-                                continue;
+
+                            std::set<Color_t> possibleColors;
+
+                            if (values.second.allColors) {
+                                values.second.colors.reserve(place.counts().size());
                             }
-                            if (std::binary_search(possibleColors.begin(), possibleColors.end(), ALL_COLOR)) {
-                                possibleColors = std::vector(arcPossibleColors.begin(), arcPossibleColors.end());
+
+                            for (const auto& tokens : place.counts()) {
+                                auto bindingValue = add_color_offset(
+                                    tokens.first.getSequence()[constraint.colorIndex],
+                                    -constraint.colorOffset,
+                                    _net._variables[variable].colorType->colors
+                                );
+
+                                if (values.second.allColors) {
+                                    values.second.colors.push_back(bindingValue);
+                                } else {
+                                    possibleColors.insert(bindingValue);
+                                }
+                            }
+
+                            if (values.second.allColors) {
+                                values.second.allColors = false;
+                                std::sort(values.second.colors.begin(), values.second.colors.end());
                             } else {
-                                std::vector<Color_t> newPossibleColors;
-                                std::set_intersection(possibleColors.begin(), possibleColors.end(), arcPossibleColors.begin(), arcPossibleColors.end(), std::back_inserter(newPossibleColors));
-                                possibleColors = std::move(newPossibleColors);
+                                values.second.intersect(possibleColors);
                             }
                         }
-                        state.variableValues.emplace_back(variable, std::move(possibleColors));
+                        state.stateMaxes[variable] = values.second.allColors
+                            ? _net._variables[variable].colorType->colors
+                            : values.second.colors.size();
                     }
-                    for (const auto& variableValue : state.variableValues) {
-                        if (variableValue.second.empty()) {
-                            state.nextTransition();
-                            goto transitionLoop;
-                        }
-                        state.variableIndices.push_back(0);
-                    }
-                    for (const auto&[variableIndex, variableValues] : state.variableValues) {
-                        if (std::binary_search(variableValues.begin(), variableValues.end(), ALL_COLOR)) {
-                            state.stateMaxes.push_back(_net._variables[variableIndex].colorType->colors);
-                        } else {
-                            state.stateMaxes.push_back(variableValues.size());
-                        }
-                    }
-                }
+                //}
 
                 state.checkedEarlyTermination();
                 Binding binding {};
                 while (true) {
-                    for (auto variableIndex = 0; variableIndex < state.variableValues.size(); ++variableIndex) {
-                        if (std::binary_search(state.variableValues[variableIndex].second.begin(), state.variableValues[variableIndex].second.end(), ALL_COLOR)) {
+                    for (const auto var : allVariables) {
+                        const auto& possibleValues = possibleVariableValues.find(var)->second;
+                        if (possibleValues.allColors) {
                             binding.setValue(
-                                state.variableValues[variableIndex].first,
-                                state.variableIndices[variableIndex]
+                                var,
+                                state.variableIndices[var]
                             );
                         } else {
                             binding.setValue(
-                               state.variableValues[variableIndex].first,
-                               state.variableValues[variableIndex].second[state.variableIndices[variableIndex]]
-                           );
+                                var,
+                                possibleValues.colors[state.variableIndices[var]]
+                            );
                         }
                     }
                     if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
                         auto newState = ColoredPetriNetStateConstrained{state.marking};
                         _fire(newState.marking, state.getCurrentTransition(), binding);
-                        if (state.incrementVariableIndices(state.stateMaxes)) {
+                        if (state.incrementVariableIndices()) {
                             state.nextTransition();
                         }
                         return newState;
                     }
-                    if (state.incrementVariableIndices(state.stateMaxes)) {
+                    if (state.incrementVariableIndices()) {
                         state.nextTransition();
                         goto transitionLoop;
                     }

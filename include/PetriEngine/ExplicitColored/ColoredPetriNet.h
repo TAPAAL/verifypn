@@ -18,6 +18,7 @@ namespace PetriEngine::ExplicitColored
         std::unique_ptr<CompiledGuardExpression> guardExpression;
         std::set<Variable_t> variables;
         std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
+        std::map<Variable_t, std::vector<VariableConstraint>> preplacesVariableConstraints;
     };
 
     struct BaseColorType
