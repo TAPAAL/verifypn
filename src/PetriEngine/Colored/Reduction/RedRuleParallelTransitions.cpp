@@ -14,7 +14,6 @@ namespace PetriEngine::Colored::Reduction {
                                            QueryType queryType, bool preserveLoops, bool preserveStutter) {
 
         // Remove transitions which effect is k times another transitions effect
-
         bool continueReductions = false;
 
         auto &transitions = red.transitions();
@@ -26,7 +25,7 @@ namespace PetriEngine::Colored::Reduction {
         for (size_t t = 0; t < transitions.size(); t++) {
             auto &trans = transitions[t];
             if (!trans.skipped && trans.input_arcs.empty() && trans.output_arcs.empty() && (!trans.inhibited || hasOtherEmptyTrans)) {
-                if (hasOtherEmptyTrans) {
+                if (hasOtherEmptyTrans && !inQuery.isTransitionUsed(t)) {
                     _applications++;
                     red.skipTransition(t);
                 }
