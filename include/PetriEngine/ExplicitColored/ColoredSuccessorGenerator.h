@@ -234,6 +234,10 @@ transitionLoop:
                             } else {
                                 values.second.intersect(possibleColors);
                             }
+                            if (values.second.colors.empty() && !values.second.allColors) {
+                                state.nextTransition();
+                                goto transitionLoop;
+                            }
                         }
                         state.stateMaxes[variable] = values.second.allColors
                             ? _net._variables[variable].colorType->colors

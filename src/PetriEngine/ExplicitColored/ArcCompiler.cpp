@@ -47,13 +47,6 @@ namespace PetriEngine::ExplicitColored {
             return _rhs;
         }
 
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
-            std::set<Color_t> result = _lhs->getPossibleBindings(variable, inputPlaceTokens);
-            std::set<Color_t> rhs = _rhs->getPossibleBindings(variable, inputPlaceTokens);
-            result.insert(rhs.begin(), rhs.end());
-            return result;
-        }
-
         [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
             auto constraints = _lhs->calculateVariableConstraints(var, place);
             const auto rhsConstraints = _rhs->calculateVariableConstraints(var, place);
@@ -118,16 +111,6 @@ namespace PetriEngine::ExplicitColored {
             return _rhs;
         }
 
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
-            std::set<Color_t> result = _lhs->getPossibleBindings(variable, inputPlaceTokens);
-            std::set<Color_t> rhs = _rhs->getPossibleBindings(variable, inputPlaceTokens);
-            if (rhs.find(variable) != rhs.end()) {
-                return {ALL_COLOR};
-            }
-            result.insert(rhs.begin(), rhs.end());
-            return result;
-        }
-
         [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t place) const override {
             if (_rhs->getVariables().find(var) != _rhs->getVariables().end()) {
                 return {VariableConstraint::getTop()};
@@ -186,10 +169,6 @@ namespace PetriEngine::ExplicitColored {
             return _scale;
         }
 
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
-            return _expr->getPossibleBindings(variable, inputPlaceTokens);
-        }
-
         [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
             return _expr->calculateVariableConstraints(var, place);
         }
@@ -236,10 +215,6 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] CPNMultiSet getConstant() const {
             return _constant;
-        }
-
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
-            return std::set<Color_t>{};
         }
 
         [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(const Variable_t var, const Place_t place) const override {
@@ -303,23 +278,6 @@ namespace PetriEngine::ExplicitColored {
 
         MarkingCount_t getCount() const {
             return _count;
-        }
-
-        [[nodiscard]] std::set<Color_t> getPossibleBindings(const Variable_t variable, const CPNMultiSet& inputPlaceTokens) const override {
-            std::set<Color_t> result;
-            for (const auto& colorSequence : _parameterizedColorSequences) {
-                for (size_t colorIndex = 0; colorIndex < colorSequence.size(); ++colorIndex) {
-                    if (colorSequence[colorIndex].isVariable && colorSequence[colorIndex].value.variable == variable) {
-                        for (const auto& count : inputPlaceTokens.counts()) {
-                            result.insert(
-                                signed_wrap(static_cast<ColorOffset_t>(count.first.getSequence()[colorIndex]
-                                    - colorSequence[colorIndex].offset),
-                                    static_cast<ColorOffset_t>(_colorSizes[colorIndex])));
-                        }
-                    }
-                }
-            }
-            return result;
         }
 
         sMarkingCount_t getSignedCount() const {
