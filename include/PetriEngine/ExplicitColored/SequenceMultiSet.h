@@ -2,6 +2,8 @@
 #define SEQUENCEMULTISET_H
 
 #include <algorithm>
+//#include "ColoredPetriNet.h"
+//#include "CPNMultiSet.h"
 
 namespace PetriEngine::ExplicitColored {
     template<typename K>
@@ -123,7 +125,6 @@ namespace PetriEngine::ExplicitColored {
                 ++aIt;
                 ++bIt;
             }
-
             return true;
         }
 
@@ -199,7 +200,7 @@ namespace PetriEngine::ExplicitColored {
             return true;
         }
 
-        const std::vector<std::pair<K, sMarkingCount_t>>& counts() const {
+        [[nodiscard]] const std::vector<std::pair<K, sMarkingCount_t>>& counts() const {
             return _counts;
         }
 

@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+// #include "ColoredPetriNet.h"
 #include "vector"
 #include "CPNMultiSet.h"
 #include "ExplicitErrors.h"
@@ -38,27 +39,28 @@ namespace PetriEngine::ExplicitColored{
             }
         }
 
-        static ColoredPetriNetMarking constructFromEncoding(const std::vector<uint8_t>& bytes, const uint size) {
-            ColoredPetriNetMarking marking;
-            auto cursor = bytes.cbegin();
-            const auto end = bytes.cbegin() + size;
-            while (cursor != end) {
-                CPNMultiSet placeMultiSet;
-                while (*cursor != 0 && cursor != end) {
-                    const auto count = decodeVarInt<MarkingCount_t>(cursor, end);
-                    ColorSequence sequence;
-                    while (*cursor != 0 && cursor != end) {
-                        const auto color = decodeVarInt<Color_t>(cursor, end);
-                        sequence.getSequence().push_back(color - 1);
-                    }
-                    ++cursor;
-                    placeMultiSet.setCount(sequence, count);
-                }
-                ++cursor;
-                marking.markings.push_back(std::move(placeMultiSet));
-            }
-            return marking;
-        }
+        // static ColoredPetriNetMarking constructFromEncoding(const std::vector<uint8_t>& bytes, const uint size) {
+        //     ColoredPetriNetMarking marking;
+        //     auto cursor = bytes.cbegin();
+        //     const auto end = bytes.cbegin() + size;
+        //     while (cursor != end) {
+        //         CPNMultiSet placeMultiSet;
+        //         while (*cursor != 0 && cursor != end) {
+        //             const auto count = decodeVarInt<MarkingCount_t>(cursor, end);
+        //             std::vector<uint32_t> sequence;
+        //             while (*cursor != 0 && cursor != end) {
+        //                 const auto color = decodeVarInt<Color_t>(cursor, end);
+        //                 sequence.push_back(color - 1);
+        //             }
+        //             auto colorSequence = ColorSequence{se}
+        //             ++cursor;
+        //             placeMultiSet.setCount(sequence, count);
+        //         }
+        //         ++cursor;
+        //         marking.markings.push_back(std::move(placeMultiSet));
+        //     }
+        //     return marking;
+        // }
 
         size_t compressedEncode(std::vector<uint8_t>& bytes, bool& success) const {
             size_t cursor = 0;
@@ -66,9 +68,7 @@ namespace PetriEngine::ExplicitColored{
                 for (const auto& [set, count] : marking.counts()) {
                     if (count > 0) {
                         encodeVarInt(bytes, cursor, count);
-                        for (const auto c : set.getSequence()) {
-                            encodeVarInt(bytes, cursor, c + 1);
-                        }
+                        encodeVarInt(bytes, cursor, set.color + 1);
                         if (bytes.size() < cursor + 1) {
                             bytes.resize(cursor + 1);
                         }
@@ -83,26 +83,51 @@ namespace PetriEngine::ExplicitColored{
             //If state is too big for the ptrie we will not explore full statespace,
             //but counterexamples found are still valid
             if (cursor >= std::numeric_limits<uint16_t>::max()) {
+                if (success) {
+                    std::cout << "Too big for ptrie" << std::endl;
+                }
                 success = false;
                 return std::numeric_limits<uint16_t>::max();
             }
             return cursor;
         }
 
-        void stableEncode(std::ostream& out) const {
-            for (const auto& marking : markings) {
-                for (const auto& pair : marking.counts()) {
-                    if (pair.second > 0) {
-                        out << pair.second << "'(";
-                        for (auto c : pair.first.getSequence()) {
-                            out << c << ",";
-                        }
-                        out << ")";
-                    }
-                }
-                out << ".";
-            }
-        }
+        // size_t compressedEncode2(std::vector<uint8_t>& bytes, bool& success, ColoredPetriNet& net) const {
+        //     bytes.zero();
+        //     _scratchpad.raw()[0] = type;
+        //     auto const places = markings.size();
+        //     for (const auto& marking : markings) {
+        //         for (const auto& [set, count] : marking.counts()) {
+        //             if (count > 0) {
+        //                 encodeVarInt(bytes, cursor, count);
+        //                 for (const auto c : set.getSequence()) {
+        //                     encodeVarInt(bytes, cursor, c + 1);
+        //                 }
+        //                 if (bytes.size() < cursor + 1) {
+        //                     bytes.resize(cursor + 1);
+        //                 }
+        //                 bytes[cursor++] = 0;
+        //             }
+        //         }
+        //         if (bytes.size() < cursor + 1) {
+        //             bytes.resize(cursor + 1);
+        //         }
+        //         bytes[cursor++] = 0;
+        //     }
+        // }
+
+        // void stableEncode(std::ostream& out) const {
+        //     for (const auto& marking : markings) {
+        //         for (const auto& pair : marking.counts()) {
+        //             if (pair.second > 0) {
+        //                 out << pair.second << "'(";
+        //                 out << pair.first.color;
+        //                 out << ")";
+        //             }
+        //         }
+        //         out << ".";
+        //     }
+        // }
     private:
         template<typename T>
         static void encodeVarInt(std::vector<uint8_t>& out, size_t& cursor, T value) {

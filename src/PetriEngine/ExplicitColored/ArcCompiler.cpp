@@ -263,8 +263,11 @@ namespace PetriEngine::ExplicitColored {
     private:
         ColorSequence getColorSequence(const std::vector<ParameterizedColor>& sequence, const Binding& binding) const {
             std::vector<Color_t> colorSequence;
+            uint32_t totalSize = 1;
             for (size_t i = 0; i < sequence.size(); i++) {
                 const auto& parameterizedColor = sequence[i];
+                const auto& size = parameterizedColor.possibleValues;
+                totalSize *= size;
                 if (sequence[i].isVariable) {
                     colorSequence.push_back(
                         add_color_offset(binding.getValue(parameterizedColor.value.variable), parameterizedColor.offset, _colorSizes[i])
@@ -275,7 +278,7 @@ namespace PetriEngine::ExplicitColored {
                     );
                 }
             }
-            return ColorSequence { std::move(colorSequence) };
+            return ColorSequence {colorSequence, _colorSizes, totalSize  };
         }
 
         std::vector<Color_t> _colorSizes;
@@ -294,16 +297,17 @@ namespace PetriEngine::ExplicitColored {
         ) : _colorTypeMap(colorTypeMap), _variableMap(variableMap), _parameterizedColor(), _maxColor(0) {}
 
         void accept(const Colored::DotConstantExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR);
             _maxColor = 1;
+            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR, _maxColor);
         }
 
         void accept(const Colored::VariableExpression* expr) override {
             const auto varIt = _variableMap.find(expr->variable()->name);
             if (varIt == _variableMap.end())
                 throw explicit_error{unknown_variable};
-            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second);
             _maxColor = expr->getColorType(_colorTypeMap)->size();
+            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second, _maxColor);
+
         }
 
         void accept(const Colored::SuccessorExpression* expr) override {
@@ -323,13 +327,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void accept(const Colored::AllExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromAll();
             _maxColor = expr->size();
+            _parameterizedColor = ParameterizedColor::fromAll(_maxColor);
         }
 
         void accept(const Colored::UserOperatorExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId());
             _maxColor = expr->getColorType(_colorTypeMap)->size();
+            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId(), _maxColor);
         }
 
         void accept(const Colored::TupleExpression *) override {unexpectedExpression();}
@@ -384,13 +388,13 @@ namespace PetriEngine::ExplicitColored {
                 colorMaxes.push_back(visitor.getMaxColor());
                 if (visitor.getColor().isAll()) {
                     for (auto& colorSequence : colorSequences) {
-                        colorSequence.push_back(ParameterizedColor::fromColor(0));
+                        colorSequence.push_back(ParameterizedColor::fromColor(0, visitor.getMaxColor()));
                     }
                     const size_t originalColorSequencesBound = colorSequences.size();
                     for (Color_t c = 1; c <= visitor.getMaxColor(); c++) {
                         for (size_t i = 0; i < originalColorSequencesBound; i++) {
                             auto copy = colorSequences[i];
-                            copy.push_back(ParameterizedColor::fromColor(c));
+                            copy.push_back(ParameterizedColor::fromColor(c, visitor.getMaxColor()));
                             colorSequences.push_back(copy);
                         }
                     }
@@ -543,7 +547,7 @@ namespace PetriEngine::ExplicitColored {
                         newColorSequence.push_back(add_color_offset( color.value.color, color.offset, expr->getColorMaxes()[i]));
                     }
                     if (!hasVariable) {
-                        constantMultiSet.addCount(ColorSequence { newColorSequence }, expr->getSignedCount());
+                        constantMultiSet.addCount(ColorSequence { newColorSequence, expr->getColorMaxes() }, expr->getSignedCount());
                     } else {
                         newColorSequences.push_back(colorSequence);
                     }

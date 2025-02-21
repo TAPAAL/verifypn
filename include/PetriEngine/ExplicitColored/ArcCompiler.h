@@ -5,6 +5,7 @@
 #include "../Colored/Expressions.h"
 #include "CPNMultiSet.h"
 #include "Binding.h"
+#include "ExplicitColorTypes.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {
@@ -15,6 +16,7 @@ namespace PetriEngine::ExplicitColored {
     struct ParameterizedColor {
         ColorOffset_t offset;
         bool isVariable;
+        uint32_t possibleValues;
         //perhaps include "all" value so we dont need to materialize all colors
         ColorOrVariable value;
         bool operator==(const ParameterizedColor &other) const {
@@ -29,31 +31,34 @@ namespace PetriEngine::ExplicitColored {
             return !(*this == other);
         }
 
-        bool isAll() const {
+        [[nodiscard]] bool isAll() const {
             return !isVariable && value.color == ALL_COLOR;
         }
 
-        static ParameterizedColor fromColor(const Color_t color) {
+        static ParameterizedColor fromColor(const Color_t color, const uint32_t possibleValues) {
             ParameterizedColor rv{};
             rv.isVariable = false;
             rv.offset = 0;
             rv.value.color = color;
+            rv.possibleValues = possibleValues;
             return rv;
         }
 
-        static ParameterizedColor fromVariable(const Variable_t variable) {
+        static ParameterizedColor fromVariable(const Variable_t variable, const uint32_t possibleValues) {
             ParameterizedColor rv{};
             rv.isVariable = true;
             rv.offset = 0;
             rv.value.variable = variable;
+            rv.possibleValues = possibleValues;
             return rv;
         }
 
-        static ParameterizedColor fromAll() {
+        static ParameterizedColor fromAll(const uint32_t possibleValues) {
             ParameterizedColor rv{};
             rv.isVariable = false;
             rv.offset = 0;
             rv.value.color = ALL_COLOR;
+            rv.possibleValues = possibleValues;
             return rv;
         }
     };

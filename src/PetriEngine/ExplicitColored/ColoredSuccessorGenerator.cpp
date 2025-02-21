@@ -38,7 +38,6 @@ namespace PetriEngine::ExplicitColored{
         }else {
             binding = std::move(Binding{});
         }
-
     }
 
     bool ColoredSuccessorGenerator::check(const ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const{

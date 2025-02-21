@@ -1,74 +1,105 @@
 #ifndef MULTI_SET_H
 #define MULTI_SET_H
 
-#include "AtomicTypes.h" 
+#include "AtomicTypes.h"
 #include <vector>
 #include <utils/errors.h>
 #include "SequenceMultiSet.h"
+#include "ExplicitColorTypes.h"
 
-namespace PetriEngine::ExplicitColored
-{
+namespace PetriEngine::ExplicitColored {
     class ColorSequence {
     public:
-        ColorSequence() = default;
+        ColorSequence() {
+            color = 0;
+        };
         ColorSequence(const ColorSequence&) = default;
         ColorSequence(ColorSequence&&) = default;
         ColorSequence& operator=(const ColorSequence&) = default;
         ColorSequence& operator=(ColorSequence&&) = default;
-        explicit ColorSequence(std::vector<Color_t> colorSequence)
-            : _sequence(std::move(colorSequence)) {}
-
-        bool operator<(const ColorSequence& other) const {
-            if (_sequence.size() != other._sequence.size()) {
-                throw base_error("Cannot compare sequences with inconsistent cardinalities");
-            }
-            for (size_t i = 0; i < _sequence.size(); i++) {
-                if (_sequence[i] < other._sequence[i]) {
-                    return true;
-                }
-
-                if (_sequence[i] > other._sequence[i]) {
-                    return false;
-                }
-            }
-            return false;
+        explicit ColorSequence(const std::vector<Color_t>& sequence, const ColorType& type) : ColorSequence(sequence, type.basicColorSizes, type.colorSize) {
+            // //Essentially reverse binding generator to generate unique id for product color
+            // uint64_t result = 0;
+            // const auto& interval = type.colorSize;
+            // for (size_t i = 0; i < sequence.size(); i++) {
+            //     const auto color = sequence[i];
+            //     const auto colorSize = type.basicColorSizes[i];
+            //     result += interval / colorSize * (color - 1);
+            // }
+            // color = result;
         }
 
-        bool operator==(const ColorSequence& other) const {
-            if (_sequence.size() != other._sequence.size())
-                return false;
-            for (size_t i = 0; i < _sequence.size(); i++) {
-                if (_sequence[i] != other._sequence[i]) {
-                    return false;
-                }
+        explicit ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes, const uint32_t totalSize) {
+            //Essentially reverse binding generator to generate unique id for product color
+            uint64_t result = 0;
+            auto interval = totalSize;
+            for (size_t i = 0; i < sequence.size(); i++) {
+                const auto color = sequence[i];
+                const auto colorSize = sizes[i];
+                result += interval / colorSize * color;
+                interval /= colorSize;
             }
-            return true;
+            color = result;
+        }
+        //Pretty bad
+        explicit ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes) {
+           uint32_t totalSize = 1;
+            for (auto& element : sizes) {
+                totalSize *= element;
+            }
+            uint64_t result = 0;
+            const auto& interval = totalSize;
+            for (size_t i = 0; i < sequence.size(); i++) {
+                const auto color = sequence[i];
+                const auto colorSize = sizes[i];
+                result += interval / colorSize * color;
+            }
+            color = result;
+        }
+
+        explicit ColorSequence(const Color_t color) : color(color) {}
+
+        Color_t color;
+
+        //Operators might need typechecking if something changes
+        bool operator<(const ColorSequence& other) const {
+            return color < other.color;
+        }
+        //Operators might need typechecking if something changes
+        bool operator==(const ColorSequence& other) const {
+            return color == other.color;
         }
 
         bool operator!=(const ColorSequence& other) const {
             return !(*this == other);
         }
 
-        [[nodiscard]] const std::vector<Color_t>& getSequence() const {
-            return _sequence;
-        }
+        // // Essentially reverse binding generator
+        // uint64_t getColor() const {
+        //     uint64_t result = 0;
+        //     const auto& interval = type.colors;
+        //     for (size_t i = 0; i < _sequence.size(); i++) {
+        //         const auto color = _sequence[i];
+        //         const auto colorSize = type.basicColorTypes[i]->colors;
+        //         result += interval / colorSize * (color - 1);
+        //     }
+        //     return result;
+        // }
 
-        std::vector<Color_t>& getSequence() {
-            return _sequence;
-        }
+        // [[nodiscard]] const std::vector<Color_t>& getSequence() const {
+        //     return _sequence;
+        // }
 
         friend std::ostream& operator<<(std::ostream& os, const ColorSequence& colorSequence) {
-            for (const auto& color : colorSequence._sequence) {
-                os << color << ",";
-            }
+            os << colorSequence.color;
             return os;
         }
     private:
-        std::vector<Color_t> _sequence;
+        // std::vector<Color_t> _sequence;
+        // PetriEngine::ExplicitColored::ColorType& _type;
     };
 
     typedef SequenceMultiSet<ColorSequence> CPNMultiSet;
 }
-
 
 #endif
