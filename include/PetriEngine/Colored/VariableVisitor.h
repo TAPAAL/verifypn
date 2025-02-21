@@ -271,7 +271,7 @@ namespace PetriEngine {
             static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, PositionVariableMap& varPositions) {
                 VariableModifierMap varModifierMap;
                 std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> tuples;
-                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+                get_variables(e, variables, varPositions, varModifierMap, tuples, true);
             }
 
             static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables) {
@@ -279,14 +279,14 @@ namespace PetriEngine {
                 VariableModifierMap varModifierMap;
                 std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>> tuples;
 
-                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+                get_variables(e, variables, varPositions, varModifierMap, tuples, true);
             }
 
             static inline void get_variables(Expression& e, std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, std::vector<const Colored::ColorExpression*>>& tuples) {
                 PositionVariableMap varPositions;
                 VariableModifierMap varModifierMap;
 
-                get_variables(e, variables, varPositions, varModifierMap, tuples, false);
+                get_variables(e, variables, varPositions, varModifierMap, tuples, true);
             }
 
         private:
