@@ -38,7 +38,7 @@ namespace PetriEngine::ExplicitColored{
             }
         }
 
-        static ColoredPetriNetMarking constructFromEncoding(const std::vector<uint8_t>& bytes, const uint size) {
+        static ColoredPetriNetMarking constructFromEncoding(const std::vector<uint8_t>& bytes, const uint32_t size) {
             ColoredPetriNetMarking marking;
             auto cursor = bytes.cbegin();
             const auto end = bytes.cbegin() + size;
