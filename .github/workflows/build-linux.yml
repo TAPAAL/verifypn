@@ -42,24 +42,12 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc-14 CXX=g++-14 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=OFF
+          # We create a static binary with parallel simplification - works both for the MCC competition as well as releases
+          CC=gcc-14 CXX=g++-14 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TEST=OFF
           make
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: verifypn-linux64
-          path: build/verifypn/bin/verifypn-linux64
-
-      - name: BuildMCC
-        run: |
-          mkdir -p build
-          cd build
-          CC=gcc-14 CXX=g++-14 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TEST=OFF
-          make
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: verifypn-mcc-linux64
           path: build/verifypn/bin/verifypn-linux64
