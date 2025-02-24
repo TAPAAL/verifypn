@@ -179,9 +179,8 @@ namespace PetriEngine {
             _symmetric_var_combinations.push_back(combinations);
         }
 
-
         for (auto* var : variables) {
-            if(var_map.empty() || var_map[_nextIndex].find(var)->second.empty()){
+            if(var_map.empty() || var_map[_nextIndex].empty() || var_map[_nextIndex].find(var)->second.empty()){
                 _noValidBindings = true;
                 break;
             }
