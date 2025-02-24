@@ -263,11 +263,8 @@ namespace PetriEngine::ExplicitColored {
     private:
         ColorSequence getColorSequence(const std::vector<ParameterizedColor>& sequence, const Binding& binding) const {
             std::vector<Color_t> colorSequence;
-            uint32_t totalSize = 1;
             for (size_t i = 0; i < sequence.size(); i++) {
                 const auto& parameterizedColor = sequence[i];
-                const auto& size = parameterizedColor.possibleValues;
-                totalSize *= size;
                 if (sequence[i].isVariable) {
                     colorSequence.push_back(
                         add_color_offset(binding.getValue(parameterizedColor.value.variable), parameterizedColor.offset, _colorSizes[i])
@@ -278,7 +275,7 @@ namespace PetriEngine::ExplicitColored {
                     );
                 }
             }
-            return ColorSequence {colorSequence, _colorSizes, totalSize  };
+            return ColorSequence {colorSequence, _colorSizes };
         }
 
         std::vector<Color_t> _colorSizes;
@@ -298,7 +295,7 @@ namespace PetriEngine::ExplicitColored {
 
         void accept(const Colored::DotConstantExpression* expr) override {
             _maxColor = 1;
-            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR, _maxColor);
+            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR);
         }
 
         void accept(const Colored::VariableExpression* expr) override {
@@ -306,7 +303,7 @@ namespace PetriEngine::ExplicitColored {
             if (varIt == _variableMap.end())
                 throw explicit_error{unknown_variable};
             _maxColor = expr->getColorType(_colorTypeMap)->size();
-            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second, _maxColor);
+            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second);
 
         }
 
@@ -328,12 +325,12 @@ namespace PetriEngine::ExplicitColored {
 
         void accept(const Colored::AllExpression* expr) override {
             _maxColor = expr->size();
-            _parameterizedColor = ParameterizedColor::fromAll(_maxColor);
+            _parameterizedColor = ParameterizedColor::fromAll();
         }
 
         void accept(const Colored::UserOperatorExpression* expr) override {
             _maxColor = expr->getColorType(_colorTypeMap)->size();
-            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId(), _maxColor);
+            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId());
         }
 
         void accept(const Colored::TupleExpression *) override {unexpectedExpression();}
@@ -388,13 +385,13 @@ namespace PetriEngine::ExplicitColored {
                 colorMaxes.push_back(visitor.getMaxColor());
                 if (visitor.getColor().isAll()) {
                     for (auto& colorSequence : colorSequences) {
-                        colorSequence.push_back(ParameterizedColor::fromColor(0, visitor.getMaxColor()));
+                        colorSequence.push_back(ParameterizedColor::fromColor(0));
                     }
                     const size_t originalColorSequencesBound = colorSequences.size();
                     for (Color_t c = 1; c <= visitor.getMaxColor(); c++) {
                         for (size_t i = 0; i < originalColorSequencesBound; i++) {
                             auto copy = colorSequences[i];
-                            copy.push_back(ParameterizedColor::fromColor(c, visitor.getMaxColor()));
+                            copy.push_back(ParameterizedColor::fromColor(c));
                             colorSequences.push_back(copy);
                         }
                     }
