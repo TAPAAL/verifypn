@@ -28,9 +28,6 @@ set(VERIFYPN_OSX_DEPLOYMENT_TARGET 10.8 CACHE STRING "Specify the minimum versio
 
 ## Configure Static
 if (VERIFYPN_Static)
-    if (VERIFYPN_MC_Simplification)
-        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking")
-    endif (VERIFYPN_MC_Simplification)
     set(BUILD_SHARED_LIBS OFF)
     if (NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")

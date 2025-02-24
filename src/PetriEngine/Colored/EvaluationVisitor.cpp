@@ -12,6 +12,7 @@ namespace PetriEngine {
         }
 
         void EvaluationVisitor::accept(const VariableExpression* e) {
+            assert(!_context.binding.empty());
             _cres = _context.binding.find(e->variable())->second;
         }
 
