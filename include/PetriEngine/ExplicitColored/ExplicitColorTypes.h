@@ -6,19 +6,13 @@
 #define COLOREDPETRINETELEMENTS_H
 
 namespace PetriEngine::ExplicitColored {
-//    struct BaseColorType
-//    {
-//        Color_t colors;
-//    };
-
     struct ColorType {
         ColorType() = delete;
-        explicit ColorType(const uint32_t colorSize, std::vector<Color_t> basicColorSizes) :
+        explicit ColorType(const Color_t colorSize, std::vector<Color_t> basicColorSizes) :
             colorSize(colorSize), basicColorSizes(std::move(basicColorSizes)) {}
-        explicit ColorType(const uint32_t colorSize) :
+        explicit ColorType(const Color_t colorSize) :
             colorSize(colorSize), basicColorSizes(std::vector<Color_t>{colorSize}) {}
-        uint32_t colorSize{};
-//        std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
+        Color_t colorSize{};
         std::vector<Color_t> basicColorSizes{};
     };
 }

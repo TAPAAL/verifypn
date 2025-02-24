@@ -371,7 +371,6 @@ namespace PetriEngine {
 
 
                 size_t length = _encoder.encode(state.marking(), type);
-                std::cout << "Size of encoding: " << length * 8 << std::endl;
                 if(length*8 >= std::numeric_limits<uint16_t>::max())
                 {
                     throw base_error("Marking could not be encoded into less than 2^16 bytes, current limit of PTries");

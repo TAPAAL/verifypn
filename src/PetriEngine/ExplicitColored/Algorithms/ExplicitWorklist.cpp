@@ -11,7 +11,6 @@
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
 #include "PetriEngine/ExplicitColored/FireabilityChecker.h"
 #include "PetriEngine/ExplicitColored/ExplicitErrors.h"
-//#include "PetriEngine/ExplicitColored/ColoredEncoder.h"
 
 namespace PetriEngine::ExplicitColored {
     ExplicitWorklist::ExplicitWorklist(

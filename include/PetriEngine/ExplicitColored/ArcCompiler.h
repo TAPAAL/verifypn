@@ -3,9 +3,8 @@
 
 #include "AtomicTypes.h"
 #include "../Colored/Expressions.h"
-#include "CPNMultiSet.h"
+#include "SequenceMultiSet.h"
 #include "Binding.h"
-#include "ExplicitColorTypes.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {
