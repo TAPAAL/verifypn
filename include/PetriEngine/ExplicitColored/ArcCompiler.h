@@ -3,7 +3,7 @@
 
 #include "AtomicTypes.h"
 #include "../Colored/Expressions.h"
-#include "CPNMultiSet.h"
+#include "SequenceMultiSet.h"
 #include "Binding.h"
 
 namespace PetriEngine::ExplicitColored {
@@ -29,7 +29,7 @@ namespace PetriEngine::ExplicitColored {
             return !(*this == other);
         }
 
-        bool isAll() const {
+        [[nodiscard]] bool isAll() const {
             return !isVariable && value.color == ALL_COLOR;
         }
 
@@ -58,6 +58,13 @@ namespace PetriEngine::ExplicitColored {
         }
     };
 
+    class ColoredMinimalMarking {
+    public:
+        CPNMultiSet minimalMarkingMultiSet;
+        MarkingCount_t variableCount;
+    };
+
+
     struct VariableConstraint {
         uint32_t colorIndex;
         ColorOffset_t colorOffset;
@@ -85,6 +92,7 @@ namespace PetriEngine::ExplicitColored {
             return result <= superSet;
         }
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
+        [[nodiscard]] virtual const ColoredMinimalMarking& getMinimalColorMarking() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t fromPlace) const = 0;
         virtual ~CompiledArcExpression() = default;

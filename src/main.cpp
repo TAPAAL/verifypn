@@ -574,13 +574,18 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     if (options.enablecolreduction) {
         ColoredPetriNetBuilder cpnBuilder(string_set);
         cpnBuilder.parse_model(options.modelfile);
-        std::stringstream cpnOut;
-        reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
+        bool result = reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
                       options.enablecolreduction, options.colreductions);
-        Colored::PnmlWriter writer(cpnBuilder, cpnOut);
-        writer.toColPNML();
-        builder.parse_model(cpnOut);
-        fullStatisticOut << std::endl;
+        if (!result) {
+            std::cout << "Could not do colored reductions" << std::endl;
+            builder.parse_model(options.modelfile);
+        } else {
+            std::stringstream cpnOut;
+            Colored::PnmlWriter writer(cpnBuilder, cpnOut);
+            writer.toColPNML();
+            builder.parse_model(cpnOut);
+            fullStatisticOut << std::endl;
+        }
     } else {
         builder.parse_model(options.modelfile);
     }

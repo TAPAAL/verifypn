@@ -38,7 +38,6 @@ namespace PetriEngine::ExplicitColored{
         }else {
             binding = std::move(Binding{});
         }
-
     }
 
     bool ColoredSuccessorGenerator::check(const ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const{
@@ -91,6 +90,9 @@ namespace PetriEngine::ExplicitColored{
         for (auto i = _net._transitionArcs[tid].first; i < _net._transitionArcs[tid].second; i++) {
             auto& arc = _net._arcs[i];
             if (marking.markings[arc.from].totalCount() < arc.expression->getMinimalMarkingCount()) {
+                return false;
+            }
+            if (!(arc.expression->getMinimalColorMarking().minimalMarkingMultiSet <= marking.markings[arc.from])) {
                 return false;
             }
         }

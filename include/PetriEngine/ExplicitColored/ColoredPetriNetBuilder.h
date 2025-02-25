@@ -37,7 +37,6 @@ namespace PetriEngine::ExplicitColored {
         std::unordered_map<std::string, uint32_t> _transitionIndices;
         std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
         std::unordered_map<std::string, std::shared_ptr<ColorType>> _colorTypeMap;
-        std::unordered_map<std::string, std::shared_ptr<BaseColorType>> _baseColorType;
         std::vector<ColoredPetriNetArc> _outputArcs;
         std::vector<ColoredPetriNetArc> _inputArcs;
         ColoredPetriNet _currentNet;

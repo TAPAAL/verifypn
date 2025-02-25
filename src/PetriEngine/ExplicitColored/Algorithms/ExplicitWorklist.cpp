@@ -7,7 +7,6 @@
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
-#include "PetriEngine/ExplicitColored/ColoredMarkingSet.h"
 #include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ColoredSearchTypes.h"
 #include "PetriEngine/ExplicitColored/FireabilityChecker.h"

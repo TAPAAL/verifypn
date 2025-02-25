@@ -5,17 +5,13 @@
 
 namespace PetriEngine::ExplicitColored {
     ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
-        auto dotBasicColorType = std::make_shared<BaseColorType>();
-        dotBasicColorType->colors = 1;
-
-        _dotColorType = std::make_shared<ColorType>();
-        _dotColorType->size = 1;
-        _dotColorType->basicColorTypes.emplace_back(std::move(dotBasicColorType));
+        _dotColorType = std::make_shared<ColorType>(1);
         _colors = std::make_shared<Colored::ColorTypeMap>();
         _variableMap = std::make_shared<std::unordered_map<std::string, Variable_t>>();
     }
 
-    void ColoredPetriNetBuilder::addPlace(const std::string& name, const uint32_t tokens, double, double) {
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, const uint32_t tokens, double, double)
+    {
         _currentNet._places.push_back({
             _dotColorType
         });
@@ -23,7 +19,7 @@ namespace PetriEngine::ExplicitColored {
         _placeIndices[name] = _currentNet._places.size() - 1;
 
         auto multiSet = CPNMultiSet();
-        multiSet.setCount(ColorSequence({DOT_COLOR}), tokens);
+        multiSet.setCount(ColorSequence{DOT_COLOR}, tokens);
 
         _currentNet._initialMarking.markings.push_back(multiSet);
     }
@@ -129,8 +125,8 @@ namespace PetriEngine::ExplicitColored {
             } else {
                 colorSequence.push_back(tokenColor->getId());
             }
-
-            multiSet.setCount(ColorSequence(colorSequence), count);
+            //Potentially not good, not sure what
+            multiSet.setCount(ColorSequence{colorSequence,*place.colorType}, count);
         }
 
         _currentNet._places.push_back(std::move(place));
@@ -155,20 +151,16 @@ namespace PetriEngine::ExplicitColored {
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
         if (const auto productType = dynamic_cast<const Colored::ProductType*>(type)) {
-            auto productColorType = std::make_shared<ColorType>();
-            for (size_t i = 0; i < productType->getConstituentsSizes().size(); i++) {
-                auto baseColorType = _baseColorType.find(productType->getNestedColorType(i)->getName())->second;
-                productColorType->basicColorTypes.push_back(std::move(baseColorType));
-                productColorType->size++;
+            std::vector<uint32_t> basicColorSizes;
+            uint32_t totalSize = 1;
+            for (const auto& colorSize : productType->getConstituentsSizes()) {
+                basicColorSizes.push_back(colorSize);
+                totalSize *= colorSize;
             }
+            auto productColorType = std::make_shared<ColorType>(totalSize, std::move(basicColorSizes));
             _colorTypeMap.emplace(id, std::move(productColorType));
         } else {
-            auto colorType = std::make_shared<ColorType>();
-            auto baseColorType = std::make_shared<BaseColorType>();
-            baseColorType->colors = type->size();
-            colorType->size = 1;
-            _baseColorType[id] = baseColorType;
-            colorType->basicColorTypes.push_back(std::move(baseColorType));
+            auto colorType = std::make_shared<ColorType>(type->size());
             _colorTypeMap[id] = std::move(colorType);
         }
         (*_colors)[id] = type;
@@ -176,9 +168,9 @@ namespace PetriEngine::ExplicitColored {
 
     void ColoredPetriNetBuilder::addVariable(const Colored::Variable* variable) {
         (*_variableMap)[variable->name] = _variableMap->size();
-        Variable var;
-        var.colorType = _baseColorType.find(variable->colorType->getName())->second;
-        _currentNet._variables.emplace_back(std::move(var));
+        Variable var{};
+        var.colorType = _colorTypeMap.find(variable->colorType->getName())->second->colorSize;
+        _currentNet._variables.emplace_back(var);
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
