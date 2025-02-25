@@ -39,7 +39,7 @@ namespace PetriEngine::ExplicitColored {
             std::map<Variable_t, std::vector<uint32_t>> newMap = std::map<Variable_t, std::vector<uint32_t>>{};
             auto vars = arc.expression->getVariables();
             for (auto &&var: vars) {
-                auto nValues = _net._variables[var].colorType->colors;
+                auto nValues = _net._variables[var].colorType;
                 std::vector<uint32_t> values = std::vector<uint32_t>{};
                 for (uint32_t i = 0; i < nValues; i++) {
                     values.push_back(i);
@@ -56,7 +56,7 @@ namespace PetriEngine::ExplicitColored {
             }
             auto vars = transition.variables;
             for (auto &&var: vars) {
-                auto nValues = _net._variables[var].colorType->colors;
+                auto nValues = _net._variables[var].colorType;
                 std::vector<uint32_t> values = std::vector<uint32_t>(nValues);
                 for (uint32_t i = 0; i < nValues; i++) {
                     values.push_back(i);

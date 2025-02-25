@@ -3,7 +3,7 @@
 
 #include "AtomicTypes.h"
 #include "../Colored/Expressions.h"
-#include "CPNMultiSet.h"
+#include "SequenceMultiSet.h"
 #include "Binding.h"
 
 namespace PetriEngine::ExplicitColored {
@@ -29,7 +29,7 @@ namespace PetriEngine::ExplicitColored {
             return !(*this == other);
         }
 
-        bool isAll() const {
+        [[nodiscard]] bool isAll() const {
             return !isVariable && value.color == ALL_COLOR;
         }
 

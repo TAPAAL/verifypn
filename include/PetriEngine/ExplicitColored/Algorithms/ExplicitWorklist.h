@@ -9,7 +9,6 @@
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 
-
 namespace PetriEngine::ExplicitColored {
     template <typename T>
     class RDFSStructure;
