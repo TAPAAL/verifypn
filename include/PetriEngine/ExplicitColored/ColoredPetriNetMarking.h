@@ -66,6 +66,13 @@ namespace PetriEngine::ExplicitColored{
             return cursor;
         }
 
+        [[nodiscard]] uint32_t getHighestCount() const {
+            uint32_t max = 0;
+            for (const auto& marking : markings) {
+                max = std::max(max, marking.getHighestCount());
+            }
+            return max;
+        }
     private:
         template<typename T>
         static void encodeVarInt(std::vector<uint8_t>& out, size_t& cursor, T value) {

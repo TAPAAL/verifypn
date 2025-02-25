@@ -58,12 +58,13 @@ namespace PetriEngine::ExplicitColored {
     template <template <typename> typename WaitingList, typename T>
     bool ExplicitWorklist::_genericSearch(WaitingList<T> waiting) {
         ptrie::set<uint8_t> passed;
-        std::vector<uint8_t> scratchpad;
+        ColoredEncoder encoder = ColoredEncoder{_net.getPlaces()};
         _fullStatespace = true;
         const auto& initialState = _net.initial();
         const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
-        size_t size = initialState.compressedEncode(scratchpad, _fullStatespace);
 
+        encoder.encode(initialState);
+        passed.insert(encoder.data(), encoder.size());
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
             waiting.add(std::move(initial));
@@ -71,7 +72,7 @@ namespace PetriEngine::ExplicitColored {
             auto initial = ColoredPetriNetStateFixed{initialState};
             waiting.add(std::move(initial));
         }
-        passed.insert(scratchpad.data(), size);
+
         _searchStatistics.passedCount = 1;
         _searchStatistics.checkedStates = 1;
 
@@ -98,10 +99,10 @@ namespace PetriEngine::ExplicitColored {
                 }
             }
 
-            auto& marking = successor.marking;
-            size = marking.compressedEncode(scratchpad, _fullStatespace);
+            const auto& marking = successor.marking;
+            encoder.encode(marking);
             _searchStatistics.exploredStates++;
-            if (!passed.exists(scratchpad.data(), size).first) {
+            if (!passed.exists(encoder.data(), encoder.size()).first) {
                 _searchStatistics.checkedStates += 1;
                 if (_check(marking) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
@@ -109,7 +110,7 @@ namespace PetriEngine::ExplicitColored {
                 }
                 successor.shrink();
                 waiting.add(std::move(successor));
-                passed.insert(scratchpad.data(), size);
+                passed.insert(encoder.data(), encoder.size());
                 _searchStatistics.passedCount += 1;
                 _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
             }

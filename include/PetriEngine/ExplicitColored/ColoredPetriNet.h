@@ -63,6 +63,9 @@ namespace PetriEngine::ExplicitColored
         [[nodiscard]] Transition_t getTransitionCount() const {
             return _transitions.size();
         }
+        [[nodiscard]] const std::vector<ColoredPetriNetPlace>& getPlaces() const {
+            return _places;
+        }
     private:
         friend class ColoredPetriNetBuilder;
         friend class ColoredSuccessorGenerator;

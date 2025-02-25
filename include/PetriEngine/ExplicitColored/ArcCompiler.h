@@ -15,7 +15,6 @@ namespace PetriEngine::ExplicitColored {
     struct ParameterizedColor {
         ColorOffset_t offset;
         bool isVariable;
-        uint32_t possibleValues;
         //perhaps include "all" value so we dont need to materialize all colors
         ColorOrVariable value;
         bool operator==(const ParameterizedColor &other) const {
@@ -34,30 +33,27 @@ namespace PetriEngine::ExplicitColored {
             return !isVariable && value.color == ALL_COLOR;
         }
 
-        static ParameterizedColor fromColor(const Color_t color, const uint32_t possibleValues) {
+        static ParameterizedColor fromColor(const Color_t color) {
             ParameterizedColor rv{};
             rv.isVariable = false;
             rv.offset = 0;
             rv.value.color = color;
-            rv.possibleValues = possibleValues;
             return rv;
         }
 
-        static ParameterizedColor fromVariable(const Variable_t variable, const uint32_t possibleValues) {
+        static ParameterizedColor fromVariable(const Variable_t variable) {
             ParameterizedColor rv{};
             rv.isVariable = true;
             rv.offset = 0;
             rv.value.variable = variable;
-            rv.possibleValues = possibleValues;
             return rv;
         }
 
-        static ParameterizedColor fromAll(const uint32_t possibleValues) {
+        static ParameterizedColor fromAll() {
             ParameterizedColor rv{};
             rv.isVariable = false;
             rv.offset = 0;
             rv.value.color = ALL_COLOR;
-            rv.possibleValues = possibleValues;
             return rv;
         }
     };

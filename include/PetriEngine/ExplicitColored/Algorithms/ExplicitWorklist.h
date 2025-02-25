@@ -8,7 +8,7 @@
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
-
+#include "PetriEngine/ExplicitColored/ColoredEncoder.h"
 
 namespace PetriEngine::ExplicitColored {
     template <typename T>

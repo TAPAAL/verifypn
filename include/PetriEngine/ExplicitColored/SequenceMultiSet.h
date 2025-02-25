@@ -13,6 +13,7 @@ namespace PetriEngine::ExplicitColored {
         SequenceMultiSet(SequenceMultiSet&&) = default;
         SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
 
+
         [[nodiscard]] MarkingCount_t getCount(const ColorSequence& colorSequence) const {
             const Color_t& color = colorSequence.color;
             const auto it = clower_bound(color);
@@ -25,7 +26,6 @@ namespace PetriEngine::ExplicitColored {
         void setCount(const ColorSequence& colorSequence, MarkingCount_t count) {
             const Color_t& color = colorSequence.color;
             const auto it = lower_bound(color);
-
             _cardinality += static_cast<sMarkingCount_t>(count);
             if (it != _counts.end() && it->first == color) {
                 _cardinality -= it->second;
@@ -230,6 +230,13 @@ namespace PetriEngine::ExplicitColored {
             }
         }
 
+        [[nodiscard]] uint32_t getHighestCount() const {
+            int max = 0;
+            for (auto& [key, count] : _counts) {
+                max = std::max(count, max);
+            }
+            return max;
+        }
         friend std::ostream& operator<<(std::ostream& out, const SequenceMultiSet& sequence) {
             for (const auto& [color, count] : sequence._counts) {
                 if (count > 0) {
