@@ -14,36 +14,33 @@ namespace PetriEngine::ExplicitColored {
         SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
 
         [[nodiscard]] MarkingCount_t getCount(const ColorSequence& colorSequence) const {
-            const Color_t& color = colorSequence.color;
-            const auto it = clower_bound(color);
-            if (it != _counts.end() && it->first == color) {
+            const auto it = clower_bound(colorSequence);
+            if (it != _counts.end() && it->first == colorSequence) {
                 return it->second;
             }
             return 0;
         }
 
         void setCount(const ColorSequence& colorSequence, MarkingCount_t count) {
-            const Color_t& color = colorSequence.color;
-            const auto it = lower_bound(color);
+            const auto it = lower_bound(colorSequence);
 
             _cardinality += static_cast<sMarkingCount_t>(count);
-            if (it != _counts.end() && it->first == color) {
+            if (it != _counts.end() && it->first == colorSequence) {
                 _cardinality -= it->second;
                 it->second = static_cast<sMarkingCount_t>(count);
                 return;
             }
-            _counts.insert(it, {color, count});
+            _counts.insert(it, {colorSequence, count});
         }
 
         void addCount(const ColorSequence& colorSequence, sMarkingCount_t count) {
-            const Color_t& color = colorSequence.color;
-            const auto it = lower_bound(color);
+            const auto it = lower_bound(colorSequence);
             _cardinality += count;
-            if (it != _counts.end() && it->first == color) {
+            if (it != _counts.end() && it->first == colorSequence) {
                 it->second += count;
                 return;
             }
-            _counts.insert(it, {color, count});
+            _counts.insert(it, {colorSequence, count});
         }
 
         [[nodiscard]] MarkingCount_t totalCount() const {
@@ -202,7 +199,7 @@ namespace PetriEngine::ExplicitColored {
             return true;
         }
 
-        [[nodiscard]] const std::vector<std::pair<Color_t, sMarkingCount_t>>& counts() const {
+        [[nodiscard]] const std::vector<std::pair<ColorSequence, sMarkingCount_t>>& counts() const {
             return _counts;
         }
 
@@ -239,7 +236,7 @@ namespace PetriEngine::ExplicitColored {
             return out;
         }
     private:
-        std::vector<std::pair<Color_t, sMarkingCount_t>>::iterator lower_bound(const Color_t& key) {
+        std::vector<std::pair<ColorSequence, sMarkingCount_t>>::iterator lower_bound(const ColorSequence& key) {
             return std::lower_bound(
                  _counts.begin(),
                  _counts.end(),
@@ -250,7 +247,7 @@ namespace PetriEngine::ExplicitColored {
             );
         }
 
-        [[nodiscard]] std::vector<std::pair<Color_t, sMarkingCount_t>>::const_iterator clower_bound(const Color_t& key) const {
+        [[nodiscard]] std::vector<std::pair<ColorSequence, sMarkingCount_t>>::const_iterator clower_bound(const ColorSequence& key) const {
             return std::lower_bound(
                  _counts.cbegin(),
                  _counts.cend(),
@@ -260,7 +257,7 @@ namespace PetriEngine::ExplicitColored {
                  }
             );
         }
-        std::vector<std::pair<Color_t, sMarkingCount_t>> _counts;
+        std::vector<std::pair<ColorSequence, sMarkingCount_t>> _counts;
         sMarkingCount_t _cardinality = 0;
     };
 
