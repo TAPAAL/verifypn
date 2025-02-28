@@ -54,13 +54,21 @@ namespace PetriEngine::ExplicitColored {
             return totalSize;
         }
 
+
+        std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes, Color_t totalSize) const {
+            std::vector<Color_t> rv;
+            auto interval = totalSize;
+            for (auto colorSize : colorSizes){
+                const auto size = colorSize;
+                interval /= size;
+                rv.push_back((encodedValue / interval) % size);
+            }
+            return rv;
+        }
+
         friend std::ostream& operator<<(std::ostream& os, const ColorSequence& colorSequence) {
             os << colorSequence.encodedValue;
             return os;
-        }
-
-        std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes) {
-
         }
     };
 }

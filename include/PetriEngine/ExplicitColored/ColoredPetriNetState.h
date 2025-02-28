@@ -124,6 +124,70 @@ namespace PetriEngine::ExplicitColored {
         uint32_t _completedTransitions = 0;
     };
 
+    struct PossibleValues {
+            explicit PossibleValues(std::vector<Color_t> colors)
+                : colors(std::move(colors)), allColors(false) {}
+
+            explicit PossibleValues(const std::set<Color_t>& colors)
+                : colors(colors.begin(), colors.end()), allColors(false) {}
+
+            static PossibleValues getAll() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = true;
+                return rv;
+            }
+
+            static PossibleValues getEmpty() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = false;
+                return rv;
+            }
+
+            void sort() {
+                std::sort(colors.begin(), colors.end());
+            }
+
+            void intersect(const PossibleValues& other) {
+                if (other.allColors) {
+                    return;
+                }
+                if (allColors) {
+                    colors = other.colors;
+                    return;
+                }
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.colors.cbegin(),
+                    other.colors.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            void intersect(const std::set<Color_t>& other) {
+                if (allColors) {
+                    colors.clear();
+                    colors.insert(colors.begin(), other.cbegin(), other.cend());
+                    return;
+                }
+
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.cbegin(),
+                    other.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            std::vector<Color_t> colors;
+            bool allColors;
+        };
+
     struct ColoredPetriNetStateConstrained {
         explicit ColoredPetriNetStateConstrained(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
         ColoredPetriNetStateConstrained(const ColoredPetriNetStateConstrained& oldState) = default;
@@ -152,6 +216,7 @@ namespace PetriEngine::ExplicitColored {
             _checkedEarlyTermination = false;
             variableIndices.clear();
             stateMaxes.clear();
+            allVariables.clear();
         }
 
         void checkedEarlyTermination() {
@@ -168,6 +233,8 @@ namespace PetriEngine::ExplicitColored {
 
         std::map<Variable_t, size_t> variableIndices;
         std::map<Variable_t, size_t> stateMaxes;
+        std::set<Variable_t> allVariables;
+        std::map<Variable_t, PossibleValues> possibleVariableValues;
         ColoredPetriNetMarking marking;
     private:
         bool _incrementVariableIndices(std::map<Variable_t, size_t>::iterator variableIndex) {

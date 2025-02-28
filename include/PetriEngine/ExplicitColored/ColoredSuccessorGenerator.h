@@ -102,69 +102,7 @@ namespace PetriEngine::ExplicitColored {
                 return true;
             return false;
         }
-        struct PossibleValues {
-            explicit PossibleValues(std::vector<Color_t> colors)
-                : colors(std::move(colors)), allColors(false) {}
 
-            explicit PossibleValues(const std::set<Color_t>& colors)
-                : colors(colors.begin(), colors.end()), allColors(false) {}
-
-            static PossibleValues getAll() {
-                PossibleValues rv(std::vector<Color_t> {});
-                rv.allColors = true;
-                return rv;
-            }
-
-            static PossibleValues getEmpty() {
-                PossibleValues rv(std::vector<Color_t> {});
-                rv.allColors = false;
-                return rv;
-            }
-
-            void sort() {
-                std::sort(colors.begin(), colors.end());
-            }
-
-            void intersect(const PossibleValues& other) {
-                if (other.allColors) {
-                    return;
-                }
-                if (allColors) {
-                    colors = other.colors;
-                    return;
-                }
-                std::vector<Color_t> newColors;
-                std::set_intersection(
-                    colors.cbegin(),
-                    colors.cend(),
-                    other.colors.cbegin(),
-                    other.colors.cend(),
-                    std::back_inserter(newColors)
-                );
-                colors = std::move(newColors);
-            }
-
-            void intersect(const std::set<Color_t>& other) {
-                if (allColors) {
-                    colors.clear();
-                    colors.insert(colors.begin(), other.cbegin(), other.cend());
-                    return;
-                }
-
-                std::vector<Color_t> newColors;
-                std::set_intersection(
-                    colors.cbegin(),
-                    colors.cend(),
-                    other.cbegin(),
-                    other.cend(),
-                    std::back_inserter(newColors)
-                );
-                colors = std::move(newColors);
-            }
-
-            std::vector<Color_t> colors;
-            bool allColors;
-        };
         ColoredPetriNetStateConstrained _nextV2(ColoredPetriNetStateConstrained &state) const {
 transitionLoop:
             while (state.getCurrentTransition() < _net.getTransitionCount()) {
@@ -187,16 +125,14 @@ transitionLoop:
                     }
                 }
 
-                //if (state.shouldCheckEarlyTermination()) {
-                    std::set<Variable_t> allVariables;
+                if (state.shouldCheckEarlyTermination()) {
                     std::set<Variable_t> inputArcVariables;
-                    _net.getInputVariables(state.getCurrentTransition(), allVariables);
+                    _net.getInputVariables(state.getCurrentTransition(), state.allVariables);
                     _net.getInputVariables(state.getCurrentTransition(), inputArcVariables);
-                    _net.getOutputVariables(state.getCurrentTransition(), allVariables);
-                    _net.getGuardVariables(state.getCurrentTransition(), allVariables);
-                    std::map<Variable_t, PossibleValues> possibleVariableValues;
-                    for (Variable_t variable : allVariables) {
-                        auto& values = *possibleVariableValues.emplace(variable, PossibleValues::getAll()).first;
+                    _net.getOutputVariables(state.getCurrentTransition(), state.allVariables);
+                    _net.getGuardVariables(state.getCurrentTransition(), state.allVariables);
+                    for (Variable_t variable : state.allVariables) {
+                        auto& values = *state.possibleVariableValues.emplace(variable, PossibleValues::getAll()).first;
                         const auto& constraints = _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.find(variable);
                         if (constraints == _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.end()) {
                             continue;
@@ -216,9 +152,12 @@ transitionLoop:
 
                             for (const auto& tokens : place.counts()) {
                                 auto bindingValue = add_color_offset(
-                                    tokens.first.getSequence()[constraint.colorIndex],
+                                    tokens.first.decode(
+                                        _net._places[constraint.place].colorType->basicColorSizes,
+                                        _net._places[constraint.place].colorType->colorSize
+                                    )[constraint.colorIndex],
                                     -constraint.colorOffset,
-                                    _net._variables[variable].colorType->colors
+                                    _net._variables[variable].colorType
                                 );
 
                                 if (values.second.allColors) {
@@ -240,16 +179,16 @@ transitionLoop:
                             }
                         }
                         state.stateMaxes[variable] = values.second.allColors
-                            ? _net._variables[variable].colorType->colors
+                            ? _net._variables[variable].colorType
                             : values.second.colors.size();
                     }
-                //}
+                }
 
                 state.checkedEarlyTermination();
                 Binding binding {};
                 while (true) {
-                    for (const auto var : allVariables) {
-                        const auto& possibleValues = possibleVariableValues.find(var)->second;
+                    for (const auto var : state.allVariables) {
+                        const auto& possibleValues = state.possibleVariableValues.find(var)->second;
                         if (possibleValues.allColors) {
                             binding.setValue(
                                 var,
