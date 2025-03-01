@@ -69,8 +69,22 @@ namespace PetriEngine {
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
         bool fireable(const MarkVal* marking, int transitionIndex);
-        std::pair<const Invariant*, const Invariant*> preset(uint32_t id) const;
-        std::pair<const Invariant*, const Invariant*> postset(uint32_t id) const;
+
+        [[nodiscard]] std::pair<const Invariant*, const Invariant*> preset(uint32_t id) const
+        {
+            const TransPtr& transition = _transitions[id];
+            uint32_t first = transition.inputs;
+            uint32_t last = transition.outputs;
+            return std::make_pair(&_invariants[first], &_invariants[last]);
+        }
+
+        [[nodiscard]] std::pair<const Invariant*, const Invariant*> postset(uint32_t id) const
+        {
+            uint32_t first = _transitions[id].outputs;
+            uint32_t last = _transitions[id+1].inputs;
+            return std::make_pair(&_invariants[first], &_invariants[last]);
+        }
+
         uint32_t numberOfTransitions() const {
             return _ntransitions;
         }
@@ -150,6 +164,7 @@ namespace PetriEngine {
         friend class ReducingSuccessorGenerator;
         friend class STSolver;
         friend class StubbornSet;
+        friend class TokenEliminator;
     };
 
 } // PetriEngine
