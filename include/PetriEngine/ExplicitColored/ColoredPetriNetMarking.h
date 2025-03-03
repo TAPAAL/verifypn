@@ -26,6 +26,10 @@ namespace PetriEngine::ExplicitColored{
             return markings == other.markings;
         }
 
+        bool operator!=(const ColoredPetriNetMarking& other) const{
+            return !(*this == other);
+        }
+
         [[nodiscard]] MarkingCount_t getPlaceCount(const uint32_t placeIndex) const {
             return markings[placeIndex].totalCount();
         }
@@ -106,6 +110,7 @@ namespace PetriEngine::ExplicitColored{
             ++cursor;
             return out;
         }
+
     };
 }
 

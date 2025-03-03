@@ -24,7 +24,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void setCount(const ColorSequence& colorSequence, MarkingCount_t count) {
-            const Color_t& color = colorSequence.color;
+            setCount(colorSequence.color, count);
+        }
+
+        void setCount(const Color_t& color, MarkingCount_t count) {
             const auto it = lower_bound(color);
             _cardinality += static_cast<sMarkingCount_t>(count);
             if (it != _counts.end() && it->first == color) {

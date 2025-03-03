@@ -64,7 +64,7 @@ namespace PetriEngine::ExplicitColored {
         const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
 
         encoder.encode(initialState);
-        passed.insert(encoder.data(), encoder.size());
+        passed.insert(encoder.data(), encoder.size() * 8);
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
             waiting.add(std::move(initial));
@@ -100,9 +100,10 @@ namespace PetriEngine::ExplicitColored {
             }
 
             const auto& marking = successor.marking;
-            encoder.encode(marking);
+            const auto size = encoder.encode(marking);
+
             _searchStatistics.exploredStates++;
-            if (!passed.exists(encoder.data(), encoder.size()).first) {
+            if (!passed.exists(encoder.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
                 if (_check(marking) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
@@ -110,7 +111,7 @@ namespace PetriEngine::ExplicitColored {
                 }
                 successor.shrink();
                 waiting.add(std::move(successor));
-                passed.insert(encoder.data(), encoder.size());
+                passed.insert(encoder.data(), size);
                 _searchStatistics.passedCount += 1;
                 _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
             }
