@@ -54,7 +54,8 @@ bool CTLSingleSolve(Condition* query, PetriNet* net,
                  CTLAlgorithmType algorithmtype,
                  Strategy strategytype, bool partial_order, CTLResult& result)
 {
-    OnTheFlyDG graph(net, partial_order);
+    TokenEliminator token_elim;
+    OnTheFlyDG graph(net, partial_order, *token_elim.setEnabled(false));
     graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
     getAlgorithm(alg, algorithmtype,  strategytype);
@@ -71,6 +72,7 @@ bool CTLSingleSolve(Condition* query, PetriNet* net,
     result.processedNegationEdges += alg->processedNegationEdges();
     result.exploredConfigurations += alg->exploredConfigurations();
     result.numberOfEdges += alg->numberOfEdges();
+    result.tokensEliminated = graph.tokensEliminated();
     result.maxTokens = std::max(graph.maxTokens(), result.maxTokens);
     return res;
 }
@@ -315,6 +317,7 @@ ReturnValue CTLMain(PetriNet* net,
                     Strategy strategytype,
                     StatisticsLevel printstatistics,
                     bool partial_order,
+                    const TokenEliminationMethod token_elim_method,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
                     const std::vector<size_t>& querynumbers,
@@ -326,7 +329,11 @@ ReturnValue CTLMain(PetriNet* net,
         bool solved = false;
 
         {
-            OnTheFlyDG graph(net, partial_order);
+            TokenEliminator token_elim;
+            token_elim.setDynamic(token_elim_method == TokenEliminationMethod::Dynamic);
+            token_elim.setEnabled(token_elim_method == TokenEliminationMethod::Disabled);
+
+            OnTheFlyDG graph(net, partial_order, token_elim);
             graph.setQuery(result.query);
             switch (graph.initialEval()) {
                 case Condition::Result::RFALSE:
