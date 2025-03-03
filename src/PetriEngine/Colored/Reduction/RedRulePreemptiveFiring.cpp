@@ -47,6 +47,7 @@ namespace PetriEngine::Colored::Reduction {
 
             if (place._pre.empty()) {
                 red.skipPlace(p);
+                red.skipTransition(place._post[0]);
             } else {
                 place.marking = Multiset();
             }

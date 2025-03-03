@@ -80,7 +80,6 @@ namespace PetriEngine::ExplicitColored{
             ++cursor;
             return out;
         }
-
     };
 }
 
