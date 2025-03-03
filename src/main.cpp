@@ -88,7 +88,7 @@ int main(int argc, const char** argv) {
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
-            if (options.isCPN && options.explicit_colored) {
+            if (options.isCPN && options.explicit_colored && PetriEngine::PQL::isReachability(queries[0])) {
                 try {
                     return explicitColored(options, string_set, queries, querynames);
                 } catch (const ExplicitColored::explicit_error& e) {
