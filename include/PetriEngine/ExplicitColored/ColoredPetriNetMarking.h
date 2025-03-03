@@ -40,36 +40,6 @@ namespace PetriEngine::ExplicitColored{
             }
         }
 
-        size_t compressedEncode(std::vector<uint8_t>& bytes, bool& success) const {
-            size_t cursor = 0;
-            for (const auto& marking : markings) {
-                for (const auto& [color, count] : marking.counts()) {
-                    if (count > 0) {
-                        encodeVarInt(bytes, cursor, count);
-                        encodeVarInt(bytes, cursor, color + 1);
-                        if (bytes.size() < cursor + 1) {
-                            bytes.resize(cursor + 1);
-                        }
-                        bytes[cursor++] = 0;
-                    }
-                }
-                if (bytes.size() < cursor + 1) {
-                    bytes.resize(cursor + 1);
-                }
-                bytes[cursor++] = 0;
-            }
-            //If state is too big for the ptrie we will not explore full statespace,
-            //but counterexamples found are still valid
-            if (cursor >= std::numeric_limits<uint16_t>::max()) {
-                if (success) {
-                    std::cout << "Too big for ptrie" << std::endl;
-                }
-                success = false;
-                return std::numeric_limits<uint16_t>::max();
-            }
-            return cursor;
-        }
-
         [[nodiscard]] uint32_t getHighestCount() const {
             uint32_t max = 0;
             for (const auto& marking : markings) {

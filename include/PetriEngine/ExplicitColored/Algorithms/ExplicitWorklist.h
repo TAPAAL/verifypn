@@ -64,7 +64,7 @@ namespace PetriEngine::ExplicitColored {
 
         template <template <typename> typename WaitingList, typename T>
         [[nodiscard]] bool _genericSearch(WaitingList<T> waiting);
-        [[nodiscard]] bool _getResult(bool found) const;
+        [[nodiscard]] bool _getResult(bool found, bool fullStatespace) const;
 
 
     };

@@ -28,7 +28,7 @@ namespace PetriEngine::ExplicitColored {
         typedef ptrie::binarywrapper_t scratchpad_t;
         explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places), _placeSize(convertToTypeSize(places.size())) {
             //Arbitrary number will get resized
-            _size = 1000;
+            _size = 512;
 
             for (const auto& place : _places) {
                 _placeColorSize.push_back(convertToTypeSize(place.colorType->colorSize));
@@ -61,13 +61,12 @@ namespace PetriEngine::ExplicitColored {
             }
 
             if (offset > 65536) {
-                std::cout << "State with size: " << offset << " cannot be represented correctly" << std::endl;
-            }
-            if (offset > _scratchpad.size()){
-                auto newScratchpad = scratchpad_t((offset + 500) * 8);
-                newScratchpad.copy(_scratchpad, 0);
-                _scratchpad = newScratchpad;
-                return encode(marking, type);
+                //If too big for representation partial statespace will be explored
+                if (_fullStatespace) {
+                    std::cout << "State with size: " << offset << " cannot be represented correctly, " << std::endl;
+                }
+                _fullStatespace = false;
+                return 65536;
             }
             _biggestRepresentation = std::max(offset, _biggestRepresentation);
             return offset;
@@ -85,10 +84,6 @@ namespace PetriEngine::ExplicitColored {
             default:
                 throw explicit_error{unknown_encoding};
             }
-        }
-
-        [[nodiscard]] size_t size() const {
-          return _size;
         }
 
         [[nodiscard]] const uchar* data() const {
@@ -110,6 +105,10 @@ namespace PetriEngine::ExplicitColored {
             }
             return true;
         }
+
+        [[nodiscard]] bool isFullStatespace() const {
+            return _fullStatespace;
+        }
     private:
         scratchpad_t _scratchpad;
         const std::vector<ColoredPetriNetPlace>& _places;
@@ -117,10 +116,7 @@ namespace PetriEngine::ExplicitColored {
         size_t _biggestRepresentation = 0;
         TYPE_SIZE _placeSize;
         std::vector<TYPE_SIZE> _placeColorSize = {};
-
-        void _writePlaces(const ColoredPetriNetMarking& data){
-
-        }
+        bool _fullStatespace = true;
 
         //Writes the cardinality of each color in each place in order, including 0
         //Could possibly use bits to show whether a token is non-zero
@@ -171,8 +167,22 @@ namespace PetriEngine::ExplicitColored {
             return offset;
         }
 
-        ENCODING_TYPE _getType(const ColoredPetriNetMarking& marking) {
-            return PLACE_TOKEN_COUNT;
+        //Decides what encoding should be used based on heuristic
+        //Not sure what good heuristics are here
+        [[nodiscard]] ENCODING_TYPE _getType(const ColoredPetriNetMarking& marking) const {
+            auto markingIt = marking.markings.cbegin();
+            uint32_t possibleTokens = 0;
+            uint32_t tokens = 0;
+            for (const auto & _place : _places) {
+                const auto placeCountSize = (markingIt++)->counts().size();
+                const auto colors = _place.colorType->colorSize;
+                possibleTokens += colors;
+                tokens += placeCountSize;
+            }
+            //Relatively sparse
+            if (tokens == 0 || possibleTokens / tokens >= 2){
+                return PLACE_TOKEN_COUNT;
+            }
             return TOKEN_COUNTS;
         }
 
@@ -234,7 +244,7 @@ namespace PetriEngine::ExplicitColored {
 
         //Doubles size, there could be a better way to minimize the size still limiting the resizes
         void _resizeScratchpad(const size_t offset) {
-            _size = std::min( static_cast<int>(offset * 2), UINT16_MAX);
+            _size = std::min( static_cast<int>(_size * 2), UINT16_MAX);
             auto newScratchpad = scratchpad_t(_size * 8);
             newScratchpad.copy(_scratchpad, 0);
             _scratchpad = newScratchpad;
