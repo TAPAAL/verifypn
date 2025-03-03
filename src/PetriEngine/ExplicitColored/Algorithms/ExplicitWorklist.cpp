@@ -3,7 +3,6 @@
 
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include <PetriEngine/options.h>
-#include "PetriEngine/ExplicitColored/Visitors/GammaQueryVisitor.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
@@ -44,9 +43,6 @@ namespace PetriEngine::ExplicitColored {
         if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
-        if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::CONSTRAINED) {
-            return _search<ColoredPetriNetStateConstrained>(searchStrategy);
-        }
         throw explicit_error(unsupported_generator);
     }
 
@@ -54,8 +50,8 @@ namespace PetriEngine::ExplicitColored {
         return _searchStatistics;
     }
 
-    bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state) const {
-        return _gammaQuery->eval(_successorGenerator, state);
+    bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state, size_t id) const {
+        return _gammaQuery->eval(_successorGenerator, state, id);
     }
 
     template <template <typename> typename WaitingList, typename T>
@@ -69,19 +65,18 @@ namespace PetriEngine::ExplicitColored {
 
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
-            waiting.add(std::move(initial));
-        } else if constexpr (std::is_same_v<T, ColoredPetriNetStateConstrained>) {
-            auto initial = ColoredPetriNetStateConstrained {initialState};
+            initial.id = 0;
             waiting.add(std::move(initial));
         } else {
             auto initial = ColoredPetriNetStateFixed{initialState};
+            initial.id = 0;
             waiting.add(std::move(initial));
         }
         passed.insert(scratchpad.data(), size);
         _searchStatistics.passedCount = 1;
         _searchStatistics.checkedStates = 1;
 
-        if (_check(initialState) == earlyTerminationCondition) {
+        if (_check(initialState, 0) == earlyTerminationCondition) {
             return _getResult(true);
         }
         if (_net.getTransitionCount() == 0) {
@@ -93,6 +88,7 @@ namespace PetriEngine::ExplicitColored {
             auto successor = _successorGenerator.next(next);
             if (next.done()) {
                 waiting.remove();
+                _successorGenerator.shrinkState(next.id);
                 continue;
             }
 
@@ -109,7 +105,7 @@ namespace PetriEngine::ExplicitColored {
             _searchStatistics.exploredStates++;
             if (!passed.exists(scratchpad.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
-                if (_check(marking) == earlyTerminationCondition) {
+                if (_check(marking, successor.id) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
                     return _getResult(true);
                 }

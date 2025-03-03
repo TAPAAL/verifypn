@@ -27,8 +27,7 @@ enum class Strategy {
 
 enum class ColoredSuccessorGeneratorOption {
     FIXED,
-    EVEN,
-    CONSTRAINED
+    EVEN
 };
 
 enum class TraceLevel {

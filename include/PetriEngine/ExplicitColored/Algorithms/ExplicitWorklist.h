@@ -50,7 +50,7 @@ namespace PetriEngine::ExplicitColored {
         const IColoredResultPrinter& _coloredResultPrinter;
         template<typename SuccessorGeneratorState>
         [[nodiscard]] bool _search(SearchStrategy searchStrategy);
-        [[nodiscard]] bool _check(const ColoredPetriNetMarking& state) const;
+        [[nodiscard]] bool _check(const ColoredPetriNetMarking& state, size_t id) const;
 
         template <typename T>
         [[nodiscard]] bool _dfs();

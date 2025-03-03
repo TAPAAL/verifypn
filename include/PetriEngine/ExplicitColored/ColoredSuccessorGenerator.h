@@ -1,15 +1,17 @@
 #ifndef COLOREDSUCCESSORGENERATOR_H
 #define COLOREDSUCCESSORGENERATOR_H
 
+#include "PetriEngine/ExplicitColored/StateCodec.h"
 #include "ColoredPetriNet.h"
 #include "ColoredPetriNetState.h"
 #include <limits>
 #include <utils/MathExt.h>
 
 namespace PetriEngine::ExplicitColored {
-    struct TransitionVariables{
-        std::map<Variable_t, std::vector<uint32_t>> possibleValues = std::map<Variable_t, std::vector<uint32_t>>{};
-        uint32_t totalBindings = 0;
+    struct ConstraintData {
+        StateCodec<size_t, Color_t> stateCodec;
+        std::vector<Variable_t> variableIndex;
+        std::vector<PossibleValues> possibleVariableValues;
     };
 
     class ColoredSuccessorGenerator {
@@ -25,14 +27,17 @@ namespace PetriEngine::ExplicitColored {
             return _nextEven(state);
         }
 
-        ColoredPetriNetStateConstrained next(ColoredPetriNetStateConstrained& state) const {
-            return _nextV2(state);
-        }
-
         [[nodiscard]] const ColoredPetriNet& net() const {
             return _net;
         }
-        [[nodiscard]] Binding_t findNextValidBinding(const ColoredPetriNetMarking& marking, Transition_t tid, Binding_t bid, uint64_t totalBindings, Binding& binding) const;
+
+        [[nodiscard]] Binding_t findNextValidBinding(const ColoredPetriNetMarking& marking, Transition_t tid, Binding_t bid, uint64_t totalBindings, Binding& binding, size_t stateId) const;
+
+        void shrinkState(size_t stateId) const {
+            const auto lower = _constraintData.lower_bound(getKey(stateId, 0));
+            const auto upper = _constraintData.upper_bound(getKey(stateId, 0xFFFF));
+            _constraintData.erase(lower, upper);
+        }
     protected:
         void getBinding(Transition_t tid, Binding_t bid, Binding& binding) const;
         [[nodiscard]] bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
@@ -41,8 +46,11 @@ namespace PetriEngine::ExplicitColored {
         void consumePreset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
     private:
+        mutable std::map<size_t, ConstraintData> _constraintData;
+        mutable size_t nextId = 1;
         const ColoredPetriNet& _net;
         void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
+        std::map<size_t, ConstraintData>::iterator calculateConstraintData(const ColoredPetriNetMarking& marking, size_t id, Transition_t transition, bool& noPossibleBinding) const;
         [[nodiscard]] bool _hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t tid) const;
         [[nodiscard]] bool _shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t tid) const {
             if (!checkInhibitor(marking, tid))
@@ -58,9 +66,10 @@ namespace PetriEngine::ExplicitColored {
             Binding binding;
             while (tid < _net.getTransitionCount()) {
                 const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
-                const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding);
+                const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding, state.id);
                 if (nextBid != std::numeric_limits<Binding_t>::max()) {
                     auto newState = ColoredPetriNetStateFixed(state.marking);
+                    newState.id = nextId++;
                     _fire(newState.marking, tid, binding);
                     state.nextBinding(nextBid);
                     return newState;
@@ -77,12 +86,13 @@ namespace PetriEngine::ExplicitColored {
             auto totalBindings = _net._transitions[tid].validVariables.second;
             Binding binding;
             //If bid is updated at the end optimizations seem to make the loop not work
-            while (bid != std::numeric_limits<Binding_t>::max()){
+            while (bid != std::numeric_limits<Binding_t>::max()) {
                 {
-                    const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding);
+                    const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding, state.id);
                     state.updatePair(tid, nextBid);
                     if (nextBid != std::numeric_limits<Binding_t>::max()) {
                         auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
+                        newState.id = nextId++;
                         _fire(newState.marking, tid, binding);
                         return newState;
                     }
@@ -103,120 +113,8 @@ namespace PetriEngine::ExplicitColored {
             return false;
         }
 
-        ColoredPetriNetStateConstrained _nextV2(ColoredPetriNetStateConstrained &state) const {
-transitionLoop:
-            while (state.getCurrentTransition() < _net.getTransitionCount()) {
-                if (state.shouldCheckEarlyTermination()) {
-                    const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
-                    if (totalBindings == 0) {
-                        if (check(state.marking, state.getCurrentTransition(), Binding{})) {
-                            auto newState = ColoredPetriNetStateConstrained(state.marking);
-                            _fire(newState.marking, state.getCurrentTransition(), Binding{});
-                            state.nextTransition();
-                            return newState;
-                        }
-                        state.nextTransition();
-                        continue;
-                    }
-
-                    if (shouldEarlyTerminateTransition(state.marking, state.getCurrentTransition())) {
-                        state.nextTransition();
-                        continue;
-                    }
-                }
-
-                if (state.shouldCheckEarlyTermination()) {
-                    std::set<Variable_t> inputArcVariables;
-                    _net.getInputVariables(state.getCurrentTransition(), state.allVariables);
-                    _net.getInputVariables(state.getCurrentTransition(), inputArcVariables);
-                    _net.getOutputVariables(state.getCurrentTransition(), state.allVariables);
-                    _net.getGuardVariables(state.getCurrentTransition(), state.allVariables);
-                    for (Variable_t variable : state.allVariables) {
-                        auto& values = *state.possibleVariableValues.emplace(variable, PossibleValues::getAll()).first;
-                        const auto& constraints = _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.find(variable);
-                        if (constraints == _net._transitions[state.getCurrentTransition()].preplacesVariableConstraints.end()) {
-                            continue;
-                        }
-                        for (const auto& constraint : constraints->second) {
-                            const auto& place = state.marking.markings[constraint.place];
-
-                            if (constraint.isTop()) {
-                                continue;
-                            }
-
-                            std::set<Color_t> possibleColors;
-
-                            if (values.second.allColors) {
-                                values.second.colors.reserve(place.counts().size());
-                            }
-
-                            for (const auto& tokens : place.counts()) {
-                                auto bindingValue = add_color_offset(
-                                    tokens.first.decode(
-                                        _net._places[constraint.place].colorType->basicColorSizes,
-                                        _net._places[constraint.place].colorType->colorSize
-                                    )[constraint.colorIndex],
-                                    -constraint.colorOffset,
-                                    _net._variables[variable].colorType
-                                );
-
-                                if (values.second.allColors) {
-                                    values.second.colors.push_back(bindingValue);
-                                } else {
-                                    possibleColors.insert(bindingValue);
-                                }
-                            }
-
-                            if (values.second.allColors) {
-                                values.second.allColors = false;
-                                std::sort(values.second.colors.begin(), values.second.colors.end());
-                            } else {
-                                values.second.intersect(possibleColors);
-                            }
-                            if (values.second.colors.empty() && !values.second.allColors) {
-                                state.nextTransition();
-                                goto transitionLoop;
-                            }
-                        }
-                        state.stateMaxes[variable] = values.second.allColors
-                            ? _net._variables[variable].colorType
-                            : values.second.colors.size();
-                    }
-                }
-
-                state.checkedEarlyTermination();
-                Binding binding {};
-                while (true) {
-                    for (const auto var : state.allVariables) {
-                        const auto& possibleValues = state.possibleVariableValues.find(var)->second;
-                        if (possibleValues.allColors) {
-                            binding.setValue(
-                                var,
-                                state.variableIndices[var]
-                            );
-                        } else {
-                            binding.setValue(
-                                var,
-                                possibleValues.colors[state.variableIndices[var]]
-                            );
-                        }
-                    }
-                    if (checkPresetAndGuard(state.marking, state.getCurrentTransition(), binding)) {
-                        auto newState = ColoredPetriNetStateConstrained{state.marking};
-                        _fire(newState.marking, state.getCurrentTransition(), binding);
-                        if (state.incrementVariableIndices()) {
-                            state.nextTransition();
-                        }
-                        return newState;
-                    }
-                    if (state.incrementVariableIndices()) {
-                        state.nextTransition();
-                        goto transitionLoop;
-                    }
-                }
-            }
-            state.setDone();
-            return ColoredPetriNetStateConstrained{{}};
+        [[nodiscard]] uint64_t getKey(size_t stateId, Transition_t transition) const {
+            return ((stateId & 0xFFFF'FFFF'FFFF) << 16) | ((static_cast<uint64_t>(transition) & 0xFFFF));
         }
     };
 }
