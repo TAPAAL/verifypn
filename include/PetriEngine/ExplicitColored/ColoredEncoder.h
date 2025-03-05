@@ -26,12 +26,12 @@ namespace PetriEngine::ExplicitColored {
     class ColoredEncoder {
     public:
         typedef ptrie::binarywrapper_t scratchpad_t;
-        explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places), _placeSize(convertToTypeSize(places.size())) {
+        explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places), _placeSize(_convertToTypeSize(places.size())) {
             //Arbitrary number will get resized
             _size = 512;
 
             for (const auto& place : _places) {
-                _placeColorSize.push_back(convertToTypeSize(place.colorType->colorSize));
+                _placeColorSize.push_back(_convertToTypeSize(place.colorType->colorSize));
             }
 
             _scratchpad = scratchpad_t(_size * 8);
@@ -44,17 +44,16 @@ namespace PetriEngine::ExplicitColored {
 
         size_t encode (const ColoredPetriNetMarking& marking, ENCODING_TYPE type = NOT_SET){
             _scratchpad.zero();
-            const auto countSize = convertToTypeSize(marking.getHighestCount());
             if (type == NOT_SET) {
                 type = _getType(marking);
             }
-            auto offset = _writeTypeSignature(type, countSize, 0);
+            auto offset = _writeTypeSignature(type, 0);
             switch (type) {
                 case TOKEN_COUNTS:
-                    offset = _writeTokenCounts(marking, countSize, offset);
+                    offset = _writeTokenCounts(marking, offset);
                     break;
                 case PLACE_TOKEN_COUNT:
-                    offset = _writePlaceTokenCounts(marking, countSize, offset);
+                    offset = _writePlaceTokenCounts(marking, offset);
                     break;
                 default:
                     throw explicit_error{unknown_encoding};
@@ -75,12 +74,11 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNetMarking decode(const unsigned char* encoding) const{
             size_t offset = 0;
             const auto type = static_cast<ENCODING_TYPE>(_readFromEncoding(encoding, EIGHT, offset));
-            const auto colorSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
             switch (static_cast<ENCODING_TYPE>(type)) {
             case PLACE_TOKEN_COUNT:
-                return _decodePlaceTokenCounts(encoding, colorSize, offset);
+                return _decodePlaceTokenCounts(encoding, offset);
             case TOKEN_COUNTS:
-                return _decodeTokenCounts(encoding, colorSize, offset);
+                return _decodeTokenCounts(encoding, offset);
             default:
                 throw explicit_error{unknown_encoding};
             }
@@ -120,10 +118,12 @@ namespace PetriEngine::ExplicitColored {
 
         //Writes the cardinality of each color in each place in order, including 0
         //Could possibly use bits to show whether a token is non-zero
-        size_t _writeTokenCounts(const ColoredPetriNetMarking& data, const TYPE_SIZE countSize, size_t& offset){
+        size_t _writeTokenCounts(const ColoredPetriNetMarking& data, size_t& offset){
             for(size_t i = 0; i < data.markings.size(); i++) {
                 auto& placeMultiset = data.markings[i];
                 const auto colors = _places[i].colorType->colorSize;
+                const auto highestCountType = _convertToTypeSize(data.markings[i].getHighestCount());
+                _writeToPad(highestCountType, EIGHT, offset);
                 auto placeIterator = placeMultiset.counts().begin();
                 for (size_t colorId = 0; colorId < colors; colorId++) {
                     auto count = 0;
@@ -131,25 +131,28 @@ namespace PetriEngine::ExplicitColored {
                         count = placeIterator->second;
                         ++placeIterator;
                     }
-                    _writeToPad(count, countSize, offset);
+                    _writeToPad(count, highestCountType, offset);
                 }
             }
             return offset;
         }
 
-        size_t _writePlaceTokenCounts(const ColoredPetriNetMarking& data, const TYPE_SIZE countSize, size_t& offset) {
+        size_t _writePlaceTokenCounts(const ColoredPetriNetMarking& data, size_t& offset) {
             for(size_t pid = 0; pid < data.markings.size(); pid++) {
                 auto& placeMultiset = data.markings[pid];
-                if (placeMultiset.getHighestCount() == 0 && pid != data.markings.size() - 1) {
+                const auto highestCount = placeMultiset.getHighestCount();
+                if (highestCount == 0 && pid != data.markings.size() - 1) {
                     continue;
                 }
                 const auto placeColorSize = _placeColorSize[pid];
+                const auto placeCountSize = _convertToTypeSize(highestCount);
                 //Puts place id
                 _writeToPad(pid, _placeSize, offset);
                 //Save index for inputting amount of different colors in place
                 auto colorNumIndex = offset;
                 auto colorNum = 0;
                 offset += placeColorSize;
+                _writeToPad(placeCountSize, placeCountSize, offset);
 
                 //Puts every token id followed by token count
                 for (auto [color, count] : placeMultiset.counts()) {
@@ -159,7 +162,7 @@ namespace PetriEngine::ExplicitColored {
                     colorNum += 1;
                     _writeToPad(color, placeColorSize, offset);
                     //Maybe use different count size for each multiset
-                    _writeToPad(count, countSize, offset);
+                    _writeToPad(count, placeCountSize, offset);
                 }
                 //Puts amount of different tokens in the place - calculated on the fly
                 _writeToPad(colorNum, placeColorSize, colorNumIndex);
@@ -186,13 +189,12 @@ namespace PetriEngine::ExplicitColored {
             return TOKEN_COUNTS;
         }
 
-        size_t _writeTypeSignature(const ENCODING_TYPE type, const TYPE_SIZE countSize, size_t offset) {
+        size_t _writeTypeSignature(const ENCODING_TYPE type, size_t offset) {
             _writeToPad(type, EIGHT, offset);
-            _writeToPad(countSize, EIGHT, offset);
             return offset;
         }
 
-        static TYPE_SIZE convertToTypeSize(const size_t n){
+        static TYPE_SIZE _convertToTypeSize(const size_t n){
             const auto bitCount = n == 0 ? 1 : static_cast<uint64_t>(std::floor(std::log2(n)) + 1);
             if (bitCount <= 8) {
                 return EIGHT;
@@ -203,13 +205,14 @@ namespace PetriEngine::ExplicitColored {
             return THIRTYTWO;
         }
 
-        ColoredPetriNetMarking _decodeTokenCounts(const uchar* encoding, const TYPE_SIZE countSize, size_t offset) const {
+        ColoredPetriNetMarking _decodeTokenCounts(const uchar* encoding, size_t offset) const {
             ColoredPetriNetMarking marking{};
             for (const auto& place : _places) {
                 const auto colorNum = place.colorType->colorSize;
                 CPNMultiSet multiset{};
+                const auto placeCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
                 for (size_t colorId = 0; colorId < colorNum; colorId++) {
-                    const MarkingCount_t count = _readFromEncoding(encoding, countSize, offset);
+                    const MarkingCount_t count = _readFromEncoding(encoding, placeCountSize, offset);
                     if (count > 0) {
                         multiset.setCount(colorId, count);
                     }
@@ -219,7 +222,7 @@ namespace PetriEngine::ExplicitColored {
             return marking;
         }
 
-        ColoredPetriNetMarking _decodePlaceTokenCounts(const uchar* encoding, const TYPE_SIZE countSize, size_t offset) const {
+        ColoredPetriNetMarking _decodePlaceTokenCounts(const uchar* encoding, size_t offset) const {
             ColoredPetriNetMarking marking{};
             for (size_t pid = 0; pid < _places.size(); pid++) {
                 CPNMultiSet multiset{};
@@ -230,9 +233,10 @@ namespace PetriEngine::ExplicitColored {
                 }
                 const TYPE_SIZE placeColorSize = _placeColorSize[pid];
                 const auto multisetCardinality = _readFromEncoding(encoding, placeColorSize, offset);
+                const auto multisetCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
                 for (size_t color = 0; color < multisetCardinality; color++) {
                     const Color_t colorId = _readFromEncoding(encoding, placeColorSize, offset);
-                    const MarkingCount_t count = _readFromEncoding(encoding, countSize, offset);
+                    const MarkingCount_t count = _readFromEncoding(encoding, multisetCountSize, offset);
                     if (count != 0) {
                         multiset.setCount(colorId, count);
                     }
@@ -243,7 +247,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         //Doubles size, there could be a better way to minimize the size still limiting the resizes
-        void _resizeScratchpad(const size_t offset) {
+        void _resizeScratchpad() {
             _size = std::min( static_cast<int>(_size * 2), UINT16_MAX);
             auto newScratchpad = scratchpad_t(_size * 8);
             newScratchpad.copy(_scratchpad, 0);
@@ -253,7 +257,7 @@ namespace PetriEngine::ExplicitColored {
         template <typename T>
         void _writeToPad(const T element, const TYPE_SIZE typeSize, size_t& offset ) {
             if (offset + 4 > _size) {
-                _resizeScratchpad(offset);
+                _resizeScratchpad();
             }
             switch (typeSize) {
             case EIGHT:

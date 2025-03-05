@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include "ColorSequence.h"
+#include "ExplicitErrors.h"
 
 namespace PetriEngine::ExplicitColored {
     class SequenceMultiSet {
@@ -12,7 +13,6 @@ namespace PetriEngine::ExplicitColored {
         SequenceMultiSet& operator=(const SequenceMultiSet&) = default;
         SequenceMultiSet(SequenceMultiSet&&) = default;
         SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
-
 
         [[nodiscard]] MarkingCount_t getCount(const ColorSequence& colorSequence) const {
             const Color_t& color = colorSequence.color;
@@ -30,6 +30,7 @@ namespace PetriEngine::ExplicitColored {
         void setCount(const Color_t& color, MarkingCount_t count) {
             const auto it = lower_bound(color);
             _cardinality += static_cast<sMarkingCount_t>(count);
+
             if (it != _counts.end() && it->first == color) {
                 _cardinality -= it->second;
                 it->second = static_cast<sMarkingCount_t>(count);
@@ -41,6 +42,9 @@ namespace PetriEngine::ExplicitColored {
         void addCount(const ColorSequence& colorSequence, sMarkingCount_t count) {
             const Color_t& color = colorSequence.color;
             const auto it = lower_bound(color);
+            if (count > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - count) {
+                throw explicit_error{too_many_tokens};
+            }
             _cardinality += count;
             if (it != _counts.end() && it->first == color) {
                 it->second += count;
@@ -58,6 +62,9 @@ namespace PetriEngine::ExplicitColored {
             auto bIt = other._counts.begin();
             while (aIt != _counts.end() && bIt != other._counts.end()) {
                 if (aIt->first == bIt->first) {
+                    if (bIt->second > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - bIt->second) {
+                        throw explicit_error{too_many_tokens};
+                    }
                     aIt->second += bIt->second;
                     _cardinality += bIt->second;
                     ++aIt;
@@ -105,6 +112,10 @@ namespace PetriEngine::ExplicitColored {
             for (auto& [color, count] : _counts) {
                 count *= static_cast<sMarkingCount_t>(scalar);
             }
+            if (_cardinality > std::numeric_limits<sMarkingCount_t>::max() / scalar) {
+                throw explicit_error{too_many_tokens};
+            }
+
             _cardinality *= static_cast<sMarkingCount_t>(scalar);
             return *this;
         }

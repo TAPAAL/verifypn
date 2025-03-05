@@ -100,7 +100,7 @@ namespace PetriEngine::ExplicitColored {
 
             const auto& marking = successor.marking;
             size = encoder.encode(marking);
-
+            encoder.testEncodingDecoding(marking);
             _searchStatistics.exploredStates++;
             if (!passed.exists(encoder.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
