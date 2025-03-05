@@ -4,12 +4,12 @@
 #include <random>
 #include <vector>
 #include <memory>
-
 #include "ArcCompiler.h"
 #include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
-#include "ColoredPetriNetMarking.h"
 #include "GuardCompiler.h"
+#include "ExplicitColorTypes.h"
+#include "ColoredPetriNetMarking.h"
 
 namespace PetriEngine::ExplicitColored
 {
@@ -18,17 +18,6 @@ namespace PetriEngine::ExplicitColored
         std::unique_ptr<CompiledGuardExpression> guardExpression;
         std::set<Variable_t> variables;
         std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
-    };
-
-    struct BaseColorType
-    {
-        Color_t colors;
-    };
-
-    struct ColorType
-    {
-        uint32_t size;
-        std::vector<std::shared_ptr<BaseColorType>> basicColorTypes;
     };
 
     struct ColoredPetriNetPlace
@@ -55,7 +44,7 @@ namespace PetriEngine::ExplicitColored
 
     struct Variable
     {
-        std::shared_ptr<BaseColorType> colorType;
+        Color_t colorType;
     };
 
     class ColoredPetriNetBuilder;
@@ -85,7 +74,7 @@ namespace PetriEngine::ExplicitColored
         std::vector<ColoredPetriNetArc> _arcs;
         std::vector<ColoredPetriNetInhibitor> _inhibitorArcs;
         std::vector<Variable> _variables;
-        ColoredPetriNetMarking _initialMarking;
+        ColoredPetriNetMarking _initialMarking{};
         std::vector<std::pair<uint32_t,uint32_t>> _transitionArcs; //Index is transition and pair is input/output arc beginning index in _arcs
         std::vector<uint32_t> _transitionInhibitors; //Index is transition and value is beginning index in _inhibitorArcs
     };

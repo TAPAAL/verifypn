@@ -334,7 +334,7 @@ namespace PetriEngine::ExplicitColored {
                     );
                 }
             }
-            return ColorSequence { std::move(colorSequence) };
+            return ColorSequence {colorSequence, _colorSizes };
         }
 
         std::vector<Color_t> _colorSizes;
@@ -354,16 +354,17 @@ namespace PetriEngine::ExplicitColored {
         ) : _colorTypeMap(colorTypeMap), _variableMap(variableMap), _parameterizedColor(), _maxColor(0) {}
 
         void accept(const Colored::DotConstantExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR);
             _maxColor = 1;
+            _parameterizedColor = ParameterizedColor::fromColor(DOT_COLOR);
         }
 
         void accept(const Colored::VariableExpression* expr) override {
             const auto varIt = _variableMap.find(expr->variable()->name);
             if (varIt == _variableMap.end())
                 throw explicit_error{unknown_variable};
-            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second);
             _maxColor = expr->getColorType(_colorTypeMap)->size();
+            _parameterizedColor = ParameterizedColor::fromVariable(varIt->second);
+
         }
 
         void accept(const Colored::SuccessorExpression* expr) override {
@@ -383,13 +384,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void accept(const Colored::AllExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromAll();
             _maxColor = expr->size();
+            _parameterizedColor = ParameterizedColor::fromAll();
         }
 
         void accept(const Colored::UserOperatorExpression* expr) override {
-            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId());
             _maxColor = expr->getColorType(_colorTypeMap)->size();
+            _parameterizedColor = ParameterizedColor::fromColor(expr->user_operator()->getId());
         }
 
         void accept(const Colored::TupleExpression *) override {unexpectedExpression();}
@@ -603,7 +604,7 @@ namespace PetriEngine::ExplicitColored {
                         newColorSequence.push_back(add_color_offset( color.value.color, color.offset, expr->getColorMaxes()[i]));
                     }
                     if (!hasVariable) {
-                        constantMultiSet.addCount(ColorSequence { newColorSequence }, expr->getSignedCount());
+                        constantMultiSet.addCount(ColorSequence { newColorSequence, expr->getColorMaxes() }, expr->getSignedCount());
                     } else {
                         newColorSequences.push_back(colorSequence);
                     }
