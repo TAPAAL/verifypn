@@ -1595,7 +1595,7 @@ namespace PetriEngine {
             for(auto& t : parent->_places[p].producers)
             {
                 auto& trans = getTransition(t);
-                auto arc = getInArc(p, trans);
+                auto arc = getOutArc(trans, p);
                 arc->weight /= mod;
             }
             parent->initialMarking[p] /= mod;
