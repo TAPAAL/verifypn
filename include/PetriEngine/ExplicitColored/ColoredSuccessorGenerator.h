@@ -1,7 +1,7 @@
 #ifndef COLOREDSUCCESSORGENERATOR_H
 #define COLOREDSUCCESSORGENERATOR_H
 
-#include "PetriEngine/ExplicitColored/StateCodec.h"
+#include "PetriEngine/ExplicitColored/IntegerPackCodec.h"
 #include "ColoredPetriNet.h"
 #include "ColoredPetriNetState.h"
 #include <limits>
@@ -9,7 +9,7 @@
 
 namespace PetriEngine::ExplicitColored {
     struct ConstraintData {
-        StateCodec<size_t, Color_t> stateCodec;
+        IntegerPackCodec<size_t, Color_t> stateCodec;
         std::vector<Variable_t> variableIndex;
         std::vector<PossibleValues> possibleVariableValues;
     };

@@ -9,6 +9,7 @@
 #include "GuardCompiler.h"
 #include "ExplicitColorTypes.h"
 #include "ColoredPetriNetMarking.h"
+#include "IntegerPackCodec.h"
 
 namespace PetriEngine::ExplicitColored
 {

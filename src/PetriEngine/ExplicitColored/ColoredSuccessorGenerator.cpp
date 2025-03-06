@@ -114,10 +114,7 @@ namespace PetriEngine::ExplicitColored{
 
                 for (const auto& tokens : place.counts()) {
                     auto bindingValue = add_color_offset(
-                        tokens.first.decode(
-                            _net._places[constraint.place].colorType->basicColorSizes,
-                            _net._places[constraint.place].colorType->colorSize
-                        )[constraint.colorIndex],
+                        _net._places[constraint.place].colorType->colorCodec.decode(tokens.first.encodedValue, constraint.colorIndex),
                         -constraint.colorOffset,
                         _net._variables[variable].colorType
                     );
@@ -147,7 +144,7 @@ namespace PetriEngine::ExplicitColored{
             constraintData.possibleVariableValues.emplace_back(std::move(values));
         }
 
-        constraintData.stateCodec = StateCodec<size_t, Color_t>(stateMaxes);
+        constraintData.stateCodec = IntegerPackCodec(stateMaxes);
 
         constraintData.variableIndex.insert(
             constraintData.variableIndex.begin(),

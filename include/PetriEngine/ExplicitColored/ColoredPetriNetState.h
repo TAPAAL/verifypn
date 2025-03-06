@@ -3,7 +3,7 @@
 
 #include <queue>
 #include <utility>
-#include "PetriEngine/ExplicitColored/StateCodec.h"
+#include "PetriEngine/ExplicitColored/IntegerPackCodec.h"
 #include "ColoredPetriNetMarking.h"
 
 namespace PetriEngine::ExplicitColored {
