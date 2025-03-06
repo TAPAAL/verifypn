@@ -5,6 +5,7 @@
 #include "../Colored/Expressions.h"
 #include "SequenceMultiSet.h"
 #include "Binding.h"
+#include "VariableConstraint.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {
@@ -62,24 +63,6 @@ namespace PetriEngine::ExplicitColored {
     public:
         CPNMultiSet minimalMarkingMultiSet;
         MarkingCount_t variableCount;
-    };
-
-
-    struct VariableConstraint {
-        uint32_t colorIndex;
-        ColorOffset_t colorOffset;
-        Place_t place;
-
-        static VariableConstraint getTop() {
-            return VariableConstraint{
-                std::numeric_limits<uint32_t>::max(),
-                0
-            };
-        }
-
-        [[nodiscard]] bool isTop() const {
-            return colorIndex == std::numeric_limits<Place_t>::max();
-        }
     };
 
     class CompiledArcExpression {

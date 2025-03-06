@@ -25,14 +25,12 @@ namespace PetriEngine::ExplicitColored{
 
     void ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid, Binding& binding) const {
         auto map = std::map<Variable_t, Color_t>{};
-        const auto& possibleValues = _net._transitions[tid].validVariables.second;
-        if (possibleValues != 0){
-            auto& variables = _net._transitions[tid].validVariables.first;
-            auto interval = possibleValues;
-            for (const auto&[varName, varValues] : variables){
-                const auto size = varValues.size();
+        auto interval = _net._transitions[tid].totalBindings;
+        if (interval != 0){
+            for (const auto varIndex : _net._transitions[tid].variables){
+                const auto size = _net._variables[varIndex].colorType;
                 interval /= size;
-                map.emplace(varName, varValues.at((bid / interval) % size));
+                map.emplace(varIndex, (bid / interval) % size);
             }
             binding = std::move(map);
         }else {
@@ -87,14 +85,11 @@ namespace PetriEngine::ExplicitColored{
     }
 
     std::map<size_t, ConstraintData>::iterator ColoredSuccessorGenerator::calculateConstraintData(
-        const ColoredPetriNetMarking &marking, size_t id, Transition_t transition, bool &noPossibleBinding) const {
+        const ColoredPetriNetMarking &marking, const size_t id, const Transition_t transition, bool &noPossibleBinding) const {
         ConstraintData constraintData;
-        std::set<Color_t> allVariables;
+        const auto& allVariables = _net.getAllTransitionVariables(transition);
         std::set<Variable_t> inputArcVariables;
-        _net.getInputVariables(transition, allVariables);
-        _net.getInputVariables(transition, inputArcVariables);
-        _net.getOutputVariables(transition, allVariables);
-        _net.getGuardVariables(transition, allVariables);
+        _net.extractInputVariables(transition, inputArcVariables);
         std::vector<Color_t> stateMaxes;
         for (Variable_t variable : allVariables) {
             PossibleValues values = PossibleValues::getAll();
@@ -227,7 +222,7 @@ namespace PetriEngine::ExplicitColored{
                     );
                 }
             }
-            
+
             if (checkPresetAndGuard(marking, tid, binding)) {
                 return bid;
             }

@@ -65,7 +65,7 @@ namespace PetriEngine::ExplicitColored {
             const auto& bid = state.getCurrentBinding();
             Binding binding;
             while (tid < _net.getTransitionCount()) {
-                const auto totalBindings = _net._transitions[state.getCurrentTransition()].validVariables.second;
+                const auto totalBindings = _net._transitions[state.getCurrentTransition()].totalBindings;
                 const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding, state.id);
                 if (nextBid != std::numeric_limits<Binding_t>::max()) {
                     auto newState = ColoredPetriNetStateFixed(state.marking);
@@ -83,7 +83,7 @@ namespace PetriEngine::ExplicitColored {
         // SuccessorGenerator but only considers current transition
         ColoredPetriNetStateEven _nextEven(ColoredPetriNetStateEven &state) const {
             auto [tid, bid] = state.getNextPair();
-            auto totalBindings = _net._transitions[tid].validVariables.second;
+            auto totalBindings = _net._transitions[tid].totalBindings;
             Binding binding;
             //If bid is updated at the end optimizations seem to make the loop not work
             while (bid != std::numeric_limits<Binding_t>::max()) {
@@ -100,7 +100,7 @@ namespace PetriEngine::ExplicitColored {
                 auto [nextTid, nextBid] = state.getNextPair();
                 tid = nextTid;
                 bid = nextBid;
-                totalBindings = _net._transitions[tid].validVariables.second;
+                totalBindings = _net._transitions[tid].totalBindings;
             }
             return {{},0};
         }

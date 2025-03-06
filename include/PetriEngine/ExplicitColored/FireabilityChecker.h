@@ -15,7 +15,7 @@ namespace PetriEngine::ExplicitColored {
     public:
         static bool canFire(const ColoredSuccessorGenerator& successorGenerator, const Transition_t tid, const ColoredPetriNetMarking& state, const size_t id) {
             Binding binding;
-            const auto totalBindings = successorGenerator.net()._transitions[tid].validVariables.second;
+            const auto totalBindings = successorGenerator.net()._transitions[tid].totalBindings;
             return successorGenerator.findNextValidBinding(state, tid, 0, totalBindings, binding, id) != std::numeric_limits<Binding_t>::max();
         }
 

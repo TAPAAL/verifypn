@@ -393,13 +393,10 @@ namespace PetriEngine::ExplicitColored {
     GuardCompiler::GuardCompiler(const std::unordered_map<std::string, Variable_t>& variableMap, const Colored::ColorTypeMap& colorTypeMap)
         : _colorTypeMap(colorTypeMap), _variableMap(variableMap) { }
 
-    std::pair<std::unique_ptr<CompiledGuardExpression>, std::set<Variable_t>> GuardCompiler::compile(const Colored::GuardExpression &colorExpression) const {
-        VariableExtractorVisitor variableExtractor(_variableMap);
-        colorExpression.visit(variableExtractor);
-        auto variables = std::move(variableExtractor.collectedVariables);
-
+    std::unique_ptr<CompiledGuardExpression> GuardCompiler::compile(const Colored::GuardExpression &colorExpression) const {
         ColorExpressionCompilerVisitor topLevelVisitor(_colorTypeMap, _variableMap);
         colorExpression.visit(topLevelVisitor);
-        return {topLevelVisitor.takeCompiled(), std::move(variables)};
+        auto compiled = topLevelVisitor.takeCompiled();
+        return topLevelVisitor.takeCompiled();
     }
 }
