@@ -13,21 +13,20 @@ namespace PetriEngine::ExplicitColored {
     enum ENCODING_TYPE : unsigned char {
         TOKEN_COUNTS,
         PLACE_TOKEN_COUNT,
-        NOT_SET,
+        EMPTY,
     };
 
     enum TYPE_SIZE : unsigned char {
         EIGHT = 1,
         SIXTEEN = 2,
         THIRTYTWO = 4,
-        UNKNOWN
     };
 
     class ColoredEncoder {
     public:
         typedef ptrie::binarywrapper_t scratchpad_t;
         explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places), _placeSize(_convertToTypeSize(places.size())) {
-            //Arbitrary number will get resized
+            //Will get resized if needed
             _size = 512;
 
             for (const auto& place : _places) {
@@ -38,34 +37,37 @@ namespace PetriEngine::ExplicitColored {
         }
 
         ~ColoredEncoder() {
-            std::cout << "The biggest represented state was: " << _biggestRepresentation << " bytes" << std::endl;
             _scratchpad.release();
         }
 
-        size_t encode (const ColoredPetriNetMarking& marking, ENCODING_TYPE type = NOT_SET){
+        //Encodes each place with its own encoding type, written as a prefix for each place
+        size_t encode (const ColoredPetriNetMarking& marking){
             _scratchpad.zero();
-            if (type == NOT_SET) {
-                type = _getType(marking);
-            }
-            auto offset = _writeTypeSignature(type, 0);
-            switch (type) {
+            size_t offset = 0;
+            auto pid = 0;
+            for (const auto& place : marking.markings) {
+                const auto type = _getType(place, _placeColorSize[pid]);
+                _writeTypeSignature(type, offset);
+                switch (type) {
                 case TOKEN_COUNTS:
-                    offset = _writeTokenCounts(marking, offset);
+                    _writeTokenCounts(place, _places[pid].colorType->colorSize, offset);
                     break;
                 case PLACE_TOKEN_COUNT:
-                    offset = _writePlaceTokenCounts(marking, offset);
+                    _writePlaceTokenCounts(place, _placeColorSize[pid], offset);
                     break;
-                default:
-                    throw explicit_error{unknown_encoding};
+                case EMPTY:
+                    break;
+                }
+                ++pid;
             }
-
-            if (offset > 65536) {
+            if (offset > UINT16_MAX) {
                 //If too big for representation partial statespace will be explored
                 if (_fullStatespace) {
-                    std::cout << "State with size: " << offset << " cannot be represented correctly, " << std::endl;
+                    _biggestRepresentation = UINT16_MAX;
+                    std::cout << "State with size: " << offset << " cannot be represented correctly, so full statespace is not explored " << std::endl;
                 }
                 _fullStatespace = false;
-                return 65536;
+                return UINT16_MAX;
             }
             _biggestRepresentation = std::max(offset, _biggestRepresentation);
             return offset;
@@ -73,32 +75,40 @@ namespace PetriEngine::ExplicitColored {
 
         ColoredPetriNetMarking decode(const unsigned char* encoding) const{
             size_t offset = 0;
-            const auto type = static_cast<ENCODING_TYPE>(_readFromEncoding(encoding, EIGHT, offset));
-            switch (static_cast<ENCODING_TYPE>(type)) {
-            case PLACE_TOKEN_COUNT:
-                return _decodePlaceTokenCounts(encoding, offset);
-            case TOKEN_COUNTS:
-                return _decodeTokenCounts(encoding, offset);
-            default:
-                throw explicit_error{unknown_encoding};
+            ColoredPetriNetMarking marking{};
+            for (auto pid = 0; pid < _places.size(); ++pid) {
+                const auto type = static_cast<ENCODING_TYPE>(_readFromEncoding(encoding, EIGHT, offset));
+                CPNMultiSet placeMultiset;
+                switch (static_cast<ENCODING_TYPE>(type)) {
+                case PLACE_TOKEN_COUNT:
+                    placeMultiset = _decodePlaceTokenCounts(encoding, _placeColorSize[pid], offset);
+                    break;
+                case TOKEN_COUNTS:
+                    placeMultiset = _decodeTokenCounts(encoding, _places[pid].colorType->colorSize, offset);
+                    break;
+                case EMPTY:
+                    break;
+                default:
+                    throw explicit_error{unknown_encoding};
+                }
+                marking.markings.push_back(placeMultiset);
             }
+            return marking;
         }
 
         [[nodiscard]] const uchar* data() const {
             return _scratchpad.const_raw();
         }
 
+        void printBiggestEncoding() const {
+            std::cout << "The biggest represented state was: " << _biggestRepresentation << " bytes" << std::endl;
+        }
+
         [[nodiscard]] bool testEncodingDecoding(const ColoredPetriNetMarking& marking) {
-            this->encode(marking, PLACE_TOKEN_COUNT);
-            const auto placeTokenDecoded = decode(this->data());
-            if (placeTokenDecoded != marking) {
-                std::cout << "PLACE_TOKEN_COUNT is not en/de-coded correctly" << std::endl;
-                return false;
-            }
-            this->encode(marking, TOKEN_COUNTS);
-            const auto tokenCountsDecoded = decode(this->data());
-            if (tokenCountsDecoded != marking) {
-                std::cout << "TOKEN_COUNTS is not en/de-coded correctly" << std::endl;
+            encode(marking);
+            const auto decodedMarking = decode(this->data());
+            if (decodedMarking != marking) {
+                std::cout << "De/encoding is not equivalent" << std::endl;
                 return false;
             }
             return true;
@@ -116,86 +126,65 @@ namespace PetriEngine::ExplicitColored {
         std::vector<TYPE_SIZE> _placeColorSize = {};
         bool _fullStatespace = true;
 
-        //Writes the cardinality of each color in each place in order, including 0
+        //Writes the cardinality of each color in the place in order, including 0
         //Could possibly use bits to show whether a token is non-zero
-        size_t _writeTokenCounts(const ColoredPetriNetMarking& data, size_t& offset){
-            for(size_t i = 0; i < data.markings.size(); i++) {
-                auto& placeMultiset = data.markings[i];
-                const auto colors = _places[i].colorType->colorSize;
-                const auto highestCountType = _convertToTypeSize(data.markings[i].getHighestCount());
-                _writeToPad(highestCountType, EIGHT, offset);
-                auto placeIterator = placeMultiset.counts().begin();
-                for (size_t colorId = 0; colorId < colors; colorId++) {
-                    auto count = 0;
-                    if (placeIterator != placeMultiset.counts().end() && placeIterator->first == colorId) {
-                        count = placeIterator->second;
-                        ++placeIterator;
-                    }
-                    _writeToPad(count, highestCountType, offset);
+        void _writeTokenCounts(const CPNMultiSet& place, const Color_t colorNum, size_t& offset) {
+            const auto highestCountType = _convertToTypeSize(place.getHighestCount());
+            _writeToPad(highestCountType, EIGHT, offset);
+            auto placeIterator = place.counts().begin();
+            for (size_t colorId = 0; colorId < colorNum; colorId++) {
+                auto count = 0;
+                if (placeIterator != place.counts().end() && placeIterator->first == colorId) {
+                    count = placeIterator->second;
+                    ++placeIterator;
                 }
+                _writeToPad(count, highestCountType, offset);
             }
-            return offset;
         }
 
-        size_t _writePlaceTokenCounts(const ColoredPetriNetMarking& data, size_t& offset) {
-            for(size_t pid = 0; pid < data.markings.size(); pid++) {
-                auto& placeMultiset = data.markings[pid];
-                const auto highestCount = placeMultiset.getHighestCount();
-                if (highestCount == 0 && pid != data.markings.size() - 1) {
+        //Writes the type used for writing count then the amount of different colored tokens in the place followed by color-count pairs for each color token in the place
+        void _writePlaceTokenCounts(const CPNMultiSet& place, const TYPE_SIZE placeColorSize, size_t& offset) {
+            const auto highestCount = place.getHighestCount();
+            const auto placeCountSize = _convertToTypeSize(highestCount);
+            auto colorNumIndex = offset;
+            auto colorNum = 0;
+            offset += placeColorSize;
+            _writeToPad(placeCountSize, placeCountSize, offset);
+
+            //Puts every token id followed by token count
+            for (auto [color, count] : place.counts()) {
+                if (count == 0) {
                     continue;
                 }
-                const auto placeColorSize = _placeColorSize[pid];
-                const auto placeCountSize = _convertToTypeSize(highestCount);
-                //Puts place id
-                _writeToPad(pid, _placeSize, offset);
-                //Save index for inputting amount of different colors in place
-                auto colorNumIndex = offset;
-                auto colorNum = 0;
-                offset += placeColorSize;
-                _writeToPad(placeCountSize, placeCountSize, offset);
-
-                //Puts every token id followed by token count
-                for (auto [color, count] : placeMultiset.counts()) {
-                    if (count == 0) {
-                        continue;
-                    }
-                    colorNum += 1;
-                    _writeToPad(color, placeColorSize, offset);
-                    //Maybe use different count size for each multiset
-                    _writeToPad(count, placeCountSize, offset);
-                }
-                //Puts amount of different tokens in the place - calculated on the fly
-                _writeToPad(colorNum, placeColorSize, colorNumIndex);
+                colorNum += 1;
+                _writeToPad(color, placeColorSize, offset);
+                _writeToPad(count, placeCountSize, offset);
             }
-            return offset;
+            //Puts amount of different tokens in the place - calculated on the fly
+            _writeToPad(colorNum, placeColorSize, colorNumIndex);
         }
 
-        //Decides what encoding should be used based on heuristic
-        //Not sure what good heuristics are here
-        [[nodiscard]] ENCODING_TYPE _getType(const ColoredPetriNetMarking& marking) const {
-            auto markingIt = marking.markings.cbegin();
-            uint32_t possibleTokens = 0;
-            uint32_t tokens = 0;
-            for (const auto & _place : _places) {
-                const auto placeCountSize = (markingIt++)->counts().size();
-                const auto colors = _place.colorType->colorSize;
-                possibleTokens += colors;
-                tokens += placeCountSize;
+        //Decides what encoding should be used for a place Not sure what good heuristics are here
+        //Multiset needs to be shrunk before being encoded or edge case exists where 0 cardinality token impacts encoding
+        [[nodiscard]] static ENCODING_TYPE _getType(const CPNMultiSet& multiset, const Color_t colorSize) {
+            const uint32_t tokens = multiset.counts().size();
+            if (tokens == 0) {
+                return EMPTY;
             }
             //Relatively sparse
-            if (tokens == 0 || possibleTokens / tokens >= 2){
+            if (tokens * 2 <= colorSize){
                 return PLACE_TOKEN_COUNT;
             }
             return TOKEN_COUNTS;
         }
 
-        size_t _writeTypeSignature(const ENCODING_TYPE type, size_t offset) {
+        void _writeTypeSignature(const ENCODING_TYPE type, size_t& offset) {
             _writeToPad(type, EIGHT, offset);
-            return offset;
         }
 
+        //Getting bit count could potentially be done faster
         static TYPE_SIZE _convertToTypeSize(const size_t n){
-            const auto bitCount = n == 0 ? 1 : static_cast<uint64_t>(std::floor(std::log2(n)) + 1);
+            const auto bitCount = n == 0 ? 1 : static_cast<uint32_t>(std::floor(std::log2(n)) + 1);
             if (bitCount <= 8) {
                 return EIGHT;
             }
@@ -205,50 +194,35 @@ namespace PetriEngine::ExplicitColored {
             return THIRTYTWO;
         }
 
-        ColoredPetriNetMarking _decodeTokenCounts(const uchar* encoding, size_t offset) const {
-            ColoredPetriNetMarking marking{};
-            for (const auto& place : _places) {
-                const auto colorNum = place.colorType->colorSize;
-                CPNMultiSet multiset{};
-                const auto placeCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
-                for (size_t colorId = 0; colorId < colorNum; colorId++) {
-                    const MarkingCount_t count = _readFromEncoding(encoding, placeCountSize, offset);
-                    if (count > 0) {
-                        multiset.setCount(colorId, count);
-                    }
+        static CPNMultiSet _decodeTokenCounts(const uchar* encoding, const Color_t colorNum, size_t& offset) {
+            CPNMultiSet multiset{};
+            const auto placeCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
+            for (size_t colorId = 0; colorId < colorNum; colorId++) {
+                const MarkingCount_t count = _readFromEncoding(encoding, placeCountSize, offset);
+                if (count > 0) {
+                    multiset.setCount(colorId, count);
                 }
-                marking.markings.push_back(std::move(multiset));
             }
-            return marking;
+            return multiset;
         }
 
-        ColoredPetriNetMarking _decodePlaceTokenCounts(const uchar* encoding, size_t offset) const {
-            ColoredPetriNetMarking marking{};
-            for (size_t pid = 0; pid < _places.size(); pid++) {
-                CPNMultiSet multiset{};
-                const auto nextPlace = _readFromEncoding(encoding, _placeSize, offset);
-                while (pid < nextPlace) {
-                    marking.markings.emplace_back();
-                    ++pid;
+        static CPNMultiSet _decodePlaceTokenCounts(const uchar* encoding, const TYPE_SIZE placeColorSize, size_t& offset) {
+            CPNMultiSet multiset{};
+            const auto multisetCardinality = _readFromEncoding(encoding, placeColorSize, offset);
+            const auto multisetCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
+            for (size_t color = 0; color < multisetCardinality; color++) {
+                const Color_t colorId = _readFromEncoding(encoding, placeColorSize, offset);
+                const MarkingCount_t count = _readFromEncoding(encoding, multisetCountSize, offset);
+                if (count != 0) {
+                    multiset.setCount(colorId, count);
                 }
-                const TYPE_SIZE placeColorSize = _placeColorSize[pid];
-                const auto multisetCardinality = _readFromEncoding(encoding, placeColorSize, offset);
-                const auto multisetCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
-                for (size_t color = 0; color < multisetCardinality; color++) {
-                    const Color_t colorId = _readFromEncoding(encoding, placeColorSize, offset);
-                    const MarkingCount_t count = _readFromEncoding(encoding, multisetCountSize, offset);
-                    if (count != 0) {
-                        multiset.setCount(colorId, count);
-                    }
-                }
-                marking.markings.emplace_back(std::move(multiset));
             }
-            return marking;
+            return multiset;
         }
 
         //Doubles size, there could be a better way to minimize the size still limiting the resizes
         void _resizeScratchpad() {
-            _size = std::min( static_cast<int>(_size * 2), UINT16_MAX);
+            _size = _size * 2;
             auto newScratchpad = scratchpad_t(_size * 8);
             newScratchpad.copy(_scratchpad, 0);
             _scratchpad = newScratchpad;
@@ -256,7 +230,10 @@ namespace PetriEngine::ExplicitColored {
 
         template <typename T>
         void _writeToPad(const T element, const TYPE_SIZE typeSize, size_t& offset ) {
-            if (offset + 4 > _size) {
+            if (offset + typeSize > _size) {
+                if (_size == UINT16_MAX) {
+                    return;
+                }
                 _resizeScratchpad();
             }
             switch (typeSize) {
@@ -282,6 +259,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         [[nodiscard]] static uint32_t _readFromEncoding(const uchar* encoding, const TYPE_SIZE typeSize, size_t& offset) {
+            if (offset + typeSize > UINT16_MAX) {
+                //If encoding is too big then we decode to 0
+                return 0;
+            }
             uint32_t result;
             switch (typeSize) {
             case EIGHT:

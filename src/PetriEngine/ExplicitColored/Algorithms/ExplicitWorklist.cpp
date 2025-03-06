@@ -76,9 +76,11 @@ namespace PetriEngine::ExplicitColored {
         _searchStatistics.checkedStates = 1;
 
         if (_check(initialState) == earlyTerminationCondition) {
+            encoder.printBiggestEncoding();
             return _getResult(true, encoder.isFullStatespace());
         }
         if (_net.getTransitionCount() == 0) {
+            encoder.printBiggestEncoding();
             return _getResult(false, encoder.isFullStatespace());
         }
 
@@ -98,23 +100,24 @@ namespace PetriEngine::ExplicitColored {
                 }
             }
 
+            successor.shrink();
             const auto& marking = successor.marking;
             size = encoder.encode(marking);
-            encoder.testEncodingDecoding(marking);
             _searchStatistics.exploredStates++;
             if (!passed.exists(encoder.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
                 if (_check(marking) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
+                    encoder.printBiggestEncoding();
                     return _getResult(true, encoder.isFullStatespace());
                 }
-                successor.shrink();
                 waiting.add(std::move(successor));
                 passed.insert(encoder.data(), size);
                 _searchStatistics.passedCount += 1;
                 _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
             }
         }
+        encoder.printBiggestEncoding();
         _searchStatistics.endWaitingStates = waiting.size();
         return _getResult(false, encoder.isFullStatespace());
     }
