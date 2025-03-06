@@ -77,6 +77,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
         [[nodiscard]] virtual const ColoredMinimalMarking& getMinimalColorMarking() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
+        [[nodiscard]] virtual bool containsNegative() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
 

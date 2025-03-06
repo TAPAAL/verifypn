@@ -33,7 +33,7 @@ namespace PetriEngine::ExplicitColored {
             _quantifier = Quantifier::AG;
             _gammaQuery = queryCompiler.compile(agGammaQuery->getCond());
         } else {
-            throw explicit_error{unsupported_query};
+            throw explicit_error{ExplicitErrorType::unsupported_query};
         }
     }
 
@@ -44,7 +44,7 @@ namespace PetriEngine::ExplicitColored {
         if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
-        throw explicit_error(unsupported_generator);
+        throw explicit_error(ExplicitErrorType::unsupported_generator);
     }
 
     const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {

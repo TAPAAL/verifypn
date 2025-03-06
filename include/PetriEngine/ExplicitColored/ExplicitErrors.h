@@ -9,7 +9,7 @@
 
 
 namespace PetriEngine::ExplicitColored {
-    enum ExplicitErrorType {
+    enum class ExplicitErrorType {
         ptrie_too_small = 0,
         unsupported_query = 1,
         unsupported_strategy = 2,

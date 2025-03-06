@@ -10,7 +10,7 @@ target_link_libraries(verifypn PUBLIC CTL LTL PetriEngine PetriParse)
 
 add_dependencies(verifypn glpk-ext spot-ext)
 
-add_executable(verifypn-${ARCH_TYPE} main.cpp)
+add_executable(verifypn-${ARCH_TYPE} main.cpp explicitMain.cpp)
 target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE verifypn)
 
 if (VERIFYPN_MC_Simplification)
