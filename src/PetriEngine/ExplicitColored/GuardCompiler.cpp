@@ -396,7 +396,6 @@ namespace PetriEngine::ExplicitColored {
     std::unique_ptr<CompiledGuardExpression> GuardCompiler::compile(const Colored::GuardExpression &colorExpression) const {
         ColorExpressionCompilerVisitor topLevelVisitor(_colorTypeMap, _variableMap);
         colorExpression.visit(topLevelVisitor);
-        auto compiled = topLevelVisitor.takeCompiled();
         return topLevelVisitor.takeCompiled();
     }
 }

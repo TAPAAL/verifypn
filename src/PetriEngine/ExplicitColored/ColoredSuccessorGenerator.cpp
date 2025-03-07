@@ -26,14 +26,14 @@ namespace PetriEngine::ExplicitColored{
     void ColoredSuccessorGenerator::getBinding(const Transition_t tid, const Binding_t bid, Binding& binding) const {
         auto map = std::map<Variable_t, Color_t>{};
         auto interval = _net._transitions[tid].totalBindings;
-        if (interval != 0){
+        if (interval != 0) {
             for (const auto varIndex : _net._transitions[tid].variables){
                 const auto size = _net._variables[varIndex].colorType;
                 interval /= size;
                 map.emplace(varIndex, (bid / interval) % size);
             }
             binding = std::move(map);
-        }else {
+        } else {
             binding = std::move(Binding{});
         }
     }
@@ -84,7 +84,7 @@ namespace PetriEngine::ExplicitColored{
         producePostset(state, tid, binding);
     }
 
-    std::map<size_t, ConstraintData>::iterator ColoredSuccessorGenerator::calculateConstraintData(
+    std::map<size_t, ConstraintData>::iterator ColoredSuccessorGenerator::_calculateConstraintData(
         const ColoredPetriNetMarking &marking, const size_t id, const Transition_t transition, bool &noPossibleBinding) const {
         ConstraintData constraintData;
         const auto& allVariables = _net.getAllTransitionVariables(transition);
@@ -188,7 +188,7 @@ namespace PetriEngine::ExplicitColored{
                 std::cout << "constrained" << std::endl;
                 firstTime = false;
             }
-            constraintDataIt = calculateConstraintData(marking, stateId, tid, noPossibleBinding);
+            constraintDataIt = _calculateConstraintData(marking, stateId, tid, noPossibleBinding);
             if (noPossibleBinding) {
                 return std::numeric_limits<Binding_t>::max();
             }

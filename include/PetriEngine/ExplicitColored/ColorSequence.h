@@ -58,7 +58,7 @@ namespace PetriEngine::ExplicitColored {
         std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes, Color_t totalSize) const {
             std::vector<Color_t> rv;
             auto interval = totalSize;
-            for (auto colorSize : colorSizes){
+            for (const auto colorSize : colorSizes) {
                 const auto size = colorSize;
                 interval /= size;
                 rv.push_back((encodedValue / interval) % size);

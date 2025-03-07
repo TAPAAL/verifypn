@@ -138,7 +138,7 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNetTransition transition;
         const GuardCompiler compiler(*_variableMap, *_colors);
         if (guard != nullptr) {
-            transition.guardExpression = std::move(compiler.compile(*guard));
+            transition.guardExpression = compiler.compile(*guard);
         } else {
             transition.guardExpression = nullptr;
         }

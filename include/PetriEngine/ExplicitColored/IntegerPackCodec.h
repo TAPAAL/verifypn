@@ -12,11 +12,12 @@ namespace PetriEngine::ExplicitColored {
             for (auto size : stateSizes) {
                 _totalValues *= size;
             }
+            _decodeValues.push_back(_totalValues);
             auto interval = _totalValues;
             for (auto size : stateSizes) {
                 interval /= size;
-                decodeValues.push_back(interval);
-                valueSizes.push_back(size);
+                _decodeValues.push_back(interval);
+                _valueSizes.push_back(size);
             }
         }
         IntegerPackCodec(const IntegerPackCodec&) = default;
@@ -25,7 +26,11 @@ namespace PetriEngine::ExplicitColored {
         IntegerPackCodec& operator=(IntegerPackCodec&&) = default;
 
         VT decode(ET encoded, size_t index) const {
-            return (encoded / decodeValues[index]) % valueSizes[index];
+            return encoded / _decodeValues[index + 1] % _valueSizes[index];
+        }
+
+        ET addToValue(ET current, size_t index, VT valueToAdd) const {
+            return current + _decodeValues[index] / _valueSizes[index] * valueToAdd;
         }
 
         ET getMax() const {
@@ -33,8 +38,8 @@ namespace PetriEngine::ExplicitColored {
         }
 
     private:
-        std::vector<ET> decodeValues;
-        std::vector<ET> valueSizes;
+        std::vector<ET> _decodeValues;
+        std::vector<ET> _valueSizes;
         size_t _totalValues = 0;
     };
 }
