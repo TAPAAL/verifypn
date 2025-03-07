@@ -39,14 +39,6 @@ namespace PetriEngine::ExplicitColored{
                 place.shrink();
             }
         }
-
-        [[nodiscard]] uint32_t getHighestCount() const {
-            uint32_t max = 0;
-            for (const auto& marking : markings) {
-                max = std::max(max, marking.getHighestCount());
-            }
-            return max;
-        }
     };
 }
 
