@@ -19,7 +19,7 @@ namespace PetriEngine::ExplicitColored {
             //Essentially reverse binding generator to generate unique id for product color
             uint64_t result = 0;
             auto interval = totalSize;
-            for (size_t i = 0; i < sequence.size(); i++) {
+            for (size_t i = 0; i < sequence.size(); ++i) {
                 const auto elementColor = sequence[i];
                 const auto elementSize = sizes[i];
                 result += interval / elementSize * elementColor;

@@ -46,7 +46,7 @@ namespace PetriEngine::ExplicitColored {
             size_t offset = 0;
             auto pid = 0;
             for (const auto& place : marking.markings) {
-                const auto type = _getType(place, _placeColorSize[pid]);
+                const auto type = _getType(place, _places[pid].colorType->colorSize);
                 _writeTypeSignature(type, offset);
                 switch (type) {
                 case TOKEN_COUNTS:
@@ -166,16 +166,27 @@ namespace PetriEngine::ExplicitColored {
 
         //Decides what encoding should be used for a place Not sure what good heuristics are here
         //Multiset needs to be shrunk before being encoded or edge case exists where 0 cardinality token impacts encoding
-        [[nodiscard]] static ENCODING_TYPE _getType(const CPNMultiSet& multiset, const Color_t colorSize) {
+        [[nodiscard]] static ENCODING_TYPE _getType(const CPNMultiSet& multiset, const Color_t possibleColors) {
             const uint32_t tokens = multiset.counts().size();
             if (tokens == 0) {
                 return EMPTY;
             }
+
             //Relatively sparse
-            if (tokens * 2 <= colorSize){
+            if (tokens * 2 <= possibleColors){
                 return PLACE_TOKEN_COUNT;
             }
             return TOKEN_COUNTS;
+            //This is a non-heuristic way to do it but it is too slow
+            //auto countSize = _convertToTypeSize(multiset.getHighestCount());
+            //auto colorSize = _convertToTypeSize(possibleColors);
+
+            //auto tokenCount = countSize * possibleColors;
+            //auto placeTokenCount = (countSize + colorSize) * tokens;
+            //if (tokenCount < placeTokenCount) {
+            //    return TOKEN_COUNTS;
+            //}
+            //return PLACE_TOKEN_COUNT;
         }
 
         void _writeTypeSignature(const ENCODING_TYPE type, size_t& offset) {
