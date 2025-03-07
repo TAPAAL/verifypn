@@ -694,6 +694,7 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
+            printf("                        Kira Stæhr Pedersen <kira2809@live.dk>\n");
             printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk>\n");
             printf("                        Theodor Risager <theodor349@gmail.com>\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
