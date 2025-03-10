@@ -42,7 +42,6 @@ namespace PetriEngine::ExplicitColored {
 
         //Encodes each place with its own encoding type, written as a prefix for each place
         size_t encode (const ColoredPetriNetMarking& marking){
-            _scratchpad.zero();
             size_t offset = 0;
             auto pid = 0;
             for (const auto& place : marking.markings) {
@@ -177,16 +176,6 @@ namespace PetriEngine::ExplicitColored {
                 return PLACE_TOKEN_COUNT;
             }
             return TOKEN_COUNTS;
-            //This is a non-heuristic way to do it but it is too slow
-            //auto countSize = _convertToTypeSize(multiset.getHighestCount());
-            //auto colorSize = _convertToTypeSize(possibleColors);
-
-            //auto tokenCount = countSize * possibleColors;
-            //auto placeTokenCount = (countSize + colorSize) * tokens;
-            //if (tokenCount < placeTokenCount) {
-            //    return TOKEN_COUNTS;
-            //}
-            //return PLACE_TOKEN_COUNT;
         }
 
         void _writeTypeSignature(const ENCODING_TYPE type, size_t& offset) {
