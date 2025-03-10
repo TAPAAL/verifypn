@@ -47,7 +47,7 @@ namespace PetriEngine::ExplicitColored {
         void producePostset(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
     private:
         mutable std::map<size_t, ConstraintData> _constraintData;
-        mutable size_t nextId = 1;
+        mutable size_t _nextId = 1;
         const ColoredPetriNet& _net;
         void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         std::map<size_t, ConstraintData>::iterator _calculateConstraintData(const ColoredPetriNetMarking& marking, size_t id, Transition_t transition, bool& noPossibleBinding) const;
@@ -69,7 +69,7 @@ namespace PetriEngine::ExplicitColored {
                 const auto nextBid = findNextValidBinding(state.marking, tid, bid, totalBindings, binding, state.id);
                 if (nextBid != std::numeric_limits<Binding_t>::max()) {
                     auto newState = ColoredPetriNetStateFixed(state.marking);
-                    newState.id = nextId++;
+                    newState.id = _nextId++;
                     _fire(newState.marking, tid, binding);
                     state.nextBinding(nextBid);
                     return newState;
@@ -92,7 +92,7 @@ namespace PetriEngine::ExplicitColored {
                     state.updatePair(tid, nextBid);
                     if (nextBid != std::numeric_limits<Binding_t>::max()) {
                         auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
-                        newState.id = nextId++;
+                        newState.id = _nextId++;
                         _fire(newState.marking, tid, binding);
                         return newState;
                     }
@@ -103,14 +103,6 @@ namespace PetriEngine::ExplicitColored {
                 totalBindings = _net._transitions[tid].totalBindings;
             }
             return {{},0};
-        }
-
-        [[nodiscard]] bool shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t transition) const {
-            if (!checkInhibitor(marking, transition))
-                return true;
-            if (!_hasMinimalCardinality(marking, transition))
-                return true;
-            return false;
         }
 
         [[nodiscard]] uint64_t getKey(size_t stateId, Transition_t transition) const {

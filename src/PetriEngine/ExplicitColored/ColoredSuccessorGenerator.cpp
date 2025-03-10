@@ -183,11 +183,6 @@ namespace PetriEngine::ExplicitColored{
         auto constraintDataIt = _constraintData.find(getKey(stateId, tid));
         if (totalBindings > 30 && constraintDataIt == _constraintData.end()) {
             bool noPossibleBinding = false;
-            static bool firstTime = true;
-            if (firstTime) {
-                std::cout << "constrained" << std::endl;
-                firstTime = false;
-            }
             constraintDataIt = _calculateConstraintData(marking, stateId, tid, noPossibleBinding);
             if (noPossibleBinding) {
                 return std::numeric_limits<Binding_t>::max();
