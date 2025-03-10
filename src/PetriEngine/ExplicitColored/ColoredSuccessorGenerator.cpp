@@ -114,7 +114,7 @@ namespace PetriEngine::ExplicitColored{
 
                 for (const auto& tokens : place.counts()) {
                     auto bindingValue = add_color_offset(
-                        _net._places[constraint.place].colorType->colorCodec.decode(tokens.first.encodedValue, constraint.colorIndex),
+                        _net._places[constraint.place].colorType->colorCodec.decode(tokens.first, constraint.colorIndex),
                         -constraint.colorOffset,
                         _net._variables[variable].colorType
                     );

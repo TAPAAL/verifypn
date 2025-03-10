@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include "ColorSequence.h"
+#include "ExplicitErrors.h"
 
 namespace PetriEngine::ExplicitColored {
     class SequenceMultiSet {
@@ -14,33 +15,42 @@ namespace PetriEngine::ExplicitColored {
         SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
 
         [[nodiscard]] MarkingCount_t getCount(const ColorSequence& colorSequence) const {
-            const auto it = clower_bound(colorSequence);
-            if (it != _counts.end() && it->first == colorSequence) {
+            const Color_t& color = colorSequence.encodedValue;
+            const auto it = clower_bound(color);
+            if (it != _counts.end() && it->first == color) {
                 return it->second;
             }
             return 0;
         }
 
         void setCount(const ColorSequence& colorSequence, MarkingCount_t count) {
-            const auto it = lower_bound(colorSequence);
+            setCount(colorSequence.encodedValue, count);
+        }
 
+        void setCount(const Color_t& color, MarkingCount_t count) {
+            const auto it = lower_bound(color);
             _cardinality += static_cast<sMarkingCount_t>(count);
-            if (it != _counts.end() && it->first == colorSequence) {
+
+            if (it != _counts.end() && it->first == color) {
                 _cardinality -= it->second;
                 it->second = static_cast<sMarkingCount_t>(count);
                 return;
             }
-            _counts.insert(it, {colorSequence, count});
+            _counts.insert(it, {color, count});
         }
 
         void addCount(const ColorSequence& colorSequence, sMarkingCount_t count) {
-            const auto it = lower_bound(colorSequence);
+            const Color_t& color = colorSequence.encodedValue;
+            const auto it = lower_bound(color);
+            if (count > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - count) {
+                throw explicit_error{too_many_tokens};
+            }
             _cardinality += count;
-            if (it != _counts.end() && it->first == colorSequence) {
+            if (it != _counts.end() && it->first == color) {
                 it->second += count;
                 return;
             }
-            _counts.insert(it, {colorSequence, count});
+            _counts.insert(it, {color, count});
         }
 
         [[nodiscard]] MarkingCount_t totalCount() const {
@@ -52,6 +62,9 @@ namespace PetriEngine::ExplicitColored {
             auto bIt = other._counts.begin();
             while (aIt != _counts.end() && bIt != other._counts.end()) {
                 if (aIt->first == bIt->first) {
+                    if (bIt->second > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - bIt->second) {
+                        throw explicit_error{too_many_tokens};
+                    }
                     aIt->second += bIt->second;
                     _cardinality += bIt->second;
                     ++aIt;
@@ -99,6 +112,10 @@ namespace PetriEngine::ExplicitColored {
             for (auto& [color, count] : _counts) {
                 count *= static_cast<sMarkingCount_t>(scalar);
             }
+            if (_cardinality > std::numeric_limits<sMarkingCount_t>::max() / scalar) {
+                throw explicit_error{too_many_tokens};
+            }
+
             _cardinality *= static_cast<sMarkingCount_t>(scalar);
             return *this;
         }
@@ -199,7 +216,7 @@ namespace PetriEngine::ExplicitColored {
             return true;
         }
 
-        [[nodiscard]] const std::vector<std::pair<ColorSequence, sMarkingCount_t>>& counts() const {
+        [[nodiscard]] const std::vector<std::pair<Color_t, sMarkingCount_t>>& counts() const {
             return _counts;
         }
 
@@ -227,6 +244,14 @@ namespace PetriEngine::ExplicitColored {
             }
         }
 
+        [[nodiscard]] uint32_t getHighestCount() const {
+            int max = 0;
+            for (auto& [key, count] : _counts) {
+                max = std::max(count, max);
+            }
+            return max;
+        }
+
         friend std::ostream& operator<<(std::ostream& out, const SequenceMultiSet& sequence) {
             for (const auto& [color, count] : sequence._counts) {
                 if (count > 0) {
@@ -236,7 +261,7 @@ namespace PetriEngine::ExplicitColored {
             return out;
         }
     private:
-        std::vector<std::pair<ColorSequence, sMarkingCount_t>>::iterator lower_bound(const ColorSequence& key) {
+        std::vector<std::pair<Color_t, sMarkingCount_t>>::iterator lower_bound(const Color_t& key) {
             return std::lower_bound(
                  _counts.begin(),
                  _counts.end(),
@@ -247,7 +272,7 @@ namespace PetriEngine::ExplicitColored {
             );
         }
 
-        [[nodiscard]] std::vector<std::pair<ColorSequence, sMarkingCount_t>>::const_iterator clower_bound(const ColorSequence& key) const {
+        [[nodiscard]] std::vector<std::pair<Color_t, sMarkingCount_t>>::const_iterator clower_bound(const Color_t& key) const {
             return std::lower_bound(
                  _counts.cbegin(),
                  _counts.cend(),
@@ -257,7 +282,7 @@ namespace PetriEngine::ExplicitColored {
                  }
             );
         }
-        std::vector<std::pair<ColorSequence, sMarkingCount_t>> _counts;
+        std::vector<std::pair<Color_t, sMarkingCount_t>> _counts;
         sMarkingCount_t _cardinality = 0;
     };
 

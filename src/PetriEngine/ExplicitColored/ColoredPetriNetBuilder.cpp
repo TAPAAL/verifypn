@@ -112,9 +112,8 @@ namespace PetriEngine::ExplicitColored {
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) {
         ColoredPetriNetPlace place;
-        place.colorType = _colorTypeMap.find(type->getName())->second;
-
         CPNMultiSet multiSet;
+        place.colorType = _colorTypeMap.find(type->getName())->second;
         for (const auto& [tokenColor, count] : tokens) {
             std::vector<Color_t> colorSequence;
             if (tokenColor->isTuple()) {
@@ -124,8 +123,7 @@ namespace PetriEngine::ExplicitColored {
             } else {
                 colorSequence.push_back(tokenColor->getId());
             }
-            //Potentially not good, not sure what
-            multiSet.setCount(ColorSequence{colorSequence,*place.colorType}, count);
+            multiSet.setCount(ColorSequence{colorSequence, *place.colorType}, count);
         }
 
         _currentNet._places.push_back(std::move(place));
@@ -161,6 +159,15 @@ namespace PetriEngine::ExplicitColored {
             _colorTypeMap[id] = std::move(colorType);
         }
         (*_colors)[id] = type;
+    }
+
+    void ColoredPetriNetBuilder::addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) {
+        auto& productType = _colorTypeMap[colorType->getName()];
+        const auto colorSize = newConstituent->getConstituentsSizes()[0];
+        productType->colorSize *= colorSize;
+        productType->basicColorSizes.push_back(colorSize);
+        //Not related to building our net but the PNML writer needs the pointer updated
+        colorType->addType(newConstituent);
     }
 
     void ColoredPetriNetBuilder::addVariable(const Colored::Variable* variable) {

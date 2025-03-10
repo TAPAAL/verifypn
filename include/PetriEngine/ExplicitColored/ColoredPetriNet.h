@@ -69,6 +69,9 @@ namespace PetriEngine::ExplicitColored
         void extractGuardVariables(Transition_t transition, std::set<Variable_t>& out) const;
         void extractOutputVariables(Transition_t transition, std::set<Variable_t>& out) const;
         [[nodiscard]] const std::set<Variable_t>& getAllTransitionVariables(Transition_t transition) const;
+        [[nodiscard]] const std::vector<ColoredPetriNetPlace>& getPlaces() const {
+            return _places;
+        }
     private:
         friend class ColoredPetriNetBuilder;
         friend class ColoredSuccessorGenerator;

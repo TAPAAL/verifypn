@@ -59,6 +59,7 @@ using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
+int explicitColoredErrorHandler(const ExplicitColored::explicit_error& error);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -83,14 +84,21 @@ int main(int argc, const char** argv) {
                        ? getCTLQueries(ctlStarQueries)
                        : getLTLQueries(ctlStarQueries);
 
-        if (options.explicit_colored) {
-            return explicitColored(options, string_set, queries, querynames);
-        }
-
         ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
+            if (options.explicit_colored) {
+                if (options.isCPN && !queries.empty() && isReachability(queries[0])) {
+                    try {
+                        return explicitColored(options, string_set, queries, querynames);
+                    } catch (const ExplicitColored::explicit_error& e) {
+                        return explicitColoredErrorHandler(e);
+                    }
+                }
+                std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
+                return to_underlying(ReturnValue::ErrorCode);
+            }
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
         }
@@ -589,21 +597,20 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     } else {
         builder.parse_model(options.modelfile);
     }
-
     auto buildStatus = builder.build();
 
     switch (buildStatus) {
-        case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
-            break;
-        case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
-            std::cout << "The colored petri net has too many bindings to be represented" << std::endl
-                    << "TOO_MANY_BINDINGS" << std::endl;
-            return to_underlying(ReturnValue::UnknownCode);
-        default:
-            std::cout << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(
-                        buildStatus) << std::endl
-                    << "Unknown builder error " << static_cast<int>(buildStatus) << std::endl;
-            return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
+        break;
+    case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+        std::cout << "The colored petri net has too many bindings to be represented" << std::endl
+                << "TOO_MANY_BINDINGS" << std::endl;
+        return to_underlying(ReturnValue::UnknownCode);
+    default:
+        std::cout << "The explicit colored petri net builder gave an unexpected error " << static_cast<int>(
+                    buildStatus) << std::endl
+                << "Unknown builder error " << static_cast<int>(buildStatus) << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
     }
 
     auto net = builder.takeNet();
@@ -614,68 +621,68 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     for (size_t i = 0; i < queries.size(); i++) {
         const auto seed = options.seed();
         ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
-        try {
-            ExplicitColored::ExplicitWorklist worklist(net, queries[i], placeIndices, transitionIndices, resultPrinter, seed);
-            switch (options.strategy) {
-                case Strategy::DEFAULT:
-                case Strategy::DFS:
-                    result = worklist.check(ExplicitColored::SearchStrategy::DFS, options.colored_sucessor_generator);
-                break;
-                case Strategy::BFS:
-                    result = worklist.check(ExplicitColored::SearchStrategy::BFS, options.colored_sucessor_generator);
-                break;
-                case Strategy::RDFS:
-                    result = worklist.check(ExplicitColored::SearchStrategy::RDFS, options.colored_sucessor_generator);
-                break;
-                case Strategy::HEUR:
-                    result = worklist.check(ExplicitColored::SearchStrategy::HEUR, options.colored_sucessor_generator);
-                break;
-                default:
-                    throw ExplicitColored::explicit_error{ExplicitColored::ExplicitErrorType::unsupported_strategy};
-            }
-        }catch (const ExplicitColored::explicit_error& e) {
-            switch (e.type){
-                case ExplicitColored::unsupported_strategy:
-                    std::cout << "Strategy is not supported for explicit colored engine" << std::endl
-                    << "UNSUPPORTED STRATEGY" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::unsupported_query:
-                    std::cout << "Query is not supported for explicit colored engine" << std::endl
-                    << "UNSUPPORTED QUERY" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::ptrie_too_small:
-                    std::cout << "Marking was too big to be stored in passed list" << std::endl
-                    << "PTRIE TOO SMALL" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::unsupported_generator:
-                    std::cout << "Type of successor generator not supported" << std::endl
-                    << "UNSUPPORTED GENERATOR" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::unsupported_net:
-                    std::cout << "Net is not supported" << std::endl
-                    << "UNSUPPORTED NET" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::unexpected_expression:
-                    std::cout << "Unexpected expression in arc" << std::endl
-                    << "UNEXPECTED EXPRESSION" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::unknown_variable:
-                    std::cout << "Unknown variable in arc" << std::endl
-                    << "UNKNOWN VARIABLE" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                case ExplicitColored::too_many_tokens:
-                    std::cout << "Too many tokens to represent" << std::endl
-                    << "TOO MANY TOKENS" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-                default:
-                    std::cout << "Something went wrong in explicit colored exploration" << std::endl
-                    << "UNKNOWN EXPLICIT COLORED ERROR" << std::endl;
-                    return to_underlying(ReturnValue::ErrorCode);
-            }
+        ExplicitColored::ExplicitWorklist worklist(net, queries[i], placeIndices, transitionIndices, resultPrinter, seed);
+        switch (options.strategy) {
+        case Strategy::DEFAULT:
+        case Strategy::DFS:
+            result = worklist.check(ExplicitColored::SearchStrategy::DFS, options.colored_sucessor_generator);
+            break;
+        case Strategy::BFS:
+            result = worklist.check(ExplicitColored::SearchStrategy::BFS, options.colored_sucessor_generator);
+            break;
+        case Strategy::RDFS:
+            result = worklist.check(ExplicitColored::SearchStrategy::RDFS, options.colored_sucessor_generator);
+            break;
+        case Strategy::HEUR:
+            result = worklist.check(ExplicitColored::SearchStrategy::HEUR, options.colored_sucessor_generator);
+            break;
+        default:
+            throw ExplicitColored::explicit_error{ExplicitColored::ExplicitErrorType::unsupported_strategy};
         }
     }
     if (result) {
         return to_underlying(ReturnValue::SuccessCode);
     }
     return to_underlying(ReturnValue::FailedCode);
+}
+
+int explicitColoredErrorHandler(const ExplicitColored::explicit_error& error) {
+    switch (error.type){
+    case ExplicitColored::unsupported_strategy:
+        std::cout << "Strategy is not supported for explicit colored engine" << std::endl
+        << "UNSUPPORTED STRATEGY" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::unsupported_query:
+        std::cout << "Query is not supported for explicit colored engine" << std::endl
+        << "UNSUPPORTED QUERY" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::ptrie_too_small:
+        std::cout << "Marking was too big to be stored in passed list" << std::endl
+        << "PTRIE TOO SMALL" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::unsupported_generator:
+        std::cout << "Type of successor generator not supported" << std::endl
+        << "UNSUPPORTED GENERATOR" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::unsupported_net:
+        std::cout << "Net is not supported" << std::endl
+        << "UNSUPPORTED NET" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::unexpected_expression:
+        std::cout << "Unexpected expression in arc" << std::endl
+        << "UNEXPECTED EXPRESSION" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::unknown_variable:
+        std::cout << "Unknown variable in arc" << std::endl
+        << "UNKNOWN VARIABLE" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    case ExplicitColored::too_many_tokens:
+        std::cout << "Too many tokens to represent" << std::endl
+        << "TOO MANY TOKENS" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    default:
+        std::cout << "Something went wrong in explicit colored exploration" << std::endl
+        << "UNKNOWN EXPLICIT COLORED ERROR" << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    }
 }
