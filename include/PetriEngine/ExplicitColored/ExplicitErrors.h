@@ -18,6 +18,7 @@ namespace PetriEngine::ExplicitColored {
         unexpected_expression = 5,
         unknown_variable = 6,
         too_many_tokens = 7,
+        unknown_encoding = 8,
     };
 
     class explicit_error : public std::exception {

@@ -58,12 +58,12 @@ namespace PetriEngine::ExplicitColored {
     template <template <typename> typename WaitingList, typename T>
     bool ExplicitWorklist::_genericSearch(WaitingList<T> waiting) {
         ptrie::set<uint8_t> passed;
-        std::vector<uint8_t> scratchpad;
-        _fullStatespace = true;
+        ColoredEncoder encoder = ColoredEncoder{_net.getPlaces()};
         const auto& initialState = _net.initial();
         const auto earlyTerminationCondition = _quantifier == Quantifier::EF;
-        size_t size = initialState.compressedEncode(scratchpad, _fullStatespace);
 
+        auto size = encoder.encode(initialState);
+        passed.insert(encoder.data(), size);
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
             waiting.add(std::move(initial));
@@ -71,15 +71,17 @@ namespace PetriEngine::ExplicitColored {
             auto initial = ColoredPetriNetStateFixed{initialState};
             waiting.add(std::move(initial));
         }
-        passed.insert(scratchpad.data(), size);
+
         _searchStatistics.passedCount = 1;
         _searchStatistics.checkedStates = 1;
 
         if (_check(initialState) == earlyTerminationCondition) {
-            return _getResult(true);
+            encoder.printBiggestEncoding();
+            return _getResult(true, encoder.isFullStatespace());
         }
         if (_net.getTransitionCount() == 0) {
-            return _getResult(false);
+            encoder.printBiggestEncoding();
+            return _getResult(false, encoder.isFullStatespace());
         }
 
         while (!waiting.empty()){
@@ -98,24 +100,26 @@ namespace PetriEngine::ExplicitColored {
                 }
             }
 
-            auto& marking = successor.marking;
-            size = marking.compressedEncode(scratchpad, _fullStatespace);
+            successor.shrink();
+            const auto& marking = successor.marking;
+            size = encoder.encode(marking);
             _searchStatistics.exploredStates++;
-            if (!passed.exists(scratchpad.data(), size).first) {
+            if (!passed.exists(encoder.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
                 if (_check(marking) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
-                    return _getResult(true);
+                    encoder.printBiggestEncoding();
+                    return _getResult(true, encoder.isFullStatespace());
                 }
-                successor.shrink();
                 waiting.add(std::move(successor));
-                passed.insert(scratchpad.data(), size);
+                passed.insert(encoder.data(), size);
                 _searchStatistics.passedCount += 1;
                 _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
             }
         }
+        encoder.printBiggestEncoding();
         _searchStatistics.endWaitingStates = waiting.size();
-        return _getResult(false);
+        return _getResult(false, encoder.isFullStatespace());
     }
 
     template<typename SuccessorGeneratorState>
@@ -160,9 +164,9 @@ namespace PetriEngine::ExplicitColored {
             );
     }
 
-    bool ExplicitWorklist::_getResult(const bool found) const {
+    bool ExplicitWorklist::_getResult(const bool found, const bool fullStatespace) const {
         Reachability::ResultPrinter::Result res;
-        if (!found && !_fullStatespace) {
+        if (!found && !fullStatespace) {
             res = Reachability::ResultPrinter::Result::Unknown;
         }else {
             res = (

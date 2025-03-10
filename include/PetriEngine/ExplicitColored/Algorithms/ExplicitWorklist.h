@@ -8,6 +8,7 @@
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/SearchStatistics.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
+#include "PetriEngine/ExplicitColored/ColoredEncoder.h"
 
 namespace PetriEngine::ExplicitColored {
     template <typename T>
@@ -63,7 +64,7 @@ namespace PetriEngine::ExplicitColored {
 
         template <template <typename> typename WaitingList, typename T>
         [[nodiscard]] bool _genericSearch(WaitingList<T> waiting);
-        [[nodiscard]] bool _getResult(bool found) const;
+        [[nodiscard]] bool _getResult(bool found, bool fullStatespace) const;
 
 
     };
