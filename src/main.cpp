@@ -59,7 +59,6 @@ using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
 int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
-int explicitColoredErrorHandler(const ExplicitColored::explicit_error& error);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -93,7 +92,8 @@ int main(int argc, const char** argv) {
                     try {
                         return explicitColored(options, string_set, queries, querynames);
                     } catch (const ExplicitColored::explicit_error& e) {
-                        return explicitColoredErrorHandler(e);
+                        std::cout << e << std::endl;
+                        return to_underlying(ReturnValue::ErrorCode);
                     }
                 }
                 std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
@@ -623,9 +623,3 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     }
     return to_underlying(ReturnValue::FailedCode);
 }
-
-int explicitColoredErrorHandler(const ExplicitColored::explicit_error& error) {
-    std::cout << error << std::endl;
-    return to_underlying(ReturnValue::ErrorCode);
-}
-
