@@ -535,7 +535,7 @@ namespace PetriEngine::ExplicitColored {
         void accept(const Colored::NumberOfExpression* expr) override {
             _scale *= expr->number();
             if (expr->size() > 1) {
-                throw explicit_error{unsupported_net};
+                throw explicit_error{ExplicitErrorType::unsupported_net};
             }
             (*expr)[0]->visit(*this);
         }
@@ -627,7 +627,7 @@ namespace PetriEngine::ExplicitColored {
         MarkingCount_t _scale;
 
         static void unexpectedExpression() {
-            throw explicit_error{unexpected_expression};
+            throw explicit_error{ExplicitErrorType::unexpected_expression};
         }
     };
 

@@ -118,7 +118,7 @@ namespace PetriEngine::ExplicitColored {
                 count *= static_cast<sMarkingCount_t>(scalar);
             }
             if (_cardinality > std::numeric_limits<sMarkingCount_t>::max() / scalar) {
-                throw explicit_error{too_many_tokens};
+                throw explicit_error{ ExplicitErrorType::too_many_tokens };
             }
 
             _cardinality *= static_cast<sMarkingCount_t>(scalar);
