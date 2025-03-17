@@ -15,7 +15,7 @@ namespace PetriEngine::ExplicitColored {
         SequenceMultiSet& operator=(SequenceMultiSet&&) = default;
 
         [[nodiscard]] MarkingCount_t getCount(const ColorSequence& colorSequence) const {
-            const Color_t& color = colorSequence.color;
+            const Color_t& color = colorSequence.encodedValue;
             const auto it = clower_bound(color);
             if (it != _counts.end() && it->first == color) {
                 return it->second;
@@ -24,7 +24,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void setCount(const ColorSequence& colorSequence, MarkingCount_t count) {
-            setCount(colorSequence.color, count);
+            setCount(colorSequence.encodedValue, count);
         }
 
         void setCount(const Color_t& color, MarkingCount_t count) {
@@ -40,7 +40,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void addCount(const ColorSequence& colorSequence, sMarkingCount_t count) {
-            const Color_t& color = colorSequence.color;
+            const Color_t& color = colorSequence.encodedValue;
             const auto it = lower_bound(color);
             if (count > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - count) {
                 throw explicit_error{too_many_tokens};
@@ -251,6 +251,7 @@ namespace PetriEngine::ExplicitColored {
             }
             return max;
         }
+
         friend std::ostream& operator<<(std::ostream& out, const SequenceMultiSet& sequence) {
             for (const auto& [color, count] : sequence._counts) {
                 if (count > 0) {

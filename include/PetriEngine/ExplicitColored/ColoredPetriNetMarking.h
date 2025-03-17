@@ -10,14 +10,7 @@ namespace PetriEngine::ExplicitColored{
         ColoredPetriNetMarking() = default;
         ColoredPetriNetMarking(const ColoredPetriNetMarking& marking) = default;
         ColoredPetriNetMarking(ColoredPetriNetMarking&&) = default;
-        ColoredPetriNetMarking& operator=(const ColoredPetriNetMarking& marking) {
-            auto vec = std::vector<CPNMultiSet>{};
-            for (const auto & i : marking.markings){
-                vec.push_back(i);
-            }
-            markings = std::move(vec);
-            return *this;
-        };
+        ColoredPetriNetMarking& operator=(const ColoredPetriNetMarking& marking) = default;
         ColoredPetriNetMarking& operator=(ColoredPetriNetMarking&&) = default;
 
         std::vector<CPNMultiSet> markings;

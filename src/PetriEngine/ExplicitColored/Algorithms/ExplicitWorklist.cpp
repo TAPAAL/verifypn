@@ -3,7 +3,6 @@
 
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include <PetriEngine/options.h>
-#include "PetriEngine/ExplicitColored/Visitors/GammaQueryVisitor.h"
 #include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
@@ -37,11 +36,11 @@ namespace PetriEngine::ExplicitColored {
         }
     }
 
-    bool ExplicitWorklist::check(const Strategy searchStrategy, const ColoredSuccessorGeneratorOption colored_successor_generator_option) {
-        if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::FIXED) {
+    bool ExplicitWorklist::check(const Strategy searchStrategy, const ColoredSuccessorGeneratorOption coloredSuccessorGeneratorOption) {
+        if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::FIXED) {
             return _search<ColoredPetriNetStateFixed>(searchStrategy);
         }
-        if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
+        if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
         throw explicit_error(unsupported_generator);
@@ -51,8 +50,8 @@ namespace PetriEngine::ExplicitColored {
         return _searchStatistics;
     }
 
-    bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state) const {
-        return _gammaQuery->eval(_successorGenerator, state);
+    bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state, size_t id) const {
+        return _gammaQuery->eval(_successorGenerator, state, id);
     }
 
     template <template <typename> typename WaitingList, typename T>
@@ -66,16 +65,18 @@ namespace PetriEngine::ExplicitColored {
         passed.insert(encoder.data(), size);
         if constexpr (std::is_same_v<T, ColoredPetriNetStateEven>) {
             auto initial = ColoredPetriNetStateEven{initialState, _net.getTransitionCount()};
+            initial.id = 0;
             waiting.add(std::move(initial));
         } else {
             auto initial = ColoredPetriNetStateFixed{initialState};
+            initial.id = 0;
             waiting.add(std::move(initial));
         }
 
         _searchStatistics.passedCount = 1;
         _searchStatistics.checkedStates = 1;
 
-        if (_check(initialState) == earlyTerminationCondition) {
+        if (_check(initialState, 0) == earlyTerminationCondition) {
             encoder.printBiggestEncoding();
             return _getResult(true, encoder.isFullStatespace());
         }
@@ -89,6 +90,7 @@ namespace PetriEngine::ExplicitColored {
             auto successor = _successorGenerator.next(next);
             if (next.done()) {
                 waiting.remove();
+                _successorGenerator.shrinkState(next.id);
                 continue;
             }
 
@@ -106,7 +108,7 @@ namespace PetriEngine::ExplicitColored {
             _searchStatistics.exploredStates++;
             if (!passed.exists(encoder.data(), size).first) {
                 _searchStatistics.checkedStates += 1;
-                if (_check(marking) == earlyTerminationCondition) {
+                if (_check(marking, successor.id) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
                     encoder.printBiggestEncoding();
                     return _getResult(true, encoder.isFullStatespace());

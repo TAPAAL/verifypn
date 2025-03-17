@@ -31,7 +31,7 @@ namespace PetriEngine::ExplicitColored {
             size_t seed
         );
 
-        bool check(Strategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option);
+        bool check(Strategy searchStrategy, ColoredSuccessorGeneratorOption coloredSuccessorGeneratorOption);
         [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
     private:
         std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
@@ -44,7 +44,7 @@ namespace PetriEngine::ExplicitColored {
         const IColoredResultPrinter& _coloredResultPrinter;
         template<typename SuccessorGeneratorState>
         [[nodiscard]] bool _search(Strategy searchStrategy);
-        [[nodiscard]] bool _check(const ColoredPetriNetMarking& state) const;
+        [[nodiscard]] bool _check(const ColoredPetriNetMarking& state, size_t id) const;
 
         template <typename T>
         [[nodiscard]] bool _dfs();
