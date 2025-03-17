@@ -78,6 +78,8 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id,
                 const Colored::ColorType* type) override;
+        void addToColorType(Colored::ProductType* colorType,
+            const Colored::ColorType* newConstituent) override;
 
         void sort() override;
 

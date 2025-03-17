@@ -13,17 +13,17 @@
 namespace PetriEngine::ExplicitColored {
     class FireabilityChecker {
     public:
-        static bool canFire(const ColoredSuccessorGenerator& successorGenerator, const Transition_t tid, const ColoredPetriNetMarking& state) {
+        static bool canFire(const ColoredSuccessorGenerator& successorGenerator, const Transition_t tid, const ColoredPetriNetMarking& state, const size_t id) {
             Binding binding;
-            const auto totalBindings = successorGenerator.net()._transitions[tid].validVariables.second;
-            return successorGenerator.findNextValidBinding(state, tid, 0, totalBindings, binding) != std::numeric_limits<Binding_t>::max();
+            const auto totalBindings = successorGenerator.net()._transitions[tid].totalBindings;
+            return successorGenerator.findNextValidBinding(state, tid, 0, totalBindings, binding, id) != std::numeric_limits<Binding_t>::max();
         }
 
         //This is no good, but we do not really have deadlock queries
-        static bool hasDeadlock (const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking& state) {
+        static bool hasDeadlock (const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking& state, const size_t id) {
             const auto transitionCount = successorGenerator.net().getTransitionCount();
             for (Transition_t tid = 0; tid < transitionCount; tid++) {
-                if (canFire(successorGenerator, tid, state)) {
+                if (canFire(successorGenerator, tid, state, id)) {
                     return false;
                 }
             }

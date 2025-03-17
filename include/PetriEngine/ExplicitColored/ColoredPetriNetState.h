@@ -3,7 +3,7 @@
 
 #include <queue>
 #include <utility>
-
+#include "PetriEngine/ExplicitColored/IntegerPackCodec.h"
 #include "ColoredPetriNetMarking.h"
 
 namespace PetriEngine::ExplicitColored {
@@ -48,6 +48,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         ColoredPetriNetMarking marking;
+        size_t id;
     private:
         bool _done = false;
 
@@ -56,15 +57,14 @@ namespace PetriEngine::ExplicitColored {
     };
 
     struct ColoredPetriNetStateEven {
-        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& state) : marking(state.marking), _map(state._map), _currentIndex(state._currentIndex) {};
         ColoredPetriNetStateEven(const ColoredPetriNetStateEven& oldState, const size_t& numberOfTransitions) : marking(oldState.marking) {
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
-        ColoredPetriNetStateEven(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking)){
+        ColoredPetriNetStateEven(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking))  {
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
         ColoredPetriNetStateEven(ColoredPetriNetStateEven&& state) = default;
-
+        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& state) = default;
         ColoredPetriNetStateEven& operator=(const ColoredPetriNetStateEven&) = default;
         ColoredPetriNetStateEven& operator=(ColoredPetriNetStateEven&&) = default;
         std::pair<Transition_t, Binding_t> getNextPair() {
@@ -74,14 +74,14 @@ namespace PetriEngine::ExplicitColored {
                 return {tid,bid};
             }
             auto it = _map.begin() + _currentIndex;
-            while (it != _map.end() && *it == std::numeric_limits<Transition_t>::max()) {
+            while (it != _map.end() && *it == std::numeric_limits<Binding_t>::max()) {
                 ++it;
                 ++_currentIndex;
             }
             if (it == _map.end()) {
                 _currentIndex = 0;
                 shuffle = true;
-            }else {
+            } else {
                 tid = _currentIndex;
                 bid = *it;
                 ++_currentIndex;
@@ -117,12 +117,78 @@ namespace PetriEngine::ExplicitColored {
 
         ColoredPetriNetMarking marking;
         bool shuffle = false;
+        size_t id;
+
     private:
         bool _done = false;
         std::vector<Binding_t> _map;
         uint32_t _currentIndex = 0;
         uint32_t _completedTransitions = 0;
     };
+
+    struct PossibleValues {
+            explicit PossibleValues(std::vector<Color_t> colors)
+                : colors(std::move(colors)), allColors(false) {}
+
+            explicit PossibleValues(const std::set<Color_t>& colors)
+                : colors(colors.begin(), colors.end()), allColors(false) {}
+
+            static PossibleValues getAll() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = true;
+                return rv;
+            }
+
+            static PossibleValues getEmpty() {
+                PossibleValues rv(std::vector<Color_t> {});
+                rv.allColors = false;
+                return rv;
+            }
+
+            void sort() {
+                std::sort(colors.begin(), colors.end());
+            }
+
+            void intersect(const PossibleValues& other) {
+                if (other.allColors) {
+                    return;
+                }
+                if (allColors) {
+                    colors = other.colors;
+                    return;
+                }
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.colors.cbegin(),
+                    other.colors.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            void intersect(const std::set<Color_t>& other) {
+                if (allColors) {
+                    colors.clear();
+                    colors.insert(colors.begin(), other.cbegin(), other.cend());
+                    return;
+                }
+
+                std::vector<Color_t> newColors;
+                std::set_intersection(
+                    colors.cbegin(),
+                    colors.cend(),
+                    other.cbegin(),
+                    other.cend(),
+                    std::back_inserter(newColors)
+                );
+                colors = std::move(newColors);
+            }
+
+            std::vector<Color_t> colors;
+            bool allColors;
+        };
 }
 
 #endif //COLOREDPETRINETSTATE_H

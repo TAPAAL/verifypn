@@ -8,6 +8,7 @@ add_library(ExplicitColored
     ColoredResultPrinter.cpp
     GuardCompiler.cpp
     GammaQueryCompiler.cpp
+    ColoredPetriNet.cpp
     ColorIgnorantPetriNetBuilder.cpp
 )
 

@@ -5,11 +5,11 @@
 #include <vector>
 #include <memory>
 #include "ArcCompiler.h"
-#include "utils/structures/shared_string.h"
 #include "AtomicTypes.h"
 #include "GuardCompiler.h"
 #include "ExplicitColorTypes.h"
 #include "ColoredPetriNetMarking.h"
+#include "IntegerPackCodec.h"
 
 namespace PetriEngine::ExplicitColored
 {
@@ -17,7 +17,8 @@ namespace PetriEngine::ExplicitColored
     {
         std::unique_ptr<CompiledGuardExpression> guardExpression;
         std::set<Variable_t> variables;
-        std::pair<std::map<Variable_t,std::vector<Color_t>>, uint64_t> validVariables;
+        uint64_t totalBindings;
+        std::map<Variable_t, std::vector<VariableConstraint>> preplacesVariableConstraints;
     };
 
     struct ColoredPetriNetPlace
@@ -62,6 +63,14 @@ namespace PetriEngine::ExplicitColored
 
         [[nodiscard]] Transition_t getTransitionCount() const {
             return _transitions.size();
+        }
+
+        void extractInputVariables(Transition_t transition, std::set<Variable_t>& out) const;
+        void extractGuardVariables(Transition_t transition, std::set<Variable_t>& out) const;
+        void extractOutputVariables(Transition_t transition, std::set<Variable_t>& out) const;
+        [[nodiscard]] const std::set<Variable_t>& getAllTransitionVariables(Transition_t transition) const;
+        [[nodiscard]] const std::vector<ColoredPetriNetPlace>& getPlaces() const {
+            return _places;
         }
     private:
         friend class ColoredPetriNetBuilder;

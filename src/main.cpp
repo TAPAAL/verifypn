@@ -83,12 +83,16 @@ int main(int argc, const char** argv) {
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
-            if (options.isCPN && options.explicit_colored && PetriEngine::PQL::isReachability(queries[0])) {
-                try {
-                    return explicitColored(options, string_set, queries, querynames);
-                } catch (const ExplicitColored::explicit_error& e) {
-                    return explicitColoredErrorHandler(e);
+            if (options.explicit_colored) {
+                if (options.isCPN && !queries.empty() && isReachability(queries[0])) {
+                    try {
+                        return explicitColored(options, string_set, queries, querynames);
+                    } catch (const ExplicitColored::explicit_error& e) {
+                        return explicitColoredErrorHandler(e);
+                    }
                 }
+                std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
+                return to_underlying(ReturnValue::ErrorCode);
             }
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
