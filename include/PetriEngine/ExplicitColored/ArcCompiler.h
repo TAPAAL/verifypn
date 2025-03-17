@@ -5,6 +5,7 @@
 #include "../Colored/Expressions.h"
 #include "SequenceMultiSet.h"
 #include "Binding.h"
+#include "VariableConstraint.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {
@@ -64,7 +65,6 @@ namespace PetriEngine::ExplicitColored {
         MarkingCount_t variableCount;
     };
 
-
     class CompiledArcExpression {
     public:
         [[nodiscard]] virtual const CPNMultiSet& eval(const Binding& binding) const = 0;
@@ -77,6 +77,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
         [[nodiscard]] virtual const ColoredMinimalMarking& getMinimalColorMarking() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
+        [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t fromPlace) const = 0;
         virtual ~CompiledArcExpression() = default;
     };
 

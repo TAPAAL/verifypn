@@ -1,6 +1,5 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 #include <PetriEngine/ExplicitColored/ArcCompiler.h>
-#include "PetriEngine/ExplicitColored/ValidVariableGenerator.h"
 #include "PetriEngine/ExplicitColored/GuardCompiler.h"
 
 namespace PetriEngine::ExplicitColored {
@@ -137,9 +136,7 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNetTransition transition;
         const GuardCompiler compiler(*_variableMap, *_colors);
         if (guard != nullptr) {
-            auto [guardExpr, vars] = compiler.compile(*guard);
-            transition.guardExpression = std::move(guardExpr);
-            transition.variables = std::move(vars);
+            transition.guardExpression = compiler.compile(*guard);
         } else {
             transition.guardExpression = nullptr;
         }
@@ -181,6 +178,23 @@ namespace PetriEngine::ExplicitColored {
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
+        _createArcsAndTransitions();
+
+        const auto status = _calculateTransitionVariables();
+        if (status != ColoredPetriNetBuilderStatus::OK) {
+            return status;
+        }
+
+        _calculatePrePlaceConstraints();
+
+        return ColoredPetriNetBuilderStatus::OK;
+    }
+
+    ColoredPetriNet ColoredPetriNetBuilder::takeNet() {
+        return std::move(_currentNet);
+    }
+
+    void ColoredPetriNetBuilder::_createArcsAndTransitions() {
         const auto transitions = _currentNet._transitions.size();
         auto transIndices = std::vector<std::pair<uint32_t,uint32_t>>(transitions + 1);
         auto arcs = std::vector<ColoredPetriNetArc>{};
@@ -222,15 +236,51 @@ namespace PetriEngine::ExplicitColored {
         _currentNet._transitionInhibitors = std::move(inhibIndices);
         _currentNet._arcs = std::move(arcs);
         _currentNet._transitionArcs = std::move(transIndices);
-        const auto result = ValidVariableGenerator{_currentNet}.generateValidColorsForTransitions();
-        if (result == ValidVariableGeneratorStatus::TOO_MANY_BINDINGS) {
-            return ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS;
+    }
+
+    ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::_calculateTransitionVariables() {
+        for (auto tid = 0; tid < _currentNet._transitions.size(); tid++) {
+            std::set<Variable_t> relevantVariables;
+            _currentNet.extractGuardVariables(tid, relevantVariables);
+            _currentNet.extractInputVariables(tid, relevantVariables);
+            _currentNet.extractOutputVariables(tid, relevantVariables);
+
+            Binding_t totalBindings = 0;
+            bool first = true;
+            for (auto variableIndex : relevantVariables) {
+                auto varColorCount = _currentNet._variables[variableIndex].colorType;
+
+                if (first) {
+                    totalBindings = 1;
+                    first = false;
+                }
+                if (totalBindings > std::numeric_limits<Binding_t>::max() / varColorCount) {
+                    return ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS;
+                }
+                totalBindings *= varColorCount;
+            }
+            _currentNet._transitions[tid].variables = std::move(relevantVariables);
+            _currentNet._transitions[tid].totalBindings = std::move(totalBindings);
         }
         return ColoredPetriNetBuilderStatus::OK;
     }
 
-    ColoredPetriNet ColoredPetriNetBuilder::takeNet() {
-        return std::move(_currentNet);
+    void ColoredPetriNetBuilder::_calculatePrePlaceConstraints() {
+        //create preplace constraints for transitions
+        for (Transition_t tid = 0; tid < _currentNet._transitions.size(); tid++) {
+            auto& transition = _currentNet._transitions[tid];
+            for (auto i = _currentNet._transitionArcs[tid].first; i < _currentNet._transitionArcs[tid].second; i++) {
+                auto& arc = _currentNet._arcs[i];
+                for (Variable_t var : arc.expression->getVariables()) {
+                    const auto constraints = arc.expression->calculateVariableConstraints(var, arc.from);
+                    auto entry = transition.preplacesVariableConstraints.find(var);
+                    if (entry == transition.preplacesVariableConstraints.end()) {
+                        entry = transition.preplacesVariableConstraints.emplace(var, std::vector<VariableConstraint> {}).first;
+                    }
+                    entry->second.insert(entry->second.begin(), constraints.cbegin(), constraints.cend());
+                }
+            }
+        }
     }
 
     void ColoredPetriNetBuilder::sort() {

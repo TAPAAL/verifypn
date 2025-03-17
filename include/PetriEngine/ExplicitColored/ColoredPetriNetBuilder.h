@@ -42,6 +42,10 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNet _currentNet;
         std::shared_ptr<ColorType> _dotColorType;
         std::shared_ptr<Colored::ColorTypeMap> _colors;
+
+        void _createArcsAndTransitions();
+        ColoredPetriNetBuilderStatus _calculateTransitionVariables();
+        void _calculatePrePlaceConstraints();
     };
 }
 
