@@ -4,6 +4,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "utils/structures/shared_string.h"
 #include <sstream>
+#include "Visitors/ConditionCopyVisitor.h"
 
 #include "ColoredResultPrinter.h"
 
@@ -28,7 +29,7 @@ namespace PetriEngine::ExplicitColored {
     private:
         Result checkColorIgnorantLP(
             const std::string& pnmlModel,
-            PQL::Condition_ptr query,
+            const PQL::Condition_ptr& query,
             options_t& options
         ) const;
 

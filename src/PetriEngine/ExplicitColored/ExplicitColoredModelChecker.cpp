@@ -58,14 +58,16 @@ namespace PetriEngine::ExplicitColored {
 
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkColorIgnorantLP(
         const std::string& pnmlModel,
-        PQL::Condition_ptr query,
+        const PQL::Condition_ptr& query,
         options_t& options
     ) const {
         if (!isReachability(query)) {
             return Result::UNKNOWN;
         }
+        auto queryCopy = ConditionCopyVisitor::copyCondition(query);
+
         bool isEf = false;
-        if (dynamic_cast<PQL::EFCondition*>(query.get())) {
+        if (dynamic_cast<PQL::EFCondition*>(queryCopy.get())) {
             isEf = true;
         }
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
@@ -80,7 +82,7 @@ namespace PetriEngine::ExplicitColored {
         std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
         size_t initial_size = 0;
 
-        std::vector queries { std::move(query) };
+        std::vector queries { std::move(queryCopy) };
 
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
 
