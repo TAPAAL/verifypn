@@ -1,5 +1,7 @@
 #include "explicitMain.h"
 
+#include <PetriEngine/PQL/Evaluation.h>
+
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include "PetriEngine/Colored/PnmlWriter.h"
@@ -21,12 +23,53 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     ignorantBuilder.sort();
 
     auto status = ignorantBuilder.build();
-    if (status == ExplicitColored::ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
+    if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
         std::cout << "Cannot do color ignorant check" << std::endl;
     } else {
-        auto net = ignorantBuilder.getPetriNet();
-        std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());
-        simplify_queries(qm0.get(), net.get(), queries, options, std::cout);
+        auto builder = ignorantBuilder.getUnderlying();
+        auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
+        std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
+        auto queriesCopy = queries;
+        std::set<size_t> initial_marking_solved;
+        size_t initial_size = 0;
+        {
+            contextAnalysis(false, {}, {}, builder, qnet.get(), queriesCopy);
+
+
+            for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
+                initial_size += qm0[i];
+
+            {
+                EvaluationContext context(qm0.get(), qnet.get());
+                for (size_t i = 0; i < queriesCopy.size(); ++i) {
+                    ContainsFireabilityVisitor has_fireability;
+                    Visitor::visit(has_fireability, queriesCopy[i]);
+
+                    auto r = PQL::evaluate(queriesCopy[i].get(), context);
+                    if(r == Condition::RFALSE)
+                    {
+                        queries[i] = BooleanCondition::FALSE_CONSTANT;
+                        initial_marking_solved.emplace(i);
+                    }
+                    else if(r == Condition::RTRUE)
+                    {
+                        queries[i] = BooleanCondition::TRUE_CONSTANT;
+                        initial_marking_solved.emplace(i);
+                    }
+                }
+            }
+
+
+            // simplification. We always want to do negation-push and initial marking check.
+            simplify_queries(qm0.get(), qnet.get(), queriesCopy, options, std::cout);
+
+            auto queryNamesCopy = queryNames;
+            outputQueries(builder, queries, queryNamesCopy, options.query_out_file, options.binary_query_io, options.keep_solved);
+
+            std::cout << "simplified" << std::endl;
+        }
+
+        std::cout << "simplified queries" << std::endl;
     }
 
     std::cout << "Using explicit colored" << std::endl;
@@ -51,9 +94,8 @@ int explicitColored(options_t& options, shared_string_set& string_set, std::vect
     } else {
         builder.parse_model(options.modelfile);
     }
-    auto buildStatus = builder.build();
 
-    switch (buildStatus) {
+    switch (auto buildStatus = builder.build()) {
     case ColoredPetriNetBuilderStatus::OK:
         break;
     case ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:

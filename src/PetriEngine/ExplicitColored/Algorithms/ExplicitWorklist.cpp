@@ -17,12 +17,10 @@ namespace PetriEngine::ExplicitColored {
         const PQL::Condition_ptr &query,
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
         const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-        const IColoredResultPrinter& coloredResultPrinter,
         const size_t seed
     ) : _net(std::move(net)),
         _successorGenerator(ColoredSuccessorGenerator{_net}),
-        _seed(seed),
-        _coloredResultPrinter(coloredResultPrinter)
+        _seed(seed)
     {
         const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -177,7 +175,6 @@ namespace PetriEngine::ExplicitColored {
                ? Reachability::ResultPrinter::Result::Satisfied
                : Reachability::ResultPrinter::Result::NotSatisfied;
         }
-        _coloredResultPrinter.printResults(_searchStatistics, res);
         return res == Reachability::ResultPrinter::Result::Satisfied;
     }
 }

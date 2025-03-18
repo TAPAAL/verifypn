@@ -33,7 +33,7 @@ namespace PetriEngine::ExplicitColored {
         void sort() override;
 
         ColoredIgnorantPetriNetBuilderStatus build();
-        std::unique_ptr<PetriNet> getPetriNet();
+        PetriNetBuilder getUnderlying();
     private:
         PetriNetBuilder _builder;
         bool _foundNegative;

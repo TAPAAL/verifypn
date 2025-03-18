@@ -10,6 +10,7 @@ add_library(ExplicitColored
     GammaQueryCompiler.cpp
     ColoredPetriNet.cpp
     ColorIgnorantPetriNetBuilder.cpp
+    ExplicitColoredModelChecker.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)

@@ -1,5 +1,6 @@
 #include "PetriEngine/ExplicitColored/ColorIgnorantPetriNetBuilder.h"
 
+#include <VerifyPN.h>
 #include <PetriEngine/ExplicitColored/ArcCompiler.h>
 
 namespace PetriEngine::ExplicitColored {
@@ -56,7 +57,7 @@ namespace PetriEngine::ExplicitColored {
         if (compiled->containsNegative()) {
             _foundNegative = true;
         }
-        _builder.addOutputArc(place, transition, compiled->getMinimalMarkingCount());
+        _builder.addOutputArc(transition, place, compiled->getMinimalMarkingCount());
     }
 
     void ColorIgnorantPetriNetBuilder::addColorType(const std::string &id, const Colored::ColorType *type) {
@@ -78,7 +79,7 @@ namespace PetriEngine::ExplicitColored {
         return ColoredIgnorantPetriNetBuilderStatus::OK;
     }
 
-    std::unique_ptr<PetriNet> ColorIgnorantPetriNetBuilder::getPetriNet() {
-        return std::unique_ptr<PetriNet>(_builder.makePetriNet());
+    PetriNetBuilder ColorIgnorantPetriNetBuilder::getUnderlying() {
+        return _builder;
     }
 }

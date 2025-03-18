@@ -925,6 +925,12 @@ namespace PetriEngine {
             /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
             virtual std::string sopTAPAAL() const = 0;
 
+            Condition_ptr deepCopy() const override {
+                auto rv = std::make_shared<CompareCondition>(*this);
+                rv->_expr1 = rv->_expr1->deepCopy();
+                rv->_expr2 = rv->_expr2->deepCopy();
+                return rv;
+            }
         protected:
             uint32_t _distance(DistanceContext& c,
                     std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const;
@@ -1012,6 +1018,9 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::EVAL; }
             const bool value;
             virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+            Condition_ptr deepCopy() const override {
+                return std::make_shared<BooleanCondition>(*this);
+            }
         };
 
         /* Deadlock condition */
@@ -1157,7 +1166,11 @@ namespace PetriEngine {
             double getMax() const { return _max; }
             double getOffset() const { return _offset; }
             double getBound() const { return _bound; }
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); }
+
+            Condition_ptr deepCopy() const override {
+              return std::make_shared<UnfoldedUpperBoundsCondition>(*this);
+            }
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;

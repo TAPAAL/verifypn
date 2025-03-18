@@ -51,11 +51,11 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
-#include "explicitMain.h"
+#include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
-
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
     try {
@@ -84,15 +84,7 @@ int main(int argc, const char** argv) {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
             if (options.explicit_colored) {
-                if (options.isCPN && !queries.empty() && isReachability(queries[0])) {
-                    try {
-                        return explicitColored(options, string_set, queries, querynames);
-                    } catch (const ExplicitColored::explicit_error& e) {
-                        return explicitColoredErrorHandler(e);
-                    }
-                }
-                std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
-                return to_underlying(ReturnValue::ErrorCode);
+                return explicitColored(string_set, options, queries, querynames);
             }
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
@@ -569,3 +561,66 @@ int main(int argc, const char** argv) {
     return to_underlying(ReturnValue::SuccessCode);
 }
 
+
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames) {
+    using namespace ExplicitColored;
+
+    if (!options.isCPN || queries.empty() || !isReachability(queries[0])) {
+        std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
+        return to_underlying(ReturnValue::ErrorCode);
+    }
+
+    try {
+        ExplicitColoredModelChecker ecpnChecker(stringSet);
+        ColoredResultPrinter resultPrinter(0, std::cout, queryNames[0], options.seed());
+        auto result = ecpnChecker.checkQuery(options.modelfile, queries[0], options, &resultPrinter);
+
+        if (result == ExplicitColoredModelChecker::Result::SATISFIED)
+            return to_underlying(ReturnValue::SuccessCode);
+
+        if (result == ExplicitColoredModelChecker::Result::UNSATISFIED)
+            return to_underlying(ReturnValue::FailedCode);
+
+        return to_underlying(ReturnValue::UnknownCode);
+
+    } catch (const explicit_error& error) {
+        switch (error.type){
+        case ExplicitErrorType::unsupported_strategy:
+            std::cout << "Strategy is not supported for explicit colored engine" << std::endl
+            << "UNSUPPORTED STRATEGY" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::unsupported_query:
+            std::cout << "Query is not supported for explicit colored engine" << std::endl
+            << "UNSUPPORTED QUERY" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::ptrie_too_small:
+            std::cout << "Marking was too big to be stored in passed list" << std::endl
+            << "PTRIE TOO SMALL" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::unsupported_generator:
+            std::cout << "Type of successor generator not supported" << std::endl
+            << "UNSUPPORTED GENERATOR" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::unsupported_net:
+            std::cout << "Net is not supported" << std::endl
+            << "UNSUPPORTED NET" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::unexpected_expression:
+            std::cout << "Unexpected expression in arc" << std::endl
+            << "UNEXPECTED EXPRESSION" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::unknown_variable:
+            std::cout << "Unknown variable in arc" << std::endl
+            << "UNKNOWN VARIABLE" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        case ExplicitErrorType::too_many_tokens:
+            std::cout << "Too many tokens to represent" << std::endl
+            << "TOO MANY TOKENS" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        default:
+            std::cout << "Something went wrong in explicit colored exploration" << std::endl
+            << "UNKNOWN EXPLICIT COLORED ERROR" << std::endl;
+            return to_underlying(ReturnValue::ErrorCode);
+        }
+    }
+}

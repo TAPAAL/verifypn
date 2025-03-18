@@ -94,6 +94,8 @@ namespace PetriEngine {
                 static_assert(std::is_base_of<Expr,T>::value);
                 return type_id<T>() == type();
             }
+
+            virtual std::shared_ptr<Expr> deepCopy() const = 0;
         };
 /******************* NEGATION PUSH STATS  *******************/
 
@@ -214,6 +216,8 @@ namespace PetriEngine {
                 static_assert(std::is_base_of<Condition,T>::value);
                 return type_id<T>() == type();
             }
+
+            virtual std::shared_ptr<Condition> deepCopy() const = 0;
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.
