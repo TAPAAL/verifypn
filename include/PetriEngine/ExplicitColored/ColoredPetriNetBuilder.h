@@ -39,6 +39,8 @@ namespace PetriEngine::ExplicitColored {
         std::unordered_map<std::string, std::shared_ptr<ColorType>> _colorTypeMap;
         std::vector<ColoredPetriNetArc> _outputArcs;
         std::vector<ColoredPetriNetArc> _inputArcs;
+        std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _inputArcsToCompile;
+        std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _outputArcsToCompile;
         ColoredPetriNet _currentNet;
         std::shared_ptr<ColorType> _dotColorType;
         std::shared_ptr<Colored::ColorTypeMap> _colors;
@@ -46,6 +48,7 @@ namespace PetriEngine::ExplicitColored {
         void _createArcsAndTransitions();
         ColoredPetriNetBuilderStatus _calculateTransitionVariables();
         void _calculatePrePlaceConstraints();
+        void _compileUncompiledArcs();
     };
 }
 
