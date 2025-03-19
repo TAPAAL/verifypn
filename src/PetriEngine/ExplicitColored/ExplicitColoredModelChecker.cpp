@@ -64,6 +64,11 @@ namespace PetriEngine::ExplicitColored {
         if (!isReachability(query)) {
             return Result::UNKNOWN;
         }
+        ContainsFireabilityVisitor has_fireability;
+        Visitor::visit(has_fireability, query);
+        if (has_fireability.getReturnValue()) {
+            return Result::UNKNOWN;
+        }
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
 
         bool isEf = false;
