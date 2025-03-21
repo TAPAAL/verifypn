@@ -45,7 +45,7 @@ namespace PetriEngine::ExplicitColored
 
     struct Variable
     {
-        Color_t colorType;
+        Color_t colorSize;
     };
 
     class ColoredPetriNetBuilder;

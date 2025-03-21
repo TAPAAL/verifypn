@@ -15,7 +15,11 @@ namespace PetriEngine::ExplicitColored {
 
         explicit ColorType(const Color_t colorSize) :
             colorSize(colorSize), basicColorSizes(std::vector{colorSize}), colorCodec(basicColorSizes) { }
-
+        void addBaseColorSize(const Color_t newBaseSize) {
+            colorSize *= newBaseSize;
+            basicColorSizes.push_back(newBaseSize);
+            colorCodec = IntegerPackCodec{this->basicColorSizes};
+        }
         Color_t colorSize{};
         std::vector<Color_t> basicColorSizes;
         IntegerPackCodec<uint64_t, Color_t> colorCodec;

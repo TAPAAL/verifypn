@@ -109,23 +109,27 @@ namespace PetriEngine::ExplicitColored {
             }
             multiSet.setCount(ColorSequence{colorSequence, *place.colorType}, count);
         }
-
         _currentNet._places.push_back(std::move(place));
         _currentNet._initialMarking.markings.push_back(multiSet);
-
         _placeIndices[name] = _currentNet._places.size() - 1;
     }
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
         ColoredPetriNetTransition transition;
-        const GuardCompiler compiler(*_variableMap, *_colors);
         if (guard != nullptr) {
-            transition.guardExpression = compiler.compile(*guard);
+            _guardsToCompile.emplace_back(_currentNet._transitions.size(), guard);
         } else {
             transition.guardExpression = nullptr;
         }
         _currentNet._transitions.emplace_back(std::move(transition));
         _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
+    }
+    void ColoredPetriNetBuilder::_compileUncompiledGuards() {
+        const GuardCompiler compiler(*_variableMap, *_colors);
+        for (const auto& [tid, guard] : _guardsToCompile) {
+            _currentNet._transitions[tid].guardExpression = compiler.compile(*guard);
+        }
+        _guardsToCompile.clear();
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
@@ -146,22 +150,22 @@ namespace PetriEngine::ExplicitColored {
     }
 
     void ColoredPetriNetBuilder::addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) {
-        auto& productType = _colorTypeMap[colorType->getName()];
+        const auto& productType = _colorTypeMap[colorType->getName()];
         const auto colorSize = newConstituent->getConstituentsSizes()[0];
-        productType->colorSize *= colorSize;
-        productType->basicColorSizes.push_back(colorSize);
+        productType->addBaseColorSize(colorSize);
         //Not related to building our net but the PNML writer needs the pointer updated
         colorType->addType(newConstituent);
     }
 
     void ColoredPetriNetBuilder::addVariable(const Colored::Variable* variable) {
         (*_variableMap)[variable->name] = _variableMap->size();
-        Variable var{};
-        var.colorType = _colorTypeMap.find(variable->colorType->getName())->second->colorSize;
-        _currentNet._variables.emplace_back(var);
+        const auto colorType = _colorTypeMap.find(variable->colorType->getName())->second;
+        _variablesToAdd.push_back(colorType);
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
+        _addVariables();
+        _compileUncompiledGuards();
         _compileUncompiledArcs();
         _createArcsAndTransitions();
         const auto status = _calculateTransitionVariables();
@@ -232,7 +236,7 @@ namespace PetriEngine::ExplicitColored {
             Binding_t totalBindings = 0;
             bool first = true;
             for (const auto variableIndex : relevantVariables) {
-                const auto varColorCount = _currentNet._variables[variableIndex].colorType;
+                const auto varColorCount = _currentNet._variables[variableIndex].colorSize;
                 if (first) {
                     totalBindings = 1;
                     first = false;
@@ -253,7 +257,7 @@ namespace PetriEngine::ExplicitColored {
         for (Transition_t tid = 0; tid < _currentNet._transitions.size(); tid++) {
             auto& transition = _currentNet._transitions[tid];
             for (auto i = _currentNet._transitionArcs[tid].first; i < _currentNet._transitionArcs[tid].second; i++) {
-                auto& arc = _currentNet._arcs[i];
+                const auto& arc = _currentNet._arcs[i];
                 for (Variable_t var : arc.expression->getVariables()) {
                     const auto constraints = arc.expression->calculateVariableConstraints(var, arc.from);
                     auto entry = transition.preplacesVariableConstraints.find(var);
@@ -305,6 +309,15 @@ namespace PetriEngine::ExplicitColored {
             });
             _outputArcsToCompile.pop_back();
         }
+    }
+
+    void ColoredPetriNetBuilder::_addVariables() {
+        for (auto it = _variablesToAdd.begin(); it != _variablesToAdd.end(); ++it ) {
+            Variable var{};
+            var.colorSize = (*it)->colorSize;
+            _currentNet._variables.emplace_back(var);
+        }
+        _variablesToAdd.clear();
     }
 
     void ColoredPetriNetBuilder::sort() {
