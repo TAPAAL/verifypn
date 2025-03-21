@@ -118,8 +118,6 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNetTransition transition;
         if (guard != nullptr) {
             _guardsToCompile.emplace_back(_currentNet._transitions.size(), guard);
-        } else {
-            transition.guardExpression = nullptr;
         }
         _currentNet._transitions.emplace_back(std::move(transition));
         _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
@@ -295,10 +293,8 @@ namespace PetriEngine::ExplicitColored {
         Place_t outputPlaceId = 0;
         while (!_outputArcsToCompile.empty()) {
             const auto [from, to, expr] = _outputArcsToCompile.back();
-
-            while (outputIterator != _outputArcs.cend() && outputPlaceId < from) {
+            for (;outputIterator != _outputArcs.cend() && outputPlaceId < from;++outputIterator) {
                 outputPlaceId = outputIterator->from;
-                ++outputIterator;
             }
             auto arc = arcCompiler.compile(expr);
             outputIterator = _outputArcs.emplace(outputIterator, ColoredPetriNetArc {

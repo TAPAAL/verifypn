@@ -41,7 +41,7 @@ namespace PetriEngine::ExplicitColored {
         std::vector<ColoredPetriNetArc> _inputArcs;
         std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _inputArcsToCompile;
         std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _outputArcsToCompile;
-        std::vector<std::pair<size_t, const Colored::GuardExpression_ptr>> _guardsToCompile;
+        std::vector<std::pair<Transition_t, const Colored::GuardExpression_ptr>> _guardsToCompile;
         std::vector<std::shared_ptr<ColorType>> _variablesToAdd;
         ColoredPetriNet _currentNet;
         std::shared_ptr<ColorType> _dotColorType;
