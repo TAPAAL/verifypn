@@ -1406,7 +1406,10 @@ namespace PetriEngine {
                         }
                         if(!ok) break;
                     }
-                    if(!ok) continue;
+                    if(!ok) {
+                        p1 = p2;
+                        continue;
+                    }
                 }
 
                 removed = true;
@@ -2910,7 +2913,7 @@ restart:
             const char* rnames = "ABCDEFGHIJKLMNOPQRS";
             for(int i = reduction.size() - 1; i >= 0; --i)
             {
-                if (contains_next && (reduction[i] == 2 || reduction[i] == 4 || reduction[i] == 5 || reduction[i] == 8))
+                if (contains_next && (reduction[i] == 2 || reduction[i] == 4 || reduction[i] == 5 || reduction[i] == 7 || reduction[i] == 8))
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                     reduction.erase(reduction.begin() + i);
