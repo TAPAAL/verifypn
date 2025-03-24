@@ -34,11 +34,11 @@ namespace PetriEngine::ExplicitColored {
         }
     }
 
-    bool ExplicitWorklist::check(const SearchStrategy searchStrategy, const ColoredSuccessorGeneratorOption colored_successor_generator_option) {
-        if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::FIXED) {
+    bool ExplicitWorklist::check(const Strategy searchStrategy, const ColoredSuccessorGeneratorOption coloredSuccessorGeneratorOption) {
+        if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::FIXED) {
             return _search<ColoredPetriNetStateFixed>(searchStrategy);
         }
-        if (colored_successor_generator_option == ColoredSuccessorGeneratorOption::EVEN) {
+        if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
         throw explicit_error(ExplicitErrorType::unsupported_generator);
@@ -123,18 +123,19 @@ namespace PetriEngine::ExplicitColored {
     }
 
     template<typename SuccessorGeneratorState>
-    bool ExplicitWorklist::_search(const SearchStrategy searchStrategy) {
+    bool ExplicitWorklist::_search(const Strategy searchStrategy) {
         switch (searchStrategy) {
-            case SearchStrategy::DFS:
+            case Strategy::DEFAULT:
+            case Strategy::DFS:
                 return _dfs<SuccessorGeneratorState>();
-            case SearchStrategy::BFS:
+            case Strategy::BFS:
                 return _bfs<SuccessorGeneratorState>();
-            case SearchStrategy::RDFS:
+            case Strategy::RDFS:
                 return _rdfs<SuccessorGeneratorState>();
-            case SearchStrategy::HEUR:
+            case Strategy::HEUR:
                 return _bestfs<SuccessorGeneratorState>();
             default:
-                throw base_error("Unsupported exploration type");
+                throw explicit_error(ExplicitErrorType::unsupported_strategy);
         }
     }
 

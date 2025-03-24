@@ -152,25 +152,8 @@ namespace PetriEngine::ExplicitColored {
         auto transitionIndices = cpnBuilder.takeTransitionIndices();
 
         ExplicitWorklist worklist(net, query, placeIndices, transitionIndices, options.seed());
-        bool result;
+        bool result = worklist.check(options.strategy, options.colored_sucessor_generator);
 
-        switch (options.strategy) {
-            case Strategy::DEFAULT:
-            case Strategy::DFS:
-                result = worklist.check(SearchStrategy::DFS, options.colored_sucessor_generator);
-            break;
-            case Strategy::BFS:
-                result = worklist.check(SearchStrategy::BFS, options.colored_sucessor_generator);
-            break;
-            case Strategy::RDFS:
-                result = worklist.check(SearchStrategy::RDFS, options.colored_sucessor_generator);
-            break;
-            case Strategy::HEUR:
-                result = worklist.check(SearchStrategy::HEUR, options.colored_sucessor_generator);
-            break;
-            default:
-                throw explicit_error{ExplicitErrorType::unsupported_strategy};
-        }
         if (searchStatistics) {
             *searchStatistics = worklist.GetSearchStatistics();
         }

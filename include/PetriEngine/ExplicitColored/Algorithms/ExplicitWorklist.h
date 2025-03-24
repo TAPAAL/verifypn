@@ -20,13 +20,6 @@ namespace PetriEngine::ExplicitColored {
         AG
     };
 
-    enum class SearchStrategy {
-        DFS,
-        BFS,
-        RDFS,
-        HEUR
-    };
-
     class ExplicitWorklist {
     public:
         ExplicitWorklist(
@@ -37,7 +30,7 @@ namespace PetriEngine::ExplicitColored {
             size_t seed
         );
 
-        bool check(SearchStrategy searchStrategy, ColoredSuccessorGeneratorOption colored_successor_generator_option);
+        bool check(Strategy searchStrategy, ColoredSuccessorGeneratorOption coloredSuccessorGeneratorOption);
         [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
     private:
         std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
@@ -48,7 +41,7 @@ namespace PetriEngine::ExplicitColored {
         bool _fullStatespace = true;
         SearchStatistics _searchStatistics;
         template<typename SuccessorGeneratorState>
-        [[nodiscard]] bool _search(SearchStrategy searchStrategy);
+        [[nodiscard]] bool _search(Strategy searchStrategy);
         [[nodiscard]] bool _check(const ColoredPetriNetMarking& state, size_t id) const;
 
         template <typename T>
