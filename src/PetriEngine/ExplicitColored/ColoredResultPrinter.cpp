@@ -23,23 +23,23 @@ namespace PetriEngine::ExplicitColored {
         if (result == Reachability::AbstractHandler::Unknown) {
             return;
         }
-        _stream << "FORMULA " << _queryName  << " ";
+        std::cout << "FORMULA " << _queryName  << " ";
         if (result == Reachability::AbstractHandler::Satisfied) {
-            _stream << "TRUE ";
+            std::cout << "TRUE ";
         } else if (result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "FALSE ";
+            std::cout << "FALSE ";
         }
 
-        _stream << "TECHNIQUES ";
+        std::cout << "TECHNIQUES ";
         for (const auto& techniqueFlag : _techniqueFlags) {
-            _stream << techniqueFlag << " ";
+            std::cout << techniqueFlag << " ";
         }
 
         for (const auto& techniqueFlag : extraTechniques) {
-            _stream << techniqueFlag << " ";
+            std::cout << techniqueFlag << " ";
         }
 
-        _stream << std::endl;
+        std::cout << std::endl;
         if (result == Reachability::AbstractHandler::Satisfied || result == Reachability::AbstractHandler::NotSatisfied) {
             _stream << "Query index " << _queryOffset << " was solved" << std::endl;
         }

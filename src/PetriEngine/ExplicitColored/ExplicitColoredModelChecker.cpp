@@ -12,12 +12,12 @@
 namespace PetriEngine::ExplicitColored {
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
         const std::string& modelPath,
-        const PQL::Condition_ptr& query,
+        const Condition_ptr& query,
         options_t& options,
         IColoredResultPrinter* resultPrinter
     ) const {
         std::stringstream pnmlModelStream;
-        Result result;
+        Result result = Result::UNKNOWN;
         std::ifstream modelFile(modelPath);
         pnmlModelStream << modelFile.rdbuf();
         std::string pnmlModel = std::move(pnmlModelStream).str();
@@ -28,18 +28,20 @@ namespace PetriEngine::ExplicitColored {
             pnmlModel = std::move(reducedPnml).str();
         }
 
-        result = checkColorIgnorantLP(pnmlModel, query, options);
-        if (result != Result::UNKNOWN) {
-            if (resultPrinter) {
-                //TODO: add other techniques
-                resultPrinter->printNonExplicitResult(
-                    {"COLOR_IGNORANT" },
-                    result == Result::SATISFIED
-                        ? AbstractHandler::Result::Satisfied
-                        : AbstractHandler::Result::NotSatisfied
-                );
+        if (options.use_query_reductions) {
+            result = checkColorIgnorantLP(pnmlModel, query, options);
+            if (result != Result::UNKNOWN) {
+                if (resultPrinter) {
+                    //TODO: add other techniques
+                    resultPrinter->printNonExplicitResult(
+                        {"COLOR_IGNORANT", "QUERY_REDUCTION", "SAT_SMT", "LP_APPROX" },
+                        result == Result::SATISFIED
+                            ? AbstractHandler::Result::Satisfied
+                            : AbstractHandler::Result::NotSatisfied
+                    );
+                }
+                return result;
             }
-            return result;
         }
 
         SearchStatistics searchStatistics;
@@ -58,7 +60,7 @@ namespace PetriEngine::ExplicitColored {
 
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkColorIgnorantLP(
         const std::string& pnmlModel,
-        const PQL::Condition_ptr& query,
+        const Condition_ptr& query,
         options_t& options
     ) const {
         if (!isReachability(query)) {
@@ -72,7 +74,7 @@ namespace PetriEngine::ExplicitColored {
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
 
         bool isEf = false;
-        if (dynamic_cast<PQL::EFCondition*>(queryCopy.get())) {
+        if (dynamic_cast<EFCondition*>(queryCopy.get())) {
             isEf = true;
         }
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
@@ -82,6 +84,7 @@ namespace PetriEngine::ExplicitColored {
         if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
             return Result::UNKNOWN;
         }
+
         auto builder = ignorantBuilder.getUnderlying();
         auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
         std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
@@ -96,10 +99,8 @@ namespace PetriEngine::ExplicitColored {
 
         {
             EvaluationContext context(qm0.get(), qnet.get());
-            ContainsFireabilityVisitor has_fireability;
-            Visitor::visit(has_fireability, queries[0]);
 
-            auto r = PQL::evaluate(queries[0].get(), context);
+            auto r = evaluate(queries[0].get(), context);
             if(r == Condition::RFALSE)
             {
                 queries[0] = BooleanCondition::FALSE_CONSTANT;
@@ -124,7 +125,7 @@ namespace PetriEngine::ExplicitColored {
 
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::explicitColorCheck(
         const std::string& pnmlModel,
-        const PQL::Condition_ptr& query,
+        const Condition_ptr& query,
         options_t& options,
         SearchStatistics* searchStatistics
     ) const {
@@ -179,7 +180,7 @@ namespace PetriEngine::ExplicitColored {
     void ExplicitColoredModelChecker::_reduce(
         const std::string& pnmlModel,
         std::stringstream& out,
-        const PQL::Condition_ptr& query,
+        const Condition_ptr& query,
         options_t& options,
         std::ostream& fullStatisticOut
     ) const {
