@@ -28,7 +28,7 @@ namespace PetriEngine::ExplicitColored{
         auto interval = _net._transitions[tid].totalBindings;
         if (interval != 0) {
             for (const auto varIndex : _net._transitions[tid].variables){
-                const auto size = _net._variables[varIndex].colorType;
+                const auto size = _net._variables[varIndex].colorSize;
                 interval /= size;
                 map.emplace(varIndex, (bid / interval) % size);
             }
@@ -95,7 +95,7 @@ namespace PetriEngine::ExplicitColored{
             PossibleValues values = PossibleValues::getAll();
             const auto& constraints = _net._transitions[transition].preplacesVariableConstraints.find(variable);
             if (constraints == _net._transitions[transition].preplacesVariableConstraints.end()) {
-                stateMaxes.push_back(_net._variables[variable].colorType);
+                stateMaxes.push_back(_net._variables[variable].colorSize);
                 constraintData.possibleVariableValues.push_back(PossibleValues::getAll());
                 continue;
             }
@@ -116,7 +116,7 @@ namespace PetriEngine::ExplicitColored{
                     auto bindingValue = add_color_offset(
                         _net._places[constraint.place].colorType->colorCodec.decode(tokens.first, constraint.colorIndex),
                         -constraint.colorOffset,
-                        _net._variables[variable].colorType
+                        _net._variables[variable].colorSize
                     );
 
                     if (values.allColors) {
@@ -139,7 +139,7 @@ namespace PetriEngine::ExplicitColored{
                 }
             }
             stateMaxes.push_back(values.allColors
-                ? _net._variables[variable].colorType
+                ? _net._variables[variable].colorSize
                 : values.colors.size());
             constraintData.possibleVariableValues.emplace_back(std::move(values));
         }

@@ -1,6 +1,7 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 #include <PetriEngine/ExplicitColored/ArcCompiler.h>
 #include "PetriEngine/ExplicitColored/GuardCompiler.h"
+#include <algorithm>
 
 namespace PetriEngine::ExplicitColored {
     ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
@@ -60,15 +61,7 @@ namespace PetriEngine::ExplicitColored {
         if (inhib_weight != 0) {
             _currentNet._inhibitorArcs.emplace_back(from, to, inhib_weight);
         } else {
-            const ArcCompiler arcCompiler(*_variableMap, *_colors);
-            auto arc = arcCompiler.compile(expr);
-
-            _inputArcs.push_back(ColoredPetriNetArc {
-                from,
-                to,
-                _currentNet._places[from].colorType,
-                std::move(arc)
-            });
+            _inputArcsToCompile.emplace_back(from, to, expr);
         }
 
     }
@@ -96,18 +89,9 @@ namespace PetriEngine::ExplicitColored {
 
     //Colored output arc
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
-        const auto placeIndex = _placeIndices.find(place)->second;
-
-        const ArcCompiler arcCompiler(*_variableMap, *_colors);
-
-        auto arc = arcCompiler.compile(expr);
-
-        _outputArcs.push_back(ColoredPetriNetArc {
-            _transitionIndices.find(transition)->second,
-            placeIndex,
-            _currentNet._places[placeIndex].colorType,
-            std::move(arc)
-        });
+        const auto from = _transitionIndices.find(transition)->second;
+        const auto to = _placeIndices.find(place)->second;
+        _outputArcsToCompile.emplace_back(from, to, expr);
     }
 
     void ColoredPetriNetBuilder::addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) {
@@ -125,23 +109,25 @@ namespace PetriEngine::ExplicitColored {
             }
             multiSet.setCount(ColorSequence{colorSequence, *place.colorType}, count);
         }
-
         _currentNet._places.push_back(std::move(place));
         _currentNet._initialMarking.markings.push_back(multiSet);
-
         _placeIndices[name] = _currentNet._places.size() - 1;
     }
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
         ColoredPetriNetTransition transition;
-        const GuardCompiler compiler(*_variableMap, *_colors);
         if (guard != nullptr) {
-            transition.guardExpression = compiler.compile(*guard);
-        } else {
-            transition.guardExpression = nullptr;
+            _guardsToCompile.emplace_back(_currentNet._transitions.size(), guard);
         }
         _currentNet._transitions.emplace_back(std::move(transition));
         _transitionIndices.emplace(name, _currentNet._transitions.size() - 1);
+    }
+    void ColoredPetriNetBuilder::_compileUncompiledGuards() {
+        const GuardCompiler compiler(*_variableMap, *_colors);
+        for (const auto& [tid, guard] : _guardsToCompile) {
+            _currentNet._transitions[tid].guardExpression = compiler.compile(*guard);
+        }
+        _guardsToCompile.clear();
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, const Colored::ColorType* type) {
@@ -162,24 +148,24 @@ namespace PetriEngine::ExplicitColored {
     }
 
     void ColoredPetriNetBuilder::addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) {
-        auto& productType = _colorTypeMap[colorType->getName()];
+        const auto& productType = _colorTypeMap[colorType->getName()];
         const auto colorSize = newConstituent->getConstituentsSizes()[0];
-        productType->colorSize *= colorSize;
-        productType->basicColorSizes.push_back(colorSize);
+        productType->addBaseColorSize(colorSize);
         //Not related to building our net but the PNML writer needs the pointer updated
         colorType->addType(newConstituent);
     }
 
     void ColoredPetriNetBuilder::addVariable(const Colored::Variable* variable) {
         (*_variableMap)[variable->name] = _variableMap->size();
-        Variable var{};
-        var.colorType = _colorTypeMap.find(variable->colorType->getName())->second->colorSize;
-        _currentNet._variables.emplace_back(var);
+        const auto colorType = _colorTypeMap.find(variable->colorType->getName())->second;
+        _variablesToAdd.push_back(colorType);
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
+        _addVariables();
+        _compileUncompiledGuards();
+        _compileUncompiledArcs();
         _createArcsAndTransitions();
-
         const auto status = _calculateTransitionVariables();
         if (status != ColoredPetriNetBuilderStatus::OK) {
             return status;
@@ -247,9 +233,8 @@ namespace PetriEngine::ExplicitColored {
 
             Binding_t totalBindings = 0;
             bool first = true;
-            for (auto variableIndex : relevantVariables) {
-                auto varColorCount = _currentNet._variables[variableIndex].colorType;
-
+            for (const auto variableIndex : relevantVariables) {
+                const auto varColorCount = _currentNet._variables[variableIndex].colorSize;
                 if (first) {
                     totalBindings = 1;
                     first = false;
@@ -270,7 +255,7 @@ namespace PetriEngine::ExplicitColored {
         for (Transition_t tid = 0; tid < _currentNet._transitions.size(); tid++) {
             auto& transition = _currentNet._transitions[tid];
             for (auto i = _currentNet._transitionArcs[tid].first; i < _currentNet._transitionArcs[tid].second; i++) {
-                auto& arc = _currentNet._arcs[i];
+                const auto& arc = _currentNet._arcs[i];
                 for (Variable_t var : arc.expression->getVariables()) {
                     const auto constraints = arc.expression->calculateVariableConstraints(var, arc.from);
                     auto entry = transition.preplacesVariableConstraints.find(var);
@@ -283,8 +268,55 @@ namespace PetriEngine::ExplicitColored {
         }
     }
 
-    void ColoredPetriNetBuilder::sort() {
+    void ColoredPetriNetBuilder::_compileUncompiledArcs() {
+        const ArcCompiler arcCompiler(*_variableMap, *_colors);
 
+        auto inputIterator = _inputArcs.cbegin();
+        Place_t inputPlaceId = 0;
+        while (!_inputArcsToCompile.empty()) {
+            const auto [from, to, expr] = _inputArcsToCompile.back();
+            _inputArcsToCompile.pop_back();
+            while (inputIterator != _inputArcs.cend() && inputPlaceId < to) {
+                inputPlaceId = inputIterator->to;
+                ++inputIterator;
+            }
+            auto arc = arcCompiler.compile(expr);
+            inputIterator = _inputArcs.emplace(inputIterator, ColoredPetriNetArc {
+                from,
+                to,
+                _currentNet._places[from].colorType,
+                std::move(arc)
+            });
+        }
+
+        auto outputIterator = _outputArcs.cbegin();
+        Place_t outputPlaceId = 0;
+        while (!_outputArcsToCompile.empty()) {
+            const auto [from, to, expr] = _outputArcsToCompile.back();
+            for (;outputIterator != _outputArcs.cend() && outputPlaceId < from;++outputIterator) {
+                outputPlaceId = outputIterator->from;
+            }
+            auto arc = arcCompiler.compile(expr);
+            outputIterator = _outputArcs.emplace(outputIterator, ColoredPetriNetArc {
+                from,
+                to,
+                _currentNet._places[to].colorType,
+                std::move(arc)
+            });
+            _outputArcsToCompile.pop_back();
+        }
+    }
+
+    void ColoredPetriNetBuilder::_addVariables() {
+        for (auto it = _variablesToAdd.begin(); it != _variablesToAdd.end(); ++it ) {
+            Variable var{};
+            var.colorSize = (*it)->colorSize;
+            _currentNet._variables.emplace_back(var);
+        }
+        _variablesToAdd.clear();
+    }
+
+    void ColoredPetriNetBuilder::sort() {
     }
 
     std::unordered_map<std::string, uint32_t> ColoredPetriNetBuilder::takePlaceIndices() {
