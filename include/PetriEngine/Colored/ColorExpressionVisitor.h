@@ -55,6 +55,8 @@ namespace PetriEngine {
 
         class ColorExpressionVisitor {
         public:
+            virtual ~ColorExpressionVisitor() = default;
+
             virtual void accept(const DotConstantExpression*) = 0;
             virtual void accept(const VariableExpression*) = 0;
             virtual void accept(const UserOperatorExpression*) = 0;
