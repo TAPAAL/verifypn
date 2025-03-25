@@ -6,20 +6,19 @@ namespace PetriEngine::ExplicitColored {
         const Reachability::AbstractHandler::Result result
     ) const {
         _printCommon(result, {});
-        _stream << "STATES:" << std::endl
-            << "passed states: " << searchStatistics.passedCount << std::endl
-            << "explored states: " << searchStatistics.exploredStates << std::endl
-            << "checked states: " << searchStatistics.checkedStates << std::endl
-            << "peak waiting states: " << searchStatistics.peakWaitingStates << std::endl
-            << "end waiting states: " << searchStatistics.endWaitingStates << std::endl;
+        _stream << "STATS:" << std::endl
+                << "	discovered states:   " << searchStatistics.discoveredStates << std::endl
+                << "	explored states:     " << searchStatistics.exploredStates << std::endl
+                << "	peak waiting states: " << searchStatistics.peakWaitingStates << std::endl
+                << "	end waiting states:  " << searchStatistics.endWaitingStates << std::endl;
     }
 
-    void ColoredResultPrinter::printNonExplicitResult(std::vector<std::string> techniques,
-        Reachability::AbstractHandler::Result result) const {
+    void ColoredResultPrinter::printNonExplicitResult(const std::vector<std::string> techniques,
+        const Reachability::AbstractHandler::Result result) const {
         _printCommon(result, techniques);
     }
 
-    void ColoredResultPrinter::_printCommon(Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const {
+    void ColoredResultPrinter::_printCommon(const Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const {
         if (result == Reachability::AbstractHandler::Unknown) {
             return;
         }
@@ -41,16 +40,16 @@ namespace PetriEngine::ExplicitColored {
 
         std::cout << std::endl;
         if (result == Reachability::AbstractHandler::Satisfied || result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "Query index " << _queryOffset << " was solved" << std::endl;
+            std::cout << "Query index " << _queryOffset << " was solved" << std::endl;
         }
-        _stream << std::endl;
+        std::cout << std::endl;
 
-        _stream << "Query is ";
+        std::cout << "Query is ";
         if (result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "NOT ";
+            std::cout << "NOT ";
         }
 
-        _stream << "satisfied" << std::endl;
+        std::cout << "satisfied" << std::endl;
     }
 }
 

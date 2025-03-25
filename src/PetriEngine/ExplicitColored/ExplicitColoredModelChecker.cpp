@@ -24,7 +24,7 @@ namespace PetriEngine::ExplicitColored {
 
         if (options.enablecolreduction) {
             std::stringstream reducedPnml;
-            _reduce(pnmlModel, reducedPnml, query, options, std::cout);
+            _reduce(pnmlModel, reducedPnml, query, options);
             pnmlModel = std::move(reducedPnml).str();
         }
 
@@ -129,9 +129,6 @@ namespace PetriEngine::ExplicitColored {
         options_t& options,
         SearchStatistics* searchStatistics
     ) const {
-        NullStream nullStream;
-        std::ostream &fullStatisticOut = options.printstatistics == StatisticsLevel::Full ? std::cout : nullStream;
-
         ColoredPetriNetBuilder cpnBuilder;
         auto pnmlModelStream = std::istringstream {pnmlModel};
         cpnBuilder.parse_model(pnmlModelStream);
@@ -164,14 +161,13 @@ namespace PetriEngine::ExplicitColored {
         const std::string& pnmlModel,
         std::stringstream& out,
         const Condition_ptr& query,
-        options_t& options,
-        std::ostream& fullStatisticOut
+        options_t& options
     ) const {
         PetriEngine::ColoredPetriNetBuilder cpnBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         cpnBuilder.parse_model(pnmlModelStream);
         auto queries = std::vector{query};
-        const bool result = reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
+        const bool result = reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, _fullStatisticOut,
                       options.enablecolreduction, options.colreductions);
         std::stringstream cpnResult;
         if (!result) {
@@ -182,7 +178,7 @@ namespace PetriEngine::ExplicitColored {
         }
         Colored::PnmlWriter writer(cpnBuilder, out);
         writer.toColPNML();
-        fullStatisticOut << std::endl;
+        _fullStatisticOut << std::endl;
         out << cpnResult.rdbuf();
     }
 

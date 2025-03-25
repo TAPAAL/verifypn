@@ -17,7 +17,8 @@ namespace PetriEngine::ExplicitColored {
             UNKNOWN
         };
 
-        explicit ExplicitColoredModelChecker(shared_string_set& stringSet) : _stringSet(stringSet)
+        explicit ExplicitColoredModelChecker(shared_string_set& stringSet, std::ostream& fullStatisticOut)
+            : _stringSet(stringSet), _fullStatisticOut(fullStatisticOut)
             {}
 
         Result checkQuery(
@@ -44,10 +45,10 @@ namespace PetriEngine::ExplicitColored {
             const std::string& pnmlModel,
             std::stringstream& out,
             const PQL::Condition_ptr& query,
-            options_t& options,
-            std::ostream& fullStatisticOut
+            options_t& options
         ) const;
         shared_string_set& _stringSet;
+        std::ostream& _fullStatisticOut;
     };
 }
 #endif //EXPLICITCOLOREDMODELCHECKER_H

@@ -3,6 +3,7 @@
 #include <VerifyPN.h>
 #include <PetriEngine/ExplicitColored/ArcCompiler.h>
 
+
 namespace PetriEngine::ExplicitColored {
     void ColorIgnorantPetriNetBuilder::addPlace(const std::string &name, const uint32_t tokens, const double x, const double y) {
         _builder.addPlace(name, tokens, x, y);

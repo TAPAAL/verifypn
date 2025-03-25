@@ -47,6 +47,8 @@
 
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
+#include <utils/NullStream.h>
+
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
@@ -88,7 +90,6 @@ int main(int argc, const char** argv) {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
             if (options.explicit_colored) {
-                std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
                 return explicitColored(string_set, options, queries, querynames);
             }
         } catch (const base_error &err) {
@@ -572,19 +573,27 @@ int explicitColored(shared_string_set& stringSet, options_t& options, std::vecto
 
     if (!options.isCPN || queries.empty() || !isReachability(queries[0])) {
         std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
-        return to_underlying(ReturnValue::ErrorCode);
+        return to_underlying(ReturnValue::UnknownCode);
     }
 
     try {
-        ExplicitColoredModelChecker ecpnChecker(stringSet);
+        NullStream nullStream;
+        std::ostream& fullStatisticsOut = options.printstatistics == StatisticsLevel::Full
+                ? std::cout
+                : nullStream;
+
+        ExplicitColoredModelChecker ecpnChecker(stringSet, fullStatisticsOut);
+
         ColoredResultPrinter resultPrinter(0, std::cout, queryNames[0], options.seed());
         auto result = ecpnChecker.checkQuery(options.modelfile, queries[0], options, &resultPrinter);
 
-        if (result == ExplicitColoredModelChecker::Result::SATISFIED)
+        if (result == ExplicitColoredModelChecker::Result::SATISFIED) {
             return to_underlying(ReturnValue::SuccessCode);
+        }
 
-        if (result == ExplicitColoredModelChecker::Result::UNSATISFIED)
+        if (result == ExplicitColoredModelChecker::Result::UNSATISFIED) {
             return to_underlying(ReturnValue::FailedCode);
+        }
 
         return to_underlying(ReturnValue::UnknownCode);
 

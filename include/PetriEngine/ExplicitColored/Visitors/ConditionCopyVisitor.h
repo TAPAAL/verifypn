@@ -75,15 +75,15 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void _accept(const PQL::CommutativeExpr *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::SimpleQuantifierCondition *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::LogicalCondition *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::UntilCondition *element) override {
@@ -98,7 +98,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void _accept(const PQL::PathQuant *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::ExistPath *element) override {
@@ -189,7 +189,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void _accept(const PQL::ShallowCondition *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::UnfoldedFireableCondition *element) override {
@@ -226,7 +226,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void _accept(const PQL::CompareCondition *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::UnfoldedIdentifierExpr *element) override {
@@ -261,7 +261,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void _accept(const PQL::NaryExpr *element) override {
-            throw base_error("no");
+            throw base_error("Cannot copy abstract class");
         }
 
         void _accept(const PQL::SubtractExpr *element) override {
