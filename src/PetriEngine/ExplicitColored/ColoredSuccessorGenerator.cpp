@@ -93,9 +93,10 @@ namespace PetriEngine::ExplicitColored{
         std::vector<Color_t> stateMaxes;
         for (Variable_t variable : allVariables) {
             PossibleValues values = PossibleValues::getAll();
+            const auto variableColorSize = _net._variables[variable].colorSize;
             const auto& constraints = _net._transitions[transition].preplacesVariableConstraints.find(variable);
             if (constraints == _net._transitions[transition].preplacesVariableConstraints.end()) {
-                stateMaxes.push_back(_net._variables[variable].colorSize);
+                stateMaxes.push_back(variableColorSize);
                 constraintData.possibleVariableValues.push_back(PossibleValues::getAll());
                 continue;
             }
@@ -116,19 +117,18 @@ namespace PetriEngine::ExplicitColored{
                     auto bindingValue = add_color_offset(
                         _net._places[constraint.place].colorType->colorCodec.decode(tokens.first, constraint.colorIndex),
                         -constraint.colorOffset,
-                        _net._variables[variable].colorSize
+                        variableColorSize
                     );
-
-                    if (values.allColors) {
-                        values.colors.push_back(bindingValue);
-                    } else {
-                        possibleColors.insert(bindingValue);
-                    }
+                    possibleColors.insert(bindingValue);
                 }
 
                 if (values.allColors) {
-                    values.allColors = false;
-                    std::sort(values.colors.begin(), values.colors.end());
+                    if (possibleColors.size() != variableColorSize) {
+                        values.allColors = false;
+                        for (const auto& color : possibleColors) {
+                            values.colors.push_back(color);
+                        }
+                    }
                 } else {
                     values.intersect(possibleColors);
                 }
@@ -139,7 +139,7 @@ namespace PetriEngine::ExplicitColored{
                 }
             }
             stateMaxes.push_back(values.allColors
-                ? _net._variables[variable].colorSize
+                ? variableColorSize
                 : values.colors.size());
             constraintData.possibleVariableValues.emplace_back(std::move(values));
         }

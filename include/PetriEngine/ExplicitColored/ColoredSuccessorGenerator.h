@@ -105,7 +105,7 @@ namespace PetriEngine::ExplicitColored {
             return {{},0};
         }
 
-        [[nodiscard]] uint64_t getKey(size_t stateId, Transition_t transition) const {
+        [[nodiscard]] uint64_t getKey(const size_t stateId, const Transition_t transition) const {
             return ((stateId & 0xFFFF'FFFF'FFFF) << 16) | ((static_cast<uint64_t>(transition) & 0xFFFF));
         }
     };
