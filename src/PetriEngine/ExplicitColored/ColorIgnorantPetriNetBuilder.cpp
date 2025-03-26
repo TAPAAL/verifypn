@@ -102,6 +102,13 @@ namespace PetriEngine::ExplicitColored {
         _variableMap[variable->name] = _nextVariable++;
     }
 
+    void ColorIgnorantPetriNetBuilder::addToColorType(Colored::ProductType *colorType,
+        const Colored::ColorType *newConstituent) {
+        //Not related to building our net but the PNML writer needs the pointer updated
+        colorType->addType(newConstituent);
+        _colors[colorType->getName()] = colorType;
+    }
+
     void ColorIgnorantPetriNetBuilder::sort() {
         _builder.sort();
     }

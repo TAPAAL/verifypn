@@ -99,8 +99,8 @@ namespace PetriEngine::ExplicitColored {
             return _scratchpad.const_raw();
         }
 
-        void printBiggestEncoding() const {
-            std::cout << "The biggest represented state was: " << _biggestRepresentation << " bytes" << std::endl;
+        size_t getBiggestEncoding() const {
+            return _biggestRepresentation;
         }
 
         [[nodiscard]] bool testEncodingDecoding(const ColoredPetriNetMarking& marking) {

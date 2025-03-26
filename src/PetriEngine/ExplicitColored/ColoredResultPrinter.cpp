@@ -7,10 +7,11 @@ namespace PetriEngine::ExplicitColored {
     ) const {
         _printCommon(result, {});
         _stream << "STATS:" << std::endl
-                << "	discovered states:   " << searchStatistics.discoveredStates << std::endl
-                << "	explored states:     " << searchStatistics.exploredStates << std::endl
-                << "	peak waiting states: " << searchStatistics.peakWaitingStates << std::endl
-                << "	end waiting states:  " << searchStatistics.endWaitingStates << std::endl;
+                << "	discovered states:     " << searchStatistics.discoveredStates << std::endl
+                << "	explored states:       " << searchStatistics.exploredStates << std::endl
+                << "	peak waiting states:   " << searchStatistics.peakWaitingStates << std::endl
+                << "	end waiting states:    " << searchStatistics.endWaitingStates << std::endl
+                << "    biggest encoded state: " << searchStatistics.biggestEncoding << " bytes" << std::endl;
     }
 
     void ColoredResultPrinter::printNonExplicitResult(const std::vector<std::string> techniques,
