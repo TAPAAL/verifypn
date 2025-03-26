@@ -5,6 +5,39 @@
 
 
 namespace PetriEngine::ExplicitColored {
+
+    class Minus {
+
+    };
+
+    class ColorAtom final : Minus {
+    public:
+        explicit ColorAtom(const Color_t color) : _color(color) {}
+    private:
+        Color_t _color;
+    };
+
+    class VariableAtom final : Minus {
+    public:
+        explicit VariableAtom(const Variable_t variable, const ColorOffset_t offset)
+            : _variable(variable), _offset(offset) {}
+    private:
+        Variable_t _variable;
+        ColorOffset_t _offset;
+    };
+
+    class SimpleMinus final : Minus {
+    public:
+        SimpleMinus(
+            std::vector<std::unique_ptr<Minus>> strongSet,
+            std::vector<std::unique_ptr<Minus>> weakSet
+        ) : _strongSet(std::move(strongSet)), _weakSet(std::move(weakSet)) {};
+    private:
+        std::vector<std::unique_ptr<Minus>> _strongSet;
+        std::vector<std::unique_ptr<Minus>> _weakSet;
+    };
+
+
     void ColorIgnorantPetriNetBuilder::addPlace(const std::string &name, const uint32_t tokens, const double x, const double y) {
         _builder.addPlace(name, tokens, x, y);
     }
