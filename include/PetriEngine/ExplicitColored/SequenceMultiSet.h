@@ -69,9 +69,11 @@ namespace PetriEngine::ExplicitColored {
                     _cardinality += bIt->second;
                     ++aIt;
                     ++bIt;
-                } else if (aIt->first < bIt->first) {
+                }
+                else if (aIt->first < bIt->first) {
                     ++aIt;
-                } else {
+                }
+                else {
                     aIt = _counts.insert(aIt, *bIt);
                     _cardinality += bIt->second;
                     ++bIt;
@@ -93,9 +95,11 @@ namespace PetriEngine::ExplicitColored {
                     _cardinality -= bIt->second;
                     ++aIt;
                     ++bIt;
-                } else if (aIt->first < bIt->first) {
+                }
+                else if (aIt->first < bIt->first) {
                     ++aIt;
-                } else {
+                }
+                else {
                     aIt = _counts.insert(aIt, {bIt->first, -bIt->second});
                     _cardinality -= bIt->second;
                     ++bIt;
@@ -165,9 +169,11 @@ namespace PetriEngine::ExplicitColored {
                     }
                     ++aIt;
                     ++bIt;
-                } else if (aIt->first < bIt->first) {
+                }
+                else if (aIt->first < bIt->first) {
                     ++aIt;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
@@ -201,9 +207,11 @@ namespace PetriEngine::ExplicitColored {
                     }
                     ++aIt;
                     ++bIt;
-                } else if (aIt->first < bIt->first) {
+                }
+                else if (aIt->first < bIt->first) {
                     return false;
-                } else {
+                }
+                else {
                     ++bIt;
                 }
             }
@@ -260,28 +268,31 @@ namespace PetriEngine::ExplicitColored {
             }
             return out;
         }
+
     private:
         std::vector<std::pair<Color_t, sMarkingCount_t>>::iterator lower_bound(const Color_t& key) {
             return std::lower_bound(
-                 _counts.begin(),
-                 _counts.end(),
-                 key,
-                 [](const auto& a, const auto& b) {
-                     return a.first < b;
-                 }
+                _counts.begin(),
+                _counts.end(),
+                key,
+                [](const auto& a, const auto& b) {
+                    return a.first < b;
+                }
             );
         }
 
-        [[nodiscard]] std::vector<std::pair<Color_t, sMarkingCount_t>>::const_iterator clower_bound(const Color_t& key) const {
+        [[nodiscard]] std::vector<std::pair<Color_t, sMarkingCount_t>>::const_iterator clower_bound(
+            const Color_t& key) const {
             return std::lower_bound(
-                 _counts.cbegin(),
-                 _counts.cend(),
-                 key,
-                 [](const auto& a, const auto& b) {
-                     return a.first < b;
-                 }
+                _counts.cbegin(),
+                _counts.cend(),
+                key,
+                [](const auto& a, const auto& b) {
+                    return a.first < b;
+                }
             );
         }
+
         std::vector<std::pair<Color_t, sMarkingCount_t>> _counts;
         sMarkingCount_t _cardinality = 0;
     };

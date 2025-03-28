@@ -10,7 +10,8 @@ namespace PetriEngine::ExplicitColored {
     class CompiledGammaQueryExpression {
     public:
         virtual ~CompiledGammaQueryExpression() = default;
-        [[nodiscard]] virtual bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking& marking, size_t id) const = 0;
+        [[nodiscard]] virtual bool eval(const ColoredSuccessorGenerator& successorGenerator,
+                                        const ColoredPetriNetMarking& marking, size_t id) const = 0;
         [[nodiscard]] virtual MarkingCount_t distance(const ColoredPetriNetMarking& marking, bool neg) const = 0;
     };
 
@@ -22,7 +23,8 @@ namespace PetriEngine::ExplicitColored {
             const ColoredSuccessorGenerator& successorGenerator
         );
 
-        [[nodiscard]] std::unique_ptr<CompiledGammaQueryExpression> compile(const PQL::Condition_ptr &expression) const;
+        [[nodiscard]] std::unique_ptr<CompiledGammaQueryExpression> compile(const PQL::Condition_ptr& expression) const;
+
     private:
         const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
         const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;

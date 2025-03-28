@@ -30,6 +30,7 @@ namespace PetriEngine::ExplicitColored {
             const SearchStatistics& searchStatistics,
             Reachability::AbstractHandler::Result result
         ) const override;
+
     private:
         uint32_t _queryOffset;
         std::ostream& _stream;

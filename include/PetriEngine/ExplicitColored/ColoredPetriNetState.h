@@ -7,7 +7,8 @@
 
 namespace PetriEngine::ExplicitColored {
     struct ColoredPetriNetStateFixed {
-        explicit ColoredPetriNetStateFixed(ColoredPetriNetMarking marking) : marking(std::move(marking)) {};
+        explicit ColoredPetriNetStateFixed(ColoredPetriNetMarking marking) : marking(std::move(marking)) {
+        };
         ColoredPetriNetStateFixed(const ColoredPetriNetStateFixed& oldState) = default;
         ColoredPetriNetStateFixed(ColoredPetriNetStateFixed&&) = default;
         ColoredPetriNetStateFixed& operator=(const ColoredPetriNetStateFixed&) = default;
@@ -48,6 +49,7 @@ namespace PetriEngine::ExplicitColored {
 
         ColoredPetriNetMarking marking;
         size_t id;
+
     private:
         bool _done = false;
 
@@ -56,21 +58,26 @@ namespace PetriEngine::ExplicitColored {
     };
 
     struct ColoredPetriNetStateEven {
-        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& oldState, const size_t& numberOfTransitions) : marking(oldState.marking) {
+        ColoredPetriNetStateEven(const ColoredPetriNetStateEven& oldState, const size_t& numberOfTransitions) : marking(
+            oldState.marking) {
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
-        ColoredPetriNetStateEven(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(std::move(marking))  {
+
+        ColoredPetriNetStateEven(ColoredPetriNetMarking marking, const size_t& numberOfTransitions) : marking(
+            std::move(marking)) {
             _map = std::vector<Binding_t>(numberOfTransitions);
         }
+
         ColoredPetriNetStateEven(ColoredPetriNetStateEven&& state) = default;
         ColoredPetriNetStateEven(const ColoredPetriNetStateEven& state) = default;
         ColoredPetriNetStateEven& operator=(const ColoredPetriNetStateEven&) = default;
         ColoredPetriNetStateEven& operator=(ColoredPetriNetStateEven&&) = default;
+
         std::pair<Transition_t, Binding_t> getNextPair() {
             Transition_t tid = _currentIndex;
             Binding_t bid = std::numeric_limits<Binding_t>::max();
             if (done()) {
-                return {tid,bid};
+                return {tid, bid};
             }
             auto it = _map.begin() + _currentIndex;
             while (it != _map.end() && *it == std::numeric_limits<Binding_t>::max()) {
@@ -80,12 +87,13 @@ namespace PetriEngine::ExplicitColored {
             if (it == _map.end()) {
                 _currentIndex = 0;
                 shuffle = true;
-            } else {
+            }
+            else {
                 tid = _currentIndex;
                 bid = *it;
                 ++_currentIndex;
             }
-            return {tid,bid};
+            return {tid, bid};
         }
 
         //Takes last fired transition-binding pair, so next binding is bid + 1
@@ -100,7 +108,8 @@ namespace PetriEngine::ExplicitColored {
                             _done = true;
                         }
                     }
-                } else {
+                }
+                else {
                     oldBid = bid + 1;
                 }
             }

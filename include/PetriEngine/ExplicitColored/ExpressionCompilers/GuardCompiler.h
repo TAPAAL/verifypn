@@ -19,8 +19,11 @@ namespace PetriEngine::ExplicitColored {
 
     class GuardCompiler {
     public:
-        GuardCompiler(const std::unordered_map<std::string, Variable_t>& variableMap, const Colored::ColorTypeMap& colorTypeMap);
-        [[nodiscard]] std::unique_ptr<CompiledGuardExpression> compile(const Colored::GuardExpression& colorExpression) const;
+        GuardCompiler(const std::unordered_map<std::string, Variable_t>& variableMap,
+                      const Colored::ColorTypeMap& colorTypeMap);
+        [[nodiscard]] std::unique_ptr<CompiledGuardExpression> compile(
+            const Colored::GuardExpression& colorExpression) const;
+
     private:
         const Colored::ColorTypeMap& _colorTypeMap;
         const std::unordered_map<std::string, Variable_t>& _variableMap;

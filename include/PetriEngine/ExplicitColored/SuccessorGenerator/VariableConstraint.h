@@ -21,7 +21,6 @@ namespace PetriEngine::ExplicitColored {
             return colorIndex == std::numeric_limits<Place_t>::max();
         }
     };
-
 }
 
 #endif //VARIABLECONSTRAINT_H
