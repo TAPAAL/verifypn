@@ -5,25 +5,77 @@
 
 
 namespace PetriEngine::ExplicitColored {
+    class ColorOrVar {
+    public:
+        [[nodiscard]] static ColorOrVar fromColor(const Color_t color) {
+            ColorOrVar rv;
+            rv._value.color = color;
+            rv._isColor = true;
+            return rv;
+        }
+
+        [[nodiscard]] static ColorOrVar fromVariable(const Variable_t variable) {
+            ColorOrVar rv;
+            rv._value.variable = variable;
+            rv._isColor = true;
+            return rv;
+        }
+
+        [[nodiscard]] Color_t getColor() const {
+            assert(_isColor);
+            return _value.color;
+        }
+
+        [[nodiscard]] Variable_t getVariable() const {
+            assert(!_isColor);
+            return _value.variable;
+        }
+
+        [[nodiscard]] bool isColor() const {
+            return _isColor;
+        }
+    private:
+        ColorOrVar() {
+            _value.color = 0;
+            _isColor = true;
+        }
+        bool _isColor;
+        union {
+            Color_t color;
+            Variable_t variable;
+        } _value;
+    };
+
+    class Constraint {
+    public:
+        enum class ConstraintType {
+            Equal,
+            NotEqual
+        };
+
+        explicit Constraint(const ConstraintType constraintType) {
+            _constraintType = constraintType;
+        }
+        ConstraintType getConstraintType() {
+            return _constraintType;
+        }
+    private:
+        ConstraintType _constraintType;
+    };
 
     class Minus {
 
     };
 
-    class ColorAtom final : Minus {
+    class Atom final : Minus {
     public:
-        explicit ColorAtom(const Color_t color) : _color(color) {}
-    private:
-        Color_t _color;
-    };
+        explicit Atom(const ColorOrVar value) : _value(value) {}
+        const ColorOrVar& getValue() const {
+            return _value;
+        }
 
-    class VariableAtom final : Minus {
-    public:
-        explicit VariableAtom(const Variable_t variable, const ColorOffset_t offset)
-            : _variable(variable), _offset(offset) {}
     private:
-        Variable_t _variable;
-        ColorOffset_t _offset;
+        ColorOrVar _value;
     };
 
     class SimpleMinus final : Minus {
@@ -67,21 +119,22 @@ namespace PetriEngine::ExplicitColored {
 
     void ColorIgnorantPetriNetBuilder::addTransition(const std::string &name, const Colored::GuardExpression_ptr &guard,
         int32_t player, double x, double y) {
+        _transitions.emplace(name, TransitionStore {});
         _builder.addTransition(name, player, x, y);
     }
 
     void ColorIgnorantPetriNetBuilder::addInputArc(const std::string &place, const std::string &transition,
         const Colored::ArcExpression_ptr &expr, uint32_t inhib_weight) {
         if (inhib_weight > 0) {
-            _builder.addInputArc(place, transition, true, inhib_weight);
+            _inhibitors.emplace_back(place, transition, inhib_weight);
+            return;
         }
         ArcCompiler compiler(_variableMap, _colors);
         auto compiled = compiler.compile(expr);
         if (compiled->containsNegative()) {
             _foundNegative = true;
         }
-        _builder.addInputArc(place, transition, false, compiled->getMinimalMarkingCount());
-
+        _transitions[transition].inputs.emplace_back(place, std::move(compiled));
     }
 
     void ColorIgnorantPetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place,
@@ -91,7 +144,7 @@ namespace PetriEngine::ExplicitColored {
         if (compiled->containsNegative()) {
             _foundNegative = true;
         }
-        _builder.addOutputArc(transition, place, compiled->getMinimalMarkingCount());
+        _transitions[transition].outputs.emplace_back(std::move(compiled), place);
     }
 
     void ColorIgnorantPetriNetBuilder::addColorType(const std::string &id, const Colored::ColorType *type) {
@@ -113,9 +166,74 @@ namespace PetriEngine::ExplicitColored {
         _builder.sort();
     }
 
+    struct ArcRange {
+        bool isInput;
+        std::string place;
+        MarkingCount_t lowerWeight;
+        MarkingCount_t upperWeight;
+        MarkingCount_t current;
+    };
+
     ColoredIgnorantPetriNetBuilderStatus ColorIgnorantPetriNetBuilder::build() {
         if (_foundNegative) {
-            return ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE;
+            for (const auto& [transitionName, transitionStore] : _transitions) {
+                std::vector<ArcRange> arcRanges;
+
+                for (const auto& [place, arcExpr] : transitionStore.inputs) {
+                    arcRanges.push_back({
+                        true,
+                        place,
+                        arcExpr->getMinimalMarkingCount(),
+                        arcExpr->getUpperBoundMarkingCount(),
+                        arcExpr->getMinimalMarkingCount()
+                    });
+                }
+
+                for (const auto& [arcExpr, place] : transitionStore.outputs) {
+                    arcRanges.push_back({
+                        false,
+                        place,
+                        arcExpr->getMinimalMarkingCount(),
+                        arcExpr->getUpperBoundMarkingCount(),
+                        arcExpr->getMinimalMarkingCount()
+                    });
+                }
+
+                _builder.addTransition(transitionName, 0, 0, 0);
+                bool carry = false;
+                while (!carry) {
+                    carry = true;
+                    for (auto& arcRange : arcRanges) {
+                        if (arcRange.isInput) {
+                            _builder.addInputArc(arcRange.place, transitionName, false, arcRange.current);
+                        } else {
+                            _builder.addOutputArc(transitionName, arcRange.place, arcRange.current);
+                        }
+                        if (carry) {
+                            if (arcRange.current >= arcRange.upperWeight) {
+                                arcRange.current = arcRange.lowerWeight;
+                                carry = true;
+                            } else {
+                                arcRange.current += 1;
+                                carry = false;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            for (const auto& [transitionName, transitionStore] : _transitions) {
+                _builder.addTransition(transitionName, 0, 0, 0);
+                for (const auto& [place, arcExpr] : transitionStore.inputs) {
+                    _builder.addInputArc(place, transitionName, false, arcExpr->getMinimalMarkingCount());
+                }
+                for (const auto& [arcExpr, place] : transitionStore.outputs) {
+                    _builder.addOutputArc(transitionName, place, arcExpr->getMinimalMarkingCount());
+                }
+            }
+        }
+        for (const auto& [place, transition, weight] : _inhibitors) {
+            _builder.addInputArc(place, transition, true, weight);
         }
         return ColoredIgnorantPetriNetBuilderStatus::OK;
     }
