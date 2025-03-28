@@ -1,13 +1,12 @@
 #ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
-
-#include <PetriEngine/ExplicitColored/GammaQueryCompiler.h>
+#include <PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h>
 #include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
-#include "PetriEngine/ExplicitColored/SearchStatistics.h"
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
+#include "PetriEngine/ExplicitColored/Algorithms/SearchStatistics.h"
+#include "PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h"
 #include "PetriEngine/ExplicitColored/ColoredEncoder.h"
 
 namespace PetriEngine::ExplicitColored {

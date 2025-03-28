@@ -1,12 +1,7 @@
-//
-// Created by emil on 2/12/25.
-//
-
 #ifndef PTRIE_TOO_SMALL_H
 #define PTRIE_TOO_SMALL_H
 
 #include <exception>
-
 
 namespace PetriEngine::ExplicitColored {
     enum ExplicitErrorType {
@@ -22,9 +17,9 @@ namespace PetriEngine::ExplicitColored {
         unknown_encoding = 9,
     };
 
-    class explicit_error : public std::exception {
+    class explicit_error final : public std::exception {
     public:
-        explicit explicit_error(ExplicitErrorType type) : std::exception(), type(type) {}
+        explicit explicit_error(const ExplicitErrorType type) : std::exception(), type(type) {}
         ExplicitErrorType type;
 
         void print(std::ostream& os) const {

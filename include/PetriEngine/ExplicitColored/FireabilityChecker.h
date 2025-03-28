@@ -1,11 +1,7 @@
-//
-// Created by joms on 12/12/24.
-//
-
 #ifndef FIREABILITYCHECKER_H
 #define FIREABILITYCHECKER_H
 
-#include "ColoredSuccessorGenerator.h"
+#include "SuccessorGenerator/ColoredSuccessorGenerator.h"
 #include "ColoredPetriNetMarking.h"
 #include "ColoredPetriNet.h"
 #include "Binding.h"

@@ -1,10 +1,7 @@
-//
-// Created by emil on 2/19/25.
-//
-
 #ifndef COLOREDPETRINETELEMENTS_H
 #define COLOREDPETRINETELEMENTS_H
-#include "IntegerPackCodec.h"
+
+#include "SuccessorGenerator/IntegerPackCodec.h"
 
 namespace PetriEngine::ExplicitColored {
     struct ColorType {

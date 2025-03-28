@@ -1,7 +1,3 @@
-//
-// Created by emil on 12/4/24.
-//
-
 #ifndef COLOREDEXPRESSIONVISITOR_H
 #define COLOREDEXPRESSIONVISITOR_H
 #include <PetriEngine/ExplicitColored/ColoredPetriNetMarking.h>

@@ -1,11 +1,11 @@
 #ifndef ARCCOMPILER_H
 #define ARCCOMPILER_H
 
-#include "AtomicTypes.h"
-#include "../Colored/Expressions.h"
-#include "SequenceMultiSet.h"
-#include "Binding.h"
-#include "VariableConstraint.h"
+#include "../AtomicTypes.h"
+#include "../../Colored/Expressions.h"
+#include "../SequenceMultiSet.h"
+#include "../Binding.h"
+#include "../SuccessorGenerator/VariableConstraint.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {

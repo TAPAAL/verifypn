@@ -1,16 +1,15 @@
 #ifndef VARIABLEEXTRACTORVSITOR_H
 #define VARIABLEEXTRACTORVSITOR_H
 
-#include "../Colored/ColorExpressionVisitor.h"
-#include "../Colored/Expressions.h"
-#include "AtomicTypes.h"
+#include "../../Colored/ColorExpressionVisitor.h"
+#include "../../Colored/Expressions.h"
+#include "../AtomicTypes.h"
 #include <unordered_map>
 #include <set>
 #include <string>
 
-
 namespace PetriEngine::ExplicitColored {
-    class VariableExtractorVisitor : public Colored::ColorExpressionVisitor {
+    class VariableExtractorVisitor final : public Colored::ColorExpressionVisitor {
     public:
         explicit VariableExtractorVisitor(const std::unordered_map<std::string, Variable_t>& variableMap)
             : _variableMap(&variableMap){
@@ -94,6 +93,5 @@ namespace PetriEngine::ExplicitColored {
         const std::unordered_map<std::string, Variable_t>* const _variableMap;
     };
 }
-
 
 #endif //VARIABLEEXTRACTORVSITOR_H

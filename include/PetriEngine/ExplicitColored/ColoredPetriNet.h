@@ -1,15 +1,13 @@
 #ifndef COLOREDPETRINET_H
 #define COLOREDPETRINET_H
 
-#include <random>
 #include <vector>
 #include <memory>
-#include "ArcCompiler.h"
+#include "ExpressionCompilers/ArcCompiler.h"
 #include "AtomicTypes.h"
-#include "GuardCompiler.h"
-#include "ExplicitColorTypes.h"
+#include "ExpressionCompilers/GuardCompiler.h"
+#include "ExplicitColorType.h"
 #include "ColoredPetriNetMarking.h"
-#include "IntegerPackCodec.h"
 
 namespace PetriEngine::ExplicitColored
 {

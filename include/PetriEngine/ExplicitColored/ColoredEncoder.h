@@ -1,6 +1,3 @@
-//
-// Created by emil on 2/18/25.
-//
 #ifndef COLOREDENCODER_H
 #define COLOREDENCODER_H
 

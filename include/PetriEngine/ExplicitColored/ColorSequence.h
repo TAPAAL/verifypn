@@ -3,7 +3,7 @@
 
 #include "AtomicTypes.h"
 #include <vector>
-#include "ExplicitColorTypes.h"
+#include "ExplicitColorType.h"
 #include <ostream>
 
 namespace PetriEngine::ExplicitColored {
@@ -54,8 +54,7 @@ namespace PetriEngine::ExplicitColored {
             return totalSize;
         }
 
-
-        std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes, Color_t totalSize) const {
+        [[nodiscard]] std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes, const Color_t totalSize) const {
             std::vector<Color_t> rv;
             auto interval = totalSize;
             for (const auto colorSize : colorSizes) {

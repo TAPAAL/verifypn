@@ -3,7 +3,7 @@
 
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include <PetriEngine/options.h>
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
+#include "PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
 #include "PetriEngine/PQL/Visitor.h"

@@ -1,9 +1,10 @@
 #ifndef COLOREDSUCCESSORGENERATOR_H
 #define COLOREDSUCCESSORGENERATOR_H
 
-#include "PetriEngine/ExplicitColored/IntegerPackCodec.h"
-#include "ColoredPetriNet.h"
-#include "ColoredPetriNetState.h"
+#include "IntegerPackCodec.h"
+#include "PossibleValues.h"
+#include "../ColoredPetriNet.h"
+#include "../ColoredPetriNetState.h"
 #include <limits>
 #include <utils/MathExt.h>
 
@@ -33,9 +34,9 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] Binding_t findNextValidBinding(const ColoredPetriNetMarking& marking, Transition_t tid, Binding_t bid, uint64_t totalBindings, Binding& binding, size_t stateId) const;
 
-        void shrinkState(size_t stateId) const {
-            const auto lower = _constraintData.lower_bound(getKey(stateId, 0));
-            const auto upper = _constraintData.upper_bound(getKey(stateId, 0xFFFF));
+        void shrinkState(const size_t stateId) const {
+            const auto lower = _constraintData.lower_bound(_getKey(stateId, 0));
+            const auto upper = _constraintData.upper_bound(_getKey(stateId, 0xFFFF));
             _constraintData.erase(lower, upper);
         }
     protected:
@@ -53,10 +54,12 @@ namespace PetriEngine::ExplicitColored {
         std::map<size_t, ConstraintData>::iterator _calculateConstraintData(const ColoredPetriNetMarking& marking, size_t id, Transition_t transition, bool& noPossibleBinding) const;
         [[nodiscard]] bool _hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t tid) const;
         [[nodiscard]] bool _shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t tid) const {
-            if (!checkInhibitor(marking, tid))
+            if (!checkInhibitor(marking, tid)) {
                 return true;
-            if (!_hasMinimalCardinality(marking, tid))
+            }
+            if (!_hasMinimalCardinality(marking, tid)) {
                 return true;
+            }
             return false;
         }
 
@@ -105,7 +108,7 @@ namespace PetriEngine::ExplicitColored {
             return {{},0};
         }
 
-        [[nodiscard]] uint64_t getKey(const size_t stateId, const Transition_t transition) const {
+        [[nodiscard]] static uint64_t _getKey(const size_t stateId, const Transition_t transition) {
             return ((stateId & 0xFFFF'FFFF'FFFF) << 16) | ((static_cast<uint64_t>(transition) & 0xFFFF));
         }
     };

@@ -2,7 +2,7 @@
 #define VARIABLECONSTRAINT_H
 
 #include <cstdint>
-#include "AtomicTypes.h"
+#include "../AtomicTypes.h"
 
 namespace PetriEngine::ExplicitColored {
     struct VariableConstraint {

@@ -1,14 +1,10 @@
-//
-// Created by joms on 2/3/25.
-//
-
 #ifndef GAMMAQUERYCOMPILER_H
 #define GAMMAQUERYCOMPILER_H
 #include <PetriEngine/PQL/PQL.h>
 
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
+#include "PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h"
 
 namespace PetriEngine::ExplicitColored {
     class CompiledGammaQueryExpression {
