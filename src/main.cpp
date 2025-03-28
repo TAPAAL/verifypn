@@ -47,18 +47,19 @@
 
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
+#include <utils/NullStream.h>
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
-#include "utils/NullStream.h"
+#include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -88,16 +89,7 @@ int main(int argc, const char** argv) {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
             if (options.explicit_colored) {
-                if (options.isCPN && !queries.empty() && isReachability(queries[0])) {
-                    try {
-                        return explicitColored(options, string_set, queries, querynames);
-                    } catch (const ExplicitColored::explicit_error& e) {
-                        std::cout << e << std::endl;
-                        return to_underlying(ReturnValue::ErrorCode);
-                    }
-                }
-                std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
-                return to_underlying(ReturnValue::ErrorCode);
+                return explicitColored(string_set, options, queries, querynames);
             }
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
@@ -574,52 +566,38 @@ int main(int argc, const char** argv) {
     return to_underlying(ReturnValue::SuccessCode);
 }
 
-int explicitColored(options_t& options, shared_string_set& string_set, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames) {
-    std::cout << "Using explicit colored" << std::endl;
-    NullStream nullStream;
-    std::ostream &fullStatisticOut = options.printstatistics == StatisticsLevel::Full ? std::cout : nullStream;
-    ExplicitColored::ColoredPetriNetBuilder builder;
-    if (options.enablecolreduction) {
-        ColoredPetriNetBuilder cpnBuilder(string_set);
-        cpnBuilder.parse_model(options.modelfile);
-        bool result = reduceColored(cpnBuilder, queries, options.logic, options.colReductionTimeout, fullStatisticOut,
-                      options.enablecolreduction, options.colreductions);
-        if (!result) {
-            std::cout << "Could not do colored reductions" << std::endl;
-            builder.parse_model(options.modelfile);
-        } else {
-            std::stringstream cpnOut;
-            Colored::PnmlWriter writer(cpnBuilder, cpnOut);
-            writer.toColPNML();
-            builder.parse_model(cpnOut);
-            fullStatisticOut << std::endl;
+
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames) {
+    using namespace ExplicitColored;
+
+    if (!options.isCPN || queries.empty() || !isReachability(queries[0])) {
+        std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
+        return to_underlying(ReturnValue::UnknownCode);
+    }
+
+    try {
+        NullStream nullStream;
+        std::ostream& fullStatisticsOut = options.printstatistics == StatisticsLevel::Full
+                ? std::cout
+                : nullStream;
+
+        ExplicitColoredModelChecker ecpnChecker(stringSet, fullStatisticsOut);
+
+        ColoredResultPrinter resultPrinter(0, std::cout, queryNames[0], options.seed());
+        auto result = ecpnChecker.checkQuery(options.modelfile, queries[0], options, &resultPrinter);
+
+        if (result == ExplicitColoredModelChecker::Result::SATISFIED) {
+            return to_underlying(ReturnValue::SuccessCode);
         }
-    } else {
-        builder.parse_model(options.modelfile);
-    }
 
-    switch (builder.build()) {
-    case ExplicitColored::ColoredPetriNetBuilderStatus::OK:
-        break;
-    case ExplicitColored::ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
-        throw ExplicitColored::explicit_error(ExplicitColored::too_many_bindings);
-    default:
-        throw ExplicitColored::explicit_error(ExplicitColored::unsupported_net);
-    }
+        if (result == ExplicitColoredModelChecker::Result::UNSATISFIED) {
+            return to_underlying(ReturnValue::FailedCode);
+        }
 
-    const auto net = builder.takeNet();
-    bool result = false;
-    auto placeIndices = builder.takePlaceIndices();
-    auto transitionIndices = builder.takeTransitionIndices();
+        return to_underlying(ReturnValue::UnknownCode);
 
-    for (size_t i = 0; i < queries.size(); i++) {
-        const auto seed = options.seed();
-        ExplicitColored::ColoredResultPrinter resultPrinter(i, fullStatisticOut, queryNames, seed);
-        ExplicitColored::ExplicitWorklist worklist(net, queries[i], placeIndices, transitionIndices, resultPrinter, seed);
-        result = worklist.check(options.strategy, options.colored_sucessor_generator);
+    } catch (const explicit_error& e) {
+        std::cout << e << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
     }
-    if (result) {
-        return to_underlying(ReturnValue::SuccessCode);
-    }
-    return to_underlying(ReturnValue::FailedCode);
 }

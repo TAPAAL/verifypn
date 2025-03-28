@@ -1,42 +1,56 @@
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 
 namespace PetriEngine::ExplicitColored {
-    void ColoredResultPrinter::printResults(
+    void ColoredResultPrinter::printResult(
         const SearchStatistics& searchStatistics,
         const Reachability::AbstractHandler::Result result
     ) const {
+        _printCommon(result, {});
+        _stream << "STATS:" << std::endl
+                << "	discovered states:     " << searchStatistics.discoveredStates << std::endl
+                << "	explored states:       " << searchStatistics.exploredStates << std::endl
+                << "	peak waiting states:   " << searchStatistics.peakWaitingStates << std::endl
+                << "	end waiting states:    " << searchStatistics.endWaitingStates << std::endl
+                << "	biggest encoded state: " << searchStatistics.biggestEncoding << " bytes" << std::endl;
+    }
+
+    void ColoredResultPrinter::printNonExplicitResult(const std::vector<std::string> techniques,
+        const Reachability::AbstractHandler::Result result) const {
+        _printCommon(result, techniques);
+    }
+
+    void ColoredResultPrinter::_printCommon(const Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const {
         if (result == Reachability::AbstractHandler::Unknown) {
             return;
         }
-        _stream << "FORMULA " << _queryNames[_queryOffset]  << " ";
+        std::cout << "FORMULA " << _queryName  << " ";
         if (result == Reachability::AbstractHandler::Satisfied) {
-            _stream << "TRUE ";
+            std::cout << "TRUE ";
         } else if (result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "FALSE ";
+            std::cout << "FALSE ";
         }
-        _stream << "TECHNIQUES ";
+
+        std::cout << "TECHNIQUES ";
         for (const auto& techniqueFlag : _techniqueFlags) {
-            _stream << techniqueFlag << " ";
+            std::cout << techniqueFlag << " ";
         }
-        _stream << std::endl;
+
+        for (const auto& techniqueFlag : extraTechniques) {
+            std::cout << techniqueFlag << " ";
+        }
+
+        std::cout << std::endl;
         if (result == Reachability::AbstractHandler::Satisfied || result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "Query index " << _queryOffset << " was solved" << std::endl;
+            std::cout << "Query index " << _queryOffset << " was solved" << std::endl;
         }
-        _stream << std::endl;
+        std::cout << std::endl;
 
-        _stream << "Query is ";
+        std::cout << "Query is ";
         if (result == Reachability::AbstractHandler::NotSatisfied) {
-            _stream << "NOT ";
+            std::cout << "NOT ";
         }
 
-        _stream << "satisfied" << std::endl;
-
-        _stream << "STATES:" << std::endl
-            << "passed states: " << searchStatistics.passedCount << std::endl
-            << "explored states: " << searchStatistics.exploredStates << std::endl
-            << "checked states: " << searchStatistics.checkedStates << std::endl
-            << "peak waiting states: " << searchStatistics.peakWaitingStates << std::endl
-            << "end waiting states: " << searchStatistics.endWaitingStates << std::endl;
+        std::cout << "satisfied" << std::endl;
     }
 }
 

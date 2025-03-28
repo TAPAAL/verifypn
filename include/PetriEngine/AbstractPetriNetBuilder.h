@@ -34,7 +34,7 @@ namespace PetriEngine {
         bool _hasPartition = false;
 
     public:
-        void parse_model(const std::string&& model);
+        void parse_model(const std::string& model);
         void parse_model(std::istream& model);
 
         /** Add a new place with a unique name */

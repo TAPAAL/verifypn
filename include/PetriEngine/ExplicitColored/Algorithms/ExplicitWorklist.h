@@ -27,7 +27,6 @@ namespace PetriEngine::ExplicitColored {
             const PQL::Condition_ptr &query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
             const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-            const IColoredResultPrinter& coloredResultPrinter,
             size_t seed
         );
 
@@ -41,7 +40,6 @@ namespace PetriEngine::ExplicitColored {
         const size_t _seed;
         bool _fullStatespace = true;
         SearchStatistics _searchStatistics;
-        const IColoredResultPrinter& _coloredResultPrinter;
         template<typename SuccessorGeneratorState>
         [[nodiscard]] bool _search(Strategy searchStrategy);
         [[nodiscard]] bool _check(const ColoredPetriNetMarking& state, size_t id) const;

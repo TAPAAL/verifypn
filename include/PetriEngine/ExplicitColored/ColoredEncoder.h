@@ -88,7 +88,7 @@ namespace PetriEngine::ExplicitColored {
                 case EMPTY:
                     break;
                 default:
-                    throw explicit_error{unknown_encoding};
+                    throw explicit_error{ExplicitErrorType::unknown_encoding};
                 }
                 marking.markings.push_back(placeMultiset);
             }
@@ -99,8 +99,8 @@ namespace PetriEngine::ExplicitColored {
             return _scratchpad.const_raw();
         }
 
-        void printBiggestEncoding() const {
-            std::cout << "The biggest represented state was: " << _biggestRepresentation << " bytes" << std::endl;
+        size_t getBiggestEncoding() const {
+            return _biggestRepresentation;
         }
 
         [[nodiscard]] bool testEncodingDecoding(const ColoredPetriNetMarking& marking) {
@@ -253,7 +253,7 @@ namespace PetriEngine::ExplicitColored {
                 }
                 break;
             default:
-                throw explicit_error{unknown_encoding};
+                throw explicit_error{ExplicitErrorType::unknown_encoding};
             }
             offset += typeSize;
         }
@@ -275,7 +275,7 @@ namespace PetriEngine::ExplicitColored {
                 result = *(uint32_t*)(&encoding[offset]);
                 break;
             default:
-                throw explicit_error{unknown_encoding};
+                throw explicit_error{ExplicitErrorType::unknown_encoding};
             }
             offset += typeSize;
             return result;
