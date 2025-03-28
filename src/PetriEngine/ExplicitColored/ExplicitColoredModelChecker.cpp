@@ -88,14 +88,10 @@ namespace PetriEngine::ExplicitColored {
         auto builder = ignorantBuilder.getUnderlying();
         auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
         std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
-        size_t initial_size = 0;
-
+        
         std::vector queries { std::move(queryCopy) };
 
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-
-        for(size_t i = 0; i < qnet->numberOfPlaces(); ++i)
-            initial_size += qm0[i];
 
         {
             EvaluationContext context(qm0.get(), qnet.get());
