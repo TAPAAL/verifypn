@@ -13,7 +13,7 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
 
-        LinearProgram::LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory){
+        LinearProgram::LinearProgram(Vector* vec, uint32_t constant, op_t op, LPCache* factory){
             // TODO fix memory-management here!
             equation_t c;
             switch(op)
