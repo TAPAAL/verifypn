@@ -69,6 +69,10 @@ namespace PetriEngine::ExplicitColored {
         ContainsFireabilityVisitor has_fireability;
         Visitor::visit(has_fireability, query);
 
+        if (has_fireability.getReturnValue()) {
+            return Result::UNKNOWN;
+        }
+
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
 
         bool isEf = false;
@@ -78,10 +82,7 @@ namespace PetriEngine::ExplicitColored {
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         ignorantBuilder.parse_model(pnmlModelStream);
-        auto status = ignorantBuilder.build();
-        if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
-            return Result::UNKNOWN;
-        }
+        ignorantBuilder.build();
 
         auto builder = ignorantBuilder.getUnderlying();
         auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
