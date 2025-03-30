@@ -204,10 +204,12 @@ namespace PetriEngine::ExplicitColored {
                 while (!carry) {
                     carry = true;
                     for (auto& arcRange : arcRanges) {
-                        if (arcRange.isInput) {
-                            _builder.addInputArc(arcRange.place, transitionName, false, arcRange.current);
-                        } else {
-                            _builder.addOutputArc(transitionName, arcRange.place, arcRange.current);
+                        if (arcRange.current > 0) {
+                            if (arcRange.isInput) {
+                                _builder.addInputArc(arcRange.place, transitionName, false, arcRange.current);
+                            } else {
+                                _builder.addOutputArc(transitionName, arcRange.place, arcRange.current);
+                            }
                         }
                         if (carry) {
                             if (arcRange.current >= arcRange.upperWeight) {
