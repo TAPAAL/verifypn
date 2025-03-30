@@ -13,7 +13,7 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
 
-        LinearProgram::LinearProgram(Vector* vec, uint32_t constant, op_t op, LPCache* factory){
+        LinearProgram::LinearProgram(Vector* vec, int64_t constant, op_t op, LPCache* factory){
             // TODO fix memory-management here!
             equation_t c;
             switch(op)
@@ -58,6 +58,12 @@ namespace PetriEngine {
 
             if (_equations.size() == 0 || context.timeout()){
                 return false;
+            }
+
+            // Check if any of the constants are out of the int limits
+            for (auto eq: _equations) {
+                if (eq.upper > std::numeric_limits<int>::max() || eq.upper < std::numeric_limits<int>::min()) return false;
+                if (eq.lower > std::numeric_limits<int>::max() || eq.lower < std::numeric_limits<int>::min()) return false;
             }
 
             const uint32_t nCol = net->numberOfTransitions();
