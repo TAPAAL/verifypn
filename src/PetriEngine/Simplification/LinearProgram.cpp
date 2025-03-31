@@ -60,12 +60,6 @@ namespace PetriEngine {
                 return false;
             }
 
-            // Check if any of the constants are out of the int limits
-            for (auto eq: _equations) {
-                if (eq.upper > std::numeric_limits<int>::max() || eq.upper < std::numeric_limits<int>::min()) return false;
-                if (eq.lower > std::numeric_limits<int>::max() || eq.lower < std::numeric_limits<int>::min()) return false;
-            }
-
             const uint32_t nCol = net->numberOfTransitions();
             const uint32_t nRow = net->numberOfPlaces() + _equations.size();
 
