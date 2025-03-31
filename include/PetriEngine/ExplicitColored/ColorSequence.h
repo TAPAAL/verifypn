@@ -3,7 +3,7 @@
 
 #include "AtomicTypes.h"
 #include <vector>
-#include "ExplicitColorTypes.h"
+#include "ExplicitColorType.h"
 #include <ostream>
 
 namespace PetriEngine::ExplicitColored {
@@ -13,9 +13,13 @@ namespace PetriEngine::ExplicitColored {
         ColorSequence(ColorSequence&&) = default;
         ColorSequence& operator=(const ColorSequence&) = default;
         ColorSequence& operator=(ColorSequence&&) = default;
+
         ColorSequence(const std::vector<Color_t>& sequence, const ColorType& type) :
-        ColorSequence(sequence, type.basicColorSizes, type.colorSize) {}
-        ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes, const uint32_t totalSize) {
+            ColorSequence(sequence, type.basicColorSizes, type.colorSize) {
+        }
+
+        ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes,
+                      const uint32_t totalSize) {
             //Essentially reverse binding generator to generate unique id for product color
             uint64_t result = 0;
             auto interval = totalSize;
@@ -27,10 +31,13 @@ namespace PetriEngine::ExplicitColored {
             }
             encodedValue = result;
         }
-        ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes) :
-        ColorSequence(sequence, sizes, getTotalSize(sizes)) {}
 
-        explicit ColorSequence(const Color_t encodedColor) : encodedValue(encodedColor) {}
+        ColorSequence(const std::vector<Color_t>& sequence, const std::vector<uint32_t>& sizes) :
+            ColorSequence(sequence, sizes, getTotalSize(sizes)) {
+        }
+
+        explicit ColorSequence(const Color_t encodedColor) : encodedValue(encodedColor) {
+        }
 
         Color_t encodedValue;
 
@@ -38,6 +45,7 @@ namespace PetriEngine::ExplicitColored {
         bool operator<(const ColorSequence& other) const {
             return encodedValue < other.encodedValue;
         }
+
         bool operator==(const ColorSequence& other) const {
             return encodedValue == other.encodedValue;
         }
@@ -54,8 +62,8 @@ namespace PetriEngine::ExplicitColored {
             return totalSize;
         }
 
-
-        std::vector<Color_t> decode(const std::vector<Color_t>& colorSizes, Color_t totalSize) const {
+        [[nodiscard]] std::vector<Color_t>
+        decode(const std::vector<Color_t>& colorSizes, const Color_t totalSize) const {
             std::vector<Color_t> rv;
             auto interval = totalSize;
             for (const auto colorSize : colorSizes) {

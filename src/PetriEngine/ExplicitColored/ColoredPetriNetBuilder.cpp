@@ -1,6 +1,6 @@
 #include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
-#include <PetriEngine/ExplicitColored/ArcCompiler.h>
-#include "PetriEngine/ExplicitColored/GuardCompiler.h"
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/ArcCompiler.h"
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/GuardCompiler.h"
 #include <algorithm>
 
 namespace PetriEngine::ExplicitColored {

@@ -1,11 +1,11 @@
 #ifndef ARCCOMPILER_H
 #define ARCCOMPILER_H
 
-#include "AtomicTypes.h"
-#include "../Colored/Expressions.h"
-#include "SequenceMultiSet.h"
-#include "Binding.h"
-#include "VariableConstraint.h"
+#include "../AtomicTypes.h"
+#include "../../Colored/Expressions.h"
+#include "../SequenceMultiSet.h"
+#include "../Binding.h"
+#include "../SuccessorGenerator/VariableConstraint.h"
 
 namespace PetriEngine::ExplicitColored {
     union ColorOrVariable {
@@ -18,15 +18,16 @@ namespace PetriEngine::ExplicitColored {
         bool isVariable;
         //perhaps include "all" value so we dont need to materialize all colors
         ColorOrVariable value;
-        bool operator==(const ParameterizedColor &other) const {
+
+        bool operator==(const ParameterizedColor& other) const {
             return isVariable == other.isVariable
                 && (isVariable
-                    ? (value.variable == other.value.variable)
-                    : (value.color == other.value.color)
-                    ) && offset == other.offset;
+                        ? (value.variable == other.value.variable)
+                        : (value.color == other.value.color)
+                ) && offset == other.offset;
         }
 
-        bool operator!=(const ParameterizedColor &other) const {
+        bool operator!=(const ParameterizedColor& other) const {
             return !(*this == other);
         }
 
@@ -70,14 +71,17 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual const CPNMultiSet& eval(const Binding& binding) const = 0;
         virtual void produce(CPNMultiSet& out, const Binding& binding) const = 0;
         virtual void consume(CPNMultiSet& out, const Binding& binding) const = 0;
+
         [[nodiscard]] virtual bool isSubSet(const CPNMultiSet& superSet, const Binding& binding) const {
             const auto& result = eval(binding);
             return result <= superSet;
         }
+
         [[nodiscard]] virtual MarkingCount_t getMinimalMarkingCount() const = 0;
         [[nodiscard]] virtual const ColoredMinimalMarking& getMinimalColorMarking() const = 0;
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
-        [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t fromPlace) const = 0;
+        [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(
+            Variable_t var, Place_t fromPlace) const = 0;
         [[nodiscard]] virtual bool containsNegative() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
@@ -87,7 +91,8 @@ namespace PetriEngine::ExplicitColored {
         ArcCompiler(
             const std::unordered_map<std::string, Variable_t>& variableMap,
             const Colored::ColorTypeMap& colorTypeMap
-        ) : _variableMap(std::move(variableMap)), _colorTypeMap(std::move(colorTypeMap)) {}
+        ) : _variableMap(std::move(variableMap)), _colorTypeMap(std::move(colorTypeMap)) {
+        }
 
         [[nodiscard]] std::unique_ptr<CompiledArcExpression> compile(
             const Colored::ArcExpression_ptr& arcExpression
@@ -95,7 +100,6 @@ namespace PetriEngine::ExplicitColored {
 
         static std::unique_ptr<CompiledArcExpression> testCompile();
     private:
-
         static void replaceConstants(std::unique_ptr<CompiledArcExpression>& top);
         static void preCalculate(std::unique_ptr<CompiledArcExpression>& top);
 
@@ -103,7 +107,5 @@ namespace PetriEngine::ExplicitColored {
         const Colored::ColorTypeMap& _colorTypeMap;
     };
 }
-
-
 
 #endif //ARCCOMPILER_H

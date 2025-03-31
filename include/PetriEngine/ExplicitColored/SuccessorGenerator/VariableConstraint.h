@@ -2,7 +2,7 @@
 #define VARIABLECONSTRAINT_H
 
 #include <cstdint>
-#include "AtomicTypes.h"
+#include "../AtomicTypes.h"
 
 namespace PetriEngine::ExplicitColored {
     struct VariableConstraint {
@@ -21,7 +21,6 @@ namespace PetriEngine::ExplicitColored {
             return colorIndex == std::numeric_limits<Place_t>::max();
         }
     };
-
 }
 
 #endif //VARIABLECONSTRAINT_H
