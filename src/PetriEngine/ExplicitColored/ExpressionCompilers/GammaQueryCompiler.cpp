@@ -1,9 +1,10 @@
-#include "PetriEngine/ExplicitColored/GammaQueryCompiler.h"
+#include "../../../../include/PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h"
 
-#include <PetriEngine/ExplicitColored/FireabilityChecker.h>
-#include <PetriEngine/PQL/Visitor.h>
+#include <numeric>
+#include <../../../../include/PetriEngine/ExplicitColored/FireabilityChecker.h>
+#include <../../../../include/PetriEngine/PQL/Visitor.h>
+#include "../../../../include/PetriEngine/PQL/Expressions.h"
 
-#include "PetriEngine/PQL/Expressions.h"
 namespace PetriEngine::ExplicitColored {
     MarkingCount_t minShortCircuit(
         const ColoredPetriNetMarking& marking,
@@ -28,9 +29,9 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryAndExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
             : _expressions(std::move(expressions)) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             for (const auto& expression : _expressions) {
-                if (!expression->eval(successorGenerator, marking)) {
+                if (!expression->eval(successorGenerator, marking, id)) {
                     return false;
                 }
             }
@@ -58,9 +59,9 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryOrExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
             : _expressions(std::move(expressions)) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             for (const auto& expression : _expressions) {
-                if (expression->eval(successorGenerator, marking)) {
+                if (expression->eval(successorGenerator, marking, id)) {
                     return true;
                 }
             }
@@ -88,8 +89,8 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryNotExpression(std::unique_ptr<CompiledGammaQueryExpression> inner)
             : _inner(std::move(inner)){}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
-            return !_inner->eval(successorGenerator, marking);
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
+            return !_inner->eval(successorGenerator, marking, id);
         }
 
         [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking,
@@ -152,7 +153,7 @@ namespace PetriEngine::ExplicitColored {
         GammaQueryLessThanExpression(QueryValue lhs, QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             return _lhs.getCount(marking) < _rhs.getCount(marking);
         }
 
@@ -182,7 +183,7 @@ namespace PetriEngine::ExplicitColored {
         GammaQueryLessThanOrEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             return _lhs.getCount(marking) <= _rhs.getCount(marking);
         }
 
@@ -212,7 +213,7 @@ namespace PetriEngine::ExplicitColored {
         GammaQueryEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             return _lhs.getCount(marking) == _rhs.getCount(marking);
         }
 
@@ -234,7 +235,7 @@ namespace PetriEngine::ExplicitColored {
         GammaQueryNotEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
             return _lhs.getCount(marking) != _rhs.getCount(marking);
         }
 
@@ -253,8 +254,8 @@ namespace PetriEngine::ExplicitColored {
 
     class GammaQueryDeadlockExpression final : public CompiledGammaQueryExpression {
     public:
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
-           return FireabilityChecker::hasDeadlock(successorGenerator, marking);
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
+           return FireabilityChecker::hasDeadlock(successorGenerator, marking, id);
         }
 
         [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, const bool neg) const override {
@@ -267,8 +268,8 @@ namespace PetriEngine::ExplicitColored {
         explicit GammaQueryFireabilityExpression(const Transition_t transitionId)
             : _transitionId(transitionId) {}
 
-        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking) const override {
-            return FireabilityChecker::canFire(successorGenerator, _transitionId, marking);
+        [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
+            return FireabilityChecker::canFire(successorGenerator, _transitionId, marking, id);
         }
 
         [[nodiscard]] MarkingCount_t distance(const ColoredPetriNetMarking &marking, bool neg) const override {

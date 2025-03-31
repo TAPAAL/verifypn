@@ -1,4 +1,4 @@
-#include "PetriEngine/ExplicitColored/GuardCompiler.h"
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/GuardCompiler.h"
 #include "utils/MathExt.h"
 #include <algorithm>
 
@@ -21,32 +21,38 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] Color_t getLhs(const Binding& binding, const TypeFlag_t typeFlag) const {
             return (typeFlag & TypeFlag::LHS_VAR)
-                ? add_color_offset(binding.getValue(value.variable), offset, color_max)
+                ? addColorOffset(binding.getValue(value.variable), offset, color_max)
                 : value.color;
         }
 
         [[nodiscard]] Color_t getRhs(const Binding& binding, const TypeFlag_t typeFlag) const {
             return (typeFlag & TypeFlag::RHS_VAR)
-                ? add_color_offset(binding.getValue(value.variable), offset, color_max)
+                ? addColorOffset(binding.getValue(value.variable), offset, color_max)
                 : value.color;
         }
     };
 
-    class CompiledGuardAndExpression final : public CompiledGuardExpression {
-    public:
-        explicit CompiledGuardAndExpression(std::vector<std::unique_ptr<CompiledGuardExpression>> compiledGuardExpressions)
-            : _expressions(std::move(compiledGuardExpressions)) {}
-        bool eval(const Binding& binding) override {
-            for (const auto& expression : _expressions) {
-                if (!expression->eval(binding)) {
-                    return false;
+        class CompiledGuardAndExpression final : public CompiledGuardExpression {
+        public:
+            explicit CompiledGuardAndExpression(std::vector<std::unique_ptr<CompiledGuardExpression>> copmiledGuardExpressions)
+                : _expressions(std::move(copmiledGuardExpressions)) {}
+            bool eval(const Binding& binding) override {
+                for (const auto& expression : _expressions) {
+                    if (!expression->eval(binding)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            void collectVariables(std::set<Variable_t> &out) const override {
+                for (const auto& expression : _expressions) {
+                    expression->collectVariables(out);
                 }
             }
-            return true;
-        }
-    private:
-        std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
-    };
+        private:
+            std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
+        };
 
     class CompiledGuardOrExpression final : public CompiledGuardExpression {
     public:
@@ -60,6 +66,12 @@ namespace PetriEngine::ExplicitColored {
             }
             return false;
         }
+
+        void collectVariables(std::set<Variable_t> &out) const override {
+            for (const auto& expression : _expressions) {
+                expression->collectVariables(out);
+            }
+        }
     private:
         std::vector<std::unique_ptr<CompiledGuardExpression>> _expressions;
     };
@@ -71,6 +83,15 @@ namespace PetriEngine::ExplicitColored {
 
         bool eval(const Binding& binding) override {
             return _lhs.getLhs(binding, _typeFlag) < _rhs.getRhs(binding, _typeFlag);
+        }
+
+        void collectVariables(std::set<Variable_t> &out) const override {
+            if (_typeFlag & TypeFlag::LHS_VAR) {
+                out.insert(_lhs.value.variable);
+            }
+            if (_typeFlag & TypeFlag::RHS_VAR) {
+                out.insert(_rhs.value.variable);
+            }
         }
     private:
         VarOrColorWithOffset _lhs;
@@ -85,6 +106,15 @@ namespace PetriEngine::ExplicitColored {
 
         bool eval(const Binding& binding) override {
             return _lhs.getLhs(binding, _typeFlag) <= _rhs.getRhs(binding, _typeFlag);
+        }
+
+        void collectVariables(std::set<Variable_t> &out) const override {
+            if (_typeFlag & TypeFlag::LHS_VAR) {
+                out.insert(_lhs.value.variable);
+            }
+            if (_typeFlag & TypeFlag::RHS_VAR) {
+                out.insert(_rhs.value.variable);
+            }
         }
     private:
         VarOrColorWithOffset _lhs;
@@ -111,6 +141,17 @@ namespace PetriEngine::ExplicitColored {
             }
             return true;
         }
+
+        void collectVariables(std::set<Variable_t> &out) const override {
+            for (auto i = 0; i < _typeFlags.size(); ++i) {
+                if (_typeFlags[i] & TypeFlag::LHS_VAR) {
+                    out.insert(_lhs[i].value.variable);
+                }
+                if (_typeFlags[i] & TypeFlag::RHS_VAR) {
+                    out.insert(_rhs[i].value.variable);
+                }
+            }
+        }
     private:
         std::vector<TypeFlag_t> _typeFlags;
         std::vector<VarOrColorWithOffset> _lhs;
@@ -135,6 +176,17 @@ namespace PetriEngine::ExplicitColored {
                 ++typeFlagIt;
             }
             return false;
+        }
+
+        void collectVariables(std::set<Variable_t> &out) const override {
+            for (auto i = 0; i < _typeFlags.size(); ++i) {
+                if (_typeFlags[i] & TypeFlag::LHS_VAR) {
+                    out.insert(_lhs[i].value.variable);
+                }
+                if (_typeFlags[i] & TypeFlag::RHS_VAR) {
+                    out.insert(_rhs[i].value.variable);
+                }
+            }
         }
     private:
         std::vector<TypeFlag_t> _typeFlags;
@@ -190,7 +242,7 @@ namespace PetriEngine::ExplicitColored {
         VarOrColorWithOffset getResult() {
             if (_isVar)
                 return _result;
-            _result.value.color = add_color_offset(_result.value.color, _result.offset, _result.color_max);
+            _result.value.color = addColorOffset(_result.value.color, _result.offset, _result.color_max);
             return _result;
         }
 
@@ -341,13 +393,9 @@ namespace PetriEngine::ExplicitColored {
     GuardCompiler::GuardCompiler(const std::unordered_map<std::string, Variable_t>& variableMap, const Colored::ColorTypeMap& colorTypeMap)
         : _colorTypeMap(colorTypeMap), _variableMap(variableMap) { }
 
-    std::pair<std::unique_ptr<CompiledGuardExpression>, std::set<Variable_t>> GuardCompiler::compile(const Colored::GuardExpression &colorExpression) const {
-        VariableExtractorVisitor variableExtractor(_variableMap);
-        colorExpression.visit(variableExtractor);
-        auto variables = std::move(variableExtractor.collectedVariables);
-
+    std::unique_ptr<CompiledGuardExpression> GuardCompiler::compile(const Colored::GuardExpression &colorExpression) const {
         ColorExpressionCompilerVisitor topLevelVisitor(_colorTypeMap, _variableMap);
         colorExpression.visit(topLevelVisitor);
-        return {topLevelVisitor.takeCompiled(), std::move(variables)};
+        return topLevelVisitor.takeCompiled();
     }
 }

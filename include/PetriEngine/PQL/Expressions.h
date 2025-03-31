@@ -924,7 +924,6 @@ namespace PetriEngine {
 
             /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
             virtual std::string sopTAPAAL() const = 0;
-
         protected:
             uint32_t _distance(DistanceContext& c,
                     std::function<uint32_t(uint32_t, uint32_t, bool)>&& d) const;
@@ -1157,7 +1156,7 @@ namespace PetriEngine {
             double getMax() const { return _max; }
             double getOffset() const { return _offset; }
             double getBound() const { return _bound; }
-            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); };
+            virtual type_id_t type() const { return PQL::type_id<decltype(this)>(); }
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;

@@ -25,7 +25,7 @@ namespace PetriEngine::ExplicitColored {
         void addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id, const Colored::ColorType* type) override;
         void addVariable(const Colored::Variable* variable) override;
-
+        void addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) override;
         void sort() override;
 
         std::unordered_map<std::string, uint32_t> takePlaceIndices();
@@ -37,12 +37,22 @@ namespace PetriEngine::ExplicitColored {
         std::unordered_map<std::string, uint32_t> _transitionIndices;
         std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
         std::unordered_map<std::string, std::shared_ptr<ColorType>> _colorTypeMap;
-        std::unordered_map<std::string, std::shared_ptr<BaseColorType>> _baseColorType;
         std::vector<ColoredPetriNetArc> _outputArcs;
         std::vector<ColoredPetriNetArc> _inputArcs;
+        std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _inputArcsToCompile;
+        std::vector<std::tuple<Transition_t, Transition_t, Colored::ArcExpression_ptr>> _outputArcsToCompile;
+        std::vector<std::pair<Transition_t, const Colored::GuardExpression_ptr>> _guardsToCompile;
+        std::vector<std::shared_ptr<ColorType>> _variablesToAdd;
         ColoredPetriNet _currentNet;
         std::shared_ptr<ColorType> _dotColorType;
         std::shared_ptr<Colored::ColorTypeMap> _colors;
+
+        void _createArcsAndTransitions();
+        ColoredPetriNetBuilderStatus _calculateTransitionVariables();
+        void _calculatePrePlaceConstraints();
+        void _compileUncompiledArcs();
+        void _compileUncompiledGuards();
+        void _addVariables();
     };
 }
 
