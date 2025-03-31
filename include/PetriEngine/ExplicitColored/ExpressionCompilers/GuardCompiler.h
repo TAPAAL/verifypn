@@ -3,10 +3,10 @@
 
 #include <string>
 #include <unordered_map>
-#include "../AtomicTypes.h"
-#include "../../Colored/Colors.h"
-#include "../../Colored/Expressions.h"
-#include "../Binding.h"
+#include "PetriEngine/ExplicitColored/AtomicTypes.h"
+#include "PetriEngine/Colored/Colors.h"
+#include "PetriEngine/Colored/Expressions.h"
+#include "PetriEngine/ExplicitColored/Binding.h"
 #include <memory>
 
 namespace PetriEngine::ExplicitColored {
