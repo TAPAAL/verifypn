@@ -88,7 +88,7 @@ namespace PetriEngine::ExplicitColored {
                 case EMPTY:
                     break;
                 default:
-                    throw explicit_error{unknown_encoding};
+                    throw explicit_error{ExplicitErrorType::unknown_encoding};
                 }
                 marking.markings.push_back(placeMultiset);
             }
@@ -99,8 +99,8 @@ namespace PetriEngine::ExplicitColored {
             return _scratchpad.const_raw();
         }
 
-        void printBiggestEncoding() const {
-            std::cout << "The biggest represented state was: " << _biggestRepresentation << " bytes" << std::endl;
+        size_t getBiggestEncoding() const {
+            return _biggestRepresentation;
         }
 
         [[nodiscard]] bool testEncodingDecoding(const ColoredPetriNetMarking& marking) {
@@ -239,19 +239,22 @@ namespace PetriEngine::ExplicitColored {
                 _resizeScratchpad();
             }
             switch (typeSize) {
-            case EIGHT:
+            case EIGHT: {
                 _scratchpad.raw()[offset] = static_cast<uint8_t>(element);
                 break;
-            case SIXTEEN:
+            }
+            case SIXTEEN: {
                 const auto dest16 = (uint16_t*)(&_scratchpad.raw()[offset]);
                 dest16[0] = static_cast<uint16_t>(element);
-            break;
-            case THIRTYTWO:
+                break;
+            }
+            case THIRTYTWO: {
                 const auto dest32 = (uint32_t*)(&_scratchpad.raw()[offset]);
                 dest32[0] = static_cast<uint32_t>(element);
-            break;
+                break;
+            }
             default:
-                throw explicit_error{unknown_encoding};
+                throw explicit_error{ExplicitErrorType::unknown_encoding};
             }
             offset += typeSize;
         }
@@ -274,7 +277,7 @@ namespace PetriEngine::ExplicitColored {
                 result = *(uint32_t*)(&encoding[offset]);
                 break;
             default:
-                throw explicit_error{unknown_encoding};
+                throw explicit_error{ExplicitErrorType::unknown_encoding};
             }
             offset += typeSize;
             return result;

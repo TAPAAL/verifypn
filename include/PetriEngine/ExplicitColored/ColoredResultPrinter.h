@@ -7,8 +7,12 @@
 namespace PetriEngine::ExplicitColored {
     class IColoredResultPrinter {
     public:
-        virtual void printResults(
+        virtual void printResult(
             const SearchStatistics& searchStatistics,
+            Reachability::AbstractHandler::Result result
+        ) const = 0;
+        virtual void printNonExplicitResult(
+            std::vector<std::string> techniques,
             Reachability::AbstractHandler::Result result
         ) const = 0;
         virtual ~IColoredResultPrinter() = default;
@@ -19,22 +23,27 @@ namespace PetriEngine::ExplicitColored {
         ColoredResultPrinter(
             const uint32_t queryOffset,
             std::ostream& stream,
-            std::vector<std::string> queryNames,
+            std::string queryName,
             const size_t seed
-        ) : _queryOffset(queryOffset), _stream(stream), _queryNames(std::move(queryNames)), _seed(seed) {
+        ) : _queryOffset(queryOffset), _stream(stream), _queryName(std::move(queryName)), _seed(seed) {
             _techniqueFlags.emplace_back("STRUCTURAL_REDUCTION");
             _techniqueFlags.emplace_back("CPN_EXPLICIT");
         }
 
-        void printResults(
+        void printResult(
             const SearchStatistics& searchStatistics,
             Reachability::AbstractHandler::Result result
         ) const override;
 
+        void printNonExplicitResult(
+            std::vector<std::string> techniques,
+            Reachability::AbstractHandler::Result result
+        ) const override;
     private:
+        void _printCommon(Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const;
         uint32_t _queryOffset;
         std::ostream& _stream;
-        std::vector<std::string> _queryNames;
+        std::string _queryName;
         size_t _seed;
         std::vector<std::string> _techniqueFlags;
     };

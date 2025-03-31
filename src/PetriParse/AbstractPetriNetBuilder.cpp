@@ -8,7 +8,7 @@
 
 
 namespace PetriEngine {
-    void AbstractPetriNetBuilder::parse_model(const std::string&& model)
+    void AbstractPetriNetBuilder::parse_model(const std::string& model)
     {
         std::ifstream mfile(model, std::ifstream::in);
         if (!mfile) {

@@ -82,6 +82,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] virtual const std::set<Variable_t>& getVariables() const = 0;
         [[nodiscard]] virtual std::vector<VariableConstraint> calculateVariableConstraints(
             Variable_t var, Place_t fromPlace) const = 0;
+        [[nodiscard]] virtual bool containsNegative() const = 0;
         virtual ~CompiledArcExpression() = default;
     };
 
@@ -98,7 +99,6 @@ namespace PetriEngine::ExplicitColored {
         ) const;
 
         static std::unique_ptr<CompiledArcExpression> testCompile();
-
     private:
         static void replaceConstants(std::unique_ptr<CompiledArcExpression>& top);
         static void preCalculate(std::unique_ptr<CompiledArcExpression>& top);
@@ -107,6 +107,5 @@ namespace PetriEngine::ExplicitColored {
         const Colored::ColorTypeMap& _colorTypeMap;
     };
 }
-
 
 #endif //ARCCOMPILER_H

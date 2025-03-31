@@ -8,7 +8,7 @@ public:
     int overflow(const int c) override { return c; }
 };
 
-class NullStream : public std::ostream {
+class NullStream final : public std::ostream {
 public:
     NullStream(const NullStream&) = delete;
     NullStream& operator=(const NullStream&) = delete;

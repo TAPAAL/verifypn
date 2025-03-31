@@ -17,12 +17,10 @@ namespace PetriEngine::ExplicitColored {
         const PQL::Condition_ptr &query,
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
         const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-        const IColoredResultPrinter& coloredResultPrinter,
         const size_t seed
     ) : _net(std::move(net)),
         _successorGenerator(ColoredSuccessorGenerator{_net}),
-        _seed(seed),
-        _coloredResultPrinter(coloredResultPrinter)
+        _seed(seed)
     {
         const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -32,7 +30,7 @@ namespace PetriEngine::ExplicitColored {
             _quantifier = Quantifier::AG;
             _gammaQuery = queryCompiler.compile(agGammaQuery->getCond());
         } else {
-            throw explicit_error{unsupported_query};
+            throw explicit_error{ExplicitErrorType::unsupported_query};
         }
     }
 
@@ -43,7 +41,7 @@ namespace PetriEngine::ExplicitColored {
         if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
-        throw explicit_error(unsupported_generator);
+        throw explicit_error(ExplicitErrorType::unsupported_generator);
     }
 
     const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {
@@ -73,15 +71,13 @@ namespace PetriEngine::ExplicitColored {
             waiting.add(std::move(initial));
         }
 
-        _searchStatistics.passedCount = 1;
-        _searchStatistics.checkedStates = 1;
+        _searchStatistics.exploredStates = 1;
+        _searchStatistics.discoveredStates = 1;
 
         if (_check(initialState, 0) == earlyTerminationCondition) {
-            encoder.printBiggestEncoding();
             return _getResult(true, encoder.isFullStatespace());
         }
         if (_net.getTransitionCount() == 0) {
-            encoder.printBiggestEncoding();
             return _getResult(false, encoder.isFullStatespace());
         }
 
@@ -105,22 +101,22 @@ namespace PetriEngine::ExplicitColored {
             successor.shrink();
             const auto& marking = successor.marking;
             size = encoder.encode(marking);
-            _searchStatistics.exploredStates++;
+            _searchStatistics.discoveredStates++;
             if (!passed.exists(encoder.data(), size).first) {
-                _searchStatistics.checkedStates += 1;
+                _searchStatistics.exploredStates += 1;
                 if (_check(marking, successor.id) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
-                    encoder.printBiggestEncoding();
+                    _searchStatistics.biggestEncoding = encoder.getBiggestEncoding();
                     return _getResult(true, encoder.isFullStatespace());
                 }
                 waiting.add(std::move(successor));
                 passed.insert(encoder.data(), size);
-                _searchStatistics.passedCount += 1;
                 _searchStatistics.peakWaitingStates = std::max(waiting.size(), _searchStatistics.peakWaitingStates);
             }
         }
-        encoder.printBiggestEncoding();
+
         _searchStatistics.endWaitingStates = waiting.size();
+        _searchStatistics.biggestEncoding = encoder.getBiggestEncoding();
         return _getResult(false, encoder.isFullStatespace());
     }
 
@@ -137,7 +133,7 @@ namespace PetriEngine::ExplicitColored {
             case Strategy::HEUR:
                 return _bestfs<SuccessorGeneratorState>();
             default:
-                throw explicit_error(unsupported_strategy);
+                throw explicit_error(ExplicitErrorType::unsupported_strategy);
         }
     }
 
@@ -178,7 +174,6 @@ namespace PetriEngine::ExplicitColored {
                ? Reachability::ResultPrinter::Result::Satisfied
                : Reachability::ResultPrinter::Result::NotSatisfied;
         }
-        _coloredResultPrinter.printResults(_searchStatistics, res);
         return res == Reachability::ResultPrinter::Result::Satisfied;
     }
 }
