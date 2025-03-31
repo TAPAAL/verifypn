@@ -49,6 +49,7 @@ namespace PetriEngine {
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
+            auto marking = context.marking();
 
             if (_result != result_t::UKNOWN)
             {
@@ -58,6 +59,14 @@ namespace PetriEngine {
 
             if (_equations.size() == 0 || context.timeout()){
                 return false;
+            }
+
+                 
+            for(size_t i = 0; i < net->numberOfPlaces(); ++i) {
+                if (marking[i] >  std::numeric_limits<int32_t>::max()) {
+                    std::cout << "Initial marking contains a place with " << marking[i] << " tokens, which exceeds the numeric limit. Query simplifaction is skipped.\n";
+                    return false;
+                }
             }
 
             const uint32_t nCol = net->numberOfTransitions();

@@ -525,13 +525,6 @@ void simplify_queries(const MarkVal* marking,
                       std::vector<PetriEngine::PQL::Condition_ptr>& queries,
                       options_t& options, std::ostream& outstream) {
 
-    bool initialMarkingOutOfBound = false;            
-    for(size_t i = 0; i < net->numberOfPlaces(); ++i) {
-        if (marking[i] >  std::numeric_limits<int32_t>::max()) {
-            std::cout << "Initial marking contains a place with " << marking[i] << " tokens, which exceeds the numeric limit. Query simplifaction is skipped.\n";
-            initialMarkingOutOfBound = true;
-        }
-    }
 
     // simplification. We always want to do negation-push and initial marking check.
     std::vector<LPCache> caches(options.cores);
@@ -610,7 +603,7 @@ void simplify_queries(const MarkVal* marking,
 
                     
 
-                    if (options.queryReductionTimeout > 0 && qt > 0 && !initialMarkingOutOfBound) {  // skip query simplification if the initial marking contains too many tokens
+                    if (options.queryReductionTimeout > 0 && qt > 0) {  
                         SimplificationContext simplificationContext(marking, net, qt,
                             options.lpsolveTimeout, &cache);
                         try {
