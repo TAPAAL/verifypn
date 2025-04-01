@@ -1,5 +1,5 @@
 #include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
-
+#include "PetriEngine/ExplicitColored/Visitors/fireabilityEvaluate.h"
 #include <VerifyPN.h>
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h>
@@ -66,50 +66,45 @@ namespace PetriEngine::ExplicitColored {
         if (!isReachability(query)) {
             return Result::UNKNOWN;
         }
-        ContainsFireabilityVisitor has_fireability;
-        Visitor::visit(has_fireability, query);
-        if (has_fireability.getReturnValue()) {
-            return Result::UNKNOWN;
-        }
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
-
-        bool isEf = false;
-        if (dynamic_cast<EFCondition*>(queryCopy.get())) {
-            isEf = true;
-        }
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         ignorantBuilder.parse_model(pnmlModelStream);
-        auto status = ignorantBuilder.build();
+        const auto status = ignorantBuilder.build();
         if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
             return Result::UNKNOWN;
         }
 
         auto builder = ignorantBuilder.getUnderlying();
-        auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
-        std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
-        
+        const auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
+        const std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
+
         std::vector queries { std::move(queryCopy) };
 
+        const EvaluationContext context(qm0.get(), qnet.get());
+        negstat_t stats;
+        ContainsFireabilityVisitor hasFireability;
+        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
+        Visitor::visit(hasFireability, queries[0]);
+        bool isEf = false;
+        if (dynamic_cast<EFCondition*>(queries[0].get())) {
+            isEf = true;
+        }
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-
-        {
-            EvaluationContext context(qm0.get(), qnet.get());
-
-            auto r = evaluate(queries[0].get(), context);
-            if(r == Condition::RFALSE)
-            {
-                queries[0] = BooleanCondition::FALSE_CONSTANT;
-            }
-            else if(r == Condition::RTRUE)
-            {
-                queries[0] = BooleanCondition::TRUE_CONSTANT;
-            }
+        Condition::Result r;
+        if (hasFireability.getReturnValue()) {
+            r = fireabilityEvaluate(queries[0].get(), context);
+        }else {
+            r = evaluate(queries[0].get(), context);
         }
 
-        // simplification. We always want to do negation-push and initial marking check.
-        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
-
+        if(r == Condition::RFALSE) {
+            queries[0] = BooleanCondition::FALSE_CONSTANT;
+        }
+        else if(r == Condition::RTRUE) {
+            queries[0] = BooleanCondition::TRUE_CONSTANT;
+        }
+        std::cout << "Query is " << (isEf ? "EF " : "AG ") << "and " << r << std::endl;
         if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
             return Result::UNSATISFIED;
         }

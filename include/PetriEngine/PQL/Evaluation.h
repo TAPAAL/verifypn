@@ -55,7 +55,7 @@ namespace PetriEngine { namespace PQL {
 
     class BaseEvaluationVisitor : public MutatingVisitor {
     public:
-        Condition::Result get_return_value() { return _return_value; }
+        Condition::Result get_return_value() { return _returnValue; }
         const EvaluationContext& context() const { return _context; }
     protected:
         explicit BaseEvaluationVisitor(const EvaluationContext& context) : _context(context) {}
@@ -73,7 +73,7 @@ namespace PetriEngine { namespace PQL {
         }
     protected:
         const EvaluationContext& _context;
-        Condition::Result _return_value = Condition::RUNKNOWN;
+        Condition::Result _returnValue = Condition::RUNKNOWN;
         size_t _offset;
     };
 
