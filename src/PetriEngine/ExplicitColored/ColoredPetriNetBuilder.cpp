@@ -159,6 +159,7 @@ namespace PetriEngine::ExplicitColored {
         (*_variableMap)[variable->name] = _variableMap->size();
         const auto colorType = _colorTypeMap.find(variable->colorType->getName())->second;
         _variablesToAdd.push_back(colorType);
+        _underlyingVariableColorTypes.push_back(variable->colorType);
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
@@ -325,5 +326,13 @@ namespace PetriEngine::ExplicitColored {
 
     std::unordered_map<std::string, Transition_t> ColoredPetriNetBuilder::takeTransitionIndices() {
         return std::move(_transitionIndices);
+    }
+
+    std::shared_ptr<std::unordered_map<std::string, Variable_t>> ColoredPetriNetBuilder::getVariableIndices() {
+        return _variableMap;
+    }
+
+    std::vector<const Colored::ColorType *> ColoredPetriNetBuilder::takeUnderlyingVariableColorTypes() {
+        return std::move(_underlyingVariableColorTypes);
     }
 }

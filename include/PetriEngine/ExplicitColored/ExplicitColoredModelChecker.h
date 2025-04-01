@@ -7,6 +7,7 @@
 #include "Visitors/ConditionCopyVisitor.h"
 
 #include "ColoredResultPrinter.h"
+#include "Algorithms/ExplicitWorklist.h"
 
 namespace PetriEngine::ExplicitColored {
     class ExplicitColoredModelChecker {
@@ -34,7 +35,7 @@ namespace PetriEngine::ExplicitColored {
             options_t& options
         ) const;
 
-        Result explicitColorCheck(
+        std::pair<Result, std::optional<std::vector<TraceStep>>> explicitColorCheck(
             const std::string& pnmlModel,
             const PQL::Condition_ptr& query,
             options_t& options,
@@ -47,6 +48,14 @@ namespace PetriEngine::ExplicitColored {
             const PQL::Condition_ptr& query,
             options_t& options
         ) const;
+
+        std::vector<TraceStep> _translateTraceStep(
+            const std::vector<InternalTraceStep>& internalTrace,
+            const std::unordered_map<Transition_t, std::string>& transitionToId,
+            const std::unordered_map<Variable_t, std::string>& variableToId,
+            const std::vector<const Colored::ColorType*>& variableColorTypes
+        ) const;
+
         shared_string_set& _stringSet;
         std::ostream& _fullStatisticOut;
     };

@@ -45,12 +45,18 @@ namespace PetriEngine::ExplicitColored {
         }
 
         SearchStatistics searchStatistics;
-        result = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
+        auto [newResult, trace] = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
+        result = newResult;
         if (result != Result::UNKNOWN) {
             if (resultPrinter) {
-                resultPrinter->printResult(searchStatistics, result == Result::SATISFIED
-                    ? AbstractHandler::Result::Satisfied
-                    : AbstractHandler::Result::NotSatisfied
+                resultPrinter->printResult(
+                    searchStatistics,
+                    result == Result::SATISFIED
+                        ? AbstractHandler::Result::Satisfied
+                        : AbstractHandler::Result::NotSatisfied,
+                    trace.has_value()
+                        ? &trace.value()
+                        : nullptr
                 );
             }
             return result;
@@ -119,7 +125,7 @@ namespace PetriEngine::ExplicitColored {
         return Result::UNKNOWN;
     }
 
-    ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::explicitColorCheck(
+    std::pair<ExplicitColoredModelChecker::Result, std::optional<std::vector<TraceStep>>> ExplicitColoredModelChecker::explicitColorCheck(
         const std::string& pnmlModel,
         const Condition_ptr& query,
         options_t& options,
@@ -135,7 +141,7 @@ namespace PetriEngine::ExplicitColored {
             case ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
                 std::cout << "The colored petri net has too many bindings to be represented" << std::endl
                         << "TOO_MANY_BINDINGS" << std::endl;
-                return Result::UNKNOWN;
+                return std::make_pair(Result::UNKNOWN, std::nullopt);
             default:
                 throw base_error("Unknown builder error ", static_cast<uint32_t>(buildStatus));
         }
@@ -143,14 +149,37 @@ namespace PetriEngine::ExplicitColored {
         auto net = cpnBuilder.takeNet();
         auto placeIndices = cpnBuilder.takePlaceIndices();
         auto transitionIndices = cpnBuilder.takeTransitionIndices();
+        auto variableIndices = cpnBuilder.getVariableIndices();
+        auto variableColorTypes = cpnBuilder.takeUnderlyingVariableColorTypes();
 
-        ExplicitWorklist worklist(net, query, placeIndices, transitionIndices, options.seed());
+        ExplicitWorklist worklist(net, query, placeIndices, transitionIndices, options.seed(), options.trace != TraceLevel::None);
         bool result = worklist.check(options.strategy, options.colored_sucessor_generator);
 
         if (searchStatistics) {
             *searchStatistics = worklist.GetSearchStatistics();
         }
-        return result ? Result::SATISFIED : Result::UNSATISFIED;
+
+        std::optional<std::vector<TraceStep>> trace = std::nullopt;
+        if (options.trace != TraceLevel::None) {
+            auto counterExample = worklist.getCounterExampleId();
+
+            if (counterExample.has_value()) {
+                std::unordered_map<Transition_t, std::string> transitionLut;
+                for (const auto& [key, value] : transitionIndices) {
+                    transitionLut.emplace(value, key);
+                }
+
+                std::unordered_map<Variable_t, std::string> variableLut;
+                for (const auto& [key, value] : *variableIndices) {
+                    variableLut.emplace(value, key);
+                }
+                auto internalTrace  = worklist.getTraceTo(counterExample.value());
+                if (internalTrace.has_value()) {
+                    trace = _translateTraceStep(internalTrace.value(), transitionLut, variableLut, variableColorTypes);
+                }
+            }
+        }
+        return std::make_pair(result ? Result::SATISFIED : Result::UNSATISFIED, trace);
     }
 
     void ExplicitColoredModelChecker::_reduce(
@@ -178,4 +207,24 @@ namespace PetriEngine::ExplicitColored {
         out << cpnResult.rdbuf();
     }
 
+    std::vector<TraceStep> ExplicitColoredModelChecker::_translateTraceStep(
+        const std::vector<InternalTraceStep> &internalTrace,
+        const std::unordered_map<Transition_t, std::string> &transitionToId,
+        const std::unordered_map<Variable_t, std::string> &variableToId,
+        const std::vector<const Colored::ColorType*>& variableColorTypes
+    ) const {
+
+        std::vector<TraceStep> trace;
+        for (auto& traceStep : internalTrace) {
+            std::unordered_map<std::string, std::string> binding;
+            for (auto [variable, value] : traceStep.binding.getValues()) {
+                binding.emplace(variableToId.find(variable)->second, (*variableColorTypes[variable])[value].getColorName());
+            }
+            trace.emplace_back(TraceStep {
+                transitionToId.find(traceStep.transition)->second,
+                std::move(binding)
+            });
+        }
+        return trace;
+    }
 }
