@@ -64,8 +64,9 @@ namespace PetriEngine::ExplicitColored {
                         << "TOO_MANY_BINDINGS" << std::endl;
                     break;
                 case ExplicitErrorType::invalid_trace:
-                    os << "Trace contained unknown transition, variable or color" << std::endl;
-                    os << "INVALID TRACE" << std::endl;
+                    os << "Trace contained unknown transition, variable or color" << std::endl
+                        << "INVALID TRACE" << std::endl;
+                    break;
                 default:
                     os << "Something went wrong in explicit colored exploration" << std::endl
                         << "UNKNOWN EXPLICIT COLORED ERROR" << std::endl;
