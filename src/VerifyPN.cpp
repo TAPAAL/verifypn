@@ -606,33 +606,37 @@ void simplify_queries(const MarkVal* marking,
                     if (options.queryReductionTimeout > 0 && qt > 0) {  
                         SimplificationContext simplificationContext(marking, net, qt,
                             options.lpsolveTimeout, &cache);
-                        try {
-                            negstat_t stats;
-                            auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
-                            queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
-                            wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
+                        if (simplificationContext.markingOutOfBounds()) {
+                            out << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
+                        } else {
+                            try {
+                                negstat_t stats;
+                                auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
+                                queries[i] = pushNegation(simp_cond.formula, stats, context, false, false, true);
+                                wasAGCPNApprox |= dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
+                                if (options.printstatistics == StatisticsLevel::Full) {
+                                    out << "RWSTATS POST:";
+                                    stats.print(out);
+                                    out << std::endl;
+                                }
+                            } catch (std::bad_alloc& ba) {
+                                throw base_error("Query reduction failed.\nException information: ", ba.what());
+                            }
+
                             if (options.printstatistics == StatisticsLevel::Full) {
-                                out << "RWSTATS POST:";
-                                stats.print(out);
+                                out << "\nQuery after reduction: ";
+                                queries[i]->toString(out);
                                 out << std::endl;
                             }
-                        } catch (std::bad_alloc& ba) {
-                            throw base_error("Query reduction failed.\nException information: ", ba.what());
-                        }
-
-                        if (options.printstatistics == StatisticsLevel::Full) {
-                            out << "\nQuery after reduction: ";
-                            queries[i]->toString(out);
-                            out << std::endl;
-                        }
-                        if (simplificationContext.timeout()) {
-                            if (options.printstatistics == StatisticsLevel::Full)
-                                out << "Query reduction reached timeout.\n";
-                            hadTo[i] = true;
-                        } else {
-                            if (options.printstatistics == StatisticsLevel::Full)
-                                out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
-                            --to_handle;
+                            if (simplificationContext.timeout()) {
+                                if (options.printstatistics == StatisticsLevel::Full)
+                                    out << "Query reduction reached timeout.\n";
+                                hadTo[i] = true;
+                            } else {
+                                if (options.printstatistics == StatisticsLevel::Full)
+                                    out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                                --to_handle;
+                            }
                         }
                     } else if (options.printstatistics == StatisticsLevel::Full) {
                         out << "Skipping linear-programming (-q 0)" << std::endl;

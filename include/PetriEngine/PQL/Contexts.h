@@ -189,6 +189,12 @@ namespace PetriEngine {
                 _base_lp = buildBase();
                 _start = std::chrono::high_resolution_clock::now();
                 _cache = cache;
+                _markingOutOfBounds = false;
+                for(size_t i = 0; i < net->numberOfPlaces(); ++i) {
+                    if (marking[i] >  std::numeric_limits<int32_t>::max()) { //too many tokens exceeding int32_t limits, LP solver will give wrong results
+                        _markingOutOfBounds = true;
+                    }
+                }
             }
 
             virtual ~SimplificationContext() {
@@ -200,6 +206,10 @@ namespace PetriEngine {
 
             const MarkVal* marking() const {
                 return _marking;
+            }
+
+            bool markingOutOfBounds() const {
+                return _markingOutOfBounds;
             }
 
             const PetriNet* net() const {
@@ -245,6 +255,7 @@ namespace PetriEngine {
         private:
             bool _negated;
             const MarkVal* _marking;
+            bool _markingOutOfBounds;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout, _potencyTimeout;
             mutable glp_prob* _base_lp = nullptr;

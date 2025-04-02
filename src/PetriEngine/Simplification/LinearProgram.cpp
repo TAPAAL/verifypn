@@ -61,12 +61,8 @@ namespace PetriEngine {
                 return false;
             }
 
-                 
-            for(size_t i = 0; i < net->numberOfPlaces(); ++i) {
-                if (marking[i] >  std::numeric_limits<int32_t>::max()) {
-                    std::cout << "Initial marking contains a place with " << marking[i] << " tokens, which exceeds the numeric limit. Query simplifaction is skipped.\n";
-                    return false;
-                }
+            if (context.markingOutOfBounds()) {  // the initial marking has too many tokens that exceed the int32_t limits
+                return false;
             }
 
             const uint32_t nCol = net->numberOfTransitions();
