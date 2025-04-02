@@ -5,6 +5,7 @@ add_library(ExplicitColored
     ColoredPetriNetBuilder.cpp
     SuccessorGenerator/ColoredSuccessorGenerator.cpp
     Algorithms/ExplicitWorklist.cpp
+    Algorithms/FireabilitySearch.cpp
     ColoredResultPrinter.cpp
     ExpressionCompilers/GuardCompiler.cpp
     ExpressionCompilers/GammaQueryCompiler.cpp

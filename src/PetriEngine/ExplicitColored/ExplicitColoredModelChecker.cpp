@@ -1,5 +1,4 @@
 #include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
-#include "PetriEngine/ExplicitColored/Visitors/fireabilityEvaluate.h"
 #include <VerifyPN.h>
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h>
@@ -8,6 +7,7 @@
 #include <PetriEngine/PQL/Evaluation.h>
 #include <utils/NullStream.h>
 #include <sstream>
+#include <PetriEngine/ExplicitColored/Algorithms/FireabilitySearch.h>
 
 namespace PetriEngine::ExplicitColored {
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
@@ -43,7 +43,7 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
-
+        throw explicit_error(ExplicitErrorType::unsupported_query);
         SearchStatistics searchStatistics;
         result = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
         if (result != Result::UNKNOWN) {
@@ -76,7 +76,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         auto builder = ignorantBuilder.getUnderlying();
-        const auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
+        auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
         const std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
 
         std::vector queries { std::move(queryCopy) };
@@ -84,16 +84,72 @@ namespace PetriEngine::ExplicitColored {
         const EvaluationContext context(qm0.get(), qnet.get());
         negstat_t stats;
         ContainsFireabilityVisitor hasFireability;
+        std::cout << "Query before reduction: " << std::endl;
+        bool isEf = true;
+        // if (dynamic_cast<EFCondition*>(queries[0].get())) {
+        //     isEf = true;
+        // }
+        queries[0]->toString(std::cout);
         queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         Visitor::visit(hasFireability, queries[0]);
-        bool isEf = false;
-        if (dynamic_cast<EFCondition*>(queries[0].get())) {
-            isEf = true;
-        }
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+
+        std::cout << std::endl << "Query after reduction: " << std::endl;
+        queries[0]->toString(std::cout);
         Condition::Result r;
+
         if (hasFireability.getReturnValue()) {
-            r = fireabilityEvaluate(queries[0].get(), context);
+            try {
+                queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+                queries.push_back(std::move(queryCopy));
+                EFCondition* q1;// = dynamic_cast<EFCondition*>(queries[0].get());
+                EFCondition* q2;// = dynamic_cast<EFCondition*>(queries[1].get());
+                if (dynamic_cast<EFCondition*>(queries[0].get())) {
+                    q1 = dynamic_cast<EFCondition*>(queries[0].get());
+                    q2 = dynamic_cast<EFCondition*>(queries[1].get());
+                }else {
+                    if (isEf) {
+                        isEf = false;
+                    }
+                    q1 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[0].get())->getCond().get());
+                    q2 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[1].get())->getCond().get());
+                }
+                contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+                queries[0] = std::make_shared<AGCondition>(q1->getCond());
+                queries[1] = std::make_shared<EFCondition>(*q2);
+                queries[0] = pushNegation(queries[0], stats, context, false, false, false);
+                queries[1] = pushNegation(queries[1], stats, context, false, false, false);
+                // std::cout << std::endl << "Query 'check if true': \n";
+                // queries[0]->toString(std::cout);
+                // std::cout << std::endl << "Query 'check if false': \n";
+                // queries[1]->toString(std::cout);
+                // std::cout << std::endl;
+            } catch (std::exception&)  {
+                return Result::UNKNOWN;
+            }
+
+            //Just for input
+            std::vector<std::string> names = {"Check if true", "Check if false"};
+            ResultPrinter printer(&builder, &options, names);
+
+            std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
+            FireabilitySearch strategy(*qnet, printer, options.kbound);
+            strategy.reachable(queries, results,
+                                    Strategy::RDFS,
+                                    false,
+                                    false,
+                                    StatisticsLevel::None,
+                                    options.trace != TraceLevel::None,
+                                    options.seed(),
+                                    options.depthRandomWalk,
+                                    options.incRandomWalk);
+            if (results[0] == ResultPrinter::Satisfied) {
+                return isEf ? Result::SATISFIED : Result::UNSATISFIED;
+            }
+            if (results[1] == ResultPrinter::NotSatisfied) {
+                return isEf ? Result::UNSATISFIED : Result::SATISFIED;
+            }
+            return Result::UNKNOWN;
         }else {
             r = evaluate(queries[0].get(), context);
         }
@@ -104,7 +160,8 @@ namespace PetriEngine::ExplicitColored {
         else if(r == Condition::RTRUE) {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
-        std::cout << "Query is " << (isEf ? "EF " : "AG ") << "and " << r << std::endl;
+        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
+        std::cout << std::endl << "Query is " << (isEf ? "EF " : "AG ") << "and " << r << std::endl;
         if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
             return Result::UNSATISFIED;
         }
