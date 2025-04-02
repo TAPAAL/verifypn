@@ -49,7 +49,6 @@ namespace PetriEngine {
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
-            auto marking = context.marking();
 
             if (_result != result_t::UKNOWN)
             {
