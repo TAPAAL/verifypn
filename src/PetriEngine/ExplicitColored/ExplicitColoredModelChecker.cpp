@@ -86,9 +86,6 @@ namespace PetriEngine::ExplicitColored {
         ContainsFireabilityVisitor hasFireability;
         std::cout << "Query before reduction: " << std::endl;
         bool isEf = true;
-        // if (dynamic_cast<EFCondition*>(queries[0].get())) {
-        //     isEf = true;
-        // }
         queries[0]->toString(std::cout);
         queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         Visitor::visit(hasFireability, queries[0]);
@@ -151,6 +148,9 @@ namespace PetriEngine::ExplicitColored {
             }
             return Result::UNKNOWN;
         }else {
+            if (dynamic_cast<EFCondition*>(queries[0].get())) {
+                isEf = true;
+            }
             r = evaluate(queries[0].get(), context);
         }
 
