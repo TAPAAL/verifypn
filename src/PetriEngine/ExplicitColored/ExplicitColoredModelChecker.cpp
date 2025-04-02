@@ -218,10 +218,29 @@ namespace PetriEngine::ExplicitColored {
         for (auto& traceStep : internalTrace) {
             std::unordered_map<std::string, std::string> binding;
             for (auto [variable, value] : traceStep.binding.getValues()) {
-                binding.emplace(variableToId.find(variable)->second, (*variableColorTypes[variable])[value].getColorName());
+                const auto variableIt = variableToId.find(variable);
+                if (variableIt == variableToId.end()) {
+                    std::cerr << "Could not find variable id corresponding to variable index " << variable << std::endl;
+                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                }
+                if (variable >= variableColorTypes.size()) {
+                    std::cerr << "Could not find color type for variable index " << variable << "(" << variableIt->second << ")" << std::endl;
+                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                }
+                const auto& variableColorType = (*variableColorTypes[variable]);
+                if (variableColorType.size() < value) {
+                    std::cerr << "Could not find corresponding color id for color index" << value << " in color type " << variableColorType.getName() << std::endl;
+                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                }
+                binding.emplace(variableIt->second, variableColorType[value].getColorName());
+            }
+            const auto transitionIt = transitionToId.find(traceStep.transition);
+            if (transitionIt == transitionToId.end()) {
+                std::cerr << "Could not find transition id corresponding to transition with index " << traceStep.transition << std::endl;
+                throw explicit_error(ExplicitErrorType::invalid_trace);
             }
             trace.emplace_back(TraceStep {
-                transitionToId.find(traceStep.transition)->second,
+                transitionIt->second,
                 std::move(binding)
             });
         }

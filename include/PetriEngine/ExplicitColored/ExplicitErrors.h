@@ -15,6 +15,7 @@ namespace PetriEngine::ExplicitColored {
         too_many_tokens = 7,
         too_many_bindings = 8,
         unknown_encoding = 9,
+        invalid_trace = 10
     };
 
     class explicit_error final : public std::exception {
@@ -62,6 +63,9 @@ namespace PetriEngine::ExplicitColored {
                     os << "The colored petri net has too many bindings to be represented" << std::endl
                         << "TOO_MANY_BINDINGS" << std::endl;
                     break;
+                case ExplicitErrorType::invalid_trace:
+                    os << "Trace contained unknown transition, variable or color" << std::endl;
+                    os << "INVALID TRACE" << std::endl;
                 default:
                     os << "Something went wrong in explicit colored exploration" << std::endl
                         << "UNKNOWN EXPLICIT COLORED ERROR" << std::endl;
