@@ -67,7 +67,7 @@ namespace PetriEngine::ExplicitColored {
             _traceStream << "\t\t<binding>" << std::endl;
             for (const auto& [variableId, value] : step.binding) {
                 _traceStream << "\t\t\t<assignment variableId=" << std::quoted(variableId)
-                    << " colorId=" << std::quoted(value) << ">" << std::endl;
+                    << " colorId=" << std::quoted(value) << " />" << std::endl;
             }
             _traceStream << "\t\t</binding>" << std::endl;
             _traceStream << "\t\t<marking>" << std::endl;
