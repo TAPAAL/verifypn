@@ -1,6 +1,7 @@
 #ifndef COLORED_RESULT_PRINTER_H
 #define COLORED_RESULT_PRINTER_H
 
+#include "AtomicTypes.h"
 #include "PetriEngine/ExplicitColored/Algorithms/SearchStatistics.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 
@@ -8,6 +9,7 @@ namespace PetriEngine::ExplicitColored {
     struct TraceStep {
         std::string transitionId;
         std::unordered_map<std::string, std::string> binding;
+        std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> marking;
     };
 
     class IColoredResultPrinter {

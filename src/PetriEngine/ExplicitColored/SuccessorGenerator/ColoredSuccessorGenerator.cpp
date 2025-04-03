@@ -78,7 +78,7 @@ namespace PetriEngine::ExplicitColored{
         }
     }
 
-    void ColoredSuccessorGenerator::_fire(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const{
+    void ColoredSuccessorGenerator::fire(ColoredPetriNetMarking& state, const Transition_t tid, const Binding& binding) const{
         consumePreset(state, tid, binding);
         producePostset(state, tid, binding);
     }

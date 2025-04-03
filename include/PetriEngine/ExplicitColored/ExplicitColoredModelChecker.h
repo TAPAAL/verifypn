@@ -51,9 +51,8 @@ namespace PetriEngine::ExplicitColored {
 
         std::vector<TraceStep> _translateTraceStep(
             const std::vector<InternalTraceStep>& internalTrace,
-            const std::unordered_map<Transition_t, std::string>& transitionToId,
-            const std::unordered_map<Variable_t, std::string>& variableToId,
-            const std::vector<const Colored::ColorType*>& variableColorTypes
+            const ColoredPetriNetBuilder& cpnBuilder,
+            const ColoredPetriNet& net
         ) const;
 
         shared_string_set& _stringSet;

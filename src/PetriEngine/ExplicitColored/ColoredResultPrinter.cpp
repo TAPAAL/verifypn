@@ -70,6 +70,25 @@ namespace PetriEngine::ExplicitColored {
                     << " colorId=" << std::quoted(value) << ">" << std::endl;
             }
             _traceStream << "\t\t</binding>" << std::endl;
+            _traceStream << "\t\t<marking>" << std::endl;
+            for (const auto& [placeId, marking] : step.marking) {
+                if (marking.size() > 0) {
+                    _traceStream << "\t\t\t<place id=" << std::quoted(placeId) << ">" << std::endl;
+                    for (const auto& [productColor, count] : marking) {
+                        if (count > 0) {
+                            _traceStream << "\t\t\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
+                            for (const auto& color : productColor) {
+                                _traceStream << "\t\t\t\t\t<color id=" << std::quoted(color) << " />" << std::endl;
+                            }
+                            _traceStream << "\t\t\t\t</token>" << std::endl;
+                        }
+                    }
+                    _traceStream << "\t\t\t</place>" << std::endl;
+                } else {
+                    _traceStream << "\t\t\t<place id=" << std::quoted(placeId) << " />" << std::endl;
+                }
+            }
+            _traceStream << "\t\t</marking>" << std::endl;
             _traceStream << "\t</transition>" << std::endl;
         }
         _traceStream << "</trace>" << std::endl;

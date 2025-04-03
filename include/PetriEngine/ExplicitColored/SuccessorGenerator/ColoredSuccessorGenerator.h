@@ -47,6 +47,7 @@ namespace PetriEngine::ExplicitColored {
             _constraintData.erase(lower, upper);
         }
         void getBinding(Transition_t tid, Binding_t bid, Binding& binding) const;
+        void fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
     protected:
         [[nodiscard]] bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         [[nodiscard]] bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
@@ -57,7 +58,6 @@ namespace PetriEngine::ExplicitColored {
         mutable std::map<size_t, ConstraintData> _constraintData;
         mutable size_t _nextId = 1;
         const ColoredPetriNet& _net;
-        void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         std::map<size_t, ConstraintData>::iterator _calculateConstraintData(const ColoredPetriNetMarking& marking, size_t id, Transition_t transition, bool& noPossibleBinding) const;
         [[nodiscard]] bool _hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t tid) const;
         [[nodiscard]] bool _shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t tid) const {
@@ -80,7 +80,7 @@ namespace PetriEngine::ExplicitColored {
                 if (nextBid != std::numeric_limits<Binding_t>::max()) {
                     auto newState = ColoredPetriNetStateFixed(state.marking);
                     newState.id = _nextId++;
-                    _fire(newState.marking, tid, binding);
+                    fire(newState.marking, tid, binding);
                     state.nextBinding(nextBid);
                     return std::make_pair(newState, TraceMapStep {
                         newState.id,
@@ -108,7 +108,7 @@ namespace PetriEngine::ExplicitColored {
                     if (nextBid != std::numeric_limits<Binding_t>::max()) {
                         auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
                         newState.id = _nextId++;
-                        _fire(newState.marking, tid, binding);
+                        fire(newState.marking, tid, binding);
                         return std::make_pair(newState, TraceMapStep {
                             newState.id,
                             state.id,

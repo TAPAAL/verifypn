@@ -70,7 +70,7 @@ namespace PetriEngine::ExplicitColored {
                 it->second.transition
             });
         }
-        return trace;
+        return std::vector(trace.rbegin(), trace.rend());
     }
 
     bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state, size_t id) const {
