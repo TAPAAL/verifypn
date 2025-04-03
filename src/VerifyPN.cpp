@@ -607,7 +607,7 @@ void simplify_queries(const MarkVal* marking,
                         SimplificationContext simplificationContext(marking, net, qt,
                             options.lpsolveTimeout, &cache);
                         if (simplificationContext.markingOutOfBounds()) {
-                            out << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
+                            std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
                             break;
                         } 
                         try {
