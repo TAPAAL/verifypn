@@ -7,12 +7,11 @@ using namespace PetriEngine::Reachability;
 
 namespace PetriEngine::ExplicitColored {
 
-    class FireabilitySearch : public ReachabilitySearch {
+    class FireabilitySearch final : public ReachabilitySearch {
     public:
-        FireabilitySearch(PetriNet& net, AbstractHandler& callback, const int kBound = 0, const bool early = false)
-            : ReachabilitySearch(net, callback, kBound, early)
+        FireabilitySearch(PetriNet& net, AbstractHandler& callback, const uint32_t queryTimeout)
+            : ReachabilitySearch(net, callback, 0, false), _beginTime(std::chrono::high_resolution_clock::now()), _queryTimeout(queryTimeout)
         {}
-        ~FireabilitySearch() = default;
 
         bool checkQueries(std::vector<std::shared_ptr<PQL::Condition > >& queries,
                                               std::vector<ResultPrinter::Result>& results,
@@ -24,6 +23,15 @@ namespace PetriEngine::ExplicitColored {
             ResultPrinter::Result r,
             searchstate_t& ss,
             Structures::StateSetInterface* states) override;
+    private:
+        std::chrono::high_resolution_clock::time_point _beginTime;
+        uint32_t _queryTimeout;
+
+        [[nodiscard]] bool _timeout() const {
+            const auto end = std::chrono::high_resolution_clock::now();
+            const auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _beginTime);
+            return diff.count() >= _queryTimeout;
+        }
     };
 }
 #endif //FIREABILITYSEARCH_H

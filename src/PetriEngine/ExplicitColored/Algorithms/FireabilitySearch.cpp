@@ -14,19 +14,20 @@ namespace PetriEngine::ExplicitColored {
                                          Structures::StateSetInterface* states)
     {
         bool allDone = true;
+        if (_timeout()) {
+            std::cout << "Reached timeout for fireability query reduction check" << std::endl;
+            for (auto& r : results) {
+                r = ResultPrinter::Result::Ignore;
+            }
+            return allDone;
+        }
         for(size_t i = 0; i < queries.size(); ++i) {
             if(results[i] == ResultPrinter::Unknown) {
                 EvaluationContext ec(state.marking(), &_net);
                 const auto evaluation = fireabilityEvaluate(queries[i].get(), ec);
                 if(evaluation == Condition::RTRUE) {
-                    // std::cout << std::endl << "Query being checked': \n";
-                    // queries[0]->toString(std::cout);
-                    // std::cout << std::endl;
                     const auto [res,b] = doCallback(queries[i], i, ResultPrinter::Satisfied, ss, states);
                     results[i] = res;
-                    if(res == ResultPrinter::Satisfied) {
-                        return true;
-                    }
                 }
                 else if (evaluation == Condition::RUNKNOWN) {
                     results[i] = ResultPrinter::Result::Ignore;
@@ -44,19 +45,18 @@ namespace PetriEngine::ExplicitColored {
             ResultPrinter::Result r,
             searchstate_t& ss,
             Structures::StateSetInterface* states) {
-        if(r == ResultPrinter::Unknown) {
-            return {ResultPrinter::Unknown,false};
-        }
-        // if (dynamic_cast<NotCondition*>(query.get())) {
-        //     r = r == AbstractHandler::Satisfied ? AbstractHandler::NotSatisfied : AbstractHandler::Satisfied;
+        return {r, false};
+        // if(r == ResultPrinter::Unknown) {
+        //     return {ResultPrinter::Unknown,false};
         // }
-        if (r == ResultPrinter::Satisfied) {
-            std::cout << "\nQuery: " << i << " has found a counter example" << std::endl;
-            return {ResultPrinter::Satisfied,false};
-            return {ResultPrinter::NotSatisfied,false};
-        }
-        std::cout << "\nQuery: " << i << " has not found a counter example in all reachable states" << std::endl;
-        return {ResultPrinter::NotSatisfied,false};
-        return {ResultPrinter::Satisfied,false};
+        // // if (dynamic_cast<NotCondition*>(query.get())) {
+        // //     r = r == AbstractHandler::Satisfied ? AbstractHandler::NotSatisfied : AbstractHandler::Satisfied;
+        // // }
+        // if (r == ResultPrinter::Satisfied) {
+        //     std::cout << "\nQuery: " << i << " has found a counter example" << std::endl;
+        //     return {ResultPrinter::Satisfied,false};
+        // }
+        // std::cout << "\nQuery: " << i << " has not found a counter example in all reachable states" << std::endl;
+        // return {ResultPrinter::NotSatisfied,false};
     }
 }

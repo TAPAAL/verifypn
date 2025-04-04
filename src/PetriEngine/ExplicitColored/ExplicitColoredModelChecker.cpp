@@ -43,7 +43,6 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
-        throw explicit_error(ExplicitErrorType::unsupported_query);
         SearchStatistics searchStatistics;
         result = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
         if (result != Result::UNKNOWN) {
@@ -82,64 +81,56 @@ namespace PetriEngine::ExplicitColored {
         std::vector queries { std::move(queryCopy) };
 
         const EvaluationContext context(qm0.get(), qnet.get());
+        bool isEf = true;
         negstat_t stats;
         ContainsFireabilityVisitor hasFireability;
-        std::cout << "Query before reduction: " << std::endl;
-        bool isEf = true;
-        queries[0]->toString(std::cout);
-        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         Visitor::visit(hasFireability, queries[0]);
+        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-
-        std::cout << std::endl << "Query after reduction: " << std::endl;
-        queries[0]->toString(std::cout);
         Condition::Result r;
 
+        //Cardinality check
         if (hasFireability.getReturnValue()) {
             try {
+                EFCondition* q1;
+                EFCondition* q2;
                 queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
                 queries.push_back(std::move(queryCopy));
-                EFCondition* q1;// = dynamic_cast<EFCondition*>(queries[0].get());
-                EFCondition* q2;// = dynamic_cast<EFCondition*>(queries[1].get());
                 if (dynamic_cast<EFCondition*>(queries[0].get())) {
                     q1 = dynamic_cast<EFCondition*>(queries[0].get());
                     q2 = dynamic_cast<EFCondition*>(queries[1].get());
                 }else {
-                    if (isEf) {
-                        isEf = false;
-                    }
+                    isEf = false;
                     q1 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[0].get())->getCond().get());
                     q2 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[1].get())->getCond().get());
                 }
+
+                //Copying transforms compare conjunction to fireable, so we need to analyse for safety
                 contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+                //If the first query is satisfied then the original query is satisfied (reverse if it is an AG query)
                 queries[0] = std::make_shared<AGCondition>(q1->getCond());
+                //If the second query isn't satisfied then the original query is not satisfied (reverse if it is an AG query)
+                //Equal to satisfying AG not e
                 queries[1] = std::make_shared<EFCondition>(*q2);
                 queries[0] = pushNegation(queries[0], stats, context, false, false, false);
                 queries[1] = pushNegation(queries[1], stats, context, false, false, false);
-                // std::cout << std::endl << "Query 'check if true': \n";
-                // queries[0]->toString(std::cout);
-                // std::cout << std::endl << "Query 'check if false': \n";
-                // queries[1]->toString(std::cout);
-                // std::cout << std::endl;
             } catch (std::exception&)  {
                 return Result::UNKNOWN;
             }
-
             //Just for input
-            std::vector<std::string> names = {"Check if true", "Check if false"};
+            std::vector<std::string> names;
             ResultPrinter printer(&builder, &options, names);
-
-            std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
-            FireabilitySearch strategy(*qnet, printer, options.kbound);
+            //Unknown result means not computed, Ignore means it cannot be computed
+            std::vector results(queries.size(), ResultPrinter::Result::Unknown);
+            FireabilitySearch strategy(*qnet, printer, options.queryReductionTimeout);
             strategy.reachable(queries, results,
                                     Strategy::RDFS,
                                     false,
                                     false,
                                     StatisticsLevel::None,
                                     options.trace != TraceLevel::None,
-                                    options.seed(),
-                                    options.depthRandomWalk,
-                                    options.incRandomWalk);
+                                    options.seed()
+                                    );
             if (results[0] == ResultPrinter::Satisfied) {
                 return isEf ? Result::SATISFIED : Result::UNSATISFIED;
             }
@@ -147,12 +138,14 @@ namespace PetriEngine::ExplicitColored {
                 return isEf ? Result::UNSATISFIED : Result::SATISFIED;
             }
             return Result::UNKNOWN;
-        }else {
-            if (dynamic_cast<EFCondition*>(queries[0].get())) {
-                isEf = true;
-            }
-            r = evaluate(queries[0].get(), context);
         }
+
+        //Cardinality check
+        //Never used
+        if (dynamic_cast<AGCondition*>(queries[0].get())) {
+            isEf = false;
+        }
+        r = evaluate(queries[0].get(), context);
 
         if(r == Condition::RFALSE) {
             queries[0] = BooleanCondition::FALSE_CONSTANT;
@@ -161,7 +154,6 @@ namespace PetriEngine::ExplicitColored {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
         simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
-        std::cout << std::endl << "Query is " << (isEf ? "EF " : "AG ") << "and " << r << std::endl;
         if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
             return Result::UNSATISFIED;
         }

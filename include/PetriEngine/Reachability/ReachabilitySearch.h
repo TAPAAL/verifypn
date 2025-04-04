@@ -49,7 +49,7 @@ namespace PetriEngine {
             : _net(net), _kbound(kbound), _callback(callback) {
             }
 
-            ~ReachabilitySearch()
+            virtual ~ReachabilitySearch()
             {
             }
 
