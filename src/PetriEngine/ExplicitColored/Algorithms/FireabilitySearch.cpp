@@ -1,7 +1,7 @@
 #include "PetriEngine/ExplicitColored/Algorithms/FireabilitySearch.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/PQL/Contexts.h"
-#include "PetriEngine/ExplicitColored/Visitors/FireabilityEvaluate.h"
+#include "PetriEngine/ExplicitColored/Visitors/IgnorantFireabilityVisitor.h"
 
 using namespace PetriEngine::Reachability;
 using namespace PetriEngine::Structures;

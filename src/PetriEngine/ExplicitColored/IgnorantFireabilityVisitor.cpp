@@ -1,4 +1,4 @@
-#include "PetriEngine/ExplicitColored/Visitors/FireabilityEvaluate.h"
+#include "PetriEngine/ExplicitColored/Visitors/IgnorantFireabilityVisitor.h"
 
 namespace PetriEngine::PQL {
     template<typename V, typename C>
@@ -8,16 +8,16 @@ namespace PetriEngine::PQL {
     }
 
     void FireabilityEvaluateVisitor::_accept(SimpleQuantifierCondition *element) {
-        _returnValue = {Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
     //All fireability queries need to be converted into EF
     void FireabilityEvaluateVisitor::_accept(AGCondition *element) {
-        _returnValue = {Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
     void FireabilityEvaluateVisitor::_accept(ControlCondition *element) {
-        _returnValue = {Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
     void FireabilityEvaluateVisitor::_accept(EFCondition *element) {
@@ -26,7 +26,7 @@ namespace PetriEngine::PQL {
 
     //All fireability queries need to be converted into EF
     void FireabilityEvaluateVisitor::_accept(AllPaths *element) {
-        _returnValue = {Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
     void FireabilityEvaluateVisitor::_accept(ExistPath *element) {
@@ -37,26 +37,26 @@ namespace PetriEngine::PQL {
         auto res = Condition::RTRUE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_returnValue == Condition::RFALSE) {
+            if (_return_value == Condition::RFALSE) {
                 return;
             }
-            if (_returnValue == Condition::RUNKNOWN)
+            if (_return_value == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
-        _returnValue = {res};
+        _return_value = {res};
     }
 
     void FireabilityEvaluateVisitor::_accept(OrCondition *element) {
         auto res = Condition::RFALSE;
         for (auto &c: element->getOperands()) {
             Visitor::visit(this, c);
-            if (_returnValue == Condition::RTRUE) {
+            if (_return_value == Condition::RTRUE) {
                 return;
             }
-            if (_returnValue == Condition::RUNKNOWN)
+            if (_return_value == Condition::RUNKNOWN)
                 res = Condition::RUNKNOWN;
         }
-        _returnValue = {res};
+        _return_value = {res};
     }
 
     // Transition fireability is converted into a compare conjunction, where each input place is an element
@@ -68,35 +68,35 @@ namespace PetriEngine::PQL {
             if (!res) break;
         }
         if (!res) {
-            _returnValue = element->isNegated() ? Condition::RTRUE : Condition::RFALSE;
+            _return_value = element->isNegated() ? Condition::RTRUE : Condition::RFALSE;
         }else {
-            _returnValue = Condition::RUNKNOWN;
+            _return_value = Condition::RUNKNOWN;
         }
     }
 
     void FireabilityEvaluateVisitor::_accept(LessThanOrEqualCondition *element) {
-        _returnValue = {compare(this, element)};
+        _return_value = {compare(this, element)};
     }
 
     void FireabilityEvaluateVisitor::_accept(LessThanCondition *element) {
-        _returnValue = {compare(this, element)};
+        _return_value = {compare(this, element)};
     }
 
     void FireabilityEvaluateVisitor::_accept(EqualCondition *element) {
-        _returnValue = {compare(this, element)};
+        _return_value = {compare(this, element)};
     }
 
     void FireabilityEvaluateVisitor::_accept(NotEqualCondition *element) {
-        _returnValue = {compare(this, element)};
+        _return_value = {compare(this, element)};
     }
 
     void FireabilityEvaluateVisitor::_accept(NotCondition *element) {
         Visitor::visit(this, (*element)[0]);
         if (dynamic_cast<EFCondition*>((*element)[0].get())) {
-            if (_returnValue != Condition::RUNKNOWN)
-                _returnValue = {_returnValue == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
+            if (_return_value != Condition::RUNKNOWN)
+                _return_value = {_return_value == Condition::RFALSE ? Condition::RTRUE : Condition::RFALSE};
             else
-                _returnValue = {Condition::RUNKNOWN};
+                _return_value = {Condition::RUNKNOWN};
         }else {
 
         }
@@ -104,11 +104,11 @@ namespace PetriEngine::PQL {
     }
 
     void FireabilityEvaluateVisitor::_accept(BooleanCondition *element) {
-        _returnValue = {element->value ? Condition::RTRUE : Condition::RFALSE};
+        _return_value = {element->value ? Condition::RTRUE : Condition::RFALSE};
     }
 
     void FireabilityEvaluateVisitor::_accept(DeadlockCondition *element) {
-        _returnValue = {Condition::RUNKNOWN};
+        _return_value = {Condition::RUNKNOWN};
     }
 
     void FireabilityEvaluateVisitor::_accept(ShallowCondition *element) {

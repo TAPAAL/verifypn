@@ -9,7 +9,7 @@ add_library(ExplicitColored
     ColoredResultPrinter.cpp
     ExpressionCompilers/GuardCompiler.cpp
     ExpressionCompilers/GammaQueryCompiler.cpp
-    fireabilityEvaluate.cpp
+        IgnorantFireabilityVisitor.cpp
     ColoredPetriNet.cpp
     ColorIgnorantPetriNetBuilder.cpp
     ExplicitColoredModelChecker.cpp
