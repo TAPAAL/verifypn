@@ -3,58 +3,10 @@
 namespace PetriEngine::PQL {
     template<typename V, typename C>
     Condition::Result compare(V* visitor, C* condition) {
-        ExprEvalVisitor eval(visitor->context());
-        Visitor::visit(eval, (*condition)[0]);
-        const auto v1 = eval.value();
-        if constexpr (std::is_same_v<C,EqualCondition>) {
-            return Condition::RUNKNOWN;
-        }
-        else if constexpr (std::is_same_v<C,NotEqualCondition>) {
-            return Condition::RUNKNOWN;
-        }
-        else if constexpr (std::is_same_v<C,LessThanCondition>) {
-            if (v1 < eval.value()) {
-                return Condition::RTRUE;
-            }
-            return Condition::RUNKNOWN;
-        }
-        else if constexpr (std::is_same_v<C,LessThanOrEqualCondition>) {
-            if (v1 <= eval.value()) {
-                return Condition::RTRUE;
-            }
-            return Condition::RUNKNOWN;
-        }
-        else {
-            return C::fail_hard_here;
-        }
+        std::cout << "Cardinality comparison not supported for fireability reduction" << std::endl;
+        return Condition::RUNKNOWN;
     }
 
-    // Condition::Result compare(V* visitor, C* condition) {
-    //     ExprEvalVisitor eval(visitor->context());
-    //     Visitor::visit(eval, (*condition)[0]);
-    //     const auto v1 = eval.value();
-    //     if constexpr (std::is_same_v<C,EqualCondition>) {
-    //         return Condition::RUNKNOWN;
-    //     }
-    //     else if constexpr (std::is_same_v<C,NotEqualCondition>) {
-    //         return Condition::RUNKNOWN;
-    //     }
-    //     else if constexpr (std::is_same_v<C,LessThanCondition>) {
-    //         if (v1 < eval.value()) {
-    //             return Condition::RTRUE;
-    //         }
-    //         return Condition::RUNKNOWN;
-    //     }
-    //     else if constexpr (std::is_same_v<C,LessThanOrEqualCondition>) {
-    //         if (v1 <= eval.value()) {
-    //             return Condition::RTRUE;
-    //         }
-    //         return Condition::RUNKNOWN;
-    //     }
-    //     else {
-    //         return C::fail_hard_here;
-    //     }
-    // }
     void FireabilityEvaluateVisitor::_accept(SimpleQuantifierCondition *element) {
         _returnValue = {Condition::RUNKNOWN};
     }
@@ -112,7 +64,6 @@ namespace PetriEngine::PQL {
         //Res is false if it is impossible to reach a marking where the constraints are satisfied
         bool res = true;
         for (auto &c : element->constraints()) {
-            auto tokenCount = _context.marking()[c._place];
             res = _context.marking()[c._place] >= c._lower;
             if (!res) break;
         }

@@ -65,7 +65,9 @@ namespace PetriEngine::ExplicitColored {
         if (!isReachability(query)) {
             return Result::UNKNOWN;
         }
+
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
+
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         ignorantBuilder.parse_model(pnmlModelStream);
@@ -77,26 +79,28 @@ namespace PetriEngine::ExplicitColored {
         auto builder = ignorantBuilder.getUnderlying();
         auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
         const std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
-
         std::vector queries { std::move(queryCopy) };
 
         const EvaluationContext context(qm0.get(), qnet.get());
-        bool isEf = true;
-        negstat_t stats;
         ContainsFireabilityVisitor hasFireability;
         Visitor::visit(hasFireability, queries[0]);
-        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
-        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
         Condition::Result r;
+        bool isEf = false;
 
-        //Cardinality check
+        //Fireability check
         if (hasFireability.getReturnValue()) {
+            negstat_t stats;
+            queries[0] = pushNegation(queries[0], stats, context, false, false, false);
+            contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
             try {
                 EFCondition* q1;
                 EFCondition* q2;
                 queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
                 queries.push_back(std::move(queryCopy));
+                queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+                queries.push_back(std::move(queryCopy));
                 if (dynamic_cast<EFCondition*>(queries[0].get())) {
+                    isEf = true;
                     q1 = dynamic_cast<EFCondition*>(queries[0].get());
                     q2 = dynamic_cast<EFCondition*>(queries[1].get());
                 }else {
@@ -104,7 +108,6 @@ namespace PetriEngine::ExplicitColored {
                     q1 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[0].get())->getCond().get());
                     q2 = dynamic_cast<EFCondition*>(dynamic_cast<NotCondition*>(queries[1].get())->getCond().get());
                 }
-
                 //Copying transforms compare conjunction to fireable, so we need to analyse for safety
                 contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
                 //If the first query is satisfied then the original query is satisfied (reverse if it is an AG query)
@@ -113,7 +116,7 @@ namespace PetriEngine::ExplicitColored {
                 //Equal to satisfying AG not e
                 queries[1] = std::make_shared<EFCondition>(*q2);
                 queries[0] = pushNegation(queries[0], stats, context, false, false, false);
-                queries[1] = pushNegation(queries[1], stats, context, false, false, false);
+                queries[1] = pushNegation(queries[2], stats, context, false, false, false);
             } catch (std::exception&)  {
                 return Result::UNKNOWN;
             }
@@ -141,10 +144,11 @@ namespace PetriEngine::ExplicitColored {
         }
 
         //Cardinality check
-        //Never used
-        if (dynamic_cast<AGCondition*>(queries[0].get())) {
-            isEf = false;
+        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+        if (dynamic_cast<EFCondition*>(queries[0].get())) {
+            isEf = true;
         }
+
         r = evaluate(queries[0].get(), context);
 
         if(r == Condition::RFALSE) {

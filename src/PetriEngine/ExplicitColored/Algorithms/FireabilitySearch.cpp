@@ -46,17 +46,5 @@ namespace PetriEngine::ExplicitColored {
             searchstate_t& ss,
             Structures::StateSetInterface* states) {
         return {r, false};
-        // if(r == ResultPrinter::Unknown) {
-        //     return {ResultPrinter::Unknown,false};
-        // }
-        // // if (dynamic_cast<NotCondition*>(query.get())) {
-        // //     r = r == AbstractHandler::Satisfied ? AbstractHandler::NotSatisfied : AbstractHandler::Satisfied;
-        // // }
-        // if (r == ResultPrinter::Satisfied) {
-        //     std::cout << "\nQuery: " << i << " has found a counter example" << std::endl;
-        //     return {ResultPrinter::Satisfied,false};
-        // }
-        // std::cout << "\nQuery: " << i << " has not found a counter example in all reachable states" << std::endl;
-        // return {ResultPrinter::NotSatisfied,false};
     }
 }
