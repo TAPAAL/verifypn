@@ -524,6 +524,8 @@ void simplify_queries(const MarkVal* marking,
                       const PetriNet* net,
                       std::vector<PetriEngine::PQL::Condition_ptr>& queries,
                       options_t& options, std::ostream& outstream) {
+
+
     // simplification. We always want to do negation-push and initial marking check.
     std::vector<LPCache> caches(options.cores);
     std::atomic<uint32_t> to_handle(queries.size());
@@ -599,10 +601,15 @@ void simplify_queries(const MarkVal* marking,
                         out << std::endl;
                     }
 
+                    
 
-                    if (options.queryReductionTimeout > 0 && qt > 0) {
+                    if (options.queryReductionTimeout > 0 && qt > 0) {  
                         SimplificationContext simplificationContext(marking, net, qt,
                             options.lpsolveTimeout, &cache);
+                        if (simplificationContext.markingOutOfBounds()) {
+                            std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
+                            break;
+                        } 
                         try {
                             negstat_t stats;
                             auto simp_cond = PetriEngine::PQL::simplify(queries[i], simplificationContext);
@@ -631,6 +638,7 @@ void simplify_queries(const MarkVal* marking,
                                 out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
                             --to_handle;
                         }
+                        
                     } else if (options.printstatistics == StatisticsLevel::Full) {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
