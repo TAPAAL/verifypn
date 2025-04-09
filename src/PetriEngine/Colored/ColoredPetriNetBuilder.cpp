@@ -186,6 +186,10 @@ namespace PetriEngine {
         _colors[id] = type;
     }
 
+    void ColoredPetriNetBuilder::addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) {
+        colorType->addType(newConstituent);
+    }
+
     void ColoredPetriNetBuilder::sort() {
         for (Colored::Place &place : _places) {
             std::sort(place._pre.begin(), place._pre.end());
