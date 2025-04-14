@@ -175,6 +175,7 @@ namespace PetriEngine::ExplicitColored {
     };
 
     ColoredIgnorantPetriNetBuilderStatus ColorIgnorantPetriNetBuilder::build() {
+        std::map<std::string, std::vector<size_t>> transitionVariationCount;
         if (_foundNegative) {
             for (const auto& [transitionName, transitionStore] : _transitions) {
                 std::vector<ArcRange> arcRanges;
@@ -199,16 +200,18 @@ namespace PetriEngine::ExplicitColored {
                     });
                 }
 
-                _builder.addTransition(transitionName, 0, 0, 0);
                 bool carry = false;
+                size_t transitionCount = 0;
                 while (!carry) {
+                    auto currentTransitionName = transitionName + "___" + std::to_string(transitionCount++);
+                    _builder.addTransition(currentTransitionName, 0, 0, 0);
                     carry = true;
                     for (auto& arcRange : arcRanges) {
                         if (arcRange.current > 0) {
                             if (arcRange.isInput) {
-                                _builder.addInputArc(arcRange.place, transitionName, false, arcRange.current);
+                                _builder.addInputArc(arcRange.place, currentTransitionName, false, arcRange.current);
                             } else {
-                                _builder.addOutputArc(transitionName, arcRange.place, arcRange.current);
+                                _builder.addOutputArc(currentTransitionName, arcRange.place, arcRange.current);
                             }
                         }
                         if (carry) {
@@ -222,6 +225,7 @@ namespace PetriEngine::ExplicitColored {
                         }
                     }
                 }
+                transitionVariationCount.emplace(transitionName, transitionCount);
             }
         } else {
             for (const auto& [transitionName, transitionStore] : _transitions) {
@@ -235,7 +239,14 @@ namespace PetriEngine::ExplicitColored {
             }
         }
         for (const auto& [place, transition, weight] : _inhibitors) {
-            _builder.addInputArc(place, transition, true, weight);
+            auto transitionVariationCountIt = transitionVariationCount.find(transition);
+            if (transitionVariationCountIt == transitionVariationCount.end()) {
+                _builder.addInputArc(place, transition, true, weight);
+            } else {
+                for (size_t i = 0; i < transitionVariationCountIt->second.size(); i++) {
+                    _builder.addInputArc(place, transition + "___" + std::to_string(i), true, weight);
+                }
+            }
         }
         return ColoredIgnorantPetriNetBuilderStatus::OK;
     }
