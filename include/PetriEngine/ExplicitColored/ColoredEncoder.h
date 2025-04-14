@@ -1,6 +1,3 @@
-//
-// Created by emil on 2/18/25.
-//
 #ifndef COLOREDENCODER_H
 #define COLOREDENCODER_H
 
@@ -25,7 +22,9 @@ namespace PetriEngine::ExplicitColored {
     class ColoredEncoder {
     public:
         typedef ptrie::binarywrapper_t scratchpad_t;
-        explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places), _placeSize(_convertToTypeSize(places.size())) {
+
+        explicit ColoredEncoder(const std::vector<ColoredPetriNetPlace>& places) : _places(places),
+            _placeSize(_convertToTypeSize(places.size())) {
             //Will get resized if needed
             _size = 512;
 
@@ -41,7 +40,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         //Encodes each place with its own encoding type, written as a prefix for each place
-        size_t encode (const ColoredPetriNetMarking& marking){
+        size_t encode(const ColoredPetriNetMarking& marking) {
             size_t offset = 0;
             auto pid = 0;
             for (const auto& place : marking.markings) {
@@ -63,7 +62,8 @@ namespace PetriEngine::ExplicitColored {
                 //If too big for representation partial statespace will be explored
                 if (_fullStatespace) {
                     _biggestRepresentation = UINT16_MAX;
-                    std::cout << "State with size: " << offset << " cannot be represented correctly, so full statespace is not explored " << std::endl;
+                    std::cout << "State with size: " << offset <<
+                        " cannot be represented correctly, so full statespace is not explored " << std::endl;
                 }
                 _fullStatespace = false;
                 return UINT16_MAX;
@@ -72,7 +72,7 @@ namespace PetriEngine::ExplicitColored {
             return offset;
         }
 
-        ColoredPetriNetMarking decode(const unsigned char* encoding) const{
+        ColoredPetriNetMarking decode(const unsigned char* encoding) const {
             size_t offset = 0;
             ColoredPetriNetMarking marking{};
             for (auto pid = 0; pid < _places.size(); ++pid) {
@@ -116,6 +116,7 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] bool isFullStatespace() const {
             return _fullStatespace;
         }
+
     private:
         scratchpad_t _scratchpad;
         const std::vector<ColoredPetriNetPlace>& _places;
@@ -172,7 +173,7 @@ namespace PetriEngine::ExplicitColored {
             }
 
             //Relatively sparse
-            if (tokens * 2 <= possibleColors){
+            if (tokens * 2 <= possibleColors) {
                 return PLACE_TOKEN_COUNT;
             }
             return TOKEN_COUNTS;
@@ -183,7 +184,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         //Getting bit count could potentially be done faster
-        static TYPE_SIZE _convertToTypeSize(const size_t n){
+        static TYPE_SIZE _convertToTypeSize(const size_t n) {
             const auto bitCount = n == 0 ? 1 : static_cast<uint32_t>(std::floor(std::log2(n)) + 1);
             if (bitCount <= 8) {
                 return EIGHT;
@@ -206,7 +207,8 @@ namespace PetriEngine::ExplicitColored {
             return multiset;
         }
 
-        static CPNMultiSet _decodePlaceTokenCounts(const uchar* encoding, const TYPE_SIZE placeColorSize, size_t& offset) {
+        static CPNMultiSet _decodePlaceTokenCounts(const uchar* encoding, const TYPE_SIZE placeColorSize,
+                                                   size_t& offset) {
             CPNMultiSet multiset{};
             const auto multisetCardinality = _readFromEncoding(encoding, placeColorSize, offset);
             const auto multisetCountSize = static_cast<TYPE_SIZE>(_readFromEncoding(encoding, EIGHT, offset));
@@ -229,7 +231,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         template <typename T>
-        void _writeToPad(const T element, const TYPE_SIZE typeSize, size_t& offset ) {
+        void _writeToPad(const T element, const TYPE_SIZE typeSize, size_t& offset) {
             if (offset + typeSize > _size) {
                 if (_size == UINT16_MAX) {
                     return;
@@ -237,28 +239,28 @@ namespace PetriEngine::ExplicitColored {
                 _resizeScratchpad();
             }
             switch (typeSize) {
-            case EIGHT:
+            case EIGHT: {
                 _scratchpad.raw()[offset] = static_cast<uint8_t>(element);
                 break;
-            case SIXTEEN:
-                {
-                    const auto dest16 = (uint16_t*)(&_scratchpad.raw()[offset]);
-                    dest16[0] = static_cast<uint16_t>(element);
-                }
+            }
+            case SIXTEEN: {
+                const auto dest16 = (uint16_t*)(&_scratchpad.raw()[offset]);
+                dest16[0] = static_cast<uint16_t>(element);
                 break;
-            case THIRTYTWO:
-                {
-                    const auto dest32 = (uint32_t*)(&_scratchpad.raw()[offset]);
-                    dest32[0] = static_cast<uint32_t>(element);
-                }
+            }
+            case THIRTYTWO: {
+                const auto dest32 = (uint32_t*)(&_scratchpad.raw()[offset]);
+                dest32[0] = static_cast<uint32_t>(element);
                 break;
+            }
             default:
                 throw explicit_error{ExplicitErrorType::unknown_encoding};
             }
             offset += typeSize;
         }
 
-        [[nodiscard]] static uint32_t _readFromEncoding(const uchar* encoding, const TYPE_SIZE typeSize, size_t& offset) {
+        [[nodiscard]] static uint32_t
+        _readFromEncoding(const uchar* encoding, const TYPE_SIZE typeSize, size_t& offset) {
             if (offset + typeSize > UINT16_MAX) {
                 //If encoding is too big then we decode to 0
                 return 0;
@@ -269,7 +271,7 @@ namespace PetriEngine::ExplicitColored {
                 result = static_cast<uint8_t>(encoding[offset]);
                 break;
             case SIXTEEN:
-                    result = *(uint16_t*)(&encoding[offset]);
+                result = *(uint16_t*)(&encoding[offset]);
                 break;
             case THIRTYTWO:
                 result = *(uint32_t*)(&encoding[offset]);

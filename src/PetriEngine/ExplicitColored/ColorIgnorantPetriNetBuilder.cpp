@@ -1,7 +1,6 @@
-#include "PetriEngine/ExplicitColored/ColorIgnorantPetriNetBuilder.h"
-
 #include <VerifyPN.h>
-#include <PetriEngine/ExplicitColored/ArcCompiler.h>
+#include "PetriEngine/ExplicitColored/ColorIgnorantPetriNetBuilder.h"
+#include <PetriEngine/ExplicitColored/ExpressionCompilers/ArcCompiler.h>
 
 
 namespace PetriEngine::ExplicitColored {

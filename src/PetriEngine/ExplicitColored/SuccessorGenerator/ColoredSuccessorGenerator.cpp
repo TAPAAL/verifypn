@@ -2,8 +2,7 @@
 #define COLOREDSUCCESSORGENERATOR_CPP
 
 #include <memory>
-#include "PetriEngine/ExplicitColored/ColoredSuccessorGenerator.h"
-
+#include "PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h"
 
 namespace PetriEngine::ExplicitColored{
     ColoredSuccessorGenerator::ColoredSuccessorGenerator(const ColoredPetriNet& net)
@@ -114,7 +113,7 @@ namespace PetriEngine::ExplicitColored{
                 }
 
                 for (const auto& tokens : place.counts()) {
-                    auto bindingValue = add_color_offset(
+                    auto bindingValue = addColorOffset(
                         _net._places[constraint.place].colorType->colorCodec.decode(tokens.first, constraint.colorIndex),
                         -constraint.colorOffset,
                         variableColorSize
@@ -151,8 +150,8 @@ namespace PetriEngine::ExplicitColored{
             allVariables.begin(),
             allVariables.end()
         );
-        _constraintData.emplace(getKey(id, transition), std::move(constraintData));
-        return _constraintData.find(getKey(id, transition));
+        _constraintData.emplace(_getKey(id, transition), std::move(constraintData));
+        return _constraintData.find(_getKey(id, transition));
     }
 
     bool ColoredSuccessorGenerator::_hasMinimalCardinality(const ColoredPetriNetMarking &marking, const Transition_t tid) const {
@@ -180,7 +179,7 @@ namespace PetriEngine::ExplicitColored{
             return std::numeric_limits<Binding_t>::max();
         }
 
-        auto constraintDataIt = _constraintData.find(getKey(stateId, tid));
+        auto constraintDataIt = _constraintData.find(_getKey(stateId, tid));
         if (totalBindings > 30 && constraintDataIt == _constraintData.end()) {
             bool noPossibleBinding = false;
             constraintDataIt = _calculateConstraintData(marking, stateId, tid, noPossibleBinding);
@@ -219,7 +218,6 @@ namespace PetriEngine::ExplicitColored{
                 return bid;
             }
         }
-
         return std::numeric_limits<Binding_t>::max();
     }
 }

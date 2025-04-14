@@ -48,7 +48,6 @@
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
 #include <utils/NullStream.h>
-
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"

@@ -1,6 +1,6 @@
 #ifndef COLORIGNORANTPETRINETBUILDER_H
 #define COLORIGNORANTPETRINETBUILDER_H
-#include "ArcCompiler.h"
+#include "ExpressionCompilers/ArcCompiler.h"
 #include "AtomicTypes.h"
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "PetriEngine/PetriNetBuilder.h"

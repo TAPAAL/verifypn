@@ -1,7 +1,7 @@
 #ifndef COLORED_RESULT_PRINTER_H
 #define COLORED_RESULT_PRINTER_H
 
-#include "PetriEngine/ExplicitColored/SearchStatistics.h"
+#include "PetriEngine/ExplicitColored/Algorithms/SearchStatistics.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 
 namespace PetriEngine::ExplicitColored {
@@ -26,8 +26,8 @@ namespace PetriEngine::ExplicitColored {
             std::string queryName,
             const size_t seed
         ) : _queryOffset(queryOffset), _stream(stream), _queryName(std::move(queryName)), _seed(seed) {
-            _techniqueFlags.push_back("STRUCTURAL_REDUCTION");
-            _techniqueFlags.push_back("CPN_EXPLICIT");
+            _techniqueFlags.emplace_back("STRUCTURAL_REDUCTION");
+            _techniqueFlags.emplace_back("CPN_EXPLICIT");
         }
 
         void printResult(
@@ -40,7 +40,6 @@ namespace PetriEngine::ExplicitColored {
             Reachability::AbstractHandler::Result result
         ) const override;
     private:
-
         void _printCommon(Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const;
         uint32_t _queryOffset;
         std::ostream& _stream;

@@ -1,9 +1,9 @@
-#include "PetriEngine/ExplicitColored/GammaQueryCompiler.h"
-
-#include <PetriEngine/ExplicitColored/FireabilityChecker.h>
-#include <PetriEngine/PQL/Visitor.h>
-
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h"
+#include <numeric>
+#include "PetriEngine/ExplicitColored/FireabilityChecker.h"
+#include "PetriEngine/PQL/Visitor.h"
 #include "PetriEngine/PQL/Expressions.h"
+
 namespace PetriEngine::ExplicitColored {
     MarkingCount_t minShortCircuit(
         const ColoredPetriNetMarking& marking,
