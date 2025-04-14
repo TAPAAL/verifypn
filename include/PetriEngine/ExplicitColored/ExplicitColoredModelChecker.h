@@ -42,6 +42,23 @@ namespace PetriEngine::ExplicitColored {
             SearchStatistics* searchStatistics
         ) const;
 
+        Result checkFireabilityColorIgnorantLP(
+            const PQL::EvaluationContext& context,
+            std::vector<std::shared_ptr<PQL::Condition>>& queries,
+            PetriNetBuilder& builder,
+            const std::unique_ptr<PetriNet>& qnet,
+            options_t& options
+        ) const;
+
+        Result checkCardinalityColorIgnorantLP(
+            const PQL::EvaluationContext& context,
+            std::vector<std::shared_ptr<PQL::Condition>>& queries,
+            PetriNetBuilder& builder,
+            const std::unique_ptr<PetriNet>& qnet,
+            const std::unique_ptr<MarkVal[]>& qm0,
+            options_t& options
+        ) const;
+
         void _reduce(
             const std::string& pnmlModel,
             std::stringstream& out,
