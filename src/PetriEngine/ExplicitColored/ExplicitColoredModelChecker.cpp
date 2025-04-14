@@ -136,12 +136,10 @@ namespace PetriEngine::ExplicitColored {
         //Copying transforms compare conjunction to fireable, so we need to analyse for safety
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
         //If the first query is satisfied then the original query is satisfied (reverse if it is an AG query)
-        queries[0] = std::make_shared<AGCondition>(q1->getCond());
+        queries[0] = pushNegation(std::make_shared<AGCondition>(q1->getCond()), stats, context, false, false, false);
         //If the second query isn't satisfied then the original query is not satisfied (reverse if it is an AG query)
         //Equal to satisfying AG not e
-        queries[1] = std::make_shared<EFCondition>(*q2);
-        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
-        queries[1] = pushNegation(queries[2], stats, context, false, false, false);
+        queries[1] = pushNegation(std::make_shared<EFCondition>(*q2), stats, context, false, false, false);
         //Just for input
         std::vector<std::string> names;
         ResultPrinter printer(&builder, &options, names);
