@@ -1,7 +1,7 @@
 #ifndef GAMMAQUERYCOMPILER_H
 #define GAMMAQUERYCOMPILER_H
-#include <PetriEngine/PQL/PQL.h>
 
+#include <PetriEngine/PQL/PQL.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h"

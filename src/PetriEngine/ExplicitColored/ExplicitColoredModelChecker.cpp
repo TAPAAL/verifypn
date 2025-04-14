@@ -1,5 +1,4 @@
 #include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
-
 #include <VerifyPN.h>
 #include <PetriEngine/Colored/PnmlWriter.h>
 #include <PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h>
@@ -8,6 +7,7 @@
 #include <PetriEngine/PQL/Evaluation.h>
 #include <utils/NullStream.h>
 #include <sstream>
+#include <PetriEngine/ExplicitColored/Algorithms/FireabilitySearch.h>
 
 namespace PetriEngine::ExplicitColored {
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
@@ -43,7 +43,6 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
-
         SearchStatistics searchStatistics;
         result = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
         if (result != Result::UNKNOWN) {
@@ -66,50 +65,127 @@ namespace PetriEngine::ExplicitColored {
         if (!isReachability(query)) {
             return Result::UNKNOWN;
         }
-        ContainsFireabilityVisitor has_fireability;
-        Visitor::visit(has_fireability, query);
-        if (has_fireability.getReturnValue()) {
-            return Result::UNKNOWN;
-        }
         auto queryCopy = ConditionCopyVisitor::copyCondition(query);
-
-        bool isEf = false;
-        if (dynamic_cast<EFCondition*>(queryCopy.get())) {
-            isEf = true;
-        }
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         ignorantBuilder.parse_model(pnmlModelStream);
-        auto status = ignorantBuilder.build();
+        const auto status = ignorantBuilder.build();
         if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
             return Result::UNKNOWN;
         }
 
         auto builder = ignorantBuilder.getUnderlying();
-        auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
-        std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
-        
+        const auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
+        const std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
         std::vector queries { std::move(queryCopy) };
+        const EvaluationContext context(qm0.get(), qnet.get());
 
+        ContainsFireabilityVisitor hasFireability;
+        Visitor::visit(hasFireability, queries[0]);
+
+        if (hasFireability.getReturnValue()) {
+            return checkFireabilityColorIgnorantLP(context, queries, builder, qnet, options);
+        }
+        return checkCardinalityColorIgnorantLP(context, queries, builder, qnet, qm0, options);
+    }
+
+    ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkFireabilityColorIgnorantLP(
+       const EvaluationContext& context,
+       std::vector<std::shared_ptr<Condition>>& queries,
+       PetriNetBuilder& builder,
+       const std::unique_ptr<PetriNet>& qnet,
+       options_t& options
+    ) const {
+        negstat_t stats;
+        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-
-        {
-            EvaluationContext context(qm0.get(), qnet.get());
-
-            auto r = evaluate(queries[0].get(), context);
-            if(r == Condition::RFALSE)
-            {
-                queries[0] = BooleanCondition::FALSE_CONSTANT;
+        auto isEf = false;
+        EFCondition* q1;
+        EFCondition* q2;
+        auto queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+        queries.push_back(std::move(queryCopy));
+        queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+        queries.push_back(std::move(queryCopy));
+        if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(queries[0])) {
+            isEf = true;
+            q1 = efQuery.get();
+            if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1])) {
+                q2 = efQuery.get();
+            } else {
+                return Result::UNKNOWN;
             }
-            else if(r == Condition::RTRUE)
-            {
-                queries[0] = BooleanCondition::TRUE_CONSTANT;
+        }else {
+            auto goodQueries = 0;
+            isEf = false;
+            if (const auto notQuery = std::dynamic_pointer_cast<NotCondition>(queries[0])) {
+                if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(notQuery->getCond())) {
+                    q1 = efQuery.get();
+                    goodQueries++;
+                }
+            }
+            if (auto notQuery = std::dynamic_pointer_cast<NotCondition>(queries[1])) {
+                if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(notQuery->getCond())) {
+                    q2 = efQuery.get();
+                    goodQueries++;
+                }
+            }
+            if (goodQueries < 2) {
+                return Result::UNKNOWN;
             }
         }
+        //Copying transforms compare conjunction to fireable, so we need to analyse for safety
+        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+        //If the first query is satisfied then the original query is satisfied (reverse if it is an AG query)
+        queries[0] = pushNegation(std::make_shared<AGCondition>(q1->getCond()), stats, context, false, false, false);
+        //If the second query isn't satisfied then the original query is not satisfied (reverse if it is an AG query)
+        //Equal to satisfying AG not e
+        queries[1] = pushNegation(std::make_shared<EFCondition>(*q2), stats, context, false, false, false);
+        //Just for input
+        std::vector<std::string> names;
+        ResultPrinter printer(&builder, &options, names);
+        //Unknown result means not computed, Ignore means it cannot be computed
+        std::vector results(queries.size(), ResultPrinter::Result::Unknown);
+        FireabilitySearch strategy(*qnet, printer, options.queryReductionTimeout);
+        strategy.reachable(queries, results,
+                                Strategy::RDFS,
+                                false,
+                                false,
+                                StatisticsLevel::None,
+                                options.trace != TraceLevel::None,
+                                options.seed()
+                                );
+        if (results[0] == ResultPrinter::Satisfied) {
+            return isEf ? Result::SATISFIED : Result::UNSATISFIED;
+        }
+        if (results[1] == ResultPrinter::NotSatisfied) {
+            return isEf ? Result::UNSATISFIED : Result::SATISFIED;
+        }
+        return Result::UNKNOWN;
+    }
 
-        // simplification. We always want to do negation-push and initial marking check.
+    ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkCardinalityColorIgnorantLP(
+        const EvaluationContext& context,
+        std::vector<std::shared_ptr<Condition>>& queries,
+        PetriNetBuilder& builder,
+        const std::unique_ptr<PetriNet>& qnet,
+        const std::unique_ptr<MarkVal[]>& qm0,
+        options_t& options
+    ) const {
+        auto isEf = false;
+        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
+        if (dynamic_cast<EFCondition*>(queries[0].get())) {
+            isEf = true;
+        }
+
+        const auto r = evaluate(queries[0].get(), context);
+
+        if(r == Condition::RFALSE) {
+            queries[0] = BooleanCondition::FALSE_CONSTANT;
+        }
+        else if(r == Condition::RTRUE) {
+            queries[0] = BooleanCondition::TRUE_CONSTANT;
+        }
         simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
-
         if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
             return Result::UNSATISFIED;
         }
@@ -120,24 +196,24 @@ namespace PetriEngine::ExplicitColored {
     }
 
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::explicitColorCheck(
-        const std::string& pnmlModel,
-        const Condition_ptr& query,
-        options_t& options,
-        SearchStatistics* searchStatistics
-    ) const {
+    const std::string& pnmlModel,
+    const Condition_ptr& query,
+    options_t& options,
+    SearchStatistics* searchStatistics
+) const {
         ColoredPetriNetBuilder cpnBuilder;
         auto pnmlModelStream = std::istringstream {pnmlModel};
         cpnBuilder.parse_model(pnmlModelStream);
 
         switch (const auto buildStatus = cpnBuilder.build()) {
-            case ColoredPetriNetBuilderStatus::OK:
-                break;
-            case ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
-                std::cout << "The colored petri net has too many bindings to be represented" << std::endl
-                        << "TOO_MANY_BINDINGS" << std::endl;
-                return Result::UNKNOWN;
-            default:
-                throw base_error("Unknown builder error ", static_cast<uint32_t>(buildStatus));
+        case ColoredPetriNetBuilderStatus::OK:
+            break;
+        case ColoredPetriNetBuilderStatus::TOO_MANY_BINDINGS:
+            std::cout << "The colored petri net has too many bindings to be represented" << std::endl
+                    << "TOO_MANY_BINDINGS" << std::endl;
+            return Result::UNKNOWN;
+        default:
+            throw base_error("Unknown builder error ", static_cast<uint32_t>(buildStatus));
         }
 
         auto net = cpnBuilder.takeNet();
