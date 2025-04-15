@@ -224,7 +224,8 @@ namespace PetriEngine {
             //we know that this place contains the tokens to activate the transition for this binding
             //because color fixpoint allowed the binding
             if (_fixed_point.computed() && _stable[arc.place]) {
-                return;
+                //return;
+                std::cout << "SKIPPER STABLE PLACE OPTIMIZATION\n";
             }
 
             assert(_partition.partition().size() > arc.place);
