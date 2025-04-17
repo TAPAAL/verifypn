@@ -44,8 +44,11 @@ namespace PetriEngine::ExplicitColored {
             _counts.insert(it, {color, count});
         }
 
-        void addCount(const ColorSequence& colorSequence, sMarkingCount_t count) {
-            const Color_t& color = colorSequence.encodedValue;
+        void addCount(const ColorSequence& colorSequence, const sMarkingCount_t count) {
+            addCount(colorSequence.encodedValue, count);
+        }
+
+        void addCount(const Color_t& color, const sMarkingCount_t count) {
             const auto it = lower_bound(color);
             if (count > 0 && _cardinality > std::numeric_limits<sMarkingCount_t>::max() - count) {
                 throw explicit_error{ExplicitErrorType::too_many_tokens};
