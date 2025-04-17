@@ -552,11 +552,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void accept(const Colored::NumberOfExpression* expr) override {
+            auto oldScale = _scale;
             _scale *= expr->number();
             if (expr->size() > 1) {
                 throw explicit_error{ExplicitErrorType::unsupported_net};
             }
             (*expr)[0]->visit(*this);
+            _scale = oldScale;
         }
 
         void accept(const Colored::AddExpression* expr) override {
@@ -584,8 +586,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void accept(const Colored::ScalarProductExpression* expr) override {
+            auto oldScale = _scale;
             _scale *= expr->scalar();
             expr->child()->visit(*this);
+            _scale = oldScale;
         }
 
         void accept(const Colored::DotConstantExpression* expr) override {
