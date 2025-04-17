@@ -43,6 +43,7 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
+
         SearchStatistics searchStatistics;
         result = explicitColorCheck(pnmlModel, query, options, &searchStatistics);
         if (result != Result::UNKNOWN) {
@@ -69,10 +70,8 @@ namespace PetriEngine::ExplicitColored {
         ColorIgnorantPetriNetBuilder ignorantBuilder(_stringSet);
         std::stringstream pnmlModelStream {pnmlModel};
         ignorantBuilder.parse_model(pnmlModelStream);
-        const auto status = ignorantBuilder.build();
-        if (status == ColoredIgnorantPetriNetBuilderStatus::CONTAINS_NEGATIVE) {
-            return Result::UNKNOWN;
-        }
+
+        ignorantBuilder.build();
 
         auto builder = ignorantBuilder.getUnderlying();
         const auto qnet = std::unique_ptr<PetriNet>(builder.makePetriNet(false));
@@ -196,11 +195,11 @@ namespace PetriEngine::ExplicitColored {
     }
 
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::explicitColorCheck(
-    const std::string& pnmlModel,
-    const Condition_ptr& query,
-    options_t& options,
-    SearchStatistics* searchStatistics
-) const {
+        const std::string& pnmlModel,
+        const Condition_ptr& query,
+        options_t& options,
+        SearchStatistics* searchStatistics
+    ) const {
         ColoredPetriNetBuilder cpnBuilder;
         auto pnmlModelStream = std::istringstream {pnmlModel};
         cpnBuilder.parse_model(pnmlModelStream);

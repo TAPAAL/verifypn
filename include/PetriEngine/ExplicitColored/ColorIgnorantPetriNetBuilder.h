@@ -1,5 +1,6 @@
 #ifndef COLORIGNORANTPETRINETBUILDER_H
 #define COLORIGNORANTPETRINETBUILDER_H
+#include "ExpressionCompilers/ArcCompiler.h"
 #include "AtomicTypes.h"
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "PetriEngine/PetriNetBuilder.h"
@@ -36,9 +37,15 @@ namespace PetriEngine::ExplicitColored {
         ColoredIgnorantPetriNetBuilderStatus build();
         PetriNetBuilder getUnderlying();
     private:
+        struct TransitionStore {
+            std::vector<std::pair<std::string, std::unique_ptr<CompiledArcExpression>>> inputs;
+            std::vector<std::pair<std::unique_ptr<CompiledArcExpression>, std::string>> outputs;
+        };
         PetriNetBuilder _builder;
         bool _foundNegative;
         std::unordered_map<std::string, Variable_t> _variableMap;
+        std::map<std::string, TransitionStore> _transitions;
+        std::vector<std::tuple<std::string, std::string, int>> _inhibitors;
         Colored::ColorTypeMap _colors;
         Variable_t _nextVariable;
     };
