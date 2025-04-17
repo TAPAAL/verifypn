@@ -202,7 +202,11 @@ namespace PetriEngine::ExplicitColored {
                 bool carry = false;
                 size_t transitionCount = 0;
                 while (!carry) {
-                    auto currentTransitionName = transitionName + "___" + std::to_string(transitionCount++);
+                    std::string currentTransitionName = transitionName;
+                    if (transitionCount++ != 0) {
+                        currentTransitionName += "___" + std::to_string(transitionCount);
+                    }
+
                     _builder.addTransition(currentTransitionName, 0, 0, 0);
                     carry = true;
                     for (auto& arcRange : arcRanges) {
