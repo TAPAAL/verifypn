@@ -159,7 +159,7 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
         if(colorTypes.count(missingCTPair.first) == 0){
             throw base_error("Unable to find colortype ", missingCTPair.first, " used in product type ", missingCTPair.second->getName());
         }
-        missingCTPair.second->addType(colorTypes[missingCTPair.first]);
+        builder->addToColorType(missingCTPair.second, colorTypes[missingCTPair.first]);
     }
     missingCTs.clear();
 }
