@@ -64,12 +64,13 @@ namespace PetriEngine::ExplicitColored {
         _traceStream << "<trace>" << std::endl;
         for (const auto& step : trace) {
             _traceStream << "\t<transition id=" << std::quoted(step.transitionId) << ">" << std::endl;
-            _traceStream << "\t\t<binding>" << std::endl;
+            _traceStream << "\t\t<bindings>" << std::endl;
             for (const auto& [variableId, value] : step.binding) {
-                _traceStream << "\t\t\t<assignment variableId=" << std::quoted(variableId)
-                    << " colorId=" << std::quoted(value) << " />" << std::endl;
+                _traceStream << "\t\t\t<variable id=" << std::quoted(variableId) << ">" << std::endl;
+                _traceStream << "\t\t\t\t<color>" << std::quoted(value) << "</color>" << std::endl;
+                _traceStream << "\t\t\t</variable>" << std::endl;
             }
-            _traceStream << "\t\t</binding>" << std::endl;
+            _traceStream << "\t\t</bindings>" << std::endl;
             _traceStream << "\t\t<marking>" << std::endl;
             for (const auto& [placeId, marking] : step.marking) {
                 if (marking.size() > 0) {
