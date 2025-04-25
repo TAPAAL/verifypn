@@ -36,6 +36,10 @@ namespace PetriEngine::ExplicitColored {
             out << "]";
             return out;
         }
+
+        [[nodiscard]] const std::map<Variable_t, Color_t>& getValues() const {
+            return _values;
+        }
     private:
         std::map<Variable_t, Color_t> _values;
     };

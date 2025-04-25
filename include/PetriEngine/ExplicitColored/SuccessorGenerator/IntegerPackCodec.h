@@ -37,6 +37,10 @@ namespace PetriEngine::ExplicitColored {
           return _totalValues;
         }
 
+        [[nodiscard]] size_t getColorCount() const {
+            return _valueSizes.size();
+        }
+
     private:
         std::vector<ET> _decodeValues;
         std::vector<ET> _valueSizes;

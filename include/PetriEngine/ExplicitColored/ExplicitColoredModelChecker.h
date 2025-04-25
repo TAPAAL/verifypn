@@ -7,6 +7,7 @@
 #include "Visitors/ConditionCopyVisitor.h"
 
 #include "ColoredResultPrinter.h"
+#include "Algorithms/ExplicitWorklist.h"
 
 namespace PetriEngine::ExplicitColored {
     class ExplicitColoredModelChecker {
@@ -34,11 +35,28 @@ namespace PetriEngine::ExplicitColored {
             options_t& options
         ) const;
 
-        Result explicitColorCheck(
+        std::pair<Result, std::optional<std::vector<TraceStep>>> explicitColorCheck(
             const std::string& pnmlModel,
             const PQL::Condition_ptr& query,
             options_t& options,
             SearchStatistics* searchStatistics
+        ) const;
+
+        Result checkFireabilityColorIgnorantLP(
+            const PQL::EvaluationContext& context,
+            std::vector<std::shared_ptr<PQL::Condition>>& queries,
+            PetriNetBuilder& builder,
+            const std::unique_ptr<PetriNet>& qnet,
+            options_t& options
+        ) const;
+
+        Result checkCardinalityColorIgnorantLP(
+            const PQL::EvaluationContext& context,
+            std::vector<std::shared_ptr<PQL::Condition>>& queries,
+            PetriNetBuilder& builder,
+            const std::unique_ptr<PetriNet>& qnet,
+            const std::unique_ptr<MarkVal[]>& qm0,
+            options_t& options
         ) const;
 
         void _reduce(
@@ -47,6 +65,13 @@ namespace PetriEngine::ExplicitColored {
             const PQL::Condition_ptr& query,
             options_t& options
         ) const;
+
+        std::vector<TraceStep> _translateTraceStep(
+            const std::vector<InternalTraceStep>& internalTrace,
+            const ColoredPetriNetBuilder& cpnBuilder,
+            const ColoredPetriNet& net
+        ) const;
+
         shared_string_set& _stringSet;
         std::ostream& _fullStatisticOut;
     };

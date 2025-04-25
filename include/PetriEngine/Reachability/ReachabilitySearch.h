@@ -49,7 +49,7 @@ namespace PetriEngine {
             : _net(net), _kbound(kbound), _callback(callback) {
             }
 
-            ~ReachabilitySearch()
+            virtual ~ReachabilitySearch()
             {
             }
 
@@ -67,7 +67,7 @@ namespace PetriEngine {
                     const int64_t incRandomWalk = 5000,
                     const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>());
             size_t maxTokens() const;
-        private:
+        protected:
             struct searchstate_t {
                 size_t expandedStates = 0;
                 size_t exploredStates = 1;
@@ -98,12 +98,12 @@ namespace PetriEngine {
 
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
 
-            bool checkQueries(std::vector<std::shared_ptr<PQL::Condition > >&,
+            virtual bool checkQueries(std::vector<std::shared_ptr<PQL::Condition > >&,
                               std::vector<ResultPrinter::Result>&,
                               Structures::State&, searchstate_t&,
                               Structures::StateSetInterface*);
 
-            std::pair<ResultPrinter::Result,bool> doCallback(
+            virtual std::pair<ResultPrinter::Result,bool> doCallback(
                 std::shared_ptr<PQL::Condition>& query, size_t i,
                 ResultPrinter::Result r, searchstate_t &ss,
                 Structures::StateSetInterface *states);
