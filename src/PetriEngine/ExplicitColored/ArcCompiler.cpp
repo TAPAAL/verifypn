@@ -67,6 +67,10 @@ namespace PetriEngine::ExplicitColored {
             return _lhs->containsNegative() || _rhs->containsNegative();
         }
 
+        [[nodiscard]] MarkingCount_t getUpperBoundMarkingCount() const override {
+            return _lhs->getUpperBoundMarkingCount() + _rhs->getUpperBoundMarkingCount();
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
@@ -151,6 +155,10 @@ namespace PetriEngine::ExplicitColored {
             return true;
         }
 
+        [[nodiscard]] MarkingCount_t getUpperBoundMarkingCount() const override {
+            return _lhs->getUpperBoundMarkingCount();
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _lhs;
         std::unique_ptr<CompiledArcExpression> _rhs;
@@ -219,6 +227,10 @@ namespace PetriEngine::ExplicitColored {
             return _expr->containsNegative();
         }
 
+        [[nodiscard]] MarkingCount_t getUpperBoundMarkingCount() const override {
+            return _expr->getUpperBoundMarkingCount() * _scale;
+        }
+
     private:
         std::unique_ptr<CompiledArcExpression> _expr;
         MarkingCount_t _scale;
@@ -277,6 +289,10 @@ namespace PetriEngine::ExplicitColored {
 
         [[nodiscard]] bool containsNegative() const override {
             return false;
+        }
+
+        [[nodiscard]] MarkingCount_t getUpperBoundMarkingCount() const override {
+            return _minimalMarkingCount;
         }
 
     private:
@@ -386,6 +402,10 @@ namespace PetriEngine::ExplicitColored {
             return false;
         }
 
+        [[nodiscard]] MarkingCount_t getUpperBoundMarkingCount() const override {
+            return _minimalMarkingCount;
+        }
+
     private:
         ColorSequence getColorSequence(const std::vector<ParameterizedColor>& sequence, const Binding& binding) const {
             std::vector<Color_t> colorSequence;
@@ -403,7 +423,6 @@ namespace PetriEngine::ExplicitColored {
             }
             return ColorSequence {colorSequence, _colorSizes };
         }
-
         std::vector<Color_t> _colorSizes;
         std::vector<std::vector<ParameterizedColor>> _parameterizedColorSequences;
         MarkingCount_t _count;
