@@ -13,7 +13,6 @@ IntervalGenerator.cpp
 EquivalenceVec.cpp
 CExprToString.cpp
 EvaluationVisitor.cpp
-StablePlaceFinder.cpp
 ForwardFixedPoint.cpp
 VariableSymmetry.cpp
 Unfolder.cpp

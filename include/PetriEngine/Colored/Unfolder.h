@@ -34,7 +34,6 @@
 #include "ForwardFixedPoint.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "VariableSymmetry.h"
-#include "StablePlaceFinder.h"
 
 
 namespace PetriEngine {
@@ -52,7 +51,6 @@ namespace PetriEngine {
             void unfoldInhibitorArc(PetriNetBuilder& ptBuilder, const shared_const_string &oldname, const shared_const_string &newname);
             std::string arc_to_string(const Colored::Arc& arc) const;
             void unfoldArc(PetriNetBuilder& ptBuilder, const Colored::Arc& arc, const Colored::BindingMap& binding, const shared_const_string& name);
-            Colored::StablePlaceFinder _stable;
             double _time = 0;
             shared_place_color_map _ptplacenames;
             shared_name_name_map _pttransitionnames;
@@ -69,7 +67,6 @@ namespace PetriEngine {
         public:
             Unfolder(const ColoredPetriNetBuilder& b, const PartitionBuilder& partition, const VariableSymmetry& symmetry, const ForwardFixedPoint& fixed_point, bool print_bindings)
             : _builder(b),
-              _stable(b),
               _symmetry(symmetry),
               _partition(partition),
               _fixed_point(fixed_point),

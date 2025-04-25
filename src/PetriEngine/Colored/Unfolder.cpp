@@ -61,10 +61,6 @@ namespace PetriEngine {
             if (_builder.isColored()) {
                 auto start = std::chrono::high_resolution_clock::now();
 
-                if (_fixed_point.computed()) {
-                    _stable.compute();
-                }
-
                 for (uint32_t transitionId = 0; transitionId < _builder.transitions().size(); transitionId++) {
                     unfoldTransition(ptBuilder, transitionId);
                 }
@@ -223,9 +219,6 @@ namespace PetriEngine {
             //This exploits the fact that since the transition is being unfolded with this binding
             //we know that this place contains the tokens to activate the transition for this binding
             //because color fixpoint allowed the binding
-            if (_fixed_point.computed() && _stable[arc.place]) {
-                return;
-            }
 
             assert(_partition.partition().size() > arc.place);
             const Colored::ExpressionContext context{binding, _builder.colors(), _partition.partition()[arc.place]};
