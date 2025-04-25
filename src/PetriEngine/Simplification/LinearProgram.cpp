@@ -13,7 +13,7 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
 
-        LinearProgram::LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory){
+        LinearProgram::LinearProgram(Vector* vec, int64_t constant, op_t op, LPCache* factory){
             // TODO fix memory-management here!
             equation_t c;
             switch(op)
@@ -57,6 +57,10 @@ namespace PetriEngine {
             }
 
             if (_equations.size() == 0 || context.timeout()){
+                return false;
+            }
+
+            if (context.markingOutOfBounds()) {  // the initial marking has too many tokens that exceed the int32_t limits
                 return false;
             }
 

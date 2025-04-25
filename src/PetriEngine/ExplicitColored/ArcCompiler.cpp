@@ -97,8 +97,8 @@ namespace PetriEngine::ExplicitColored {
             _minimalColorMarking = _lhs->getMinimalColorMarking();
             const auto& minColRhs = _rhs->getMinimalColorMarking();
             if (minColRhs.variableCount != 0) {
-                for (auto colorSequence : _minimalColorMarking.minimalMarkingMultiSet.counts()) {
-                    colorSequence.second -= minColRhs.variableCount;
+                for (const auto& [color, cardinality] : _minimalColorMarking.minimalMarkingMultiSet.counts()) {
+                    _minimalColorMarking.minimalMarkingMultiSet.addCount(color, -minColRhs.variableCount);
                 }
             }
             else {
@@ -552,11 +552,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         void accept(const Colored::NumberOfExpression* expr) override {
+            auto oldScale = _scale;
             _scale *= expr->number();
             if (expr->size() > 1) {
                 throw explicit_error{ExplicitErrorType::unsupported_net};
             }
             (*expr)[0]->visit(*this);
+            _scale = oldScale;
         }
 
         void accept(const Colored::AddExpression* expr) override {
@@ -579,13 +581,16 @@ namespace PetriEngine::ExplicitColored {
         void accept(const Colored::SubtractExpression* expr) override {
             (*expr)[0]->visit(*this);
             auto lhs = std::move(_top);
+            _scale = 1;
             (*expr)[1]->visit(*this);
             _top = std::make_unique<ArcExpressionSubtraction>(std::move(lhs), std::move(_top));
         }
 
         void accept(const Colored::ScalarProductExpression* expr) override {
+            auto oldScale = _scale;
             _scale *= expr->scalar();
             expr->child()->visit(*this);
+            _scale = oldScale;
         }
 
         void accept(const Colored::DotConstantExpression* expr) override {

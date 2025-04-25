@@ -48,7 +48,7 @@ namespace PetriEngine {
             LinearProgram(const LinearProgram& other)
             : _result(other._result), _equations(other._equations) {}
 
-            LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory);
+            LinearProgram(Vector* vec, int64_t constant, op_t op, LPCache* factory);
             size_t size() const
             {
                 return _equations.size();
