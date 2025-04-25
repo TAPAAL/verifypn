@@ -112,7 +112,6 @@ namespace PetriEngine::ExplicitColored {
         _currentNet._places.push_back(std::move(place));
         _currentNet._initialMarking.markings.push_back(multiSet);
         _placeIndices[name] = _currentNet._places.size() - 1;
-        _underlyingColorType[_currentNet._places.size() - 1] = type;
     }
 
     void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) {
@@ -160,7 +159,6 @@ namespace PetriEngine::ExplicitColored {
         (*_variableMap)[variable->name] = _variableMap->size();
         const auto colorType = _colorTypeMap.find(variable->colorType->getName())->second;
         _variablesToAdd.push_back(colorType);
-        _underlyingVariableColorTypes.push_back(variable->colorType);
     }
 
     ColoredPetriNetBuilderStatus ColoredPetriNetBuilder::build() {
@@ -321,23 +319,11 @@ namespace PetriEngine::ExplicitColored {
     void ColoredPetriNetBuilder::sort() {
     }
 
-    const std::unordered_map<std::string, Place_t>& ColoredPetriNetBuilder::getPlaceIndices() const {
-        return _placeIndices;
+    std::unordered_map<std::string, uint32_t> ColoredPetriNetBuilder::takePlaceIndices() {
+        return std::move(_placeIndices);
     }
 
-    const std::unordered_map<std::string, Transition_t>& ColoredPetriNetBuilder::getTransitionIndices() const {
+    std::unordered_map<std::string, Transition_t> ColoredPetriNetBuilder::takeTransitionIndices() {
         return std::move(_transitionIndices);
-    }
-
-    const std::shared_ptr<std::unordered_map<std::string, Variable_t>>& ColoredPetriNetBuilder::getVariableIndices() const {
-        return _variableMap;
-    }
-
-    const std::vector<const Colored::ColorType *>& ColoredPetriNetBuilder::getUnderlyingVariableColorTypes() const {
-        return std::move(_underlyingVariableColorTypes);
-    }
-
-    const Colored::ColorType * ColoredPetriNetBuilder::getPlaceUnderlyingColorType(Place_t place) const {
-        return _underlyingColorType.find(place)->second;
     }
 }

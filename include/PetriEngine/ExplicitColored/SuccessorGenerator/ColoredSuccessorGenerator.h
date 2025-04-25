@@ -15,23 +15,16 @@ namespace PetriEngine::ExplicitColored {
         std::vector<PossibleValues> possibleVariableValues;
     };
 
-    struct TraceMapStep {
-        uint64_t id;
-        uint64_t predecessorId;
-        Transition_t transition;
-        Binding_t binding;
-    };
-
     class ColoredSuccessorGenerator {
     public:
         explicit ColoredSuccessorGenerator(const ColoredPetriNet& net);
         ~ColoredSuccessorGenerator() = default;
 
-        std::pair<ColoredPetriNetStateFixed, TraceMapStep> next(ColoredPetriNetStateFixed& state) const {
+        ColoredPetriNetStateFixed next(ColoredPetriNetStateFixed& state) const {
             return _nextFixed(state);
         }
 
-        std::pair<ColoredPetriNetStateEven, TraceMapStep> next(ColoredPetriNetStateEven& state) const {
+        ColoredPetriNetStateEven next(ColoredPetriNetStateEven& state) const {
             return _nextEven(state);
         }
 
@@ -46,9 +39,8 @@ namespace PetriEngine::ExplicitColored {
             const auto upper = _constraintData.upper_bound(_getKey(stateId, 0xFFFF));
             _constraintData.erase(lower, upper);
         }
-        void getBinding(Transition_t tid, Binding_t bid, Binding& binding) const;
-        void fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
     protected:
+        void getBinding(Transition_t tid, Binding_t bid, Binding& binding) const;
         [[nodiscard]] bool check(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         [[nodiscard]] bool checkInhibitor(const ColoredPetriNetMarking& state, Transition_t tid) const;
         [[nodiscard]] bool checkPresetAndGuard(const ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
@@ -58,6 +50,7 @@ namespace PetriEngine::ExplicitColored {
         mutable std::map<size_t, ConstraintData> _constraintData;
         mutable size_t _nextId = 1;
         const ColoredPetriNet& _net;
+        void _fire(ColoredPetriNetMarking& state, Transition_t tid, const Binding& binding) const;
         std::map<size_t, ConstraintData>::iterator _calculateConstraintData(const ColoredPetriNetMarking& marking, size_t id, Transition_t transition, bool& noPossibleBinding) const;
         [[nodiscard]] bool _hasMinimalCardinality(const ColoredPetriNetMarking& marking, Transition_t tid) const;
         [[nodiscard]] bool _shouldEarlyTerminateTransition(const ColoredPetriNetMarking& marking, const Transition_t tid) const {
@@ -70,7 +63,7 @@ namespace PetriEngine::ExplicitColored {
             return false;
         }
 
-        std::pair<ColoredPetriNetStateFixed, TraceMapStep> _nextFixed(ColoredPetriNetStateFixed &state) const {
+        ColoredPetriNetStateFixed _nextFixed(ColoredPetriNetStateFixed &state) const {
             const auto& tid = state.getCurrentTransition();
             const auto& bid = state.getCurrentBinding();
             Binding binding;
@@ -80,23 +73,18 @@ namespace PetriEngine::ExplicitColored {
                 if (nextBid != std::numeric_limits<Binding_t>::max()) {
                     auto newState = ColoredPetriNetStateFixed(state.marking);
                     newState.id = _nextId++;
-                    fire(newState.marking, tid, binding);
+                    _fire(newState.marking, tid, binding);
                     state.nextBinding(nextBid);
-                    return std::make_pair(newState, TraceMapStep {
-                        newState.id,
-                        state.id,
-                        tid,
-                        nextBid
-                    });
+                    return newState;
                 }
                 state.nextTransition();
             }
             state.setDone();
-            return std::make_pair(ColoredPetriNetStateFixed{{}}, TraceMapStep {});
+            return ColoredPetriNetStateFixed{{}};
         }
 
         // SuccessorGenerator but only considers current transition
-        std::pair<ColoredPetriNetStateEven, TraceMapStep> _nextEven(ColoredPetriNetStateEven &state) const {
+        ColoredPetriNetStateEven _nextEven(ColoredPetriNetStateEven &state) const {
             auto [tid, bid] = state.getNextPair();
             auto totalBindings = _net._transitions[tid].totalBindings;
             Binding binding;
@@ -108,13 +96,8 @@ namespace PetriEngine::ExplicitColored {
                     if (nextBid != std::numeric_limits<Binding_t>::max()) {
                         auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
                         newState.id = _nextId++;
-                        fire(newState.marking, tid, binding);
-                        return std::make_pair(newState, TraceMapStep {
-                            newState.id,
-                            state.id,
-                            tid,
-                            nextBid
-                        });
+                        _fire(newState.marking, tid, binding);
+                        return newState;
                     }
                 }
                 auto [nextTid, nextBid] = state.getNextPair();
@@ -122,7 +105,7 @@ namespace PetriEngine::ExplicitColored {
                 bid = nextBid;
                 totalBindings = _net._transitions[tid].totalBindings;
             }
-            return std::make_pair(ColoredPetriNetStateEven {{}, 0}, TraceMapStep {});
+            return {{},0};
         }
 
         [[nodiscard]] static uint64_t _getKey(const size_t stateId, const Transition_t transition) {

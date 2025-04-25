@@ -17,12 +17,10 @@ namespace PetriEngine::ExplicitColored {
         const PQL::Condition_ptr &query,
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
         const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-        const size_t seed,
-        bool createTrace
+        const size_t seed
     ) : _net(std::move(net)),
         _successorGenerator(ColoredSuccessorGenerator{_net}),
-        _seed(seed),
-        _createTrace(createTrace)
+        _seed(seed)
     {
         const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
@@ -48,29 +46,6 @@ namespace PetriEngine::ExplicitColored {
 
     const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {
         return _searchStatistics;
-    }
-
-    std::optional<uint64_t> ExplicitWorklist::getCounterExampleId() const {
-        return _counterExampleId;
-    }
-
-    std::optional<std::vector<InternalTraceStep>> ExplicitWorklist::getTraceTo(uint64_t counterExampleId) const {
-        uint64_t currentId = counterExampleId;
-        std::vector<InternalTraceStep> trace;
-        while (currentId != 0) {
-            auto it = _stateMap.transitions.find(currentId);
-            if (it == _stateMap.transitions.end()) {
-                return std::nullopt;
-            }
-            currentId = it->second.predecessorId;
-            Binding binding;
-            _successorGenerator.getBinding(it->second.transition, it->second.binding, binding);
-            trace.push_back(InternalTraceStep {
-                binding,
-                it->second.transition
-            });
-        }
-        return std::vector(trace.rbegin(), trace.rend());
     }
 
     bool ExplicitWorklist::_check(const ColoredPetriNetMarking& state, size_t id) const {
@@ -100,7 +75,6 @@ namespace PetriEngine::ExplicitColored {
         _searchStatistics.discoveredStates = 1;
 
         if (_check(initialState, 0) == earlyTerminationCondition) {
-            _counterExampleId = 0;
             return _getResult(true, encoder.isFullStatespace());
         }
         if (_net.getTransitionCount() == 0) {
@@ -109,7 +83,7 @@ namespace PetriEngine::ExplicitColored {
 
         while (!waiting.empty()){
             auto& next = waiting.next();
-            auto [successor, traceStep] = _successorGenerator.next(next);
+            auto successor = _successorGenerator.next(next);
             if (next.done()) {
                 waiting.remove();
                 _successorGenerator.shrinkState(next.id);
@@ -129,14 +103,10 @@ namespace PetriEngine::ExplicitColored {
             size = encoder.encode(marking);
             _searchStatistics.discoveredStates++;
             if (!passed.exists(encoder.data(), size).first) {
-                if (_createTrace) {
-                    _stateMap.transitions.emplace(successor.id, traceStep);
-                }
                 _searchStatistics.exploredStates += 1;
                 if (_check(marking, successor.id) == earlyTerminationCondition) {
                     _searchStatistics.endWaitingStates = waiting.size();
                     _searchStatistics.biggestEncoding = encoder.getBiggestEncoding();
-                    _counterExampleId = successor.id;
                     return _getResult(true, encoder.isFullStatespace());
                 }
                 waiting.add(std::move(successor));

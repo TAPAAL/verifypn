@@ -19,15 +19,6 @@ namespace PetriEngine::ExplicitColored {
         AG
     };
 
-    struct StateMap {
-        std::unordered_map<uint32_t, TraceMapStep> transitions;
-    };
-
-    struct InternalTraceStep {
-        Binding binding;
-        Transition_t transition;
-    };
-
     class ExplicitWorklist {
     public:
         ExplicitWorklist(
@@ -35,24 +26,18 @@ namespace PetriEngine::ExplicitColored {
             const PQL::Condition_ptr& query,
             const std::unordered_map<std::string, uint32_t>& placeNameIndices,
             const std::unordered_map<std::string, Transition_t>& transitionNameIndices,
-            size_t seed,
-            bool createTrace
+            size_t seed
         );
 
         bool check(Strategy searchStrategy, ColoredSuccessorGeneratorOption coloredSuccessorGeneratorOption);
         [[nodiscard]] const SearchStatistics& GetSearchStatistics() const;
-        std::optional<uint64_t> getCounterExampleId() const;
-        std::optional<std::vector<InternalTraceStep>> getTraceTo(uint64_t counterExampleId) const;
     private:
         std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
-        std::optional<uint64_t> _counterExampleId;
         Quantifier _quantifier;
         const ColoredPetriNet& _net;
         const ColoredSuccessorGenerator _successorGenerator;
         const size_t _seed;
         bool _fullStatespace = true;
-        bool _createTrace;
-        StateMap _stateMap;
         SearchStatistics _searchStatistics;
         template <typename SuccessorGeneratorState>
         [[nodiscard]] bool _search(Strategy searchStrategy);
