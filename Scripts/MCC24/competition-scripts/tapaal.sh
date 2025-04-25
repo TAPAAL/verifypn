@@ -175,7 +175,7 @@ function verifyparallel {
     fi
 
     echo "$TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
-    echo
+    echo 
 
     TMP=$($TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY 2>&1 )
 
