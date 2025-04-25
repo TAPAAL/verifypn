@@ -8,7 +8,6 @@ namespace PetriEngine::ExplicitColored {
         OK,
         TOO_MANY_BINDINGS
     };
-
     class ColoredPetriNetBuilder final : public AbstractPetriNetBuilder {
     public:
         ColoredPetriNetBuilder();
@@ -29,16 +28,11 @@ namespace PetriEngine::ExplicitColored {
         void addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) override;
         void sort() override;
 
-        const std::unordered_map<std::string, uint32_t>& getPlaceIndices() const;
-        const std::unordered_map<std::string, Transition_t>& getTransitionIndices() const;
-        const std::shared_ptr<std::unordered_map<std::string, Variable_t>>& getVariableIndices() const;
-        const std::vector<const Colored::ColorType*>& getUnderlyingVariableColorTypes() const;
-        const Colored::ColorType* getPlaceUnderlyingColorType(Place_t place) const;
-
+        std::unordered_map<std::string, uint32_t> takePlaceIndices();
+        std::unordered_map<std::string, Transition_t> takeTransitionIndices();
         ColoredPetriNetBuilderStatus build();
         ColoredPetriNet takeNet();
     private:
-        std::unordered_map<Place_t, const Colored::ColorType*> _underlyingColorType;
         std::unordered_map<std::string, uint32_t> _placeIndices;
         std::unordered_map<std::string, uint32_t> _transitionIndices;
         std::shared_ptr<std::unordered_map<std::string, Variable_t>> _variableMap;
@@ -52,7 +46,6 @@ namespace PetriEngine::ExplicitColored {
         ColoredPetriNet _currentNet;
         std::shared_ptr<ColorType> _dotColorType;
         std::shared_ptr<Colored::ColorTypeMap> _colors;
-        std::vector<const Colored::ColorType*> _underlyingVariableColorTypes;
 
         void _createArcsAndTransitions();
         ColoredPetriNetBuilderStatus _calculateTransitionVariables();
