@@ -52,7 +52,7 @@
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
-#include "PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/ExplicitColoredPetriNetBuilder.h"
 #include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
 #include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
 using namespace PetriEngine;

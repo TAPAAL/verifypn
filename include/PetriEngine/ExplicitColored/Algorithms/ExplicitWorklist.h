@@ -1,7 +1,7 @@
 #ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
-#include <PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h>
+#include <PetriEngine/ExplicitColored/ExpressionCompilers/ExplicitQueryPropositionCompiler.h>
 #include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
@@ -44,7 +44,7 @@ namespace PetriEngine::ExplicitColored {
         std::optional<uint64_t> getCounterExampleId() const;
         std::optional<std::vector<InternalTraceStep>> getTraceTo(uint64_t counterExampleId) const;
     private:
-        std::shared_ptr<CompiledGammaQueryExpression> _gammaQuery;
+        std::shared_ptr<ExplicitQueryProposition> _gammaQuery;
         std::optional<uint64_t> _counterExampleId;
         Quantifier _quantifier;
         const ColoredPetriNet& _net;

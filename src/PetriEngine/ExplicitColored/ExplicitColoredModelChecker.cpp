@@ -1,7 +1,7 @@
 #include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
 #include <VerifyPN.h>
 #include <PetriEngine/Colored/PnmlWriter.h>
-#include <PetriEngine/ExplicitColored/ColoredPetriNetBuilder.h>
+#include <PetriEngine/ExplicitColored/ExplicitColoredPetriNetBuilder.h>
 #include <PetriEngine/ExplicitColored/ColorIgnorantPetriNetBuilder.h>
 #include <PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h>
 #include <PetriEngine/PQL/Evaluation.h>
@@ -206,7 +206,7 @@ namespace PetriEngine::ExplicitColored {
         options_t& options,
         SearchStatistics* searchStatistics
     ) const {
-        ColoredPetriNetBuilder cpnBuilder;
+        ExplicitColoredPetriNetBuilder cpnBuilder;
         auto pnmlModelStream = std::istringstream {pnmlModel};
         cpnBuilder.parse_model(pnmlModelStream);
 
@@ -271,7 +271,7 @@ namespace PetriEngine::ExplicitColored {
 
     std::vector<TraceStep> ExplicitColoredModelChecker::_translateTraceStep(
         const std::vector<InternalTraceStep> &internalTrace,
-        const ColoredPetriNetBuilder& cpnBuilder,
+        const ExplicitColoredPetriNetBuilder& cpnBuilder,
         const ColoredPetriNet& net
     ) const {
         std::unordered_map<Transition_t, std::string> transitionToId;
@@ -300,23 +300,23 @@ namespace PetriEngine::ExplicitColored {
                 const auto variableIt = variableToId.find(variable);
                 if (variableIt == variableToId.end()) {
                     std::cerr << "Could not find variable id corresponding to variable index " << variable << std::endl;
-                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
                 if (variable >= variableColorTypes.size()) {
                     std::cerr << "Could not find color type for variable index " << variable << "(" << variableIt->second << ")" << std::endl;
-                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
                 const auto& variableColorType = (*variableColorTypes[variable]);
                 if (variableColorType.size() < value) {
                     std::cerr << "Could not find corresponding color id for color index" << value << " in color type " << variableColorType.getName() << std::endl;
-                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
                 binding.emplace(variableIt->second, variableColorType[value].getColorName());
             }
             const auto transitionIt = transitionToId.find(traceStep.transition);
             if (transitionIt == transitionToId.end()) {
                 std::cerr << "Could not find transition id corresponding to transition with index " << traceStep.transition << std::endl;
-                throw explicit_error(ExplicitErrorType::invalid_trace);
+                throw explicit_error(ExplicitErrorType::INVALID_TRACE);
             }
 
             successorGenerator.fire(currentState, traceStep.transition, traceStep.binding);
@@ -325,7 +325,7 @@ namespace PetriEngine::ExplicitColored {
                 auto placeIdIt = placeToId.find(place);
                 if (placeIdIt == placeToId.end()) {
                     std::cerr << "Could not find corresponding place id for place index" << place << std::endl;
-                    throw explicit_error(ExplicitErrorType::invalid_trace);
+                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
                 std::vector<std::pair<std::vector<std::string>, MarkingCount_t>> tokenCounts;
                 for (const auto& [tokenColor, tokenCount] : currentState.markings[place].counts()) {
@@ -336,7 +336,7 @@ namespace PetriEngine::ExplicitColored {
                     const auto underlyingColor = cpnBuilder.getPlaceUnderlyingColorType(place);
                     if (underlyingColor == nullptr) {
                         std::cerr << "Could not find corresponding color type forplace index" << place << std::endl;
-                        throw explicit_error(ExplicitErrorType::invalid_trace);
+                        throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                     }
                     if (const auto productColorType = dynamic_cast<const Colored::ProductType*>(underlyingColor)) {
                         for (size_t colorIndex = 0; colorIndex < net.getPlaces()[place].colorType->colorCodec.getColorCount(); colorIndex++) {

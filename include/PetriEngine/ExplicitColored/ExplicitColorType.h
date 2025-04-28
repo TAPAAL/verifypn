@@ -18,7 +18,7 @@ namespace PetriEngine::ExplicitColored {
         void addBaseColorSize(const Color_t newBaseSize) {
             colorSize *= newBaseSize;
             basicColorSizes.push_back(newBaseSize);
-            colorCodec = IntegerPackCodec{this->basicColorSizes};
+            colorCodec = IntegerPackCodec<uint64_t, Color_t>{this->basicColorSizes};
         }
 
         Color_t colorSize{};

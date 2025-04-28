@@ -1,4 +1,4 @@
-#include "PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h"
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/ExplicitQueryPropositionCompiler.h"
 #include <numeric>
 #include "PetriEngine/ExplicitColored/FireabilityChecker.h"
 #include "PetriEngine/PQL/Visitor.h"
@@ -7,7 +7,7 @@
 namespace PetriEngine::ExplicitColored {
     MarkingCount_t minShortCircuit(
         const ColoredPetriNetMarking& marking,
-        const std::vector<std::unique_ptr<CompiledGammaQueryExpression>>& expressions,
+        const std::vector<std::unique_ptr<ExplicitQueryProposition>>& expressions,
         const bool neg
     ) {
         auto min = std::numeric_limits<MarkingCount_t>::max();
@@ -23,9 +23,9 @@ namespace PetriEngine::ExplicitColored {
         return min;
     }
 
-    class GammaQueryAndExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryAndExpression final : public ExplicitQueryProposition {
     public:
-        explicit GammaQueryAndExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
+        explicit GammaQueryAndExpression(std::vector<std::unique_ptr<ExplicitQueryProposition>> expressions)
             : _expressions(std::move(expressions)) {}
 
         [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
@@ -43,19 +43,19 @@ namespace PetriEngine::ExplicitColored {
                 return minShortCircuit(marking, _expressions, true);
             }
             return std::accumulate(_expressions.begin(), _expressions.end(), 0,
-                [&](const MarkingCount_t sum, const std::unique_ptr<CompiledGammaQueryExpression> &expression) {
+                [&](const MarkingCount_t sum, const std::unique_ptr<ExplicitQueryProposition> &expression) {
                     return sum + expression->distance(marking, false);
                 }
             );
         }
 
     private:
-        std::vector<std::unique_ptr<CompiledGammaQueryExpression>> _expressions;
+        std::vector<std::unique_ptr<ExplicitQueryProposition>> _expressions;
     };
 
-    class GammaQueryOrExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryOrExpression final : public ExplicitQueryProposition {
     public:
-        explicit GammaQueryOrExpression(std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions)
+        explicit GammaQueryOrExpression(std::vector<std::unique_ptr<ExplicitQueryProposition>> expressions)
             : _expressions(std::move(expressions)) {}
 
         [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
@@ -71,7 +71,7 @@ namespace PetriEngine::ExplicitColored {
             const bool neg) const override {
             if (neg) {
                 return std::accumulate(_expressions.begin(), _expressions.end(), 0,
-                    [&](const MarkingCount_t sum, const std::unique_ptr<CompiledGammaQueryExpression> &expression) {
+                    [&](const MarkingCount_t sum, const std::unique_ptr<ExplicitQueryProposition> &expression) {
                         return sum + expression->distance(marking, true);
                     }
                 );
@@ -80,12 +80,12 @@ namespace PetriEngine::ExplicitColored {
         }
 
     private:
-        std::vector<std::unique_ptr<CompiledGammaQueryExpression>> _expressions;
+        std::vector<std::unique_ptr<ExplicitQueryProposition>> _expressions;
     };
 
-    class GammaQueryNotExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryNotExpression final : public ExplicitQueryProposition {
     public:
-        explicit GammaQueryNotExpression(std::unique_ptr<CompiledGammaQueryExpression> inner)
+        explicit GammaQueryNotExpression(std::unique_ptr<ExplicitQueryProposition> inner)
             : _inner(std::move(inner)){}
 
         [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
@@ -98,7 +98,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
     private:
-        std::unique_ptr<CompiledGammaQueryExpression> _inner;
+        std::unique_ptr<ExplicitQueryProposition> _inner;
     };
 
     class QueryValue {
@@ -147,7 +147,7 @@ namespace PetriEngine::ExplicitColored {
         } _value {};
     };
 
-    class GammaQueryLessThanExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryLessThanExpression final : public ExplicitQueryProposition {
     public:
         GammaQueryLessThanExpression(QueryValue lhs, QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
@@ -177,7 +177,7 @@ namespace PetriEngine::ExplicitColored {
         QueryValue _rhs;
     };
 
-    class GammaQueryLessThanOrEqualExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryLessThanOrEqualExpression final : public ExplicitQueryProposition {
     public:
         GammaQueryLessThanOrEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
@@ -207,7 +207,7 @@ namespace PetriEngine::ExplicitColored {
         QueryValue _rhs;
     };
 
-    class GammaQueryEqualExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryEqualExpression final : public ExplicitQueryProposition {
     public:
         GammaQueryEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
@@ -229,7 +229,7 @@ namespace PetriEngine::ExplicitColored {
         QueryValue _rhs;
     };
 
-    class GammaQueryNotEqualExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryNotEqualExpression final : public ExplicitQueryProposition {
     public:
         GammaQueryNotEqualExpression(const QueryValue lhs, const QueryValue rhs)
             : _lhs(lhs), _rhs(rhs) {}
@@ -251,7 +251,7 @@ namespace PetriEngine::ExplicitColored {
         QueryValue _rhs;
     };
 
-    class GammaQueryDeadlockExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryDeadlockExpression final : public ExplicitQueryProposition {
     public:
         [[nodiscard]] bool eval(const ColoredSuccessorGenerator& successorGenerator, const ColoredPetriNetMarking &marking, size_t id) const override {
            return FireabilityChecker::hasDeadlock(successorGenerator, marking, id);
@@ -262,7 +262,7 @@ namespace PetriEngine::ExplicitColored {
         }
     };
 
-    class GammaQueryFireabilityExpression final : public CompiledGammaQueryExpression {
+    class GammaQueryFireabilityExpression final : public ExplicitQueryProposition {
     public:
         explicit GammaQueryFireabilityExpression(const Transition_t transitionId)
             : _transitionId(transitionId) {}
@@ -281,7 +281,7 @@ namespace PetriEngine::ExplicitColored {
     
     class GammaQueryCompilerVisitor final : public PQL::Visitor {
         public:
-            static std::unique_ptr<CompiledGammaQueryExpression> compile(
+            static std::unique_ptr<ExplicitQueryProposition> compile(
                 const PQL::Condition_ptr& expr,
                 const std::unordered_map<std::string, uint32_t>& placeNameIndices,
                 const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
@@ -306,7 +306,7 @@ namespace PetriEngine::ExplicitColored {
             }
 
             void _accept(const PQL::AndCondition *expr) override {
-                std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions;
+                std::vector<std::unique_ptr<ExplicitQueryProposition>> expressions;
                 for (const auto& subExpr : *expr) {
                     visit(this, subExpr.get());
                     expressions.emplace_back(std::move(_compiled));
@@ -315,7 +315,7 @@ namespace PetriEngine::ExplicitColored {
             }
 
             void _accept(const PQL::OrCondition *expr) override {
-                std::vector<std::unique_ptr<CompiledGammaQueryExpression>> expressions;
+                std::vector<std::unique_ptr<ExplicitQueryProposition>> expressions;
                 for (const auto& subExpr : *expr) {
                     visit(this, subExpr.get());
                     expressions.emplace_back(std::move(_compiled));
@@ -433,17 +433,17 @@ namespace PetriEngine::ExplicitColored {
             const ColoredSuccessorGenerator& _successorGenerator;
             const std::unordered_map<std::string, uint32_t>& _placeNameIndices;
             const std::unordered_map<std::string, uint32_t>& _transitionNameIndices;
-            std::unique_ptr<CompiledGammaQueryExpression> _compiled;
+            std::unique_ptr<ExplicitQueryProposition> _compiled;
         };
 
 
-    GammaQueryCompiler::GammaQueryCompiler(
+    ExplicitQueryPropositionCompiler::ExplicitQueryPropositionCompiler(
         const std::unordered_map<std::string, uint32_t>& placeNameIndices,
         const std::unordered_map<std::string, uint32_t>& transitionNameIndices,
         const ColoredSuccessorGenerator& successorGenerator
     ) : _placeNameIndices(placeNameIndices), _transitionNameIndices(transitionNameIndices), _successorGenerator(successorGenerator) {}
 
-    std::unique_ptr<CompiledGammaQueryExpression> GammaQueryCompiler::compile(const PQL::Condition_ptr &expression) const {
+    std::unique_ptr<ExplicitQueryProposition> ExplicitQueryPropositionCompiler::compile(const PQL::Condition_ptr &expression) const {
         return GammaQueryCompilerVisitor::compile(expression, _placeNameIndices, _transitionNameIndices, _successorGenerator);
     }
 }

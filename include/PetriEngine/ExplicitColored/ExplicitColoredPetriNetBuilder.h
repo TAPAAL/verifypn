@@ -1,5 +1,5 @@
-#ifndef COLORED_PETRI_NET_BUILDER_H
-#define COLORED_PETRI_NET_BUILDER_H
+#ifndef EXPLICIT_COLORED_PETRI_NET_BUILDER_H
+#define EXPLICIT_COLORED_PETRI_NET_BUILDER_H
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "ColoredPetriNet.h"
 
@@ -9,11 +9,11 @@ namespace PetriEngine::ExplicitColored {
         TOO_MANY_BINDINGS
     };
 
-    class ColoredPetriNetBuilder final : public AbstractPetriNetBuilder {
+    class ExplicitColoredPetriNetBuilder final : public AbstractPetriNetBuilder {
     public:
-        ColoredPetriNetBuilder();
-        ColoredPetriNetBuilder(ColoredPetriNetBuilder&&) = default;
-        ColoredPetriNetBuilder& operator=(const ColoredPetriNetBuilder&) = default;
+        ExplicitColoredPetriNetBuilder();
+        ExplicitColoredPetriNetBuilder(ExplicitColoredPetriNetBuilder&&) = default;
+        ExplicitColoredPetriNetBuilder& operator=(const ExplicitColoredPetriNetBuilder&) = default;
 
         void addPlace(const std::string& name, uint32_t tokens, double, double) override;
         void addTransition(const std::string& name, int32_t, double, double) override;

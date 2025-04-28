@@ -24,7 +24,7 @@ namespace PetriEngine::ExplicitColored {
         _seed(seed),
         _createTrace(createTrace)
     {
-        const GammaQueryCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
+        const ExplicitQueryPropositionCompiler queryCompiler(placeNameIndices, transitionNameIndices, _successorGenerator);
         if (const auto efGammaQuery = dynamic_cast<PQL::EFCondition*>(query.get())) {
             _quantifier = Quantifier::EF;
             _gammaQuery = queryCompiler.compile(efGammaQuery->getCond());
@@ -32,7 +32,7 @@ namespace PetriEngine::ExplicitColored {
             _quantifier = Quantifier::AG;
             _gammaQuery = queryCompiler.compile(agGammaQuery->getCond());
         } else {
-            throw explicit_error{ExplicitErrorType::unsupported_query};
+            throw explicit_error{ExplicitErrorType::UNSUPPORTED_QUERY};
         }
     }
 
@@ -43,7 +43,7 @@ namespace PetriEngine::ExplicitColored {
         if (coloredSuccessorGeneratorOption == ColoredSuccessorGeneratorOption::EVEN) {
             return _search<ColoredPetriNetStateEven>(searchStrategy);
         }
-        throw explicit_error(ExplicitErrorType::unsupported_generator);
+        throw explicit_error(ExplicitErrorType::UNSUPPORTED_GENERATOR);
     }
 
     const SearchStatistics & ExplicitWorklist::GetSearchStatistics() const {
@@ -163,7 +163,7 @@ namespace PetriEngine::ExplicitColored {
             case Strategy::HEUR:
                 return _bestfs<SuccessorGeneratorState>();
             default:
-                throw explicit_error(ExplicitErrorType::unsupported_strategy);
+                throw explicit_error(ExplicitErrorType::UNSUPPORTED_STRATEGY);
         }
     }
 
