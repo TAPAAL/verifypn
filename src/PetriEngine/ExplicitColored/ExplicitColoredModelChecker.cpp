@@ -294,6 +294,9 @@ namespace PetriEngine::ExplicitColored {
         ColoredSuccessorGenerator successorGenerator(net);
         auto currentState = net.initial();
         std::vector<TraceStep> trace;
+
+        trace.emplace_back(TraceStep(_translateMarking(currentState, placeToId, cpnBuilder, net)));
+
         for (auto& traceStep : internalTrace) {
             std::unordered_map<std::string, std::string> binding;
             for (auto [variable, value] : traceStep.binding.getValues()) {
@@ -320,41 +323,49 @@ namespace PetriEngine::ExplicitColored {
             }
 
             successorGenerator.fire(currentState, traceStep.transition, traceStep.binding);
-            std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> marking;
-            for (Place_t place = 0; place < currentState.markings.size(); place++) {
-                auto placeIdIt = placeToId.find(place);
-                if (placeIdIt == placeToId.end()) {
-                    std::cerr << "Could not find corresponding place id for place index" << place << std::endl;
-                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
-                }
-                std::vector<std::pair<std::vector<std::string>, MarkingCount_t>> tokenCounts;
-                for (const auto& [tokenColor, tokenCount] : currentState.markings[place].counts()) {
-                    if (tokenCount <= 0) {
-                        continue;
-                    }
-                    std::vector<std::string> colors;
-                    const auto underlyingColor = cpnBuilder.getPlaceUnderlyingColorType(place);
-                    if (underlyingColor == nullptr) {
-                        std::cerr << "Could not find corresponding color type forplace index" << place << std::endl;
-                        throw explicit_error(ExplicitErrorType::INVALID_TRACE);
-                    }
-                    if (const auto productColorType = dynamic_cast<const Colored::ProductType*>(underlyingColor)) {
-                        for (size_t colorIndex = 0; colorIndex < net.getPlaces()[place].colorType->colorCodec.getColorCount(); colorIndex++) {
-                            colors.push_back((*(*productColorType).getNestedColorType(colorIndex))[colorIndex].getColorName());
-                        }
-                    } else {
-                        colors.push_back((*underlyingColor)[tokenColor].getColorName());
-                    }
-                    tokenCounts.emplace_back(std::move(colors), tokenCount);
-                }
-                marking.emplace(placeIdIt->second, std::move(tokenCounts));
-            }
-            trace.emplace_back(TraceStep {
-                transitionIt->second,
-                std::move(binding),
-                std::move(marking)
-            });
+            auto translatedMarking = _translateMarking(currentState, placeToId, cpnBuilder, net);
+
+            trace.emplace_back(TraceStep(transitionIt->second, std::move(binding), std::move(translatedMarking)));
         }
         return trace;
+    }
+
+    std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>>
+        ExplicitColoredModelChecker::_translateMarking(
+            const ColoredPetriNetMarking& marking,
+            const std::unordered_map<Place_t, std::string>& placeToId,
+            const ExplicitColoredPetriNetBuilder& cpnBuilder,
+            const ColoredPetriNet& net
+        ) const {
+        std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> translatedMarking;
+        for (Place_t place = 0; place < marking.markings.size(); place++) {
+            auto placeIdIt = placeToId.find(place);
+            if (placeIdIt == placeToId.end()) {
+                std::cerr << "Could not find corresponding place id for place index" << place << std::endl;
+                throw explicit_error(ExplicitErrorType::INVALID_TRACE);
+            }
+            std::vector<std::pair<std::vector<std::string>, MarkingCount_t>> tokenCounts;
+            for (const auto& [tokenColor, tokenCount] : marking.markings[place].counts()) {
+                if (tokenCount <= 0) {
+                    continue;
+                }
+                std::vector<std::string> colors;
+                const auto underlyingColor = cpnBuilder.getPlaceUnderlyingColorType(place);
+                if (underlyingColor == nullptr) {
+                    std::cerr << "Could not find corresponding color type for place index" << place << std::endl;
+                    throw explicit_error(ExplicitErrorType::INVALID_TRACE);
+                }
+                if (const auto productColorType = dynamic_cast<const Colored::ProductType*>(underlyingColor)) {
+                    for (size_t colorIndex = 0; colorIndex < net.getPlaces()[place].colorType->colorCodec.getColorCount(); colorIndex++) {
+                        colors.push_back((*(*productColorType).getNestedColorType(colorIndex))[colorIndex].getColorName());
+                    }
+                } else {
+                    colors.push_back((*underlyingColor)[tokenColor].getColorName());
+                }
+                tokenCounts.emplace_back(std::move(colors), tokenCount);
+            }
+            translatedMarking.emplace(placeIdIt->second, std::move(tokenCounts));
+        }
+        return translatedMarking;
     }
 }
