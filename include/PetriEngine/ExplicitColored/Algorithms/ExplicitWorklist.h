@@ -1,7 +1,7 @@
 #ifndef NAIVEWORKLIST_H
 #define NAIVEWORKLIST_H
 
-#include <PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h>
+#include <PetriEngine/ExplicitColored/ExpressionCompilers/ExplicitQueryPropositionCompiler.h>
 #include <PetriEngine/options.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNet.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"

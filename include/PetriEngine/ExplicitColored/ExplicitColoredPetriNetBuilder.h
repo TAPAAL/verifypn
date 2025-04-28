@@ -1,5 +1,5 @@
-#ifndef COLORED_PETRI_NET_BUILDER_H
-#define COLORED_PETRI_NET_BUILDER_H
+#ifndef EXPLICIT_COLORED_PETRI_NET_BUILDER_H
+#define EXPLICIT_COLORED_PETRI_NET_BUILDER_H
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "ColoredPetriNet.h"
 

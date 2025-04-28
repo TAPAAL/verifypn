@@ -1,4 +1,4 @@
-#include "PetriEngine/ExplicitColored/ExpressionCompilers/GammaQueryCompiler.h"
+#include "PetriEngine/ExplicitColored/ExpressionCompilers/ExplicitQueryPropositionCompiler.h"
 #include <numeric>
 #include "PetriEngine/ExplicitColored/FireabilityChecker.h"
 #include "PetriEngine/PQL/Visitor.h"

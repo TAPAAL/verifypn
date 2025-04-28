@@ -8,7 +8,7 @@ add_library(ExplicitColored
     Algorithms/FireabilitySearch.cpp
     ColoredResultPrinter.cpp
     ExpressionCompilers/GuardCompiler.cpp
-    ExpressionCompilers/GammaQueryCompiler.cpp
+    ExpressionCompilers/ExplicitQueryPropositionCompiler.cpp
     IgnorantFireabilityVisitor.cpp
     ColoredPetriNet.cpp
     ColorIgnorantPetriNetBuilder.cpp

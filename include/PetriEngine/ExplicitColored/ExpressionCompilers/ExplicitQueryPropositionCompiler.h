@@ -1,5 +1,5 @@
-#ifndef GAMMAQUERYCOMPILER_H
-#define GAMMAQUERYCOMPILER_H
+#ifndef EXPLICITQUERYPROPOSITIONCOMPILER_H
+#define EXPLICITQUERYPROPOSITIONCOMPILER_H
 
 #include <PetriEngine/PQL/PQL.h>
 #include "PetriEngine/ExplicitColored/ColoredPetriNetMarking.h"
@@ -32,5 +32,5 @@ namespace PetriEngine::ExplicitColored {
     };
 }
 
-#endif //GAMMAQUERYCOMPILER_H
+#endif //EXPLICITQUERYPROPOSITIONCOMPILER_H
 
