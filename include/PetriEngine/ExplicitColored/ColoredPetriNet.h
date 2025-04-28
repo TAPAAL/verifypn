@@ -42,7 +42,7 @@ namespace PetriEngine::ExplicitColored {
         Color_t colorSize;
     };
 
-    class ColoredPetriNetBuilder;
+    class ExplicitColoredPetriNetBuilder;
 
     class ColoredPetriNet {
     public:
@@ -68,7 +68,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
     private:
-        friend class ColoredPetriNetBuilder;
+        friend class ExplicitColoredPetriNetBuilder;
         friend class ColoredSuccessorGenerator;
         friend class ValidVariableGenerator;
         friend class FireabilityChecker;

@@ -68,7 +68,7 @@ namespace PetriEngine::ExplicitColored {
 
         std::vector<TraceStep> _translateTraceStep(
             const std::vector<InternalTraceStep>& internalTrace,
-            const ColoredPetriNetBuilder& cpnBuilder,
+            const ExplicitColoredPetriNetBuilder& cpnBuilder,
             const ColoredPetriNet& net
         ) const;
 
