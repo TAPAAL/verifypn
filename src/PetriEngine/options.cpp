@@ -221,7 +221,7 @@ void printHelp() {
         "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
         "  -C                                   Use explicit colored engine to answer query (CPN only).\n"
-        "                                       Only supports -R, --colored-successor-generator and -s options.\n"
+        "                                       Only supports -R, -t, --colored-successor-generator and -s options.\n"
         "  --colored-successor-generator        Sets the the successor generator used in the explicit colored engine\n"
         "                                       - fixed   transitions and bindings are traversed in a fixed order\n"
         "                                       - even    transitions and bindings are checked evenly (default)\n"
