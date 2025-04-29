@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<property-set xmlns="http://mcc.lip6.fr/">
+  <property>
+    <id>OneSafe</id>
+    <formula>
+      <k-safe>
+        <integer-constant>1</integer-constant>
+      </k-safe>
+    </formula>
+  </property>
+</property-set>
