@@ -34,7 +34,7 @@ namespace PetriEngine {
         bool _hasPartition = false;
 
     public:
-        void parse_model(const std::string&& model);
+        void parse_model(const std::string& model);
         void parse_model(std::istream& model);
 
         /** Add a new place with a unique name */
@@ -99,6 +99,10 @@ namespace PetriEngine {
         virtual void addVariable(const PetriEngine::Colored::Variable* variable)
         {
             throw base_error("Variables are not supported in standard P/T nets");
+        }
+
+        virtual void addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) {
+            throw base_error("Product colors are not supported in standard P/T nets");
         }
 
         virtual void enableColors() {

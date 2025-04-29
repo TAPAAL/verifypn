@@ -46,14 +46,20 @@
 
 
 #include <PetriEngine/Colored/PnmlWriter.h>
+#include <PetriEngine/ExplicitColored/ExplicitErrors.h>
+#include <utils/NullStream.h>
 #include "VerifyPN.h"
 #include "PetriEngine/Synthesis/SimpleSynthesis.h"
 #include "LTL/LTLSearch.h"
 #include "PetriEngine/PQL/PQL.h"
-
+#include "PetriEngine/ExplicitColored/ExplicitColoredPetriNetBuilder.h"
+#include "PetriEngine/ExplicitColored/Algorithms/ExplicitWorklist.h"
+#include "PetriEngine/ExplicitColored/ExplicitColoredModelChecker.h"
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
+
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames);
 
 int main(int argc, const char** argv) {
     shared_string_set string_set; //<-- used for de-duplicating names of places/transitions
@@ -71,10 +77,20 @@ int main(int argc, const char** argv) {
         }
         options.print();
 
+        //----------------------- Parse Query -----------------------//
+        std::vector<std::string> querynames;
+        auto ctlStarQueries = readQueries(string_set, options, querynames);
+        auto queries = options.logic == TemporalLogic::CTL
+                       ? getCTLQueries(ctlStarQueries)
+                       : getLTLQueries(ctlStarQueries);
+
         ColoredPetriNetBuilder cpnBuilder(string_set);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
+            if (options.explicit_colored) {
+                return explicitColored(string_set, options, queries, querynames);
+            }
         } catch (const base_error &err) {
             throw base_error("CANNOT_COMPUTE\nError parsing the model\n", err.what());
         }
@@ -92,13 +108,6 @@ int main(int argc, const char** argv) {
         if (options.printstatistics == StatisticsLevel::Full) {
             std::cout << "Finished parsing model" << std::endl;
         }
-
-        //----------------------- Parse Query -----------------------//
-        std::vector<std::string> querynames;
-        auto ctlStarQueries = readQueries(string_set, options, querynames);
-        auto queries = options.logic == TemporalLogic::CTL
-                       ? getCTLQueries(ctlStarQueries)
-                       : getLTLQueries(ctlStarQueries);
 
         if (options.printstatistics == StatisticsLevel::Full && options.queryReductionTimeout > 0) {
             negstat_t stats;
@@ -555,4 +564,40 @@ int main(int argc, const char** argv) {
     }
 
     return to_underlying(ReturnValue::SuccessCode);
+}
+
+
+int explicitColored(shared_string_set& stringSet, options_t& options, std::vector<Condition_ptr>& queries, const std::vector<std::string>& queryNames) {
+    using namespace ExplicitColored;
+
+    if (!options.isCPN || queries.empty() || !isReachability(queries[0])) {
+        std::cerr << "Explicit state-space search is supported only for colored nets and reachability queries.";
+        return to_underlying(ReturnValue::UnknownCode);
+    }
+
+    try {
+        NullStream nullStream;
+        std::ostream& fullStatisticsOut = options.printstatistics == StatisticsLevel::Full
+                ? std::cout
+                : nullStream;
+
+        ExplicitColoredModelChecker ecpnChecker(stringSet, fullStatisticsOut);
+
+        ColoredResultPrinter resultPrinter(0, std::cout, queryNames[0], options.seed(), std::cerr);
+        auto result = ecpnChecker.checkQuery(options.modelfile, queries[0], options, &resultPrinter);
+
+        if (result == ExplicitColoredModelChecker::Result::SATISFIED) {
+            return to_underlying(ReturnValue::SuccessCode);
+        }
+
+        if (result == ExplicitColoredModelChecker::Result::UNSATISFIED) {
+            return to_underlying(ReturnValue::FailedCode);
+        }
+
+        return to_underlying(ReturnValue::UnknownCode);
+
+    } catch (const explicit_error& e) {
+        std::cout << e << std::endl;
+        return to_underlying(ReturnValue::ErrorCode);
+    }
 }
