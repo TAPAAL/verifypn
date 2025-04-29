@@ -39,7 +39,7 @@ namespace PetriEngine::ExplicitColored {
             return _net;
         }
 
-        [[nodiscard]] Binding_t findNextValidBinding(const ColoredPetriNetMarking& marking, Transition_t tid, Binding_t bid, uint64_t totalBindings, Binding& binding, size_t stateId) const;
+        Binding_t findNextValidBinding(const ColoredPetriNetMarking& marking, Transition_t tid, Binding_t bid, uint64_t totalBindings, Binding& binding, size_t stateId) const;
 
         void shrinkState(const size_t stateId) const {
             const auto lower = _constraintData.lower_bound(_getKey(stateId, 0));
@@ -108,6 +108,7 @@ namespace PetriEngine::ExplicitColored {
                     auto newState = ColoredPetriNetStateEven{state, _net.getTransitionCount()};
                     newState.id = _nextId++;
                     fire(newState.marking, tid, binding);
+
                     return std::make_pair(newState, TraceMapStep {
                         newState.id,
                         state.id,

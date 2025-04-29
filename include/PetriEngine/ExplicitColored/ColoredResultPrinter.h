@@ -7,9 +7,25 @@
 
 namespace PetriEngine::ExplicitColored {
     struct TraceStep {
+        TraceStep(
+            std::string transitionId,
+            std::unordered_map<std::string, std::string> binding,
+            std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> marking
+        ) : transitionId(std::move(transitionId)), binding(std::move(binding)), marking(std::move(marking)), isInitial(false) {}
+
+        TraceStep(
+            std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> marking
+        ) : marking(std::move(marking)), isInitial(true) {}
+
+        TraceStep(const TraceStep&) = default;
+        TraceStep(TraceStep&&) = default;
+        TraceStep& operator=(const TraceStep&) = default;
+        TraceStep& operator=(TraceStep&&) = default;
+
         std::string transitionId;
         std::unordered_map<std::string, std::string> binding;
         std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> marking;
+        bool isInitial;
     };
 
     class IColoredResultPrinter {

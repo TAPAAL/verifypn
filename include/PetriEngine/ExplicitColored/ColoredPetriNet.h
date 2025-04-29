@@ -67,6 +67,10 @@ namespace PetriEngine::ExplicitColored {
             return _places;
         }
 
+        [[nodiscard]] uint64_t getTotalBindings(Transition_t transition) const {
+            return _transitions[transition].totalBindings;
+        }
+
     private:
         friend class ExplicitColoredPetriNetBuilder;
         friend class ColoredSuccessorGenerator;

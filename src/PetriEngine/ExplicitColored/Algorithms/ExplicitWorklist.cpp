@@ -63,10 +63,8 @@ namespace PetriEngine::ExplicitColored {
                 return std::nullopt;
             }
             currentId = it->second.predecessorId;
-            Binding binding;
-            _successorGenerator.getBinding(it->second.transition, it->second.binding, binding);
             trace.push_back(InternalTraceStep {
-                binding,
+                it->second.binding,
                 it->second.transition
             });
         }

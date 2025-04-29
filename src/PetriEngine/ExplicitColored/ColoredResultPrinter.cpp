@@ -63,34 +63,34 @@ namespace PetriEngine::ExplicitColored {
         _traceStream << "Trace: " << std::endl;
         _traceStream << "<trace>" << std::endl;
         for (const auto& step : trace) {
-            _traceStream << "\t<transition id=" << std::quoted(step.transitionId) << ">" << std::endl;
-            _traceStream << "\t\t<bindings>" << std::endl;
-            for (const auto& [variableId, value] : step.binding) {
-                _traceStream << "\t\t\t<variable id=" << std::quoted(variableId) << ">" << std::endl;
-                _traceStream << "\t\t\t\t<color>" << std::quoted(value) << "</color>" << std::endl;
-                _traceStream << "\t\t\t</variable>" << std::endl;
+            if (!step.isInitial) {
+                _traceStream << "\t<transition id=" << std::quoted(step.transitionId) << ">" << std::endl;
+                _traceStream << "\t\t<bindings>" << std::endl;
+                for (const auto& [variableId, value] : step.binding) {
+                    _traceStream << "\t\t\t<variable id=" << std::quoted(variableId) << ">" << std::endl;
+                    _traceStream << "\t\t\t\t<color>" << value << "</color>" << std::endl;
+                    _traceStream << "\t\t\t</variable>" << std::endl;
+                }
+                _traceStream << "\t\t</bindings>" << std::endl;
+                _traceStream << "\t</transition>" << std::endl;
             }
-            _traceStream << "\t\t</bindings>" << std::endl;
-            _traceStream << "\t\t<marking>" << std::endl;
+            _traceStream << "\t<marking>" << std::endl;
             for (const auto& [placeId, marking] : step.marking) {
                 if (marking.size() > 0) {
-                    _traceStream << "\t\t\t<place id=" << std::quoted(placeId) << ">" << std::endl;
+                    _traceStream << "\t\t<place id=" << std::quoted(placeId) << ">" << std::endl;
                     for (const auto& [productColor, count] : marking) {
                         if (count > 0) {
-                            _traceStream << "\t\t\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
+                            _traceStream << "\t\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
                             for (const auto& color : productColor) {
-                                _traceStream << "\t\t\t\t\t<color id=" << std::quoted(color) << " />" << std::endl;
+                                _traceStream << "\t\t\t\t<color>" << color << "</color>" << std::endl;
                             }
-                            _traceStream << "\t\t\t\t</token>" << std::endl;
+                            _traceStream << "\t\t\t</token>" << std::endl;
                         }
                     }
-                    _traceStream << "\t\t\t</place>" << std::endl;
-                } else {
-                    _traceStream << "\t\t\t<place id=" << std::quoted(placeId) << " />" << std::endl;
+                    _traceStream << "\t\t</place>" << std::endl;
                 }
             }
-            _traceStream << "\t\t</marking>" << std::endl;
-            _traceStream << "\t</transition>" << std::endl;
+            _traceStream << "\t</marking>" << std::endl;
         }
         _traceStream << "</trace>" << std::endl;
     }
