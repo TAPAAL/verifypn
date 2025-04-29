@@ -68,7 +68,7 @@ namespace PetriEngine::ExplicitColored {
                 _traceStream << "\t\t<bindings>" << std::endl;
                 for (const auto& [variableId, value] : step.binding) {
                     _traceStream << "\t\t\t<variable id=" << std::quoted(variableId) << ">" << std::endl;
-                    _traceStream << "\t\t\t\t<color>" << std::quoted(value) << "</color>" << std::endl;
+                    _traceStream << "\t\t\t\t<color>" << value << "</color>" << std::endl;
                     _traceStream << "\t\t\t</variable>" << std::endl;
                 }
                 _traceStream << "\t\t</bindings>" << std::endl;
@@ -82,7 +82,7 @@ namespace PetriEngine::ExplicitColored {
                         if (count > 0) {
                             _traceStream << "\t\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
                             for (const auto& color : productColor) {
-                                _traceStream << "\t\t\t\t<color id=" << std::quoted(color) << " />" << std::endl;
+                                _traceStream << "\t\t\t\t<color>" << color << "</color>" << std::endl;
                             }
                             _traceStream << "\t\t\t</token>" << std::endl;
                         }

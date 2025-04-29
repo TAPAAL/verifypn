@@ -24,7 +24,7 @@ namespace PetriEngine::ExplicitColored {
     };
 
     struct InternalTraceStep {
-        Binding binding;
+        Binding_t binding;
         Transition_t transition;
     };
 
