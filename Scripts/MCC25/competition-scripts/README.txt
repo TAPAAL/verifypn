@@ -11,8 +11,6 @@ For creating the VM remember:
 
 - install time, parallel (check for --will-cite) and bc
 
-- to fix locales do: sudo apt-get update
-                     sudo apt-get purge locales
-                     sudo apt-get install locales
+- to fix locales add to .profile and .bashrc (both in root and ~mcc directory): export PERL_BADLANG=0
 
 - for running qemu, check the QEMU-README.txt file.
