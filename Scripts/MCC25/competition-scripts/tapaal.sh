@@ -85,7 +85,7 @@ STRATEGIES_PAR[1]="-s RPFS -q 0 -l 0 -d $SHORTRED"
 STRATEGIES_PAR[2]="-s BFS -q 0 -l 0 -d $SHORTRED"
 STRATEGIES_PAR[3]="-s RDFS -q 0 -l 0 -d $SHORTRED"
 
-STRATEGIES_EX[0]="-C -s RDFS --colored-successor-generator even --colored-encode-waiting 0"
+STRATEGIES_EX[0]="-C -s RDFS --colored-successor-generator even"
 STRATEGIES_EX[1]="-C -s BFS --colored-successor-generator even -R 0 -q 0"
 STRATEGIES_EX[2]="-C -s DFS --colored-successor-generator even -q 0"
 STRATEGIES_EX[3]="-C -s BestFS --colored-successor-generator fixed -q 0"
