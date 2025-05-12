@@ -147,7 +147,7 @@ namespace PetriEngine::ExplicitColored {
             auto colorNumIndex = offset;
             auto colorNum = 0;
             offset += placeColorSize;
-            _writeToPad(placeCountSize, placeCountSize, offset);
+            _writeToPad(placeCountSize, EIGHT, offset);
 
             //Puts every token id followed by token count
             for (auto [color, count] : place.counts()) {
