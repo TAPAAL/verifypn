@@ -95,14 +95,12 @@ namespace PetriEngine::ExplicitColored {
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
             _minimalColorMarking = _lhs->getMinimalColorMarking();
-            const auto& minColRhs = _rhs->getMinimalColorMarking();
-            if (minColRhs.variableCount != 0) {
+            const auto& [rhsMinimalMarkingMultiSet, variableCount] = _rhs->getMinimalColorMarking();
+            _minimalColorMarking.minimalMarkingMultiSet -= rhsMinimalMarkingMultiSet;
+            if (variableCount != 0) {
                 for (const auto& [color, cardinality] : _minimalColorMarking.minimalMarkingMultiSet.counts()) {
-                    _minimalColorMarking.minimalMarkingMultiSet.addCount(color, -minColRhs.variableCount);
+                    _minimalColorMarking.minimalMarkingMultiSet.addCount(color, -variableCount);
                 }
-            }
-            else {
-                _minimalColorMarking.minimalMarkingMultiSet -= minColRhs.minimalMarkingMultiSet;
             }
         }
 
@@ -175,8 +173,8 @@ namespace PetriEngine::ExplicitColored {
             _minimalMarkingCount = _expr->getMinimalMarkingCount() * n;
             _variables = _expr->getVariables();
             _minimalColorMarking = _expr->getMinimalColorMarking();
-            _minimalColorMarking.minimalMarkingMultiSet *= _scale;
-            _minimalColorMarking.variableCount *= _scale;
+            _minimalColorMarking.minimalMarkingMultiSet *= n;
+            _minimalColorMarking.variableCount *= n;
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -307,22 +305,17 @@ namespace PetriEngine::ExplicitColored {
         ArcExpressionVariableCollection(std::vector<std::vector<ParameterizedColor>> parameterizedColorSequences, std::vector<Color_t> colorSizes, const MarkingCount_t count)
             : _colorSizes(std::move(colorSizes)), _parameterizedColorSequences(std::move(parameterizedColorSequences)), _count(count) {
             _minimalMarkingCount = _parameterizedColorSequences.size() * _count;
-            for (const auto& colorSequence : _parameterizedColorSequences) {
-                for (const auto& color : colorSequence) {
-                    if (color.isVariable) {
-                        _variables.emplace(color.value.variable);
-                    }
-                }
-            }
             _minimalColorMarking.minimalMarkingMultiSet = {};
             _minimalColorMarking.variableCount = 0;
             for (const auto& colorSequence : _parameterizedColorSequences) {
                 auto hasVariable = false;
-                for (const auto& parameterizedColor : colorSequence) {
-                    if (parameterizedColor.isVariable) {
+                for (const auto& color : colorSequence) {
+                    if (color.isVariable) {
+                        _variables.emplace(color.value.variable);
                         hasVariable = true;
                     }
                 }
+
                 if (hasVariable) {
                     _minimalColorMarking.variableCount += _count;
                 }
