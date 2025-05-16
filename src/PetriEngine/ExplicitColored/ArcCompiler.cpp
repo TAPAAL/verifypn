@@ -85,7 +85,7 @@ namespace PetriEngine::ExplicitColored {
         ArcExpressionSubtraction(std::unique_ptr<CompiledArcExpression> lhs, std::unique_ptr<CompiledArcExpression> rhs)
             : _lhs(std::move(lhs)), _rhs(std::move(rhs)) {
             const auto lhsValue = _lhs->getMinimalMarkingCount();
-            const auto rhsValue = _rhs->getMinimalMarkingCount();
+            const auto rhsValue = _rhs->getUpperBoundMarkingCount();
             if (lhsValue < rhsValue) {
                 _minimalMarkingCount = 0;
             } else {
