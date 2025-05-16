@@ -13,9 +13,9 @@ namespace PetriEngine::ExplicitColored {
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
             _minimalColorMarking = _lhs->getMinimalColorMarking();
-            const auto& minColRhs = _rhs->getMinimalColorMarking();
-            _minimalColorMarking.minimalMarkingMultiSet += minColRhs.minimalMarkingMultiSet;
-            _minimalColorMarking.variableCount += minColRhs.variableCount;
+            const auto& [minimalMarkingMultiSet, variableCount] = _rhs->getMinimalColorMarking();
+            _minimalColorMarking.minimalMarkingMultiSet += minimalMarkingMultiSet;
+            _minimalColorMarking.variableCount += variableCount;
         }
 
         const CPNMultiSet& eval(const Binding& binding) const override {
@@ -43,6 +43,13 @@ namespace PetriEngine::ExplicitColored {
             return _minimalColorMarking;
         }
 
+        const ColoredMinimalMarking getMaximalColorMarking() const override {
+            auto rv = _lhs->getMaximalColorMarking();
+            rv.minimalMarkingMultiSet += _rhs->getMaximalColorMarking().minimalMarkingMultiSet;
+            rv.variableCount += _rhs->getMaximalColorMarking().variableCount;
+            return rv;
+        }
+
         const std::set<Variable_t> & getVariables() const override {
             return _variables;
         }
@@ -61,7 +68,6 @@ namespace PetriEngine::ExplicitColored {
             constraints.insert(constraints.begin(), rhsConstraints.begin(), rhsConstraints.end());
             return constraints;
         }
-
 
         [[nodiscard]] bool containsNegative() const override {
             return _lhs->containsNegative() || _rhs->containsNegative();
@@ -85,7 +91,7 @@ namespace PetriEngine::ExplicitColored {
         ArcExpressionSubtraction(std::unique_ptr<CompiledArcExpression> lhs, std::unique_ptr<CompiledArcExpression> rhs)
             : _lhs(std::move(lhs)), _rhs(std::move(rhs)) {
             const auto lhsValue = _lhs->getMinimalMarkingCount();
-            const auto rhsValue = _rhs->getMinimalMarkingCount();
+            const auto rhsValue = _rhs->getUpperBoundMarkingCount();
             if (lhsValue < rhsValue) {
                 _minimalMarkingCount = 0;
             } else {
@@ -95,12 +101,14 @@ namespace PetriEngine::ExplicitColored {
             auto rhsSet = _rhs->getVariables();
             _variables.merge(rhsSet);
             _minimalColorMarking = _lhs->getMinimalColorMarking();
-            const auto& [rhsMinimalMarkingMultiSet, variableCount] = _rhs->getMinimalColorMarking();
-            _minimalColorMarking.minimalMarkingMultiSet -= rhsMinimalMarkingMultiSet;
+
+            const auto& [rhsMaximalMarkingMultiSet, variableCount] = _rhs->getMaximalColorMarking();
+            _minimalColorMarking.minimalMarkingMultiSet -= rhsMaximalMarkingMultiSet;
             if (variableCount != 0) {
                 for (const auto& [color, cardinality] : _minimalColorMarking.minimalMarkingMultiSet.counts()) {
                     _minimalColorMarking.minimalMarkingMultiSet.addCount(color, -variableCount);
                 }
+                _minimalColorMarking.minimalMarkingMultiSet.fixNegative();
             }
         }
 
@@ -127,6 +135,10 @@ namespace PetriEngine::ExplicitColored {
 
         ColoredMinimalMarking& getMinimalColorMarking() const override {
             return _minimalColorMarking;
+        }
+
+        const ColoredMinimalMarking getMaximalColorMarking() const override {
+            return _lhs->getMinimalColorMarking();
         }
 
         const std::set<Variable_t> & getVariables() const override {
@@ -164,6 +176,7 @@ namespace PetriEngine::ExplicitColored {
         mutable ColoredMinimalMarking _minimalColorMarking;
         mutable CPNMultiSet _result;
         std::set<Variable_t> _variables;
+
     };
 
     class ArcExpressionScale final : public CompiledArcExpression {
@@ -201,6 +214,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         ColoredMinimalMarking& getMinimalColorMarking() const override {
+            return _minimalColorMarking;
+        }
+
+        const ColoredMinimalMarking getMaximalColorMarking() const override {
             return _minimalColorMarking;
         }
 
@@ -265,6 +282,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         ColoredMinimalMarking& getMinimalColorMarking() const override {
+            return _minimalColorMarking;
+        }
+
+        const ColoredMinimalMarking getMaximalColorMarking() const override {
             return _minimalColorMarking;
         }
 
@@ -349,6 +370,10 @@ namespace PetriEngine::ExplicitColored {
         }
 
         ColoredMinimalMarking& getMinimalColorMarking() const override {
+            return _minimalColorMarking;
+        }
+
+        const ColoredMinimalMarking getMaximalColorMarking() const override {
             return _minimalColorMarking;
         }
 
@@ -574,7 +599,6 @@ namespace PetriEngine::ExplicitColored {
         void accept(const Colored::SubtractExpression* expr) override {
             (*expr)[0]->visit(*this);
             auto lhs = std::move(_top);
-            _scale = 1;
             (*expr)[1]->visit(*this);
             _top = std::make_unique<ArcExpressionSubtraction>(std::move(lhs), std::move(_top));
         }
