@@ -138,7 +138,9 @@ namespace PetriEngine::ExplicitColored {
         }
 
         const ColoredMinimalMarking getMaximalColorMarking() const override {
-            return _lhs->getMinimalColorMarking();
+            auto rv = _lhs->getMinimalColorMarking();
+            rv.minimalMarkingMultiSet -= _rhs->getMaximalColorMarking().minimalMarkingMultiSet;
+            return rv;
         }
 
         const std::set<Variable_t> & getVariables() const override {
