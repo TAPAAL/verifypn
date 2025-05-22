@@ -144,10 +144,13 @@ namespace PetriEngine::ExplicitColored {
         }
 
         [[nodiscard]] std::vector<VariableConstraint> calculateVariableConstraints(Variable_t var, Place_t place) const override {
-            if (_rhs->getVariables().find(var) != _rhs->getVariables().end()) {
+            if (
+                _rhs->getVariables().find(var) != _rhs->getVariables().end() ||
+                _lhs->getVariables().find(var) != _lhs->getVariables().end()
+            ) {
                 return {VariableConstraint::getTop()};
             }
-            return _lhs->calculateVariableConstraints(var, place);
+            return {};
         }
 
 
