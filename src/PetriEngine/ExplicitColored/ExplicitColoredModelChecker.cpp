@@ -42,6 +42,7 @@ namespace PetriEngine::ExplicitColored {
                 }
                 return result;
             }
+            return result;
         }
 
         SearchStatistics searchStatistics;
