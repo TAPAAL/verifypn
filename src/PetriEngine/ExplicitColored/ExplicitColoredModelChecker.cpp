@@ -192,11 +192,34 @@ namespace PetriEngine::ExplicitColored {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
         simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
-        if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
-            return Result::UNSATISFIED;
-        }
-        if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
-            return Result::SATISFIED;
+        if (queries[0] == BooleanCondition::FALSE_CONSTANT || queries[0] == BooleanCondition::TRUE_CONSTANT) {
+            if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
+                return Result::UNSATISFIED;
+            }
+            if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+                return Result::SATISFIED;
+            }
+        }else {
+            //Just for input
+            std::vector<std::string> names = {""};
+            ResultPrinter printer(&builder, &options, names);
+
+            std::vector results(queries.size(), ResultPrinter::Result::Unknown);
+            ReachabilitySearch strategy(*qnet, printer);
+            strategy.reachable(queries, results,
+                                Strategy::RDFS,
+                                false,
+                                false,
+                                StatisticsLevel::None,
+                                options.trace != TraceLevel::None,
+                                options.seed()
+                                );
+            if (results[0] == ResultPrinter::Satisfied && !isEf) {
+                return Result::SATISFIED;
+            }
+            if (results[0] == ResultPrinter::NotSatisfied && isEf) {
+                return Result::UNSATISFIED;
+            }
         }
         return Result::UNKNOWN;
     }
