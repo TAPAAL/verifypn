@@ -10,6 +10,21 @@
 #include <PetriEngine/ExplicitColored/Algorithms/FireabilitySearch.h>
 
 namespace PetriEngine::ExplicitColored {
+    class NullHandler : public AbstractHandler {
+    public:
+        std::pair<Result, bool> handle (
+            size_t index,
+            PQL::Condition* query,
+            Result result,
+            const std::vector<uint32_t>* maxPlaceBound,
+            size_t expandedStates,
+            size_t exploredStates,
+            size_t discoveredStates,
+            int maxTokens,
+            Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace) override {
+            return std::make_pair(result, true);
+        };
+    };
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
         const std::string& modelPath,
         const Condition_ptr& query,
@@ -87,8 +102,12 @@ namespace PetriEngine::ExplicitColored {
         const EvaluationContext context(qm0.get(), qnet.get());
 
         ContainsFireabilityVisitor hasFireability;
+        ContainsDeadlockVisitor hasDeadlock;
         Visitor::visit(hasFireability, queries[0]);
-
+        Visitor::visit(hasDeadlock, queries[0]);
+        if (hasDeadlock.getReturnValue()) {
+            return Result::UNKNOWN;
+        }
         if (hasFireability.getReturnValue()) {
             return checkFireabilityColorIgnorantLP(context, queries, builder, qnet, options);
         }
@@ -191,7 +210,8 @@ namespace PetriEngine::ExplicitColored {
         else if(r == Condition::RTRUE) {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
-        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
+        NullStream nullStream;
+        simplify_queries(qm0.get(), qnet.get(), queries, options, nullStream);
         if (queries[0] == BooleanCondition::FALSE_CONSTANT || queries[0] == BooleanCondition::TRUE_CONSTANT) {
             if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
                 return Result::UNSATISFIED;
@@ -203,9 +223,10 @@ namespace PetriEngine::ExplicitColored {
             //Just for input
             std::vector<std::string> names = {""};
             ResultPrinter printer(&builder, &options, names);
+            NullHandler nullPrinter{};
 
             std::vector results(queries.size(), ResultPrinter::Result::Unknown);
-            ReachabilitySearch strategy(*qnet, printer);
+            ReachabilitySearch strategy(*qnet, nullPrinter);
             strategy.reachable(queries, results,
                                 Strategy::RDFS,
                                 false,
