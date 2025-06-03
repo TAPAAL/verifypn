@@ -22,7 +22,11 @@ namespace PetriEngine::ExplicitColored {
             size_t discoveredStates,
             int maxTokens,
             Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace) override {
-            return std::make_pair(result, true);
+                bool isDone = true;
+                if(result == Unknown) {
+                    isDone = false;
+                }
+                return std::make_pair(result, isDone);
         };
     };
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
