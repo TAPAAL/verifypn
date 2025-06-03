@@ -22,11 +22,19 @@ namespace PetriEngine::ExplicitColored {
             size_t discoveredStates,
             int maxTokens,
             Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace) override {
-                bool isDone = true;
+                auto retVal = Unknown;
                 if(result == Unknown) {
-                    isDone = false;
+                    return std::make_pair(result, false);
                 }
-                return std::make_pair(result, isDone);
+                if (result == Satisfied)
+                    retVal = query->isInvariant() ? NotSatisfied : Satisfied;
+                else if (result == NotSatisfied)
+                    retVal = query->isInvariant() ? Satisfied : NotSatisfied;
+                // if (result == NotSatisfied) {
+                //     retVal = query->isInvariant() ? Satisfied : NotSatisfied;
+                // }
+                // auto retval = query->isInvariant() ? Satisfied : NotSatisfied;
+                return std::make_pair(retVal, true);
         };
     };
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
@@ -200,13 +208,28 @@ namespace PetriEngine::ExplicitColored {
         const std::unique_ptr<MarkVal[]>& qm0,
         options_t& options
     ) const {
-        auto isEf = false;
+        negstat_t stats;
+        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-        if (dynamic_cast<EFCondition*>(queries[0].get())) {
+        auto isEf = false;
+        auto queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+        queries.push_back(std::move(queryCopy));
+        if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1])) {
             isEf = true;
+            // const EFCondition* efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1]).get();
+            auto innerQuery = efQuery->getCond();
+            queries[1] = pushNegation(std::make_shared<AGCondition>(innerQuery), stats, context, false, false, false);
+        }else {
+            if (const auto notQuery = std::dynamic_pointer_cast<NotCondition>(queries[1])) {
+                if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(notQuery->getCond())) {
+                    auto innerQuery = efQuery->getCond();
+                    queries[1] = pushNegation(std::make_shared<AGCondition>(innerQuery), stats, context, false, false, false);
+                }
+            }
         }
-
+        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
         const auto r = evaluate(queries[0].get(), context);
+        const auto r2 = evaluate(queries[1].get(), context);
 
         if(r == Condition::RFALSE) {
             queries[0] = BooleanCondition::FALSE_CONSTANT;
@@ -217,35 +240,46 @@ namespace PetriEngine::ExplicitColored {
         NullStream nullStream;
         simplify_queries(qm0.get(), qnet.get(), queries, options, nullStream);
         if (queries[0] == BooleanCondition::FALSE_CONSTANT || queries[0] == BooleanCondition::TRUE_CONSTANT) {
-            if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
-                return Result::UNSATISFIED;
+            if (queries[0] == BooleanCondition::FALSE_CONSTANT) {
+                if (isEf) {
+                    return Result::UNSATISFIED;
+                }
+                if (queries[1] == BooleanCondition::TRUE_CONSTANT) {
+                    return Result::SATISFIED;
+                }
             }
-            if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
-                return Result::SATISFIED;
-            }
-        }else {
-            //Just for input
-            std::vector<std::string> names = {""};
-            ResultPrinter printer(&builder, &options, names);
-            NullHandler nullPrinter{};
-
-            std::vector results(queries.size(), ResultPrinter::Result::Unknown);
-            ReachabilitySearch strategy(*qnet, nullPrinter);
-            strategy.reachable(queries, results,
-                                Strategy::RDFS,
-                                false,
-                                false,
-                                StatisticsLevel::None,
-                                options.trace != TraceLevel::None,
-                                options.seed()
-                                );
-            if (results[0] == ResultPrinter::Satisfied && !isEf) {
-                return Result::SATISFIED;
-            }
-            if (results[0] == ResultPrinter::NotSatisfied && isEf) {
-                return Result::UNSATISFIED;
+            if (queries[0] == BooleanCondition::TRUE_CONSTANT) {
+                if (!isEf) {
+                    return Result::SATISFIED;
+                }
+                if (queries[1] == BooleanCondition::FALSE_CONSTANT) {
+                    return Result::UNSATISFIED;
+                }
             }
         }
+        // else {
+        //     //Just for input
+        //     std::vector<std::string> names = {""};
+        //     ResultPrinter printer(&builder, &options, names);
+        //     NullHandler nullPrinter{};
+        //
+        //     std::vector results(queries.size(), ResultPrinter::Result::Unknown);
+        //     ReachabilitySearch strategy(*qnet, nullPrinter);
+        //     strategy.reachable(queries, results,
+        //                         Strategy::RDFS,
+        //                         false,
+        //                         false,
+        //                         StatisticsLevel::None,
+        //                         options.trace != TraceLevel::None,
+        //                         options.seed()
+        //                         );
+        //     if (results[0] == ResultPrinter::Satisfied && !isEf) {
+        //         return Result::SATISFIED;
+        //     }
+        //     if (results[0] == ResultPrinter::NotSatisfied && isEf) {
+        //         return Result::UNSATISFIED;
+        //     }
+        // }
         return Result::UNKNOWN;
     }
 
