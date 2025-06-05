@@ -216,7 +216,6 @@ namespace PetriEngine::ExplicitColored {
         queries.push_back(std::move(queryCopy));
         if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1])) {
             isEf = true;
-            // const EFCondition* efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1]).get();
             auto innerQuery = efQuery->getCond();
             queries[1] = pushNegation(std::make_shared<AGCondition>(innerQuery), stats, context, false, false, false);
         }else {
@@ -254,7 +253,7 @@ namespace PetriEngine::ExplicitColored {
         if (queries[1] == BooleanCondition::TRUE_CONSTANT && !isEf) {
             return Result::UNSATISFIED;
         }
-        if (queries[1] == BooleanCondition::FALSE_CONSTANT && isEf) {
+        if (queries[1] == BooleanCondition::TRUE_CONSTANT && isEf) {
             return Result::SATISFIED;
         }
 
