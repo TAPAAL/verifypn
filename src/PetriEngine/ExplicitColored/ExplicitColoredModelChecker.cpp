@@ -237,26 +237,29 @@ namespace PetriEngine::ExplicitColored {
         else if(r == Condition::RTRUE) {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
-        NullStream nullStream;
-        simplify_queries(qm0.get(), qnet.get(), queries, options, nullStream);
-        if (queries[0] == BooleanCondition::FALSE_CONSTANT || queries[0] == BooleanCondition::TRUE_CONSTANT) {
-            if (queries[0] == BooleanCondition::FALSE_CONSTANT) {
-                if (isEf) {
-                    return Result::UNSATISFIED;
-                }
-                if (queries[1] == BooleanCondition::TRUE_CONSTANT) {
-                    return Result::SATISFIED;
-                }
-            }
-            if (queries[0] == BooleanCondition::TRUE_CONSTANT) {
-                if (!isEf) {
-                    return Result::SATISFIED;
-                }
-                if (queries[1] == BooleanCondition::FALSE_CONSTANT) {
-                    return Result::UNSATISFIED;
-                }
-            }
+        if(r2 == Condition::RFALSE) {
+            queries[1] = BooleanCondition::FALSE_CONSTANT;
         }
+        else if(r2 == Condition::RTRUE) {
+            queries[1] = BooleanCondition::TRUE_CONSTANT;
+        }
+        NullStream nullStream;
+        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
+        if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+            return Result::SATISFIED;
+        }
+        if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
+            return Result::UNSATISFIED;
+        }
+        if (queries[1] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+            return Result::UNSATISFIED;
+        }
+        if (queries[1] == BooleanCondition::FALSE_CONSTANT && isEf) {
+            return Result::SATISFIED;
+        }
+
+
+
         // else {
         //     //Just for input
         //     std::vector<std::string> names = {""};
