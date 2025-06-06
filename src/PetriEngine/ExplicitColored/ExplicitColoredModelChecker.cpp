@@ -274,28 +274,13 @@ namespace PetriEngine::ExplicitColored {
         const ExplicitColoredPetriNetBuilder& cpnBuilder,
         const ColoredPetriNet& net
     ) const {
-        std::unordered_map<Transition_t, std::string> transitionToId;
-        for (const auto& [key, value] : cpnBuilder.getTransitionIndices()) {
-            transitionToId.emplace(value, key);
-        }
-
-        std::unordered_map<Variable_t, std::string> variableToId;
-        for (const auto& [key, value] : *cpnBuilder.getVariableIndices()) {
-            variableToId.emplace(value, key);
-        }
-
-        std::unordered_map<Place_t, std::string> placeToId;
-        for (const auto& [key, value] : cpnBuilder.getPlaceIndices()) {
-            placeToId.emplace(value, key);
-        }
-
         const auto& variableColorTypes = cpnBuilder.getUnderlyingVariableColorTypes();
 
         ColoredSuccessorGenerator successorGenerator(net);
         auto currentState = net.initial();
         std::vector<TraceStep> trace;
 
-        trace.emplace_back(_translateMarking(currentState, placeToId, cpnBuilder, net));
+        trace.emplace_back(_translateMarking(currentState, cpnBuilder, net));
 
         for (auto& traceStep : internalTrace) {
             Binding traceBinding;
@@ -313,32 +298,35 @@ namespace PetriEngine::ExplicitColored {
 
             std::unordered_map<std::string, std::string> binding;
             for (auto [variable, value] : traceBinding.getValues()) {
-                const auto variableIt = variableToId.find(variable);
-                if (variableIt == variableToId.end()) {
+                if (variable >= cpnBuilder.getVariableCount()) {
                     std::cerr << "Could not find variable id corresponding to variable index " << variable << std::endl;
                     throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
+                const auto variableName = cpnBuilder.getVariableName(variable);
+
                 if (variable >= variableColorTypes.size()) {
-                    std::cerr << "Could not find color type for variable index " << variable << "(" << variableIt->second << ")" << std::endl;
+                    std::cerr << "Could not find color type for variable index " << variable << "(" << variableName << ")" << std::endl;
                     throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
                 const auto& variableColorType = (*variableColorTypes[variable]);
+
                 if (variableColorType.size() < value) {
                     std::cerr << "Could not find corresponding color id for color index" << value << " in color type " << variableColorType.getName() << std::endl;
                     throw explicit_error(ExplicitErrorType::INVALID_TRACE);
                 }
-                binding.emplace(variableIt->second, variableColorType[value].getColorName());
+                binding.emplace(variableName, variableColorType[value].getColorName());
             }
-            const auto transitionIt = transitionToId.find(traceStep.transition);
-            if (transitionIt == transitionToId.end()) {
+
+            if (traceStep.transition >= cpnBuilder.getTransitionCount()) {
                 std::cerr << "Could not find transition id corresponding to transition with index " << traceStep.transition << std::endl;
                 throw explicit_error(ExplicitErrorType::INVALID_TRACE);
             }
+            auto transitionName = cpnBuilder.getTransitionName(traceStep.transition);
 
             successorGenerator.fire(currentState, traceStep.transition, traceBinding);
             currentState.shrink();
-            auto translatedMarking = _translateMarking(currentState, placeToId, cpnBuilder, net);
-            trace.emplace_back(transitionIt->second, std::move(binding), std::move(translatedMarking));
+            auto translatedMarking = _translateMarking(currentState, cpnBuilder, net);
+            trace.emplace_back(transitionName, std::move(binding), std::move(translatedMarking));
         }
         return trace;
     }
@@ -346,17 +334,17 @@ namespace PetriEngine::ExplicitColored {
     std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>>
         ExplicitColoredModelChecker::_translateMarking(
             const ColoredPetriNetMarking& marking,
-            const std::unordered_map<Place_t, std::string>& placeToId,
             const ExplicitColoredPetriNetBuilder& cpnBuilder,
             const ColoredPetriNet& net
         ) const {
         std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>> translatedMarking;
         for (Place_t place = 0; place < marking.markings.size(); place++) {
-            auto placeIdIt = placeToId.find(place);
-            if (placeIdIt == placeToId.end()) {
+            if (place >= cpnBuilder.getPlaceCount()) {
                 std::cerr << "Could not find corresponding place id for place index" << place << std::endl;
                 throw explicit_error(ExplicitErrorType::INVALID_TRACE);
             }
+            const auto& placeName = cpnBuilder.getPlaceName(place);
+
             std::vector<std::pair<std::vector<std::string>, MarkingCount_t>> tokenCounts;
             for (const auto& [tokenColor, tokenCount] : marking.markings[place].counts()) {
                 if (tokenCount <= 0) {
@@ -378,7 +366,7 @@ namespace PetriEngine::ExplicitColored {
                 }
                 tokenCounts.emplace_back(std::move(colors), tokenCount);
             }
-            translatedMarking.emplace(placeIdIt->second, std::move(tokenCounts));
+            translatedMarking.emplace(placeName, std::move(tokenCounts));
         }
         return translatedMarking;
     }

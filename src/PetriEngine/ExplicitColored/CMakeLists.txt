@@ -13,6 +13,7 @@ add_library(ExplicitColored
     ColoredPetriNet.cpp
     ColorIgnorantPetriNetBuilder.cpp
     ExplicitColoredModelChecker.cpp
+    ExplicitColoredInteractiveMode.cpp
 )
 
 target_link_libraries(ExplicitColored Colored)

@@ -46,6 +46,7 @@
 
 
 #include <PetriEngine/Colored/PnmlWriter.h>
+#include <PetriEngine/ExplicitColored/ExplicitColoredInteractiveMode.h>
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
 #include <utils/NullStream.h>
 #include "VerifyPN.h"
@@ -89,6 +90,9 @@ int main(int argc, const char** argv) {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
             if (options.explicit_colored) {
+                if (options.interactive_mode) {
+                    return ExplicitColored::ExplicitColoredInteractiveMode::run(options.modelfile);
+                }
                 return explicitColored(string_set, options, queries, querynames);
             }
         } catch (const base_error &err) {

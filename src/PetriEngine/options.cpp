@@ -572,6 +572,9 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Invalid argument ", std::quoted(argv[i + 1]), " to --colored-successor-generator");
             }
             ++i;
+        } else if (std::strcmp(argv[i], "--interactive-mode") == 0) {
+            interactive_mode = true;
+            ++i;
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (std::strcmp(argv[i], "-z") == 0) {
