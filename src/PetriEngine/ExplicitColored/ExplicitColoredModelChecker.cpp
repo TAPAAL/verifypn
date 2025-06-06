@@ -10,33 +10,6 @@
 #include <PetriEngine/ExplicitColored/Algorithms/FireabilitySearch.h>
 
 namespace PetriEngine::ExplicitColored {
-    class NullHandler : public AbstractHandler {
-    public:
-        std::pair<Result, bool> handle (
-            size_t index,
-            PQL::Condition* query,
-            Result result,
-            const std::vector<uint32_t>* maxPlaceBound,
-            size_t expandedStates,
-            size_t exploredStates,
-            size_t discoveredStates,
-            int maxTokens,
-            Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace) override {
-                auto retVal = Unknown;
-                if(result == Unknown) {
-                    return std::make_pair(result, false);
-                }
-                if (result == Satisfied)
-                    retVal = query->isInvariant() ? NotSatisfied : Satisfied;
-                else if (result == NotSatisfied)
-                    retVal = query->isInvariant() ? Satisfied : NotSatisfied;
-                // if (result == NotSatisfied) {
-                //     retVal = query->isInvariant() ? Satisfied : NotSatisfied;
-                // }
-                // auto retval = query->isInvariant() ? Satisfied : NotSatisfied;
-                return std::make_pair(retVal, true);
-        };
-    };
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
         const std::string& modelPath,
         const Condition_ptr& query,
@@ -69,7 +42,6 @@ namespace PetriEngine::ExplicitColored {
                 }
                 return result;
             }
-            return result;
         }
 
         SearchStatistics searchStatistics;
@@ -243,7 +215,7 @@ namespace PetriEngine::ExplicitColored {
             queries[1] = BooleanCondition::TRUE_CONSTANT;
         }
         NullStream nullStream;
-        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
+        simplify_queries(qm0.get(), qnet.get(), queries, options, nullStream);
         if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
             return Result::SATISFIED;
         }
@@ -256,32 +228,6 @@ namespace PetriEngine::ExplicitColored {
         if (queries[1] == BooleanCondition::TRUE_CONSTANT && isEf) {
             return Result::SATISFIED;
         }
-
-
-
-        // else {
-        //     //Just for input
-        //     std::vector<std::string> names = {""};
-        //     ResultPrinter printer(&builder, &options, names);
-        //     NullHandler nullPrinter{};
-        //
-        //     std::vector results(queries.size(), ResultPrinter::Result::Unknown);
-        //     ReachabilitySearch strategy(*qnet, nullPrinter);
-        //     strategy.reachable(queries, results,
-        //                         Strategy::RDFS,
-        //                         false,
-        //                         false,
-        //                         StatisticsLevel::None,
-        //                         options.trace != TraceLevel::None,
-        //                         options.seed()
-        //                         );
-        //     if (results[0] == ResultPrinter::Satisfied && !isEf) {
-        //         return Result::SATISFIED;
-        //     }
-        //     if (results[0] == ResultPrinter::NotSatisfied && isEf) {
-        //         return Result::UNSATISFIED;
-        //     }
-        // }
         return Result::UNKNOWN;
     }
 
