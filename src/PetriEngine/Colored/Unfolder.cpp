@@ -40,8 +40,7 @@ namespace PetriEngine {
                     }
 
                     for (const auto& outputArc : transition.output_arcs) {
-                        ignorantBuilder.addInputArc(*_builder.transitions().at(outputArc.transition).name, *_builder.places().at(outputArc.place).name, outputArc.expr, outputArc.inhib_weight);
-
+                        ignorantBuilder.addOutputArc(*_builder.transitions().at(outputArc.transition).name, *_builder.places().at(outputArc.place).name, outputArc.expr);
                     }
                 }
 
