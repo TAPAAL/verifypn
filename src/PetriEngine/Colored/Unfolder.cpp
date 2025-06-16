@@ -38,14 +38,16 @@ namespace PetriEngine {
                     for (const auto& inputArc : transition.input_arcs) {
                         ignorantBuilder.addInputArc(*_builder.places().at(inputArc.place).name, *_builder.transitions().at(inputArc.transition).name, inputArc.expr, inputArc.inhib_weight);
                     }
+
                     for (const auto& outputArc : transition.output_arcs) {
                         ignorantBuilder.addInputArc(*_builder.transitions().at(outputArc.transition).name, *_builder.places().at(outputArc.place).name, outputArc.expr, outputArc.inhib_weight);
 
                     }
-                    for (const auto& inhibitor : _builder.inhibitors()) {
-                        ignorantBuilder.addInputArc(*_builder.places()[inhibitor.place].name, *_builder.transitions()[inhibitor.transition].name, true,
-                            inhibitor.inhib_weight);
-                    }
+                }
+
+                for (const auto& inhibitor : _builder.inhibitors()) {
+                    ignorantBuilder.addInputArc(*_builder.places()[inhibitor.place].name, *_builder.transitions()[inhibitor.transition].name, true,
+                        inhibitor.inhib_weight);
                 }
             }
 
