@@ -1,6 +1,9 @@
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "PetriEngine/Colored/EvaluationVisitor.h"
 #include "PetriEngine/Colored/Unfolder.h"
+
+#include <PetriEngine/ExplicitColored/ColorIgnorantPetriNetBuilder.h>
+
 #include "PetriEngine/Colored/BindingGenerator.h"
 
 namespace PetriEngine {
@@ -11,49 +14,43 @@ namespace PetriEngine {
                 "(" + *_builder.places()[arc.place].name + ", " + *_builder.transitions()[arc.transition].name + ")";
         }
 
-        PetriNetBuilder Unfolder::strip_colors() {
-            PetriNetBuilder pnBuilder(_builder.string_set());
+        PetriNetBuilder Unfolder::strip_colors() const {
+            ExplicitColored::ColorIgnorantPetriNetBuilder ignorantBuilder(_builder.string_set());
             if (_builder.isColored()) {
+                for (const auto& [colorName, colorType] : _builder.colors()) {
+                    ignorantBuilder.addColorType(colorName, colorType);
+                }
+
+                for (const auto& variable : _builder.variables()) {
+                    ignorantBuilder.addVariable(variable);
+                }
+
                 for (auto& place : _builder.places()) {
                     if (place.skipped) continue;
-                    pnBuilder.addPlace(place.name, place.marking.size(), place._x, place._y);
+                    ignorantBuilder.addPlace(*place.name, place.marking.size(), place._x, place._y);
                 }
 
                 for (auto& transition : _builder.transitions()) {
+                    ignorantBuilder.addTransition(*transition.name, transition.guard, transition._player, transition._x, transition._y);
+
                     if (transition.skipped) continue;
-                    pnBuilder.addTransition(transition.name, transition._player, transition._x, transition._y);
-                    for (const auto& arc : transition.input_arcs) {
-                        try {
-                            pnBuilder.addInputArc(_builder.places()[arc.place].name, _builder.transitions()[arc.transition].name, false,
-                                arc.expr->weight());
-                        } catch (base_error& e) {
-                            std::stringstream ss;
-                            ss << "Exception on input arc: " << arc_to_string(arc) << std::endl;
-                            ss << "In expression: " << *arc.expr << std::endl;
-                            ss << e.what() << std::endl;
-                            throw base_error(ss.str());
-                        }
+
+                    for (const auto& inputArc : transition.input_arcs) {
+                        ignorantBuilder.addInputArc(*_builder.places().at(inputArc.place).name, *_builder.transitions().at(inputArc.transition).name, inputArc.expr, inputArc.inhib_weight);
                     }
-                    for (const auto& arc : transition.output_arcs) {
-                        try {
-                            pnBuilder.addOutputArc(_builder.transitions()[arc.transition].name, _builder.places()[arc.place].name,
-                                arc.expr->weight());
-                        } catch (base_error& e) {
-                            std::stringstream ss;
-                            ss << "Exception on output arc: " << arc_to_string(arc) << std::endl;
-                            ss << "In expression: " << *arc.expr << std::endl;
-                            ss << e.what() << std::endl;
-                            throw base_error(ss.str());
-                        }
+                    for (const auto& outputArc : transition.output_arcs) {
+                        ignorantBuilder.addInputArc(*_builder.transitions().at(outputArc.transition).name, *_builder.places().at(outputArc.place).name, outputArc.expr, outputArc.inhib_weight);
+
                     }
-                    for (const auto& arc : _builder.inhibitors()) {
-                        pnBuilder.addInputArc(_builder.places()[arc.place].name, _builder.transitions()[arc.transition].name, true,
-                            arc.inhib_weight);
+                    for (const auto& inhibitor : _builder.inhibitors()) {
+                        ignorantBuilder.addInputArc(*_builder.places()[inhibitor.place].name, *_builder.transitions()[inhibitor.transition].name, true,
+                            inhibitor.inhib_weight);
                     }
                 }
             }
 
-            return pnBuilder;
+            ignorantBuilder.build();
+            return ignorantBuilder.getUnderlying();
         }
 
         PetriNetBuilder Unfolder::unfold() {

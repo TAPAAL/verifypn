@@ -124,6 +124,10 @@ namespace PetriEngine {
             return _transitions;
         }
 
+        const std::vector<const Colored::Variable *>& variables() const {
+            return _variables;
+        }
+
         auto& colored_placenames() const {
             return _placenames;
         }
