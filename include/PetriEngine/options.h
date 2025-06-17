@@ -116,6 +116,7 @@ struct options_t {
     bool print_bindings = false;
 
     bool explicit_colored = false;
+    bool explicit_only_overapprox = false;
     ColoredSuccessorGeneratorOption colored_sucessor_generator = ColoredSuccessorGeneratorOption::EVEN;
 
     std::string strategy_output;

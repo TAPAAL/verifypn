@@ -32,7 +32,6 @@ namespace PetriEngine::ExplicitColored {
             result = checkColorIgnorantLP(pnmlModel, query, options);
             if (result != Result::UNKNOWN) {
                 if (resultPrinter) {
-                    //TODO: add other techniques
                     resultPrinter->printNonExplicitResult(
                         {"COLOR_IGNORANT", "QUERY_REDUCTION", "SAT_SMT", "LP_APPROX" },
                         result == Result::SATISFIED
@@ -42,6 +41,9 @@ namespace PetriEngine::ExplicitColored {
                 }
                 return result;
             }
+        }
+        if (options.explicit_only_overapprox) {
+            return Result::UNKNOWN;
         }
 
         SearchStatistics searchStatistics;
