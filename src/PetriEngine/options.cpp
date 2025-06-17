@@ -221,12 +221,10 @@ void printHelp() {
         "                                       Useful for seeing the effect of colored reductions, without unfolding\n"
         "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
         "  -C                                   Use explicit colored engine to answer query (CPN only).\n"
-        "                                       Only supports -R, -t, --colored-successor-generator, -explicit-no-exploration and -s options.\n"
+        "                                       Only supports -R, -t, --colored-successor-generator and -s options.\n"
         "  --colored-successor-generator        Sets the the successor generator used in the explicit colored engine\n"
         "                                       - fixed   transitions and bindings are traversed in a fixed order\n"
         "                                       - even    transitions and bindings are checked evenly (default)\n"
-        "  --explicit-no-exploration            Uses only explicit color-overapproximation to simplify query. \n"
-        "                                       Only prints result if it can be determined and needs to be used together with the -C flag. \n"
         "  --disable-cfp                        Disable the computation of possible colors in the Petri Net (CPN only)\n"
         "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
         "  --disable-symmetry-vars              Disable search for symmetric variables (CPN only)\n"
@@ -574,8 +572,6 @@ bool options_t::parse(int argc, const char** argv) {
                 throw base_error("Invalid argument ", std::quoted(argv[i + 1]), " to --colored-successor-generator");
             }
             ++i;
-        } else if (std::strcmp(argv[i], "--explicit-no-exploration") == 0) {
-            explicit_only_overapprox = true;
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (std::strcmp(argv[i], "-z") == 0) {

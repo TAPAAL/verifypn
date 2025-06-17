@@ -42,7 +42,7 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
-        if (options.explicit_only_overapprox) {
+        if (options.strategy == Strategy::OverApprox) {
             return Result::UNKNOWN;
         }
 
