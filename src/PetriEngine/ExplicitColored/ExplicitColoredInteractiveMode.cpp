@@ -57,11 +57,16 @@ namespace PetriEngine::ExplicitColored {
         while (true) {
             auto input = _readUntilDoubleNewline(std::cin);
 
+            if (input == "EXIT") {
+                return 0;
+            }
+
             rapidxml::xml_document<> inputXml;
             inputXml.parse<0>(input.data());
 
             if (inputXml.first_node() == nullptr) {
                 std::cerr << "No xml was given" << std::endl;
+                continue;
             }
 
             if (inputXml.first_node()->name() == std::string("marking")) {

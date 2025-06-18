@@ -69,6 +69,10 @@ int main(int argc, const char** argv) {
         if (options.parse(argc, argv)) // if options were --help or --version
             return to_underlying(ReturnValue::SuccessCode);
 
+        if (options.explicit_colored && options.interactive_mode) {
+            return ExplicitColored::ExplicitColoredInteractiveMode::run(options.modelfile);
+        }
+
         if (options.printstatistics == StatisticsLevel::Full) {
             std::cout << std::endl << "Parameters: ";
             for (int i = 1; i < argc; i++) {
@@ -90,9 +94,6 @@ int main(int argc, const char** argv) {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
             if (options.explicit_colored) {
-                if (options.interactive_mode) {
-                    return ExplicitColored::ExplicitColoredInteractiveMode::run(options.modelfile);
-                }
                 return explicitColored(string_set, options, queries, querynames);
             }
         } catch (const base_error &err) {
