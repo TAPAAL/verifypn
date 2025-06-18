@@ -86,8 +86,12 @@ namespace PetriEngine::ExplicitColored {
         const EvaluationContext context(qm0.get(), qnet.get());
 
         ContainsFireabilityVisitor hasFireability;
+        ContainsDeadlockVisitor hasDeadlock;
         Visitor::visit(hasFireability, queries[0]);
-
+        Visitor::visit(hasDeadlock, queries[0]);
+        if (hasDeadlock.getReturnValue()) {
+            return Result::UNKNOWN;
+        }
         if (hasFireability.getReturnValue()) {
             return checkFireabilityColorIgnorantLP(context, queries, builder, qnet, options);
         }
@@ -176,13 +180,27 @@ namespace PetriEngine::ExplicitColored {
         const std::unique_ptr<MarkVal[]>& qm0,
         options_t& options
     ) const {
-        auto isEf = false;
+        negstat_t stats;
+        queries[0] = pushNegation(queries[0], stats, context, false, false, false);
         contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
-        if (dynamic_cast<EFCondition*>(queries[0].get())) {
+        auto isEf = false;
+        auto queryCopy = ConditionCopyVisitor::copyCondition(queries[0]);
+        queries.push_back(std::move(queryCopy));
+        if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(queries[1])) {
             isEf = true;
+            auto innerQuery = efQuery->getCond();
+            queries[1] = pushNegation(std::make_shared<AGCondition>(innerQuery), stats, context, false, false, false);
+        }else {
+            if (const auto notQuery = std::dynamic_pointer_cast<NotCondition>(queries[1])) {
+                if (auto efQuery = std::dynamic_pointer_cast<EFCondition>(notQuery->getCond())) {
+                    auto innerQuery = efQuery->getCond();
+                    queries[1] = pushNegation(std::make_shared<AGCondition>(innerQuery), stats, context, false, false, false);
+                }
+            }
         }
-
+        contextAnalysis(false, {}, {}, builder, qnet.get(), queries);
         const auto r = evaluate(queries[0].get(), context);
+        const auto r2 = evaluate(queries[1].get(), context);
 
         if(r == Condition::RFALSE) {
             queries[0] = BooleanCondition::FALSE_CONSTANT;
@@ -190,11 +208,24 @@ namespace PetriEngine::ExplicitColored {
         else if(r == Condition::RTRUE) {
             queries[0] = BooleanCondition::TRUE_CONSTANT;
         }
-        simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
+        if(r2 == Condition::RFALSE) {
+            queries[1] = BooleanCondition::FALSE_CONSTANT;
+        }
+        else if(r2 == Condition::RTRUE) {
+            queries[1] = BooleanCondition::TRUE_CONSTANT;
+        }
+        NullStream nullStream;
+        simplify_queries(qm0.get(), qnet.get(), queries, options, nullStream);
+        if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+            return Result::SATISFIED;
+        }
         if (queries[0] == BooleanCondition::FALSE_CONSTANT && isEf) {
             return Result::UNSATISFIED;
         }
-        if (queries[0] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+        if (queries[1] == BooleanCondition::TRUE_CONSTANT && !isEf) {
+            return Result::UNSATISFIED;
+        }
+        if (queries[1] == BooleanCondition::TRUE_CONSTANT && isEf) {
             return Result::SATISFIED;
         }
         return Result::UNKNOWN;
