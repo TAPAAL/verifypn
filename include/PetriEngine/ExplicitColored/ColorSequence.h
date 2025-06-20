@@ -36,10 +36,9 @@ namespace PetriEngine::ExplicitColored {
             ColorSequence(sequence, sizes, getTotalSize(sizes)) {
         }
 
-        explicit ColorSequence(const Color_t encodedColor) : encodedValue(encodedColor) {
-        }
+        explicit ColorSequence(const uint64_t encodedColor) : encodedValue(encodedColor) { }
 
-        Color_t encodedValue;
+        uint64_t encodedValue;
 
         //Operators might need typechecking if something changes
         bool operator<(const ColorSequence& other) const {

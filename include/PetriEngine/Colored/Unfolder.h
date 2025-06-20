@@ -88,7 +88,7 @@ namespace PetriEngine {
                 return _time;
             }
 
-            PetriNetBuilder strip_colors();
+            PetriNetBuilder strip_colors() const;
 
         
             void printBinding();

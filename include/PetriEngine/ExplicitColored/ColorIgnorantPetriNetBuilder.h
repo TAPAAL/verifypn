@@ -4,6 +4,9 @@
 #include "AtomicTypes.h"
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "PetriEngine/PetriNetBuilder.h"
+#include <map>
+#include <vector>
+#include <unordered_map>
 
 namespace PetriEngine::ExplicitColored {
     enum class ColoredIgnorantPetriNetBuilderStatus {
@@ -12,7 +15,7 @@ namespace PetriEngine::ExplicitColored {
     };
     class ColorIgnorantPetriNetBuilder final : public AbstractPetriNetBuilder {
     public:
-        ColorIgnorantPetriNetBuilder(shared_string_set& string_set) : _builder(string_set), _foundNegative(false) {}
+        explicit ColorIgnorantPetriNetBuilder(shared_string_set& string_set) : _builder(string_set), _foundNegative(false) {}
 
         ColorIgnorantPetriNetBuilder(ColorIgnorantPetriNetBuilder&&) = default;
         ColorIgnorantPetriNetBuilder(const ColorIgnorantPetriNetBuilder&) = default;
@@ -47,7 +50,7 @@ namespace PetriEngine::ExplicitColored {
         std::map<std::string, TransitionStore> _transitions;
         std::vector<std::tuple<std::string, std::string, int>> _inhibitors;
         Colored::ColorTypeMap _colors;
-        Variable_t _nextVariable;
+        Variable_t _nextVariable = 0;
     };
 }
 #endif //COLORIGNORANTPETRINETBUILDER_H

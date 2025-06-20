@@ -2,6 +2,7 @@
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
 #include "PetriEngine/ExplicitColored/Visitors/VariableExtractorVisitor.h"
 #include "utils/MathExt.h"
+#include <set>
 
 namespace PetriEngine::ExplicitColored {
     class ArcExpressionAddition final : public CompiledArcExpression {
