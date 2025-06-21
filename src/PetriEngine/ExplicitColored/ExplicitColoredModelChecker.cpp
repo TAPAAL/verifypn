@@ -21,6 +21,12 @@ namespace PetriEngine::ExplicitColored {
         std::ifstream modelFile(modelPath);
         pnmlModelStream << modelFile.rdbuf();
         std::string pnmlModel = std::move(pnmlModelStream).str();
+        bool isOverApproximationOnly = false;
+
+        if (options.strategy == Strategy::OverApprox) {
+            isOverApproximationOnly = true;
+            options.strategy = Strategy::RDFS;
+        }
 
         if (options.enablecolreduction) {
             std::stringstream reducedPnml;
@@ -42,7 +48,7 @@ namespace PetriEngine::ExplicitColored {
                 return result;
             }
         }
-        if (options.strategy == Strategy::OverApprox) {
+        if (isOverApproximationOnly) {
             return Result::UNKNOWN;
         }
 
