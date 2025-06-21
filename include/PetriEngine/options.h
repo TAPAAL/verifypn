@@ -114,6 +114,7 @@ struct options_t {
     int max_intervals = 500; //0 disabled
     int max_intervals_reduced = 5;
     bool print_bindings = false;
+    bool interactive_mode = false;
 
     bool explicit_colored = false;
     ColoredSuccessorGeneratorOption colored_sucessor_generator = ColoredSuccessorGeneratorOption::EVEN;
