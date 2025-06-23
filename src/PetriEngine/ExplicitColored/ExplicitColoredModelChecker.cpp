@@ -297,7 +297,7 @@ namespace PetriEngine::ExplicitColored {
                       options.enablecolreduction, options.colreductions);
         std::stringstream cpnResult;
         if (!result) {
-            std::cout << "Could not do colored reductions" << std::endl;
+            _fullStatisticOut << "Could not do colored reductions" << std::endl;
             std::stringstream cpnOut;
             out << pnmlModel;
             return;
