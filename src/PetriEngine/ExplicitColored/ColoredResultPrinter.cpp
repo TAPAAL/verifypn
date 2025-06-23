@@ -76,7 +76,7 @@ namespace PetriEngine::ExplicitColored {
             }
             _traceStream << "\t<marking>" << std::endl;
             for (const auto& [placeId, marking] : step.marking) {
-                if (marking.size() > 0) {
+                if (!marking.empty()) {
                     _traceStream << "\t\t<place id=" << std::quoted(placeId) << ">" << std::endl;
                     for (const auto& [productColor, count] : marking) {
                         if (count > 0) {

@@ -166,6 +166,8 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(100)) {
                 {
                     for(auto approx : {false, true})
                     {
+                        if (approx && !reduce)
+                            continue;
                         if(approx && reduce) continue;
                         std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                         try {

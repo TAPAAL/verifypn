@@ -26,4 +26,5 @@ VarReplaceVisitor.cpp)
 
 
 target_link_libraries(Colored ColoredReduction)
+target_link_libraries(Colored ExplicitColored)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)
