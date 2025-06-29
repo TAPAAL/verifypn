@@ -18,6 +18,7 @@ add_library(PetriEngine ${HEADER_FILES}
     STSolver.cpp
     SuccessorGenerator.cpp
     TraceReplay.cpp
+    TokenEliminator.cpp
     options.cpp)
 
 target_link_libraries(PetriEngine PRIVATE Colored ColoredReduction Structures Simplification Stubborn Reachability PQL TAR Synthesis ExplicitColored)
