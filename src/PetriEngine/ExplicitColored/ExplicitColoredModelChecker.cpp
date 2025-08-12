@@ -21,6 +21,12 @@ namespace PetriEngine::ExplicitColored {
         std::ifstream modelFile(modelPath);
         pnmlModelStream << modelFile.rdbuf();
         std::string pnmlModel = std::move(pnmlModelStream).str();
+        bool isOverApproximationOnly = false;
+
+        if (options.strategy == Strategy::OverApprox) {
+            isOverApproximationOnly = true;
+            options.strategy = Strategy::RDFS;
+        }
 
         if (options.enablecolreduction) {
             std::stringstream reducedPnml;
@@ -32,7 +38,6 @@ namespace PetriEngine::ExplicitColored {
             result = checkColorIgnorantLP(pnmlModel, query, options);
             if (result != Result::UNKNOWN) {
                 if (resultPrinter) {
-                    //TODO: add other techniques
                     resultPrinter->printNonExplicitResult(
                         {"COLOR_IGNORANT", "QUERY_REDUCTION", "SAT_SMT", "LP_APPROX" },
                         result == Result::SATISFIED
@@ -42,6 +47,9 @@ namespace PetriEngine::ExplicitColored {
                 }
                 return result;
             }
+        }
+        if (isOverApproximationOnly) {
+            return Result::UNKNOWN;
         }
 
         SearchStatistics searchStatistics;
@@ -289,7 +297,7 @@ namespace PetriEngine::ExplicitColored {
                       options.enablecolreduction, options.colreductions);
         std::stringstream cpnResult;
         if (!result) {
-            std::cout << "Could not do colored reductions" << std::endl;
+            _fullStatisticOut << "Could not do colored reductions" << std::endl;
             std::stringstream cpnOut;
             out << pnmlModel;
             return;
