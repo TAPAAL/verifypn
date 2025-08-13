@@ -274,6 +274,10 @@ namespace PetriEngine::ExplicitColored {
 
         Binding binding;
         auto variableNode = bindingNode->first_node();
+        if (variableNode == nullptr) {
+            return std::make_pair(transitionIndexIt->second, binding);
+        }
+
         do {
             if (variableNode->name() != std::string("variable")) {
                 errorOut << "Unexpected tag " << std::quoted(variableNode->name()) << std::endl;
