@@ -163,6 +163,26 @@ namespace PetriEngine::ExplicitColored {
         _underlyingVariableColorTypes.push_back(variable->colorType);
     }
 
+    const std::string & ExplicitColoredPetriNetBuilder::getVariableName(const Variable_t variableIndex) const {
+        return _variableToId.at(variableIndex);
+    }
+
+    const std::string & ExplicitColoredPetriNetBuilder::getTransitionName(const Transition_t transitionIndex) const {
+        return _transitionToId.at(transitionIndex);
+    }
+
+    size_t ExplicitColoredPetriNetBuilder::getPlaceCount() const {
+        return _placeIndices.size();
+    }
+
+    size_t ExplicitColoredPetriNetBuilder::getVariableCount() const {
+        return _variableMap->size();
+    }
+
+    size_t ExplicitColoredPetriNetBuilder::getTransitionCount() const {
+        return _transitionIndices.size();
+    }
+
     ColoredPetriNetBuilderStatus ExplicitColoredPetriNetBuilder::build() {
         _addVariables();
         _compileUncompiledGuards();
@@ -174,6 +194,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         _calculatePrePlaceConstraints();
+        _fillLookupTables();
 
         return ColoredPetriNetBuilderStatus::OK;
     }
@@ -318,6 +339,20 @@ namespace PetriEngine::ExplicitColored {
         _variablesToAdd.clear();
     }
 
+    void ExplicitColoredPetriNetBuilder::_fillLookupTables() {
+        for (const auto& [key, value] : getTransitionIndices()) {
+            _transitionToId.emplace(value, key);
+        }
+
+        for (const auto& [key, value] : *getVariableIndices()) {
+            _variableToId.emplace(value, key);
+        }
+
+        for (const auto& [key, value] : getPlaceIndices()) {
+            _placeToId.emplace(value, key);
+        }
+    }
+
     void ExplicitColoredPetriNetBuilder::sort() {
     }
 
@@ -339,5 +374,9 @@ namespace PetriEngine::ExplicitColored {
 
     const Colored::ColorType * ExplicitColoredPetriNetBuilder::getPlaceUnderlyingColorType(Place_t place) const {
         return _underlyingColorType.find(place)->second;
+    }
+
+    const std::string & ExplicitColoredPetriNetBuilder::getPlaceName(const Place_t placeIndex) const {
+        return _placeToId.at(placeIndex);
     }
 }
