@@ -1,0 +1,95 @@
+This PR adds interactive mode which uses the explicit colored engine to generate valid transition-binding pairs. This makes it possible to repeatedly send transitions and then receiving successors and possible bindings.
+
+The protocol is as follows:
+
+    When verifypn is called by ./verifypn-linux64 <model-path> -n 0 -C --interactive-mode it reads an xml encoded marking from the stdin followed by three newlines.
+    A list of valid transition-binding pairs is printed to the stdout followed by three newlines
+    Now either a transition or new marking can be written to stdin followd by three newlines
+    a. If a transition-binding pair was given, the result marking of firing that transition-binding pair is written followed by three new lines
+    Goes back to step 2
+
+An example of this can be seen here where # means something is written to stdin and no prefix means something is received from stdout. The corresponding PNML encoded net for this example is test-interactive-mode.txt as a .txt file because github is not happy with the .pnml extension
+
+<marking>
+	  <place id="P2">
+		<token count="1">
+			<color>1</color>
+		</token>
+		<token count="1">
+			<color>6</color>
+		</token>
+	</place>
+</marking>
+
+
+#<valid-bindings>
+#	<transition id="T1">
+#		<binding>
+#			<variable id="x">
+#				<color>1</color>
+#			</variable>
+#		</binding>
+#		<binding>
+#			<variable id="x">
+#				<color>6</color>
+#			</variable>
+#		</binding>
+#	</transition>
+#	<transition id="T2">
+#		<binding>
+#			<variable id="y">
+#				<color>1</color>
+#			</variable>
+#		</binding>
+#		<binding>
+#			<variable id="y">
+#				<color>6</color>
+#			</variable>
+#		</binding>
+#	</transition>
+# </valid-bindings>
+#
+#
+<transition id="T1">
+		<binding>
+			<variable id="x">
+				<color>1</color>
+			</variable>
+		</binding>
+</transition>
+
+
+#<marking>
+#	<place id="P2">
+#		<token count="1">
+#			<color>6</color>
+#		</token>
+#	</place>
+#	<place id="P3">
+#		<token count="1">
+#			<color>1</color>
+#		</token>
+#	</place>
+#</marking>
+#
+#
+# <valid-bindings>
+#	<transition id="T1">
+#		<binding>
+#			<variable id="x">
+#				<color>6</color>
+#			</variable>
+#		</binding>
+#	</transition>
+#	<transition id="T2">
+#		<binding>
+#			<variable id="y">
+#				<color>6</color>
+#			</variable>
+#		</binding>
+#	</transition>
+#</valid-bindings>
+#
+#
+...
+
