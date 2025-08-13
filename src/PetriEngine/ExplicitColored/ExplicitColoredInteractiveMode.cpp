@@ -70,7 +70,7 @@ namespace PetriEngine::ExplicitColored {
             }
 
             if (inputXml.first_node()->name() == std::string("marking")) {
-                auto markingOption = _parseMarking(initialMarkingXml, std::cerr);
+                auto markingOption = _parseMarking(inputXml, std::cerr);
 
                 if (!markingOption.has_value()) {
                     return 1;
