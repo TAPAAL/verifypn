@@ -75,7 +75,6 @@ namespace PetriEngine::ExplicitColored {
         [[nodiscard]] std::unordered_map<std::string, std::vector<std::pair<std::vector<std::string>, MarkingCount_t>>>
         _translateMarking(
             const ColoredPetriNetMarking& marking,
-            const std::unordered_map<Place_t, std::string>& placeToId,
             const ExplicitColoredPetriNetBuilder& cpnBuilder,
             const ColoredPetriNet& net
         ) const;

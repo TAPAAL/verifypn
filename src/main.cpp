@@ -46,6 +46,7 @@
 
 
 #include <PetriEngine/Colored/PnmlWriter.h>
+#include <PetriEngine/ExplicitColored/ExplicitColoredInteractiveMode.h>
 #include <PetriEngine/ExplicitColored/ExplicitErrors.h>
 #include <utils/NullStream.h>
 #include "VerifyPN.h"
@@ -67,6 +68,10 @@ int main(int argc, const char** argv) {
         options_t options;
         if (options.parse(argc, argv)) // if options were --help or --version
             return to_underlying(ReturnValue::SuccessCode);
+
+        if (options.explicit_colored && options.interactive_mode) {
+            return ExplicitColored::ExplicitColoredInteractiveMode::run(options.modelfile);
+        }
 
         if (options.printstatistics == StatisticsLevel::Full) {
             std::cout << std::endl << "Parameters: ";
