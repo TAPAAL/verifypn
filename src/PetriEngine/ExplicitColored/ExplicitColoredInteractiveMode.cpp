@@ -342,7 +342,7 @@ namespace PetriEngine::ExplicitColored {
                             throw std::runtime_error("Color codec is inconsistent with underlying color type");
                         }
                         for (size_t colorIndex = 0; colorIndex < colorCodec.getColorCount(); colorIndex++) {
-                            const Color_t color = colorCodec.decode(color, colorIndex);
+                            const Color_t color = colorCodec.decode(encodedColor, colorIndex);
                             out << "\t\t\t<color>"
                                 << (*(productColorType->getNestedColorType(colorIndex)))[color].getColorName()
                                 << "</color>"
