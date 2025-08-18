@@ -95,6 +95,8 @@ namespace PetriEngine::ExplicitColored {
         }
 
         SequenceMultiSet& operator-=(const SequenceMultiSet& other) {
+            if (_counts.empty()) return *this;
+
             auto aIt = _counts.begin();
             auto bIt = other._counts.begin();
             while (aIt != _counts.end() && bIt != other._counts.end()) {
@@ -114,7 +116,7 @@ namespace PetriEngine::ExplicitColored {
                 }
             }
             for (; bIt != other._counts.end(); ++bIt) {
-                _counts.push_back(*bIt);
+                _counts.emplace_back(bIt->first, -bIt->second);
                 _cardinality -= bIt->second;
             }
             return *this;
