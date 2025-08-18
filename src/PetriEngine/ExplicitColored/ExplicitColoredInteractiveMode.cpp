@@ -174,6 +174,11 @@ namespace PetriEngine::ExplicitColored {
             errorOut << "Unexpected tag " << std::quoted(root->name()) << std::endl;
             return std::nullopt;
         }
+
+        if (placeNode == nullptr) {
+            return generatedMarking; // Empty marking
+        }
+
         do {
             if (placeNode->name() != std::string("place")) {
                 errorOut << "Unexpected tag " << std::quoted(placeNode->name()) << std::endl;
