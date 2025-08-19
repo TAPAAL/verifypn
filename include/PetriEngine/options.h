@@ -46,6 +46,12 @@ enum class StatisticsLevel {
     Full
 };
 
+enum TokenEliminationMethod {
+    Disabled,
+    Dynamic,
+    Static,
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -72,6 +78,8 @@ struct options_t {
     bool doUnfolding = true;
     int64_t depthRandomWalk = 50000;
     int64_t incRandomWalk = 5000;
+    TokenEliminationMethod tokenElimMethodCTL = TokenEliminationMethod::Disabled;
+    TokenEliminationMethod tokenElimMethodReach = TokenEliminationMethod::Disabled;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;

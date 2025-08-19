@@ -402,6 +402,7 @@ int main(int argc, const char** argv) {
                                  options.strategy,
                                  options.printstatistics,
                                  options.stubbornreduction,
+                                 options.tokenElimMethodCTL,
                                  querynames,
                                  queries,
                                  ctl_ids,
@@ -549,7 +550,8 @@ int main(int argc, const char** argv) {
                                     options.seed(),
                                     options.depthRandomWalk,
                                     options.incRandomWalk,
-                                    initialPotencies);
+                                    initialPotencies,
+                                    options.tokenElimMethodReach);
                 } else {
                     strategy.reachable(queries, results,
                                     options.strategy,
@@ -559,7 +561,9 @@ int main(int argc, const char** argv) {
                                     options.trace != TraceLevel::None,
                                     options.seed(),
                                     options.depthRandomWalk,
-                                    options.incRandomWalk);
+                                    options.incRandomWalk,
+                                    std::vector<MarkVal>(),
+                                    options.tokenElimMethodReach);
                 }
             }
         }

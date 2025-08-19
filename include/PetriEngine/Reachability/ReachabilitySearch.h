@@ -32,6 +32,7 @@
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 
 #include "PetriEngine/options.h"
+#include "PetriEngine/TokenEliminator.h"
 
 #include <memory>
 #include <vector>
@@ -65,7 +66,8 @@ namespace PetriEngine {
                     size_t seed,
                     int64_t depthRandomWalk = 50000,
                     const int64_t incRandomWalk = 5000,
-                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>());
+                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>(),
+                    TokenEliminationMethod tokenElim = TokenEliminationMethod::Disabled);
             size_t maxTokens() const;
         protected:
             struct searchstate_t {
@@ -94,7 +96,8 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
                 size_t seed,
-                const std::vector<MarkVal>& initPotencies);
+                const std::vector<MarkVal>& initPotencies,
+                TokenEliminationMethod tokenElim);
 
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
 
@@ -114,6 +117,7 @@ namespace PetriEngine {
             Structures::State _initial;
             AbstractHandler& _callback;
             size_t _max_tokens = 0;
+            TokenEliminator token_elim{};
         };
 
         template <typename G>
@@ -131,7 +135,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReach(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
                                         StatisticsLevel statisticsLevel, size_t seed,
-                                        const std::vector<MarkVal>& initPotencies)
+                                        const std::vector<MarkVal>& initPotencies, TokenEliminationMethod tokenElim)
         {
 
             // set up state
@@ -180,6 +184,10 @@ namespace PetriEngine {
                     queue.push(r.second, &dc, queries[ss.heurquery].get());
                 }
 
+                token_elim.init(&_net);
+                token_elim.setEnabled(tokenElim != TokenEliminationMethod::Disabled);
+                token_elim.setDynamic(tokenElim == TokenEliminationMethod::Dynamic);
+
                 // Search!
                 for(auto nid = queue.pop(); nid != Structures::Queue::EMPTY; nid = queue.pop()) {
                     states.decode(state, nid);
@@ -187,6 +195,7 @@ namespace PetriEngine {
 
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;
+                        token_elim.eliminate(&working, queries[ss.heurquery].get());
                         auto res = states.add(working);
                         // If we have not seen this state before
                         if (res.first) {
