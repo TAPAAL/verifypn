@@ -18,9 +18,11 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "VerifyPN.h"
+#include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
+using namespace PetriEngine::ExplicitColored;
 
 std::ifstream loadFile(const char* file) {
     std::stringstream ss;
@@ -89,6 +91,29 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
     contextAnalysis(cpnBuilder.isColored() && !over_approx, trans_names, place_names, builder, pn.get(), conditions);
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
+}
+
+auto load_explicit(std::string model, std::string queries, const std::set<size_t>& qnums) {
+    shared_string_set sset;
+    ColoredPetriNetBuilder cpnBuilder(sset);
+    auto f = loadFile(model.c_str());
+    cpnBuilder.parse_model(f);
+    auto q = loadFile(queries.c_str());
+    std::vector<std::string> qstrings;
+    auto conditions = parseXMLQueries(sset, qstrings, q, qnums, false);
+
+    options_t options;
+    options.modelfile = model.data();
+    options.isCPN = true;
+    options.explicit_colored = true;
+    options.doUnfolding = false;
+    options.enablereduction = 0;
+    options.enablecolreduction = 0;
+    options.queryReductionTimeout = 0;
+    options.colReductionTimeout = 0;
+    options.stubbornreduction = false;
+
+    return std::make_tuple(std::move(conditions), std::move(qstrings), std::move(cpnBuilder), std::move(sset), std::move(options));
 }
 
 class IntialMarkingCollector : public AbstractPetriNetBuilder {
