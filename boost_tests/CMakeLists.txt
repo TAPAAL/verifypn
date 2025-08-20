@@ -29,7 +29,7 @@ target_link_libraries(hyper_ltl PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn 
 target_link_libraries(games        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 target_link_libraries(color        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 target_link_libraries(reduction        PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
-target_link_libraries(explicit_engine_test PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn Reachability -Wl,-Bdynamic)
+target_link_libraries(explicit_engine_test PUBLIC ${Boost_LIBRARIES} -Wl,-Bstatic verifypn -Wl,-Bdynamic)
 
 add_test(NAME BinaryPrinterTests COMMAND BinaryPrinterTests)
 add_test(NAME XMLPrinterTests COMMAND XMLPrinterTests)
