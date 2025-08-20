@@ -75,6 +75,23 @@ namespace PetriEngine {
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
             bool skipped = false;
+
+            Place(shared_const_string name,
+                  const ColorType* type,
+                  Multiset marking,
+                  double x = 0, double y = 0)
+                  : name(std::move(name)), type(type), marking(std::move(marking)), _x(x), _y(y) {}
+
+            bool isEmptyAndHasSubtractionInputArc() const {
+                return marking.empty() && hasSubtractionInputArc;
+            }
+
+            void setHasSubtractionInputArc(bool value) {
+                hasSubtractionInputArc = value;
+            }
+            
+            private:
+                bool hasSubtractionInputArc = false;
         };
     }
 }

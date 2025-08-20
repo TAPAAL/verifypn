@@ -171,6 +171,10 @@ namespace PetriEngine {
         arc.input = input;
         arc.inhib_weight = inhib_weight;
 
+        if (input && expr && expr->is_subtraction()) {
+            _places[p].setHasSubtractionInputArc(true);
+        }
+
         if (inhib_weight > 0) {
             _inhibitorArcs.push_back(std::move(arc));
         } else if (input) {
