@@ -62,7 +62,24 @@ namespace PetriEngine {
                 }
             }
 
-            if (colorCounter == place.type->size()) {
+            bool hasSubtractionArcFromEmptyPlace = false;
+            if (place.marking.empty()) {
+                auto &transitions = _builder.transitions();
+                for (const auto &transitionId : place._post) {
+                    const Colored::Transition &transition = transitions[transitionId];
+                    for (const auto &arc : transition.input_arcs) {
+                        if (arc.place == _placeColorFixpoints.size() &&
+                            arc.expr->is_subtraction()) {
+                            hasSubtractionArcFromEmptyPlace = true;
+                            break;
+                        }
+                    }
+
+                    if (hasSubtractionArcFromEmptyPlace) break;
+                }
+            }
+
+            if (colorCounter == place.type->size() || hasSubtractionArcFromEmptyPlace) {
                 colorFixpoint.constraints.addInterval(place.type->getFullInterval());
             } else {
                 for (const auto& colorPair : place.marking) {
