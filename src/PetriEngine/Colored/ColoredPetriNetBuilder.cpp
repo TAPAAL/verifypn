@@ -172,7 +172,7 @@ namespace PetriEngine {
         arc.inhib_weight = inhib_weight;
 
         if (input && expr && expr->is_subtraction()) {
-            _places[p].setHasSubtractionInputArc(true);
+            _places[p].hasSubtractionInputArc = true;
         }
 
         if (inhib_weight > 0) {
