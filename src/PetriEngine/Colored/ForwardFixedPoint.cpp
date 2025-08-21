@@ -157,7 +157,7 @@ namespace PetriEngine {
                     _placeFixpointQueue.pop_back();
                     _placeColorFixpoints[currentPlaceId].inQueue = false;
 
-                    for (auto transitionId : places[currentPlaceId]._post) {
+                    for (uint32_t transitionId = 0; transitionId < transitions.size(); ++transitionId) {
                         const Colored::Transition& transition = _builder.transitions()[transitionId];
                         // Skip transitions that cannot add anything new,
                         // such as transitions with only constants on their arcs that have been processed once
