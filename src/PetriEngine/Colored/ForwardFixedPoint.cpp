@@ -62,7 +62,7 @@ namespace PetriEngine {
                 }
             }
 
-            if (colorCounter == place.type->size()) {
+            if (colorCounter == place.type->size() || place.hasSubtractionInputArc) {
                 colorFixpoint.constraints.addInterval(place.type->getFullInterval());
             } else {
                 for (const auto& colorPair : place.marking) {
