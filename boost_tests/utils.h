@@ -18,9 +18,11 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "VerifyPN.h"
+#include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
+using namespace PetriEngine::ExplicitColored;
 
 std::ifstream loadFile(const char* file) {
     std::stringstream ss;
@@ -89,6 +91,30 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
     contextAnalysis(cpnBuilder.isColored() && !over_approx, trans_names, place_names, builder, pn.get(), conditions);
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
+}
+
+auto load_explicit(const std::string& modelName, const std::string& queryName, const std::set<size_t>& qnums) {
+    options_t options;
+    options.modelfile = std::string(getenv("TEST_FILES")) + modelName;
+    options.queryfile = std::string(getenv("TEST_FILES")) + queryName;
+    options.isCPN = true;
+    options.explicit_colored = true;
+    options.doUnfolding = false;
+    options.enablereduction = 0;
+    options.enablecolreduction = 0;
+    options.queryReductionTimeout = 0;
+    options.colReductionTimeout = 0;
+    options.stubbornreduction = false;
+    options.querynumbers = qnums;
+
+    std::vector<std::string> querynames;
+    shared_string_set sset;
+    auto ctlStarQueries = readQueries(sset, options, querynames);
+    auto queries = options.logic == TemporalLogic::CTL
+                    ? getCTLQueries(ctlStarQueries)
+                    : getLTLQueries(ctlStarQueries);
+
+    return std::make_tuple(std::move(queries), std::move(querynames), std::move(sset), std::move(options));
 }
 
 class IntialMarkingCollector : public AbstractPetriNetBuilder {
