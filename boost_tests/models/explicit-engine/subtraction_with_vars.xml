@@ -2,14 +2,14 @@
 <property-set xmlns="http://tapaal.net/">
   
   <property>
-    <id>Wrong answer - should be TRUE</id>
-    <description>Wrong answer - should be TRUE</description>
+    <id>subtraction with vars explicit</id>
+    <description>subtraction with vars explicit</description>
     <formula>
       <exists-path>
         <finally>
           <integer-eq>
             <tokens-count>
-              <place>P1</place>
+              <place>TAPN1_P1</place>
             </tokens-count>
             <integer-constant>1</integer-constant>
           </integer-eq>

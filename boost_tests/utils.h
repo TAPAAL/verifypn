@@ -93,17 +93,10 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     return std::make_tuple(std::move(pn), std::move(conditions), std::move(qstrings));
 }
 
-auto load_explicit(std::string model, std::string queries, const std::set<size_t>& qnums) {
-    shared_string_set sset;
-    ColoredPetriNetBuilder cpnBuilder(sset);
-    auto f = loadFile(model.c_str());
-    cpnBuilder.parse_model(f);
-    auto q = loadFile(queries.c_str());
-    std::vector<std::string> qstrings;
-    auto conditions = parseXMLQueries(sset, qstrings, q, qnums, false);
-
+auto load_explicit(const std::string& modelName, const std::string& queryName, const std::set<size_t>& qnums) {
     options_t options;
-    options.modelfile = model.data();
+    options.modelfile = std::string(getenv("TEST_FILES")) + modelName;
+    options.queryfile = std::string(getenv("TEST_FILES")) + queryName;
     options.isCPN = true;
     options.explicit_colored = true;
     options.doUnfolding = false;
@@ -112,8 +105,16 @@ auto load_explicit(std::string model, std::string queries, const std::set<size_t
     options.queryReductionTimeout = 0;
     options.colReductionTimeout = 0;
     options.stubbornreduction = false;
+    options.querynumbers = qnums;
 
-    return std::make_tuple(std::move(conditions), std::move(qstrings), std::move(cpnBuilder), std::move(sset), std::move(options));
+    std::vector<std::string> querynames;
+    shared_string_set sset;
+    auto ctlStarQueries = readQueries(sset, options, querynames);
+    auto queries = options.logic == TemporalLogic::CTL
+                    ? getCTLQueries(ctlStarQueries)
+                    : getLTLQueries(ctlStarQueries);
+
+    return std::make_tuple(std::move(queries), std::move(querynames), std::move(sset), std::move(options));
 }
 
 class IntialMarkingCollector : public AbstractPetriNetBuilder {

@@ -23,10 +23,9 @@ namespace PetriEngine::ExplicitColored {
             {}
 
         Result checkQuery(
-            const std::string& modelPath,
             const PQL::Condition_ptr& query,
             options_t& options,
-            IColoredResultPrinter* resultPrinter
+            IColoredResultPrinter* resultPrinter = nullptr
         ) const;
     private:
         Result checkColorIgnorantLP(

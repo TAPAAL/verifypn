@@ -17,13 +17,15 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
 }
 
 void test_subtraction_with_vars(const char* fn, ExplicitColoredModelChecker::Result expected, size_t quid = 0) { 
-    std::string model = std::string("/models/games/") + fn + ".pnml";
-    std::string query = std::string("/models/games/") + fn + ".xml";
+    std::string model = std::string("/models/explicit-engine/") + fn + ".pnml";
+    std::string query = std::string("/models/explicit-engine/") + fn + ".xml";
     std::set<size_t> qnums{quid};
-    auto [conditions, qstrings, cpnBuilder, sset, options] = load_explicit(model, query, qnums);
+    auto [queries, querynames, sset, options] = load_explicit(model, query, qnums);
     options.kbound = 4;
+
     ExplicitColoredModelChecker checker(sset, std::cout);
-    auto result = checker.checkQuery(model, conditions[0], options, nullptr);
+    
+    auto result = checker.checkQuery(queries[0], options);
     
     BOOST_REQUIRE_EQUAL(expected, result);
 }
