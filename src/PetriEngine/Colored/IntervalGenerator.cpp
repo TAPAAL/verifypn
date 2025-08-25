@@ -155,6 +155,11 @@ namespace PetriEngine {
         }
 
         bool IntervalGenerator::getVarIntervals(std::vector<VariableIntervalMap>& variableMaps, const std::unordered_map<uint32_t, ArcIntervals> &placeArcIntervals) {
+            if (placeArcIntervals.empty()) {
+                variableMaps.emplace_back();
+                return true;
+            }
+
             for(auto& placeArcInterval : placeArcIntervals){
                 for(uint32_t j = 0; j < placeArcInterval.second._intervalTupleVec.size(); j++){
                     uint32_t intervalTupleSize = placeArcInterval.second._intervalTupleVec[j].size();
