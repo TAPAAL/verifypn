@@ -333,11 +333,8 @@ namespace PetriEngine {
                     // and there is a varaible which was not found on an input arc or in the guard,
                     // we give it the full interval
                     for (auto* var : variables) {
-                        std::cout << "Var: " << var->name << " on out arc of transition " << *transition.name << std::endl;
                         for (auto& varmap : _transition_variable_maps[transition_id]) {
-                            std::cout << "varmap iter" << std::endl;
                             if (varmap.count(var) == 0) {
-                                std::cout << "Add full interval for var " << var->name << std::endl;
                                 Colored::interval_vector_t intervalTuple;
                                 intervalTuple.addInterval(var->colorType->getFullInterval());
                                 varmap[var] = std::move(intervalTuple);
