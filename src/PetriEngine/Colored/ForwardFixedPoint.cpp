@@ -148,6 +148,7 @@ namespace PetriEngine {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto reduceTimer = std::chrono::high_resolution_clock::now();
 
+                // First, we compute color propagation for all transitions with an empty preset
                 for (uint32_t transitionId = 0; transitionId < transitions.size(); ++transitionId) {
                     if (!transitions[transitionId].input_arcs.empty()) continue;
 
