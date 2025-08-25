@@ -147,6 +147,23 @@ namespace PetriEngine {
                 auto start = std::chrono::high_resolution_clock::now();
                 auto end = std::chrono::high_resolution_clock::now();
                 auto reduceTimer = std::chrono::high_resolution_clock::now();
+
+                for (uint32_t transitionId = 0; transitionId < transitions.size(); ++transitionId) {
+                    if (!transitions[transitionId].input_arcs.empty()) continue;
+
+                    _transition_variable_maps[transitionId].clear();
+
+                    auto &transition = transitions[transitionId];
+                    IntervalGenerator::getVarIntervals(_transition_variable_maps[transitionId], _arcIntervals[transitionId]);
+                    if (transition.guard != nullptr) {
+                        addTransitionVars(transitionId);
+                        Colored::RestrictVisitor::restrict(*transition.guard, _transition_variable_maps[transitionId]);
+                        removeInvalidVarmaps(transitionId);
+                    }
+
+                    processOutputArcs(transitions[transitionId], transitionId);
+                }
+
                 while (!_placeFixpointQueue.empty()) {
                     //Reduce max interval once timeout passes
                     if (maxIntervals > maxIntervalsReduced && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout) {
@@ -157,7 +174,7 @@ namespace PetriEngine {
                     _placeFixpointQueue.pop_back();
                     _placeColorFixpoints[currentPlaceId].inQueue = false;
 
-                    for (uint32_t transitionId = 0; transitionId < transitions.size(); ++transitionId) {
+                    for (auto transitionId : places[currentPlaceId]._post) {
                         const Colored::Transition& transition = _builder.transitions()[transitionId];
                         // Skip transitions that cannot add anything new,
                         // such as transitions with only constants on their arcs that have been processed once
@@ -313,8 +330,11 @@ namespace PetriEngine {
                     // and there is a varaible which was not found on an input arc or in the guard,
                     // we give it the full interval
                     for (auto* var : variables) {
+                        std::cout << "Var: " << var->name << " on out arc of transition " << *transition.name << std::endl;
                         for (auto& varmap : _transition_variable_maps[transition_id]) {
+                            std::cout << "varmap iter" << std::endl;
                             if (varmap.count(var) == 0) {
+                                std::cout << "Add full interval for var " << var->name << std::endl;
                                 Colored::interval_vector_t intervalTuple;
                                 intervalTuple.addInterval(var->colorType->getFullInterval());
                                 varmap[var] = std::move(intervalTuple);
