@@ -152,6 +152,7 @@ namespace PetriEngine {
                     if (!transitions[transitionId].input_arcs.empty()) continue;
 
                     _transition_variable_maps[transitionId].clear();
+                    bool transitionActivated = true;
 
                     auto &transition = transitions[transitionId];
                     IntervalGenerator::getVarIntervals(_transition_variable_maps[transitionId], _arcIntervals[transitionId]);
@@ -159,8 +160,10 @@ namespace PetriEngine {
                         addTransitionVars(transitionId);
                         Colored::RestrictVisitor::restrict(*transition.guard, _transition_variable_maps[transitionId]);
                         removeInvalidVarmaps(transitionId);
+                        transitionActivated = !_transition_variable_maps[transitionId].empty();
                     }
 
+                    if (!transitionActivated) continue;
                     processOutputArcs(transitions[transitionId], transitionId);
                 }
 
