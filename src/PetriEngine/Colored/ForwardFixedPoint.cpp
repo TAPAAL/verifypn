@@ -40,7 +40,7 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> variables;
                 Colored::PositionVariableMap varPositions;
                 Colored::VariableModifierMap varModifiersMap;
-                Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, false);
+                Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, true);
 
                 res.emplace(std::make_pair(arc.place, Colored::ArcIntervals(std::move(varModifiersMap))));
             }
