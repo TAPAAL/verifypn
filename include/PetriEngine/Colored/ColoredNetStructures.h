@@ -75,6 +75,7 @@ namespace PetriEngine {
             std::vector<uint32_t> _pre;
             std::vector<uint32_t> _post;
             bool skipped = false;
+            bool hasSubtractionInputArc = false;
         };
     }
 }

@@ -297,6 +297,7 @@ namespace PetriEngine {
             virtual uint32_t weight() const = 0;
             virtual bool is_single_color() const = 0;
             virtual bool is_number_of() const { return false; }
+            virtual bool is_subtraction() const { return false; }
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
@@ -439,6 +440,7 @@ namespace PetriEngine {
                 else return _right;
             }
 
+            bool is_subtraction() const override { return true; }
 
             SubtractExpression(ArcExpression_ptr&& left, ArcExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
