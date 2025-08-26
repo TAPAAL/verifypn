@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-void test_subtraction_with_vars(const char* fn, ExplicitColoredModelChecker::Result expected, size_t quid = 0) { 
+void test_explicit_engine(const char* fn, ExplicitColoredModelChecker::Result expected, size_t quid = 0) { 
     std::string model = std::string("/models/explicit-engine/") + fn + ".pnml";
     std::string query = std::string("/models/explicit-engine/") + fn + ".xml";
     std::set<size_t> qnums{quid};
@@ -31,5 +31,9 @@ void test_subtraction_with_vars(const char* fn, ExplicitColoredModelChecker::Res
 }
 
 BOOST_AUTO_TEST_CASE(SubtractionWithVars, * utf::timeout(5)) {
-    test_subtraction_with_vars("subtraction_with_vars", ExplicitColoredModelChecker::Result::SATISFIED);
+    test_explicit_engine("subtraction_with_vars", ExplicitColoredModelChecker::Result::SATISFIED);
+}
+
+BOOST_AUTO_TEST_CASE(ReferendumColoredSubtraction, * utf::timeout(5)) {
+    test_explicit_engine("referendum_colored_subtraction", ExplicitColoredModelChecker::Result::SATISFIED);
 }
