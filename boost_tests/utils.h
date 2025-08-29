@@ -135,7 +135,7 @@ void runReachabilityMatrixTest(
                                   << " reduce=" << reduce << " partition=" << partition
                                   << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
                         try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(), query.c_str(), qnums, logic, reduce, partition, symmetry, cfp, approx);
+                            auto [pn, conditions, qstrings] = load_pn(model.data(), query.data(), qnums, logic, reduce, partition, symmetry, cfp, approx);
                             checkFn(std::move(pn), conditions, approx, 0);
                         } catch (const base_error& err) {
                             std::cerr << err.what() << std::endl;

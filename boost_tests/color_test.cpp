@@ -362,8 +362,8 @@ BOOST_AUTO_TEST_CASE(SubtractionErrorUnfolding, * utf::timeout(2)) {
 
 BOOST_AUTO_TEST_CASE(SubtractionErrorUnfoldingNonEmptyMarking, * utf::timeout(2)) {
     runReachabilityMatrixTest(
-        "/models/subtraction_error_unfolding_non_empty_marking.pnml",
-        "/models/subtraction_error_unfolding_non_empty_marking.xml",
+        "/models/subtraction_error_unfolding_nonempty_marking.pnml",
+        "/models/subtraction_error_unfolding_nonempty_marking.xml",
         singleQueryExpect(Reachability::ResultPrinter::Satisfied)
     );
 }
