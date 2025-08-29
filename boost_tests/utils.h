@@ -169,31 +169,5 @@ auto singleQueryExpect(
     };
 }
 
-auto multiQueryExpect(
-    const std::vector<Reachability::ResultPrinter::Result>& expected,
-    const std::set<size_t>& qnums)
-{
-    return [expected, qnums](std::unique_ptr<PetriNet> pn,
-                             const std::vector<Condition_ptr>& conditions,
-                             bool approx,
-                             size_t) {
-        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-        ResultHandler handler;
-        size_t idx = 0;
-        for (auto qnum : qnums) {
-            auto c2 = prepareForReachability(conditions[idx]);
-            ReachabilitySearch strategy(*pn, handler, 0);
-            std::vector<Condition_ptr> vec{c2};
-            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-            if (!approx) {
-                BOOST_REQUIRE_EQUAL(expected[idx], results[0]);
-            }
-            
-            ++idx;
-        }
-    };
-}
-
 #endif /* UTILS_H */
 

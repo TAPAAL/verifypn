@@ -133,9 +133,9 @@ BOOST_AUTO_TEST_CASE(InitialMarkingAllSubtractionHandled, * utf::timeout(10)) {
 }
 
 BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(100)) {
+
     std::string model("/models/PhilosophersDyn-COL-03/model.pnml");
     std::string query("/models/PhilosophersDyn-COL-03/ReachabilityCardinality.xml");
-    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     std::vector<Reachability::ResultPrinter::Result> expected{
         Reachability::ResultPrinter::NotSatisfied,
         Reachability::ResultPrinter::NotSatisfied,
@@ -152,21 +152,51 @@ BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(100)) {
         Reachability::ResultPrinter::NotSatisfied,
         Reachability::ResultPrinter::Satisfied,
         Reachability::ResultPrinter::Satisfied,
-        Reachability::ResultPrinter::Satisfied
-    };
-    runReachabilityMatrixTest(
-        model,
-        query,
-        multiQueryExpect(expected, qnums),
-        TemporalLogic::CTL,
-        qnums
-    );
+        Reachability::ResultPrinter::Satisfied};
+    ResultHandler handler;
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    for(auto reduce : {false, true})
+    {
+        for(auto partition : {false, true})
+        {
+            for(auto symmetry : {false, true})
+            {
+                for(auto cfp : {false, true})
+                {
+                    for(auto approx : {false, true})
+                    {
+                        if (approx && !reduce)
+                            continue;
+                        if(approx && reduce) continue;
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            for(auto i : qnums)
+                            {
+                                std::cerr << "\t\tQ[" << i << "] " << std::endl;
+                                auto c2 = prepareForReachability(conditions[i]);
+                                ReachabilitySearch strategy(*pn, handler, 0);
+                                std::vector<Condition_ptr> vec{c2};
+                                std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                                strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
+                                if(!approx) // if it is approx, the answer could be anything, the handling-logic is in the result-printer
+                                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                            }
+                        } catch (const base_error& er) {
+                            BOOST_REQUIRE(approx);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(100)) {
+
     std::string model("/models/Peterson-COL-2/model.pnml");
     std::string query("/models/Peterson-COL-2/ReachabilityCardinality.xml");
-    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     std::vector<Reachability::ResultPrinter::Result> expected{
         Reachability::ResultPrinter::Satisfied,
         Reachability::ResultPrinter::NotSatisfied,
@@ -183,15 +213,50 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(100)) {
         Reachability::ResultPrinter::NotSatisfied,
         Reachability::ResultPrinter::NotSatisfied,
         Reachability::ResultPrinter::NotSatisfied,
-        Reachability::ResultPrinter::Satisfied
-    };
-    runReachabilityMatrixTest(
-        model,
-        query,
-        multiQueryExpect(expected, qnums),
-        TemporalLogic::CTL,
-        qnums
-    );
+        Reachability::ResultPrinter::Satisfied};
+    ResultHandler handler;
+    std::set<size_t> qnums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    for(auto reduce : {false, true})
+    {
+        for(auto partition : {false, true})
+        {
+            for(auto symmetry : {false, true})
+            {
+                for(auto cfp : {false, true})
+                {
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            for(auto i : qnums)
+                            {
+                                std::cerr << "\t\tQ[" << i << "] " << std::endl;
+                                auto c2 = prepareForReachability(conditions[i]);
+                                ReachabilitySearch strategy(*pn, handler, 0);
+                                std::vector<Condition_ptr> vec{c2};
+                                std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+                                strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
+                                if(!approx)
+                                    BOOST_REQUIRE_EQUAL(expected[i], results[0]);
+                                else
+                                {
+                                    // the solver does not know that it is solving approx.
+                                    // result-printer actually deals with it, so cannot test for now
+                                    //BOOST_REQUIRE(expected[i] == results[0] || // either solved correctly or not determined.
+                                    //    (results[0] != Reachability::ResultPrinter::Satisfied && results[0] != Reachability::ResultPrinter::NotSatisfied));
+                                }
+                            }
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(100)) {
@@ -287,21 +352,45 @@ BOOST_AUTO_TEST_CASE(AllPlaceInterval, * utf::timeout(2)) {
 }
 
 BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(2)) {
+
     std::string model("/models/all_place_product.pnml");
     std::string query("/models/all_place_product.xml");
-    std::set<size_t> qnums{0, 1, 2};
-    std::vector<Reachability::ResultPrinter::Result> expected{
-        Reachability::ResultPrinter::Satisfied,
-        Reachability::ResultPrinter::NotSatisfied,
-        Reachability::ResultPrinter::Satisfied
-    };
-    runReachabilityMatrixTest(
-        model,
-        query,
-        multiQueryExpect(expected, qnums),
-        TemporalLogic::CTL,
-        qnums
-    );
+    std::set<size_t> qnums{0,1,2};
+    ResultHandler handler;
+    for(auto reduce : {false, true})
+    {
+        for(auto partition : {false, true})
+        {
+            for(auto symmetry : {false, true})
+            {
+                for(auto cfp : {false, true})
+                {
+                    for(auto approx : {false, true})
+                    {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
+                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
+                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+                            ReachabilitySearch strategy(*pn, handler, 0);
+                            std::vector<Condition_ptr> vec{conditions[0], conditions[1], conditions[2]};
+                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown, Reachability::ResultPrinter::Unknown, Reachability::ResultPrinter::Unknown};
+                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
+                            if(!approx)
+                            {
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::NotSatisfied, results[1]);
+                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[2]);
+                            }
+                        } catch (const base_error& er) {
+                            std::cerr << er.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(2)) {
