@@ -40,7 +40,7 @@ namespace PetriEngine {
                 std::set<const Colored::Variable *> variables;
                 Colored::PositionVariableMap varPositions;
                 Colored::VariableModifierMap varModifiersMap;
-                Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, false);
+                Colored::VariableVisitor::get_variables(*arc.expr, variables, varPositions, varModifiersMap, true);
 
                 res.emplace(std::make_pair(arc.place, Colored::ArcIntervals(std::move(varModifiersMap))));
             }
@@ -147,6 +147,27 @@ namespace PetriEngine {
                 auto start = std::chrono::high_resolution_clock::now();
                 auto end = std::chrono::high_resolution_clock::now();
                 auto reduceTimer = std::chrono::high_resolution_clock::now();
+
+                // First, we compute color propagation for all transitions with an empty preset
+                for (uint32_t transitionId = 0; transitionId < transitions.size(); ++transitionId) {
+                    if (!transitions[transitionId].input_arcs.empty()) continue;
+
+                    _transition_variable_maps[transitionId].clear();
+                    bool transitionActivated = true;
+
+                    auto &transition = transitions[transitionId];
+                    IntervalGenerator::getVarIntervals(_transition_variable_maps[transitionId], _arcIntervals[transitionId]);
+                    if (transition.guard != nullptr) {
+                        addTransitionVars(transitionId);
+                        Colored::RestrictVisitor::restrict(*transition.guard, _transition_variable_maps[transitionId]);
+                        removeInvalidVarmaps(transitionId);
+                        transitionActivated = !_transition_variable_maps[transitionId].empty();
+                    }
+
+                    if (!transitionActivated) continue;
+                    processOutputArcs(transitions[transitionId], transitionId);
+                }
+
                 while (!_placeFixpointQueue.empty()) {
                     //Reduce max interval once timeout passes
                     if (maxIntervals > maxIntervalsReduced && timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout) {
