@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>T0</id>
+    <description>T0</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <is-fireable>
+            <transition>T0</transition>
+          </is-fireable>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>
