@@ -132,7 +132,6 @@ BOOST_AUTO_TEST_CASE(InitialMarkingAllSubtractionHandled, * utf::timeout(10)) {
     BOOST_REQUIRE(!saw_exception);
 }
 
-
 BOOST_AUTO_TEST_CASE(PhilosophersDynCOL03, * utf::timeout(100)) {
 
     std::string model("/models/PhilosophersDyn-COL-03/model.pnml");
@@ -260,7 +259,6 @@ BOOST_AUTO_TEST_CASE(PetersonCOL2, * utf::timeout(100)) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(UtilityControlRoomCOLZ2T3N04, * utf::timeout(100)) {
 
     std::string model("/models/UtilityControlRoom-COL-Z2T3N04/model.pnml");
@@ -330,125 +328,27 @@ BOOST_AUTO_TEST_CASE(NeoElectionCOL3, * utf::timeout(100)) {
 }
 
 BOOST_AUTO_TEST_CASE(RangeNotOne, * utf::timeout(2)) {
-
-    std::string model("/models/intrangeNotOne/model.pnml");
-    std::string query("/models/intrangeNotOne/query.xml");
-    std::set<size_t> qnums{0};
-    ResultHandler handler;
-    for(auto reduce : {false, true})
-    {
-        for(auto partition : {false, true})
-        {
-            for(auto symmetry : {false, true})
-            {
-                for(auto cfp : {false, true})
-                {
-                    for(auto approx : {false, true})
-                    {
-                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                        try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
-                            BOOST_REQUIRE(pn->numberOfTransitions() > 0);
-                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                            auto c2 = prepareForReachability(conditions[0]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-                            if(!approx)
-                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
-                        } catch (const base_error& er) {
-                            std::cerr << er.what() << std::endl;
-                            BOOST_REQUIRE(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    runReachabilityMatrixTest(
+        "/models/intrangeNotOne/model.pnml",
+        "/models/intrangeNotOne/query.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
 }
-
 
 BOOST_AUTO_TEST_CASE(UnfoldLoop, * utf::timeout(2)) {
-
-    std::string model("/models/unfolding_loop.pnml");
-    std::string query("/models/unfolding_loop.xml");
-    std::set<size_t> qnums{0};
-    ResultHandler handler;
-    for(auto reduce : {false, true})
-    {
-        for(auto partition : {false, true})
-        {
-            for(auto symmetry : {false, true})
-            {
-                for(auto cfp : {false, true})
-                {
-                    for(auto approx : {false, true})
-                    {
-                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                        try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
-                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                            auto c2 = prepareForReachability(conditions[0]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-                            if(!approx)
-                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::NotSatisfied, results[0]);
-                        } catch (const base_error& er) {
-                            std::cerr << er.what() << std::endl;
-                            BOOST_REQUIRE(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    runReachabilityMatrixTest(
+        "/models/unfolding_loop.pnml",
+        "/models/unfolding_loop.xml",
+        singleQueryExpect(Reachability::ResultPrinter::NotSatisfied)
+    );
 }
 
-
 BOOST_AUTO_TEST_CASE(AllPlaceInterval, * utf::timeout(2)) {
-
-    std::string model("/models/all_place_interval.pnml");
-    std::string query("/models/all_place_interval.xml");
-    std::set<size_t> qnums{0};
-    ResultHandler handler;
-    for(auto reduce : {false, true})
-    {
-        for(auto partition : {false, true})
-        {
-            for(auto symmetry : {false, true})
-            {
-                for(auto cfp : {false, true})
-                {
-                    for(auto approx : {false, true})
-                    {
-                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                        try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
-                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                            auto c2 = prepareForReachability(conditions[0]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-                            if(!approx)
-                            {
-                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
-                            }
-                        } catch (const base_error& er) {
-                            std::cerr << er.what() << std::endl;
-                            BOOST_REQUIRE(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    runReachabilityMatrixTest(
+        "/models/all_place_interval.pnml",
+        "/models/all_place_interval.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
 }
 
 BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(2)) {
@@ -494,82 +394,66 @@ BOOST_AUTO_TEST_CASE(AllPlaceProduct, * utf::timeout(2)) {
 }
 
 BOOST_AUTO_TEST_CASE(TokenRingAll, * utf::timeout(2)) {
-
-    std::string model("/models/error-all-token-ring.pnml");
-    std::string query("/models/error-all-token-ring.xml");
-    std::set<size_t> qnums{0};
-    ResultHandler handler;
-    for(auto reduce : {false, true})
-    {
-        for(auto partition : {false, true})
-        {
-            for(auto symmetry : {false, true})
-            {
-                for(auto cfp : {false, true})
-                {
-                    for(auto approx : {false, true})
-                    {
-                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                        try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
-                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                            auto c2 = prepareForReachability(conditions[0]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-                            if(!approx)
-                            {
-                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::Satisfied, results[0]);
-                            }
-                        } catch (const base_error& er) {
-                            std::cerr << er.what() << std::endl;
-                            BOOST_REQUIRE(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    runReachabilityMatrixTest(
+        "/models/error-all-token-ring.pnml",
+        "/models/error-all-token-ring.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
 }
+
 BOOST_AUTO_TEST_CASE(TokenRingAll2, * utf::timeout(2)) {
-
-    std::string model("/models/error-all-token-ring-2.pnml");
-    std::string query("/models/error-all-token-ring-2.xml");
-    std::set<size_t> qnums{0};
-    ResultHandler handler;
-    for(auto reduce : {false, true})
-    {
-        for(auto partition : {true, false})
-        {
-            for(auto symmetry : {false, true})
-            {
-                for(auto cfp : {false, true})
-                {
-                    for(auto approx : {false, true})
-                    {
-                        std::cerr << "\t" << model << ", " << query << std::boolalpha << " reduce=" << reduce << " partition=" << partition << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
-                        try {
-                            auto [pn, conditions, qstrings] = load_pn(model.c_str(),
-                                query.c_str(), qnums, TemporalLogic::CTL, reduce, partition, symmetry, cfp, approx);
-                            BOOST_REQUIRE(pn->numberOfPlaces() > 0);
-                            auto c2 = prepareForReachability(conditions[0]);
-                            ReachabilitySearch strategy(*pn, handler, 0);
-                            std::vector<Condition_ptr> vec{c2};
-                            std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
-                            strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
-                            if(!approx)
-                            {
-                                BOOST_REQUIRE_EQUAL(Reachability::ResultPrinter::NotSatisfied, results[0]);
-                            }
-                        } catch (const base_error& er) {
-                            std::cerr << er.what() << std::endl;
-                            BOOST_REQUIRE(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    runReachabilityMatrixTest(
+        "/models/error-all-token-ring-2.pnml",
+        "/models/error-all-token-ring-2.xml",
+        singleQueryExpect(Reachability::ResultPrinter::NotSatisfied)
+    );
 }
+
+BOOST_AUTO_TEST_CASE(SubtractionUnfolding, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/subtraction_unfolding.pnml",
+        "/models/subtraction_unfolding.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+
+BOOST_AUTO_TEST_CASE(UnfoldingAndOverapproxCpnSubtractionError, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/unfolding_and_overapprox_cpn_subtraction_error.pnml",
+        "/models/unfolding_and_overapprox_cpn_subtraction_error.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+
+BOOST_AUTO_TEST_CASE(SubtractionBug, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/subtraction_bug.pnml",
+        "/models/subtraction_bug.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+
+BOOST_AUTO_TEST_CASE(FixpointAndPartitioningError, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/fixpoint_and_partitioning_error.pnml",
+        "/models/fixpoint_and_partitioning_error.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+
+BOOST_AUTO_TEST_CASE(SubtractionErrorUnfolding, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/subtraction_error_unfolding.pnml",
+        "/models/subtraction_error_unfolding.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+
+BOOST_AUTO_TEST_CASE(SubtractionErrorUnfoldingNonEmptyMarking, * utf::timeout(2)) {
+    runReachabilityMatrixTest(
+        "/models/subtraction_error_unfolding_nonempty_marking.pnml",
+        "/models/subtraction_error_unfolding_nonempty_marking.xml",
+        singleQueryExpect(Reachability::ResultPrinter::Satisfied)
+    );
+}
+

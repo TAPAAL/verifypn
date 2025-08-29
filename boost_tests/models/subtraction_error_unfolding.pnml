@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="colors" name="colors">
+                        <cyclicenumeration>
+                            <feconstant id="a" name="colors"/>
+                            <feconstant id="b" name="colors"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <variabledecl id="x" name="x">
+                        <usersort declaration="colors"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="P0">
+                <name>
+                    <text>P0</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="255" y="255"/>
+                </graphics>
+                <type>
+                    <text>colors</text>
+                    <structure>
+                        <usersort declaration="colors"/>
+                    </structure>
+                </type>
+            </place>
+            <place id="P1">
+                <name>
+                    <text>P1</text>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="630" y="255"/>
+                </graphics>
+                <type>
+                    <text>dot</text>
+                    <structure>
+                        <usersort declaration="dot"/>
+                    </structure>
+                </type>
+            </place>
+            <transition distribution="constant" id="T0" value="1.0">
+                <name>
+                    <graphics>
+                        <offset x="0" y="0"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="435" y="255"/>
+                </graphics>
+            </transition>
+            <arc id="P0_to_T0" source="P0" target="T0" type="normal">
+                <hlinscription>
+                    <text>1'x - 1'a</text>
+                    <structure>
+                        <subtract>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <variable refvariable="x"/>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                            <subterm>
+                                <numberof>
+                                    <subterm>
+                                        <numberconstant value="1">
+                                            <positive/>
+                                        </numberconstant>
+                                    </subterm>
+                                    <subterm>
+                                        <useroperator declaration="a"/>
+                                    </subterm>
+                                </numberof>
+                            </subterm>
+                        </subtract>
+                    </structure>
+                </hlinscription>
+            </arc>
+            <arc id="T0_to_P1" source="T0" target="P1" type="normal">
+                <hlinscription>
+                    <text>1'dot</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <useroperator declaration="dot"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+    </net>
+</pnml>
