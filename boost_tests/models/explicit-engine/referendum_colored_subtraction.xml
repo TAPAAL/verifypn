@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>Answer should be yes (explicit)</id>
+    <description>Answer should be yes (explicit)</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <conjunction>
+            <integer-eq>
+              <tokens-count>
+                <place>Referendum_colored_ready</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-eq>
+            <is-fireable>
+              <transition>Referendum_colored_no</transition>
+            </is-fireable>
+          </conjunction>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

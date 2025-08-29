@@ -712,9 +712,9 @@ bool options_t::parse(int argc, const char** argv) {
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return true;
-        } else if (modelfile == nullptr) {
+        } else if (modelfile.empty()) {
             modelfile = argv[i];
-        } else if (queryfile == nullptr) {
+        } else if (queryfile.empty()) {
             queryfile = argv[i];
         } else {
             throw base_error("Argument Error: Unrecognized option ", std::quoted(modelfile));
@@ -737,12 +737,12 @@ bool options_t::parse(int argc, const char** argv) {
     //----------------------- Validate Arguments -----------------------//
 
     //Check for model file
-    if (!modelfile) {
+    if (modelfile.empty()) {
         throw base_error("Argument Error: No model-file provided");
     }
 
     //Check for query file
-    if (!modelfile && !statespaceexploration) {
+    if (modelfile.empty() && !statespaceexploration) {
         throw base_error("Argument Error: No query-file provided");
     }
 

@@ -49,8 +49,8 @@ enum class StatisticsLevel {
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
-    const char* modelfile = nullptr;
-    const char* queryfile = nullptr;
+    std::string modelfile;
+    std::string queryfile;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving, 3 ... selection
     int enablecolreduction = 1;
     std::vector<uint32_t> reductions{8,2,3,4,5,7,9,6,0,1};
