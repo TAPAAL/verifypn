@@ -194,7 +194,7 @@ namespace PetriEngine {
             for (uint32_t i = 0; i < _builder.inhibitors().size(); ++i) {
                 if (*_builder.transitions()[_builder.inhibitors()[i].transition].name == *oldname) {
                     const Colored::Arc &inhibArc = _builder.inhibitors()[i];
-                    if (_sumPlacesNames.size() < inhibArc.place) _sumPlacesNames.resize(inhibArc.place + 1);
+                    if (_sumPlacesNames.size() <= inhibArc.place) _sumPlacesNames.resize(inhibArc.place + 1);
                     auto placeName = _sumPlacesNames[inhibArc.place];
 
                     if (placeName == nullptr || placeName->empty()) {
