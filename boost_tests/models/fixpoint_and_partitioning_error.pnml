@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name>
+            <text>ComposedModel</text>
+        </name>
+        <declaration>
+            <structure>
+                <declarations>
+                    <namedsort id="dot" name="dot">
+                        <dot/>
+                    </namedsort>
+                    <namedsort id="Philo" name="Philo">
+                        <cyclicenumeration>
+                            <feconstant id="Id1" name="Philo"/>
+                            <feconstant id="Id2" name="Philo"/>
+                            <feconstant id="Id3" name="Philo"/>
+                            <feconstant id="Id4" name="Philo"/>
+                            <feconstant id="Id5" name="Philo"/>
+                        </cyclicenumeration>
+                    </namedsort>
+                    <variabledecl id="varx" name="x">
+                        <usersort declaration="Philo"/>
+                    </variabledecl>
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            <place id="Catch1">
+                <name>
+                    <text>Catch1</text>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                </name>
+                <graphics>
+                    <position x="270" y="75"/>
+                </graphics>
+                <type>
+                    <text>Philo</text>
+                    <structure>
+                        <usersort declaration="Philo"/>
+                    </structure>
+                </type>
+            </place>
+            <transition distribution="constant" id="FF1a" value="1.0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>FF1a</text>
+                </name>
+                <graphics>
+                    <position x="60" y="75"/>
+                </graphics>
+            </transition>
+            <arc id="FF1a_to_Catch1" source="FF1a" target="Catch1" type="normal">
+                <hlinscription>
+                    <text>1'x</text>
+                    <structure>
+                        <numberof>
+                            <subterm>
+                                <numberconstant value="1">
+                                    <positive/>
+                                </numberconstant>
+                            </subterm>
+                            <subterm>
+                                <variable refvariable="varx"/>
+                            </subterm>
+                        </numberof>
+                    </structure>
+                </hlinscription>
+            </arc>
+        </page>
+    </net>
+</pnml>

@@ -20,6 +20,8 @@
 #include "VerifyPN.h"
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
 
+#include <functional>
+
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
 using namespace PetriEngine::ExplicitColored;
@@ -143,6 +145,55 @@ private:
     std::map<std::string, Colored::Multiset> _initialMarkings;
 };
 
+void runReachabilityMatrixTest(
+    const std::string& model,
+    const std::string& query,
+    std::function<void(std::unique_ptr<PetriNet>, const std::vector<Condition_ptr>&, bool, size_t)> checkFn,
+    TemporalLogic logic = TemporalLogic::CTL,
+    const std::set<size_t>& qnums = {0})
+{
+    for (auto reduce : {false, true}) {
+        for (auto partition : {false, true}) {
+            for (auto symmetry : {false, true}) {
+                for (auto cfp : {false, true}) {
+                    for (auto approx : {false, true}) {
+                        std::cerr << "\t" << model << ", " << query << std::boolalpha
+                                  << " reduce=" << reduce << " partition=" << partition
+                                  << " sym=" << symmetry << " cfp=" << cfp << " approx=" << approx << std::endl;
+                        try {
+                            auto [pn, conditions, qstrings] = load_pn(model.data(), query.data(), qnums, logic, reduce, partition, symmetry, cfp, approx);
+                            checkFn(std::move(pn), conditions, approx, 0);
+                        } catch (const base_error& err) {
+                            std::cerr << err.what() << std::endl;
+                            BOOST_REQUIRE(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+auto singleQueryExpect(
+    Reachability::ResultPrinter::Result expected,
+    size_t qnum = 0)
+{
+    return [expected, qnum](std::unique_ptr<PetriNet> pn,
+                                const std::vector<Condition_ptr>& conditions,
+                                bool approx,
+                                size_t) {
+        BOOST_REQUIRE(pn->numberOfPlaces() > 0);
+        auto c2 = prepareForReachability(conditions[qnum]);
+        ResultHandler handler;
+        ReachabilitySearch strategy(*pn, handler, 0);
+        std::vector<Condition_ptr> vec{c2};
+        std::vector<Reachability::ResultPrinter::Result> results{Reachability::ResultPrinter::Unknown};
+        strategy.reachable(vec, results, Strategy::DFS, false, false, StatisticsLevel::None, false, 0);
+        if (!approx) {
+            BOOST_REQUIRE_EQUAL(expected, results[0]);
+        }
+    };
+}
 
 #endif /* UTILS_H */
 
