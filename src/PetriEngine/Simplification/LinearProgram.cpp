@@ -255,11 +255,19 @@ namespace PetriEngine {
             // if (result == GLP_ETMLIM): do nothing
             if (result == 0)
             {
-                for (size_t i = 1; i <= nCol; i++) {
-                    double col_struct = glp_get_col_prim(lp, i); // Get the value of the i'th column in the solution found
-                    potencies[i - 1] += ceil(col_struct); // Round up because it represents the nb of transitions to fire
-                    // TODO: we could aggregate with max instead of adding
-                }
+                //TODO: using exact causes segfault sometimes as of GLPK 5.0
+                /*// We search for an exact solution
+                result = glp_exact(lp, &settings);
+
+                if (result == 0)
+                {*/
+                    for (size_t i = 1; i <= nCol; i++)
+                    {
+                        double col_struct = glp_get_col_prim(lp, i); // Get the value of the i'th column in the solution found
+                        potencies[i - 1] += ceil(col_struct); // Round up because it represents the nb of transitions to fire
+                        // TODO: we could aggregate with max instead of adding
+                    }
+                //}
             }
 
             glp_delete_prob(lp);
