@@ -589,7 +589,7 @@ int explicitColored(shared_string_set& stringSet, options_t& options, std::vecto
         ExplicitColoredModelChecker ecpnChecker(stringSet, fullStatisticsOut);
 
         ColoredResultPrinter resultPrinter(0, std::cout, queryNames[0], options.seed(), std::cerr);
-        auto result = ecpnChecker.checkQuery(options.modelfile, queries[0], options, &resultPrinter);
+        auto result = ecpnChecker.checkQuery(queries[0], options, &resultPrinter);
 
         if (result == ExplicitColoredModelChecker::Result::SATISFIED) {
             return to_underlying(ReturnValue::SuccessCode);

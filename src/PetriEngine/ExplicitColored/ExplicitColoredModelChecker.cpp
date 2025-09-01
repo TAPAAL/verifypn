@@ -11,14 +11,13 @@
 
 namespace PetriEngine::ExplicitColored {
     ExplicitColoredModelChecker::Result ExplicitColoredModelChecker::checkQuery(
-        const std::string& modelPath,
         const Condition_ptr& query,
         options_t& options,
         IColoredResultPrinter* resultPrinter
     ) const {
         std::stringstream pnmlModelStream;
         Result result = Result::UNKNOWN;
-        std::ifstream modelFile(modelPath);
+        std::ifstream modelFile(options.modelfile);
         pnmlModelStream << modelFile.rdbuf();
         std::string pnmlModel = std::move(pnmlModelStream).str();
         bool isOverApproximationOnly = false;

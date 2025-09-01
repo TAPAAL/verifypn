@@ -23,10 +23,9 @@ namespace PetriEngine::ExplicitColored {
             {}
 
         Result checkQuery(
-            const std::string& modelPath,
             const PQL::Condition_ptr& query,
             options_t& options,
-            IColoredResultPrinter* resultPrinter
+            IColoredResultPrinter* resultPrinter = nullptr
         ) const;
     private:
         Result checkColorIgnorantLP(
@@ -82,5 +81,16 @@ namespace PetriEngine::ExplicitColored {
         shared_string_set& _stringSet;
         std::ostream& _fullStatisticOut;
     };
+
+    inline std::ostream& operator<<(std::ostream& os, ExplicitColoredModelChecker::Result r) {
+        switch (r) {
+            case ExplicitColoredModelChecker::Result::SATISFIED:
+                return os << "SATISFIED";
+            case ExplicitColoredModelChecker::Result::UNSATISFIED:
+                return os << "UNSATISFIED";
+            case ExplicitColoredModelChecker::Result::UNKNOWN:
+                return os << "UNKNOWN";
+        }
+    }
 }
 #endif //EXPLICITCOLOREDMODELCHECKER_H

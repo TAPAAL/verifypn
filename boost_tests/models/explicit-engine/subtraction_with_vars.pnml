@@ -1,0 +1,12 @@
+<pnml>
+<net id="ComposedModel" type="P/T net">
+<declaration><structure><declarations><namedsort id="dot" name="dot"><dot/></namedsort><namedsort id="colors" name="colors"><cyclicenumeration><feconstant id="a" name="colors"/><feconstant id="b" name="colors"/></cyclicenumeration></namedsort><variabledecl id="x" name="x"><usersort declaration="colors"/></variabledecl></declarations></structure></declaration><place id="TAPN1_P0" name="TAPN1_P0" initialMarking="0" >
+<type><text>colors</text><structure><usersort declaration="colors"/></structure></type><graphics><position x="255" y="255" /></graphics></place>
+<place id="TAPN1_P1" name="TAPN1_P1" initialMarking="0" >
+<type><text>dot</text><structure><usersort declaration="dot"/></structure></type><graphics><position x="630" y="255" /></graphics></place>
+<transition player="0" id="TAPN1_T0" name="TAPN1_T0" >
+<placeHolder/><graphics><position x="435" y="255" /></graphics></transition>
+<inputArc source="TAPN1_P0" target="TAPN1_T0"><inscription><value>1</value></inscription><hlinscription><text>1'x - 1'a</text><structure><subtract><subterm><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><variable refvariable="x"/></subterm></numberof></subterm><subterm><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><useroperator declaration="a"/></subterm></numberof></subterm></subtract></structure></hlinscription></inputArc>
+<outputArc source="TAPN1_T0" target="TAPN1_P1"><inscription><value>1</value></inscription><hlinscription><text>1'dot</text><structure><numberof><subterm><numberconstant value="1"><positive/></numberconstant></subterm><subterm><useroperator declaration="dot"/></subterm></numberof></structure></hlinscription></outputArc>
+</net>
+</pnml>
