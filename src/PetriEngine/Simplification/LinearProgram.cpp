@@ -255,7 +255,7 @@ namespace PetriEngine {
             // if (result == GLP_ETMLIM): do nothing
             if (result == 0)
             {
-                //TODO: using exact causes segfault sometimes as of GLPK 5.0
+                //TODO: using exact causes segfault sometimes as of GLPK 5.0 (https://bugs.launchpad.net/tapaal/+bug/2112388)
                 /*// We search for an exact solution
                 result = glp_exact(lp, &settings);
 
