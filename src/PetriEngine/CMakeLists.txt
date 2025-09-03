@@ -21,3 +21,4 @@ add_library(PetriEngine ${HEADER_FILES}
     options.cpp)
 
 target_link_libraries(PetriEngine PRIVATE Colored ColoredReduction Structures Simplification Stubborn Reachability PQL TAR Synthesis ExplicitColored)
+add_dependencies(PetriEngine glpk-ext ptrie-ext rapidxml-ext spot-ext)

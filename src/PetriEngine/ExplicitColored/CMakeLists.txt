@@ -17,3 +17,4 @@ add_library(ExplicitColored
 )
 
 target_link_libraries(ExplicitColored Colored)
+add_dependencies(ExplicitColored glpk-ext ptrie-ext rapidxml-ext)
