@@ -21,15 +21,8 @@ jobs:
       - name: Install Packages
         run: |
           sudo apt-get update
-          sudo apt-get install flex
+          sudo apt-get install flex bison
           sudo apt-get install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64 wine wine-binfmt
-
-          wget https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.gz
-          tar xvfz bison-3.7.6.tar.gz
-          cd bison-3.7.6
-          ./configure
-          make 
-          sudo make install
 
       - name: Build 
         uses: lukka/run-cmake@v2.5
@@ -42,6 +35,8 @@ jobs:
           cmakeBuildType: Release
           cmakeGenerator: UnixMakefiles
           buildDirectory: '${{runner.workspace}}/build'     
+          buildWithCMake: true
+          buildWithCMakeArgs: -- -j$(nproc)
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:

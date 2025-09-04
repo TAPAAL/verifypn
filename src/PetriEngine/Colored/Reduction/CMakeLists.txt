@@ -11,3 +11,4 @@ add_library(ColoredReduction ${HEADER_FILES}
         RedRulePreemptiveFiring.cpp)
 
 target_link_libraries(ColoredReduction Colored)
+add_dependencies(ColoredReduction glpk-ext rapidxml-ext)
