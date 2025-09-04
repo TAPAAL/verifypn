@@ -35,7 +35,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc-14 CXX=g++-14 cmake ../ -DCMAKE_BUILD_TYPE=Debug -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TEST=ON
-          make
+          make -j$(nproc)
           CTEST_OUTPUT_ON_FAILURE=1 make test
 
       - name: Build
@@ -44,7 +44,7 @@ jobs:
           cd build
           # We create a static binary with parallel simplification - works both for the MCC competition as well as releases
           CC=gcc-14 CXX=g++-14 cmake ../ -DCMAKE_BUILD_TYPE=Release -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TEST=OFF
-          make
+          make -j$(nproc)
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
