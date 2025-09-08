@@ -1,3 +1,5 @@
+Reproducibility package for the explicit engine is available here: https://github.com/CS-24-SV-9-04/reproducibility/releases/tag/V2
+
 This PR adds interactive mode which uses the explicit colored engine to generate valid transition-binding pairs. This makes it possible to repeatedly send transitions and then receiving successors and possible bindings.
 
 The protocol is as follows:
