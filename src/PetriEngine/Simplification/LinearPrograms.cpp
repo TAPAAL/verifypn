@@ -161,6 +161,8 @@ namespace PetriEngine {
             bool more_left;
             while (true)
             {
+                if (curr == _size) break;
+
                 lempty = false;
                 LinearProgram prog = program;
                 if (merge_right)
@@ -173,6 +175,9 @@ namespace PetriEngine {
                     merge_right = false;
                 }
                 
+                ++curr;
+                assert(curr <= _size);
+
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
                 if (curr >= nsat || !(more_left || more_right))
@@ -185,9 +190,6 @@ namespace PetriEngine {
 
                     break;
                 }
-
-                ++curr;
-                assert(curr <= _size);
             }
             if (!dry_run)
                 program.make_union(tmp_prog);
