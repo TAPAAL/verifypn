@@ -153,6 +153,26 @@ namespace PetriEngine {
                     return nullptr;
                 }
             }
+
+            glp_add_rows(lp, _net->numberOfPlaces());
+            for (size_t p = 0; p < _net->numberOfPlaces(); p++) {
+                    std::vector<double> row(nCol, 0);
+                    std::vector<int> indices;
+                    row.shrink_to_fit();
+                
+                    for (size_t t = 0; t < _net->numberOfTransitions(); t++) {
+                        if(_net->outArc(t, p) - _net->inArc(p, t) != 0){
+                            row[t]  = _net->outArc(t, p);
+                            row[t] -= _net->inArc(p, t);
+                            indices.push_back(t);
+                        }
+                    }
+
+                    glp_set_mat_row(lp, rowno, indices.size() - 1, indices.data(), row.data());
+                    glp_set_row_bnds(lp, rowno, GLP_LO, 0, infty);
+                    ++rowno;
+            }
+            
             return lp;
         }
     }

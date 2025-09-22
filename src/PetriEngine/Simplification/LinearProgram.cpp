@@ -76,7 +76,7 @@ namespace PetriEngine {
             if (lp == nullptr)
                 return false;
 
-            int rowno = 1 + net->numberOfPlaces();
+            int rowno = 1 + 2 * net->numberOfPlaces();
             glp_add_rows(lp, _equations.size());
             for (const auto& eq : _equations) {
                 auto l = eq.row->write_indir(row, indir);
