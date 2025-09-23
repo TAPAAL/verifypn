@@ -161,8 +161,6 @@ namespace PetriEngine {
             bool more_left;
             while (true)
             {
-                if (curr == _size) break;
-
                 lempty = false;
                 LinearProgram prog = program;
                 if (merge_right)
@@ -175,6 +173,8 @@ namespace PetriEngine {
                     merge_right = false;
                 }
                 
+                if (curr == _size) break;
+
                 ++curr;
                 assert(curr <= _size);
 
