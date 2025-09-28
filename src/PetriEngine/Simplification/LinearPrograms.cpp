@@ -172,11 +172,8 @@ namespace PetriEngine {
                     left->reset();
                     merge_right = false;
                 }
-                
-                if (curr == _size) break;
 
                 ++curr;
-                assert(curr <= _size);
 
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
