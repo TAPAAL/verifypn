@@ -65,7 +65,7 @@ namespace PetriEngine {
             }
 
             const uint32_t nCol = net->numberOfTransitions();
-            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
+            const uint32_t nRow = 2 * net->numberOfPlaces() + _equations.size();
 
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
             std::vector<int32_t> indir(std::max(nCol, nRow) + 1);

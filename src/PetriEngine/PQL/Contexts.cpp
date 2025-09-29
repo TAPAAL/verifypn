@@ -156,20 +156,20 @@ namespace PetriEngine {
 
             glp_add_rows(lp, _net->numberOfPlaces());
             for (size_t p = 0; p < _net->numberOfPlaces(); p++) {
-                    std::vector<double> row(nCol, 0);
-                    std::vector<int> indices;
+                    std::vector<double> row(nCol+1, 0);
+                    std::vector<int> indices(1, 0);
                     row.shrink_to_fit();
                 
                     for (size_t t = 0; t < _net->numberOfTransitions(); t++) {
                         if(_net->outArc(t, p) - _net->inArc(p, t) != 0){
-                            row[t]  = _net->outArc(t, p);
-                            row[t] -= _net->inArc(p, t);
-                            indices.push_back(t);
+                            row[t+1]  = _net->outArc(t, p);
+                            row[t+1] -= _net->inArc(p, t);
+                            indices.push_back(t+1);
                         }
                     }
 
                     glp_set_mat_row(lp, rowno, indices.size() - 1, indices.data(), row.data());
-                    glp_set_row_bnds(lp, rowno, GLP_LO, 0, infty);
+                    glp_set_row_bnds(lp, rowno, GLP_LO, -1.0 * marking()[p], infty);
                     ++rowno;
             }
             
