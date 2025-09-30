@@ -154,8 +154,9 @@ namespace PetriEngine {
 
         bool MergeCollection::merge(bool& has_empty, LinearProgram& program, bool dry_run)
         {
-            if (program.knownImpossible())
+            if (program.knownImpossible()) {
                 return false;
+            }
 
             bool lempty = false;
             bool more_left;
@@ -173,20 +174,25 @@ namespace PetriEngine {
                     merge_right = false;
                 }
 
-                ++curr;
+                assert(curr < _size);
 
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
                 if (curr >= nsat || !(more_left || more_right))
                 {
-                    if ((!dry_run && prog.knownImpossible()) && (more_left || more_right))
+                    if ((!dry_run && prog.knownImpossible()) && (more_left || more_right)) {
                         continue;
+                    }
 
-                    if (!dry_run)
+                    if (!dry_run) {
                         program.swap(prog);
+                    }
 
+                    ++curr;
                     break;
                 }
+                
+                ++curr;
             }
             if (!dry_run)
                 program.make_union(tmp_prog);
