@@ -173,12 +173,13 @@ namespace PetriEngine {
                     left->reset();
                     merge_right = false;
                 }
-
-                assert(curr < _size);
+                
+                ++curr;
+                assert(curr <= _size);
 
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
-                if (curr >= nsat || !(more_left || more_right))
+                if (curr - 1 >= nsat || !(more_left || more_right))
                 {
                     if ((!dry_run && prog.knownImpossible()) && (more_left || more_right)) {
                         continue;
@@ -188,11 +189,8 @@ namespace PetriEngine {
                         program.swap(prog);
                     }
 
-                    ++curr;
                     break;
                 }
-                
-                ++curr;
             }
             if (!dry_run)
                 program.make_union(tmp_prog);
