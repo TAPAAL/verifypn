@@ -179,7 +179,7 @@ namespace PetriEngine {
 
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
-                if (curr - 1 >= nsat || !(more_left || more_right))
+                if (curr > nsat || !(more_left || more_right))
                 {
                     if ((!dry_run && prog.knownImpossible()) && (more_left || more_right)) {
                         continue;
