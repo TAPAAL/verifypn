@@ -294,8 +294,6 @@ namespace LTL {
     void TarjanModelChecker::build_trace(S& seen, light_deque<D> &&dstack, light_deque<C>& cstack)
     {
         assert(_violation);
-        if (cstack[dstack.back()._pos]._stateid == _loop_state)
-            _loop = _trace.size();
         dstack.pop_back();
         size_t p = 0;
         bool had_deadlock = _loop_trans == std::numeric_limits<uint32_t>::max() - 1;
@@ -311,8 +309,6 @@ namespace LTL {
                 had_deadlock = true;
                 break;
             }
-            if(cstack[p]._stateid == _loop_state)
-                _loop = _trace.size();
             cstack[p]._lowlink = std::numeric_limits<idx_t>::max();
         }
         // follow previously found back edges via lowsource until back in dstack.
@@ -334,9 +330,10 @@ namespace LTL {
                 p = cstack[p]._lowsource;
             }
         }
-        if(!had_deadlock && _loop_trans < _net.numberOfTransitions())
-        {
+        
+        if (!had_deadlock && !_invariant_loop && _loop_trans < _net.numberOfTransitions()) {
             assert(_loop_trans < _net.numberOfTransitions());
+            _loop = _trace.size();
             _trace.push_back({_loop_trans});
         }
     }
