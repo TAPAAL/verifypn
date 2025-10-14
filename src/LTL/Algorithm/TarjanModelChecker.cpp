@@ -339,7 +339,6 @@ namespace LTL {
         
         if(!had_deadlock && _loop_trans < _net.numberOfTransitions()) {
             assert(_loop_trans < _net.numberOfTransitions());
-            _loop = _trace.size();
             _trace.push_back({_loop_trans});
         }
     }
