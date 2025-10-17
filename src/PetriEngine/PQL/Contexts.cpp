@@ -154,7 +154,7 @@ namespace PetriEngine {
                 }
             }
 
-            glp_add_rows(lp, _net->numberOfPlaces());
+            /*glp_add_rows(lp, _net->numberOfPlaces());
             for (size_t p = 0; p < _net->numberOfPlaces(); p++) {
                     std::vector<double> row(nCol+1, 0);
                     std::vector<int> indices(1, 0);
@@ -171,7 +171,7 @@ namespace PetriEngine {
                     glp_set_mat_row(lp, rowno, indices.size() - 1, indices.data(), row.data());
                     glp_set_row_bnds(lp, rowno, GLP_LO, -1.0 * marking()[p], infty);
                     ++rowno;
-            }
+            }*/
             
             return lp;
         }

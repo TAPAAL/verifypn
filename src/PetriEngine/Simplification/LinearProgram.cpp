@@ -46,9 +46,98 @@ namespace PetriEngine {
 
         constexpr auto infty = std::numeric_limits<REAL>::infinity();
 
+        std::string bound_or_inf(double bound){
+            const std::string inf = "inf";
+            const std::string ninf = "ninf";
+            return (std::fabs(bound) != infty)? std::to_string(bound) : ((bound > 0)? inf : ninf);
+        }
+
+        void printConstraints(const PQL::SimplificationContext& context, glp_prob* lp){
+            int nCols = glp_get_num_cols(lp);
+            int nRows = glp_get_num_rows(lp);
+            
+            std::vector<int> indices(nCols + 1);
+            std::vector<double> coef(nCols + 1);
+            int l;
+
+            for(int i = 1; i <= nRows; i++){
+                std::cout << "Row " << i << ": ";
+
+                l = glp_get_mat_row(lp, i, indices.data(), coef.data());
+
+                bool first_print = true;
+                for(int j = 1; j <= l; j++){
+                    if(!first_print) std::cout << " + ";
+                    std::cout << coef[j] << "*" << *context.net()->transitionNames()[indices[j] - 1];
+                    first_print = false;
+                }
+
+                if(first_print){
+                    std::cout << "<empty-row>";
+                }
+                
+
+                double up = glp_get_row_ub(lp, i);
+                double lb = glp_get_row_lb(lp, i);
+                switch(glp_get_row_type(lp, i)){
+                    case GLP_FR:
+                        std::cout << " is unconstraint";
+                        break;
+                    case GLP_LO:
+                        std::cout << " >= " << bound_or_inf(lb);
+                        break;
+                    case GLP_UP:
+                        std::cout << " <= " << bound_or_inf(up);
+                        break;
+                    case GLP_DB:
+                        std::cout << " in [" << bound_or_inf(lb) << ", " << bound_or_inf(up) << "]";
+                        break;
+                    case GLP_FX:
+                        std::cout << " = " << bound_or_inf(lb);
+                        break;
+                }
+                std::cout << "\n";
+            }
+            
+        }
+        
+
+        void printSolution(const PQL::SimplificationContext& context, glp_prob* lp, bool is_mip){
+            if(context.getPrintLevel() == 0)
+                return;
+
+            if(context.getPrintLevel() > 1){
+                printConstraints(context, lp);
+            }
+            
+            int nCols = glp_get_num_cols(lp);
+            bool first_print = true;
+            if(is_mip){
+                std::cout << "MIP Solution: ";
+            }else{
+                std::cout << "LP Solution: ";
+            }
+            for(int i = 1; i <= nCols;i++){
+                double coef = (is_mip)? glp_mip_col_val(lp, i) : glp_get_col_prim(lp, i);
+                if(coef != 0){
+                    if(!first_print)
+                        std::cout << " + ";
+                    first_print = false;
+                    std::cout << coef << "*" << *context.net()->transitionNames()[i - 1];
+                }
+            }
+
+            if(first_print)
+                std::cout << "<empty>\n";
+            else{
+                std::cout << "\n";
+            }
+        }
+
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
+
 
             if (_result != result_t::UKNOWN)
             {
@@ -76,7 +165,7 @@ namespace PetriEngine {
             if (lp == nullptr)
                 return false;
 
-            int rowno = 1 + 2 * net->numberOfPlaces();
+            int rowno = 1 + net->numberOfPlaces();
             glp_add_rows(lp, _equations.size());
             for (const auto& eq : _equations) {
                 auto l = eq.row->write_indir(row, indir);
@@ -146,6 +235,7 @@ namespace PetriEngine {
                     auto ires = glp_intopt(lp, &iset);
                     if (ires == GLP_ETMLIM)
                     {
+                        printSolution(context, lp, false);
                         _result = result_t::UKNOWN;
                         // std::cerr << "glpk mip: timeout" << std::endl;
                     }
@@ -153,6 +243,7 @@ namespace PetriEngine {
                     {
                         auto ist = glp_mip_status(lp);
                         if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
+                            printSolution(context, lp, true);
                             _result = result_t::POSSIBLE;
                         }
                         else
@@ -163,6 +254,7 @@ namespace PetriEngine {
                 }
                 else if (status == GLP_FEAS || status == GLP_UNBND)
                 {
+                    printSolution(context, lp, false);
                     _result = result_t::POSSIBLE;
                 }
                 else

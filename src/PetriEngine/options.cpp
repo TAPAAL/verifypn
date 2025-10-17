@@ -346,6 +346,13 @@ bool options_t::parse(int argc, const char** argv) {
             if (sscanf(argv[++i], "%d", &queryReductionTimeout) != 1 || queryReductionTimeout < 0) {
                 throw base_error("Argument Error: Invalid query reduction timeout argument ", std::quoted(argv[i]));
             }
+        }else if (std::strcmp(argv[i], "-lpp") == 0 || std::strcmp(argv[i], "--lp-print") == 0) {
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &lpPrintLevel) != 1 || lpPrintLevel < 0) {
+                throw base_error("Argument Error: Invalid lp print level argument ", std::quoted(argv[i]));
+            }
         } else if (std::strcmp(argv[i], "--init-potency-timeout") == 0) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));
