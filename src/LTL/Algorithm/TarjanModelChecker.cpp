@@ -151,7 +151,7 @@ namespace LTL {
 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.set_history(stateid, successorGenerator.fired());
+                        seen.set_history(stateid, dtop._sucinfo.transition());
                     }
                 }
 
