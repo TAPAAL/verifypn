@@ -131,14 +131,13 @@ namespace LTL { namespace Structures {
 
         void decode(ProductState &state, stateid_t id) override
         {
-            _parent = id;
             BitProductStateSet<ptrie::map<stateid_t,std::pair<size_t,size_t>>,nbits>::decode(state, id);
         }
 
-        void set_history(stateid_t id, size_t transition)
+        void set_history(stateid_t id, stateid_t parent, size_t transition)
         {
             assert(this->_states.exists(id).first);
-            this->_states[id] = {_parent, transition};
+            this->_states[id] = {parent, transition};
         }
 
         std::pair<size_t, size_t> get_history(stateid_t stateid)
@@ -146,9 +145,6 @@ namespace LTL { namespace Structures {
             assert(this->_states.exists(stateid).first);
             return this->_states[stateid];
         }
-
-    private:
-        stateid_t _parent = 0;
     };
 } }
 #endif /* COMPOUNDSTATESET_H */

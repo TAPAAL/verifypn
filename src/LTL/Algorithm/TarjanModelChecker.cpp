@@ -148,14 +148,15 @@ namespace LTL {
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
                 }
-
+                
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        seen.set_history(stateid, dtop._sucinfo.transition());
+                        auto parent_stateid = cstack[dtop._pos]._stateid;
+                        seen.set_history(stateid, parent_stateid, successorGenerator.fired());
                     }
                 }
 
-                dtop._sucinfo._last_state = stateid;
+               
 
                 // lookup successor in 'hash' table
                 auto marking = StateSet::get_marking_id(stateid);
