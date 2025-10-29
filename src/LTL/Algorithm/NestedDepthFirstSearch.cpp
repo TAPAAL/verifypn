@@ -229,7 +229,7 @@ namespace LTL {
         if(!nested_todo.empty()) {
             // here the last state is significant
             // of the successor is the check that demonstrates the violation.
-            loop_id = nested_todo.back()._id;
+            loop_id = nested_todo.front()._id;
             nested_todo.pop_back();
         }
 
