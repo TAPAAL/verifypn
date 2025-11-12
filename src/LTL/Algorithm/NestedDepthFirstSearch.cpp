@@ -218,42 +218,35 @@ namespace LTL {
 
 
     template<typename T>
-    void NestedDepthFirstSearch::build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo)
-    {
-        size_t loop_id = std::numeric_limits<size_t>::max();
-        // last element of todo-stack always has a "garbage" transition, it is the
-        // current working element OR first element of nested.
+    void NestedDepthFirstSearch::build_trace(light_deque<stack_entry_t<T>>& todo, light_deque<stack_entry_t<T>>& nested_todo) {
+        if (!todo.empty()) todo.pop_back();
+        while (!todo.empty()) {
+            const auto& top = todo.front();
+            const auto res = top._sucinfo.transition();
+            if constexpr (std::is_same<std::decay_t<decltype(res)>, std::vector<uint32_t>>::value) {
+                _trace.emplace_back(res);
+            } else {
+                _trace.push_back({res});
+                assert(res < _net.numberOfTransitions());
+            }
 
-        if(!todo.empty())
-            todo.pop_back();
-        if(!nested_todo.empty()) {
-            // here the first state is significant
-            // of the successor is the check that demonstrates the violation.
-            loop_id = nested_todo.front()._id;
+            todo.pop_front();
         }
 
-        for(auto* stck : {&todo, &nested_todo})
-        {
-            while(!(*stck).empty())
-            {
-                auto& top = (*stck).front();
-                if(top._id == loop_id)
-                {
-                    _loop = _trace.size();
-                    loop_id = std::numeric_limits<size_t>::max();
-                }
-                auto res = top._sucinfo.transition();
-                if constexpr (std::is_same<decltype(res),std::vector<uint32_t>>::value)
-                {
-                    _trace.emplace_back(top._sucinfo.transition());
-                }
-                else
-                {
-                    _trace.push_back({top._sucinfo.transition()});
-                    assert(top._sucinfo.transition() < _net.numberOfTransitions());
-                }
-                (*stck).pop_front();
+        _loop = _trace.size();
+        if (nested_todo.empty()) return;
+        while (!nested_todo.empty()) {
+            const auto& top = nested_todo.front();
+            const auto res = top._sucinfo.transition();
+            if constexpr (std::is_same<std::decay_t<decltype(res)>, std::vector<uint32_t>>::value) {
+                _trace.emplace_back(res);
+            } else if (res < _net.numberOfTransitions()) {
+                _trace.push_back({res});
+            } else {
+                break;
             }
+
+            nested_todo.pop_front();
         }
     }
 }
