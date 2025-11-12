@@ -227,10 +227,9 @@ namespace LTL {
         if(!todo.empty())
             todo.pop_back();
         if(!nested_todo.empty()) {
-            // here the last state is significant
+            // here the first state is significant
             // of the successor is the check that demonstrates the violation.
             loop_id = nested_todo.front()._id;
-            nested_todo.pop_back();
         }
 
         for(auto* stck : {&todo, &nested_todo})
