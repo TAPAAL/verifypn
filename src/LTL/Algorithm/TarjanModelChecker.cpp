@@ -156,7 +156,7 @@ namespace LTL {
                     }
                 }
 
-               
+               dtop._sucinfo._last_state = stateid;
 
                 // lookup successor in 'hash' table
                 auto marking = StateSet::get_marking_id(stateid);
@@ -337,7 +337,7 @@ namespace LTL {
                 p = cstack[p]._lowsource;
             }
         }
-        
+
         if(!had_deadlock && _loop_trans < _net.numberOfTransitions()) {
             assert(_loop_trans < _net.numberOfTransitions());
             _trace.push_back({_loop_trans});
