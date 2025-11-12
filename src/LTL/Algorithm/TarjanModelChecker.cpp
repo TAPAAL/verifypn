@@ -156,7 +156,7 @@ namespace LTL {
                     }
                 }
 
-               dtop._sucinfo._last_state = stateid;
+                dtop._sucinfo._last_state = stateid;
 
                 // lookup successor in 'hash' table
                 auto marking = StateSet::get_marking_id(stateid);
