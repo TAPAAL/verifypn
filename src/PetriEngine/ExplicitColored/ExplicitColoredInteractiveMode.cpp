@@ -115,6 +115,9 @@ namespace PetriEngine::ExplicitColored {
     }
 
     void ExplicitColoredInteractiveMode::_printValidBindings(std::ostream &out, const ColoredPetriNetMarking &currentMarking) const {
+        // We always use the same state id in interactive mode, therefore we need to shrink state everytime
+        // to clear the generated color constraint data
+        _successorGenerator.shrinkState(0);
         out << "<valid-bindings>" << std::endl;
         for (Transition_t transition = 0; transition < _cpn.getTransitionCount(); transition++) {
             Binding_t currentBinding = 0;
