@@ -152,6 +152,13 @@ namespace PetriEngine {
             return _string_set;
         }
 
+        // Since ColoredPetriNetBuilder takes ownership of any colors given to it, we need to be able to tell it to
+        // forget about those colors and "leak" the memory
+        void leak_colors()
+        {
+            _colors.clear();
+        }
+
     private:
         shared_name_index_map _placenames;
         shared_name_index_map _transitionnames;

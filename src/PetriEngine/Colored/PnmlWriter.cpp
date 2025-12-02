@@ -16,6 +16,21 @@ namespace PetriEngine {
             metaInfoClose();
         }
 
+        void PnmlWriter::writeInitialTokens(const std::string& placeId)
+        {
+            const auto it = std::find_if(
+                _builder._placenames.begin(),
+                _builder._placenames.end(),
+                [&](const auto& kv) {return placeId == *kv.first;});
+
+            if (it == _builder._placenames.end())
+            {
+                throw base_error("Could not write initial tokens, since the place '", placeId, "' does not exist");
+            }
+
+            handleTokenExpression(_builder.places()[it->second].marking);
+        }
+
         void PnmlWriter::metaInfo() {
             _out << getTabs() << "<?xml version=\"1.0\"?>\n"
                  << getTabs() << "<pnml xmlns=\"http://www.pnml.org/version-2009/grammar/pnml\">\n"
@@ -216,11 +231,19 @@ namespace PetriEngine {
             _out << increaseTabs() << "<text>" << marking.toString() << "</text>\n";
             _out << getTabs() << "<structure>\n";
 
-            if (marking.size() > 1) {
+            handleTokenExpression(marking);
+
+            _out << decreaseTabs() << "</structure>\n";
+            _out << decreaseTabs() << "</hlinitialMarking>\n";
+        }
+
+        void PnmlWriter::handleTokenExpression(const Multiset& tokens)
+        {
+            if (tokens.size() > 1) {
                 bool first = true;
                 _out << increaseTabs() << "<add>\n";
 
-                for (const auto &p: marking) {
+                for (const auto &p: tokens) {
                     if (p.second == 0) {
                         continue;
                     }
@@ -235,16 +258,13 @@ namespace PetriEngine {
                 }
                 _out << decreaseTabs() << "</add>\n";
             } else {
-                for (const auto &p: marking) {
+                for (const auto &p: tokens) {
                     if (p.second == 0) {
                         continue;
                     }
                     handleNumberOf(p);
                 }
             }
-
-            _out << decreaseTabs() << "</structure>\n";
-            _out << decreaseTabs() << "</hlinitialMarking>\n";
         }
 
         void PnmlWriter::handleNumberOf(std::pair<const PetriEngine::Colored::Color *const, uint32_t> numberOff) {

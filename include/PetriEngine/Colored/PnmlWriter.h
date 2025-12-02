@@ -14,7 +14,7 @@ namespace PetriEngine::Colored {
         PnmlWriter(PetriEngine::ColoredPetriNetBuilder &b, std::ostream &out) : _builder(b), _out(out), _tabsCount(0) {}
 
         void toColPNML();
-
+        void writeInitialTokens(const std::string& placeId);
     private:
         PetriEngine::ColoredPetriNetBuilder &_builder;
         std::ostream &_out;
@@ -76,6 +76,8 @@ namespace PetriEngine::Colored {
         void handleNamedSorts();
 
         void handlehlinitialMarking(Multiset marking);
+
+        void handleTokenExpression(const Multiset& tokens);
 
         void handleType(const Place &place);
 

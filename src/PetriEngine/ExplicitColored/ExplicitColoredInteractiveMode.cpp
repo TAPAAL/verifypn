@@ -8,6 +8,10 @@
 #include <iomanip>
 #include <PetriEngine/ExplicitColored/ExplicitColoredPetriNetBuilder.h>
 #include <PetriEngine/ExplicitColored/SuccessorGenerator/ColoredSuccessorGenerator.h>
+#include <PetriEngine/Colored/ColoredPetriNetBuilder.h>
+#include <PetriEngine/Colored/PnmlWriter.h>
+
+#include "PetriParse/PNMLParser.h"
 
 namespace PetriEngine::ExplicitColored {
     int ExplicitColoredInteractiveMode::run(const std::string &model_path) {
@@ -33,7 +37,7 @@ namespace PetriEngine::ExplicitColored {
     ExplicitColoredInteractiveMode::ExplicitColoredInteractiveMode(
         const ColoredSuccessorGenerator& successorGenerator,
         const ColoredPetriNet& cpn,
-        const ExplicitColoredPetriNetBuilder& builder
+        ExplicitColoredPetriNetBuilder& builder
     )
     : _successorGenerator(successorGenerator), _cpn(cpn), _builder(builder) { }
 
@@ -166,92 +170,8 @@ namespace PetriEngine::ExplicitColored {
     std::optional<ColoredPetriNetMarking> ExplicitColoredInteractiveMode::_parseMarking(
         const rapidxml::xml_document<>& markingXml,
         std::ostream& errorOut
-    ) const {
-        const auto root = markingXml.first_node();
-
-        ColoredPetriNetMarking generatedMarking;
-        generatedMarking.markings.resize(_builder.getPlaceCount());
-
-        auto placeNode = root->first_node();
-        if (root->name() != std::string("marking")) {
-            errorOut << "Unexpected tag " << std::quoted(root->name()) << std::endl;
-            return std::nullopt;
-        }
-
-        if (placeNode == nullptr) {
-            return generatedMarking; // Empty marking
-        }
-
-        do {
-            if (placeNode->name() != std::string("place")) {
-                errorOut << "Unexpected tag " << std::quoted(placeNode->name()) << std::endl;
-                return std::nullopt;
-            }
-
-            if (placeNode->first_attribute("id") == nullptr) {
-                errorOut << "Place tag is missing id attribute" << std::endl;
-                return std::nullopt;
-            }
-
-            auto markingPlaceIndexIt = _builder.getPlaceIndices().find(placeNode->first_attribute("id")->value());
-            if (markingPlaceIndexIt == _builder.getPlaceIndices().end()) {
-                errorOut << "Unknown place id " << std::quoted(placeNode->first_attribute("id")->value()) << std::endl;
-                return std::nullopt;
-            }
-            auto tokenNode = placeNode->first_node();
-            auto placeColorType = _builder.getPlaceUnderlyingColorType(markingPlaceIndexIt->second);
-            do {
-                if (tokenNode->name() != std::string("token")) {
-                    errorOut << "Unexpected tag " << std::quoted(tokenNode->name()) << std::endl;
-                    return std::nullopt;
-                }
-                if (tokenNode->first_attribute("count") == nullptr) {
-                    errorOut << "Token tag is missing count attribute" << std::endl;
-                    return std::nullopt;
-                }
-                auto count = 0;
-                try {
-                    count = std::stoi(tokenNode->first_attribute("count")->value());
-                } catch (const std::out_of_range&) {
-                    errorOut << "Token count " << tokenNode->first_attribute("count")->value() << " is too big or too small" << std::endl;
-                    return std::nullopt;
-                } catch (const std::invalid_argument&) {
-                    errorOut << "Token count " << tokenNode->first_attribute("count")->value() << " could not be parsed" << std::endl;
-                    return std::nullopt;
-                }
-                auto colorComponentNode = tokenNode->first_node();
-                uint64_t encodedColor = 0;
-                const auto& colorCodec = _cpn.getPlaces()[markingPlaceIndexIt->second].colorType->colorCodec;
-                auto componentIndex = 0;
-                do {
-                    if (colorComponentNode->name() != std::string("color")) {
-                        errorOut << "Unexpected tag " << colorComponentNode->name() << std::endl;
-                        return std::nullopt;
-                    }
-                    if (colorComponentNode->type() != rapidxml::node_element) {
-                        errorOut << "Expected color tag to only contain color id" << std::endl;
-                        return std::nullopt;
-                    }
-                    const auto colorName = colorComponentNode->value();
-                    auto currentColorType = placeColorType;
-                    if (auto productColor = dynamic_cast<const Colored::ProductType*>(placeColorType)) {
-                        currentColorType = productColor->getNestedColorType(componentIndex);
-                    }
-
-                    auto colorIndex = _findColorIndex(currentColorType, colorName);
-                    if (colorIndex == std::nullopt) {
-                        errorOut << "Unknown color id " << std::quoted(colorName) << std::endl;
-                        return std::nullopt;
-                    }
-                    encodedColor = colorCodec.addToValue(encodedColor, componentIndex, *colorIndex);
-
-                    componentIndex++;
-                } while ((colorComponentNode = colorComponentNode->next_sibling()) != nullptr);
-                generatedMarking.markings[markingPlaceIndexIt->second].addCount(encodedColor, count);
-            } while ((tokenNode = tokenNode->next_sibling()) != nullptr);
-        } while ((placeNode = placeNode->next_sibling()) != nullptr);
-
-        return generatedMarking;
+    ) {
+        return _builder.parseMarking(markingXml);
     }
 
     std::optional<std::pair<Transition_t, Binding>> ExplicitColoredInteractiveMode::_parseTransition(
@@ -336,37 +256,55 @@ namespace PetriEngine::ExplicitColored {
         std::ostream &out,
         const ColoredPetriNetMarking &currentMarking
     ) const {
-        out << "<marking>" << std::endl;
-        for (Place_t place = 0; place < currentMarking.markings.size(); place++) {
-            out << "\t<place id=" << std::quoted(_builder.getPlaceName(place)) << ">" << std::endl;
+        shared_string_set sharedStringSet {};
+        ColoredPetriNetBuilder builder(sharedStringSet);
+        for (Place_t place = 0; place < currentMarking.markings.size(); place++)
+        {
+            builder.addColorType(_builder.getPlaceName(place), _builder.getPlaceUnderlyingColorType(place));
+
+            Colored::Multiset tokens;
             const auto& colorCodec = _cpn.getPlaces()[place].colorType->colorCodec;
             const auto& colorType = *_builder.getPlaceUnderlyingColorType(place);
             for (const auto& [encodedColor, count] : currentMarking.markings[place].counts()) {
                 if (count > 0) {
-                    out << "\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
                     if (colorCodec.getColorCount() > 1) {
                         const auto productColorType = dynamic_cast<const Colored::ProductType*>(&colorType);
                         if (productColorType == nullptr) {
                             throw std::runtime_error("Color codec is inconsistent with underlying color type");
                         }
+                        std::vector<uint32_t> colorIndices;
                         for (size_t colorIndex = 0; colorIndex < colorCodec.getColorCount(); colorIndex++) {
-                            const Color_t color = colorCodec.decode(encodedColor, colorIndex);
-                            out << "\t\t\t<color>"
-                                << (*(productColorType->getNestedColorType(colorIndex)))[color].getColorName()
-                                << "</color>"
-                                << std::endl;
+                            colorIndices.push_back(colorCodec.decode(encodedColor, colorIndex));
                         }
+
+                        tokens[productColorType->getColor(colorIndices)] += count;
                     } else {
-                        out << "\t\t\t<color>"
-                            << colorType[encodedColor].getColorName()
-                            << "</color>"
-                            << std::endl;
+                        tokens[&colorType[encodedColor]] += count;
                     }
-                    out << "\t\t</token>" << std::endl;
                 }
             }
-            out << "\t</place>" << std::endl;
+
+            builder.addPlace(
+                _builder.getPlaceName(place),
+                _builder.getPlaceUnderlyingColorType(place),
+                std::move(tokens),
+                0,
+                0);
+        }
+
+
+        Colored::PnmlWriter pnmlWriter(builder, out);
+        out << "<marking>" << std::endl;
+        for (Place_t place = 0; place < currentMarking.markings.size(); place++) {
+            if (currentMarking.markings[place].totalCount() > 0)
+            {
+                out << "\t<place id=" << std::quoted(_builder.getPlaceName(place)) << ">" << std::endl;
+                pnmlWriter.writeInitialTokens(_builder.getPlaceName(place));
+                out << "\t</place>" << std::endl;
+            }
         }
         out << "</marking>" << std::endl;
+
+        builder.leak_colors();
     }
 }
