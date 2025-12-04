@@ -244,12 +244,12 @@ namespace PetriEngine {
 
                             minimum_weight = std::min(minimum_weight, net->inArc(p, t));
                             
-                            outRow.push_back(1.0);
+                            outRow.push_back(1/1000.0);
                             outIndices.push_back(t+1);
                         }
                         else{
                             if(net->inArc(p,t) != 0){
-                                outRow.push_back(1.0);
+                                outRow.push_back(1/1000.0);
                                 outIndices.push_back(t+1);
                             }
                             if(net->outArc(t,p) != 0){
@@ -289,7 +289,7 @@ namespace PetriEngine {
                     inRow.push_back(needed_weight);
                     inIndices.push_back(OR_P);
 
-                    outRow.push_back(-1000000.0);
+                    outRow.push_back(-10000.0);
                     outIndices.push_back(OR_Q);
                 
                     glp_add_rows(lp, 3);
