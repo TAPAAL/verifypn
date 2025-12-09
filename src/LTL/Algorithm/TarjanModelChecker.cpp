@@ -151,8 +151,7 @@ namespace LTL {
                 
                 if constexpr (SaveTrace) {
                     if (isnew) {
-                        auto parent_stateid = cstack[dtop._pos]._stateid;
-                        seen.set_history(stateid, parent_stateid, successorGenerator.fired());
+                        seen.set_history(stateid, successorGenerator.fired());
                     }
                 }
 
