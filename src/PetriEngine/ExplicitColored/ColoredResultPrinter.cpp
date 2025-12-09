@@ -1,12 +1,13 @@
 #include "PetriEngine/ExplicitColored/ColoredResultPrinter.h"
-
 #include <iomanip>
+#include "PetriEngine/Colored/PnmlWriter.h"
+
 
 namespace PetriEngine::ExplicitColored {
     void ColoredResultPrinter::printResult(
         const SearchStatistics& searchStatistics,
         const Reachability::AbstractHandler::Result result,
-        const std::vector<TraceStep>* trace
+        const ExplicitColoredTraceContext* trace
     ) const {
         _printCommon(result, {});
         _stream << "STATS:" << std::endl
@@ -59,10 +60,10 @@ namespace PetriEngine::ExplicitColored {
         std::cout << "satisfied" << std::endl;
     }
 
-    void ColoredResultPrinter::_printTrace(const std::vector<TraceStep>& trace) const {
+    void ColoredResultPrinter::_printTrace(const ExplicitColoredTraceContext& trace) const {
         _traceStream << "Trace: " << std::endl;
         _traceStream << "<trace>" << std::endl;
-        for (const auto& step : trace) {
+        for (const auto& step : trace.traceSteps) {
             if (!step.isInitial) {
                 _traceStream << "\t<transition id=" << std::quoted(step.transitionId) << ">" << std::endl;
                 _traceStream << "\t\t<bindings>" << std::endl;
@@ -75,24 +76,68 @@ namespace PetriEngine::ExplicitColored {
                 _traceStream << "\t</transition>" << std::endl;
             }
             _traceStream << "\t<marking>" << std::endl;
-            for (const auto& [placeId, marking] : step.marking) {
-                if (!marking.empty()) {
-                    _traceStream << "\t\t<place id=" << std::quoted(placeId) << ">" << std::endl;
-                    for (const auto& [productColor, count] : marking) {
-                        if (count > 0) {
-                            _traceStream << "\t\t\t<token count=" << std::quoted(std::to_string(count)) << ">" << std::endl;
-                            for (const auto& color : productColor) {
-                                _traceStream << "\t\t\t\t<color>" << color << "</color>" << std::endl;
-                            }
-                            _traceStream << "\t\t\t</token>" << std::endl;
-                        }
-                    }
-                    _traceStream << "\t\t</place>" << std::endl;
-                }
-            }
+            _printMarkings(trace.cpnBuilder, step);
             _traceStream << "\t</marking>" << std::endl;
         }
         _traceStream << "</trace>" << std::endl;
+    }
+
+    void ColoredResultPrinter::_printMarkings(
+        const ExplicitColoredPetriNetBuilder& explicitCpnBuilder, const TraceStep& traceStep) const
+    {
+        shared_string_set sharedStringSet {};
+        ColoredPetriNetBuilder builder(sharedStringSet);
+        for (const auto colorType : explicitCpnBuilder.getUnderlyingVariableColorTypes())
+        {
+            builder.addColorType(colorType->getName(), colorType);
+        }
+
+        for (const auto& [place_id, traceTokens] : traceStep.marking) {
+            const auto place = explicitCpnBuilder.getPlaceIndices().find(place_id)->second;
+
+            Colored::Multiset tokens;
+            const auto& colorType = *explicitCpnBuilder.getPlaceUnderlyingColorType(place);
+            for (const auto& [color, count] : traceTokens)
+            {
+                if (color.size() > 1)
+                {
+                    const auto productColorType = dynamic_cast<const Colored::ProductType*>(&colorType);
+                    if (productColorType == nullptr) {
+                        throw std::runtime_error("Trace color is inconsistent with underlying color type");
+                    }
+
+                    std::vector<uint32_t> colorIndices;
+                    for (size_t colorTypeIndex = 0; colorTypeIndex < color.size(); colorTypeIndex++) {
+                        colorIndices.push_back(
+                            (*productColorType->getNestedColorType(colorTypeIndex))[color[colorTypeIndex]]->getId());
+                    }
+
+                    tokens[productColorType->getColor(colorIndices)] = count;
+                }
+                else
+                {
+                    tokens[colorType[color[0]]] = count;
+                }
+            }
+
+            builder.addPlace(
+                explicitCpnBuilder.getPlaceName(place),
+                explicitCpnBuilder.getPlaceUnderlyingColorType(place),
+                std::move(tokens),
+                0,
+                0);
+        }
+
+        Colored::PnmlWriter writer(builder, _traceStream);
+
+        for (auto place = 0; place < explicitCpnBuilder.getPlaceCount(); place++)
+        {
+            _traceStream << "\t\t<place id=" << std::quoted(explicitCpnBuilder.getPlaceName(place)) << ">" << std::endl;
+            writer.writeInitialTokens(explicitCpnBuilder.getPlaceName(place));
+            _traceStream << "\t\t</place>" << std::endl;
+        }
+
+        builder.leak_colors();
     }
 }
 
