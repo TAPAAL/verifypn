@@ -130,11 +130,14 @@ namespace PetriEngine::ExplicitColored {
 
         Colored::PnmlWriter writer(builder, _traceStream);
 
-        for (auto place = 0; place < explicitCpnBuilder.getPlaceCount(); place++)
+        for (const auto& [place_id, traceTokens] : traceStep.marking)
         {
-            _traceStream << "\t\t<place id=" << std::quoted(explicitCpnBuilder.getPlaceName(place)) << ">" << std::endl;
-            writer.writeInitialTokens(explicitCpnBuilder.getPlaceName(place));
-            _traceStream << "\t\t</place>" << std::endl;
+            if (!traceTokens.empty())
+            {
+                _traceStream << "\t\t<place id=" << std::quoted(place_id) << ">" << std::endl;
+                writer.writeInitialTokens(place_id);
+                _traceStream << "\t\t</place>" << std::endl;
+            }
         }
 
         builder.leak_colors();
