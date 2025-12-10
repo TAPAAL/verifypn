@@ -132,6 +132,7 @@ namespace LTL { namespace Structures {
 
         void decode(ProductState &state, stateid_t id) override
         {
+            _parent = id;
             BitProductStateSet<ptrie::map<stateid_t,std::pair<size_t,size_t>>,nbits>::decode(state, id);
         }
 
