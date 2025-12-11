@@ -156,7 +156,7 @@ namespace PetriEngine {
         // forget about those colors and "leak" the memory
         void leak_colors()
         {
-            _colors.clear();
+            _ownsColors = false;
         }
 
     private:
@@ -171,6 +171,7 @@ namespace PetriEngine {
         Colored::ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         shared_string_set& _string_set;
+        bool _ownsColors = true;
 
         void addArc(const std::string& place,
                 const std::string& transition,

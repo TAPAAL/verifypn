@@ -129,6 +129,7 @@ namespace PetriEngine::ExplicitColored {
         }
 
         Colored::PnmlWriter writer(builder, _traceStream);
+        builder.leak_colors();
 
         for (const auto& [place_id, traceTokens] : traceStep.marking)
         {
@@ -139,8 +140,6 @@ namespace PetriEngine::ExplicitColored {
                 _traceStream << "\t\t</place>" << std::endl;
             }
         }
-
-        builder.leak_colors();
     }
 }
 

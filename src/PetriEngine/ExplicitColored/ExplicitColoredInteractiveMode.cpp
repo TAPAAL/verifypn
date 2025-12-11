@@ -258,6 +258,7 @@ namespace PetriEngine::ExplicitColored {
     ) const {
         shared_string_set sharedStringSet {};
         ColoredPetriNetBuilder builder(sharedStringSet);
+        builder.leak_colors();
         for (Place_t place = 0; place < currentMarking.markings.size(); place++)
         {
             builder.addColorType(_builder.getPlaceName(place), _builder.getPlaceUnderlyingColorType(place));
@@ -305,6 +306,5 @@ namespace PetriEngine::ExplicitColored {
         }
         out << "</marking>" << std::endl;
 
-        builder.leak_colors();
     }
 }
