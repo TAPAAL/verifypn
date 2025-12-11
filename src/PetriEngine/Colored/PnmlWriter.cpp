@@ -75,10 +75,8 @@ namespace PetriEngine {
 
                 //this is a hack, better way to find if a color is a finite int range?
                 if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
-                    _namedSortTypes.emplace(colortype->getName(), "finite range");
                     handleFiniteRange(types);
                 } else {
-                    _namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
                     if (types[0]->getName() == "dot") {
                         _out << increaseTabs() << "<dot/>\n";
                     } else {
