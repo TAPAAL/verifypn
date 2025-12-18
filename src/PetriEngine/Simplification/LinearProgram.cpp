@@ -6,6 +6,7 @@
 #include "PetriEngine/Simplification/LinearProgram.h"
 #include "PetriEngine/Simplification/LPCache.h"
 #include "PetriEngine/PQL/Contexts.h"
+#include "VerifyPN.h"
 
 namespace PetriEngine {
     namespace Simplification {
@@ -143,10 +144,43 @@ namespace PetriEngine {
             }
         }
 
+        std::vector<Condition_ptr> bigMQuery(const PQL::SimplificationContext& context){
+            
+            std::vector<Condition_ptr> res;
+
+            for(int p = 0; p < context.net()->numberOfPlaces(); p++){
+                auto rhs = std::make_shared<IdentifierExpr>(context.net()->placeNames()[p]);
+                auto lhs = std::make_shared<LiteralExpr>(10000);
+                auto lt = std::make_shared<LessThanCondition>(lhs, rhs);
+                res.push_back(lt);
+            }
+
+            auto orQuery = std::make_shared<OrCondition>(res);
+            auto FQuery = std::make_shared<FCondition>(orQuery);
+            auto EFQuery = std::make_shared<ECondition>(FQuery);
+            std::vector<Condition_ptr> queries;
+            queries.push_back(EFQuery);
+            return queries;
+        }
+
+
+        bool checkBigMConstraint(const PQL::SimplificationContext& context){
+            return true;
+            auto queries = bigMQuery(context);
+            options_t options;
+            options.lpUseBigM = false;
+            simplify_queries(context.marking(), context.net(), queries, options, std::cout);
+            std::cout << "done big M\n";
+            if(queries[0]->isTriviallyFalse()){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
-
 
             if (_result != result_t::UKNOWN)
             {
@@ -216,104 +250,106 @@ namespace PetriEngine {
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
 
-            for (size_t p = 0; p < net->numberOfPlaces(); p++) {      
-                    auto numColsLP = glp_get_num_cols(lp);
-                    std::vector<double> inRow(1, 0);
-                    std::vector<int> inIndices(1, 0);
+            if(context.useBigM()){
+                for (size_t p = 0; p < net->numberOfPlaces(); p++) {      
+                        auto numColsLP = glp_get_num_cols(lp);
+                        std::vector<double> inRow(1, 0);
+                        std::vector<int> inIndices(1, 0);
+                        
+                        std::vector<double> outRow(1, 0);
+                        std::vector<int> outIndices(1, 0);
                     
-                    std::vector<double> outRow(1, 0);
-                    std::vector<int> outIndices(1, 0);
-                   
 
-                    bool has_loop = false;
-                    bool has_in   = false;
-                    //bool requires_tokens = false;
+                        bool has_loop = false;
+                        bool has_in   = false;
+                        //bool requires_tokens = false;
 
-                    //std::map<uint32_t, std::vector<uint32_t>> loops_by_weight;
-                    //int min_pos_loop = 0;
-                    uint32_t minimum_weight = UINT32_MAX;
+                        //std::map<uint32_t, std::vector<uint32_t>> loops_by_weight;
+                        //int min_pos_loop = 0;
+                        uint32_t minimum_weight = UINT32_MAX;
 
-                    for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-                        if(net->outArc(t, p) != 0 && net->inArc(p, t) != 0){
-                            has_loop = true;
-                            /*if(net->inArc(p, t) > context.marking()[p])
-                                requires_tokens = true;
-                            
-                            if(net->outArc(t, p) > net->inArc(p, t) && net->inArc(p, t) < min_pos_loop)
-                                min_pos_loop = net->inArc(p, t);*/
+                        for (size_t t = 0; t < net->numberOfTransitions(); t++) {
+                            if(net->outArc(t, p) != 0 && net->inArc(p, t) != 0){
+                                has_loop = true;
+                                /*if(net->inArc(p, t) > context.marking()[p])
+                                    requires_tokens = true;
+                                
+                                if(net->outArc(t, p) > net->inArc(p, t) && net->inArc(p, t) < min_pos_loop)
+                                    min_pos_loop = net->inArc(p, t);*/
 
-                            minimum_weight = std::min(minimum_weight, net->inArc(p, t));
-                            
-                            outRow.push_back(1/1000.0);
-                            outIndices.push_back(t+1);
-                        }
-                        else{
-                            if(net->inArc(p,t) != 0){
-                                outRow.push_back(1/1000.0);
+                                minimum_weight = std::min(minimum_weight, net->inArc(p, t));
+                                
+                                outRow.push_back(1);
                                 outIndices.push_back(t+1);
                             }
-                            if(net->outArc(t,p) != 0){
-                                has_in = true;
-                                
-                                inRow.push_back(net->outArc(t, p));
-                                inIndices.push_back(t+1);
+                            else{
+                                if(net->inArc(p,t) != 0){
+                                    outRow.push_back(1);
+                                    outIndices.push_back(t+1);
+                                }
+                                if(net->outArc(t,p) != 0){
+                                    has_in = true;
+                                    
+                                    inRow.push_back(net->outArc(t, p));
+                                    inIndices.push_back(t+1);
+                                }
                             }
                         }
-                    }
 
-                    if(!has_loop || !has_in || context.marking()[p] >= minimum_weight){
-                        //std::cout << "no loop applicable\n";
-                        continue;
-                    }
-                    else{
-                        //std::cout << "adding loop constraint for " << *net->placeNames()[p] <<"\n";
-                    }
+                        if(!has_loop || !has_in || context.marking()[p] >= minimum_weight){
+                            //std::cout << "no loop applicable\n";
+                            continue;
+                        }
+                        else{
+                            //std::cout << "adding loop constraint for " << *net->placeNames()[p] <<"\n";
+                        }
 
-                    int idx = numColsLP + 1;
-                    glp_add_cols(lp, 2);
+                        int idx = numColsLP + 1;
+                        glp_add_cols(lp, 2);
 
-                    for(int i = glp_get_num_cols(lp) - 1; i <= glp_get_num_cols(lp); i++){
-                        glp_set_obj_coef(lp, i, 1);
-                        glp_set_col_kind(lp, i, GLP_BV);
-                        //glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0);
-                    }
+                        for(int i = glp_get_num_cols(lp) - 1; i <= glp_get_num_cols(lp); i++){
+                            glp_set_obj_coef(lp, i, 1);
+                            glp_set_col_kind(lp, i, GLP_BV);
+                            //glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0);
+                        }
 
-                    const int OR_P = glp_get_num_cols(lp) ;
-                    std::string or_p_name = "NO_IMPLY_" + *net->placeNames()[p];
-                    glp_set_col_name(lp, OR_P, or_p_name.c_str());
-                    const int OR_Q = glp_get_num_cols(lp) - 1;
-                    std::string or_q_name = "YES_IMPLY_" + *net->placeNames()[p];
-                    glp_set_col_name(lp, OR_Q, or_q_name.c_str());
-                  
-                    const double needed_weight = (double) (minimum_weight - context.marking()[p]);
-                    inRow.push_back(needed_weight);
-                    inIndices.push_back(OR_P);
-
-                    outRow.push_back(-10000.0);
-                    outIndices.push_back(OR_Q);
-                
-                    glp_add_rows(lp, 3);
-
-                    glp_set_mat_row(lp, rowno, inIndices.size() - 1, inIndices.data(), inRow.data());
-                    glp_set_row_bnds(lp, rowno, GLP_LO, needed_weight, infty);
-                    ++rowno;
-
-                    glp_set_mat_row(lp, rowno, outIndices.size() - 1, outIndices.data(), outRow.data());
-                    glp_set_row_bnds(lp, rowno, GLP_UP, 0.0, 0.0);
-                    ++rowno;
-
-                    double orRow[3];
-                    int orIndices[3];
+                        const int OR_P = glp_get_num_cols(lp) ;
+                        std::string or_p_name = "NO_IMPLY_" + *net->placeNames()[p];
+                        glp_set_col_name(lp, OR_P, or_p_name.c_str());
+                        const int OR_Q = glp_get_num_cols(lp) - 1;
+                        std::string or_q_name = "YES_IMPLY_" + *net->placeNames()[p];
+                        glp_set_col_name(lp, OR_Q, or_q_name.c_str());
                     
+                        const double needed_weight = (double) (minimum_weight - context.marking()[p]);
+                        inRow.push_back(needed_weight);
+                        inIndices.push_back(OR_P);
 
-                    orRow[1] = 1.0;
-                    orRow[2] = 1.0;
-                    orIndices[1] = OR_P;
-                    orIndices[2] = OR_Q;
+                        outRow.push_back(-1.0 * 10000);
+                        outIndices.push_back(OR_Q);
+                    
+                        glp_add_rows(lp, 3);
 
-                    glp_set_mat_row(lp, rowno, 2, orIndices, orRow);
-                    glp_set_row_bnds(lp, rowno, GLP_FX, 1.0, 1.0);
-                    ++rowno;
+                        glp_set_mat_row(lp, rowno, inIndices.size() - 1, inIndices.data(), inRow.data());
+                        glp_set_row_bnds(lp, rowno, GLP_LO, needed_weight, infty);
+                        ++rowno;
+
+                        glp_set_mat_row(lp, rowno, outIndices.size() - 1, outIndices.data(), outRow.data());
+                        glp_set_row_bnds(lp, rowno, GLP_UP, 0.0, 0.0);
+                        ++rowno;
+
+                        double orRow[3];
+                        int orIndices[3];
+                        
+
+                        orRow[1] = 1.0;
+                        orRow[2] = 1.0;
+                        orIndices[1] = OR_P;
+                        orIndices[2] = OR_Q;
+
+                        glp_set_mat_row(lp, rowno, 2, orIndices, orRow);
+                        glp_set_row_bnds(lp, rowno, GLP_FX, 1.0, 1.0);
+                        ++rowno;
+                }
             }
            
             // Minimize the objective
@@ -336,6 +372,8 @@ namespace PetriEngine {
                 auto status = glp_get_status(lp);
                 if (status == GLP_OPT)
                 {
+                    
+                    #if 1
                     glp_iocp iset;
                     glp_init_iocp(&iset);
                     iset.msg_lev = 0;
@@ -343,6 +381,13 @@ namespace PetriEngine {
                     iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
                     iset.presolve = GLP_OFF;
                     auto ires = glp_intopt(lp, &iset);
+                    #else
+                    glp_smcp settings_exact;
+                    settings_exact.msg_lev = 0;
+                    settings_exact.it_lim = INT_MAX;
+                    settings_exact.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
+                    auto ires = glp_exact(lp, &settings_exact);
+                    #endif
                     if (ires == GLP_ETMLIM)
                     {
                         printSolution(context, lp, false);
@@ -350,15 +395,28 @@ namespace PetriEngine {
                         // std::cerr << "glpk mip: timeout" << std::endl;
                     }
                     else if (ires == 0)
-                    {
+                    {   
+                        #if 1
                         auto ist = glp_mip_status(lp);
+                        #else
+                        auto ist = glp_get_status(lp);
+                        #endif
                         if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
                             printSolution(context, lp, true);
                             _result = result_t::POSSIBLE;
                         }
                         else
                         {
-                            _result = result_t::IMPOSSIBLE;
+                            if(context.useBigM()){
+                                if(checkBigMConstraint(context)){
+                                    _result = result_t::IMPOSSIBLE;
+                                }else{
+                                    _result = result_t::POSSIBLE;
+                                }
+                            }
+                            else{
+                                _result = result_t::IMPOSSIBLE;
+                            }
                         }
                     }
                 }
@@ -369,7 +427,16 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    _result = result_t::IMPOSSIBLE;
+                    if(context.useBigM()){
+                        if(checkBigMConstraint(context)){
+                            _result = result_t::IMPOSSIBLE;
+                        }else{
+                            _result = result_t::POSSIBLE;
+                        }
+                    }
+                    else{
+                        _result = result_t::IMPOSSIBLE;
+                    }
                 }
             }
             else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
@@ -565,7 +632,7 @@ namespace PetriEngine {
                 for (size_t i = 1; i <= nCol; i++) {
                     glp_set_obj_coef(tmp_lp, i, row[i]);
                     glp_set_col_kind(tmp_lp, i, GLP_IV);
-                    glp_set_col_bnds(tmp_lp, i, GLP_LO, 0, infty);
+                    glp_set_col_bnds(tmp_lp, i, GLP_DB, 0, (double) INT32_MAX);
                 }
 
                 auto rs = glp_simplex(tmp_lp, &settings);

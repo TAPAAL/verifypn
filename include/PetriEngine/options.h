@@ -63,6 +63,7 @@ struct options_t {
     std::set<size_t> querynumbers;
     Strategy strategy = Strategy::DEFAULT;
     int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10, initPotencyTimeout = 10;
+    bool lpUseBigM = true;
     int lpPrintLevel = 0;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;

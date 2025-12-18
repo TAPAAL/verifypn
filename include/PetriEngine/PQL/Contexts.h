@@ -180,10 +180,11 @@ namespace PetriEngine {
 
             SimplificationContext(const MarkVal* marking,
                     const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
-                    Simplification::LPCache* cache, uint32_t potencyTimeout = 0, uint32_t printLevel = 0)
+                    Simplification::LPCache* cache, uint32_t potencyTimeout = 0, uint32_t printLevel = 0, bool useBigM = true)
                     : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout),
                     _potencyTimeout(potencyTimeout) {
                 _negated = false;
+                _useBigM = useBigM;
                 _marking = marking;
                 _net = net;
                 _base_lp = buildBase();
@@ -235,6 +236,10 @@ namespace PetriEngine {
                 return _printLevel;
             }
 
+            bool useBigM() const {
+                return _useBigM;
+            }
+
             bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
@@ -259,6 +264,7 @@ namespace PetriEngine {
 
         private:
             bool _negated;
+            bool _useBigM;
             const MarkVal* _marking;
             bool _markingOutOfBounds;
             const PetriNet* _net;
