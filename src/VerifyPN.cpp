@@ -388,6 +388,7 @@ std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlSt
     return ltlQueries;
 }
 
+
 #ifdef VERIFYPN_MC_Simplification
 std::mutex spot_mutex;
 #endif
@@ -578,7 +579,7 @@ void simplify_queries(const MarkVal* marking,
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0 || qt == 0) continue;
                         SimplificationContext simplificationContext(marking, net, qt,
-                            options.lpsolveTimeout, &cache);
+                            options.lpsolveTimeout, &cache, 0, options.lpPrintLevel, options.lpUseBigM);
                         if (simplificationContext.markingOutOfBounds()) {
                             std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction for LTL is skipped.\n";
                             break;
@@ -609,7 +610,7 @@ void simplify_queries(const MarkVal* marking,
 
                     if (options.queryReductionTimeout > 0 && qt > 0) {  
                         SimplificationContext simplificationContext(marking, net, qt,
-                            options.lpsolveTimeout, &cache);
+                            options.lpsolveTimeout, &cache, 0, options.lpPrintLevel, options.lpUseBigM);
                         if (simplificationContext.markingOutOfBounds()) {
                             std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
                             break;

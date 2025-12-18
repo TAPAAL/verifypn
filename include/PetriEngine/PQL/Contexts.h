@@ -180,16 +180,18 @@ namespace PetriEngine {
 
             SimplificationContext(const MarkVal* marking,
                     const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
-                    Simplification::LPCache* cache, uint32_t potencyTimeout = 0)
+                    Simplification::LPCache* cache, uint32_t potencyTimeout = 0, uint32_t printLevel = 0, bool useBigM = true)
                     : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout),
                     _potencyTimeout(potencyTimeout) {
                 _negated = false;
+                _useBigM = useBigM;
                 _marking = marking;
                 _net = net;
                 _base_lp = buildBase();
                 _start = std::chrono::high_resolution_clock::now();
                 _cache = cache;
                 _markingOutOfBounds = false;
+                _printLevel = printLevel;
                 for(size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     if (marking[i] >  std::numeric_limits<int32_t>::max()) { //too many tokens exceeding int32_t limits, LP solver will give wrong results
                         _markingOutOfBounds = true;
@@ -230,6 +232,14 @@ namespace PetriEngine {
 
             double getReductionTime();
 
+            uint32_t getPrintLevel() const{
+                return _printLevel;
+            }
+
+            bool useBigM() const {
+                return _useBigM;
+            }
+
             bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
@@ -254,10 +264,12 @@ namespace PetriEngine {
 
         private:
             bool _negated;
+            bool _useBigM;
             const MarkVal* _marking;
             bool _markingOutOfBounds;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout, _potencyTimeout;
+            uint32_t _printLevel;
             mutable glp_prob* _base_lp = nullptr;
             std::chrono::high_resolution_clock::time_point _start;
             Simplification::LPCache* _cache;
