@@ -15,7 +15,7 @@ concurrency:
 jobs:
   build:
     if: github.event.pull_request.draft == false
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v2
 
