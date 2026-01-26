@@ -1,5 +1,7 @@
 #ifndef EXPLICIT_COLORED_PETRI_NET_BUILDER_H
 #define EXPLICIT_COLORED_PETRI_NET_BUILDER_H
+#include <rapidxml.hpp>
+
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "ColoredPetriNet.h"
 
@@ -27,6 +29,7 @@ namespace PetriEngine::ExplicitColored {
         void addColorType(const std::string& id, const Colored::ColorType* type) override;
         void addVariable(const Colored::Variable* variable) override;
         void addToColorType(Colored::ProductType* colorType, const Colored::ColorType* newConstituent) override;
+        void addTokens(std::string&& place, Colored::Multiset&& tokens) override;
         void sort() override;
 
         const std::unordered_map<std::string, uint32_t>& getPlaceIndices() const;
@@ -45,6 +48,8 @@ namespace PetriEngine::ExplicitColored {
 
         ColoredPetriNetBuilderStatus build();
         ColoredPetriNet takeNet();
+
+        ColoredPetriNetMarking parseMarking(const rapidxml::xml_document<>& markingXml);
     private:
         std::unordered_map<Place_t, const Colored::ColorType*> _underlyingColorType;
         std::unordered_map<std::string, Place_t> _placeIndices;
@@ -66,6 +71,8 @@ namespace PetriEngine::ExplicitColored {
         std::unordered_map<Transition_t, std::string> _transitionToId;
         std::unordered_map<Variable_t, std::string> _variableToId;
 
+        bool _parsingStandAloneMarking = false;
+        ColoredPetriNetMarking _standAloneMarking;
         void _createArcsAndTransitions();
         ColoredPetriNetBuilderStatus _calculateTransitionVariables();
         void _calculatePrePlaceConstraints();

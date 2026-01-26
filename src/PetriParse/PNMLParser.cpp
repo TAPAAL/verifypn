@@ -592,6 +592,44 @@ ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* elem
         return std::make_shared<AddExpression>(std::move(result));
 }
 
+void PNMLParser::parseMarking(const rapidxml::xml_document<>& doc, PetriEngine::AbstractPetriNetBuilder* builder,
+    ColorTypeMap* colorTypes)
+{
+    this->colorTypes = *colorTypes;
+    this->builder = builder;
+
+    rapidxml::xml_node<>* root = doc.first_node();
+    if(strcmp(root->name(), "marking") != 0)
+    {
+        throw base_error("expected marking tag, got ", root->name());
+    }
+
+    for (auto child = root->first_node(); child != nullptr; child = child->next_sibling())
+    {
+        if (strcmp(child->name(), "place") != 0)
+        {
+            throw base_error("expected only place tags in marking, got ", child->name());
+        }
+
+        const auto idAttribute = child->first_attribute("id");
+
+        if (idAttribute == nullptr)
+        {
+            throw base_error("expected place to have id attribute");
+        }
+
+        std::string id = idAttribute->value();
+
+        std::unordered_map<const Variable*, const Color*> binding;
+        EquivalenceVec placePartition;
+        ExpressionContext context {binding, *colorTypes, placePartition};
+        auto ae = parseArcExpression(child->first_node());
+        auto initialMarking = EvaluationVisitor::evaluate(*ae, context);
+
+        builder->addTokens(std::move(id), std::move(initialMarking));
+    }
+}
+
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {

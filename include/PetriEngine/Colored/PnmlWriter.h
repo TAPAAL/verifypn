@@ -11,10 +11,23 @@
 namespace PetriEngine::Colored {
     class PnmlWriter {
     public:
-        PnmlWriter(PetriEngine::ColoredPetriNetBuilder &b, std::ostream &out) : _builder(b), _out(out), _tabsCount(0) {}
+        PnmlWriter(PetriEngine::ColoredPetriNetBuilder &b, std::ostream &out) : _builder(b), _out(out), _tabsCount(0)
+        {
+            for (auto &namedSort: _builder._colors)
+            {
+                std::vector<const ColorType *> types;
+                ColorType *colortype = const_cast<ColorType *>(namedSort.second);
+                colortype->getColortypes(types);
+                if (is_number(types[0]->operator[](size_t{0}).getColorName())) {
+                    _namedSortTypes.emplace(colortype->getName(), "finite range");
+                } else {
+                    _namedSortTypes.emplace(colortype->getName(), "cyclic enumeration");
+                }
+            }
+        }
 
         void toColPNML();
-
+        void writeInitialTokens(const std::string& placeId);
     private:
         PetriEngine::ColoredPetriNetBuilder &_builder;
         std::ostream &_out;
@@ -76,6 +89,8 @@ namespace PetriEngine::Colored {
         void handleNamedSorts();
 
         void handlehlinitialMarking(Multiset marking);
+
+        void handleTokenExpression(const Multiset& tokens);
 
         void handleType(const Place &place);
 
