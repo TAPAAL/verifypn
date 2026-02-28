@@ -12,7 +12,10 @@ namespace PetriEngine {
         bool AbstractProgramCollection::satisfiable(const PQL::SimplificationContext& context, uint32_t solvetime)
         {
             reset();
-            if (context.timeout() || has_empty || solvetime == 0) return true;
+            if (context.timeout() || has_empty || solvetime == 0){ 
+                std::cout << "returning from timeout/empty\n";
+                return true;
+            }
             if (_result != UNKNOWN)
             {
                 if (_result == IMPOSSIBLE)
@@ -154,8 +157,9 @@ namespace PetriEngine {
 
         bool MergeCollection::merge(bool& has_empty, LinearProgram& program, bool dry_run)
         {
-            if (program.knownImpossible())
+            if (program.knownImpossible()) {
                 return false;
+            }
 
             bool lempty = false;
             bool more_left;
@@ -172,17 +176,21 @@ namespace PetriEngine {
                     left->reset();
                     merge_right = false;
                 }
+                
                 ++curr;
                 assert(curr <= _size);
+
                 more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                 if (!more_left) merge_right = true;
-                if (curr >= nsat || !(more_left || more_right))
+                if (curr > nsat || !(more_left || more_right))
                 {
-                    if ((!dry_run && prog.knownImpossible()) && (more_left || more_right))
+                    if ((!dry_run && prog.knownImpossible()) && (more_left || more_right)) {
                         continue;
+                    }
 
-                    if (!dry_run)
+                    if (!dry_run) {
                         program.swap(prog);
+                    }
 
                     break;
                 }

@@ -31,8 +31,10 @@ namespace PetriEngine {
 
                 virtual void clear() = 0;
                 virtual void reset() = 0;
+                //virtual AbstractProgramCollection clone() = 0;
                 virtual size_t size() const = 0;
                 virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) = 0;
+
 
                 virtual uint32_t explorePotency(const PQL::SimplificationContext& context,
                                                 std::vector<uint32_t> &potencies,

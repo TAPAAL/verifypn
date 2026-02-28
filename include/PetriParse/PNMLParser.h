@@ -79,6 +79,10 @@ public:
         return queries;
     }
 
+    void parseMarking(
+        const rapidxml::xml_document<>& doc,
+        PetriEngine::AbstractPetriNetBuilder* builder,
+        ColorTypeMap* colorTypes);
 private:
     void parseElement(rapidxml::xml_node<>* element);
     void parsePlace(rapidxml::xml_node<>* element);
