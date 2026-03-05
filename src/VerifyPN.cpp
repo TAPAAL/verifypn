@@ -443,6 +443,10 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         out << std::endl;
     }
 
+    std::cout << "PushNegated: ";
+    cond->toString(std::cout);
+    std::cout << "\n";
+
     try {
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, names.size() > 1, false, true);

@@ -41,10 +41,8 @@ namespace PetriEngine { namespace PQL {
 
         enum LPQUANT {NONE, GLOBAL, FINAL, NONGLOBAL};
         LPQUANT quantifier_found = LPQUANT::NONE;
-        bool found_global_condition = false;
-        bool in_global_cond = false;
-        bool in_and_subexpr = false;
-        bool in_or_subexpr = false;
+        int32_t quantifiers = 0;
+      
 
         Retval simplify_or(const LogicalCondition* element);
         Retval simplify_and(const LogicalCondition *element);
