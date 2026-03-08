@@ -107,7 +107,7 @@ namespace PetriEngine { namespace PQL {
 
             lps.emplace_back(r.lps);
 
-            if(quantifier_found == LPQUANT::NONE || quantifier_found == LPQUANT::FINAL){
+            if(/*quantifier_found == LPQUANT::NONE ||*/ quantifier_found == LPQUANT::FINAL){
                 global_neglpsv.emplace_back(r.neglps);
             }else{
                 nonglobal_neglpsv.emplace_back(r.neglps);
@@ -177,7 +177,7 @@ namespace PetriEngine { namespace PQL {
             if( ( quantifiers - pre_quantifiers ) > 1)
                 continue;
 
-            if(quantifier_found == LPQUANT::NONE || quantifier_found == LPQUANT::GLOBAL){
+            if(/*quantifier_found == LPQUANT::NONE ||*/ quantifier_found == LPQUANT::GLOBAL){
                 global_lpsv.emplace_back(r.lps);
             }else{
                 nonglobal_lpsv.emplace_back(r.lps);
