@@ -78,6 +78,7 @@ namespace PetriEngine { namespace PQL {
         //std::cout << "simplifying or\n";
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lps;
+        std::vector<AbstractProgramCollection_ptr> unquantified_neglpsv;
         std::vector<AbstractProgramCollection_ptr> global_neglpsv;
         std::vector<AbstractProgramCollection_ptr> nonglobal_neglpsv;
        
@@ -107,7 +108,9 @@ namespace PetriEngine { namespace PQL {
 
             lps.emplace_back(r.lps);
 
-            if(/*quantifier_found == LPQUANT::NONE ||*/ quantifier_found == LPQUANT::FINAL){
+            if(quantifier_found == LPQUANT::NONE){
+                unquantified_neglpsv.emplace_back(r.neglps);
+            }else if(quantifier_found == LPQUANT::FINAL){
                 global_neglpsv.emplace_back(r.neglps);
             }else{
                 nonglobal_neglpsv.emplace_back(r.neglps);
@@ -118,6 +121,11 @@ namespace PetriEngine { namespace PQL {
 
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
+        }
+
+        if(unquantified_neglpsv.size() > 0){
+            auto uq_neglps = mergeLps(std::move(unquantified_neglpsv));
+            nonglobal_neglpsv.emplace_back(uq_neglps);
         }
 
         AbstractProgramCollection_ptr neglps = mergeLps(std::move(global_neglpsv));
@@ -155,6 +163,7 @@ namespace PetriEngine { namespace PQL {
         //std::cout << "simplifying and\n";
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> global_lpsv;
+        std::vector<AbstractProgramCollection_ptr> unquantified_lpsv;
         std::vector<AbstractProgramCollection_ptr> nonglobal_lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
         
@@ -177,7 +186,9 @@ namespace PetriEngine { namespace PQL {
             if( ( quantifiers - pre_quantifiers ) > 1)
                 continue;
 
-            if(/*quantifier_found == LPQUANT::NONE ||*/ quantifier_found == LPQUANT::GLOBAL){
+            if(quantifier_found == LPQUANT::NONE){
+                unquantified_lpsv.emplace_back(r.lps);
+            }else if (quantifier_found == LPQUANT::GLOBAL){
                 global_lpsv.emplace_back(r.lps);
             }else{
                 nonglobal_lpsv.emplace_back(r.lps);
@@ -190,6 +201,11 @@ namespace PetriEngine { namespace PQL {
         
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
+        }
+
+         if(unquantified_lpsv.size() > 0){
+            auto uq_lps = mergeLps(std::move(unquantified_lpsv));
+            nonglobal_lpsv.emplace_back(uq_lps);
         }
 
         auto lps = mergeLps(std::move(global_lpsv));
