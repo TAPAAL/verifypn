@@ -141,8 +141,8 @@ namespace PetriEngine { namespace PQL {
         }
 
         if(global_neglpsv.size() > 0 && nonglobal_neglpsv.size() > 0){
-            std::cout << "# OR\n";
-            std::cout << "# MERGE RULE APPLIED\n";
+            auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
+            std::cout << "# MERGE RULE APPLIED " << id << "\n";
         }
 
         AbstractProgramCollection_ptr neglps = mergeLps(std::move(global_neglpsv));
@@ -239,7 +239,8 @@ namespace PetriEngine { namespace PQL {
         }
 
         if(global_lpsv.size() > 0 && nonglobal_lpsv.size() > 0){
-            std::cout << "# MERGE RULE APPLIED\n";
+            auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
+            std::cout << "# MERGE RULE APPLIED " << id << "\n";
         }
         auto lps = mergeLps(std::move(global_lpsv));
         lps = createGlobalUnion(lps, std::move(nonglobal_lpsv));

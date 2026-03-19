@@ -36,6 +36,8 @@
 #include <chrono>
 #include <glpk.h>
 
+#include <chrono>
+
 namespace PetriEngine {
 
     namespace PQL {
@@ -195,7 +197,11 @@ namespace PetriEngine {
                         _markingOutOfBounds = true;
                     }
                 }
+
+                _id = std::chrono::system_clock::now();
             }
+
+            std::chrono::time_point<std::chrono::system_clock> _id;
 
             virtual ~SimplificationContext() {
                 if(_base_lp != nullptr)
