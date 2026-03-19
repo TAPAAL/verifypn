@@ -86,10 +86,16 @@ namespace PetriEngine { namespace PQL {
         const bool parent_final = quantifier_parent == LPQUANT::FINAL;
         const bool parent_global = quantifier_parent == LPQUANT::GLOBAL;
         const bool neg_is_invariant = (same_context && parent_final) || (!same_context && parent_global);
+
+        const auto local_parent = quantifier_parent;
+
         for (const auto &c: element->getOperands()) {
             quantifier_found = LPQUANT::NONE;
             int32_t pre_quantifiers = quantifiers;
+            if(!neg_is_invariant)
+                quantifier_parent = LPQUANT::OTHER;
             Visitor::visit(this, c);
+            quantifier_parent = local_parent;
 
             //std::cout << "sub expression quant depth: " << quantifiers - pre_quantifiers << "\n";
             
@@ -135,6 +141,7 @@ namespace PetriEngine { namespace PQL {
         }
 
         if(global_neglpsv.size() > 0 && nonglobal_neglpsv.size() > 0){
+            std::cout << "# OR\n";
             std::cout << "# MERGE RULE APPLIED\n";
         }
 
@@ -181,10 +188,16 @@ namespace PetriEngine { namespace PQL {
         const bool parent_final = quantifier_parent == LPQUANT::FINAL;
         const bool parent_global = quantifier_parent == LPQUANT::GLOBAL;
         const bool is_invariant = (same_context && parent_global) || (!same_context && parent_final);
+
+        const auto local_parent = quantifier_parent;
+
         for (auto &c: element->getOperands()) {
             quantifier_found = LPQUANT::NONE;
             int32_t pre_quantifiers = quantifiers;
+            if(!is_invariant)
+                quantifier_parent = LPQUANT::OTHER;
             Visitor::visit(this, c);
+            quantifier_parent = local_parent;
 
             //std::cout << "sub expression quant depth: " << quantifiers - pre_quantifiers << "\n";
             
