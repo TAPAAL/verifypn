@@ -152,6 +152,13 @@ namespace PetriEngine {
             return _string_set;
         }
 
+        // Since ColoredPetriNetBuilder takes ownership of any colors given to it, we need to be able to tell it to
+        // forget about those colors and "leak" the memory
+        void leak_colors()
+        {
+            _ownsColors = false;
+        }
+
     private:
         shared_name_index_map _placenames;
         shared_name_index_map _transitionnames;
@@ -164,6 +171,7 @@ namespace PetriEngine {
         Colored::ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         shared_string_set& _string_set;
+        bool _ownsColors = true;
 
         void addArc(const std::string& place,
                 const std::string& transition,

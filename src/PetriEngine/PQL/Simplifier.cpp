@@ -30,6 +30,7 @@ namespace PetriEngine { namespace PQL {
     }
 
     AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr> &&lps) {
+        //std::cout << "merging Lps with " << lps.size() << " Elements\n";
         if (lps.size() == 0) return nullptr;
         int j = 0;
         int i = lps.size() - 1;
@@ -44,12 +45,102 @@ namespace PetriEngine { namespace PQL {
         return lps[0];
     }
 
-    Retval Simplifier::simplify_or(const LogicalCondition *element) {
 
+    bool Simplifier::solveFinalCond(std::vector<AbstractProgramCollection_ptr>& final_lps){
+        return true;
+        for(int i = 0; i < final_lps.size(); i++){
+            if(!final_lps[i]->satisfiable(_context))
+                return false;
+        }
+
+        uint32_t nPlaces = _context.net()->numberOfPlaces();
+        std::vector<std::pair<std::vector<uint32_t>, double>> bounds(nPlaces);
+        std::vector<std::vector<bool>> m(final_lps.size(), std::vector<bool>(final_lps.size()));
+
+        for(int i = 0; i < final_lps.size(); i++){
+            for(int j = 0; j < final_lps.size(); j++){
+                if(i == j)
+                    continue;
+                for(uint32_t p = 0; p < nPlaces; p++){
+                    std::vector<uint32_t> ps = {p};
+                    double bound_p = (double) _context.marking()[p] + final_lps[i]->upperBound(_context, ps);
+                    std::cout << p << ": " << bound_p << "\n";
+                    bounds[p] = std::make_pair(std::move(ps), bound_p);
+                }
+               
+                if(!final_lps[j]->boundedSatisfiable(_context, bounds)){
+                    //std::cout << "# CANDIDATE IMPOSSIBLE\n";
+                    if(m[j][i]){
+                        std::cout << "# CANDIDATE IMPOSSIBLE\n";
+                        return false;
+                    }
+
+                    m[i][j] = true;
+                    m[j][i] = true;
+                }
+            }
+        }
+
+        std::cout << "# CANDIDATE POSSIBLE\n";
+
+        return true;
+    }
+
+
+     AbstractProgramCollection_ptr createGlobalUnion(AbstractProgramCollection_ptr &global_lp, std::vector<AbstractProgramCollection_ptr> &&nonglobal_lps) {
+        //std::cout << "creating unioncollection of global and nonglobal conditions\n";
+        
+        if(global_lp == nullptr){
+            //std::cout << "global_lp is NULL\n";
+            if(nonglobal_lps.size() == 0){
+                //std::cout << "returning null from createGlobalUnion\n";
+                return nullptr;
+            }else{
+                return std::make_shared<UnionCollection>(std::move(nonglobal_lps));
+            }
+        }
+
+        if(nonglobal_lps.size() == 0){
+            //std::cout << "nonglobal_lps is empty\n";
+            return global_lp;
+        }
+        
+
+        std::vector<AbstractProgramCollection_ptr> merges;
+
+        for(int i = 0; i < nonglobal_lps.size(); i++){
+            merges.emplace_back(std::make_shared<MergeCollection>(global_lp, nonglobal_lps[i]));
+        }
+
+        return std::make_shared<UnionCollection>(std::move(merges));
+     }
+
+    Retval Simplifier::simplify_or(const LogicalCondition *element) {
+        //std::cout << "simplifying or\n";
         std::vector<Condition_ptr> conditions;
-        std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
+        std::vector<AbstractProgramCollection_ptr> lps;
+        std::vector<AbstractProgramCollection_ptr> unquantified_neglpsv;
+        std::vector<AbstractProgramCollection_ptr> global_neglpsv;
+        std::vector<AbstractProgramCollection_ptr> final_neglpsv;
+        std::vector<AbstractProgramCollection_ptr> nonglobal_neglpsv;
+        
+        const bool same_context = qparent_neg_context == _context.negated();
+        const bool parent_final = quantifier_parent == LPQUANT::FINAL;
+        const bool parent_global = quantifier_parent == LPQUANT::GLOBAL;
+        const bool neg_is_invariant = (same_context && parent_final) || (!same_context && parent_global);
+
+        const auto local_parent = quantifier_parent;
+
         for (const auto &c: element->getOperands()) {
+            quantifier_found = LPQUANT::NONE;
+            int32_t pre_quantifiers = quantifiers;
+            if(!neg_is_invariant)
+                quantifier_parent = LPQUANT::OTHER;
             Visitor::visit(this, c);
+            quantifier_parent = local_parent;
+
+            //std::cout << "sub expression quant depth: " << quantifiers - pre_quantifiers << "\n";
+            
             auto r = std::move(_return_value);
             assert(r.neglps);
             assert(r.lps);
@@ -59,17 +150,68 @@ namespace PetriEngine { namespace PQL {
             } else if (r.formula->isTriviallyFalse()) {
                 continue;
             }
+
             conditions.push_back(r.formula);
-            lps.push_back(r.lps);
-            neglpsv.emplace_back(r.neglps);
+
+
+            lps.emplace_back(r.lps);
+
+            if( ( quantifiers - pre_quantifiers ) > 1){
+                nonglobal_neglpsv.emplace_back(r.neglps);
+            }else {
+                switch(quantifier_found){
+                    case LPQUANT::NONE:
+                        if(neg_is_invariant){
+                            global_neglpsv.emplace_back(r.neglps);
+                        }else{
+                            unquantified_neglpsv.emplace_back(r.neglps);
+                        }
+                        break;
+                    case LPQUANT::FINAL:
+                        global_neglpsv.emplace_back(r.neglps);
+                        break;
+                    case LPQUANT::GLOBAL:
+                        final_neglpsv.emplace_back(r.neglps);
+                        break;
+                    default:
+                        nonglobal_neglpsv.emplace_back(r.neglps);
+                }
+            }   
         }
 
-        AbstractProgramCollection_ptr neglps = mergeLps(std::move(neglpsv));
+        //std::cout << "sizes  or: " << lps.size() << ", " << global_neglpsv.size() << ", " << nonglobal_neglpsv.size() << "\n";
 
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         }
 
+        if(unquantified_neglpsv.size() > 0){
+            auto uq_neglps = mergeLps(std::move(unquantified_neglpsv));
+            nonglobal_neglpsv.emplace_back(uq_neglps);
+        }
+
+        if(final_neglpsv.size() > 1){
+            if(!solveFinalCond(final_neglpsv)){
+                return Retval(BooleanCondition::TRUE_CONSTANT); 
+            }
+        }
+
+        if(global_neglpsv.size() > 0 && nonglobal_neglpsv.size() > 0){
+            auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
+            std::cout << "# MERGE RULE APPLIED " << id << "\n";
+        }
+
+        AbstractProgramCollection_ptr neglps = mergeLps(std::move(global_neglpsv));
+        neglps = createGlobalUnion(neglps, std::move(nonglobal_neglpsv));
+
+        if(neglps == nullptr){
+            neglps = std::make_shared<SingleProgram>();
+        }
+
+        if(lps.size() == 0){
+            lps.emplace_back(std::make_shared<SingleProgram>());
+        }
+        
         try {
             if (!_context.timeout() && !neglps->satisfiable(_context)) {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
@@ -83,7 +225,7 @@ namespace PetriEngine { namespace PQL {
         // Lets try to see if the r1 AND r2 can ever be false at the same time
         // If not, then we know that r1 || r2 must be true.
         // we check this by checking if !r1 && !r2 is unsat
-
+        //std::cout << "leaving or\n";
         return Retval(
                 makeOr(conditions),
                 std::make_shared<UnionCollection>(std::move(lps)),
@@ -91,12 +233,31 @@ namespace PetriEngine { namespace PQL {
     }
 
     Retval Simplifier::simplify_and(const LogicalCondition *element) {
-
+        //std::cout << "simplifying and\n";
         std::vector<Condition_ptr> conditions;
-        std::vector<AbstractProgramCollection_ptr> lpsv;
+        std::vector<AbstractProgramCollection_ptr> global_lpsv;
+        std::vector<AbstractProgramCollection_ptr> final_lpsv;
+        std::vector<AbstractProgramCollection_ptr> unquantified_lpsv;
+        std::vector<AbstractProgramCollection_ptr> nonglobal_lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
+
+        const bool same_context = qparent_neg_context == _context.negated();
+        const bool parent_final = quantifier_parent == LPQUANT::FINAL;
+        const bool parent_global = quantifier_parent == LPQUANT::GLOBAL;
+        const bool is_invariant = (same_context && parent_global) || (!same_context && parent_final);
+
+        const auto local_parent = quantifier_parent;
+
         for (auto &c: element->getOperands()) {
+            quantifier_found = LPQUANT::NONE;
+            int32_t pre_quantifiers = quantifiers;
+            if(!is_invariant)
+                quantifier_parent = LPQUANT::OTHER;
             Visitor::visit(this, c);
+            quantifier_parent = local_parent;
+
+            //std::cout << "sub expression quant depth: " << quantifiers - pre_quantifiers << "\n";
+            
             auto r = std::move(_return_value);
             if (r.formula->isTriviallyFalse()) {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
@@ -105,15 +266,63 @@ namespace PetriEngine { namespace PQL {
             }
 
             conditions.push_back(r.formula);
-            lpsv.emplace_back(r.lps);
+
+            if( ( quantifiers - pre_quantifiers ) > 1){
+                nonglobal_lpsv.emplace_back(r.lps);
+            }else {
+                switch(quantifier_found){
+                    case LPQUANT::NONE:
+                        if(is_invariant){
+                            global_lpsv.emplace_back(r.lps);
+                        }else{
+                            unquantified_lpsv.emplace_back(r.lps);
+                        }
+                        break;
+                    case LPQUANT::GLOBAL:
+                        global_lpsv.emplace_back(r.lps);
+                        break;
+                    case LPQUANT::FINAL:
+                        final_lpsv.emplace_back(r.lps);
+                        break;
+                    default:
+                        nonglobal_lpsv.emplace_back(r.lps);
+                }
+            }   
             neglps.emplace_back(r.neglps);
         }
 
+        //std::cout << "sizes and: " << neglps.size() << ", " << global_lpsv.size() << ", " << nonglobal_lpsv.size() << "\n";
+
+        
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         }
 
-        auto lps = mergeLps(std::move(lpsv));
+        if(unquantified_lpsv.size() > 0){
+            auto uq_lps = mergeLps(std::move(unquantified_lpsv));
+            nonglobal_lpsv.emplace_back(uq_lps);
+        }
+
+        if(final_lpsv.size() > 1){
+            if(!solveFinalCond(final_lpsv)){
+                return Retval(BooleanCondition::FALSE_CONSTANT); 
+            }
+        }
+
+        if(global_lpsv.size() > 0 && nonglobal_lpsv.size() > 0){
+            auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
+            std::cout << "# MERGE RULE APPLIED " << id << "\n";
+        }
+        auto lps = mergeLps(std::move(global_lpsv));
+        lps = createGlobalUnion(lps, std::move(nonglobal_lpsv));
+        
+        if(lps == nullptr){
+            lps = std::make_shared<SingleProgram>();
+        }
+
+        if(neglps.size() == 0){
+            neglps.emplace_back(std::make_shared<SingleProgram>());
+        }
 
         try {
             if (!_context.timeout() && !lps->satisfiable(_context)) {
@@ -125,9 +334,11 @@ namespace PetriEngine { namespace PQL {
             std::cout << "Query reduction: memory exceeded during LPS merge." << std::endl;
         }
 
+        
         // Lets try to see if the r1 AND r2 can ever be false at the same time
         // If not, then we know that r1 || r2 must be true.
         // we check this by checking if !r1 && !r2 is unsat
+
 
         return Retval(
                 makeAnd(conditions),
@@ -198,19 +409,60 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    template<typename Quantifier>
-    Retval Simplifier::simplify_simple_quantifier(Retval &r) {
-        static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+    /*Retval Simplifier::simplify_global_quantifier(Retval &r) {
+        //std::cout << "triv true: " << r.formula->isTriviallyTrue() << "\n";
+        //std::cout << "triv false: " << r.formula->isTriviallyFalse() << "\n";
+        quantifier_found = LPQUANT::GLOBAL;
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         } else {
-            return Retval(std::make_shared<Quantifier>(r.formula));
+            return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+        }
+    }*/
+
+    template<typename Quantifier>
+    Retval Simplifier::simplify_simple_quantifier(Retval &r) {
+        //std::cout << "other quantifier\n";
+        static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+        quantifier_found = LPQUANT::OTHER;
+        //std::cout << "triv true: " << r.formula->isTriviallyTrue() << "\n";
+        //std::cout << "triv false: " << r.formula->isTriviallyFalse() << "\n";
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<Quantifier>(r.formula), r.lps, r.neglps);
         }
     }
 
-    Member memberForPlace(size_t p, const SimplificationContext &context) {
+    template<>
+    Retval Simplifier::simplify_simple_quantifier<GCondition>(Retval &r){
+        quantifier_found = LPQUANT::GLOBAL;
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+        }
+    }
+
+    template<>
+    Retval Simplifier::simplify_simple_quantifier<FCondition>(Retval &r){
+        quantifier_found = LPQUANT::FINAL;
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<FCondition>(r.formula), r.lps, r.neglps);
+        }
+    }
+
+    /*Member memberForPlace(size_t p, const SimplificationContext &context) {
         std::vector<int64_t> row(context.net()->numberOfTransitions(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
@@ -218,6 +470,17 @@ namespace PetriEngine { namespace PQL {
             row[t] -= context.net()->inArc(p, t);
         }
         return Member(std::move(row), context.marking()[p]);
+    }*/
+
+    Member memberForPlace(size_t p, const SimplificationContext &context) {
+        std::vector<int64_t> row(context.net()->numberOfTransitions() + context.net()->numberOfPlaces(), 0);
+        row.shrink_to_fit();
+        for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
+            row[t] = context.net()->outArc(t, p);
+            row[t] -= context.net()->inArc(p, t);
+        }
+        row[context.net()->numberOfTransitions() + p] = 1.0;
+        return Member(std::move(row), 0);
     }
 
     /********** Constraint Visitor **********/
@@ -300,6 +563,7 @@ namespace PetriEngine { namespace PQL {
     /******* Simplifier accepts ********/
 
     void Simplifier::_accept(const NotCondition *element) {
+        //std::cout << "negating\n";
         _context.negate();
         Visitor::visit(this, element->getCond());
         _context.negate();
@@ -831,6 +1095,8 @@ namespace PetriEngine { namespace PQL {
     void Simplifier::_accept(const UntilCondition *condition) {
         bool neg = _context.negated();
         _context.setNegate(false);
+        quantifiers++;
+        quantifier_parent = LPQUANT::OTHER;
 
         Visitor::visit(this, condition->getCond2());
         Retval r2 = std::move(_return_value);
@@ -845,6 +1111,7 @@ namespace PetriEngine { namespace PQL {
                            Retval(BooleanCondition::TRUE_CONSTANT) :
                            Retval(BooleanCondition::FALSE_CONSTANT))
         }
+        quantifier_parent = LPQUANT::OTHER;
         Visitor::visit(this, condition->getCond1());
         Retval r1 = std::move(_return_value);
 
@@ -895,18 +1162,47 @@ namespace PetriEngine { namespace PQL {
     }
 
     void Simplifier::_accept(const FCondition *condition) {
+        quantifiers++;
+        if(_context.negated()){
+            quantifier_parent = LPQUANT::GLOBAL;
+        }else{
+            quantifier_parent = LPQUANT::FINAL;
+        }
+        qparent_neg_context = _context.negated();
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplify_simple_quantifier<GCondition>(_return_value)
-                                         : simplify_simple_quantifier<FCondition>(_return_value))
+        if(_context.negated()){
+            //std::cout << "negated GCondition\n";
+            auto r = simplify_simple_quantifier<GCondition>(_return_value);
+            RETURN(std::move(r));
+        }else{
+            //std::cout << "FCondition\n";
+            RETURN(simplify_simple_quantifier<FCondition>(_return_value));
+        }
     }
 
     void Simplifier::_accept(const GCondition *condition) {
+        quantifiers++;
+        if(_context.negated()){
+            quantifier_parent = LPQUANT::FINAL;
+        }else{
+            quantifier_parent = LPQUANT::GLOBAL;
+        }
+        qparent_neg_context = _context.negated();
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplify_simple_quantifier<FCondition>(_return_value)
-                                         : simplify_simple_quantifier<GCondition>(_return_value))
+
+        if(_context.negated()){
+            //std::cout << "negated FCondition\n";
+            RETURN(simplify_simple_quantifier<FCondition>(_return_value));
+        }else{
+            //std::cout << "GCondition\n";
+            auto r  = simplify_simple_quantifier<GCondition>(_return_value);
+            RETURN(std::move(r))
+        }
     }
 
     void Simplifier::_accept(const XCondition *condition) {
+        quantifiers++;
+        quantifier_parent = LPQUANT::OTHER;
         Visitor::visit(this, condition->getCond());
         RETURN(simplify_simple_quantifier<XCondition>(_return_value))
     }

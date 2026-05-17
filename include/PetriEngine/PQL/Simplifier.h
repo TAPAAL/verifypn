@@ -39,6 +39,14 @@ namespace PetriEngine { namespace PQL {
         SimplificationContext& _context;
         Retval _return_value;
 
+        enum LPQUANT {NONE, GLOBAL, FINAL, OTHER, UNTIL};
+        LPQUANT quantifier_found = LPQUANT::NONE;
+        LPQUANT quantifier_parent = LPQUANT::NONE;
+        bool qparent_neg_context = false;
+        int32_t quantifiers = 0;
+      
+        bool solveFinalCond(std::vector<AbstractProgramCollection_ptr>& final_lps);
+
         Retval simplify_or(const LogicalCondition* element);
         Retval simplify_and(const LogicalCondition *element);
 
@@ -49,6 +57,8 @@ namespace PetriEngine { namespace PQL {
         Retval simplify_EG(Retval &r);
         Retval simplify_EF(Retval &r);
         Retval simplify_EX(Retval &r);
+
+        Retval simplify_global_quantifier(Retval &r);
 
         template <typename Quantifier>
         Retval simplify_simple_quantifier(Retval &r);

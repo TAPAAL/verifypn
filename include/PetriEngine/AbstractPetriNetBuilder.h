@@ -105,6 +105,11 @@ namespace PetriEngine {
             throw base_error("Product colors are not supported in standard P/T nets");
         }
 
+        virtual void addTokens(std::string&& place, Colored::Multiset&& tokens)
+        {
+            throw base_error("Parsing marking is not supported");
+        }
+
         virtual void enableColors() {
             _isColored = true;
         }

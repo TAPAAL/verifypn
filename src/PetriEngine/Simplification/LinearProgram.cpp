@@ -6,7 +6,6 @@
 #include "PetriEngine/Simplification/LinearProgram.h"
 #include "PetriEngine/Simplification/LPCache.h"
 #include "PetriEngine/PQL/Contexts.h"
-#include "VerifyPN.h"
 
 namespace PetriEngine {
     namespace Simplification {
@@ -54,6 +53,10 @@ namespace PetriEngine {
         }
 
         void printConstraints(const PQL::SimplificationContext& context, glp_prob* lp){
+            
+            if(context.getPrintLevel() < 1)
+                return;
+
             int nCols = glp_get_num_cols(lp);
             int nRows = glp_get_num_rows(lp);
             
@@ -61,17 +64,17 @@ namespace PetriEngine {
             std::vector<double> coef(nCols + 1);
             int l;
 
+            auto nt = context.net()->numberOfTransitions();
+
             for(int i = 1; i <= nRows; i++){
                 l = glp_get_mat_row(lp, i, indices.data(), coef.data());
                 std::cout << "Row " << i << "[len: " << l << "]: ";
 
-
-
                 bool first_print = true;
                 for(int j = 1; j <= l; j++){
                     if(!first_print) std::cout << " + ";
-                    if((indices[j] - 1) < context.net()->numberOfTransitions()){
-                        std::cout << coef[j] << "*" << *context.net()->transitionNames()[indices[j] - 1];
+                    if((indices[j] - 1) < nt){
+                        std::cout << coef[j] << "*t" << (indices[j] - 1) / nt << "." << *context.net()->transitionNames()[(indices[j] - 1) % nt];
                     }else{
                         std::cout << coef[j] << "*" << glp_get_col_name(lp, indices[j]);
                     }
@@ -106,77 +109,6 @@ namespace PetriEngine {
             }
             
         }
-        
-
-        void printSolution(const PQL::SimplificationContext& context, glp_prob* lp, bool is_mip){
-            if(context.getPrintLevel() == 0)
-                return;
-
-            if(context.getPrintLevel() > 1){
-                printConstraints(context, lp);
-            }
-            
-            int nCols = glp_get_num_cols(lp);
-            bool first_print = true;
-            if(is_mip){
-                std::cout << "MIP Solution: ";
-            }else{
-                std::cout << "LP Solution: ";
-            }
-            for(int i = 1; i <= nCols;i++){
-                double coef = (is_mip)? glp_mip_col_val(lp, i) : glp_get_col_prim(lp, i);
-                if(coef != 0){
-                    if(!first_print)
-                        std::cout << " + ";
-                    first_print = false;
-                    if( i - 1 < context.net()->numberOfTransitions()){
-                        std::cout << coef << "*" << *context.net()->transitionNames()[i - 1];
-                    }else{
-                        std::cout << coef << "*" << glp_get_col_name(lp, i);
-                    }
-                }
-            }
-
-            if(first_print)
-                std::cout << "<empty>\n";
-            else{
-                std::cout << "\n";
-            }
-        }
-
-        std::vector<Condition_ptr> bigMQuery(const PQL::SimplificationContext& context){
-            
-            std::vector<Condition_ptr> res;
-
-            for(int p = 0; p < context.net()->numberOfPlaces(); p++){
-                auto rhs = std::make_shared<IdentifierExpr>(context.net()->placeNames()[p]);
-                auto lhs = std::make_shared<LiteralExpr>(10000);
-                auto lt = std::make_shared<LessThanCondition>(lhs, rhs);
-                res.push_back(lt);
-            }
-
-            auto orQuery = std::make_shared<OrCondition>(res);
-            auto FQuery = std::make_shared<FCondition>(orQuery);
-            auto EFQuery = std::make_shared<ECondition>(FQuery);
-            std::vector<Condition_ptr> queries;
-            queries.push_back(EFQuery);
-            return queries;
-        }
-
-
-        bool checkBigMConstraint(const PQL::SimplificationContext& context){
-            return true;
-            auto queries = bigMQuery(context);
-            options_t options;
-            options.lpUseBigM = false;
-            simplify_queries(context.marking(), context.net(), queries, options, std::cout);
-            std::cout << "done big M\n";
-            if(queries[0]->isTriviallyFalse()){
-                return true;
-            }else{
-                return false;
-            }
-        }
 
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
@@ -196,8 +128,8 @@ namespace PetriEngine {
                 return false;
             }
 
-            const uint32_t nCol = net->numberOfTransitions();
-            const uint32_t nRow = 2 * net->numberOfPlaces() + _equations.size();
+            const uint32_t nCol = net->numberOfTransitions() + net->numberOfPlaces();
+            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
 
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
             std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
@@ -244,114 +176,20 @@ namespace PetriEngine {
             }
 
             // Set objective, kind and bounds
-            for (size_t i = 1; i <= nCol; i++) {
+            for (size_t i = 1; i <= net->numberOfTransitions(); i++) {
                 glp_set_obj_coef(lp, i, 1);
                 glp_set_col_kind(lp, i, use_ilp ? GLP_IV : GLP_CV);
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
 
-            if(context.useBigM()){
-                for (size_t p = 0; p < net->numberOfPlaces(); p++) {      
-                        auto numColsLP = glp_get_num_cols(lp);
-                        std::vector<double> inRow(1, 0);
-                        std::vector<int> inIndices(1, 0);
-                        
-                        std::vector<double> outRow(1, 0);
-                        std::vector<int> outIndices(1, 0);
-                    
+            /*for (size_t i = 1 + net->numberOfTransitions(); i <= nCol; i++) {
+                glp_set_obj_coef(lp, i, 0);
+                glp_set_col_kind(lp, i, use_ilp ? GLP_IV : GLP_CV);
+                glp_set_col_bnds(lp, i, GLP_FR, 0, 0);
+            }*/
 
-                        bool has_loop = false;
-                        bool has_in   = false;
-                        //bool requires_tokens = false;
+            printConstraints(context, lp);
 
-                        //std::map<uint32_t, std::vector<uint32_t>> loops_by_weight;
-                        //int min_pos_loop = 0;
-                        uint32_t minimum_weight = UINT32_MAX;
-
-                        for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-                            if(net->outArc(t, p) != 0 && net->inArc(p, t) != 0){
-                                has_loop = true;
-                                /*if(net->inArc(p, t) > context.marking()[p])
-                                    requires_tokens = true;
-                                
-                                if(net->outArc(t, p) > net->inArc(p, t) && net->inArc(p, t) < min_pos_loop)
-                                    min_pos_loop = net->inArc(p, t);*/
-
-                                minimum_weight = std::min(minimum_weight, net->inArc(p, t));
-                                
-                                outRow.push_back(1);
-                                outIndices.push_back(t+1);
-                            }
-                            else{
-                                if(net->inArc(p,t) != 0){
-                                    outRow.push_back(1);
-                                    outIndices.push_back(t+1);
-                                }
-                                if(net->outArc(t,p) != 0){
-                                    has_in = true;
-                                    
-                                    inRow.push_back(net->outArc(t, p));
-                                    inIndices.push_back(t+1);
-                                }
-                            }
-                        }
-
-                        if(!has_loop || !has_in || context.marking()[p] >= minimum_weight){
-                            //std::cout << "no loop applicable\n";
-                            continue;
-                        }
-                        else{
-                            //std::cout << "adding loop constraint for " << *net->placeNames()[p] <<"\n";
-                        }
-
-                        int idx = numColsLP + 1;
-                        glp_add_cols(lp, 2);
-
-                        for(int i = glp_get_num_cols(lp) - 1; i <= glp_get_num_cols(lp); i++){
-                            glp_set_obj_coef(lp, i, 1);
-                            glp_set_col_kind(lp, i, GLP_BV);
-                            //glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0);
-                        }
-
-                        const int OR_P = glp_get_num_cols(lp) ;
-                        std::string or_p_name = "NO_IMPLY_" + *net->placeNames()[p];
-                        glp_set_col_name(lp, OR_P, or_p_name.c_str());
-                        const int OR_Q = glp_get_num_cols(lp) - 1;
-                        std::string or_q_name = "YES_IMPLY_" + *net->placeNames()[p];
-                        glp_set_col_name(lp, OR_Q, or_q_name.c_str());
-                    
-                        const double needed_weight = (double) (minimum_weight - context.marking()[p]);
-                        inRow.push_back(needed_weight);
-                        inIndices.push_back(OR_P);
-
-                        outRow.push_back(-1.0 * 10000);
-                        outIndices.push_back(OR_Q);
-                    
-                        glp_add_rows(lp, 3);
-
-                        glp_set_mat_row(lp, rowno, inIndices.size() - 1, inIndices.data(), inRow.data());
-                        glp_set_row_bnds(lp, rowno, GLP_LO, needed_weight, infty);
-                        ++rowno;
-
-                        glp_set_mat_row(lp, rowno, outIndices.size() - 1, outIndices.data(), outRow.data());
-                        glp_set_row_bnds(lp, rowno, GLP_UP, 0.0, 0.0);
-                        ++rowno;
-
-                        double orRow[3];
-                        int orIndices[3];
-                        
-
-                        orRow[1] = 1.0;
-                        orRow[2] = 1.0;
-                        orIndices[1] = OR_P;
-                        orIndices[2] = OR_Q;
-
-                        glp_set_mat_row(lp, rowno, 2, orIndices, orRow);
-                        glp_set_row_bnds(lp, rowno, GLP_FX, 1.0, 1.0);
-                        ++rowno;
-                }
-            }
-           
             // Minimize the objective
             glp_set_obj_dir(lp, GLP_MIN);
             auto stime = glp_time();
@@ -372,71 +210,36 @@ namespace PetriEngine {
                 auto status = glp_get_status(lp);
                 if (status == GLP_OPT)
                 {
-                    
-                    #if 1
                     glp_iocp iset;
                     glp_init_iocp(&iset);
                     iset.msg_lev = 0;
-                    iset.tol_int = 1e-10;
                     iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
                     iset.presolve = GLP_OFF;
                     auto ires = glp_intopt(lp, &iset);
-                    #else
-                    glp_smcp settings_exact;
-                    settings_exact.msg_lev = 0;
-                    settings_exact.it_lim = INT_MAX;
-                    settings_exact.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
-                    auto ires = glp_exact(lp, &settings_exact);
-                    #endif
                     if (ires == GLP_ETMLIM)
                     {
-                        printSolution(context, lp, false);
                         _result = result_t::UKNOWN;
                         // std::cerr << "glpk mip: timeout" << std::endl;
                     }
                     else if (ires == 0)
-                    {   
-                        #if 1
+                    {
                         auto ist = glp_mip_status(lp);
-                        #else
-                        auto ist = glp_get_status(lp);
-                        #endif
                         if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
-                            printSolution(context, lp, true);
                             _result = result_t::POSSIBLE;
                         }
                         else
                         {
-                            if(context.useBigM()){
-                                if(checkBigMConstraint(context)){
-                                    _result = result_t::IMPOSSIBLE;
-                                }else{
-                                    _result = result_t::POSSIBLE;
-                                }
-                            }
-                            else{
-                                _result = result_t::IMPOSSIBLE;
-                            }
+                            _result = result_t::IMPOSSIBLE;
                         }
                     }
                 }
                 else if (status == GLP_FEAS || status == GLP_UNBND)
                 {
-                    printSolution(context, lp, false);
                     _result = result_t::POSSIBLE;
                 }
                 else
                 {
-                    if(context.useBigM()){
-                        if(checkBigMConstraint(context)){
-                            _result = result_t::IMPOSSIBLE;
-                        }else{
-                            _result = result_t::POSSIBLE;
-                        }
-                    }
-                    else{
-                        _result = result_t::IMPOSSIBLE;
-                    }
+                    _result = result_t::IMPOSSIBLE;
                 }
             }
             else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
@@ -446,6 +249,285 @@ namespace PetriEngine {
             glp_delete_prob(lp);
 
             return _result == result_t::IMPOSSIBLE;
+        }
+
+        bool LinearProgram::isBoundedImpossible(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime) {
+            bool use_ilp = true;
+            auto net = context.net();
+
+            _result = result_t::UKNOWN;
+            
+            if (_equations.size() == 0 || context.timeout()){
+                return false;
+            }
+
+            if (context.markingOutOfBounds()) {  // the initial marking has too many tokens that exceed the int32_t limits
+                return false;
+            }
+
+            const uint32_t nCol = net->numberOfTransitions();
+            const uint32_t nRow = bounds.size() + _equations.size();
+
+            std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+            std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
+            for (size_t i = 0; i <= nCol; ++i)
+                indir[i] = i;
+
+            auto lp = context.buildBaseFromMarking(bounds);
+            if (lp == nullptr)
+                return false;
+
+            int rowno = 1 + bounds.size();
+            glp_add_rows(lp, _equations.size());
+            for (const auto& eq : _equations) {
+                auto l = eq.row->write_indir(row, indir);
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
+                glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
+                if (!std::isinf(eq.lower) && !std::isinf(eq.upper))
+                {
+                    if (eq.lower == eq.upper)
+                        glp_set_row_bnds(lp, rowno, GLP_FX, eq.lower, eq.upper);
+                    else
+                    {
+                        if (eq.lower > eq.upper)
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                            glp_delete_prob(lp);
+                            return true;
+                        }
+                        glp_set_row_bnds(lp, rowno, GLP_DB, eq.lower, eq.upper);
+                    }
+                }
+                else if (std::isinf(eq.lower))
+                    glp_set_row_bnds(lp, rowno, GLP_UP, -infty, eq.upper);
+                else
+                    glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, -infty);
+                ++rowno;
+
+                if (context.timeout())
+                {
+                    // std::cerr << "glpk: construction timeout" << std::endl;
+                    glp_delete_prob(lp);
+                    return false;
+                }
+            }
+
+            // Set objective, kind and bounds
+            for (size_t i = 1; i <= nCol; i++) {
+                glp_set_obj_coef(lp, i, 1);
+                glp_set_col_kind(lp, i, use_ilp ? GLP_IV : GLP_CV);
+                glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
+            }
+
+            printConstraints(context, lp);
+
+            // Minimize the objective
+            glp_set_obj_dir(lp, GLP_MIN);
+            auto stime = glp_time();
+            glp_smcp settings;
+            glp_init_smcp(&settings);
+            auto timeout = std::min(solvetime, context.getLpTimeout()) * 1000;
+            settings.tm_lim = timeout;
+            settings.presolve = GLP_OFF;
+            settings.msg_lev = 0;
+            auto result = glp_simplex(lp, &settings);
+            if (result == GLP_ETMLIM)
+            {
+                _result = result_t::UKNOWN;
+                // std::cerr << "glpk: timeout" << std::endl;
+            }
+            else if (result == 0)
+            {
+                auto status = glp_get_status(lp);
+                if (status == GLP_OPT)
+                {
+                    glp_iocp iset;
+                    glp_init_iocp(&iset);
+                    iset.msg_lev = 0;
+                    iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
+                    iset.presolve = GLP_OFF;
+                    auto ires = glp_intopt(lp, &iset);
+                    if (ires == GLP_ETMLIM)
+                    {
+                        _result = result_t::UKNOWN;
+                        // std::cerr << "glpk mip: timeout" << std::endl;
+                    }
+                    else if (ires == 0)
+                    {
+                        auto ist = glp_mip_status(lp);
+                        if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
+                            _result = result_t::POSSIBLE;
+                        }
+                        else
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                        }
+                    }
+                }
+                else if (status == GLP_FEAS || status == GLP_UNBND)
+                {
+                    _result = result_t::POSSIBLE;
+                }
+                else
+                {
+                    _result = result_t::IMPOSSIBLE;
+                }
+            }
+            else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
+            glp_delete_prob(lp);
+
+            return _result == result_t::IMPOSSIBLE;
+        }
+
+        double LinearProgram::upperBoundForPlace(const PQL::SimplificationContext& context, std::vector<uint32_t>& place_set, uint32_t solvetime) {
+            bool use_ilp = true;
+            auto net = context.net();
+
+            if (_equations.size() == 0 || context.timeout()){
+                if(_equations.size() == 0)
+                    std::cout << "empty bound\n";
+                return -1;
+            }
+
+            if (context.markingOutOfBounds()) {  // the initial marking has too many tokens that exceed the int32_t limits
+                return -1;
+            }
+
+            const uint32_t nCol = net->numberOfTransitions();
+            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
+
+            std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+            std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
+            for (size_t i = 0; i <= nCol; ++i)
+                indir[i] = i;
+
+            auto lp = context.makeBaseLP();
+            if (lp == nullptr)
+                return false;
+
+            int rowno = 1 + net->numberOfPlaces();
+            glp_add_rows(lp, _equations.size());
+            for (const auto& eq : _equations) {
+                auto l = eq.row->write_indir(row, indir);
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
+                glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
+                if (!std::isinf(eq.lower) && !std::isinf(eq.upper))
+                {
+                    if (eq.lower == eq.upper)
+                        glp_set_row_bnds(lp, rowno, GLP_FX, eq.lower, eq.upper);
+                    else
+                    {
+                        if (eq.lower > eq.upper)
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                            glp_delete_prob(lp);
+                            return -1;
+                        }
+                        glp_set_row_bnds(lp, rowno, GLP_DB, eq.lower, eq.upper);
+                    }
+                }
+                else if (std::isinf(eq.lower))
+                    glp_set_row_bnds(lp, rowno, GLP_UP, -infty, eq.upper);
+                else
+                    glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, -infty);
+                ++rowno;
+
+                if (context.timeout())
+                {
+                    // std::cerr << "glpk: construction timeout" << std::endl;
+                    glp_delete_prob(lp);
+                    return -1;
+                }
+            }
+
+            // Set objective, kind and bounds
+            for (size_t i = 1; i <= nCol; i++) {
+                double place_delta = 0;
+                for(auto place : place_set){
+                    place_delta += (double) context.net()->outArc(i - 1, place);
+                    place_delta -= (double) context.net()->inArc(place, i - 1);
+                }
+
+                glp_set_obj_coef(lp, i, place_delta);
+                glp_set_col_kind(lp, i, use_ilp ? GLP_IV : GLP_CV);
+                glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
+            }
+
+            
+            printConstraints(context, lp);
+
+            // Minimize the objective
+            glp_set_obj_dir(lp, GLP_MAX);
+            auto stime = glp_time();
+            glp_smcp settings;
+            glp_init_smcp(&settings);
+            auto timeout = std::min(solvetime, context.getLpTimeout()) * 1000;
+            settings.tm_lim = timeout;
+            settings.presolve = GLP_OFF;
+            settings.msg_lev = 0;
+            auto result = glp_simplex(lp, &settings);
+            if (result == GLP_ETMLIM)
+            {
+                _result = result_t::UKNOWN;
+                // std::cerr << "glpk: timeout" << std::endl;
+            }
+            else if (result == 0)
+            {
+                auto status = glp_get_status(lp);
+                if (status == GLP_OPT)
+                {
+                    glp_iocp iset;
+                    glp_init_iocp(&iset);
+                    iset.msg_lev = 0;
+                    iset.tm_lim = std::min<uint32_t>(std::max<uint32_t>(timeout - (stime - glp_time()), 1), 1000);
+                    iset.presolve = GLP_OFF;
+                    auto ires = glp_intopt(lp, &iset);
+                    if (ires == GLP_ETMLIM)
+                    {
+                        _result = result_t::UKNOWN;
+                        // std::cerr << "glpk mip: timeout" << std::endl;
+                    }
+                    else if (ires == 0)
+                    {
+                        auto ist = glp_mip_status(lp);
+                        if (ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
+                            _result = result_t::POSSIBLE;
+                        }
+                        else
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                        }
+                    }
+                }
+                else if (status == GLP_FEAS || status == GLP_UNBND)
+                {
+                    _result = result_t::POSSIBLE;
+                }
+                else
+                {
+                    _result = result_t::IMPOSSIBLE;
+                }
+            }
+            else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
+
+            double rvalue;
+
+
+            if(_result == result_t::IMPOSSIBLE){
+                rvalue = -2;
+            }else{
+                rvalue = glp_get_obj_val(lp);
+            }
+
+            glp_delete_prob(lp);
+
+            return rvalue;
         }
 
         void LinearProgram::solvePotency(const PQL::SimplificationContext& context, std::vector<uint32_t>& potencies)
@@ -632,7 +714,7 @@ namespace PetriEngine {
                 for (size_t i = 1; i <= nCol; i++) {
                     glp_set_obj_coef(tmp_lp, i, row[i]);
                     glp_set_col_kind(tmp_lp, i, GLP_IV);
-                    glp_set_col_bnds(tmp_lp, i, GLP_DB, 0, (double) INT32_MAX);
+                    glp_set_col_bnds(tmp_lp, i, GLP_LO, 0, infty);
                 }
 
                 auto rs = glp_simplex(tmp_lp, &settings);
