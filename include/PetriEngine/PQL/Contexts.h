@@ -259,6 +259,8 @@ namespace PetriEngine {
 
             glp_prob* makeBaseLP() const;
 
+            glp_prob* buildBaseFromMarking(std::vector<std::pair<std::vector<uint32_t>, double>>& setMarking) const;
+
         private:
             bool _negated;
             const MarkVal* _marking;

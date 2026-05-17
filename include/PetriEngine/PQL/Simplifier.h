@@ -45,6 +45,7 @@ namespace PetriEngine { namespace PQL {
         bool qparent_neg_context = false;
         int32_t quantifiers = 0;
       
+        bool solveFinalCond(std::vector<AbstractProgramCollection_ptr>& final_lps);
 
         Retval simplify_or(const LogicalCondition* element);
         Retval simplify_and(const LogicalCondition *element);

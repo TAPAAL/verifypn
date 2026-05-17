@@ -46,6 +46,47 @@ namespace PetriEngine { namespace PQL {
     }
 
 
+    bool Simplifier::solveFinalCond(std::vector<AbstractProgramCollection_ptr>& final_lps){
+        return true;
+        for(int i = 0; i < final_lps.size(); i++){
+            if(!final_lps[i]->satisfiable(_context))
+                return false;
+        }
+
+        uint32_t nPlaces = _context.net()->numberOfPlaces();
+        std::vector<std::pair<std::vector<uint32_t>, double>> bounds(nPlaces);
+        std::vector<std::vector<bool>> m(final_lps.size(), std::vector<bool>(final_lps.size()));
+
+        for(int i = 0; i < final_lps.size(); i++){
+            for(int j = 0; j < final_lps.size(); j++){
+                if(i == j)
+                    continue;
+                for(uint32_t p = 0; p < nPlaces; p++){
+                    std::vector<uint32_t> ps = {p};
+                    double bound_p = (double) _context.marking()[p] + final_lps[i]->upperBound(_context, ps);
+                    std::cout << p << ": " << bound_p << "\n";
+                    bounds[p] = std::make_pair(std::move(ps), bound_p);
+                }
+               
+                if(!final_lps[j]->boundedSatisfiable(_context, bounds)){
+                    //std::cout << "# CANDIDATE IMPOSSIBLE\n";
+                    if(m[j][i]){
+                        std::cout << "# CANDIDATE IMPOSSIBLE\n";
+                        return false;
+                    }
+
+                    m[i][j] = true;
+                    m[j][i] = true;
+                }
+            }
+        }
+
+        std::cout << "# CANDIDATE POSSIBLE\n";
+
+        return true;
+    }
+
+
      AbstractProgramCollection_ptr createGlobalUnion(AbstractProgramCollection_ptr &global_lp, std::vector<AbstractProgramCollection_ptr> &&nonglobal_lps) {
         //std::cout << "creating unioncollection of global and nonglobal conditions\n";
         
@@ -80,6 +121,7 @@ namespace PetriEngine { namespace PQL {
         std::vector<AbstractProgramCollection_ptr> lps;
         std::vector<AbstractProgramCollection_ptr> unquantified_neglpsv;
         std::vector<AbstractProgramCollection_ptr> global_neglpsv;
+        std::vector<AbstractProgramCollection_ptr> final_neglpsv;
         std::vector<AbstractProgramCollection_ptr> nonglobal_neglpsv;
         
         const bool same_context = qparent_neg_context == _context.negated();
@@ -116,17 +158,25 @@ namespace PetriEngine { namespace PQL {
 
             if( ( quantifiers - pre_quantifiers ) > 1){
                 nonglobal_neglpsv.emplace_back(r.neglps);
-            }else if(quantifier_found == LPQUANT::NONE){
-                if(neg_is_invariant){
-                    global_neglpsv.emplace_back(r.neglps);
-                }else{
-                    unquantified_neglpsv.emplace_back(r.neglps);
+            }else {
+                switch(quantifier_found){
+                    case LPQUANT::NONE:
+                        if(neg_is_invariant){
+                            global_neglpsv.emplace_back(r.neglps);
+                        }else{
+                            unquantified_neglpsv.emplace_back(r.neglps);
+                        }
+                        break;
+                    case LPQUANT::FINAL:
+                        global_neglpsv.emplace_back(r.neglps);
+                        break;
+                    case LPQUANT::GLOBAL:
+                        final_neglpsv.emplace_back(r.neglps);
+                        break;
+                    default:
+                        nonglobal_neglpsv.emplace_back(r.neglps);
                 }
-            }else if(quantifier_found == LPQUANT::FINAL){
-                global_neglpsv.emplace_back(r.neglps);
-            }else{
-                nonglobal_neglpsv.emplace_back(r.neglps);
-            }
+            }   
         }
 
         //std::cout << "sizes  or: " << lps.size() << ", " << global_neglpsv.size() << ", " << nonglobal_neglpsv.size() << "\n";
@@ -138,6 +188,12 @@ namespace PetriEngine { namespace PQL {
         if(unquantified_neglpsv.size() > 0){
             auto uq_neglps = mergeLps(std::move(unquantified_neglpsv));
             nonglobal_neglpsv.emplace_back(uq_neglps);
+        }
+
+        if(final_neglpsv.size() > 1){
+            if(!solveFinalCond(final_neglpsv)){
+                return Retval(BooleanCondition::TRUE_CONSTANT); 
+            }
         }
 
         if(global_neglpsv.size() > 0 && nonglobal_neglpsv.size() > 0){
@@ -180,6 +236,7 @@ namespace PetriEngine { namespace PQL {
         //std::cout << "simplifying and\n";
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> global_lpsv;
+        std::vector<AbstractProgramCollection_ptr> final_lpsv;
         std::vector<AbstractProgramCollection_ptr> unquantified_lpsv;
         std::vector<AbstractProgramCollection_ptr> nonglobal_lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
@@ -212,17 +269,25 @@ namespace PetriEngine { namespace PQL {
 
             if( ( quantifiers - pre_quantifiers ) > 1){
                 nonglobal_lpsv.emplace_back(r.lps);
-            }else if(quantifier_found == LPQUANT::NONE){
-                if(is_invariant){
-                    global_lpsv.emplace_back(r.lps);
-                }else{
-                    unquantified_lpsv.emplace_back(r.lps);
+            }else {
+                switch(quantifier_found){
+                    case LPQUANT::NONE:
+                        if(is_invariant){
+                            global_lpsv.emplace_back(r.lps);
+                        }else{
+                            unquantified_lpsv.emplace_back(r.lps);
+                        }
+                        break;
+                    case LPQUANT::GLOBAL:
+                        global_lpsv.emplace_back(r.lps);
+                        break;
+                    case LPQUANT::FINAL:
+                        final_lpsv.emplace_back(r.lps);
+                        break;
+                    default:
+                        nonglobal_lpsv.emplace_back(r.lps);
                 }
-            }else if (quantifier_found == LPQUANT::GLOBAL){
-                global_lpsv.emplace_back(r.lps);
-            }else{
-                nonglobal_lpsv.emplace_back(r.lps);
-            }
+            }   
             neglps.emplace_back(r.neglps);
         }
 
@@ -233,9 +298,15 @@ namespace PetriEngine { namespace PQL {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         }
 
-         if(unquantified_lpsv.size() > 0){
+        if(unquantified_lpsv.size() > 0){
             auto uq_lps = mergeLps(std::move(unquantified_lpsv));
             nonglobal_lpsv.emplace_back(uq_lps);
+        }
+
+        if(final_lpsv.size() > 1){
+            if(!solveFinalCond(final_lpsv)){
+                return Retval(BooleanCondition::FALSE_CONSTANT); 
+            }
         }
 
         if(global_lpsv.size() > 0 && nonglobal_lpsv.size() > 0){
@@ -391,7 +462,7 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    Member memberForPlace(size_t p, const SimplificationContext &context) {
+    /*Member memberForPlace(size_t p, const SimplificationContext &context) {
         std::vector<int64_t> row(context.net()->numberOfTransitions(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
@@ -399,6 +470,17 @@ namespace PetriEngine { namespace PQL {
             row[t] -= context.net()->inArc(p, t);
         }
         return Member(std::move(row), context.marking()[p]);
+    }*/
+
+    Member memberForPlace(size_t p, const SimplificationContext &context) {
+        std::vector<int64_t> row(context.net()->numberOfTransitions() + context.net()->numberOfPlaces(), 0);
+        row.shrink_to_fit();
+        for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
+            row[t] = context.net()->outArc(t, p);
+            row[t] -= context.net()->inArc(p, t);
+        }
+        row[context.net()->numberOfTransitions() + p] = 1.0;
+        return Member(std::move(row), 0);
     }
 
     /********** Constraint Visitor **********/
