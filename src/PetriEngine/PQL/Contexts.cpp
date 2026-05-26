@@ -149,8 +149,13 @@ namespace PetriEngine {
                 }
             }
             int rowno = 1;
+            std::vector<int> ind(2);
+            std::vector<double> vals = {0, 1.0};
             for (size_t p = 0; p < _net->numberOfPlaces(); p++) {
-                glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double) _marking[p]), infty);
+                const int colno = 1 + p + _net->numberOfTransitions();
+                ind[1] = p+1;
+                glp_set_mat_col(lp, colno, 1, ind.data(), vals.data());
+                glp_set_row_bnds(lp, rowno, GLP_LO, 0, infty);
                 ++rowno;
                 if (timeout()) {
                     std::cerr << "glpk: construction timeout" << std::endl;
@@ -165,16 +170,7 @@ namespace PetriEngine {
                 glp_set_obj_coef(lp, colno, 0);
                 glp_set_col_kind(lp, colno, GLP_IV);
             }
-            /*std::vector<int32_t> ind(2);
-            std::vector<double> col = {0, 1.0};
-        
-            for(size_t p = 0; p < _net->numberOfPlaces(); p++){
-                ind[1] = 1 + p + _net->numberOfTransitions();
-                glp_set_mat_row(lp, rowno, 1, ind.data(), col.data());
-                glp_set_row_bnds(lp, rowno, GLP_FX, (double) _marking[p], 0);
-                ++rowno;
-            }*/
-
+            
             return lp;
         }
 

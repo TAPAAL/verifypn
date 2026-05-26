@@ -87,6 +87,58 @@ namespace PetriEngine { namespace PQL {
     }
 
 
+    bool Simplifier::finalLpsImpossible(std::vector<AbstractProgramCollection_ptr>& final_lps){
+        for(int i = 0; i < final_lps.size(); i++){
+            if(!final_lps[i]->satisfiable(_context)){
+                return true;
+            }
+        }
+        for(int i = 0; i < final_lps.size(); i++){
+            for(int j = i + 1; j < final_lps.size(); j++){
+                bool hasmore = false;
+                bool sat = false;
+                // the lps i/j may be union/mergecollections of many programs
+                do{
+                    nextProgram np_i = final_lps[i]->get_next_program();
+                    bool submore = false;
+                    do{
+                        nextProgram np_j = final_lps[j]->get_next_program();
+                        SingleProgram* s_i = dynamic_cast<SingleProgram*>(np_i.prog.get());
+                        SingleProgram* s_j = dynamic_cast<SingleProgram*>(np_j.prog.get());
+                        if(s_i && s_j){
+                            LinearProgram lp_i = s_i->getProgram();
+                            LinearProgram lp_j = s_j->getProgram();
+                            if(!lp_i.isFinalImpossibleWith(lp_j, _context) ||
+                               !lp_j.isFinalImpossibleWith(lp_i, _context)){
+                                sat = true;
+                            }
+                        }else{
+                            // shouldn't happen, but in here for safety for now
+                            std::cout << "# NOT A SINGLE PROGRAM\n";
+                            sat = true;
+                        }
+                        submore = np_j.hasmore;
+                    }while(submore && !sat);
+                    
+                    hasmore = np_i.hasmore;
+
+                    // if we found a satisfied combined lp, then (i, j) cannot give us a conclusive answer
+                    // reset and move to next combination
+                    if(sat){
+                        hasmore = false;
+                        final_lps[j]->reset();
+                        final_lps[i]->reset();
+                    }
+                }while(hasmore);
+
+                if(!sat){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
      AbstractProgramCollection_ptr createGlobalUnion(AbstractProgramCollection_ptr &global_lp, std::vector<AbstractProgramCollection_ptr> &&nonglobal_lps) {
         //std::cout << "creating unioncollection of global and nonglobal conditions\n";
         
@@ -190,22 +242,29 @@ namespace PetriEngine { namespace PQL {
             nonglobal_neglpsv.emplace_back(uq_neglps);
         }
 
-        if(final_neglpsv.size() > 1){
-            if(!solveFinalCond(final_neglpsv)){
-                return Retval(BooleanCondition::TRUE_CONSTANT); 
-            }
-        }
-
         if(global_neglpsv.size() > 0 && nonglobal_neglpsv.size() > 0){
             auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
             std::cout << "# MERGE RULE APPLIED " << id << "\n";
         }
 
-        AbstractProgramCollection_ptr neglps = mergeLps(std::move(global_neglpsv));
-        neglps = createGlobalUnion(neglps, std::move(nonglobal_neglpsv));
+        auto global_neglp = mergeLps(std::move(global_neglpsv));
+        auto neglps = createGlobalUnion(global_neglp, std::move(nonglobal_neglpsv));
 
         if(neglps == nullptr){
             neglps = std::make_shared<SingleProgram>();
+        }
+
+        if(final_neglpsv.size() > 1){
+            if(global_neglp){
+                for(int i = 0; i < final_neglpsv.size(); i++){
+                    final_neglpsv[i] = std::make_shared<MergeCollection>(global_neglp, final_neglpsv[i]);
+                }
+            }
+            if(finalLpsImpossible(final_neglpsv)){
+                std::cout << "# FINAL LP IMPOSSIBLE\n";
+                return Retval(BooleanCondition::TRUE_CONSTANT); 
+            }
+            std::cout << "# FINAL LP POSSIBLE\n";
         }
 
         if(lps.size() == 0){
@@ -303,21 +362,28 @@ namespace PetriEngine { namespace PQL {
             nonglobal_lpsv.emplace_back(uq_lps);
         }
 
-        if(final_lpsv.size() > 1){
-            if(!solveFinalCond(final_lpsv)){
-                return Retval(BooleanCondition::FALSE_CONSTANT); 
-            }
-        }
-
         if(global_lpsv.size() > 0 && nonglobal_lpsv.size() > 0){
             auto id = std::chrono::duration_cast<std::chrono::microseconds>(_context._id.time_since_epoch()).count();
             std::cout << "# MERGE RULE APPLIED " << id << "\n";
         }
-        auto lps = mergeLps(std::move(global_lpsv));
-        lps = createGlobalUnion(lps, std::move(nonglobal_lpsv));
+        auto global_lp = mergeLps(std::move(global_lpsv));
+        auto lps = createGlobalUnion(global_lp, std::move(nonglobal_lpsv));
         
         if(lps == nullptr){
             lps = std::make_shared<SingleProgram>();
+        }
+
+        if(final_lpsv.size() > 1){
+            if(global_lp){
+                for(int i = 0; i < final_lpsv.size(); i++){
+                    final_lpsv[i] = std::make_shared<MergeCollection>(global_lp, final_lpsv[i]);
+                }
+            }
+            if(finalLpsImpossible(final_lpsv)){
+                std::cout << "# FINAL LP IMPOSSIBLE\n";
+                return Retval(BooleanCondition::FALSE_CONSTANT); 
+            }
+            std::cout << "# FINAL LP POSSIBLE\n";
         }
 
         if(neglps.size() == 0){

@@ -48,6 +48,10 @@ namespace PetriEngine {
             return upperBoundImpl(context, place_set, solvetime);
         }
 
+        nextProgram AbstractProgramCollection::get_next_program(){
+            return getNextProgramImpl();
+        }
+
         uint32_t AbstractProgramCollection::explorePotency(const PQL::SimplificationContext& context,
             std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
@@ -150,6 +154,29 @@ namespace PetriEngine {
             return maxBound;
         }
 
+        nextProgram UnionCollection::getNextProgramImpl(){
+            if(lps.size() == 0){
+                auto empty = SingleProgram();
+                AbstractProgramCollection_ptr p = std::make_shared<SingleProgram>(empty);
+                return {p, false};
+            }
+            assert(current < lps.size());
+            AbstractProgramCollection_ptr prog = lps[current];
+            // this is to handle nested unions/merges where the value of np.prog might not be a SingleProgram
+            nextProgram np = prog->get_next_program();
+            if(!np.hasmore){
+                bool hasmore = (current + 1  < lps.size());
+                if(hasmore){
+                    current++;
+                }else{
+                    reset();
+                }
+                return {np.prog, hasmore};
+            }else{
+                return np;
+            }
+        } 
+
         uint32_t UnionCollection::explorePotencyImpl(const PQL::SimplificationContext& context,
             std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
@@ -197,6 +224,8 @@ namespace PetriEngine {
 
             tmp_prog = LinearProgram();
             curr = 0;
+
+            next_prog = LinearProgram();
         }
 
         bool MergeCollection::merge(bool& has_empty, LinearProgram& program, bool dry_run)
@@ -277,6 +306,19 @@ namespace PetriEngine {
             } while (hasmore);
             if (_result != POSSIBLE)
                 _result = IMPOSSIBLE;
+        }
+
+        nextProgram MergeCollection::getNextProgramImpl(){
+            bool has_empty = false;
+            bool hasmore = merge(has_empty, next_prog);
+            SingleProgram prog = SingleProgram(next_prog);
+            nextProgram np = {std::make_shared<SingleProgram>(prog), hasmore};
+
+            if(!hasmore){
+                reset();
+            }
+
+            return np;
         }
 
         void MergeCollection::boundedSatisfiableImpl(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime)
@@ -361,6 +403,12 @@ namespace PetriEngine {
             has_empty = true;
         }
 
+        SingleProgram::SingleProgram(LinearProgram lp) : AbstractProgramCollection()
+        {
+            program = lp;
+            has_empty = ( program.size() == 0 );
+        }
+
         SingleProgram::SingleProgram(LPCache* factory, const Member& lh, int64_t constant, op_t op)
         : AbstractProgramCollection(),
           program(factory->createAndCache(lh.variables()), constant, op, factory)
@@ -394,6 +442,12 @@ namespace PetriEngine {
             {
                 _result = IMPOSSIBLE;
             }
+        }
+
+        nextProgram SingleProgram::getNextProgramImpl(){
+            auto e = *this;
+            AbstractProgramCollection_ptr p = std::make_shared<SingleProgram>(e);
+            return {p, false};
         }
 
         void SingleProgram::boundedSatisfiableImpl(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime)

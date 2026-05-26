@@ -66,6 +66,7 @@ namespace PetriEngine {
 
             double upperBoundForPlace(const PQL::SimplificationContext& context, std::vector<uint32_t>& place, uint32_t solvetime);
             bool isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime);
+            bool isFinalImpossibleWith(LinearProgram& withLp, const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
             bool isBoundedImpossible(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime);
             void solvePotency(const PQL::SimplificationContext& context, std::vector<uint32_t>& potencies);
 

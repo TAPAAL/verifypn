@@ -8,6 +8,14 @@
 
 namespace PetriEngine {
     namespace Simplification {
+        class AbstractProgramCollection;
+
+        struct nextProgram
+        {
+            std::shared_ptr<AbstractProgramCollection> prog;
+            bool hasmore;
+        };
+        
         class AbstractProgramCollection
         {
             protected:
@@ -21,6 +29,7 @@ namespace PetriEngine {
                 virtual uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
                                                     std::vector<uint32_t> &potencies,
                                                     uint32_t maxConfigurationsSolved) = 0;
+                virtual nextProgram getNextProgramImpl() = 0;
 
             public:
                 virtual ~AbstractProgramCollection() {}
@@ -29,7 +38,7 @@ namespace PetriEngine {
                 virtual bool satisfiable(const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
                 virtual bool boundedSatisfiable(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
                 virtual double upperBound(const PQL::SimplificationContext& context, std::vector<uint32_t>& place_set, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
-
+                virtual nextProgram  get_next_program();
 
                 bool known_sat() { return _result == POSSIBLE; }
                 bool known_unsat() { return _result == IMPOSSIBLE; }
@@ -61,6 +70,8 @@ namespace PetriEngine {
             uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
                                         std::vector<uint32_t> &potencies,
                                         uint32_t maxConfigurationsSolved) override;
+            
+            nextProgram getNextProgramImpl() override;
 
         public:
             UnionCollection(std::vector<AbstractProgramCollection_ptr>&& programs);
@@ -86,12 +97,16 @@ namespace PetriEngine {
             size_t curr = 0;
             size_t _size = 0;
 
+            LinearProgram next_prog;
+
             void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) override;
             void boundedSatisfiableImpl(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime) override;
             double upperBoundImpl(const PQL::SimplificationContext& context, std::vector<uint32_t>& place_set, uint32_t solvetime) override;
             uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
                                         std::vector<uint32_t> &potencies,
                                         uint32_t maxConfigurationsSolved) override;
+            
+            nextProgram getNextProgramImpl() override;
 
         public:
             MergeCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B);
@@ -113,10 +128,12 @@ namespace PetriEngine {
             uint32_t explorePotencyImpl(const PQL::SimplificationContext& context,
                                         std::vector<uint32_t> &potencies,
                                         uint32_t maxConfigurationsSolved) override;
-
+            nextProgram getNextProgramImpl() override;
         public:
             SingleProgram();
+            SingleProgram(LinearProgram lp);
             SingleProgram(LPCache* factory, const Member& lh, int64_t constant, op_t op);
+
 
             virtual ~SingleProgram() {}
 
@@ -125,6 +142,12 @@ namespace PetriEngine {
             size_t size() const override { return 1; }
             bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) override;
             bool isBoundedImpossible(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime);
+
+            LinearProgram getProgram() const{
+                return program;
+            }
+
+
         };
     }
 }
