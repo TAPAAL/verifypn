@@ -319,7 +319,6 @@ namespace PetriEngine {
 
             const int shift = net->numberOfPlaces() + net->numberOfTransitions();
             glp_add_cols(lp, shift);
-
             // transition variable copies
             for (size_t i = 1; i <= net->numberOfTransitions(); i++) {
                 glp_set_obj_coef(lp, i + shift, 1);
