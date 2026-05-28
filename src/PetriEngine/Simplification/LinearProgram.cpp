@@ -319,6 +319,7 @@ namespace PetriEngine {
 
             const int shift = net->numberOfPlaces() + net->numberOfTransitions();
             glp_add_cols(lp, shift);
+
             // transition variable copies
             for (size_t i = 1; i <= net->numberOfTransitions(); i++) {
                 glp_set_obj_coef(lp, i + shift, 1);
@@ -383,7 +384,7 @@ namespace PetriEngine {
                     {
                         if (eq.lower > eq.upper)
                         {
-                            _result = result_t::IMPOSSIBLE;
+                            //_result = result_t::IMPOSSIBLE;
                             glp_delete_prob(lp);
                             return true;
                         }
@@ -463,8 +464,9 @@ namespace PetriEngine {
                 _result = result_t::IMPOSSIBLE;
             }
             glp_delete_prob(lp);
-
-            return _result == result_t::IMPOSSIBLE;
+            bool impossible = _result == result_t::IMPOSSIBLE;
+            _result = result_t::UKNOWN;
+            return impossible;
         }
 
         bool LinearProgram::isBoundedImpossible(const PQL::SimplificationContext& context, std::vector<std::pair<std::vector<uint32_t>, double>>& bounds, uint32_t solvetime) {

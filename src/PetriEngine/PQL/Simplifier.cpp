@@ -95,6 +95,8 @@ namespace PetriEngine { namespace PQL {
         }
         for(int i = 0; i < final_lps.size(); i++){
             for(int j = i + 1; j < final_lps.size(); j++){
+                final_lps[j]->reset();
+                final_lps[i]->reset();
                 bool hasmore = false;
                 bool sat = false;
                 // the lps i/j may be union/mergecollections of many programs
@@ -119,9 +121,7 @@ namespace PetriEngine { namespace PQL {
                         }
                         submore = np_j.hasmore;
                     }while(submore && !sat);
-                    
                     hasmore = np_i.hasmore;
-
                     // if we found a satisfied combined lp, then (i, j) cannot give us a conclusive answer
                     // reset and move to next combination
                     if(sat){
@@ -261,7 +261,7 @@ namespace PetriEngine { namespace PQL {
                 }
             }
             if(finalLpsImpossible(final_neglpsv)){
-                std::cout << "# FINAL LP IMPOSSIBLE\n";
+                std::cout << "# FINAL LP IMPOSSIBLE OR\n";
                 return Retval(BooleanCondition::TRUE_CONSTANT); 
             }
             std::cout << "# FINAL LP POSSIBLE\n";
@@ -380,7 +380,7 @@ namespace PetriEngine { namespace PQL {
                 }
             }
             if(finalLpsImpossible(final_lpsv)){
-                std::cout << "# FINAL LP IMPOSSIBLE\n";
+                std::cout << "# FINAL LP IMPOSSIBLE AND\n";
                 return Retval(BooleanCondition::FALSE_CONSTANT); 
             }
             std::cout << "# FINAL LP POSSIBLE\n";
