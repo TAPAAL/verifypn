@@ -250,8 +250,8 @@ namespace PetriEngine {
 
             return _result == result_t::IMPOSSIBLE;
         }
-
-        bool LinearProgram::isFinalImpossibleWith(LinearProgram& withLp, const PQL::SimplificationContext& context, uint32_t solvetime) {
+        
+        bool LinearProgram::isFinalImpossibleWith(LinearProgram& withLp, const PQL::SimplificationContext& context, bool is_next, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
 
@@ -403,6 +403,17 @@ namespace PetriEngine {
                     glp_delete_prob(lp);
                     return false;
                 }
+            }
+
+            if(is_next){
+                glp_add_rows(lp, 1);
+                for(size_t t = 1; t <= net->numberOfTransitions(); t++){
+                    indir[t] = t;
+                    row[t] = 1.0;
+                }
+                glp_set_mat_row(lp, rowno, net->numberOfTransitions(), indir.data(), row.data());
+                glp_set_row_bnds(lp, rowno, GLP_UP, -infty, 1.0);
+                ++rowno;
             }
 
             printConstraints(context, lp);
