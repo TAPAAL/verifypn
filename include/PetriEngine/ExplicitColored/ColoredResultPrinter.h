@@ -2,6 +2,7 @@
 #define COLORED_RESULT_PRINTER_H
 
 #include "AtomicTypes.h"
+#include "ExplicitColoredPetriNetBuilder.h"
 #include "PetriEngine/ExplicitColored/Algorithms/SearchStatistics.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 
@@ -28,12 +29,22 @@ namespace PetriEngine::ExplicitColored {
         bool isInitial;
     };
 
+    struct ExplicitColoredTraceContext
+    {
+        ExplicitColoredTraceContext(std::vector<TraceStep> traceSteps, ExplicitColoredPetriNetBuilder cpnBuilder)
+            : traceSteps(std::move(traceSteps)), cpnBuilder(std::move(cpnBuilder)) {}
+        ExplicitColoredTraceContext(ExplicitColoredTraceContext&&) = default;
+        ExplicitColoredTraceContext& operator=(ExplicitColoredTraceContext&&) = default;
+        std::vector<TraceStep> traceSteps;
+        ExplicitColoredPetriNetBuilder cpnBuilder;
+    };
+
     class IColoredResultPrinter {
     public:
         virtual void printResult(
             const SearchStatistics& searchStatistics,
             Reachability::AbstractHandler::Result result,
-            const std::vector<TraceStep>* trace
+            const ExplicitColoredTraceContext* trace
         ) const = 0;
         virtual void printNonExplicitResult(
             std::vector<std::string> techniques,
@@ -58,7 +69,7 @@ namespace PetriEngine::ExplicitColored {
         void printResult(
             const SearchStatistics& searchStatistics,
             Reachability::AbstractHandler::Result result,
-            const std::vector<TraceStep>* trace
+            const ExplicitColoredTraceContext* trace
         ) const override;
 
         void printNonExplicitResult(
@@ -67,7 +78,8 @@ namespace PetriEngine::ExplicitColored {
         ) const override;
     private:
         void _printCommon(Reachability::AbstractHandler::Result result, const std::vector<std::string>& extraTechniques) const;
-        void _printTrace(const std::vector<TraceStep>& trace) const;
+        void _printTrace(const ExplicitColoredTraceContext& trace) const;
+        void _printMarkings(const ExplicitColoredPetriNetBuilder& explicitCpnBuilder, const TraceStep& traceStep) const;
         uint32_t _queryOffset;
         std::ostream& _stream;
         std::string _queryName;
