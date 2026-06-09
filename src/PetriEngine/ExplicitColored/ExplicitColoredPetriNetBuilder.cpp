@@ -2,6 +2,7 @@
 #include "PetriEngine/ExplicitColored/ExpressionCompilers/ArcCompiler.h"
 #include "PetriEngine/ExplicitColored/ExpressionCompilers/GuardCompiler.h"
 #include <algorithm>
+#include "PetriParse/PNMLParser.h"
 
 namespace PetriEngine::ExplicitColored {
     ExplicitColoredPetriNetBuilder::ExplicitColoredPetriNetBuilder() {
@@ -156,6 +157,34 @@ namespace PetriEngine::ExplicitColored {
         colorType->addType(newConstituent);
     }
 
+    void ExplicitColoredPetriNetBuilder::addTokens(std::string&& place, Colored::Multiset&& tokens)
+    {
+        const auto placeId = _placeIndices.find(place);
+        if (placeId == _placeIndices.end())
+        {
+            throw base_error("Unknown place name ", place);
+        }
+
+        const auto underlyingColorType = getPlaceUnderlyingColorType(placeId->second);
+
+        CPNMultiSet multiSet;
+        const auto& colorType = _colorTypeMap.find(underlyingColorType->getName())->second;
+        for (const auto& [tokenColor, count] : tokens) {
+            std::vector<Color_t> colorSequence;
+            if (tokenColor->isTuple()) {
+                for (const auto& color : tokenColor->getTupleColors()) {
+                    colorSequence.push_back(color->getId());
+                }
+            } else {
+                colorSequence.push_back(tokenColor->getId());
+            }
+            multiSet.setCount(ColorSequence{colorSequence, *colorType}, count);
+        }
+
+
+        _standAloneMarking.markings[placeId->second] = multiSet;
+    }
+
     void ExplicitColoredPetriNetBuilder::addVariable(const Colored::Variable* variable) {
         (*_variableMap)[variable->name] = _variableMap->size();
         const auto colorType = _colorTypeMap.find(variable->colorType->getName())->second;
@@ -201,6 +230,15 @@ namespace PetriEngine::ExplicitColored {
 
     ColoredPetriNet ExplicitColoredPetriNetBuilder::takeNet() {
         return std::move(_currentNet);
+    }
+
+    ColoredPetriNetMarking ExplicitColoredPetriNetBuilder::parseMarking(const rapidxml::xml_document<>& doc)
+    {
+        _standAloneMarking = ColoredPetriNetMarking();
+        _standAloneMarking.markings.resize(getPlaceCount());
+        PNMLParser parser;
+        parser.parseMarking(doc, this, _colors.get());
+        return _standAloneMarking;
     }
 
     void ExplicitColoredPetriNetBuilder::_createArcsAndTransitions() {

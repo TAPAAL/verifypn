@@ -238,7 +238,7 @@ namespace PetriEngine::ExplicitColored {
         return Result::UNKNOWN;
     }
 
-    std::pair<ExplicitColoredModelChecker::Result, std::optional<std::vector<TraceStep>>> ExplicitColoredModelChecker::explicitColorCheck(
+    std::pair<ExplicitColoredModelChecker::Result, std::optional<ExplicitColoredTraceContext>> ExplicitColoredModelChecker::explicitColorCheck(
         const std::string& pnmlModel,
         const Condition_ptr& query,
         options_t& options,
@@ -268,18 +268,18 @@ namespace PetriEngine::ExplicitColored {
             *searchStatistics = worklist.GetSearchStatistics();
         }
 
-        std::optional<std::vector<TraceStep>> trace = std::nullopt;
+        std::optional<ExplicitColoredTraceContext> traceContext = std::nullopt;
         if (options.trace != TraceLevel::None) {
             auto counterExample = worklist.getCounterExampleId();
 
             if (counterExample.has_value()) {
                 auto internalTrace  = worklist.getTraceTo(counterExample.value());
                 if (internalTrace.has_value()) {
-                    trace = _translateTraceStep(internalTrace.value(), cpnBuilder, net);
+                    traceContext.emplace(_translateTraceStep(internalTrace.value(), cpnBuilder, net), std::move(cpnBuilder));
                 }
             }
         }
-        return std::make_pair(result ? Result::SATISFIED : Result::UNSATISFIED, trace);
+        return std::make_pair(result ? Result::SATISFIED : Result::UNSATISFIED, std::move(traceContext));
     }
 
     void ExplicitColoredModelChecker::_reduce(

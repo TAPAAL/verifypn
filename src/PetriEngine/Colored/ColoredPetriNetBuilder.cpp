@@ -35,9 +35,12 @@ namespace PetriEngine {
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
         // cleaning up colors
-        for(auto& e : _colors)
-            if(e.second != Colored::ColorType::dotInstance())
-                delete e.second;
+        if (_ownsColors)
+        {
+            for(auto& e : _colors)
+                if(e.second != Colored::ColorType::dotInstance())
+                    delete e.second;
+        }
         for(auto& v : _variables)
             delete v;
         _colors.clear();
