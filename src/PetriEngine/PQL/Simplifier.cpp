@@ -114,8 +114,8 @@ namespace PetriEngine { namespace PQL {
                         if(s_i && s_j){
                             LinearProgram lp_i = s_i->getProgram();
                             LinearProgram lp_j = s_j->getProgram();
-                            if(!lp_i.isFinalImpossibleWith(lp_j, _context) ||
-                               !lp_j.isFinalImpossibleWith(lp_i, _context)){
+                            if(!lp_i.isFinalImpossibleWith(lp_j, false, false, _context) ||
+                               !lp_j.isFinalImpossibleWith(lp_i, false, false, _context)){
                                 sat = true;
                             }
                         }else{
@@ -143,18 +143,54 @@ namespace PetriEngine { namespace PQL {
         return false;
     }
 
-    bool Simplifier::nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps){
+    bool Simplifier::nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant){
+        const bool strictNext = !_context.isDeadlocked();
         for(int i = 0; i < next_lps.size(); i++){
-            if(!next_lps[i]->satisfiable(_context)){
-                return true;
+            if(is_invariant){
+                bool nmore = false;
+                bool nsat = false;
+                next_lps[i]->reset();
+                do{
+                    nextProgram pn = next_lps[i]->get_next_program();
+                    SingleProgram* sn = dynamic_cast<SingleProgram*>(pn.prog.get());
+                    if(!sn || !sn->getProgram().isNStepsImpossible(1, strictNext, _context)){
+                        nsat = true;
+                    }
+                    nmore = pn.hasmore;
+                }while(nmore && !nsat);
+                next_lps[i]->reset();
+                if(!nsat){
+                    std::cout << "strict next impossible\n";
+                    return true;
+                }
+            }else{
+                if(!next_lps[i]->satisfiable(_context)){
+                    return true;
+                }
             }
         }
 
-        if(next_lps.size() == 0 || final_lps.size() == 0) 
+        if(next_lps.size() == 0 || final_lps.size() == 0 || !is_invariant) 
             return false;
 
-        for(int i = 0; i < next_lps.size(); i++){
-            for(int j = 0; j < final_lps.size(); j++){
+        for(int j = 0; j < final_lps.size(); j++){
+            /* checks if lp holds in initial marking, and if it does skips it */
+            bool fmore = false;
+            bool fsat = false;
+            final_lps[j]->reset();
+            do{
+                nextProgram pf = final_lps[j]->get_next_program();
+                SingleProgram* sf = dynamic_cast<SingleProgram*>(pf.prog.get());
+                if(!sf || !sf->getProgram().isNStepsImpossible(0, true, _context)){
+                    fsat = true;
+                }
+                fmore = pf.hasmore;
+            }while(fmore && !fsat);
+            final_lps[j]->reset();
+            if(fsat)
+                continue;
+
+            for(int i = 0; i < next_lps.size(); i++){
                 next_lps[i]->reset();
                 final_lps[j]->reset();
                 bool hasmore = false;
@@ -170,7 +206,8 @@ namespace PetriEngine { namespace PQL {
                         if(s_i && s_j){
                             LinearProgram lp_i = s_i->getProgram();
                             LinearProgram lp_j = s_j->getProgram();
-                            if(!lp_i.isFinalImpossibleWith(lp_j, _context, true)){
+                            if(!lp_i.isFinalImpossibleWith(lp_j, true, strictNext, _context)){ //&&
+                               //!lp_j.isFinalImpossibleWith(lp_i, _context)){
                                 sat = true;
                             }
                         }else{
@@ -340,7 +377,8 @@ namespace PetriEngine { namespace PQL {
                     next_neglpsv[i] = std::make_shared<MergeCollection>(global_neglp, next_neglpsv[i]);
                 }
             }
-            if(nextLpsImpossible(next_neglpsv, final_neglpsv)){
+            const bool next_is_invariant = neg_is_invariant || (quantifier_parent == LPQUANT::NONE);
+            if(nextLpsImpossible(next_neglpsv, final_neglpsv, next_is_invariant)){
                 std::cout << "# NEXT LP IMPOSSIBLE OR\n";
                 return Retval(BooleanCondition::TRUE_CONSTANT); 
             }
@@ -478,7 +516,8 @@ namespace PetriEngine { namespace PQL {
                     next_lpsv[i] = std::make_shared<MergeCollection>(global_lp, next_lpsv[i]);
                 }
             }
-            if(nextLpsImpossible(next_lpsv, final_lpsv)){
+            const bool next_is_invariant = is_invariant || (quantifier_parent == LPQUANT::NONE);
+            if(nextLpsImpossible(next_lpsv, final_lpsv, next_is_invariant)){
                 std::cout << "# NEXT LP IMPOSSIBLE AND\n";
                 return Retval(BooleanCondition::FALSE_CONSTANT); 
             }

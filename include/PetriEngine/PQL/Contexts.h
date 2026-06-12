@@ -198,6 +198,7 @@ namespace PetriEngine {
                     }
                 }
 
+                _isDeadlocked = _net->deadlocked(_marking);
                 _id = std::chrono::system_clock::now();
             }
 
@@ -216,6 +217,10 @@ namespace PetriEngine {
 
             bool markingOutOfBounds() const {
                 return _markingOutOfBounds;
+            }
+
+            bool isDeadlocked() const {
+                return _isDeadlocked;
             }
 
             const PetriNet* net() const {
@@ -265,6 +270,7 @@ namespace PetriEngine {
             bool _negated;
             const MarkVal* _marking;
             bool _markingOutOfBounds;
+            bool _isDeadlocked;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout, _lpPrintLevel, _potencyTimeout;
             mutable glp_prob* _base_lp = nullptr;
