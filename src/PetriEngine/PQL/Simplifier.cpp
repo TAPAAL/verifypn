@@ -143,10 +143,10 @@ namespace PetriEngine { namespace PQL {
         return false;
     }
 
-    bool Simplifier::nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant){
+    bool Simplifier::nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant, bool is_or){
         const bool strictNext = !_context.isDeadlocked();
         for(int i = 0; i < next_lps.size(); i++){
-            if(is_invariant){
+            if(is_invariant && !is_or){
                 bool nmore = false;
                 bool nsat = false;
                 next_lps[i]->reset();
@@ -329,6 +329,7 @@ namespace PetriEngine { namespace PQL {
                         break;
                     case LPQUANT::NEXT:
                         next_neglpsv.emplace_back(r.neglps);
+                        break;
                     default:
                         nonglobal_neglpsv.emplace_back(r.neglps);
                 }
@@ -378,7 +379,7 @@ namespace PetriEngine { namespace PQL {
                 }
             }
             const bool next_is_invariant = neg_is_invariant || (quantifier_parent == LPQUANT::NONE);
-            if(nextLpsImpossible(next_neglpsv, final_neglpsv, next_is_invariant)){
+            if(nextLpsImpossible(next_neglpsv, final_neglpsv, next_is_invariant, true)){
                 std::cout << "# NEXT LP IMPOSSIBLE OR\n";
                 return Retval(BooleanCondition::TRUE_CONSTANT); 
             }
@@ -467,6 +468,7 @@ namespace PetriEngine { namespace PQL {
                         break;
                     case LPQUANT::NEXT:
                         next_lpsv.emplace_back(r.lps);
+                        break;
                     default:
                         nonglobal_lpsv.emplace_back(r.lps);
                 }

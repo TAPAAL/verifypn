@@ -48,7 +48,7 @@ namespace PetriEngine { namespace PQL {
         bool solveFinalCond(std::vector<AbstractProgramCollection_ptr>& final_lps);
 
         bool finalLpsImpossible(std::vector<AbstractProgramCollection_ptr>& final_lps);
-        bool nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant);
+        bool nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant, bool is_or = false);
 
         Retval simplify_or(const LogicalCondition* element);
         Retval simplify_and(const LogicalCondition *element);
