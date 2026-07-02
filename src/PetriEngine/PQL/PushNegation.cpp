@@ -610,17 +610,49 @@ namespace PetriEngine { namespace PQL {
         RETURN(cond)
     }
 
+    struct CanBeNegativeVisitor : public BaseVisitor {
+        bool result = false;
+
+        void _accept(const CommutativeExpr *element) override {
+            if (result) return;
+            if (element->constant() < 0) {
+                result = true;
+                return;
+            }
+            BaseVisitor::_accept(static_cast<const NaryExpr*>(element));
+        }
+
+        void _accept(const SubtractExpr *element) override {
+            result = true;
+        }
+
+        void _accept(const MinusExpr *element) override {
+            result = true;
+        }
+
+        void _accept(const LiteralExpr *element) override {
+            if (result) return;
+            if (element->value() < 0) {
+                result = true;
+            }
+        }
+    };
+
     Condition_ptr PushNegationVisitor::pushEqual(CompareCondition *org, bool _negated, bool noteq) {
         if (org->isTrivial())
             return BooleanCondition::getShared(evaluate(org, context) xor _negated);
         for (auto i: {0, 1}) {
             if ((*org)[i]->placeFree() && evaluate((*org)[i].get(), context) == 0) {
-                if (_negated == noteq)
-                    return std::make_shared<LessThanOrEqualCondition>((*org)[(i + 1) % 2],
-                                                                      std::make_shared<LiteralExpr>(0));
-                else
-                    return std::make_shared<LessThanOrEqualCondition>(std::make_shared<LiteralExpr>(1),
-                                                                      (*org)[(i + 1) % 2]);
+                CanBeNegativeVisitor visitor;
+                Visitor::visit(visitor, (*org)[(i + 1) % 2].get());
+                if (!visitor.result) {
+                    if (_negated == noteq)
+                        return std::make_shared<LessThanOrEqualCondition>((*org)[(i + 1) % 2],
+                                                                          std::make_shared<LiteralExpr>(0));
+                    else
+                        return std::make_shared<LessThanOrEqualCondition>(std::make_shared<LiteralExpr>(1),
+                                                                          (*org)[(i + 1) % 2]);
+                }
             }
         }
         if (_negated == noteq) return std::make_shared<EqualCondition>((*org)[0], (*org)[1]);
