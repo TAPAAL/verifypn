@@ -110,6 +110,17 @@ void options_t::print(std::ostream& optionsOut) {
 
     optionsOut << ",LPSolve_Timeout=" << lpsolveTimeout;
 
+    switch(lpPrintLevel){
+        case 0:
+            optionsOut << ",LP_Print=DISABLED";
+            break;
+        case 1:
+            optionsOut << ",LP_Print=Constraints";
+            break;
+        default:
+            optionsOut << ",LP_Print=Full";
+    }
+
 
     if (usedctl) {
         if (ctlalgorithm == CTL::CZero) {
@@ -185,6 +196,10 @@ void printHelp() {
         "                                       write --interval-timeout 0 to disable interval limits\n"
         "  --partition-timeout <timeout>        Timeout for color partitioning in seconds (default 5)\n"
         "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
+        "  -lpp, --lp-print <level>             LP diagnostic print level\n"
+        "                                       - 0 disabled (default)\n"
+        "                                       - 1 constraints only\n"
+        "                                       - 2 constraints and solutions}\n"
         "  -p, --disable-partial-order          Disable partial order reduction (stubborn sets)\n"
         "  --ltl-por <type>                     Select partial order method to use with LTL engine (default automaton).\n"
         "                                       - automaton  apply Büchi-guided stubborn set method (Jensen et al., 2021).\n"
@@ -373,6 +388,13 @@ bool options_t::parse(int argc, const char** argv) {
             }
             if (sscanf(argv[++i], "%d", &lpsolveTimeout) != 1 || lpsolveTimeout < 0) {
                 throw base_error("Argument Error: Invalid LPSolve timeout argument ", std::quoted(argv[i]));
+            }
+        } else if (std::strcmp(argv[i], "-lpp") == 0 || std::strcmp(argv[i], "--lp-print") == 0){
+            if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &lpPrintLevel) != 1 || lpPrintLevel < 0) {
+                throw base_error("Argument Error: Invalid lpPrintLevel argument ", std::quoted(argv[i]));
             }
         } else if (std::strcmp(argv[i], "-e") == 0 || std::strcmp(argv[i], "--state-space-exploration") == 0) {
             statespaceexploration = true;

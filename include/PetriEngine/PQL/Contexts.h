@@ -36,6 +36,8 @@
 #include <chrono>
 #include <glpk.h>
 
+#include <chrono>
+
 namespace PetriEngine {
 
     namespace PQL {
@@ -179,9 +181,9 @@ namespace PetriEngine {
         public:
 
             SimplificationContext(const MarkVal* marking,
-                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
+                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout, uint32_t lpPrintLevel,
                     Simplification::LPCache* cache, uint32_t potencyTimeout = 0)
-                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout),
+                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout), _lpPrintLevel(lpPrintLevel),
                     _potencyTimeout(potencyTimeout) {
                 _negated = false;
                 _marking = marking;
@@ -195,7 +197,12 @@ namespace PetriEngine {
                         _markingOutOfBounds = true;
                     }
                 }
+
+                _isDeadlocked = _net->deadlocked(_marking);
+                _id = std::chrono::system_clock::now();
             }
+
+            std::chrono::time_point<std::chrono::system_clock> _id;
 
             virtual ~SimplificationContext() {
                 if(_base_lp != nullptr)
@@ -210,6 +217,10 @@ namespace PetriEngine {
 
             bool markingOutOfBounds() const {
                 return _markingOutOfBounds;
+            }
+
+            bool isDeadlocked() const {
+                return _isDeadlocked;
             }
 
             const PetriNet* net() const {
@@ -244,6 +255,7 @@ namespace PetriEngine {
 
             uint32_t getLpTimeout() const;
             uint32_t getPotencyTimeout() const;
+            uint32_t getPrintLevel() const;
 
             Simplification::LPCache* cache() const
             {
@@ -252,12 +264,15 @@ namespace PetriEngine {
 
             glp_prob* makeBaseLP() const;
 
+            glp_prob* buildBaseFromMarking(std::vector<std::pair<std::vector<uint32_t>, double>>& setMarking) const;
+
         private:
             bool _negated;
             const MarkVal* _marking;
             bool _markingOutOfBounds;
+            bool _isDeadlocked;
             const PetriNet* _net;
-            uint32_t _queryTimeout, _lpTimeout, _potencyTimeout;
+            uint32_t _queryTimeout, _lpTimeout, _lpPrintLevel, _potencyTimeout;
             mutable glp_prob* _base_lp = nullptr;
             std::chrono::high_resolution_clock::time_point _start;
             Simplification::LPCache* _cache;
