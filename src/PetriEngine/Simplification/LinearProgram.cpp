@@ -66,7 +66,14 @@ namespace PetriEngine {
 
             auto nt = context.net()->numberOfTransitions();
 
-            for(int i = 1; i <= nRows; i++){
+            std::stringstream ss;
+            glp_create_index(lp);
+            for(int k = 0; k <= nRows; k++){
+                std::stringstream().swap(ss);
+                ss << "C" << k;
+                int i = glp_find_row(lp, ss.str().c_str());
+                if(i == 0)
+                    break;
                 l = glp_get_mat_row(lp, i, indices.data(), coef.data());
                 std::cout << "Row " << i << "[len: " << l << "]: ";
 
@@ -74,9 +81,11 @@ namespace PetriEngine {
                 for(int j = 1; j <= l; j++){
                     if(!first_print) std::cout << " + ";
                     if((indices[j] - 1) < nt){
-                        std::cout << coef[j] << "*t" << (indices[j] - 1) / nt << "." << *context.net()->transitionNames()[(indices[j] - 1) % nt];
-                    }else{
-                        std::cout << coef[j] << "*" << glp_get_col_name(lp, indices[j]);
+                        std::cout << coef[j] << "*" << *context.net()->transitionNames()[(indices[j] - 1) % nt];
+                    }
+                    else{
+                        int idx = (indices[j] - 1) - nt;
+                        std::cout << coef[j] << "*p" << idx;
                     }
                     first_print = false;
                 }
@@ -84,7 +93,6 @@ namespace PetriEngine {
                 if(first_print){
                     std::cout << "<empty-row>";
                 }
-                
 
                 double up = glp_get_row_ub(lp, i);
                 double lb = glp_get_row_lb(lp, i);
@@ -107,6 +115,47 @@ namespace PetriEngine {
                 }
                 std::cout << "\n";
             }
+
+            /*for(int i = 1; i <= nRows; i++){
+                l = glp_get_mat_row(lp, i, indices.data(), coef.data());
+                std::cout << "Row " << i << "[len: " << l << "]: ";
+
+                bool first_print = true;
+                for(int j = 1; j <= l; j++){
+                    if(!first_print) std::cout << " + ";
+                    if((indices[j] - 1) < nt){
+                        std::cout << coef[j] << "*t" << (indices[j] - 1) / nt << "." << *context.net()->transitionNames()[(indices[j] - 1) % nt];
+                    }else{
+                        std::cout << coef[j] << "*" << glp_get_col_name(lp, indices[j]);
+                    }
+                    first_print = false;
+                }
+
+                if(first_print){
+                    std::cout << "<empty-row>";
+                }
+
+                double up = glp_get_row_ub(lp, i);
+                double lb = glp_get_row_lb(lp, i);
+                switch(glp_get_row_type(lp, i)){
+                    case GLP_FR:
+                        std::cout << " is unconstraint";
+                        break;
+                    case GLP_LO:
+                        std::cout << " >= " << bound_or_inf(lb);
+                        break;
+                    case GLP_UP:
+                        std::cout << " <= " << bound_or_inf(up);
+                        break;
+                    case GLP_DB:
+                        std::cout << " in [" << bound_or_inf(lb) << ", " << bound_or_inf(up) << "]";
+                        break;
+                    case GLP_FX:
+                        std::cout << " = " << bound_or_inf(lb);
+                        break;
+                }
+                std::cout << "\n";
+            }*/
             
         }
 
@@ -489,6 +538,8 @@ namespace PetriEngine {
             bool use_ilp = true;
             auto net = context.net();
 
+            std::stringstream ss;
+
             if (_equations.size() == 0 || context.timeout()){
                 return false;
             }
@@ -511,10 +562,22 @@ namespace PetriEngine {
 
             int rowno = 1 + net->numberOfPlaces();
             glp_add_rows(lp, _equations.size());
+
+            int cno = 0;
+            glp_create_index(lp);
+
             for (const auto& eq : _equations) {
                 auto l = eq.row->write_indir(row, indir);
                 assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
                 glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
+
+                std::stringstream().swap(ss);
+
+                ss << "C" << cno;
+                ++cno;
+
+                glp_set_row_name(lp, rowno, ss.str().c_str());
+
                 if (!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
                     if (eq.lower == eq.upper)

@@ -39,7 +39,7 @@ namespace PetriEngine { namespace PQL {
         SimplificationContext& _context;
         Retval _return_value;
 
-        enum LPQUANT {NONE, GLOBAL, FINAL, NEXT, UNTIL, OTHER};
+        enum LPQUANT {NONE, GLOBAL, FINAL, NEXT, UNTIL, OTHER, NULLT};
         LPQUANT quantifier_found = LPQUANT::NONE;
         LPQUANT quantifier_parent = LPQUANT::NONE;
         bool qparent_neg_context = false;

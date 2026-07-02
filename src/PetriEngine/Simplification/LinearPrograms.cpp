@@ -310,6 +310,7 @@ namespace PetriEngine {
 
         nextProgram MergeCollection::getNextProgramImpl(){
             bool has_empty = false;
+            next_prog = LinearProgram();
             bool hasmore = merge(has_empty, next_prog);
             SingleProgram prog = SingleProgram(next_prog);
             nextProgram np = {std::make_shared<SingleProgram>(prog), hasmore};
