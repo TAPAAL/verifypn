@@ -7,9 +7,12 @@
 
 using namespace PetriEngine::PQL;
 
+inline std::shared_ptr<IdentifierExpr> make_id(const std::string& name) {
+    return std::make_shared<IdentifierExpr>(std::make_shared<const std::string>(name));
+}
 
 BOOST_AUTO_TEST_CASE(not_less_than_literal_and_identifier) {
-    auto identifier = std::make_shared<IdentifierExpr>("a");
+    auto identifier = make_id("a");
     auto literal = std::make_shared<LiteralExpr>(1);
     auto condition = std::make_shared<NotCondition>(
             std::make_shared<LessThanCondition>(
@@ -34,10 +37,10 @@ BOOST_AUTO_TEST_CASE(not_less_than_literal_and_identifier) {
 BOOST_AUTO_TEST_CASE(equal_zero_with_subtraction_is_not_rewritten) {
     auto subtraction = std::make_shared<SubtractExpr>(std::vector<Expr_ptr>{
             std::make_shared<SubtractExpr>(std::vector<Expr_ptr>{
-                    std::make_shared<IdentifierExpr>("P0"),
-                    std::make_shared<IdentifierExpr>("P1")
+                    make_id("P0"),
+                    make_id("P1")
             }),
-            std::make_shared<IdentifierExpr>("P2")
+            make_id("P2")
     });
     auto condition = std::make_shared<EqualCondition>(
             subtraction,
@@ -53,8 +56,8 @@ BOOST_AUTO_TEST_CASE(equal_zero_with_subtraction_is_not_rewritten) {
 
 BOOST_AUTO_TEST_CASE(not_equal_zero_with_subtraction_is_not_rewritten) {
     auto subtraction = std::make_shared<SubtractExpr>(std::vector<Expr_ptr>{
-            std::make_shared<IdentifierExpr>("P0"),
-            std::make_shared<IdentifierExpr>("P1")
+            make_id("P0"),
+            make_id("P1")
     });
     auto condition = std::make_shared<NotCondition>(
             std::make_shared<EqualCondition>(
@@ -73,8 +76,8 @@ BOOST_AUTO_TEST_CASE(not_equal_zero_with_subtraction_is_not_rewritten) {
 // Keep rewrite for non-negative expressions: P0 + P1 == 0  ->  P0 + P1 <= 0
 BOOST_AUTO_TEST_CASE(equal_zero_with_plus_is_rewritten_to_leq) {
     auto sum = std::make_shared<PlusExpr>(std::vector<Expr_ptr>{
-            std::make_shared<IdentifierExpr>("P0"),
-            std::make_shared<IdentifierExpr>("P1")
+            make_id("P0"),
+            make_id("P1")
     });
     auto condition = std::make_shared<EqualCondition>(
             sum,
@@ -87,36 +90,3 @@ BOOST_AUTO_TEST_CASE(equal_zero_with_plus_is_rewritten_to_leq) {
     BOOST_REQUIRE_MESSAGE(std::dynamic_pointer_cast<LessThanOrEqualCondition>(res) != nullptr,
                           "Equality with non-negative expression should be rewritten to LessThanOrEqual");
 }
-
-//BOOST_AUTO_TEST_CASE(AirplaneLD_PT_0050_3) {
-//    auto cond = std::make_shared<NotCondition>(std::make_shared<NotCondition>(
-//            std::make_shared<EGCondition>(
-//                    std::make_shared<AFCondition>(
-//                            std::make_shared<NotCondition>(
-//                                    std::make_shared<ECondition>(
-//                                            std::make_shared<UntilCondition>(
-//                                                    std::make_shared<LessThanOrEqualCondition>(
-//                                                            std::make_shared<PlusExpr>(std::vector<Expr_ptr>{
-//                                                                    std::make_shared<IdentifierExpr>(
-//                                                                            "P3"),
-//                                                                    std::make_shared<IdentifierExpr>(
-//                                                                            "stp5")
-//                                                            }),
-//                                                            std::make_shared<LiteralExpr>(12)
-//                                                    ),
-//                                                    std::make_shared<LessThanOrEqualCondition>(
-//                                                            std::make_shared<PlusExpr>(std::vector<Expr_ptr>{
-//                                                                    std::make_shared<IdentifierExpr>(
-//                                                                            "SpeedPossibleVal_38"),
-//                                                                    std::make_shared<IdentifierExpr>(
-//                                                                            "SpeedPossibleVal_26")
-//                                                            }),
-//                                                            std::make_shared<LiteralExpr>(35)
-//                                                    )
-//                                            )
-//                                    )
-//                            )
-//                    )
-//            )
-//    ));
-//}
