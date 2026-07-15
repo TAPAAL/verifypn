@@ -148,7 +148,7 @@ namespace LTL {
                 if (stateid == std::numeric_limits<idx_t>::max()) {
                     continue;
                 }
-
+                
                 if constexpr (SaveTrace) {
                     if (isnew) {
                         seen.set_history(stateid, successorGenerator.fired());
@@ -270,9 +270,11 @@ namespace LTL {
             // either way update the component ID of the state we came from.
             cstack[from]._lowlink = cstack[to]._lowlink;
             if constexpr (T::save_trace()) {
-                _loop_state = cstack[to]._stateid;
-                _loop_trans = successorGenerator.fired();
-                cstack[to]._lowsource = from;
+                if (_violation) {
+                    _loop_state = cstack[to]._stateid;
+                    _loop_trans = successorGenerator.fired();
+                    cstack[to]._lowsource = from;
+                }
             }
         }
     }
@@ -334,8 +336,8 @@ namespace LTL {
                 p = cstack[p]._lowsource;
             }
         }
-        if(!had_deadlock && _loop_trans < _net.numberOfTransitions())
-        {
+
+        if(!had_deadlock && _loop_trans < _net.numberOfTransitions()) {
             assert(_loop_trans < _net.numberOfTransitions());
             _trace.push_back({_loop_trans});
         }

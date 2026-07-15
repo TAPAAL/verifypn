@@ -146,7 +146,7 @@ namespace LTL { namespace Structures {
             assert(this->_states.exists(stateid).first);
             return this->_states[stateid];
         }
-
+        
     private:
         stateid_t _parent = 0;
     };
