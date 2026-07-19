@@ -68,6 +68,11 @@ namespace PetriEngine {
             return _potencyTimeout;
         }
 
+        uint32_t SimplificationContext::getPrintLevel() const 
+        {
+            return _lpPrintLevel;
+        }
+
         double SimplificationContext::getReductionTime()
         {
             // duration in seconds
@@ -96,8 +101,8 @@ namespace PetriEngine {
             if (lp == nullptr)
                 return lp;
 
-            const uint32_t nCol = _net->numberOfTransitions();
-            const int nRow = _net->numberOfPlaces();
+            const uint32_t nCol = _net->numberOfTransitions() + _net->numberOfPlaces();
+            const uint32_t nRow = _net->numberOfPlaces();
             std::vector<int32_t> indir(std::max<uint32_t>(nCol, nRow) + 1);
 
             glp_add_cols(lp, nCol + 1);
@@ -153,6 +158,123 @@ namespace PetriEngine {
                     return nullptr;
                 }
             }
+        
+            for(size_t p = 0; p < _net->numberOfPlaces(); p++){
+                const int colno = 1 + p + _net->numberOfTransitions();
+                glp_set_col_bnds(lp, colno, GLP_FX, (double) _marking[p], 0);
+                glp_set_obj_coef(lp, colno, 0);
+                glp_set_col_kind(lp, colno, GLP_IV);
+            }
+            /*std::vector<int32_t> ind(2);
+            std::vector<double> col = {0, 1.0};
+        
+            for(size_t p = 0; p < _net->numberOfPlaces(); p++){
+                ind[1] = 1 + p + _net->numberOfTransitions();
+                glp_set_mat_row(lp, rowno, 1, ind.data(), col.data());
+                glp_set_row_bnds(lp, rowno, GLP_FX, (double) _marking[p], 0);
+                ++rowno;
+            }*/
+
+            return lp;
+        }
+
+    glp_prob* SimplificationContext::buildBaseFromMarking(std::vector<std::pair<std::vector<uint32_t>, double>>& setMarking) const
+        {
+            constexpr auto infty = std::numeric_limits<double>::infinity();
+            if (timeout())
+                return nullptr;
+
+            auto* lp = glp_create_prob();
+            if (lp == nullptr)
+                return lp;
+
+            const uint32_t nCol = _net->numberOfTransitions();
+            const int nRow = setMarking.size();
+            std::vector<int32_t> indir(std::max<uint32_t>(nCol, nRow) + 1);
+
+            glp_add_cols(lp, nCol + 1);
+            glp_add_rows(lp, nRow + 1);
+            {
+                std::vector<double> col = std::vector<double>(nRow + 1);
+                for (size_t t = 0; t < _net->numberOfTransitions(); ++t) {
+                    auto pre = _net->preset(t);
+                    auto post = _net->postset(t);
+                    size_t l = 1;
+                    while (pre.first != pre.second ||
+                           post.first != post.second) {
+                        if (pre.first == pre.second || (post.first != post.second && post.first->place < pre.first->place)) {
+                            col[l] = post.first->tokens;
+                            indir[l] = post.first->place + 1;
+                            ++post.first;
+                        }
+                        else if (post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place)) {
+                            if (!pre.first->inhibitor)
+                                col[l] = -(double) pre.first->tokens;
+                            else
+                                col[l] = 0;
+                            indir[l] = pre.first->place + 1;
+                            ++pre.first;
+                        }
+                        else {
+                            assert(pre.first->place == post.first->place);
+                            if (!pre.first->inhibitor)
+                                col[l] = (double) post.first->tokens - (double) pre.first->tokens;
+                            else
+                                col[l] = (double) post.first->tokens;
+                            indir[l] = pre.first->place + 1;
+                            ++pre.first;
+                            ++post.first;
+                        }
+                        ++l;
+                    }
+                    glp_set_mat_col(lp, t + 1, l - 1, indir.data(), col.data());
+                    if (timeout()) {
+                        std::cerr << "glpk: construction timeout" << std::endl;
+                        glp_delete_prob(lp);
+                        return nullptr;
+                    }
+                }
+            }
+            int rowno = 1;
+            for (size_t p = 0; p < _net->numberOfPlaces(); p++) {
+                if(setMarking[p].second >= 0){
+                    glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double) setMarking[p].second), infty);
+                }else{
+                    glp_set_row_bnds(lp, rowno, GLP_FR, -infty, infty);
+                }
+                ++rowno;
+                if (timeout()) {
+                    std::cerr << "glpk: construction timeout" << std::endl;
+                    glp_delete_prob(lp);
+                    return nullptr;
+                }
+            }
+
+            std::vector<double> col = std::vector<double>(nCol + 1);
+            for(size_t s = _net->numberOfPlaces(); s < setMarking.size(); s++){
+                if(setMarking[s].second < 0){
+                    ++rowno;
+                    continue;
+                }
+                size_t l = 1;
+                for (size_t t = 0; t < _net->numberOfTransitions(); ++t) {
+                    double coef = 0;
+                    for(auto p: setMarking[s].first){
+                        coef += _net->inArc(t, p);
+                        coef -= _net->outArc(p, t);
+                    }
+
+                    if(coef != 0){
+                        indir[l] = t + 1;
+                        col[l] = coef;
+                        l++;
+                    }
+                }
+                glp_set_mat_row(lp, s + 1, l - 1, indir.data(), col.data());
+                glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double) setMarking[s].second), infty);
+                ++rowno;
+            }
+
             return lp;
         }
     }
