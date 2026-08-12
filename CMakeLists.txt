@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.31)
 
-set(DEFAULT_GCC_VERSION 16)
+set(DEFAULT_GCC_VERSION 14)
 
 ## Default to release builds, must be set before project
 if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
