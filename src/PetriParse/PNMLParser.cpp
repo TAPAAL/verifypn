@@ -460,6 +460,10 @@ GuardExpression_ptr PNMLParser::parseGuardExpression(rapidxml::xml_node<>* eleme
         assert(rcv.size() == 1);
         auto& lc = lcv[0];
         auto& rc = rcv[0];
+        if (lc->getColorType(colorTypes) != rc->getColorType(colorTypes)) {
+            throw base_error("Illegal guard: Both operands of each comparison must have the same color type.");
+        }
+        
         if (strcmp(element->name(), "lt") == 0 || strcmp(element->name(), "lessthan") == 0) {
             if (notFlag) {
                 return std::make_shared<LessThanEqExpression>(std::move(rc), std::move(lc));

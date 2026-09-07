@@ -38,10 +38,12 @@ std::unique_ptr<ColoredPetriNetBuilder> parseGuard(const std::string& guard, sha
 <declaration><structure><declarations>
 <namedsort id="A" name="A"><finiteintrange start="0" end="2"/></namedsort>
 <namedsort id="B" name="B"><finiteintrange start="10" end="12"/></namedsort>
+<namedsort id="C" name="C"><finiteintrange start="0" end="2"/></namedsort>
 <namedsort id="E" name="E"><cyclicenumeration><feconstant id="a0" name="a0"/><feconstant id="a1" name="a1"/></cyclicenumeration></namedsort>
 <namedsort id="F" name="F"><cyclicenumeration><feconstant id="b0" name="b0"/><feconstant id="b1" name="b1"/></cyclicenumeration></namedsort>
 <variabledecl id="x" name="x"><usersort declaration="A"/></variabledecl>
 <variabledecl id="y" name="y"><usersort declaration="B"/></variabledecl>
+<variabledecl id="z" name="z"><usersort declaration="C"/></variabledecl>
 <variabledecl id="e" name="e"><usersort declaration="E"/></variabledecl>
 <variabledecl id="f" name="f"><usersort declaration="F"/></variabledecl>
 </declarations></structure></declaration><page id="page"><transition id="t"><condition><structure>)"
@@ -75,25 +77,23 @@ BOOST_AUTO_TEST_CASE(DirectoryTest) {
     BOOST_REQUIRE(getenv("TEST_FILES"));
 }
 
-BOOST_AUTO_TEST_CASE(GuardComparisonsAllowDifferentColorTypes) {
+BOOST_AUTO_TEST_CASE(GuardComparisonsRejectDifferentColorTypes) {
     for (const auto* op : {"lt", "leq", "eq", "neq", "geq", "gt"}) {
         shared_string_set strings;
-        auto builder = parseGuard(comparison(op, variable("x"), variable("y")), strings);
-        BOOST_REQUIRE_EQUAL(builder->getTransitionCount(), 1);
+        BOOST_CHECK_THROW(parseGuard(comparison(op, variable("x"), variable("y")), strings), base_error);
+        BOOST_CHECK_THROW(parseGuard(comparison(op, variable("x"), variable("z")), strings), base_error);
+        BOOST_CHECK_THROW(parseGuard(comparison(op, variable("x"), variable("e")), strings), base_error);
+        BOOST_CHECK_NO_THROW(parseGuard(comparison(op, variable("x"), variable("x")), strings));
     }
 }
 
-BOOST_AUTO_TEST_CASE(GuardOperandsUseIndependentColorContexts) {
+BOOST_AUTO_TEST_CASE(GuardUnaryOperandsRejectDifferentColorTypes) {
     const auto unary = [](const char* op, const char* name) {
         return "<subterm><" + std::string(op) + ">" + variable(name) + "</" + op + "></subterm>";
     };
     for (const auto* op : {"successor", "predecessor"}) {
         shared_string_set strings;
-        auto builder = parseGuard(comparison("eq", unary(op, "x"), unary(op, "y")), strings);
-        const auto* compare = dynamic_cast<const CompareExpression*>(builder->transitions().front().guard.get());
-        BOOST_REQUIRE(compare != nullptr);
-        BOOST_CHECK_EQUAL((*compare)[0]->getColorType(builder->colors())->getName(), "A");
-        BOOST_CHECK_EQUAL((*compare)[1]->getColorType(builder->colors())->getName(), "B");
+        BOOST_CHECK_THROW(parseGuard(comparison("eq", unary(op, "x"), unary(op, "y")), strings), base_error);
     }
 }
 
@@ -110,22 +110,30 @@ BOOST_AUTO_TEST_CASE(GuardIntegerConstantsInheritVariableType) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(GuardEnumerationOperandsKeepDeclaredTypes) {
+BOOST_AUTO_TEST_CASE(GuardEnumerationOperandsRequireMatchingTypes) {
     for (const auto& guard : {
              comparison("eq", variable("e"), variable("f")),
-             comparison("eq", variable("e"), enumConstant("b0")),
-             comparison("eq", variable("e"), variable("e"))}) {
+             comparison("eq", variable("e"), enumConstant("b0"))}) {
         shared_string_set strings;
-        auto builder = parseGuard(guard, strings);
-        BOOST_REQUIRE_EQUAL(builder->getTransitionCount(), 1);
+        BOOST_CHECK_THROW(parseGuard(guard, strings), base_error);
     }
 
     shared_string_set strings;
-    auto builder = parseGuard(comparison("eq", variable("e"), enumConstant("b0")), strings);
+    auto builder = parseGuard(comparison("eq", variable("e"), enumConstant("a0")), strings);
     const auto* compare = dynamic_cast<const CompareExpression*>(builder->transitions().front().guard.get());
     BOOST_REQUIRE(compare != nullptr);
     BOOST_CHECK_EQUAL((*compare)[0]->getColorType(builder->colors())->getName(), "E");
-    BOOST_CHECK_EQUAL((*compare)[1]->getColorType(builder->colors())->getName(), "F");
+    BOOST_CHECK_EQUAL((*compare)[1]->getColorType(builder->colors())->getName(), "E");
+}
+
+BOOST_AUTO_TEST_CASE(GuardLogicalBranchesMayUseDifferentTypes) {
+    for (const auto* op : {"and", "or"}) {
+        shared_string_set strings;
+        BOOST_CHECK_NO_THROW(parseGuard("<" + std::string(op) + "><subterm>" +
+            comparison("eq", variable("x"), integerConstant(1, 0, 2)) +
+            "</subterm><subterm>" + comparison("eq", variable("y"), integerConstant(11, 10, 12)) +
+            "</subterm></" + op + ">", strings));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(GuardRejectsEveryConstantOnlyComparison) {
@@ -133,7 +141,7 @@ BOOST_AUTO_TEST_CASE(GuardRejectsEveryConstantOnlyComparison) {
     for (const auto& guard : {
              comparison("eq", integerConstant(1, 0, 2), integerConstant(2, 0, 2)),
              constantEnum,
-             "<and><subterm>" + comparison("eq", variable("x"), variable("y")) +
+             "<and><subterm>" + comparison("eq", variable("x"), variable("x")) +
                  "</subterm><subterm>" + constantEnum + "</subterm></and>"}) {
         shared_string_set strings;
         BOOST_CHECK_THROW(parseGuard(guard, strings), base_error);
