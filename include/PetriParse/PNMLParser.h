@@ -82,7 +82,8 @@ public:
     void parseMarking(
         const rapidxml::xml_document<>& doc,
         PetriEngine::AbstractPetriNetBuilder* builder,
-        ColorTypeMap* colorTypes);
+        ColorTypeMap* colorTypes,
+        const ColorTypeMap& placeTypes);
 private:
     void parseElement(rapidxml::xml_node<>* element);
     void parsePlace(rapidxml::xml_node<>* element);
