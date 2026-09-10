@@ -241,7 +241,11 @@ namespace PetriEngine::ExplicitColored {
         _standAloneMarking = ColoredPetriNetMarking();
         _standAloneMarking.markings.resize(getPlaceCount());
         PNMLParser parser;
-        parser.parseMarking(doc, this, _colors.get());
+        Colored::ColorTypeMap placeTypes;
+        for (const auto& [name, index] : _placeIndices) {
+            placeTypes.emplace(name, getPlaceUnderlyingColorType(index));
+        }
+        parser.parseMarking(doc, this, _colors.get(), placeTypes);
         return _standAloneMarking;
     }
 

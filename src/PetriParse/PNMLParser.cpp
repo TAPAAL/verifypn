@@ -513,6 +513,9 @@ const ColorType* PNMLParser::inferGuardColorType(rapidxml::xml_node<>* element) 
     while (!pending.empty()) {
         auto* node = pending.back();
         pending.pop_back();
+        if (strcmp(node->name(), "tuple") == 0) {
+            throw base_error("Illegal guard: Tuple expressions are not allowed in comparisons.");
+        }
         if (strcmp(node->name(), "variable") == 0) {
             auto variable = variables.find(node->first_attribute("refvariable")->value());
             if (variable == variables.end()) {
@@ -701,7 +704,7 @@ ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* elem
 }
 
 void PNMLParser::parseMarking(const rapidxml::xml_document<>& doc, PetriEngine::AbstractPetriNetBuilder* builder,
-    ColorTypeMap* colorTypes)
+    ColorTypeMap* colorTypes, const ColorTypeMap& placeTypes)
 {
     this->colorTypes = *colorTypes;
     this->builder = builder;
@@ -731,7 +734,11 @@ void PNMLParser::parseMarking(const rapidxml::xml_document<>& doc, PetriEngine::
         std::unordered_map<const Variable*, const Color*> binding;
         EquivalenceVec placePartition;
         ExpressionContext context {binding, *colorTypes, placePartition};
-        auto ae = parseArcExpression(child->first_node());
+        const auto placeType = placeTypes.find(id);
+        if (placeType == placeTypes.end()) {
+            throw base_error("Unknown place in marking: ", id);
+        }
+        auto ae = parseArcExpression(child->first_node(), placeType->second);
         auto initialMarking = EvaluationVisitor::evaluate(*ae, context);
 
         builder->addTokens(std::move(id), std::move(initialMarking));
