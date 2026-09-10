@@ -16,6 +16,7 @@ EvaluationVisitor.cpp
 ForwardFixedPoint.cpp
 VariableSymmetry.cpp
 Unfolder.cpp
+TraceMapper.cpp
 PnmlWriter.cpp
 PnmlWriterColorExprVisitor.cpp
 VarMultiset.cpp

@@ -33,6 +33,7 @@
 #include "LTLOptions.h"
 #include "Algorithm/ModelChecker.h"
 #include "Algorithm/NestedDepthFirstSearch.h"
+#include "PetriEngine/Colored/TraceMapper.h"
 
 namespace LTL {
 
@@ -101,14 +102,16 @@ namespace LTL {
             return ss.str();
         }
 
-        bool print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const;
+        bool print_trace(std::ostream& out, const PetriEngine::Reducer& reducer,
+                         const PetriEngine::Colored::TraceMapper* mapper = nullptr) const;
 
         const std::vector<std::vector<uint32_t>>& raw_trace() const { return _checker->trace(); }
 
     private:
-        void _print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const;
+        void _print_trace(const PetriEngine::Reducer& reducer, std::ostream& os,
+                          const PetriEngine::Colored::TraceMapper* mapper) const;
         std::ostream &
-        print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indend, const std::string& _token_indent, bool& printed_deadlock) const;
+        print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indend, const std::string& _token_indent, bool& printed_deadlock, const PetriEngine::Colored::TraceMapper* mapper) const;
 
     };
 
@@ -116,4 +119,3 @@ namespace LTL {
 
 
 #endif /* LTLSEARCH_H */
-

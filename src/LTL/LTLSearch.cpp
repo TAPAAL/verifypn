@@ -156,7 +156,8 @@ namespace LTL {
     }
 
     // TODO refactor this into a trace-printer, this does not belong in the solver.
-    void LTLSearch::_print_trace(const PetriEngine::Reducer& reducer, std::ostream& os) const {
+    void LTLSearch::_print_trace(const PetriEngine::Reducer& reducer, std::ostream& os,
+                                 const PetriEngine::Colored::TraceMapper* mapper) const {
 
         const auto& trace = _checker->trace();
         const size_t ntraces = _traces.empty() ? 1 : _traces.size();
@@ -172,7 +173,7 @@ namespace LTL {
             if(!_traces.empty())
                 os << " name=\"" << _traces[j] << "\"";
             os << ">\n";
-            reducer.initFire(os);
+            reducer.initFire(os, mapper);
             for (size_t i = 0; i < trace.size(); ++i) {
                 if (i == _checker->loop_index())
                 {
@@ -180,7 +181,7 @@ namespace LTL {
                         os << indent << "<loop/>\n";
                 }
                 assert(trace[i].size() == ntraces);
-                print_transition(trace[i][j], reducer, os, indent, token_indent, printed_deadlock);
+                print_transition(trace[i][j], reducer, os, indent, token_indent, printed_deadlock, mapper);
             }
             os << std::endl << tindent << "</trace>" << std::endl;
         }
@@ -189,7 +190,7 @@ namespace LTL {
     }
 
     std::ostream &
-    LTLSearch::print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indent, const std::string& _token_indent, bool& printed_deadlock) const {
+    LTLSearch::print_transition(uint32_t transition, const PetriEngine::Reducer& reducer, std::ostream &os, const std::string& _indent, const std::string& _token_indent, bool& printed_deadlock, const PetriEngine::Colored::TraceMapper* mapper) const {
         if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
             if(!printed_deadlock)
                 os << _indent << "<deadlock/>";
@@ -197,22 +198,26 @@ namespace LTL {
             return os;
         }
 
-        os << _indent << "<transition id="
-                // field width stuff obsolete without büchi state printing.
-                << std::quoted(*_net.transitionNames()[transition]);
-        os << ">\n";
-        reducer.tokenConsumption(os, *_net.transitionNames()[transition]);
+        const auto& name = *_net.transitionNames()[transition];
+        if (mapper) {
+            mapper->printTransition(os, name, _indent);
+        } else {
+            os << _indent << "<transition id=" << std::quoted(name) << ">\n";
+        }
+        
+        reducer.tokenConsumption(os, name, mapper);
         os << std::endl;
         os << _indent << "</transition>\n";
-        reducer.postFire(os, *_net.transitionNames()[transition]);
+        reducer.postFire(os, name, mapper);
         return os;
     }
 
-    bool LTLSearch::print_trace(std::ostream& out, const PetriEngine::Reducer& reducer) const
+    bool LTLSearch::print_trace(std::ostream& out, const PetriEngine::Reducer& reducer,
+                                const PetriEngine::Colored::TraceMapper* mapper) const
     {
         if(!_result)
         {
-            _print_trace(reducer, out);
+            _print_trace(reducer, out, mapper);
             return true;
         }
         else

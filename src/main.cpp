@@ -170,15 +170,20 @@ int main(int argc, const char** argv) {
             return 0;
         }
 
-        auto [builder, transition_names, place_names] = unfold(cpnBuilder,
+        auto [builder, transition_names, place_names, trace_mapper] = unfold(cpnBuilder,
             options.computePartition, options.symmetricVariables,
             options.computeCFP, out,
             options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
-            options.intervalTimeout, options.cpnOverApprox, options.print_bindings);
+            options.intervalTimeout, options.cpnOverApprox, options.print_bindings,
+            options.trace_original_net);
+
+        const Colored::TraceMapper* traceMapper =
+            options.trace_original_net && cpnBuilder.isColored() && !options.cpnOverApprox
+                ? &trace_mapper : nullptr;
 
         builder.sort();
         std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
-        ResultPrinter printer(&builder, &options, querynames);
+        ResultPrinter printer(&builder, &options, querynames, traceMapper);
 
         if (options.unfolded_out_file.size() > 0) {
             outputNet(builder, options.unfolded_out_file);
@@ -189,7 +194,7 @@ int main(int argc, const char** argv) {
         PetriNetBuilder b2(builder);
         std::set<size_t> initial_marking_solved;
         size_t initial_size = 0;
-        ResultPrinter p2(&b2, &options, querynames);
+        ResultPrinter p2(&b2, &options, querynames, traceMapper);
         {
             std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
             std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
@@ -445,8 +450,9 @@ int main(int argc, const char** argv) {
                     std::cout << "\nQuery index " << qid << " was solved\n";
                     std::cout << "Query is " << (res ? "" : "NOT ") << "satisfied." << std::endl;
 
-                    if(options.trace != TraceLevel::None)
-                        search.print_trace(std::cerr, *builder.getReducer());
+                    if (options.trace != TraceLevel::None) {
+                        search.print_trace(std::cerr, *builder.getReducer(), traceMapper);
+                    }
                 }
 
                 if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
@@ -516,7 +522,7 @@ int main(int argc, const char** argv) {
             if (options.tar && net->numberOfPlaces() > 0) {
                 //Create reachability search strategy
                 TarResultPrinter tar_printer(printer);
-                TARReachabilitySearch strategy(tar_printer, *net, builder.getReducer(), options.kbound);
+                TARReachabilitySearch strategy(tar_printer, *net, builder.getReducer(), options.kbound, traceMapper);
 
                 // Change default place-holder to default strategy
                 fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");

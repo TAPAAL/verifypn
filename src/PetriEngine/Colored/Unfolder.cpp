@@ -314,7 +314,7 @@ namespace PetriEngine {
 
     
         void Unfolder::storeBinding(const shared_const_string& name, const Colored::BindingMap& binding) {
-            if (_print_bindings) { 
+            if (_store_bindings) {
                 Colored::BindingMap b;
                 for (auto var: binding) {
                     b[var.first] = var.second;

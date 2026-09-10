@@ -151,6 +151,7 @@ void printHelp() {
         "Options:\n"
         "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
         "  -t, --trace                          Provide XML-trace to stderr\n"
+        "  --trace-original-net                Show unfolded traces in the original net (CPN only)\n"
         "  -b, --bindings                       Print bindings to stderr in XML format (only for CPNs, default is not to print)\n"
         "  -s, --search-strategy <strategy>     Search strategy:\n"
         "                                       - BestFS                        Heuristic search (default)\n"
@@ -410,6 +411,8 @@ bool options_t::parse(int argc, const char** argv) {
             }
          } else if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--bindings") == 0) {
             print_bindings = true;
+        } else if (std::strcmp(argv[i], "--trace-original-net") == 0) {
+            trace_original_net = true;
         } else if (std::strcmp(argv[i], "-x") == 0 || std::strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 throw base_error("Missing number after ", std::quoted(argv[i]));

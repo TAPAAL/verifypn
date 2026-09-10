@@ -22,6 +22,7 @@
 #include <optional>
 
 namespace PetriEngine {
+    namespace Colored { class TraceMapper; }
 
     using ArcIter = std::vector<Arc>::iterator;
 
@@ -134,9 +135,9 @@ namespace PetriEngine {
                 << "Applications of rule S: " << _ruleS << std::endl;
         }
 
-        void postFire(std::ostream&, const std::string& transition) const;
-        void tokenConsumption(std::ostream&, const std::string& transition) const;
-        void initFire(std::ostream&) const;
+        void postFire(std::ostream&, const std::string& transition, const Colored::TraceMapper* mapper = nullptr) const;
+        void tokenConsumption(std::ostream&, const std::string& transition, const Colored::TraceMapper* mapper = nullptr) const;
+        void initFire(std::ostream&, const Colored::TraceMapper* mapper = nullptr) const;
 
         void saveInitialNet();
 

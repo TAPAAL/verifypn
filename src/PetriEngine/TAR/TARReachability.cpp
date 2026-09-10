@@ -415,23 +415,28 @@ namespace PetriEngine {
         {
             std::cerr << "Trace:\n<trace>\n";
 
-            if(_reducer != NULL)
-                _reducer->initFire(std::cerr);
+            if (_reducer != NULL) {
+                _reducer->initFire(std::cerr, _traceMapper);
+            }
 
-            for(auto& t : stack)
-            {
+            for(auto& t : stack) {
                 if(t.get_edge_cnt() == 0) break;
                 auto& tname = _net.transitionNames()[t.get_edge_cnt() - 1];
-                std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
+                if (_traceMapper) {
+                    _traceMapper->printTransition(std::cerr, *tname, "\t", t.get_edge_cnt() - 1);
+                } else {
+                    std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
+                }
 
-                if(_reducer != nullptr)
-                    _reducer->tokenConsumption(std::cerr, *tname);
+                if (_reducer != nullptr) {
+                    _reducer->tokenConsumption(std::cerr, *tname, _traceMapper);
+                }
 
                 std::cerr << "\t</transition>\n";
 
-                if(_reducer != nullptr)
-                    _reducer->postFire(std::cerr, *tname);
-
+                if (_reducer != nullptr) {
+                    _reducer->postFire(std::cerr, *tname, _traceMapper);
+                }
             }
 
             std::cerr << "</trace>\n" << std::endl;

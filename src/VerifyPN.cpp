@@ -128,13 +128,13 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
     return anyReduction;
 }
 
-std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
+std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map, Colored::TraceMapper>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
-    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx, bool print_bindings) {
+    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx, bool print_bindings, bool map_original_trace) {
     Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
 
     if(!cpnBuilder.isColored())
-        return {cpnBuilder.pt_builder(), {}, {}};
+        return {cpnBuilder.pt_builder(), {}, {}, {}};
     if (compute_partiton && !over_approx) {
         partition.compute(partitionTimeout);
     }
@@ -149,14 +149,15 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         fixed_point.compute(max_intervals, intervals_reduced, interval_timeout);
     } else fixed_point.set_default();
 
-    Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point, print_bindings);
+    Colored::Unfolder unfolder(cpnBuilder, partition, symmetry, fixed_point, print_bindings, map_original_trace);
     if(over_approx)
     {
         auto r = unfolder.strip_colors();
-        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
+        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map, Colored::TraceMapper>
             (std::move(r),
             shared_name_name_map{unfolder.transition_names()},
-            shared_place_color_map{unfolder.place_names()});
+            shared_place_color_map{unfolder.place_names()},
+            Colored::TraceMapper::fromUnfolder(unfolder));
     }
     else
     {
@@ -181,10 +182,11 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
         
         unfolder.printBinding();
         
-        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map>
+        return std::make_tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map, Colored::TraceMapper>
             (std::move(r),
             shared_name_name_map{unfolder.transition_names()},
-            shared_place_color_map{unfolder.place_names()});
+            shared_place_color_map{unfolder.place_names()},
+            Colored::TraceMapper::fromUnfolder(unfolder));
     }
 }
 

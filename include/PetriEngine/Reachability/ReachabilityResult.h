@@ -24,6 +24,7 @@
 #include "../PQL/PQL.h"
 #include "../Structures/StateSet.h"
 #include "../Reducer.h"
+#include "../Colored/TraceMapper.h"
 
 struct options_t;
 
@@ -69,6 +70,7 @@ namespace PetriEngine {
             options_t* options;
             std::vector<std::string>& querynames;
             Reducer* reducer;
+            const Colored::TraceMapper* traceMapper;
 
             std::string printTechniques();
             void printTrace(Structures::StateSetInterface*, size_t lastmarking);
@@ -77,8 +79,9 @@ namespace PetriEngine {
             const std::string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
             const std::string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
 
-            ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames)
-            : builder(b), options(o), querynames(querynames), reducer(NULL)
+            ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames,
+                          const Colored::TraceMapper* traceMapper = nullptr)
+            : builder(b), options(o), querynames(querynames), reducer(NULL), traceMapper(traceMapper)
             {};
 
             void setReducer(Reducer* r) { this->reducer = r; }

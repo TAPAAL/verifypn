@@ -216,23 +216,29 @@ namespace PetriEngine {
 
             reducer = reducer ? reducer : builder->getReducer();
             
-            if(reducer != nullptr)
-                reducer->initFire(std::cerr);
+            if (reducer != nullptr) {
+                reducer->initFire(std::cerr, traceMapper);
+            }
 
-            while(transitions.size() > 0)
-            {
+            while(transitions.size() > 0) {
                 size_t trans = transitions.top();
                 transitions.pop();
                 const auto& tname = ss->net().transitionNames()[trans];
-                std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << trans << "\">\n";
+                if (traceMapper) {
+                    traceMapper->printTransition(std::cerr, *tname, "\t", trans);
+                } else {
+                    std::cerr << "\t<transition id=\"" << *tname << "\" index=\"" << trans << "\">\n";
+                }
 
-                if(reducer != nullptr)
-                    reducer->tokenConsumption(std::cerr, *tname);
+                if (reducer != nullptr) {
+                    reducer->tokenConsumption(std::cerr, *tname, traceMapper);
+                }
 
                 std::cerr << "\t</transition>\n";
 
-                if(reducer != nullptr)
-                    reducer->postFire(std::cerr, *tname);
+                if (reducer != nullptr) {
+                    reducer->postFire(std::cerr, *tname, traceMapper);
+                }
             }
             std::cerr << "</trace>\n" << std::endl;
         }

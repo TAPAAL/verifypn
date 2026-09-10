@@ -63,7 +63,7 @@ auto load_builder(std::string model, std::string queries, const std::set<size_t>
     ColoredPetriNetBuilder cpnBuilder(sset);
     auto f = loadFile(model.c_str());
     cpnBuilder.parse_model(f);
-    auto [builder, trans_names, place_names] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
+    auto [builder, trans_names, place_names, trace_mapper] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
     builder.sort();
     auto q = loadFile(queries.c_str());
     std::vector<std::string> qstrings;
@@ -88,7 +88,7 @@ auto load_pn(std::string model, std::string queries, const std::set<size_t>& qnu
     auto conditions = parseXMLQueries(sset, qstrings, q, qnums, false);
     std::vector<uint32_t> reductions {};
     reduceColored(cpnBuilder, conditions, logic, reduceTimeout, std::cerr, reduce ? 1 : 0, reductions);
-    auto [builder, trans_names, place_names] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
+    auto [builder, trans_names, place_names, trace_mapper] = unfold(cpnBuilder, partition, symmetry, cfp, std::cerr, partitionTimeout, max_intervals, intervals_reduced, interval_timeout, over_approx);
     builder.sort();
     std::unique_ptr<PetriNet> pn{builder.makePetriNet()};
     contextAnalysis(cpnBuilder.isColored() && !over_approx, trans_names, place_names, builder, pn.get(), conditions);

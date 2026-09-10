@@ -26,6 +26,7 @@
 
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
 #include "PetriEngine/options.h"
+#include "PetriEngine/Colored/TraceMapper.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -37,8 +38,9 @@ namespace PetriEngine {
 
         public:
 
-            TARReachabilitySearch(AbstractHandler& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
-            : _printer(printer), _net(net), _reducer(reducer), _traceset(net) {
+            TARReachabilitySearch(AbstractHandler& printer, PetriNet& net, Reducer* reducer, int kbound = 0,
+                                  const Colored::TraceMapper* mapper = nullptr)
+            : _printer(printer), _traceMapper(mapper), _net(net), _reducer(reducer), _traceset(net) {
                 _kbound = kbound;
             }
             
@@ -63,6 +65,7 @@ namespace PetriEngine {
 
             void handleInvalidTrace(trace_t& waiting, int nvalid);
             std::pair<int,bool>  isValidTrace(trace_t& trace, Structures::State& initial, const std::vector<bool>&, PQL::Condition* query);
+            const Colored::TraceMapper* _traceMapper;
             void printStats();
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
@@ -87,4 +90,3 @@ namespace PetriEngine {
     }
 }
 #endif /* TARREACHABILITY_H */
-

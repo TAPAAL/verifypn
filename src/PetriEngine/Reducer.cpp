@@ -11,6 +11,7 @@
  */
 
 #include "PetriEngine/Reducer.h"
+#include "PetriEngine/Colored/TraceMapper.h"
 #include "PetriEngine/PetriNet.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriParse/PNMLParser.h"
@@ -3025,40 +3026,55 @@ restart:
         }
     }
 
-    void Reducer::postFire(std::ostream& out, const std::string& transition) const
+    void Reducer::postFire(std::ostream& out, const std::string& transition, const Colored::TraceMapper* mapper) const
     {
         auto it = _postfire.find(transition);
         if (it != std::end(_postfire))
         {
             for (const auto& el : it->second)
             {
-                out << "\t<transition id=\"" << *el << "\">\n";
-                tokenConsumption(out, *el);
+                if (mapper)
+                    mapper->printTransition(out, *el, "\t");
+                else
+                    out << "\t<transition id=\"" << *el << "\">\n";
+                tokenConsumption(out, *el, mapper);
                 out << "\t</transition>\n";
-                postFire(out, *el);
+                postFire(out, *el, mapper);
             }
         }
     }
 
-    void Reducer::initFire(std::ostream& out) const
+    void Reducer::initFire(std::ostream& out, const Colored::TraceMapper* mapper) const
     {
         for (const auto& init : _initfire)
         {
-            out << "\t<transition id=\"" << *init << "\">\n";
-            tokenConsumption(out, *init);
+            if (mapper)
+                mapper->printTransition(out, *init, "\t");
+            else
+                out << "\t<transition id=\"" << *init << "\">\n";
+            tokenConsumption(out, *init, mapper);
             out << "\t</transition>\n";
-            postFire(out, *init);
+            postFire(out, *init, mapper);
         }
     }
 
-    void Reducer::tokenConsumption(std::ostream& out, const std::string& transition) const
+    void Reducer::tokenConsumption(std::ostream& out, const std::string& transition, const Colored::TraceMapper* mapper) const
     {
         auto it = _transitionsBeforeReduction.find(transition);
         if (it != std::end(_transitionsBeforeReduction))
         {
             for (const auto& arc : it->second)
             {
-                out << arc;
+                if (!mapper) {
+                    out << arc;
+                    continue;
+                }
+
+                const auto place = mapper->mapPlace(*arc.place);
+                if (!place) continue;
+                for (size_t i = 0; i < arc.weight; ++i) {
+                    out << "\t\t<token place=\"" << *place << "\" age=\"0\"/>\n";
+                }
             }
         }
     }
