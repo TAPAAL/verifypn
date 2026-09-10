@@ -446,6 +446,10 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         out << std::endl;
     }
 
+    std::cout << "PushNegated: ";
+    cond->toString(std::cout);
+    std::cout << "\n";
+
     try {
         auto simp_cond = PetriEngine::PQL::simplify(cond, simplificationContext);
         cond = pushNegation(simp_cond.formula, stats, evalContext, names.size() > 1, false, true);
@@ -579,9 +583,25 @@ void simplify_queries(const MarkVal* marking,
 
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*> (queries[i].get()) != nullptr;
                     if (options.logic == TemporalLogic::LTL) {
+                        int num_paths = 0;
                         if (options.queryReductionTimeout == 0 || qt == 0) continue;
-                        SimplificationContext simplificationContext(marking, net, qt,
-                            options.lpsolveTimeout, &cache);
+
+                        if(auto path = dynamic_cast<PathQuant*>(queries[i].get())) {
+                            bool wasACond = path->is<AllPaths>();
+                            for(;path; path = dynamic_cast<PathQuant*>(path->child().get()))
+                            {
+                                if(wasACond != path->is<AllPaths>())
+                                {
+                                    std::stringstream ss;
+                                    queries[i]->toString(ss);
+                                    throw base_error("Missing Hyper-LTL quantifiers: ", ss.str());
+                                }
+                                num_paths++;
+                            }
+                        }
+                        num_paths = std::max(1, num_paths);
+                        SimplificationContext simplificationContext(marking, net, num_paths, qt,
+                            options, &cache);
                         if (simplificationContext.markingOutOfBounds()) {
                             std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction for LTL is skipped.\n";
                             break;
@@ -612,7 +632,7 @@ void simplify_queries(const MarkVal* marking,
 
                     if (options.queryReductionTimeout > 0 && qt > 0) {  
                         SimplificationContext simplificationContext(marking, net, qt,
-                            options.lpsolveTimeout, &cache);
+                            options.lpsolveTimeout, options.lpPrintLevel, &cache);
                         if (simplificationContext.markingOutOfBounds()) {
                             std::cout << "WARNING: Initial marking contains a place or places with too many tokens. Query simplifaction is skipped.\n";
                             break;
@@ -736,7 +756,7 @@ void initialize_potency(const MarkVal* marking,
 
                     if (options.initPotencyTimeout > 0 && pt > 0) {
                         SimplificationContext potencyInitializationContext(marking, net, pt,
-                                                                           options.lpsolveTimeout,
+                                                                           options.lpsolveTimeout, options.lpPrintLevel,
                                                                            &cache, options.initPotencyTimeout);
                         try {
                             uint32_t maxConfigurationsSolved = 10;

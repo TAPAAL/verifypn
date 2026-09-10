@@ -44,32 +44,342 @@ namespace PetriEngine { namespace PQL {
         return lps[0];
     }
 
-    Retval Simplifier::simplify_or(const LogicalCondition *element) {
+    bool Simplifier::finalLpsImpossible(std::vector<AbstractProgramCollection_ptr>& final_lps){
+        return finalLpsImpossibleAll(final_lps);
+        for(int i = 0; i < final_lps.size(); i++){
+            if(!final_lps[i]->satisfiable(_context)){
+                return true;
+            }
+        }
 
+        if(final_lps.size() == 1)
+            return false;
+    
+        for(int i = 0; i < final_lps.size(); i++){
+            for(int j = i + 1; j < final_lps.size(); j++){
+                bool sat = false;
+                for(auto& lp_i : final_lps[i]->AllProgs()){
+                    for(auto& lp_j : final_lps[j]->AllProgs()){
+                        if(!lp_i->isFinalImpossibleWith(lp_j, false, false, _context) ||
+                            !lp_j->isFinalImpossibleWith(lp_i, false, false, _context))
+                            {
+                                sat = true;
+                                break;
+                            }
+                    }
+                    if(sat)
+                        break;
+                }
+                if(!sat)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool Simplifier::finalLpsImpossibleAll(std::vector<AbstractProgramCollection_ptr>& final_lps){
+        for(int i = 0; i < final_lps.size(); i++){
+            if(!final_lps[i]->satisfiable(_context)){
+                return true;
+            }
+        }
+
+        if(final_lps.size() == 1)
+            return false;
+
+        std::vector<AbstractProgramCollection::NextProgramIterator> iters;
+
+        for(int i = 0; i < final_lps.size(); i++){
+            iters.push_back(AbstractProgramCollection::NextProgramIterator(final_lps[i].get()));
+        }
+
+        auto end = AbstractProgramCollection::NextProgramIterator();
+        
+        bool done = false;
+        int n = final_lps.size();
+        int lps_solved = 0;
+        while(!done){
+            /* produce all permutations */
+            std::vector<uint32_t> perm(n);
+            for(int i = 0; i < n; i++){
+                perm[i] = i;
+            }
+
+            /* all current lps */
+            std::vector<LinearProgram*> progs;
+            for(int l = 0; l < n; l++){
+                progs.push_back(*iters[l]);
+                std::cout << progs[l]->size() << "\n";
+            }
+            bool sat = false;
+            do{
+                if(!progs[0]->isFinalImpossibleWithN(perm, progs, false, false, _context)){
+                    sat = true;
+                    break;
+                }
+                lps_solved += 1;
+            }while(std::next_permutation(perm.begin(), perm.end()));
+
+            if(sat)
+                return false;
+
+            int i = n - 1;
+            while(1){
+                iters[i]++;
+                if(iters[i] == end){
+                    iters[i] = AbstractProgramCollection::NextProgramIterator(final_lps[i].get());
+                }else{
+                    break;
+                }
+                i--;
+                if(i < 0){
+                    done = true;
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    bool Simplifier::nextLpsImpossible(std::vector<AbstractProgramCollection_ptr>& next_lps, std::vector<AbstractProgramCollection_ptr>& final_lps, bool is_invariant, bool is_or){
+        /*const bool strictNext = !_context.isDeadlocked();
+        for(int i = 0; i < next_lps.size(); i++){
+            if(is_invariant){
+                bool nmore = false;
+                bool nsat = false;
+                next_lps[i]->reset();
+                do{
+                    nextProgram pn = next_lps[i]->get_next_program();
+                    SingleProgram* sn = dynamic_cast<SingleProgram*>(pn.prog.get());
+                    if(!sn || !sn->getProgram().isNStepsImpossible(1, strictNext, _context)){
+                        nsat = true;
+                    }
+                    nmore = pn.hasmore;
+                }while(nmore && !nsat);
+                next_lps[i]->reset();
+                if(!nsat){
+                    std::cout << "strict next impossible\n";
+                    return true;
+                }
+            }else{
+                if(!next_lps[i]->satisfiable(_context)){
+                    return true;
+                }
+            }
+        }
+
+        if(next_lps.size() == 0 || final_lps.size() == 0 || !is_invariant) 
+            return false;
+
+        for(int j = 0; j < final_lps.size(); j++){
+            // checks if lp holds in initial marking, and if it does skips it 
+            bool fmore = false;
+            bool fsat = false;
+            final_lps[j]->reset();
+            do{
+                nextProgram pf = final_lps[j]->get_next_program();
+                SingleProgram* sf = dynamic_cast<SingleProgram*>(pf.prog.get());
+                if(!sf || !sf->getProgram().isNStepsImpossible(0, true, _context)){
+                    fsat = true;
+                }
+                fmore = pf.hasmore;
+            }while(fmore && !fsat);
+            final_lps[j]->reset();
+            if(fsat)
+                continue;
+
+            for(int i = 0; i < next_lps.size(); i++){
+                next_lps[i]->reset();
+                final_lps[j]->reset();
+                bool hasmore = false;
+                bool sat = false;
+                // the lps i/j may be union/mergecollections of many programs
+                do{
+                    nextProgram np_i = next_lps[i]->get_next_program();
+                    bool submore = false;
+                    do{
+                        nextProgram np_j = final_lps[j]->get_next_program();
+                        SingleProgram* s_i = dynamic_cast<SingleProgram*>(np_i.prog.get());
+                        SingleProgram* s_j = dynamic_cast<SingleProgram*>(np_j.prog.get());
+                        if(s_i && s_j){
+                            LinearProgram lp_i = s_i->getProgram();
+                            LinearProgram lp_j = s_j->getProgram();
+                            if(!lp_i.isFinalImpossibleWith(lp_j, true, strictNext, _context)){ //&&
+                               //!lp_j.isFinalImpossibleWith(lp_i, _context)){
+                                sat = true;
+                            }
+                        }else{
+                            // shouldn't happen, but in here for safety for now
+                            std::cout << "# NOT A SINGLE PROGRAM\n";
+                            sat = true;
+                        }
+                        submore = np_j.hasmore;
+                    }while(submore && !sat);
+                    hasmore = np_i.hasmore;
+                    // if we found a satisfied combined lp, then (i, j) cannot give us a conclusive answer
+                    // reset and move to next combination
+                    if(sat){
+                        hasmore = false;
+                        next_lps[i]->reset();
+                        final_lps[j]->reset();
+                    }
+                }while(hasmore);
+
+                if(!sat){
+                    return true;
+                }
+            }
+        }*/
+        return false;
+    }
+
+
+
+    AbstractProgramCollection_ptr createGlobalUnion(AbstractProgramCollection_ptr &global_lp, std::vector<AbstractProgramCollection_ptr> &&nonglobal_lps) {
+        if(global_lp == nullptr){
+            if(nonglobal_lps.size() == 0){
+                return nullptr;
+            }else{
+                return std::make_shared<UnionCollection>(std::move(nonglobal_lps));
+            }
+        }
+
+        if(nonglobal_lps.size() == 0){
+            return global_lp;
+        }
+        
+        std::vector<AbstractProgramCollection_ptr> merges;
+
+        for(int i = 0; i < nonglobal_lps.size(); i++){
+            merges.emplace_back(std::make_shared<MergeCollection>(global_lp, nonglobal_lps[i]));
+        }
+
+        return std::make_shared<UnionCollection>(std::move(merges));
+    }
+
+    Retval Simplifier::simplify_or(const LogicalCondition *element) {
         std::vector<Condition_ptr> conditions;
-        std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
+        std::vector<AbstractProgramCollection_ptr> lps;
+        std::vector<AbstractProgramCollection_ptr> unquantified_neglpsv, global_neglpsv, final_neglpsv, next_neglpsv, nonglobal_neglpsv;
+
+        const bool same_context = op_parent_negated == _context.negated();
+        const bool parent_final = operator_parent == LPOP::FINAL;
+        const bool parent_global = operator_parent == LPOP::GLOBAL;
+        const bool neg_is_invariant = (same_context && parent_final) || (!same_context && parent_global);
+
+        const auto local_parent = operator_parent;
+
         for (const auto &c: element->getOperands()) {
+            operator_found = LPOP::NONE;
+            int32_t pre_operators = operators;
+            if(!neg_is_invariant)
+                operator_parent = LPOP::OTHER;
             Visitor::visit(this, c);
+            operator_parent = local_parent;
+
             auto r = std::move(_return_value);
             assert(r.neglps);
             assert(r.lps);
 
             if (r.formula->isTriviallyTrue()) {
+                operator_found = LPOP::OTHER;
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if (r.formula->isTriviallyFalse()) {
                 continue;
             }
+
             conditions.push_back(r.formula);
-            lps.push_back(r.lps);
-            neglpsv.emplace_back(r.neglps);
+
+            lps.emplace_back(r.lps);
+
+            if( ( operators - pre_operators ) > 1){
+                nonglobal_neglpsv.emplace_back(r.neglps);
+            }else {
+                switch(operator_found){
+                    case LPOP::NONE:
+                        if(neg_is_invariant){
+                            global_neglpsv.emplace_back(r.neglps);
+                        }else{
+                            unquantified_neglpsv.emplace_back(r.neglps);
+                        }
+                        break;
+                    case LPOP::FINAL:
+                        global_neglpsv.emplace_back(r.neglps);
+                        break;
+                    case LPOP::GLOBAL:
+                        final_neglpsv.emplace_back(r.neglps);
+                        break;
+                    case LPOP::UNTIL:
+                        final_neglpsv.emplace_back(r.neglps);
+                        break;
+                    case LPOP::NEXT:
+                        next_neglpsv.emplace_back(r.neglps);
+                        break;
+                    default:
+                        nonglobal_neglpsv.emplace_back(r.neglps);
+                }
+            }   
         }
-
-        AbstractProgramCollection_ptr neglps = mergeLps(std::move(neglpsv));
-
+       
+        operator_found = LPOP::OTHER;
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         }
 
+        nonglobal_neglpsv.clear();
+        if(!_context.rules().F_rule){
+            final_neglpsv.clear();
+        }
+        if(!_context.rules().G_rule){
+            std::move(global_neglpsv.begin(), global_neglpsv.end(), std::back_inserter(nonglobal_neglpsv));
+            global_neglpsv.clear();
+        }
+        if(!_context.rules().X_rule){
+            next_neglpsv.clear();
+        }
+
+        if(unquantified_neglpsv.size() > 0){
+            auto uq_neglps = mergeLps(std::move(unquantified_neglpsv));
+            nonglobal_neglpsv.emplace_back(uq_neglps);
+        }
+
+       
+        auto global_neglp = mergeLps(std::move(global_neglpsv));
+        auto neglps = createGlobalUnion(global_neglp, std::move(nonglobal_neglpsv));
+
+        if(neglps == nullptr){
+            neglps = std::make_shared<SingleProgram>();
+        }
+
+        if(final_neglpsv.size() > 0){
+            if(global_neglp){
+                for(int i = 0; i < final_neglpsv.size(); i++){
+                    final_neglpsv[i] = std::make_shared<MergeCollection>(global_neglp, final_neglpsv[i]);
+                }
+            }
+            if(finalLpsImpossible(final_neglpsv)){
+                return Retval(BooleanCondition::TRUE_CONSTANT); 
+            }
+        }
+
+        if(next_neglpsv.size() > 0){
+            if(global_neglp){
+                for(int i = 0; i < next_neglpsv.size(); i++){
+                    next_neglpsv[i] = std::make_shared<MergeCollection>(global_neglp, next_neglpsv[i]);
+                }
+            }
+            const bool next_is_invariant = neg_is_invariant || (operator_parent == LPOP::NONE);
+            if(nextLpsImpossible(next_neglpsv, final_neglpsv, next_is_invariant, true)){
+                return Retval(BooleanCondition::TRUE_CONSTANT); 
+            }
+        }
+
+        if(lps.size() == 0){
+            lps.emplace_back(std::make_shared<SingleProgram>());
+        }
+        
         try {
             if (!_context.timeout() && !neglps->satisfiable(_context)) {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
@@ -83,20 +393,43 @@ namespace PetriEngine { namespace PQL {
         // Lets try to see if the r1 AND r2 can ever be false at the same time
         // If not, then we know that r1 || r2 must be true.
         // we check this by checking if !r1 && !r2 is unsat
-
+        //std::cout << "leaving or\n";
         return Retval(
                 makeOr(conditions),
                 std::make_shared<UnionCollection>(std::move(lps)),
                 std::move(neglps));
     }
 
+    
     Retval Simplifier::simplify_and(const LogicalCondition *element) {
-
         std::vector<Condition_ptr> conditions;
-        std::vector<AbstractProgramCollection_ptr> lpsv;
+        std::vector<AbstractProgramCollection_ptr> global_lpsv, final_lpsv, next_lpsv, opfree_lpsv, nonglobal_lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
+
+        const bool same_context = op_parent_negated == _context.negated();
+        const bool parent_final = operator_parent == LPOP::FINAL;
+        const bool parent_global = operator_parent == LPOP::GLOBAL;
+        const bool is_invariant = (same_context && parent_global) || (!same_context && parent_final);
+        const auto local_parent = operator_parent;
+
+        auto unique_operator = LPOP::NULLT;
+
         for (auto &c: element->getOperands()) {
+            operator_found = LPOP::NONE;
+            int32_t pre_operators = operators;
+            if(!is_invariant)
+                operator_parent = LPOP::OTHER;
             Visitor::visit(this, c);
+            operator_parent = local_parent;
+
+            if(unique_operator == LPOP::NULLT){
+                unique_operator = operator_found;
+            }else{
+                if(operator_found != unique_operator){
+                    unique_operator = LPOP::OTHER;
+                }
+            }
+
             auto r = std::move(_return_value);
             if (r.formula->isTriviallyFalse()) {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
@@ -105,15 +438,94 @@ namespace PetriEngine { namespace PQL {
             }
 
             conditions.push_back(r.formula);
-            lpsv.emplace_back(r.lps);
+
+            if( ( operators - pre_operators ) > 1){
+                nonglobal_lpsv.emplace_back(r.lps);
+            }else {
+                switch(operator_found){
+                    case LPOP::NONE:
+                        if(is_invariant){
+                            global_lpsv.emplace_back(r.lps);
+                        }else{
+                            opfree_lpsv.emplace_back(r.lps);
+                        }
+                        break;
+                    case LPOP::GLOBAL:
+                        global_lpsv.emplace_back(r.lps);
+                        break;
+                    case LPOP::FINAL:
+                        final_lpsv.emplace_back(r.lps);
+                        break;
+                    case LPOP::UNTIL:
+                        final_lpsv.emplace_back(r.lps);
+                        break;
+                    case LPOP::NEXT:
+                        next_lpsv.emplace_back(r.lps);
+                        break;
+                    default:
+                        nonglobal_lpsv.emplace_back(r.lps);
+                }
+            }   
             neglps.emplace_back(r.neglps);
         }
 
+        if(unique_operator == LPOP::NULLT || unique_operator == LPOP::OTHER){
+            operator_found == LPOP::OTHER;
+        }
+        
         if (conditions.size() == 0) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         }
+        nonglobal_lpsv.clear();
+        if(!_context.rules().F_rule){
+            final_lpsv.clear();
+        }
+        if(!_context.rules().G_rule){
+            std::move(global_lpsv.begin(), global_lpsv.end(), std::back_inserter(nonglobal_lpsv));
+            global_lpsv.clear();
+        }
+        if(!_context.rules().X_rule){
+            next_lpsv.clear();
+        }
 
-        auto lps = mergeLps(std::move(lpsv));
+        if(opfree_lpsv.size() > 0){
+            auto uq_lps = mergeLps(std::move(opfree_lpsv));
+            nonglobal_lpsv.emplace_back(uq_lps);
+        }
+
+        auto global_lp = mergeLps(std::move(global_lpsv));
+        auto lps = createGlobalUnion(global_lp, std::move(nonglobal_lpsv));
+        
+        if(lps == nullptr){
+            lps = std::make_shared<SingleProgram>();
+        }
+
+        if(final_lpsv.size() > 0){
+            if(global_lp){
+                for(int i = 0; i < final_lpsv.size(); i++){
+                    final_lpsv[i] = std::make_shared<MergeCollection>(global_lp, final_lpsv[i]);
+                }
+            }
+            if(finalLpsImpossible(final_lpsv)){
+                return Retval(BooleanCondition::FALSE_CONSTANT); 
+            }
+        }
+
+        if(next_lpsv.size() > 0){
+            if(global_lp){
+                for(int i = 0; i < next_lpsv.size(); i++){
+                    next_lpsv[i] = std::make_shared<MergeCollection>(global_lp, next_lpsv[i]);
+                }
+            }
+            const bool next_is_invariant = is_invariant || (operator_parent == LPOP::NONE);
+            if(nextLpsImpossible(next_lpsv, final_lpsv, next_is_invariant)){
+                return Retval(BooleanCondition::FALSE_CONSTANT); 
+            }
+        }
+
+        if(neglps.size() == 0){
+            neglps.emplace_back(std::make_shared<SingleProgram>());
+        }
 
         try {
             if (!_context.timeout() && !lps->satisfiable(_context)) {
@@ -125,10 +537,10 @@ namespace PetriEngine { namespace PQL {
             std::cout << "Query reduction: memory exceeded during LPS merge." << std::endl;
         }
 
+        
         // Lets try to see if the r1 AND r2 can ever be false at the same time
         // If not, then we know that r1 || r2 must be true.
         // we check this by checking if !r1 && !r2 is unsat
-
         return Retval(
                 makeAnd(conditions),
                 std::move(lps),
@@ -198,26 +610,127 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
-    template<typename Quantifier>
-    Retval Simplifier::simplify_simple_quantifier(Retval &r) {
-        static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+    /*Retval Simplifier::simplify_global_quantifier(Retval &r) {
+        //std::cout << "triv true: " << r.formula->isTriviallyTrue() << "\n";
+        //std::cout << "triv false: " << r.formula->isTriviallyFalse() << "\n";
+        operator_found = LPOP::GLOBAL;
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         } else {
-            return Retval(std::make_shared<Quantifier>(r.formula));
+            return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+        }
+    }*/
+
+    template<typename Quantifier>
+    Retval Simplifier::simplify_simple_quantifier(Retval &r) {
+        //std::cout << "other quantifier\n";
+        static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+        operator_found = LPOP::OTHER;
+        //std::cout << "triv true: " << r.formula->isTriviallyTrue() << "\n";
+        //std::cout << "triv false: " << r.formula->isTriviallyFalse() << "\n";
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<Quantifier>(r.formula), r.lps, r.neglps);
         }
     }
 
+    bool Simplifier::isNextImpossible(AbstractProgramCollection_ptr next_lps, bool strict){
+        /*if(strict){
+            bool nmore = false;
+            bool nsat = false;
+            next_lps->reset();
+            do{
+                nextProgram pn = next_lps->get_next_program();
+                SingleProgram* sn = dynamic_cast<SingleProgram*>(pn.prog.get());
+                if(!sn || !sn->getProgram().isNStepsImpossible(1, true, _context)){
+                    nsat = true;
+                }
+                nmore = pn.hasmore;
+            }while(nmore && !nsat);
+            next_lps->reset();
+            if(!nsat){
+                return true;
+            }
+        }else{
+            if(!next_lps->satisfiable(_context)){
+                return true;
+            }
+        }*/
+        
+        return false;
+    }
+
+    template<>
+    Retval Simplifier::simplify_simple_quantifier<XCondition>(Retval &r, bool strict){
+        operator_found = LPOP::NEXT;
+        //std::cout << "has next\n";
+        if(strict){
+            if(isNextImpossible(r.neglps, true)){
+                return Retval(BooleanCondition::TRUE_CONSTANT);
+            }
+            else if(isNextImpossible(r.lps, true)){
+                return Retval(BooleanCondition::FALSE_CONSTANT);
+            }
+        }
+
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        }
+        return Retval(std::make_shared<XCondition>(r.formula), r.lps, r.neglps);
+    }
+
+    template<>
+    Retval Simplifier::simplify_simple_quantifier<GCondition>(Retval &r){
+        operator_found = LPOP::GLOBAL;
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+        }
+    }
+
+    template<>
+    Retval Simplifier::simplify_simple_quantifier<FCondition>(Retval &r){
+        operator_found = LPOP::FINAL;
+        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context)) {
+            return Retval(BooleanCondition::TRUE_CONSTANT);
+        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context)) {
+            return Retval(BooleanCondition::FALSE_CONSTANT);
+        } else {
+            return Retval(std::make_shared<FCondition>(r.formula), r.lps, r.neglps);
+        }
+    }
+
+    Member memberForPathPlace(size_t p, int cur_path, const SimplificationContext &context) {
+        std::vector<int64_t> row(( context.net()->numberOfTransitions() + context.net()->numberOfPlaces() ) * context.numPaths(), 0);
+        row.shrink_to_fit();
+        int variable_offset = cur_path * ( context.net()->numberOfTransitions() + context.net()->numberOfPlaces() );
+        for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
+            row[t + variable_offset]  = context.net()->outArc(t, p);
+            row[t + variable_offset] -= context.net()->inArc(p, t);
+        }
+        row[context.net()->numberOfTransitions() + variable_offset + p] = 1.0;
+        return Member(std::move(row), 0);
+    }
+
     Member memberForPlace(size_t p, const SimplificationContext &context) {
-        std::vector<int64_t> row(context.net()->numberOfTransitions(), 0);
+        std::vector<int64_t> row(context.net()->numberOfTransitions() + context.net()->numberOfPlaces(), 0);
         row.shrink_to_fit();
         for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
             row[t] = context.net()->outArc(t, p);
             row[t] -= context.net()->inArc(p, t);
         }
-        return Member(std::move(row), context.marking()[p]);
+        row[context.net()->numberOfTransitions() + p] = 1.0;
+        return Member(std::move(row), 0);
     }
 
     /********** Constraint Visitor **********/
@@ -236,8 +749,8 @@ namespace PetriEngine { namespace PQL {
         }
 
         for (auto &i: element->places()) {
-            if (first) res = memberForPlace(i.first, _context);
-            else op(res, memberForPlace(i.first, _context));
+            if (first) res = memberForPathPlace(i.first, _current_path, _context);
+            else op(res, memberForPathPlace(i.first, _current_path, _context));
             first = false;
         }
 
@@ -255,7 +768,7 @@ namespace PetriEngine { namespace PQL {
     }
 
     void ConstraintVisitor::_accept(const UnfoldedIdentifierExpr *element) {
-        _return_value = memberForPlace(element->offset(), _context);
+        _return_value = memberForPathPlace(element->offset(), _current_path, _context);
     }
 
     void ConstraintVisitor::_accept(const PlusExpr *element) {
@@ -291,15 +804,19 @@ namespace PetriEngine { namespace PQL {
     }
 
     void ConstraintVisitor::_accept(const PathSelectExpr *element) {
-        if(element->offset() != 0)
+        if(element->offset() >= _context.numPaths())
             _return_value = Member(0, false);
-        else
+        else{
+            _current_path = element->offset();
             Visitor::visit(*this, element->child());
+            _current_path = 0;
+        }
     }
 
     /******* Simplifier accepts ********/
 
     void Simplifier::_accept(const NotCondition *element) {
+        //std::cout << "negating\n";
         _context.negate();
         Visitor::visit(this, element->getCond());
         _context.negate();
@@ -516,6 +1033,12 @@ namespace PetriEngine { namespace PQL {
     }
 
     void Simplifier::_accept(const CompareConjunction *element) {
+        // this case is unclear to me in the hyperltl construction
+        assert(_context.numPaths() == 1);
+        if(_context.numPaths() != 1){
+            std::cerr << "CompareConjunction simplification for HyperLTL is not implemented \n";
+            RETURN(Retval(std::make_shared<CompareConjunction>(*element, _context.negated())))
+        }
         if (_context.timeout()) {
             RETURN(Retval(std::make_shared<CompareConjunction>(*element, _context.negated())))
         }
@@ -831,6 +1354,8 @@ namespace PetriEngine { namespace PQL {
     void Simplifier::_accept(const UntilCondition *condition) {
         bool neg = _context.negated();
         _context.setNegate(false);
+        operators++;
+        operator_parent = LPOP::OTHER;
 
         Visitor::visit(this, condition->getCond2());
         Retval r2 = std::move(_return_value);
@@ -845,6 +1370,7 @@ namespace PetriEngine { namespace PQL {
                            Retval(BooleanCondition::TRUE_CONSTANT) :
                            Retval(BooleanCondition::FALSE_CONSTANT))
         }
+        operator_parent = LPOP::OTHER;
         Visitor::visit(this, condition->getCond1());
         Retval r1 = std::move(_return_value);
 
@@ -857,8 +1383,9 @@ namespace PetriEngine { namespace PQL {
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context)) {
                 RETURN(Retval(std::make_shared<NotCondition>(r2.formula)))
             } else {
+                operator_parent = LPOP::UNTIL;
                 RETURN(Retval(std::make_shared<NotCondition>(
-                        std::make_shared<UntilCondition>(r1.formula, r2.formula))))
+                        std::make_shared<UntilCondition>(r1.formula, r2.formula)), r2.neglps, r2.lps))
             }
         } else {
             if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context)) {
@@ -866,7 +1393,8 @@ namespace PetriEngine { namespace PQL {
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context)) {
                 RETURN(std::move(r2))
             } else {
-                RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula)))
+                operator_parent = LPOP::UNTIL;
+                RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula), r2.lps, r2.neglps))
             }
         }
     }
@@ -895,20 +1423,51 @@ namespace PetriEngine { namespace PQL {
     }
 
     void Simplifier::_accept(const FCondition *condition) {
+        operators++;
+        if(_context.negated()){
+            operator_parent = LPOP::GLOBAL;
+        }else{
+            operator_parent = LPOP::FINAL;
+        }
+        op_parent_negated = _context.negated();
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplify_simple_quantifier<GCondition>(_return_value)
-                                         : simplify_simple_quantifier<FCondition>(_return_value))
+        if(_context.negated()){
+            //std::cout << "negated GCondition\n";
+            auto r = simplify_simple_quantifier<GCondition>(_return_value);
+            RETURN(std::move(r));
+        }else{
+            //std::cout << "FCondition\n";
+            RETURN(simplify_simple_quantifier<FCondition>(_return_value));
+        }
     }
 
     void Simplifier::_accept(const GCondition *condition) {
+        operators++;
+        if(_context.negated()){
+            operator_parent = LPOP::FINAL;
+        }else{
+            operator_parent = LPOP::GLOBAL;
+        }
+        op_parent_negated = _context.negated();
         Visitor::visit(this, condition->getCond());
-        RETURN(_context.negated() ? simplify_simple_quantifier<FCondition>(_return_value)
-                                         : simplify_simple_quantifier<GCondition>(_return_value))
+
+        if(_context.negated()){
+            //std::cout << "negated FCondition\n";
+            RETURN(simplify_simple_quantifier<FCondition>(_return_value));
+        }else{
+            //std::cout << "GCondition\n";
+            auto r  = simplify_simple_quantifier<GCondition>(_return_value);
+            RETURN(std::move(r))
+        }
     }
 
     void Simplifier::_accept(const XCondition *condition) {
+        operators++;
+        operator_parent = LPOP::NEXT;
+        int32_t pre_operators = operators;
         Visitor::visit(this, condition->getCond());
-        RETURN(simplify_simple_quantifier<XCondition>(_return_value))
+        const bool is_strict_next = (operator_parent = LPOP::NONE) && (operators == pre_operators) && (!_context.isDeadlocked());
+        RETURN(simplify_simple_quantifier<XCondition>(_return_value, is_strict_next))
     }
 
     void Simplifier::_accept(const BooleanCondition *condition) {

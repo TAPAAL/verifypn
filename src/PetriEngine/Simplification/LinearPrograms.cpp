@@ -12,7 +12,11 @@ namespace PetriEngine {
         bool AbstractProgramCollection::satisfiable(const PQL::SimplificationContext& context, uint32_t solvetime)
         {
             reset();
-            if (context.timeout() || has_empty || solvetime == 0) return true;
+            if (context.timeout() || has_empty || solvetime == 0){ 
+                if(context.timeout())
+                    std::cout << "returning from timeout\n";
+                return true;
+            }
             if (_result != UNKNOWN)
             {
                 if (_result == IMPOSSIBLE)
@@ -23,6 +27,11 @@ namespace PetriEngine {
             satisfiableImpl(context, solvetime);
             assert(_result != UNKNOWN);
             return _result == POSSIBLE;
+        }
+
+    
+        nextProgram AbstractProgramCollection::get_next_program(){
+            return getNextProgramImpl();
         }
 
         uint32_t AbstractProgramCollection::explorePotency(const PQL::SimplificationContext& context,
@@ -103,6 +112,28 @@ namespace PetriEngine {
                 _result = IMPOSSIBLE;
         }
 
+        
+        nextProgram UnionCollection::getNextProgramImpl(){
+            if(lps.size() == 0){
+                return {std::make_shared<LinearProgram>(LinearProgram()), false};
+            }
+            assert(current < lps.size());
+            AbstractProgramCollection_ptr prog = lps[current];
+            // this is to handle nested unions/merges where the value of np.prog might not be a SingleProgram
+            nextProgram np = prog->get_next_program();
+            if(!np.hasmore){
+                bool hasmore = (current + 1  < lps.size());
+                if(hasmore){
+                    current++;
+                }else{
+                    reset();
+                }
+                return {np.prog, hasmore};
+            }else{
+                return np;
+            }
+        } 
+
         uint32_t UnionCollection::explorePotencyImpl(const PQL::SimplificationContext& context,
             std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
@@ -150,6 +181,8 @@ namespace PetriEngine {
 
             tmp_prog = LinearProgram();
             curr = 0;
+
+            next_prog = LinearProgram();
         }
 
         bool MergeCollection::merge(bool& has_empty, LinearProgram& program, bool dry_run)
@@ -232,6 +265,20 @@ namespace PetriEngine {
                 _result = IMPOSSIBLE;
         }
 
+        nextProgram MergeCollection::getNextProgramImpl(){
+            bool has_empty = false;
+            next_prog = LinearProgram();
+            bool hasmore = merge(has_empty, next_prog);
+            std::shared_ptr<LinearProgram> prog_ptr = std::make_shared<LinearProgram>(next_prog);
+            nextProgram np = {prog_ptr, hasmore};
+
+            if(!hasmore){
+                reset();
+            }
+
+            return np;
+        }
+
         uint32_t MergeCollection::explorePotencyImpl(const PQL::SimplificationContext& context,
             std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
@@ -266,6 +313,12 @@ namespace PetriEngine {
             has_empty = true;
         }
 
+        SingleProgram::SingleProgram(LinearProgram lp) : AbstractProgramCollection()
+        {
+            program = lp;
+            has_empty = ( program.size() == 0 );
+        }
+
         SingleProgram::SingleProgram(LPCache* factory, const Member& lh, int64_t constant, op_t op)
         : AbstractProgramCollection(),
           program(factory->createAndCache(lh.variables()), constant, op, factory)
@@ -297,6 +350,11 @@ namespace PetriEngine {
             }
         }
 
+        nextProgram SingleProgram::getNextProgramImpl(){
+            return {std::make_shared<LinearProgram>(program), false};
+        }
+
+        
         uint32_t SingleProgram::explorePotencyImpl(const PQL::SimplificationContext& context,
             std::vector<uint32_t> &potencies, uint32_t maxConfigurationsSolved)
         {
@@ -306,5 +364,6 @@ namespace PetriEngine {
             program.solvePotency(context, potencies);
             return maxConfigurationsSolved - 1;
         }
+
     }
 }
