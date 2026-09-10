@@ -82,7 +82,8 @@ public:
     void parseMarking(
         const rapidxml::xml_document<>& doc,
         PetriEngine::AbstractPetriNetBuilder* builder,
-        ColorTypeMap* colorTypes);
+        ColorTypeMap* colorTypes,
+        const ColorTypeMap& placeTypes);
 private:
     void parseElement(rapidxml::xml_node<>* element);
     void parsePlace(rapidxml::xml_node<>* element);
@@ -91,13 +92,19 @@ private:
     void parseDeclarations(rapidxml::xml_node<>* element);
     void parsePartitions(rapidxml::xml_node<>* element);
     void parseNamedSort(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element,
+        const PetriEngine::Colored::ColorType* type = nullptr);
     PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag);
-    std::vector<PetriEngine::Colored::ColorExpression_ptr> parseColorExpression(rapidxml::xml_node<>* element);
+    std::vector<PetriEngine::Colored::ColorExpression_ptr> parseColorExpression(rapidxml::xml_node<>* element,
+        const PetriEngine::Colored::ColorType* type = nullptr, bool resolveNamedFromType = true);
+    const PetriEngine::Colored::ColorType* inferGuardColorType(rapidxml::xml_node<>* element) const;
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::ArcExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
-    void collectColorsInTuple(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors);
+    PetriEngine::Colored::ArcExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element,
+        const PetriEngine::Colored::ColorType* type = nullptr);
+    void collectColorsInTuple(rapidxml::xml_node<>* element,
+        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors,
+        const PetriEngine::Colored::ColorType* type = nullptr);
     PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
@@ -114,6 +121,7 @@ private:
     ArcList arcs;
     TransitionList _transitions;
     ColorTypeMap colorTypes;
+    ColorTypeMap placeColorTypes;
     VariableMap variables;
     bool isColored;
     std::string placeTypeContext;
