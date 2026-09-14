@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Project Definition
 set(VERIFYPN_NAME "verifypn")
-set(VERIFYPN_VERSION 4.4.2)
+set(VERIFYPN_VERSION 4.5.0)
 
 # Select GCC compiler
 set(DESIRED_GCC_VERSION "$ENV{GCC_VERSION}")
