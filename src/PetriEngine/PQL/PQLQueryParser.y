@@ -140,7 +140,10 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_
 		;
 
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
-		| INT			{ $$ = new LiteralExpr(atol($1->c_str())); delete $1; }
+		| INT			{
+		                    std::unique_ptr<std::string> token($1);
+		                    $$ = new LiteralExpr(parse_bounded_int32(token->c_str()));
+		                }
     | named         { $$ = $1; }
 		;
 

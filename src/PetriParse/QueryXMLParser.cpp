@@ -466,13 +466,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
 Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) {
     std::string elementName = element->name();
     if (elementName == "integer-constant") {
-        int i;
-        if (sscanf(element->value(), "%d", &i) == EOF)
-        {
-            assert(false);
-            return nullptr;
-        }
-        return std::make_shared<LiteralExpr>(i);
+        return std::make_shared<LiteralExpr>(parse_bounded_int32(element->value()));
     } else if (elementName == "tokens-count") {
         auto children = element->first_node();
         std::vector<Expr_ptr> ids;

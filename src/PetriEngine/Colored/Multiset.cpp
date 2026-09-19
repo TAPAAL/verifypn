@@ -18,8 +18,18 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <limits>
 
 #include "PetriEngine/Colored/Multiset.h"
+
+namespace {
+uint32_t toBoundedTokenCount(uint64_t count) {
+    if (count > std::numeric_limits<uint32_t>::max()) {
+        throw base_error("Number of tokens exceeded ", std::numeric_limits<uint32_t>::max());
+    }
+    return static_cast<uint32_t>(count);
+}
+}
 
 namespace PetriEngine {
     namespace Colored {
@@ -30,7 +40,7 @@ namespace PetriEngine {
                 : _set(), _type(nullptr)
         {
             for (auto& c : colors) {
-                (*this)[c.first] += c.second;
+                (*this)[c.first] = toBoundedTokenCount(static_cast<uint64_t>((*this)[c.first]) + c.second);
             }
         }
 
@@ -65,7 +75,7 @@ namespace PetriEngine {
                 const Color* color = &(*ColorType::dotInstance()->begin());
                 if (_type != nullptr)
                     color = &((*_type)[c.first]);
-                (*this)[color] += c.second;
+                (*this)[color] = toBoundedTokenCount(static_cast<uint64_t>((*this)[color]) + c.second);
             }
         }
 
@@ -86,7 +96,7 @@ namespace PetriEngine {
 
         void Multiset::operator *=(uint32_t scalar) {
             for (auto& c : _set) {
-                c.second *= scalar;
+                c.second = toBoundedTokenCount(static_cast<uint64_t>(c.second) * scalar);
             }
         }
 

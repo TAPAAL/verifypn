@@ -1,8 +1,15 @@
 #define BOOST_TEST_MODULE PQLParserTests
 
 #include <boost/test/unit_test.hpp>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <cstdint>
+
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriParse/QueryXMLParser.h"
+#include "utils/errors.h"
 
 using namespace PetriEngine::PQL;
 
@@ -184,4 +191,53 @@ BOOST_AUTO_TEST_CASE(large_query_mix_and_or) {
 
     std::shared_ptr<FCondition> fCondition;
     BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*aCondition)[0]));
+}
+
+namespace {
+std::string xmlQueryWithConstant(const std::string& value) {
+    return std::string(R"(<property-set><property><id>q</id><formula>
+<integer-le>
+<integer-constant>)") + value + R"(</integer-constant>
+<integer-constant>0</integer-constant>
+</integer-le>
+</formula></property></property-set>)";
+}
+
+void parseXmlQuery(const std::string& xml) {
+    shared_string_set strings;
+    QueryXMLParser parser(strings);
+    std::stringstream ss(xml);
+    BOOST_REQUIRE(parser.parse(ss, {0}));
+}
+}
+
+BOOST_AUTO_TEST_CASE(PqlIntegerConstantOverflowIsParseError) {
+    const auto maxInt = std::to_string(std::numeric_limits<int32_t>::max());
+    const auto overflowInt = std::to_string(static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1);
+
+    BOOST_CHECK_NO_THROW(ParseQuery("\"p0\" <= " + maxInt));
+    auto parsed = ParseQuery("\"p0\" <= " + maxInt);
+    auto compare = std::dynamic_pointer_cast<LessThanOrEqualCondition>(parsed);
+    BOOST_REQUIRE(compare);
+    auto literal = std::dynamic_pointer_cast<LiteralExpr>((*compare)[1]);
+    BOOST_REQUIRE(literal);
+    BOOST_CHECK_EQUAL(literal->value(), std::numeric_limits<int32_t>::max());
+
+    BOOST_CHECK_THROW(ParseQuery("\"p0\" <= " + overflowInt), base_error);
+    BOOST_CHECK_THROW(ParseQuery("\"p0\" <= 5000000000"), base_error);
+    BOOST_CHECK_THROW(ParseQuery("EF \"p0\" > 4294967296"), base_error);
+}
+
+BOOST_AUTO_TEST_CASE(XmlIntegerConstantOverflowIsParseError) {
+    const auto maxInt = std::to_string(std::numeric_limits<int32_t>::max());
+    const auto overflowInt = std::to_string(static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1);
+    const auto minInt = std::to_string(std::numeric_limits<int32_t>::min());
+
+    BOOST_CHECK_NO_THROW(parseXmlQuery(xmlQueryWithConstant(maxInt)));
+    BOOST_CHECK_NO_THROW(parseXmlQuery(xmlQueryWithConstant(minInt)));
+
+    BOOST_CHECK_THROW(parseXmlQuery(xmlQueryWithConstant(overflowInt)), base_error);
+    BOOST_CHECK_THROW(parseXmlQuery(xmlQueryWithConstant("5000000000")), base_error);
+    BOOST_CHECK_THROW(parseXmlQuery(xmlQueryWithConstant("4294967296")), base_error);
+    BOOST_CHECK_THROW(parseXmlQuery(xmlQueryWithConstant("-2147483649")), base_error);
 }
