@@ -23,6 +23,8 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <limits>
+#include <cstdint>
 
 #include "utils.h"
 #include "PetriEngine/Colored/PnmlWriter.h"
@@ -70,6 +72,37 @@ std::string enumConstant(const char* name) {
 
 std::string comparison(const char* op, const std::string& left, const std::string& right) {
     return "<" + std::string(op) + ">" + left + right + "</" + op + ">";
+}
+
+std::string numberOf(const std::string& value, const char* color = "a") {
+    return "<numberof><subterm><numberconstant value=\"" + value +
+           "\"><positive/></numberconstant></subterm><subterm><useroperator declaration=\"" +
+           color + "\"/></subterm></numberof>";
+}
+
+std::string coloredMarkingNet(const std::string& markingStructure) {
+    return std::string(R"(<pnml><net id="n" type="http://www.pnml.org/version-2009/grammar/symmetricnet">
+<declaration><structure><declarations>
+<namedsort id="E" name="E"><cyclicenumeration><feconstant id="a" name="a"/></cyclicenumeration></namedsort>
+</declarations></structure></declaration>
+<page id="page"><place id="P">
+<type><structure><usersort declaration="E"/></structure></type>
+<hlinitialMarking><structure>)") + markingStructure +
+           R"(</structure></hlinitialMarking>
+</place></page></net></pnml>)";
+}
+
+std::string ptMarkingNet(const std::string& tokens) {
+    return std::string(R"(<pnml><net id="n" type="http://www.pnml.org/version-2009/grammar/ptnet">
+<page id="page"><place id="P"><initialMarking><text>)") + tokens +
+           R"(</text></initialMarking></place></page></net></pnml>)";
+}
+
+void parseModel(const std::string& model) {
+    shared_string_set strings;
+    ColoredPetriNetBuilder builder(strings);
+    std::stringstream ss(model);
+    builder.parse_model(ss);
 }
 }
 
@@ -167,6 +200,25 @@ BOOST_AUTO_TEST_CASE(InitialMarkingMismatch, * utf::timeout(10)) {
         saw_exception = true;
     }
     BOOST_REQUIRE(saw_exception);
+}
+
+BOOST_AUTO_TEST_CASE(InitialMarkingTokenCountOverflowIsParseError) {
+    const auto maxTokens = std::to_string(std::numeric_limits<uint32_t>::max());
+    const auto overflowTokens = std::to_string(static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) + 1);
+
+    BOOST_CHECK_NO_THROW(parseModel(coloredMarkingNet(numberOf(maxTokens))));
+    BOOST_CHECK_NO_THROW(parseModel(ptMarkingNet(maxTokens)));
+
+    BOOST_CHECK_THROW(parseModel(coloredMarkingNet(numberOf(overflowTokens))), base_error);
+    BOOST_CHECK_THROW(parseModel(coloredMarkingNet(numberOf("5000000000"))), base_error);
+    BOOST_CHECK_THROW(parseModel(ptMarkingNet(overflowTokens)), base_error);
+
+    BOOST_CHECK_THROW(parseModel(coloredMarkingNet(
+        "<add><subterm>" + numberOf("3000000000") + "</subterm><subterm>" + numberOf("3000000000") +
+        "</subterm></add>")), base_error);
+    BOOST_CHECK_THROW(parseModel(coloredMarkingNet(
+        "<scalarproduct><subterm><numberconstant value=\"3\"/></subterm><subterm>" +
+        numberOf("2000000000") + "</subterm></scalarproduct>")), base_error);
 }
 
 BOOST_AUTO_TEST_CASE(InitialMarkingMatch, * utf::timeout(10)) {

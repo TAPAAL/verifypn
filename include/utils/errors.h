@@ -26,6 +26,10 @@
 #define ERRORS_H
 
 #include <sstream>
+#include <limits>
+#include <cstdint>
+#include <cerrno>
+#include <cstdlib>
 
 enum class ReturnValue {
     SuccessCode = 0,
@@ -65,5 +69,23 @@ struct base_error : public std::exception {
         return os;
     }
 };
+
+inline int32_t parse_bounded_int32(const char* text) {
+    if (text == nullptr) {
+        throw base_error("Expected an integer constant");
+    }
+    errno = 0;
+    char* end = nullptr;
+    const long long parsed = std::strtoll(text, &end, 10);
+    if (end == text) {
+        throw base_error("Expected an integer constant, got \"", text, "\"");
+    }
+    if (errno == ERANGE ||
+        parsed < static_cast<long long>(std::numeric_limits<int32_t>::min()) ||
+        parsed > static_cast<long long>(std::numeric_limits<int32_t>::max())) {
+        throw base_error("Integer constant ", text, " exceeded ", std::numeric_limits<int32_t>::max());
+    }
+    return static_cast<int32_t>(parsed);
+}
 
 #endif /* ERRORS_H */
