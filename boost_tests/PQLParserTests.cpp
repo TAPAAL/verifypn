@@ -185,3 +185,19 @@ BOOST_AUTO_TEST_CASE(large_query_mix_and_or) {
     std::shared_ptr<FCondition> fCondition;
     BOOST_REQUIRE(fCondition = std::dynamic_pointer_cast<FCondition>((*aCondition)[0]));
 }
+
+BOOST_AUTO_TEST_CASE(int32_constant_rejected_without_int64) {
+    auto query = R"("P" <= 3000000000)";
+    auto actual = ParseQuery(query, false);
+    BOOST_REQUIRE(actual == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(int64_constant_accepted_with_int64) {
+    auto query = R"("P" <= 3000000000)";
+    auto actual = ParseQuery(query, true);
+    auto leq = std::dynamic_pointer_cast<LessThanOrEqualCondition>(actual);
+    BOOST_REQUIRE(leq);
+    auto lit = std::dynamic_pointer_cast<LiteralExpr>((*leq)[1]);
+    BOOST_REQUIRE(lit);
+    BOOST_TEST(lit->value() == 3000000000LL);
+}

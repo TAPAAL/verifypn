@@ -134,11 +134,13 @@ namespace PetriEngine {
                             continue;
                         while (fout < lout && fout->place < finv->place)
                             ++fout;
-                        if (fout < lout && fout->place == finv->place) {
-                            mx = std::min(_place_bounds[finv->place].second / (fout->tokens - finv->tokens), mx);
-                        } else {
-                            mx = std::min(_place_bounds[finv->place].second / finv->tokens, mx);
-                        }
+                        // Arc weights are uint64_t. The quotient cannot exceed the
+                        // uint32_t place bound, so narrowing it back is exact.
+                        const uint64_t bound = _place_bounds[finv->place].second;
+                        const uint64_t consumed = (fout < lout && fout->place == finv->place)
+                            ? fout->tokens - finv->tokens
+                            : finv->tokens;
+                        mx = static_cast<uint32_t>(std::min(bound / consumed, static_cast<uint64_t>(mx)));
                     }
                 }
                 if (_fireing_bounds[t] != mx) {
@@ -177,7 +179,7 @@ namespace PetriEngine {
                         if (fout->place != p)
                             continue;
                         while (finv < linv && finv->place < fout->place) ++finv;
-                        auto take = 0;
+                        uint64_t take = 0;
                         if (finv < linv && finv->place == p && !finv->inhibitor) {
                             take = finv->tokens;
                         }
@@ -185,9 +187,13 @@ namespace PetriEngine {
                         break;
                     }
                 }
+                // UINT32_MAX means unbounded. A sum that does not fit stays unbounded
+                // instead of being truncated into a tighter, unsound bound.
+                if (sum > std::numeric_limits<uint32_t>::max())
+                    return;
                 assert(sum <= _place_bounds[p].second);
                 if (_place_bounds[p].second != sum) {
-                    _place_bounds[p].second = sum;
+                    _place_bounds[p].second = static_cast<uint32_t>(sum);
                     for (auto ti = _places[p].post; ti != _places[p + 1].pre; ++ti) {
                         if (_arcs[ti].direction < 0)
                             handle_transition(_arcs[ti].index);
@@ -198,7 +204,10 @@ namespace PetriEngine {
 
             // initialize places
             for (size_t p = 0; p < _net.numberOfPlaces(); ++p) {
-                uint32_t ub = (*_parent)[p];
+                const MarkVal marking = (*_parent)[p];
+                uint32_t ub = marking > std::numeric_limits<uint32_t>::max()
+                    ? std::numeric_limits<uint32_t>::max()
+                    : static_cast<uint32_t>(marking);
                 for (auto ti = _places[p].pre; ti != _places[p].post; ++ti) {
                     const auto& arc = _arcs[ti];
                     if (arc.direction <= 0 || !_future_enabled[arc.index])
@@ -206,7 +215,7 @@ namespace PetriEngine {
                     ub = std::numeric_limits<uint32_t>::max();
                     break;
                 }
-                _place_bounds[p] = std::make_pair((*_parent)[p], ub);
+                _place_bounds[p] = std::make_pair(static_cast<uint32_t>(marking), ub);
             }
             // initialize counters
             for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {

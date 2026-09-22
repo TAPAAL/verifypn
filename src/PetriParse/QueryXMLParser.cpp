@@ -22,6 +22,7 @@
 #include "PetriEngine/PQL/QueryPrinter.h"
 
 #include <string>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -35,8 +36,8 @@ int getChildCount(rapidxml::xml_node<> *n) {
     return c;
 }
 
-QueryXMLParser::QueryXMLParser(shared_string_set& string_set, const PetriEngine::ColoredPetriNetBuilder* coloredNet)
-: _string_set(string_set), _coloredNet(coloredNet) { }
+QueryXMLParser::QueryXMLParser(shared_string_set& string_set, const PetriEngine::ColoredPetriNetBuilder* coloredNet, bool int64)
+: _string_set(string_set), _coloredNet(coloredNet), _int64(int64) { }
 
 QueryXMLParser::~QueryXMLParser() = default;
 
@@ -466,6 +467,15 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
 Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) {
     std::string elementName = element->name();
     if (elementName == "integer-constant") {
+        if (_int64) {
+            long long i = 0;
+            if (sscanf(element->value(), "%lld", &i) != 1)
+            {
+                assert(false);
+                return nullptr;
+            }
+            return std::make_shared<LiteralExpr>(static_cast<int64_t>(i));
+        }
         int i;
         if (sscanf(element->value(), "%d", &i) == EOF)
         {

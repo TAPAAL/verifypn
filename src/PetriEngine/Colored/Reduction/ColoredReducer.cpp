@@ -331,7 +331,7 @@ namespace PetriEngine::Colored::Reduction {
         }
     }
 
-    void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint32_t inhib_weight){
+    void ColoredReducer::addInputArc(uint32_t pid, uint32_t tid, ArcExpression_ptr& expr, uint64_t inhib_weight){
         _builder.addInputArc(*_builder._places[pid].name, *_builder._transitions[tid].name, expr, inhib_weight);
         std::sort(_builder._places[pid]._post.begin(), _builder._places[pid]._post.end());
         std::sort(_builder._transitions[tid].input_arcs.begin(), _builder._transitions[tid].input_arcs.end(), ArcLessThanByPlace);

@@ -31,6 +31,7 @@ namespace PetriEngine {
     : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
        _places(orig._places), _transitions(orig._transitions), _ptBuilder(orig._string_set), _string_set(orig._string_set)
     {
+        setInt64(orig.int64());
     }
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
@@ -47,7 +48,7 @@ namespace PetriEngine {
         _variables.clear();
     }
 
-    void ColoredPetriNetBuilder::addPlace(const std::string& name, uint32_t tokens, double x, double y) {
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, uint64_t tokens, double x, double y) {
         if (!_isColored) {
             _ptBuilder.addPlace(name, tokens, x, y);
         }
@@ -94,18 +95,18 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint64_t weight) {
         if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint64_t inhib_weight) {
         assert(inhib_weight > 0 || expr != nullptr);
         addArc(place, transition, expr, true, inhib_weight);
     }
 
-    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint64_t weight) {
         if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }
@@ -115,7 +116,7 @@ namespace PetriEngine {
         addArc(place, transition, expr, false, 0);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, uint32_t inhib_weight) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, uint64_t inhib_weight) {
         auto stn = std::make_shared<const_string>(transition);
         auto spn = std::make_shared<const_string>(place);
         if(_transitionnames.count(stn) == 0)

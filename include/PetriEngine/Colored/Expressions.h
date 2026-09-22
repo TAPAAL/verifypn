@@ -294,7 +294,7 @@ namespace PetriEngine {
             virtual ~ArcExpression() {}
 
             virtual void visit(ColorExpressionVisitor& visitor) const = 0;
-            virtual uint32_t weight() const = 0;
+            virtual uint64_t weight() const = 0;
             virtual bool is_single_color() const = 0;
             virtual bool is_number_of() const { return false; }
             virtual bool is_subtraction() const { return false; }
@@ -328,10 +328,10 @@ namespace PetriEngine {
 
         class NumberOfExpression : public ArcExpression {
         private:
-            uint32_t _number;
+            uint64_t _number;
             std::vector<ColorExpression_ptr> _color;
         public:
-            uint32_t weight() const override {
+            uint64_t weight() const override {
                 return _number * _color.size();
             }
 
@@ -341,7 +341,7 @@ namespace PetriEngine {
 
             bool is_number_of() const override { return true; }
 
-            uint32_t number() const {
+            uint64_t number() const {
                 return _number;
             }
 
@@ -365,9 +365,9 @@ namespace PetriEngine {
                 return _color.back();
             }
 
-            NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint32_t number = 1)
+            NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint64_t number = 1)
                     : _number(number), _color(std::move(color)) {}
-            NumberOfExpression(AllExpression_ptr&& all, uint32_t number = 1)
+            NumberOfExpression(AllExpression_ptr&& all, uint64_t number = 1)
                     : _number(number), _color() {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
@@ -379,8 +379,8 @@ namespace PetriEngine {
         private:
             std::vector<ArcExpression_ptr> _constituents;
         public:
-            uint32_t weight() const override {
-                uint32_t res = 0;
+            uint64_t weight() const override {
+                uint64_t res = 0;
                 for (const auto& expr : _constituents) {
                     res += expr->weight();
                 }
@@ -423,7 +423,7 @@ namespace PetriEngine {
             ArcExpression_ptr _right;
 
         public:
-            uint32_t weight() const override {
+            uint64_t weight() const override {
                 return _left->weight() - _right->weight();
             }
 
@@ -450,11 +450,11 @@ namespace PetriEngine {
 
         class ScalarProductExpression : public ArcExpression {
         private:
-            uint32_t _scalar;
+            uint64_t _scalar;
             ArcExpression_ptr _expr;
         public:
 
-            uint32_t weight() const override {
+            uint64_t weight() const override {
                 return _scalar * _expr->weight();
             }
 
@@ -470,8 +470,8 @@ namespace PetriEngine {
                 return _expr;
             }
 
-            ScalarProductExpression(ArcExpression_ptr&& expr, uint32_t scalar)
-                    : _scalar(std::move(scalar)), _expr(expr) {}
+            ScalarProductExpression(ArcExpression_ptr&& expr, uint64_t scalar)
+                    : _scalar(scalar), _expr(expr) {}
 
             void visit(ColorExpressionVisitor& visitor) const { visitor.accept(this); }
         };

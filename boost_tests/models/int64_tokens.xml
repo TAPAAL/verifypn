@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://mcc.lip6.fr/">
+  <property>
+    <id>q0</id>
+    <description>initial marking is large</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-ge>
+            <tokens-count>
+              <place>P</place>
+            </tokens-count>
+            <integer-constant>3000000000</integer-constant>
+          </integer-ge>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

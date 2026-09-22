@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <memory>
+#include <limits>
+#include <cstdint>
 
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
@@ -8,6 +11,7 @@
 using namespace PetriEngine::PQL;
 
 PetriEngine::PQL::Condition* query;
+bool pqlq_int64_mode = false;
 extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
@@ -140,7 +144,16 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_
 		;
 
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
-		| INT			{ $$ = new LiteralExpr(atol($1->c_str())); delete $1; }
+		| INT			{
+		                    long long v = atoll($1->c_str());
+		                    if (!pqlq_int64_mode &&
+		                        (v > std::numeric_limits<int32_t>::max() || v < std::numeric_limits<int32_t>::min())) {
+		                        pqlqerror("integer constant exceeds int32 range (use --int64)");
+		                        YYERROR;
+		                    }
+		                    $$ = new LiteralExpr(v);
+		                    delete $1;
+		                }
     | named         { $$ = $1; }
 		;
 

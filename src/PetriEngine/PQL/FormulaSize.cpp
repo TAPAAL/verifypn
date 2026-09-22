@@ -41,7 +41,7 @@ void FormulaSizeVisitor::_accept(const CompareConjunction *condition) {
         if(c._lower == c._upper) ++sum;
         else {
             if(c._lower != 0) ++sum;
-            if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
+            if(c._upper != unbounded_tokens()) ++sum;
         }
     }
     if(sum == 1) RETURN(2, 0)

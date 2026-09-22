@@ -120,6 +120,9 @@ struct options_t {
     bool explicit_colored = false;
     ColoredSuccessorGeneratorOption colored_sucessor_generator = ColoredSuccessorGeneratorOption::EVEN;
 
+    // Use uint64_t markings and int64_t query constants. Default remains uint32/int32 limits.
+    bool int64 = false;
+
     std::string strategy_output;
 
     size_t seed() { return ++seed_offset; }

@@ -65,7 +65,7 @@ namespace PetriEngine {
                     size_t seed,
                     int64_t depthRandomWalk = 50000,
                     const int64_t incRandomWalk = 5000,
-                    const std::vector<MarkVal>& initPotencies = std::vector<MarkVal>());
+                    const std::vector<uint32_t>& initPotencies = std::vector<uint32_t>());
             size_t maxTokens() const;
         protected:
             struct searchstate_t {
@@ -85,7 +85,7 @@ namespace PetriEngine {
                 size_t seed,
                 int64_t depthRandomWalk,
                 const int64_t incRandomWalk,
-                const std::vector<MarkVal>& initPotencies);
+                const std::vector<uint32_t>& initPotencies);
 
             template<typename Q, typename W = Structures::StateSet, typename G>
             bool tryReach(
@@ -94,7 +94,7 @@ namespace PetriEngine {
                 bool usequeries,
                 StatisticsLevel statisticsLevel,
                 size_t seed,
-                const std::vector<MarkVal>& initPotencies);
+                const std::vector<uint32_t>& initPotencies);
 
             void printStats(searchstate_t& s, Structures::StateSetInterface*, StatisticsLevel);
 
@@ -131,7 +131,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::tryReach(std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
                                         StatisticsLevel statisticsLevel, size_t seed,
-                                        const std::vector<MarkVal>& initPotencies)
+                                        const std::vector<uint32_t>& initPotencies)
         {
 
             // set up state
@@ -232,7 +232,7 @@ namespace PetriEngine {
                                                     std::vector<ResultPrinter::Result>& results, bool usequeries,
                                                     StatisticsLevel statisticsLevel, size_t seed,
                                                     int64_t depthRandomWalk, const int64_t incRandomWalk,
-                                                    const std::vector<MarkVal>& initPotencies)
+                                                    const std::vector<uint32_t>& initPotencies)
         {
             // Set up state
             searchstate_t ss;

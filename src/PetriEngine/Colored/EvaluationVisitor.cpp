@@ -107,7 +107,7 @@ namespace PetriEngine {
 
         void EvaluationVisitor::accept(const NumberOfExpression* no) {
             if (no->size() != 0) {
-                std::vector<std::pair<const Color*,uint32_t>> col;
+                std::vector<std::pair<const Color*,uint64_t>> col;
                 col.reserve(no->size());
                 for (const auto& elem : *no) {
                     elem->visit(*this);

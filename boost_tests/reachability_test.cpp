@@ -22,6 +22,9 @@
 #include <sstream>
 
 #include "utils.h"
+#include "PetriEngine/PQL/PQLParser.h"
+#include "PetriEngine/PQL/PrepareForReachability.h"
+#include "utils/errors.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::Colored;
@@ -146,4 +149,34 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability, * utf::timeout(60)
             }
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(LargeMarkingRejectedWithoutInt64) {
+    shared_string_set sset;
+    PetriNetBuilder builder(sset);
+    BOOST_REQUIRE_THROW(builder.addPlace("P", 3000000000ULL, 0, 0), base_error);
+}
+
+BOOST_AUTO_TEST_CASE(LargeMarkingAcceptedWithInt64) {
+    shared_string_set sset;
+    PetriNetBuilder builder(sset);
+    builder.setInt64(true);
+    builder.addPlace("P", 3000000000ULL, 0, 0);
+    builder.addTransition("t", 0, 0, 0);
+    std::unique_ptr<PetriNet> net(builder.makePetriNet());
+    BOOST_REQUIRE(net->int64());
+    BOOST_REQUIRE_EQUAL(net->initial(0), 3000000000ULL);
+
+    auto query = ParseQuery(R"("P" >= 3000000000)", true);
+    BOOST_REQUIRE(query);
+    std::vector<Condition_ptr> analyzed{query};
+    contextAnalysis(false, {}, {}, builder, net.get(), analyzed);
+    auto reach = prepareForReachability(analyzed[0]);
+    ResultHandler handler;
+    ReachabilitySearch search(*net, handler, 0);
+    std::vector<Condition_ptr> queries{reach};
+    std::vector<ResultPrinter::Result> results{ResultPrinter::Unknown};
+    search.reachable(queries, results, Strategy::DFS, false, false,
+                     StatisticsLevel::None, false, 0);
+    BOOST_REQUIRE_EQUAL(ResultPrinter::Satisfied, results[0]);
 }

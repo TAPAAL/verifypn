@@ -127,7 +127,7 @@ namespace PetriEngine {
             {
                 bool single = element->constraints().size() == 1 &&
                               (element->constraints()[0]._lower == 0 ||
-                               element->constraints()[0]._upper == std::numeric_limits<uint32_t>::max());
+                               element->constraints()[0]._upper == unbounded_tokens());
                 if(!single)
                     openXmlTag("conjunction");
                 for(auto& c : element->constraints())
@@ -141,7 +141,7 @@ namespace PetriEngine {
                         outputLine("<integer-constant>", c._lower, "</integer-constant>");
                         closeXmlTag("integer-ge");
                     }
-                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    if(c._upper != unbounded_tokens())
                     {
                         openXmlTag("integer-le");
                         openXmlTag("tokens-count");

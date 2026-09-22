@@ -36,11 +36,11 @@ namespace PetriEngine {
 
         class SymmetryVisitor : public ColorExpressionVisitor {
         private:
-            std::vector<uint32_t>& _numbers;
+            std::vector<uint64_t>& _numbers;
             bool _ok = true;
         public:
 
-            SymmetryVisitor(std::vector<uint32_t>& numbers) : _numbers(numbers) {
+            SymmetryVisitor(std::vector<uint64_t>& numbers) : _numbers(numbers) {
             }
 
             virtual void accept(const DotConstantExpression*)
@@ -136,8 +136,8 @@ namespace PetriEngine {
                 }
                 //pick a number
                 //every number has to be equal
-                uint32_t firstNumber = _numbers[0];
-                for(uint32_t number : _numbers){
+                uint64_t firstNumber = _numbers[0];
+                for(uint64_t number : _numbers){
                     if(firstNumber != number){
                         _ok = false;
                         return;
@@ -156,8 +156,8 @@ namespace PetriEngine {
                 _ok = false;
             }
 
-            static inline std::pair<bool, std::vector<uint32_t>> eligible_for_symmetry(ArcExpression& e) {
-                std::vector<uint32_t> numbers;
+            static inline std::pair<bool, std::vector<uint64_t>> eligible_for_symmetry(ArcExpression& e) {
+                std::vector<uint64_t> numbers;
                 SymmetryVisitor v(numbers);
                 e.visit(v);
                 return std::make_pair(v._ok, std::move(numbers));

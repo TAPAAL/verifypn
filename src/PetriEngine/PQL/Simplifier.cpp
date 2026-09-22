@@ -547,7 +547,7 @@ namespace PetriEngine { namespace PQL {
                 }
             }
 
-            if (c._upper != std::numeric_limits<uint32_t>::max() /*&& !_context.timeout()*/) {
+            if (c._upper != unbounded_tokens() /*&& !_context.timeout()*/) {
                 auto m1 = memberForPlace(c._place, _context);
                 Member m2(c._upper);
                 // test for trivial comparison
@@ -556,7 +556,7 @@ namespace PetriEngine { namespace PQL {
                     if (eval == Trivial::False) {
                         RETURN(Retval(BooleanCondition::getShared(neg)))
                     } else
-                        nconstraints.back()._upper = std::numeric_limits<uint32_t>::max();
+                        nconstraints.back()._upper = unbounded_tokens();
                 } else { // if no trivial case
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
@@ -571,7 +571,7 @@ namespace PetriEngine { namespace PQL {
             }
 
             assert(nconstraints.size() > 0);
-            if (nconstraints.back()._lower == 0 && nconstraints.back()._upper == std::numeric_limits<uint32_t>::max())
+            if (nconstraints.back()._lower == 0 && nconstraints.back()._upper == unbounded_tokens())
                 nconstraints.pop_back();
 
             assert(nconstraints.size() <= neglps.size() * 2);
@@ -604,17 +604,17 @@ namespace PetriEngine { namespace PQL {
                 size_t cnt = 0;
                 auto &c = nconstraints[i];
                 if (c._lower != 0) ++cnt;
-                if (c._upper != std::numeric_limits<uint32_t>::max()) ++cnt;
+                if (c._upper != unbounded_tokens()) ++cnt;
                 for (size_t j = 0; j < cnt; ++j) {
                     assert(ncnt >= 0);
                     if (!neglps[ncnt]->satisfiable(_context)) {
-                        if (j == 1 || c._upper == std::numeric_limits<uint32_t>::max())
+                        if (j == 1 || c._upper == unbounded_tokens())
                             c._lower = 0;
                         else if (j == 0)
-                            c._upper = std::numeric_limits<uint32_t>::max();
+                            c._upper = unbounded_tokens();
                         neglps.erase(neglps.begin() + ncnt);
                     }
-                    if (c._upper == std::numeric_limits<uint32_t>::max() && c._lower == 0)
+                    if (c._upper == unbounded_tokens() && c._lower == 0)
                         nconstraints.erase(nconstraints.begin() + i);
                     --ncnt;
                 }
@@ -643,7 +643,7 @@ namespace PetriEngine { namespace PQL {
                     else if (neg) return std::make_shared<LessThanCondition>(lu, id);
                     else return std::make_shared<LessThanOrEqualCondition>(id, lu);
                 } else {
-                    if (c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (c._lower != 0 && c._upper != unbounded_tokens()) {
                         if (neg)
                             return makeOr(std::make_shared<LessThanCondition>(id, ll),
                                           std::make_shared<LessThanCondition>(lu, id));

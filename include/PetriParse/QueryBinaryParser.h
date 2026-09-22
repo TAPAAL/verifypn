@@ -28,7 +28,7 @@ using namespace PetriEngine::PQL;
 
 class QueryBinaryParser {
 public:
-    QueryBinaryParser(shared_string_set& string_set) : _string_set(string_set) {};
+    QueryBinaryParser(shared_string_set& string_set, bool int64 = false) : _string_set(string_set), _int64(int64) {};
     ~QueryBinaryParser() {};
 
     std::vector<QueryItem>  queries;
@@ -39,6 +39,7 @@ private:
     Condition_ptr parseQuery(std::istream& binary, const std::vector<shared_const_string>& names);
     Expr_ptr parseExpr(std::istream& binary, const std::vector<shared_const_string>& names);
     shared_string_set& _string_set;
+    bool _int64 = false;
 
 };
 

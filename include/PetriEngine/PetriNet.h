@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <climits>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <iostream>
@@ -49,14 +50,36 @@ namespace PetriEngine {
 
     struct Invariant {
         uint32_t place;
-        uint32_t tokens;
+        uint64_t tokens;
         bool inhibitor;
         int8_t direction;
         // we can pack things here, but might give slowdown
     } /*__attribute__((packed))*/;
 
-    /** Type used for holding markings values */
-    typedef uint32_t MarkVal;
+    /** Type used for holding marking values.
+     *  Always stored as uint64_t so --int64 can represent large token counts.
+     *  Without --int64, parsers and firing still enforce the historic uint32_t limit.
+     */
+    typedef uint64_t MarkVal;
+
+    inline constexpr MarkVal unbounded_tokens() {
+        return std::numeric_limits<MarkVal>::max();
+    }
+
+    inline constexpr MarkVal max_tokens_for_mode(bool int64) {
+        return int64 ? std::numeric_limits<uint64_t>::max()
+                     : static_cast<MarkVal>(std::numeric_limits<uint32_t>::max());
+    }
+
+    inline constexpr int64_t max_query_constant_for_mode(bool int64) {
+        return int64 ? std::numeric_limits<int64_t>::max()
+                     : static_cast<int64_t>(std::numeric_limits<int32_t>::max());
+    }
+
+    inline constexpr int64_t min_query_constant_for_mode(bool int64) {
+        return int64 ? std::numeric_limits<int64_t>::min()
+                     : static_cast<int64_t>(std::numeric_limits<int32_t>::min());
+    }
 
     /** Efficient representation of PetriNet */
     class PetriNet {
@@ -64,7 +87,7 @@ namespace PetriEngine {
     public:
         ~PetriNet();
 
-        uint32_t initial(size_t id) const;
+        MarkVal initial(size_t id) const;
         MarkVal* makeInitialMarking() const;
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
@@ -78,8 +101,20 @@ namespace PetriEngine {
         uint32_t numberOfPlaces() const {
             return _nplaces;
         }
-        uint32_t inArc(uint32_t place, uint32_t transition) const;
-        uint32_t outArc(uint32_t transition, uint32_t place) const;
+        MarkVal inArc(uint32_t place, uint32_t transition) const;
+        MarkVal outArc(uint32_t transition, uint32_t place) const;
+
+        bool int64() const {
+            return _int64;
+        }
+
+        void setInt64(bool v) {
+            _int64 = v;
+        }
+
+        MarkVal tokenLimit() const {
+            return max_tokens_for_mode(_int64);
+        }
         bool controllable(uint32_t t) const
         {
             return _controllable[t];
@@ -131,6 +166,7 @@ namespace PetriEngine {
          * any complexity garentees for this type.
          */
         uint32_t _ninvariants, _ntransitions, _nplaces;
+        bool _int64 = false;
 
         std::vector<TransPtr> _transitions;
         std::vector<Invariant> _invariants;

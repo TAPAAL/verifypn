@@ -19,8 +19,13 @@
 namespace PetriEngine { namespace PQL {
     void BinaryPrinter::_accept(const LiteralExpr *element){
         os.write("l", sizeof(char));
-        int temp = element->value();
-        os.write(reinterpret_cast<const char*>(&temp), sizeof(int));
+        if (_int64) {
+            int64_t temp = element->value();
+            os.write(reinterpret_cast<const char*>(&temp), sizeof(int64_t));
+        } else {
+            int temp = static_cast<int>(element->value());
+            os.write(reinterpret_cast<const char*>(&temp), sizeof(int));
+        }
     }
 
     void BinaryPrinter::_accept(const UnfoldedIdentifierExpr *element){
@@ -49,8 +54,13 @@ namespace PetriEngine { namespace PQL {
     void BinaryPrinter::_accept(const CommutativeExpr *element){
         auto sop = element->op();
         os.write(&sop[0], sizeof(char));
-        int32_t temp_constant = element->constant();
-        os.write(reinterpret_cast<const char*>(&temp_constant), sizeof(int32_t));
+        if (_int64) {
+            int64_t temp_constant = element->constant();
+            os.write(reinterpret_cast<const char*>(&temp_constant), sizeof(int64_t));
+        } else {
+            int32_t temp_constant = static_cast<int32_t>(element->constant());
+            os.write(reinterpret_cast<const char*>(&temp_constant), sizeof(int32_t));
+        }
         uint32_t size = element->places().size();
         os.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
         size = element->expressions().size();

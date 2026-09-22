@@ -56,11 +56,11 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query,
                 Result result,
-                const std::vector<uint32_t>* maxPlaceBound = nullptr,
+                const std::vector<MarkVal>* maxPlaceBound = nullptr,
                 size_t expandedStates = 0,
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
-                int maxTokens = 0,
+                MarkVal maxTokens = 0,
                 Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) = 0;
         };
 
@@ -90,11 +90,11 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query,
                 Result result,
-                const std::vector<uint32_t>* maxPlaceBound = nullptr,
+                const std::vector<MarkVal>* maxPlaceBound = nullptr,
                 size_t expandedStates = 0,
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
-                int maxTokens = 0,
+                MarkVal maxTokens = 0,
                 Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) override;
         };
 
@@ -110,11 +110,11 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query,
                 Result result,
-                const std::vector<uint32_t>* maxPlaceBound = nullptr,
+                const std::vector<MarkVal>* maxPlaceBound = nullptr,
                 size_t expandedStates = 0,
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
-                int maxTokens = 0,
+                MarkVal maxTokens = 0,
                 Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool trace = true) override;
         };
     } // Reachability

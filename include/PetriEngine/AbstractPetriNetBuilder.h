@@ -32,14 +32,18 @@ namespace PetriEngine {
     protected:
         bool _isColored = false;
         bool _hasPartition = false;
+        bool _int64 = false;
 
     public:
         void parse_model(const std::string& model);
         void parse_model(std::istream& model);
 
+        virtual void setInt64(bool v) { _int64 = v; }
+        bool int64() const { return _int64; }
+
         /** Add a new place with a unique name */
         virtual void addPlace(const std::string& name,
-                uint32_t tokens,
+                uint64_t tokens,
                 double x,
                 double y) = 0;
         /** Add a new colored place with a unique name */
@@ -69,19 +73,19 @@ namespace PetriEngine {
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                uint32_t weight) = 0;
+                uint64_t weight) = 0;
         /** Add colored input arc with given arc expression */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                uint32_t inhib_weight)
+                uint64_t inhib_weight)
         {
             throw base_error("Colored input arcs are not supported in standard P/T nets");
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
-                uint32_t weight) = 0;
+                uint64_t weight) = 0;
         /** Add output arc with given arc expression */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,

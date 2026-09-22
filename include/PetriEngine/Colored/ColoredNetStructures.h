@@ -39,7 +39,7 @@ namespace PetriEngine {
             uint32_t transition;
             ArcExpression_ptr expr;
             bool input;
-            uint32_t inhib_weight; // inhibitor arc if >0
+            uint64_t inhib_weight; // inhibitor arc if >0
 
             bool operator == (const Arc& other) const
             {

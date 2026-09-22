@@ -7,9 +7,9 @@
 namespace PetriEngine {
     namespace Reachability {
         std::pair<AbstractHandler::Result, bool> TarResultPrinter::handle(
-            size_t index, PQL::Condition* query, Result result, const std::vector<uint32_t>* maxPlaceBound,
+            size_t index, PQL::Condition* query, Result result, const std::vector<MarkVal>* maxPlaceBound,
             size_t expandedStates, size_t exploredStates, size_t discoveredStates,
-            int maxTokens, Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace)
+            MarkVal maxTokens, Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace)
         {
             auto res = _printer.handle(index, query, result, maxPlaceBound, expandedStates, exploredStates, discoveredStates, maxTokens, stateset, lastmarking, initialMarking, false);
             if(res.first == Satisfied || res.first == NotSatisfied)
@@ -23,11 +23,11 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query,
                 Result result,
-                const std::vector<uint32_t>* maxPlaceBound,
+                const std::vector<MarkVal>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                int maxTokens,
+                MarkVal maxTokens,
                 Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool trace)
         {
             if(result == Unknown) return std::make_pair(Unknown,false);
@@ -64,11 +64,11 @@ namespace PetriEngine {
             }
             else {
                 retval = Satisfied;
-                uint32_t placeBound = 0;
+                MarkVal placeBound = 0;
                 if(maxPlaceBound != nullptr)
                 {
                     for (size_t p = 0; p < maxPlaceBound->size(); p++) {
-                        placeBound = std::max<uint32_t>(placeBound, (*maxPlaceBound)[p]);
+                        placeBound = std::max<MarkVal>(placeBound, (*maxPlaceBound)[p]);
                     }
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);

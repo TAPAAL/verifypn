@@ -23,8 +23,8 @@ namespace PetriEngine {
             };
 
             PotencyQueue(size_t seed = 0);
-            PotencyQueue(const std::vector<MarkVal> &initPotencies);
-            PotencyQueue(const std::vector<MarkVal> &initPotencies, size_t seed);
+            PotencyQueue(const std::vector<uint32_t> &initPotencies);
+            PotencyQueue(const std::vector<uint32_t> &initPotencies, size_t seed);
 
             virtual ~PotencyQueue();
 
@@ -47,14 +47,14 @@ namespace PetriEngine {
             const static uint32_t _initPotencyMultiplier = 60;
 
             void _initializePotencies(size_t nTransitions, uint32_t initValue);
-            void _initializePotencies(const std::vector<MarkVal> &initPotencies);
+            void _initializePotencies(const std::vector<uint32_t> &initPotencies);
         };
 
         class RandomPotencyQueue : public PotencyQueue {
         public:
             RandomPotencyQueue() = default;
             RandomPotencyQueue(size_t seed);
-            RandomPotencyQueue(const std::vector<MarkVal> &initPotencies, size_t seed);
+            RandomPotencyQueue(const std::vector<uint32_t> &initPotencies, size_t seed);
 
             virtual ~RandomPotencyQueue();
 

@@ -17,14 +17,14 @@ namespace PetriEngine::ExplicitColored {
         ExplicitColoredPetriNetBuilder(ExplicitColoredPetriNetBuilder&&) = default;
         ExplicitColoredPetriNetBuilder& operator=(const ExplicitColoredPetriNetBuilder&) = default;
 
-        void addPlace(const std::string& name, uint32_t tokens, double, double) override;
+        void addPlace(const std::string& name, uint64_t tokens, double, double) override;
         void addTransition(const std::string& name, int32_t, double, double) override;
-        void addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) override;
-        void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override;
+        void addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint64_t weight) override;
+        void addOutputArc(const std::string& transition, const std::string& place, uint64_t weight) override;
 
         void addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double, double) override;
         void addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t, double, double) override;
-        void addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) override;
+        void addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint64_t inhib_weight) override;
         void addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id, const Colored::ColorType* type) override;
         void addVariable(const Colored::Variable* variable) override;

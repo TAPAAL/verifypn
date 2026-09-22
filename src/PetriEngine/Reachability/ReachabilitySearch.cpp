@@ -154,7 +154,7 @@ namespace PetriEngine {
                     size_t seed,
                     int64_t depthRandomWalk,
                     const int64_t incRandomWalk,
-                    const std::vector<MarkVal>& initPotencies)
+                    const std::vector<uint32_t>& initPotencies)
         {
             bool usequeries = !statespacesearch;
 

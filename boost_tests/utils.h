@@ -40,11 +40,11 @@ class ResultHandler : public Reachability::AbstractHandler {
         size_t index,
         PQL::Condition* query,
         Result result,
-        const std::vector<uint32_t>* maxPlaceBound = nullptr,
+        const std::vector<MarkVal>* maxPlaceBound = nullptr,
         size_t expandedStates = 0,
         size_t exploredStates = 0,
         size_t discoveredStates = 0,
-        int maxTokens = 0,
+        MarkVal maxTokens = 0,
         Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr, bool = true) {
         if (result == Unknown) return std::make_pair(Unknown, false);
         auto retval = Satisfied;
@@ -132,15 +132,15 @@ public:
         return it->second;
     }
 
-    void addPlace(const std::string& name, uint32_t tokens, double x, double y) override {}
+    void addPlace(const std::string& name, uint64_t tokens, double x, double y) override {}
     void addPlace(const std::string& name, const Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) override {
         _initialMarkings.emplace(name, std::move(tokens));
     }
     void addTransition(const std::string& name, int32_t player, double x, double y) override {}
     void addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, int32_t player, double x, double y) override {}
-    void addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint32_t weight) override {}
-    void addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr &expr, uint32_t inhib_weight) override {}
-    void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override {}
+    void addInputArc(const std::string& place, const std::string& transition, bool inhibitor, uint64_t weight) override {}
+    void addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr &expr, uint64_t inhib_weight) override {}
+    void addOutputArc(const std::string& transition, const std::string& place, uint64_t weight) override {}
     void addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) override {}
     void addColorType(const std::string& id, const Colored::ColorType* type) override {}
     void sort() override {}

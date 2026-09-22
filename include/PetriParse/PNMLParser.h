@@ -38,7 +38,7 @@ class PNMLParser {
     struct Arc {
         std::string source,
         target;
-        int weight;
+        uint64_t weight;
         bool inhib;
         PetriEngine::Colored::ArcExpression_ptr expr;
     };
@@ -105,10 +105,11 @@ private:
     void collectColorsInTuple(rapidxml::xml_node<>* element,
         std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors,
         const PetriEngine::Colored::ColorType* type = nullptr);
-    PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof);
+    PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint64_t numberof);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
-    uint32_t parseNumberConstant(rapidxml::xml_node<>* element);
+    uint64_t parseNumberConstant(rapidxml::xml_node<>* element);
+    uint64_t parseTokenInteger(const char* text, const std::string& what);
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::Color* findColor(const char* name) const;

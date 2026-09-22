@@ -39,8 +39,8 @@ namespace PetriEngine {
         PetriNetBuilder(shared_string_set& string_set);
         PetriNetBuilder(const PetriNetBuilder& other);
         PetriNetBuilder(PetriNetBuilder&&);
-        void addPlace(const std::string& name, uint32_t tokens, double x, double y) override;
-        void addPlace(const shared_const_string& name, uint32_t tokens, double x, double y);
+        void addPlace(const std::string& name, uint64_t tokens, double x, double y) override;
+        void addPlace(const shared_const_string& name, uint64_t tokens, double x, double y);
         void addTransition(const std::string& name,
                 int32_t player,
                 double x,
@@ -53,14 +53,14 @@ namespace PetriEngine {
         void addInputArc(const shared_const_string& place,
                 const shared_const_string& transition,
                 bool inhibitor,
-                uint32_t weight);
-        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, uint32_t weight);
+                uint64_t weight);
+        void addOutputArc(const shared_const_string& transition, const shared_const_string& place, uint64_t weight);
 
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                uint32_t weight) override;
-        void addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) override;
+                uint64_t weight) override;
+        void addOutputArc(const std::string& transition, const std::string& place, uint64_t weight) override;
 
         void saveInitialNet();
 

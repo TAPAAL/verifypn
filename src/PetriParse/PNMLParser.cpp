@@ -21,6 +21,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <cerrno>
 #include <iostream>
 #include <limits>
 #include <cstring>
@@ -287,7 +288,7 @@ ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element, 
     return nullptr;
 }
 
-ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element, std::vector<std::vector<ColorExpression_ptr>> collectedColors, uint32_t numberof) {
+ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element, std::vector<std::vector<ColorExpression_ptr>> collectedColors, uint64_t numberof) {
     std::vector<ArcExpression_ptr> numberOfExpressions;
     if (collectedColors.size() < 2) {
         for (const auto& exp : collectedColors[0]) {
@@ -667,7 +668,7 @@ const ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
 
 ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* element, const ColorType* type) {
     auto num = element->first_node();
-    uint32_t number = parseNumberConstant(num);
+    uint64_t number = parseNumberConstant(num);
     rapidxml::xml_node<>* first;
     if (number) {
         first = num->next_sibling();
@@ -798,7 +799,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     Multiset hlinitialMarking;
     const ColorType* type = nullptr;
     if(initial)
-         initialMarking = atoll(initial->value());
+         initialMarking = parseTokenInteger(initial->value(), std::string("Number of tokens in ") + id);
 
     for (auto it = element->first_node("type"); it != nullptr; it = it->next_sibling("type")) {
         type = parseUserSort(it);
@@ -812,7 +813,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(),"initialMarking") == 0) {
             std::string text;
             parseValue(it, text);
-            initialMarking = atoll(text.c_str());
+            initialMarking = parseTokenInteger(text.c_str(), std::string("Number of tokens in ") + id);
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
             std::unordered_map<const Variable*, const Color*> binding;
             EquivalenceVec placePartition;
@@ -825,10 +826,6 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         }
     }
 
-    if(initialMarking > std::numeric_limits<uint32_t>::max())
-    {
-        throw base_error("Number of tokens in ", id, " exceeded ", std::numeric_limits<uint32_t>::max());
-    }
     //Create place
     if (!isColored) {
         builder->addPlace(id, initialMarking, x, y);
@@ -853,7 +850,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
 void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     std::string source = element->first_attribute("source")->value(),
             target = element->first_attribute("target")->value();
-    int weight = 1;
+    uint64_t weight = 1;
     auto type = element->first_attribute("type");
     if(type && strcmp(type->value(), "timed") == 0)
     {
@@ -867,13 +864,13 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     bool first = true;
     auto weightTag = element->first_attribute("weight");
     if(weightTag != nullptr) {
-        weight = atoi(weightTag->value());
+        weight = parseTokenInteger(weightTag->value(), std::string("Arc weight from ") + source + " to " + target);
         assert(weight > 0);
     } else {
         for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
             std::string text;
             parseValue(it, text);
-            weight = atoi(text.c_str());
+            weight = parseTokenInteger(text.c_str(), std::string("Arc weight from ") + source + " to " + target);
             if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
             {
                 throw base_error("Found non-integer-text in inscription-tag (weight) on arc from ", source, " to ", target, " with value \"", text, "\". An integer was expected.");
@@ -930,12 +927,12 @@ void PNMLParser::parseTransportArc(rapidxml::xml_node<>* element){
     std::string source	= element->first_attribute("source")->value(),
            transiton	= element->first_attribute("transition")->value(),
            target	= element->first_attribute("target")->value();
-    int weight = 1;
+    uint64_t weight = 1;
 
     for(auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")){
         std::string text;
         parseValue(it, text);
-        weight = atoi(text.c_str());
+        weight = parseTokenInteger(text.c_str(), "Transport arc weight");
     }
 
     Arc inArc;
@@ -1002,10 +999,26 @@ void PNMLParser::parseValue(rapidxml::xml_node<>* element, std::string& text) {
     }
 }
 
-uint32_t PNMLParser::parseNumberConstant(rapidxml::xml_node<>* element) {
+uint64_t PNMLParser::parseTokenInteger(const char* text, const std::string& what) {
+    errno = 0;
+    char* end = nullptr;
+    const unsigned long long value = strtoull(text, &end, 10);
+    if (errno == ERANGE || end == text) {
+        throw base_error("Could not parse ", what, " value \"", text, "\"");
+    }
+    const bool int64 = builder != nullptr && builder->int64();
+    const auto limit = PetriEngine::max_tokens_for_mode(int64);
+    if (value > limit) {
+        throw base_error(what, " exceeded ", limit,
+                         int64 ? "" : " (use --int64 to allow token counts up to 2^64-1)");
+    }
+    return static_cast<uint64_t>(value);
+}
+
+uint64_t PNMLParser::parseNumberConstant(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "numberconstant") == 0) {
         auto value = element->first_attribute("value")->value();
-        return (uint32_t)atoll(value);
+        return parseTokenInteger(value, "numberconstant");
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseNumberConstant(element->first_node());
     }
