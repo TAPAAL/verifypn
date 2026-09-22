@@ -74,7 +74,7 @@ namespace LTL {
                         cands.emplace_back(cons._place, true);
                     }
 
-                    if (tokens > cons._upper && cons._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (tokens > cons._upper && cons._upper != unbounded_tokens()) {
                         // explore postset
                         cands.emplace_back(cons._place, false);
                     }

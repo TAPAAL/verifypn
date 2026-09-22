@@ -136,7 +136,7 @@ void writeQueries(const std::vector<std::shared_ptr<Condition>>& queries,
                   std::vector<std::string>& querynames,
                   std::vector<uint32_t>& order, std::string& filename,
                   bool binary, const shared_name_index_map& place_names,
-                  bool keep_solved, bool compact = false);
+                  bool keep_solved, bool compact = false, bool int64 = false);
 
 std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlStarQueries);
 
@@ -152,12 +152,12 @@ void outputNet(const PetriNetBuilder &builder, std::string out_file);
 void outputQueries(const PetriNetBuilder &builder,
                    const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
                    std::vector<std::string> &querynames, std::string filename,
-                   uint32_t binary_query_io, bool keep_solved);
+                   uint32_t binary_query_io, bool keep_solved, bool int64 = false);
 
 void outputCompactQueries(const PetriNetBuilder &builder,
                           const std::vector<PetriEngine::PQL::Condition_ptr> &queries,
                           std::vector<std::string> &querynames, std::string filenamem,
-                          bool keep_solved);
+                          bool keep_solved, bool int64 = false);
 
 void simplify_queries(const MarkVal* marking, const PetriNet* net,
                       std::vector<PetriEngine::PQL::Condition_ptr>& queries,
@@ -171,6 +171,7 @@ void initialize_potency(const MarkVal* marking, const PetriNet* net,
 std::vector<Condition_ptr>
 parseXMLQueries(shared_string_set& string_set, std::vector<std::string>& qstrings,
                 std::istream& qfile, const std::set<size_t>& qnums, bool binary = false,
-                const PetriEngine::ColoredPetriNetBuilder* coloredNet = nullptr);
+                const PetriEngine::ColoredPetriNetBuilder* coloredNet = nullptr,
+                bool int64 = false);
 
 #endif /* VERIFYPN_H */

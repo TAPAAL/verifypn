@@ -93,7 +93,7 @@ namespace PetriEngine {
                         pre = true;
                     }
 
-                    if (val > c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (val > c._upper && c._upper != unbounded_tokens()) {
                         assert(!neg);
                         cand = c._place;
                         pre = false;
@@ -103,7 +103,7 @@ namespace PetriEngine {
                         _stubborn.postsetOf(c._place, closure);
                     }
 
-                    if (val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (val <= c._upper && c._upper != unbounded_tokens()) {
                         _stubborn.presetOf(c._place, closure);
                     }
                 }
@@ -394,7 +394,7 @@ namespace PetriEngine {
                     // c < p becomes satisfied by preset of p.
                     _stubborn.presetOf(c._place, closure);
                 }
-                if (c._upper != std::numeric_limits<uint32_t>::max() && !_stubborn.seenPost(c._place)) {
+                if (c._upper != unbounded_tokens() && !_stubborn.seenPost(c._place)) {
                     // p < c becomes satisfied by postset of p.
                     _stubborn.postsetOf(c._place, closure);
                 }
@@ -404,7 +404,7 @@ namespace PetriEngine {
                     // !(p < c) becomes satisfied by preset of p.
                     _stubborn.postsetOf(c._place, closure);
                 }
-                if (c._upper != std::numeric_limits<uint32_t>::max() && !_stubborn.seenPre(c._place)) {
+                if (c._upper != unbounded_tokens() && !_stubborn.seenPre(c._place)) {
                     // !(c < p) becomes satisfied by postset of p.
                     _stubborn.presetOf(c._place, closure);
                 }
@@ -455,7 +455,7 @@ namespace PetriEngine {
                         pre = true;
                     }
 
-                    if (val > c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (val > c._upper && c._upper != unbounded_tokens()) {
                         assert(!neg);
                         cand = c._place;
                         pre = false;
@@ -465,7 +465,7 @@ namespace PetriEngine {
                         _stubborn.postsetOf(c._place, closure);
                     }
 
-                    if (val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                    if (val <= c._upper && c._upper != unbounded_tokens()) {
                         _stubborn.presetOf(c._place, closure);
                     }
                 }

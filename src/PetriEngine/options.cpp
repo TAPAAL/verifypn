@@ -110,6 +110,12 @@ void options_t::print(std::ostream& optionsOut) {
 
     optionsOut << ",LPSolve_Timeout=" << lpsolveTimeout;
 
+    if (int64) {
+        optionsOut << ",Int64=ENABLED";
+    } else {
+        optionsOut << ",Int64=DISABLED";
+    }
+
 
     if (usedctl) {
         if (ctlalgorithm == CTL::CZero) {
@@ -255,6 +261,12 @@ void printHelp() {
         "                                       For some queries this helps reduce the overhead of query\n"
         "                                       simplification and Büchi construction, but gives worse\n"
         "                                       results since there is less opportunity for optimizations.\n"
+        "  --int64                              Enable 64-bit token counts in markings (uint64) and\n"
+        "                                       64-bit integer constants in queries (int64).\n"
+        "                                       Without this switch, markings are limited to uint32\n"
+        "                                       and query constants to int32, matching previous versions.\n"
+        "                                       Disables query reduction, initial potency, trace abstraction,\n"
+        "                                       and the explicit colored engine, which do not support 64-bit values.\n"
         "  --noverify                           Disable verification e.g. for getting unfolded net\n"
         "  --trace-replay <file>                Replays a trace as output by the --trace option.\n"
         "                                       The trace is verified against the provided model and query.\n"
@@ -660,6 +672,8 @@ bool options_t::parse(int argc, const char** argv) {
             computeCFP = false;
         } else if (std::strcmp(argv[i], "--disable-partitioning") == 0) {
             computePartition = false;
+        } else if (std::strcmp(argv[i], "--int64") == 0) {
+            int64 = true;
         } else if (std::strcmp(argv[i], "--noverify") == 0) {
             doVerification = false;
         } else if (std::strcmp(argv[i], "--nounfold") == 0) {
@@ -721,6 +735,16 @@ bool options_t::parse(int argc, const char** argv) {
             queryfile = argv[i];
         } else {
             throw base_error("Argument Error: Unrecognized option ", std::quoted(modelfile));
+        }
+    }
+
+    if (int64) {
+        queryReductionTimeout = 0;
+        initPotencyTimeout = 0;
+        lpsolveTimeout = 0;
+        tar = false;
+        if (explicit_colored) {
+            throw base_error("Argument Error: --int64 is not compatible with the explicit colored engine (-C)");
         }
     }
 

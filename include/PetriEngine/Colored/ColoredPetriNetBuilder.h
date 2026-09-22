@@ -44,8 +44,13 @@ namespace PetriEngine {
         ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig);
         virtual ~ColoredPetriNetBuilder();
 
+        void setInt64(bool v) override {
+            AbstractPetriNetBuilder::setInt64(v);
+            _ptBuilder.setInt64(v);
+        }
+
         void addPlace(const std::string& name,
-                uint32_t tokens,
+                uint64_t tokens,
                 double x,
                 double y) override ;
         void addPlace(const std::string& name,
@@ -65,14 +70,14 @@ namespace PetriEngine {
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 bool inhibitor,
-                uint32_t weight) override;
+                uint64_t weight) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr &expr,
-                uint32_t inhib_weight) override;
+                uint64_t inhib_weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                uint32_t weight) override;
+                uint64_t weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 const Colored::ArcExpression_ptr& expr) override;
@@ -176,7 +181,7 @@ namespace PetriEngine {
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool input, uint32_t inhib_weight);
+                bool input, uint64_t inhib_weight);
 
         void addVariable(const Colored::Variable* variable) override;
     };

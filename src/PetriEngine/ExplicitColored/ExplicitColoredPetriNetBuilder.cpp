@@ -11,7 +11,7 @@ namespace PetriEngine::ExplicitColored {
         _variableMap = std::make_shared<std::unordered_map<std::string, Variable_t>>();
     }
 
-    void ExplicitColoredPetriNetBuilder::addPlace(const std::string& name, const uint32_t tokens, double, double)
+    void ExplicitColoredPetriNetBuilder::addPlace(const std::string& name, const uint64_t tokens, double, double)
     {
         _currentNet._places.push_back({
             _dotColorType
@@ -33,7 +33,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     //Dot color input arc
-     void ExplicitColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const bool inhibitor, uint32_t weight) {
+     void ExplicitColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const bool inhibitor, uint64_t weight) {
          auto from = _placeIndices.find(place)->second;
          auto to = _transitionIndices.find(transition)->second;
          if (inhibitor){
@@ -56,7 +56,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     //Colored input arc
-    void ExplicitColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint32_t inhib_weight) {
+    void ExplicitColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, uint64_t inhib_weight) {
         auto from = _placeIndices.find(place)->second;
         auto to = _transitionIndices.find(transition)->second;
         if (inhib_weight != 0) {
@@ -72,7 +72,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     //Non colored output arc
-    void ExplicitColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint32_t weight) {
+    void ExplicitColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, uint64_t weight) {
         const auto placeIndex = _placeIndices.find(place)->second;
 
         const auto expr = std::make_shared<Colored::NumberOfExpression>(

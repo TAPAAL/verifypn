@@ -175,9 +175,9 @@ namespace PetriEngine {
             }
             auto& pr = _ranges.find_or_add(p.first);
             if (_lt)
-                pr._range._upper = std::min(_base[p.first], pr._range._upper);
+                pr._range._upper = std::min(static_cast<uint32_t>(_base[p.first]), pr._range._upper);
             else
-                pr._range._lower = std::max(_base[p.first], pr._range._lower);
+                pr._range._lower = std::max(static_cast<uint32_t>(_base[p.first]), pr._range._lower);
             assert(pr._range._lower <= _base[p.first]);
             assert(pr._range._upper >= _base[p.first]);
         }
@@ -241,7 +241,7 @@ namespace PetriEngine {
             auto pre = _net.preset(cand);
             for (; pre.first != pre.second; ++pre.first) {
                 auto& pr = _ranges.find_or_add(pre.first->place);
-                pr._range._lower = std::max(pre.first->tokens, pr._range._lower);
+                pr._range._lower = std::max(static_cast<uint32_t>(pre.first->tokens), pr._range._lower);
                 assert(pr._range._lower <= _base[pre.first->place]);
                 assert(pr._range._upper >= _base[pre.first->place]);
             }
@@ -271,7 +271,7 @@ namespace PetriEngine {
                     if (!_dirty[c._place] && priority < _uses[c._place]) {
                         pr = placerange_t();
                         pr._place = c._place;
-                        pr._range._upper = c._lower - 1;
+                        pr._range._upper = static_cast<uint32_t>(c._lower - 1);
                         priority = _uses[c._place];
                         assert(pr._range._lower <= _base[c._place]);
                         assert(pr._range._upper >= _base[c._place]);
@@ -285,7 +285,7 @@ namespace PetriEngine {
                         pr = placerange_t();
                         priority = _uses[c._place];
                         pr._place = c._place;
-                        pr._range._lower = c._upper + 1;
+                        pr._range._lower = static_cast<uint32_t>(c._upper + 1);
                         pr._place = c._place;
                         assert(pr._range._lower <= _base[c._place]);
                         assert(pr._range._upper >= _base[c._place]);
@@ -294,8 +294,8 @@ namespace PetriEngine {
             }
             else {
                 auto& added = _ranges.find_or_add(c._place);
-                added._range._lower = std::max(c._lower, pr._range._lower);
-                added._range._upper = std::min(c._upper, pr._range._upper);
+                added._range._lower = std::max(static_cast<uint32_t>(c._lower), pr._range._lower);
+                added._range._upper = std::min(static_cast<uint32_t>(c._upper), pr._range._upper);
                 assert(added._range._lower <= _base[c._place]);
                 assert(added._range._upper >= _base[c._place]);
                 if(_dirty[c._place])

@@ -41,14 +41,14 @@ namespace PetriEngine {
             {
                 _discovered = 0;
                 _maxTokens = 0;
-                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
+                _maxPlaceBound = std::vector<MarkVal>(net.numberOfPlaces(), 0);
             }
 
             virtual ~StateSetInterface() {}
 
             const PetriNet& net() { return _net;}
 
-            uint32_t maxTokens() const { return _maxTokens; }
+            MarkVal maxTokens() const { return _maxTokens; }
 
             virtual size_t size() const = 0;
 
@@ -66,8 +66,8 @@ namespace PetriEngine {
             size_t _discovered;
             size_t _nplaces;
             uint32_t _kbound;
-            uint32_t _maxTokens;
-            std::vector<uint32_t> _maxPlaceBound;
+            MarkVal _maxTokens;
+            std::vector<MarkVal> _maxPlaceBound;
             const PetriNet& _net;
         };
 
@@ -80,7 +80,7 @@ namespace PetriEngine {
         {
         public:
             RandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query,
-                               const std::vector<MarkVal> &initPotencies, size_t seed, int nplaces = -1)
+                               const std::vector<uint32_t> &initPotencies, size_t seed, int nplaces = -1)
                 : StateSetInterface(net, kbound, nplaces), _seed(seed)
             {
                 srand(_seed);
@@ -213,7 +213,7 @@ namespace PetriEngine {
                 _potencies = std::vector<uint32_t>(nTransitions, initValue);
             }
 
-            void _initializePotencies(const std::vector<MarkVal> &initPotencies) {
+            void _initializePotencies(const std::vector<uint32_t> &initPotencies) {
                 assert(initPotencies.size() == _net.numberOfTransitions());
                 _potencies.reserve(initPotencies.size());
                 for (auto potency : initPotencies) {
@@ -221,8 +221,8 @@ namespace PetriEngine {
                 }
             }
 
-            uint32_t _sumMarking(const MarkVal* marking) {
-                uint32_t sum = 0;
+            MarkVal _sumMarking(const MarkVal* marking) {
+                MarkVal sum = 0;
                 for (size_t i = 0; i < _nplaces; ++i) {
                     sum += marking[i];
                 }
@@ -236,7 +236,7 @@ namespace PetriEngine {
 
         public:
             TracableRandomWalkStateSet(const PetriNet& net, uint32_t kbound, const PQL::Condition *query,
-                               const std::vector<MarkVal> &initPotencies, size_t seed, int nplaces = -1)
+                               const std::vector<uint32_t> &initPotencies, size_t seed, int nplaces = -1)
                 : RandomWalkStateSet(net, kbound, query, initPotencies, seed, nplaces)
             {
                 _stackTrace = std::stack<size_t>();
@@ -355,7 +355,7 @@ namespace PetriEngine {
 
                 MarkVal sum = 0;
                 bool allsame = true;
-                uint32_t val = 0;
+                MarkVal val = 0;
                 uint32_t active = 0;
                 uint32_t last = 0;
                 markingStats(state.marking(), sum, allsame, val, active, last);
@@ -407,7 +407,7 @@ namespace PetriEngine {
             std::pair<bool, size_t> _lookup(const State& state, T& _trie) {
                 MarkVal sum = 0;
                 bool allsame = true;
-                uint32_t val = 0;
+                MarkVal val = 0;
                 uint32_t active = 0;
                 uint32_t last = 0;
                 markingStats(state.marking(), sum, allsame, val, active, last);
@@ -424,13 +424,13 @@ namespace PetriEngine {
                 else return std::make_pair(false, std::numeric_limits<size_t>::max());
             }
 
-            void markingStats(const uint32_t* marking, MarkVal& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
+            void markingStats(const MarkVal* marking, MarkVal& sum, bool& allsame, MarkVal& val, uint32_t& active, uint32_t& last)
             {
                 uint32_t cnt = 0;
 
                 for (uint32_t i = 0; i < _nplaces; i++)
                 {
-                    uint32_t old = val;
+                    MarkVal old = val;
                     if(marking[i] != 0)
                     {
                         ++cnt;

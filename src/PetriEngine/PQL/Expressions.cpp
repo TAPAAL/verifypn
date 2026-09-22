@@ -316,7 +316,7 @@ namespace PetriEngine {
         uint32_t BooleanCondition::distance(DistanceContext& context) const {
             if (context.negated() != value)
                 return 0;
-            return std::numeric_limits<uint32_t>::max();
+            return unbounded_tokens();
         }
 
         uint32_t DeadlockCondition::distance(DistanceContext& context) const {
@@ -386,7 +386,7 @@ namespace PetriEngine {
                 for(auto& c : _constraints)
                 {
                     auto pv = context.tokens(c._place);
-                    d += (c._upper == std::numeric_limits<uint32_t>::max() ? 0 : delta<LessThanOrEqualCondition>(pv, c._upper, neg)) +
+                    d += (c._upper == unbounded_tokens() ? 0 : delta<LessThanOrEqualCondition>(pv, c._upper, neg)) +
                          (c._lower == 0 ? 0 : delta<LessThanOrEqualCondition>(c._lower, pv, neg));
                 }
             }
@@ -396,7 +396,7 @@ namespace PetriEngine {
                 for(auto& c : _constraints)
                 {
                     auto pv = context.tokens(c._place);
-                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    if(c._upper != unbounded_tokens())
                     {
                         auto d2 = delta<LessThanOrEqualCondition>(pv, c._upper, neg);
                         if(first) d = d2;
@@ -426,7 +426,7 @@ namespace PetriEngine {
 
         uint32_t disjDistance(DistanceContext& context, const std::vector<Condition_ptr>& conds)
         {
-            uint32_t val = std::numeric_limits<uint32_t>::max();
+            uint32_t val = unbounded_tokens();
             for(auto& c : conds)
                 val = std::min(c->distance(context), val);
             return val;
@@ -529,11 +529,11 @@ namespace PetriEngine {
                 if(neg)
                     c.invert();
 
-                if(c._upper == std::numeric_limits<uint32_t>::max() && c._lower == 0)
+                if(c._upper == unbounded_tokens() && c._lower == 0)
                 {
                     continue;
                 }
-                else if (c._upper != std::numeric_limits<uint32_t>::max() && c._lower != 0 && neg)
+                else if (c._upper != unbounded_tokens() && c._lower != 0 && neg)
                 {
                     throw base_error("MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED");
                 }
@@ -558,7 +558,7 @@ namespace PetriEngine {
                 auto cmp = dynamic_cast<CompareCondition*>(c.get());
                 assert(cmp);
                 auto id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[0].get());
-                uint32_t val;
+                int64_t val;
                 bool inverted = false;
                 EvaluationContext context;
                 if(!id)

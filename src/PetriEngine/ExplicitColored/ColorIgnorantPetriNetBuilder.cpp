@@ -4,7 +4,7 @@
 
 
 namespace PetriEngine::ExplicitColored {
-    void ColorIgnorantPetriNetBuilder::addPlace(const std::string &name, const uint32_t tokens, const double x, const double y) {
+    void ColorIgnorantPetriNetBuilder::addPlace(const std::string &name, const uint64_t tokens, const double x, const double y) {
         _builder.addPlace(name, tokens, x, y);
     }
 
@@ -13,18 +13,18 @@ namespace PetriEngine::ExplicitColored {
     }
 
     void ColorIgnorantPetriNetBuilder::addInputArc(const std::string &place, const std::string &transition,
-        const bool inhibitor, const uint32_t weight) {
+        const bool inhibitor, const uint64_t weight) {
         _builder.addInputArc(place, transition, inhibitor, weight);
     }
 
     void ColorIgnorantPetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place,
-        uint32_t weight) {
+        uint64_t weight) {
         _builder.addOutputArc(transition, place, weight);
     }
 
     void ColorIgnorantPetriNetBuilder::addPlace(const std::string &name, const Colored::ColorType *type,
         Colored::Multiset &&tokens, double x, double y) {
-        uint32_t sum = 0;
+        uint64_t sum = 0;
         for (const auto& [_,count] : tokens) {
             sum += count;
         }
@@ -38,7 +38,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     void ColorIgnorantPetriNetBuilder::addInputArc(const std::string &place, const std::string &transition,
-        const Colored::ArcExpression_ptr &expr, uint32_t inhib_weight) {
+        const Colored::ArcExpression_ptr &expr, uint64_t inhib_weight) {
         if (inhib_weight > 0) {
             _inhibitors.emplace_back(place, transition, inhib_weight);
             return;

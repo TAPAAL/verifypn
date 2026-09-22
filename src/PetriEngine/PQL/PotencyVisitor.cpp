@@ -307,7 +307,7 @@ namespace PetriEngine { namespace PQL {
                 lpsv.push_back(lp);
             }
 
-            if (c._upper != std::numeric_limits<uint32_t>::max())
+            if (c._upper != unbounded_tokens())
             {
                 auto m1 = memberForPlace(c._place, _context);
                 Member m2(c._upper);
@@ -328,7 +328,7 @@ namespace PetriEngine { namespace PQL {
             }
 
             assert(nconstraints.size() > 0);
-            if (nconstraints.back()._lower == 0 && nconstraints.back()._upper == std::numeric_limits<uint32_t>::max())
+            if (nconstraints.back()._lower == 0 && nconstraints.back()._upper == unbounded_tokens())
                 nconstraints.pop_back();
 
             if (neg)

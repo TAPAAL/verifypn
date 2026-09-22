@@ -22,11 +22,12 @@
 namespace PetriEngine { namespace PQL {
     class BinaryPrinter : public Visitor {
     public:
-        explicit BinaryPrinter(std::ostream& os) :
-            os(os) {}
+        explicit BinaryPrinter(std::ostream& os, bool int64 = false) :
+            os(os), _int64(int64) {}
 
     protected:
         std::ostream& os;
+        bool _int64 = false;
 
         void _accept(const NotCondition *element) override;
 

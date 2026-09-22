@@ -92,11 +92,11 @@ public:
                 size_t index,
                 PQL::Condition* query,
                 AbstractHandler::Result result,
-                const std::vector<uint32_t>* maxPlaceBound,
+                const std::vector<MarkVal>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                int maxTokens,
+                MarkVal maxTokens,
                 Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) {
         _expanded = std::max(_expanded, expandedStates);
         _explored = std::max(_explored, exploredStates);
@@ -120,11 +120,11 @@ class ResultHandler : public SimpleResultHandler {
                 size_t index,
                 PQL::Condition* query,
                 AbstractHandler::Result result,
-                const std::vector<uint32_t>* maxPlaceBound,
+                const std::vector<MarkVal>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                int maxTokens,
+                MarkVal maxTokens,
                 Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking, bool) override
         {
             if(result == ResultPrinter::Satisfied)

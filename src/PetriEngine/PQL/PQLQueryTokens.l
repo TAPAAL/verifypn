@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/PQLParser.h"
 #include "PQLQueryParser.parser.hpp"
 
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
@@ -80,8 +81,11 @@ letter        [a-zA-Z_]
 
 
 %%
+extern bool pqlq_int64_mode;
+
 namespace PetriEngine{ namespace PQL {
-std::shared_ptr<Condition> ParseQuery(const std::string& queryString) {
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool int64) {
+	pqlq_int64_mode = int64;
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 

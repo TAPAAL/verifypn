@@ -608,7 +608,7 @@ PetriConfig *OnTheFlyDG::createConfiguration(size_t marking, size_t own, Conditi
 size_t OnTheFlyDG::createMarking(Marking& t_marking){
     size_t sum = 0;
     bool allsame = true;
-    uint32_t val = 0;
+    PetriEngine::MarkVal val = 0;
     uint32_t active = 0;
     uint32_t last = 0;
     markingStats(t_marking.marking(), sum, allsame, val, active, last);
@@ -666,14 +666,14 @@ Edge* OnTheFlyDG::newEdge(Configuration &t_source, uint32_t weight)
     return e;
 }
 
-void OnTheFlyDG::markingStats(const uint32_t* marking, size_t& sum,
-        bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
+void OnTheFlyDG::markingStats(const PetriEngine::MarkVal* marking, size_t& sum,
+        bool& allsame, PetriEngine::MarkVal& val, uint32_t& active, uint32_t& last)
 {
     uint32_t cnt = 0;
 
     for (uint32_t i = 0; i < n_places; i++)
     {
-        uint32_t old = val;
+        PetriEngine::MarkVal old = val;
         if(marking[i] != 0)
         {
             ++cnt;

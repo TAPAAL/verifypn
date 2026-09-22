@@ -344,7 +344,7 @@ namespace PetriEngine {
         class LiteralExpr : public Expr {
         public:
 
-            LiteralExpr(int value) : _value(value) {
+            LiteralExpr(int64_t value) : _value(value) {
             }
             LiteralExpr(const LiteralExpr&) = default;
             virtual type_id_t type() const final { return PQL::type_id<decltype(this)>(); };
@@ -826,8 +826,8 @@ namespace PetriEngine {
         public:
             struct cons_t {
                 uint32_t _place = std::numeric_limits<uint32_t>::max();
-                uint32_t _upper = std::numeric_limits<uint32_t>::max();
-                uint32_t _lower = 0;
+                MarkVal _upper = unbounded_tokens();
+                MarkVal _lower = 0;
                 shared_const_string _name;
                 bool operator<(const cons_t& other) const
                 {
@@ -836,15 +836,15 @@ namespace PetriEngine {
 
                 void invert()
                 {
-                    if(_lower == 0 && _upper == std::numeric_limits<uint32_t>::max())
+                    if(_lower == 0 && _upper == unbounded_tokens())
                         return;
-                    assert(_lower == 0 || _upper == std::numeric_limits<uint32_t>::max());
+                    assert(_lower == 0 || _upper == unbounded_tokens());
                     if(_lower == 0)
                     {
                         _lower = _upper + 1;
-                        _upper = std::numeric_limits<uint32_t>::max();
+                        _upper = unbounded_tokens();
                     }
-                    else if(_upper == std::numeric_limits<uint32_t>::max())
+                    else if(_upper == unbounded_tokens())
                     {
                         _upper = _lower - 1;
                         _lower = 0;
@@ -886,7 +886,7 @@ namespace PetriEngine {
             {
                 return _constraints.size() == 1 &&
                                     (_constraints[0]._lower == 0 ||
-                                     _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+                                     _constraints[0]._upper == unbounded_tokens());
             };
             const std::vector<cons_t>& constraints() const { return _constraints; }
             std::vector<cons_t>::const_iterator begin() const { return _constraints.begin(); }

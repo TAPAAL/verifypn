@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(PathScopedFireabilityUsesSelectedTrace) {
     PQL::CompareConjunction::cons_t c;
     c._place = 2;
     c._lower = 1;
-    c._upper = std::numeric_limits<uint32_t>::max();
+    c._upper = unbounded_tokens();
     cons.push_back(c);
 
     auto fireable = std::make_shared<PQL::CompareConjunction>(std::move(cons), false);

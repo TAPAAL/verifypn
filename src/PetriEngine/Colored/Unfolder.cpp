@@ -16,6 +16,7 @@ namespace PetriEngine {
 
         PetriNetBuilder Unfolder::strip_colors() const {
             ExplicitColored::ColorIgnorantPetriNetBuilder ignorantBuilder(_builder.string_set());
+            ignorantBuilder.setInt64(_builder.int64());
             if (_builder.isColored()) {
                 for (const auto& [colorName, colorType] : _builder.colors()) {
                     ignorantBuilder.addColorType(colorName, colorType);
@@ -56,6 +57,7 @@ namespace PetriEngine {
 
         PetriNetBuilder Unfolder::unfold() {
             PetriNetBuilder ptBuilder(_builder.string_set());
+            ptBuilder.setInt64(_builder.int64());
             if (_builder.isColored()) {
                 auto start = std::chrono::high_resolution_clock::now();
 

@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <limits>
 
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PetriNet.h"
@@ -53,13 +54,18 @@ namespace PetriEngine {
        _transitions(std::move(other._transitions)), _places(std::move(other._places)),
        initialMarking(std::move(other.initialMarking)), reducer(this), _string_set(other._string_set) {}
 
-    void PetriNetBuilder::addPlace(const std::string &name, uint32_t tokens, double x, double y)
+    void PetriNetBuilder::addPlace(const std::string &name, uint64_t tokens, double x, double y)
     {
         auto spn = std::make_shared<const_string>(name);
         return addPlace(spn, tokens, x, y);
     }
 
-    void PetriNetBuilder::addPlace(const shared_const_string &_name, uint32_t tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const shared_const_string &_name, uint64_t tokens, double x, double y) {
+        if (!_int64 && tokens > std::numeric_limits<uint32_t>::max()) {
+            throw base_error("Number of tokens in ", *_name, " exceeded ",
+                             std::numeric_limits<uint32_t>::max(),
+                             " (use --int64 to allow larger markings)");
+        }
         auto name = *_string_set.insert(_name).first;
         size_t size = _placenames.size();
         auto [it, inserted] = _placenames.insert(std::make_pair(name, size));
@@ -93,14 +99,18 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, uint32_t weight)
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, uint64_t weight)
     {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addInputArc(spn, stn, inhibitor, weight);
     }
 
-    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, uint32_t weight) {
+    void PetriNetBuilder::addInputArc(const shared_const_string &place, const shared_const_string &transition, bool inhibitor, uint64_t weight) {
+        if (!_int64 && weight > std::numeric_limits<uint32_t>::max()) {
+            throw base_error("Arc weight exceeded ", std::numeric_limits<uint32_t>::max(),
+                             " (use --int64 to allow larger weights)");
+        }
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -140,13 +150,17 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, uint32_t weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, uint64_t weight) {
         auto spn = std::make_shared<const_string>(place);
         auto stn = std::make_shared<const_string>(transition);
         return addOutputArc(stn, spn, weight);
     }
 
-    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, uint32_t weight) {
+    void PetriNetBuilder::addOutputArc(const shared_const_string &transition, const shared_const_string &place, uint64_t weight) {
+        if (!_int64 && weight > std::numeric_limits<uint32_t>::max()) {
+            throw base_error("Arc weight exceeded ", std::numeric_limits<uint32_t>::max(),
+                             " (use --int64 to allow larger weights)");
+        }
         if(_transitionnames.count(transition) == 0)
         {
             throw base_error("Could not find ", transition);
@@ -282,6 +296,7 @@ namespace PetriEngine {
 #endif
 
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
+        net->setInt64(_int64);
 
         uint32_t next = nextPlaceId(place_cons_count, place_prod_count, place_idmap, reorder);
         uint32_t free = 0;

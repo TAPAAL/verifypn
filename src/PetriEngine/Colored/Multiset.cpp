@@ -26,7 +26,7 @@ namespace PetriEngine {
         Multiset::Multiset() : _set(), _type(nullptr) {
         }
 
-        Multiset::Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors)
+        Multiset::Multiset(std::vector<std::pair<const Color*,uint64_t>>& colors)
                 : _set(), _type(nullptr)
         {
             for (auto& c : colors) {
@@ -48,7 +48,7 @@ namespace PetriEngine {
             return ms;
         }
 
-        Multiset Multiset::operator *(uint32_t scalar) const {
+        Multiset Multiset::operator *(uint64_t scalar) const {
             Multiset ms(*this);
             ms *= scalar;
             return ms;
@@ -84,13 +84,13 @@ namespace PetriEngine {
             }
         }
 
-        void Multiset::operator *=(uint32_t scalar) {
+        void Multiset::operator *=(uint64_t scalar) {
             for (auto& c : _set) {
                 c.second *= scalar;
             }
         }
 
-        uint32_t Multiset::operator [](const Color* color) const {
+        uint64_t Multiset::operator [](const Color* color) const {
             if (_type != nullptr && _type == color->getColorType()) {
                 for (auto c : _set) {
                     if (c.first == color->getId())
@@ -106,7 +106,7 @@ namespace PetriEngine {
             return 0;
         }
 
-        uint32_t& Multiset::operator [](const Color* color) {
+        uint64_t& Multiset::operator [](const Color* color) {
             if (_type == nullptr) {
                 _type = color->getColorType();
             }
@@ -166,13 +166,13 @@ namespace PetriEngine {
             return *this;
         }
 
-        std::pair<const Color *, const uint32_t &> Multiset::Iterator::operator++(int) {
-            std::pair<const Color*, const uint32_t&> old = **this;
+        std::pair<const Color *, const uint64_t &> Multiset::Iterator::operator++(int) {
+            std::pair<const Color*, const uint64_t&> old = **this;
             ++_index;
             return old;
         }
 
-        std::pair<const Color *, const uint32_t &> Multiset::Iterator::operator*() {
+        std::pair<const Color *, const uint64_t &> Multiset::Iterator::operator*() {
             auto& item = _ms->_set[_index];
             auto color = &(*ColorType::dotInstance()->begin());
             if (_ms->_type != nullptr)

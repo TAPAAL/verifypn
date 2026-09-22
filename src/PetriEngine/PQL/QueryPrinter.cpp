@@ -80,9 +80,9 @@ namespace PetriEngine {
                 if (!first) os << " and ";
                 if (cons._lower != 0)
                     os << "(" << cons._lower << " <= " << *cons._name << ")";
-                if (cons._lower != 0 && cons._upper != std::numeric_limits<uint32_t>::max())
+                if (cons._lower != 0 && cons._upper != unbounded_tokens())
                     os << " and ";
-                if (cons._upper != std::numeric_limits<uint32_t>::max())
+                if (cons._upper != unbounded_tokens())
                     os << "(" << cons._upper << " >= " << *cons._name << ")";
                 first = false;
             }

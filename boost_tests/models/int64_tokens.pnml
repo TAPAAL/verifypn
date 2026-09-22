@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pnml>
+<net id="int64_tokens" type="P/T net">
+<place id="P" name="P" initialMarking="3000000000">
+<graphics><position x="0" y="0"/></graphics>
+</place>
+<place id="Q" name="Q" initialMarking="0">
+<graphics><position x="100" y="0"/></graphics>
+</place>
+<transition id="t" name="t">
+<graphics><position x="50" y="0"/></graphics>
+</transition>
+<inputArc source="P" target="t"><inscription><value>1</value></inscription></inputArc>
+<outputArc source="t" target="Q"><inscription><value>1</value></inscription></outputArc>
+</net>
+</pnml>

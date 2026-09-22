@@ -95,7 +95,7 @@ protected:
         return createConfiguration(marking, own, query.get());
     }
     size_t createMarking(Marking &marking);
-    void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
+    void markingStats(const PetriEngine::MarkVal* marking, size_t& sum, bool& allsame, PetriEngine::MarkVal& val, uint32_t& active, uint32_t& last);
 
     DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source, uint32_t weight);
 

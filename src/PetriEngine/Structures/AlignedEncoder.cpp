@@ -16,9 +16,9 @@ AlignedEncoder::AlignedEncoder(uint32_t places, uint32_t k)
 : _places(places)
 {
 
-    size_t bytes = 2*sizeof(uint32_t) + (places*sizeof(uint32_t));
+    size_t bytes = 2*sizeof(PetriEngine::MarkVal) + (places*sizeof(PetriEngine::MarkVal));
     _scratchpad = scratchpad_t(bytes*8);
-    assert(_scratchpad.size() == (2*sizeof(uint32_t) + (_places*sizeof(uint32_t))));
+    assert(_scratchpad.size() == (2*sizeof(PetriEngine::MarkVal) + (_places*sizeof(PetriEngine::MarkVal))));
     if(_places < 256) _psize = 1;
     else if(_places < 65536) _psize = 2;
     else _psize = 4;
@@ -31,16 +31,17 @@ AlignedEncoder::~AlignedEncoder()
     _scratchpad.release();
 }
 
-uint32_t AlignedEncoder::tokenBytes(uint32_t ntokens) const
+uint32_t AlignedEncoder::tokenBytes(PetriEngine::MarkVal ntokens) const
 {
     uint32_t size = 0;
     if(ntokens < 256) size = 1;
     else if(ntokens < 65536) size = 2;
-    else size = 4;
+    else if(ntokens <= std::numeric_limits<uint32_t>::max()) size = 4;
+    else size = 8;
     return size;
 }
 
-uint32_t AlignedEncoder::writeBitVector(size_t offset, const uint32_t* data)
+uint32_t AlignedEncoder::writeBitVector(size_t offset, const PetriEngine::MarkVal* data)
 {
     for(size_t i = 0; i < _places; ++i)
     {
@@ -49,7 +50,7 @@ uint32_t AlignedEncoder::writeBitVector(size_t offset, const uint32_t* data)
     return offset + scratchpad_t::bytes(_places);
 }
 
-uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const uint32_t* data)
+uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const PetriEngine::MarkVal* data)
 {
     for(size_t i = 0; i < _places; ++i)
     {
@@ -72,7 +73,7 @@ uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const uint32_t* data)
     return offset + scratchpad_t::bytes(_places*2);
 }
 
-uint32_t AlignedEncoder::readTwoBitVector(uint32_t* destination, const unsigned char* source, uint32_t offset)
+uint32_t AlignedEncoder::readTwoBitVector(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset)
 {
     scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places*2);
     for(size_t i = 0; i < _places; ++i)
@@ -92,25 +93,25 @@ uint32_t AlignedEncoder::readTwoBitVector(uint32_t* destination, const unsigned 
 }
 
 template<typename T>
-uint32_t AlignedEncoder::writeTokens(size_t offset, const uint32_t* data)
+uint32_t AlignedEncoder::writeTokens(size_t offset, const PetriEngine::MarkVal* data)
 {
-    if(sizeof(T) == sizeof(uint32_t))
+    if(sizeof(T) == sizeof(PetriEngine::MarkVal))
     {
-        memcpy(&(_scratchpad.raw()[offset]), data, _places*sizeof(T));        
-    } 
+        memcpy(&(_scratchpad.raw()[offset]), data, _places*sizeof(T));
+    }
     else
     {
         for(size_t i = 0; i < _places; ++i)
         {
             T* dest = (T*)(&_scratchpad.raw()[offset + (i*sizeof(T))]);
-            *dest = data[i];
+            *dest = static_cast<T>(data[i]);
         }
     }
     return offset + _places*sizeof(T);
 }
 
 template<typename T>
-uint32_t AlignedEncoder::readTokens(uint32_t* destination, const unsigned char* source, uint32_t offset)
+uint32_t AlignedEncoder::readTokens(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset)
 {
     for(size_t i = 0; i < _places; ++i)
     {
@@ -121,7 +122,7 @@ uint32_t AlignedEncoder::readTokens(uint32_t* destination, const unsigned char* 
 }
 
 template<typename T>
-uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const uint32_t* data)
+uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const PetriEngine::MarkVal* data)
 {
     size_t cnt = 0;
 
@@ -130,7 +131,7 @@ uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const uint32_t* data)
         if(data[i] > 0)
         {
             T* dest = (T*)(&_scratchpad.raw()[offset + (cnt*sizeof(T))]);
-            *dest = data[i];
+            *dest = static_cast<T>(data[i]);
             ++cnt;
         }
     }
@@ -154,7 +155,7 @@ size_t AlignedEncoder::bitTokenCountsSize(const unsigned char* source, uint32_t 
 }
 
 template<typename T>
-uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const
+uint32_t AlignedEncoder::readBitTokenCounts(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset) const
 {
     const unsigned char* ts = &source[offset + scratchpad_t::bytes(_places)];
     scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
@@ -195,7 +196,7 @@ size_t AlignedEncoder::placeTokenCountsSize(const unsigned char* source, uint32_
 }
 
 template<typename T>
-uint32_t AlignedEncoder::readPlaceTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const
+uint32_t AlignedEncoder::readPlaceTokenCounts(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset) const
 {
     size_t size;
     switch(_psize)
@@ -240,7 +241,7 @@ uint32_t AlignedEncoder::readPlaceTokenCounts(uint32_t* destination, const unsig
     return offset + size;
 }
 
-uint32_t AlignedEncoder::writePlaces(size_t offset, const uint32_t* data)
+uint32_t AlignedEncoder::writePlaces(size_t offset, const PetriEngine::MarkVal* data)
 {
     size_t cnt = 0;
     uint16_t* dest16 = (uint16_t*)(&_scratchpad.raw()[offset]);
@@ -285,7 +286,7 @@ uint32_t AlignedEncoder::writePlaces(size_t offset, const uint32_t* data)
     return offset + _psize + cnt*_psize; 
 }
 
-uint32_t AlignedEncoder::readPlaces(uint32_t* destination, const unsigned char* source, uint32_t offset, uint32_t value)
+uint32_t AlignedEncoder::readPlaces(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset, PetriEngine::MarkVal value)
 {
     size_t size;
     switch(_psize)
@@ -328,7 +329,7 @@ uint32_t AlignedEncoder::readPlaces(uint32_t* destination, const unsigned char* 
     return offset + _psize*size;
 }
 
-uint32_t AlignedEncoder::readBitVector(uint32_t* destination, const unsigned char* source, uint32_t offset, uint32_t value)
+uint32_t AlignedEncoder::readBitVector(PetriEngine::MarkVal* destination, const unsigned char* source, uint32_t offset, PetriEngine::MarkVal value)
 {
     scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
     for(uint32_t i = 0; i < _places; ++i)
@@ -345,7 +346,7 @@ uint32_t AlignedEncoder::readBitVector(uint32_t* destination, const unsigned cha
     return offset + b.size();
 }
 
-unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val) const
+unsigned char AlignedEncoder::getType(PetriEngine::MarkVal sum, uint32_t pwt, bool same, PetriEngine::MarkVal val) const
 {
     if(pwt == 0) return 0;
     if(same && val <= SAMEBOUND)
@@ -383,7 +384,9 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
                 case 2:
                     return DBOUND+3;                 
                 case 4:
-                    return DBOUND+4;                
+                    return DBOUND+4;
+                case 8:
+                    return DBOUND+11;
                 default:
                     assert(false);
             }
@@ -398,6 +401,8 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
                     return DBOUND+6;                
                 case 4:
                     return DBOUND+7;
+                case 8:
+                    return DBOUND+12;
                 default:
                     assert(false);
             }
@@ -412,6 +417,8 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
                     return DBOUND+9;
                 case 4:
                     return DBOUND+10;
+                case 8:
+                    return DBOUND+13;
                 default:
                     assert(false);
             }
@@ -476,13 +483,19 @@ size_t AlignedEncoder::size(const uchar* s) const
             return bitTokenCountsSize<uint16_t>((unsigned char*)s, 1);
         case DBOUND+10:
             return bitTokenCountsSize<uint32_t>((unsigned char*)s, 1);
+        case DBOUND+11:
+            return 1 + (sizeof(uint64_t)*_places);
+        case DBOUND+12:
+            return placeTokenCountsSize<uint64_t>((unsigned char*)s, 1);
+        case DBOUND+13:
+            return bitTokenCountsSize<uint64_t>((unsigned char*)s, 1);
         default:
             assert(false);
             return std::numeric_limits<size_t>::infinity();
     }
 }
 
-size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
+size_t AlignedEncoder::encode(const PetriEngine::MarkVal* d, unsigned char type)
 {
     _scratchpad.zero();
     _scratchpad.raw()[0] = type;
@@ -535,6 +548,18 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
                 size_t size = writeBitVector(1, d);
                 return writeTokenCounts<uint32_t>(size, d);
             }
+        case DBOUND+11:
+            return writeTokens<uint64_t>(1, d);
+        case DBOUND+12:
+            {
+                size_t size = writePlaces(1, d);
+                return writeTokenCounts<uint64_t>(size, d);
+            }
+        case DBOUND+13:
+            {
+                size_t size = writeBitVector(1, d);
+                return writeTokenCounts<uint64_t>(size, d);
+            }
         default:
             assert(false);
     }
@@ -542,9 +567,9 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
     return 0;
 }
 
-void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)
+void AlignedEncoder::decode(PetriEngine::MarkVal* d, const unsigned char* s)
 {
-    memset(d, 0, sizeof(uint32_t)*_places);
+    memset(d, 0, sizeof(PetriEngine::MarkVal)*_places);
     unsigned char type = s[0];
     if(type <= SAMEBOUND)
     {
@@ -588,6 +613,15 @@ void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)
             return;
         case DBOUND+10:
             readBitTokenCounts<uint32_t>(d, s, 1);
+            return;
+        case DBOUND+11:
+            readTokens<uint64_t>(d,s,1);
+            return;
+        case DBOUND+12:
+            readPlaceTokenCounts<uint64_t>(d, s, 1);
+            return;
+        case DBOUND+13:
+            readBitTokenCounts<uint64_t>(d, s, 1);
             return;
         default:
             assert(false);

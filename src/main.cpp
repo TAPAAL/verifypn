@@ -83,6 +83,7 @@ int main(int argc, const char** argv) {
         options.print();
 
         ColoredPetriNetBuilder cpnBuilder(string_set);
+        cpnBuilder.setInt64(options.int64);
         try {
             cpnBuilder.parse_model(options.modelfile);
             options.isCPN = cpnBuilder.isColored(); // TODO: this is really nasty, should be moved in a refactor
@@ -213,7 +214,7 @@ int main(int argc, const char** argv) {
             }
 
             if (options.unfold_query_out_file.size() > 0) {
-                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file, options.keep_solved);
+                outputCompactQueries(builder, queries, querynames, options.unfold_query_out_file, options.keep_solved, options.int64);
             }
 
 
@@ -242,7 +243,7 @@ int main(int argc, const char** argv) {
             simplify_queries(qm0.get(), qnet.get(), queries, options, std::cout);
 
             if (options.query_out_file.size() > 0) {
-                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved);
+                outputQueries(builder, queries, querynames, options.query_out_file, options.binary_query_io, options.keep_solved, options.int64);
             }
 
             if (!options.statespaceexploration) {
@@ -540,7 +541,7 @@ int main(int argc, const char** argv) {
 
                 //Reachability search
                 if (options.initPotencyTimeout > 0 && (options.strategy == Strategy::RandomWalk || options.strategy == Strategy::RPFS)) {
-                    std::vector<MarkVal> initialPotencies(net->numberOfTransitions(), 0);
+                    std::vector<uint32_t> initialPotencies(net->numberOfTransitions(), 0);
 
                     {
                         std::unique_ptr<MarkVal[]> qm0(net->makeInitialMarking());

@@ -44,7 +44,7 @@ using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
 public:
-    QueryXMLParser(shared_string_set& string_set, const PetriEngine::ColoredPetriNetBuilder* coloredNet = nullptr);
+    QueryXMLParser(shared_string_set& string_set, const PetriEngine::ColoredPetriNetBuilder* coloredNet = nullptr, bool int64 = false);
     ~QueryXMLParser();
 
     std::vector<QueryItem>  queries;
@@ -66,6 +66,7 @@ private:
     void fatal_error(const std::string& token);
     shared_string_set& _string_set;
     const PetriEngine::ColoredPetriNetBuilder* _coloredNet;
+    bool _int64 = false;
 };
 
 #endif /* QUERYXMLPARSER_H */

@@ -3,11 +3,11 @@
 
 namespace PetriEngine {
     namespace Structures {
-        PotencyQueue::PotencyQueue(const std::vector<MarkVal> &initPotencies) {
+        PotencyQueue::PotencyQueue(const std::vector<uint32_t> &initPotencies) {
             _initializePotencies(initPotencies);
         }
 
-        PotencyQueue::PotencyQueue(const std::vector<MarkVal> &initPotencies, size_t seed) : PotencyQueue(initPotencies) {}
+        PotencyQueue::PotencyQueue(const std::vector<uint32_t> &initPotencies, size_t seed) : PotencyQueue(initPotencies) {}
 
         PotencyQueue::PotencyQueue(size_t seed) {}
 
@@ -51,7 +51,7 @@ namespace PetriEngine {
             _best = 0;
         }
 
-        void PotencyQueue::_initializePotencies(const std::vector<MarkVal> &initPotencies) {
+        void PotencyQueue::_initializePotencies(const std::vector<uint32_t> &initPotencies) {
             _queues = std::vector<std::priority_queue<weighted_t>>(initPotencies.size() != 0 ? initPotencies.size() : 1);
 
             _potencies.reserve(initPotencies.size());
@@ -65,7 +65,7 @@ namespace PetriEngine {
             srand(_seed);
         }
 
-        RandomPotencyQueue::RandomPotencyQueue(const std::vector<MarkVal> &initPotencies, size_t seed) : PotencyQueue(initPotencies, seed), _seed(seed) {
+        RandomPotencyQueue::RandomPotencyQueue(const std::vector<uint32_t> &initPotencies, size_t seed) : PotencyQueue(initPotencies, seed), _seed(seed) {
             srand(_seed);
         }
 

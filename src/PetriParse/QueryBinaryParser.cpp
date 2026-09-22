@@ -245,6 +245,11 @@ Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<share
     bin.read(&t, sizeof(char));
     if(t == 'l')
     {
+        if (_int64) {
+            int64_t val;
+            bin.read(reinterpret_cast<char*>(&val), sizeof(int64_t));
+            return std::make_shared<LiteralExpr>(val);
+        }
         int val;
         bin.read(reinterpret_cast<char*>(&val), sizeof(int));
         return std::make_shared<LiteralExpr>(val);
@@ -273,10 +278,16 @@ Expr_ptr QueryBinaryParser::parseExpr(std::istream& bin, const std::vector<share
     }
     else if(t == '*' || t == '+')
     {
-        int32_t constant;
+        int64_t constant;
         uint32_t idsize;
         uint32_t exprssize;
-        bin.read(reinterpret_cast<char*>(&constant), sizeof(int32_t));
+        if (_int64) {
+            bin.read(reinterpret_cast<char*>(&constant), sizeof(int64_t));
+        } else {
+            int32_t c32 = 0;
+            bin.read(reinterpret_cast<char*>(&c32), sizeof(int32_t));
+            constant = c32;
+        }
         bin.read(reinterpret_cast<char*>(&idsize), sizeof(uint32_t));
         bin.read(reinterpret_cast<char*>(&exprssize), sizeof(uint32_t));
         std::vector<uint32_t> ids(idsize);

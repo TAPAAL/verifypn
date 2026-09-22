@@ -825,7 +825,7 @@ namespace PetriEngine {
                     }
 
                     int ok = 0;
-                    uint mult = std::numeric_limits<uint>::max();
+                    uint64_t mult = std::numeric_limits<uint64_t>::max();
                     bool pre_equal = true;
                     bool post_equal = true;
                     bool some_in_query = false;
@@ -857,7 +857,7 @@ namespace PetriEngine {
                         } else {
                             auto old = mult;
                             mult = std::min(arc2.weight / arc.weight, mult);
-                            if(old != std::numeric_limits<uint>::max() &&
+                            if(old != std::numeric_limits<uint64_t>::max() &&
                                mult != old &&
                                some_in_query)
                             {
@@ -2423,7 +2423,7 @@ namespace PetriEngine {
             if (!ok) continue;
 
             // Now we analyze consumers further
-            uint32_t maxConW = 0;
+            uint64_t maxConW = 0;
             for (auto con : place.consumers)
             {
                 // Consumers may not be inhibited and only consume from pid.

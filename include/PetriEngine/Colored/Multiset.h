@@ -36,18 +36,18 @@ namespace PetriEngine {
                 bool operator==(Iterator& other);
                 bool operator!=(Iterator& other);
                 Iterator& operator++();
-                std::pair<const Color*,const uint32_t&> operator++(int);
-                std::pair<const Color*, const uint32_t&> operator*();
+                std::pair<const Color*,const uint64_t&> operator++(int);
+                std::pair<const Color*, const uint64_t&> operator*();
             };
 
-            typedef std::vector<std::pair<uint32_t,uint32_t>> Internal;
+            typedef std::vector<std::pair<uint32_t,uint64_t>> Internal;
 
         public:
             Multiset();
             Multiset(const Multiset& orig) = default;
             Multiset(Multiset&&) = default;
-            Multiset(std::pair<const Color*,uint32_t> color);
-            Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors);
+            Multiset(std::pair<const Color*,uint64_t> color);
+            Multiset(std::vector<std::pair<const Color*,uint64_t>>& colors);
             virtual ~Multiset();
 
             Multiset& operator=(const Multiset&) = default;
@@ -55,12 +55,12 @@ namespace PetriEngine {
 
             Multiset operator+ (const Multiset& other) const;
             Multiset operator- (const Multiset& other) const;
-            Multiset operator* (uint32_t scalar) const;
+            Multiset operator* (uint64_t scalar) const;
             void operator+= (const Multiset& other);
             void operator-= (const Multiset& other);
-            void operator*= (uint32_t scalar);
-            uint32_t operator[] (const Color* color) const;
-            uint32_t& operator[] (const Color* color);
+            void operator*= (uint64_t scalar);
+            uint64_t operator[] (const Color* color) const;
+            uint64_t& operator[] (const Color* color);
 
             bool isSubsetOf(const Multiset&) const;
             bool isSubsetOrEqTo(const Multiset&) const;
