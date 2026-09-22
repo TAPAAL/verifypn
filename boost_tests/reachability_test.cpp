@@ -154,7 +154,8 @@ BOOST_AUTO_TEST_CASE(AngiogenesisPT01ReachabilityFireability, * utf::timeout(60)
 BOOST_AUTO_TEST_CASE(LargeMarkingRejectedWithoutInt64) {
     shared_string_set sset;
     PetriNetBuilder builder(sset);
-    BOOST_REQUIRE_THROW(builder.addPlace("P", 3000000000ULL, 0, 0), base_error);
+    // 3000000000 fits in a uint32 marking. The default limit is one past UINT32_MAX.
+    BOOST_REQUIRE_THROW(builder.addPlace("P", 4294967296ULL, 0, 0), base_error);
 }
 
 BOOST_AUTO_TEST_CASE(LargeMarkingAcceptedWithInt64) {
@@ -167,11 +168,14 @@ BOOST_AUTO_TEST_CASE(LargeMarkingAcceptedWithInt64) {
     BOOST_REQUIRE(net->int64());
     BOOST_REQUIRE_EQUAL(net->initial(0), 3000000000ULL);
 
-    auto query = ParseQuery(R"("P" >= 3000000000)", true);
+    // Reachability search expects the inner state formula of an EF query.
+    // A bare comparison is dropped by prepareForReachability.
+    auto query = ParseQuery(R"(EF ("P" >= 3000000000))", true);
     BOOST_REQUIRE(query);
     std::vector<Condition_ptr> analyzed{query};
     contextAnalysis(false, {}, {}, builder, net.get(), analyzed);
     auto reach = prepareForReachability(analyzed[0]);
+    BOOST_REQUIRE(reach);
     ResultHandler handler;
     ReachabilitySearch search(*net, handler, 0);
     std::vector<Condition_ptr> queries{reach};
