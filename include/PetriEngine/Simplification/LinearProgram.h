@@ -82,9 +82,9 @@ namespace PetriEngine {
             bool isNStepsImpossible(double firelimit, bool strict, const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
             void solvePotency(const PQL::SimplificationContext& context, std::vector<uint32_t>& potencies);
 
-            static bool solveFinalConjunctionImpossible(const LinearProgram* freelp, const std::vector<LinearProgram*>& lps,const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
+            static bool solveFinalConjunctionImpossible(std::vector<LinearProgram*>& lps, std::vector<std::vector<uint32_t>>& perms, std::vector<uint32_t>& starts,const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
         private:
-            static bool isFinalPermutationImpossible(glp_prob* lp, const LinearProgram* freelp, const std::vector<uint32_t>& permutation, const std::vector<LinearProgram*>& lps,const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
+            static bool isFinalPermutationImpossible(glp_prob* lp, const std::vector<uint32_t>& permutation, const std::vector<LinearProgram*>& lps,const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max());
         public:    
             void make_union(const LinearProgram& other);
         

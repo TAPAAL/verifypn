@@ -8,8 +8,14 @@ namespace PetriEngine {
         // ***********************************
         // AbstractProgramCollection functions
         // ***********************************
+
+        AbstractProgramCollection_ptr AbstractProgramCollection::clone(){
+            reset();
+            return cloneImpl();
+        }
+
         bool AbstractProgramCollection::satisfiable(const PQL::SimplificationContext& context, temporalContext tcx, uint32_t solvetime)
-        {
+        {   
             reset();
             if (context.timeout() || has_empty || solvetime == 0 || tcx.skip_solve()){ 
                 if(context.timeout())
@@ -79,6 +85,7 @@ namespace PetriEngine {
 
         bool UnionCollection::merge(bool& has_empty, mergeBuffer& buf, temporalContext tcx, bool dry_run)
         {
+            //std::cout << "\t union\n";
             if (current >= lps.size())
             {
                 current = 0;
@@ -100,8 +107,20 @@ namespace PetriEngine {
             return current < lps.size();
         }
 
+        AbstractProgramCollection_ptr UnionCollection::cloneImpl(){
+            std::vector<AbstractProgramCollection_ptr> members;
+            for(int i = 0; i < lps.size(); i++){
+                members.push_back(lps[i]->clone());
+            }
+            auto u = std::make_shared<UnionCollection>(std::move(members));
+            u->_next_ops = _next_ops;
+            u->_operator = _operator;
+            return u;
+        }
+
         void UnionCollection::satisfiableImpl(const PQL::SimplificationContext& context, temporalContext tcx, uint32_t solvetime)
         {
+            //std::cout << "solve union\n";
             tcx.update(_operator, _next_ops);
             for (int i = lps.size() - 1; i >= 0; --i)
             {
@@ -115,8 +134,12 @@ namespace PetriEngine {
                     lps.erase(lps.begin() + i);
                 }
             }
-            if (_result != POSSIBLE)
+            if (_result != POSSIBLE){
+                //std::cout << "union impossible\n";
                 _result = IMPOSSIBLE;
+            }
+
+            
         }
 
         
@@ -197,6 +220,7 @@ namespace PetriEngine {
 
         bool MergeCollection::merge(bool& has_empty, mergeBuffer& buf, temporalContext tcx, bool dry_run)
         {
+            //std::cout << "merge conj\n";
             if (buf.program.knownImpossible()) {
                 return false;
             }
@@ -217,7 +241,9 @@ namespace PetriEngine {
                     //tmp_prog = LinearProgram();
                     //more_right = right->merge(rempty, tmp_prog, tcx, false);
                     right_buf = mergeBuffer();
+                    //std::cout << "empty: " <<(right_buf.time_path == nullptr) << "\n";
                     more_right = right->merge(rempty, right_buf, tcx, false);
+                    //right_buf.print();
                     left->reset();
                     merge_right = false;
                 }
@@ -231,6 +257,7 @@ namespace PetriEngine {
                     more_left = left->merge(lempty, dry_buf, tcx, true);
                 }else{
                     more_left = left->merge(lempty, buf, tcx/*, dry_run || curr < nsat*/);
+                    buf.print();
                 }
 
                 if (!more_left) merge_right = true;
@@ -262,6 +289,13 @@ namespace PetriEngine {
             return more_left || more_right;
         }
 
+        AbstractProgramCollection_ptr MergeCollection::cloneImpl(){
+            auto m = std::make_shared<MergeCollection>(left->clone(), right->clone());
+            m->_next_ops = _next_ops;
+            m->_operator = _operator;
+            return m;
+        }
+
         void MergeCollection::satisfiableImpl(const PQL::SimplificationContext& context, temporalContext tcx, uint32_t solvetime)
         {
             // this is where the magic needs to happen
@@ -278,6 +312,7 @@ namespace PetriEngine {
                 
                 bool has_empty = false;
                 mergeBuffer buf = mergeBuffer(tcx, LinearProgram());
+
                 
                 hasmore = merge(has_empty, buf, tcx);
                
@@ -290,6 +325,8 @@ namespace PetriEngine {
                 }
                 else
                 {
+                    //std::cout << "merge before solve:\n\t";
+                    //buf.print();
                     if (context.timeout() ||
                         !buf.lpsImpossible(context, tcx, solvetime))
                     {
@@ -373,7 +410,9 @@ namespace PetriEngine {
         }
 
         bool SingleProgram::merge(bool& has_empty, mergeBuffer& buf, temporalContext tcx, bool dry_run)
-        {
+        {   
+
+            //std::cout << "\t\tmerge single\n";
             if (dry_run)
                 return false;
 
@@ -398,22 +437,22 @@ namespace PetriEngine {
             program.make_union(this->program);
             */
             timepoint tp = timepoint();
-            auto program_ptr = std::make_shared<LinearProgram>(this->program);
+            //auto program_ptr = std::make_shared<LinearProgram>(LinearProgram(this->program));
             switch(_operator){
                 case operator_t::FREE:{
-                    tp.free_lps.push_back({tcx, program_ptr});
+                    tp.free_lps.push_back({tcx, this->program});
                     break;
                 }
                 case operator_t::G:{
-                    tp.global_lps.push_back({tcx, program_ptr});
+                    tp.global_lps.push_back({tcx, this->program});
                     break;
                 }
                 case operator_t::F:{
-                    tp.final_lps.push_back({tcx, program_ptr});
+                    tp.final_lps.push_back({tcx, this->program});
                     break;
                 }
                 case operator_t::X:{
-                    tp.next_lps.push_back({tcx, program_ptr});
+                    tp.next_lps.push_back({tcx, this->program});
                     break;
                 }
                 default:
@@ -426,8 +465,16 @@ namespace PetriEngine {
             return false;
         }
 
+        AbstractProgramCollection_ptr SingleProgram::cloneImpl(){
+            auto s = std::make_shared<SingleProgram>(LinearProgram(this->program));
+            s->_next_ops = _next_ops;
+            s->_operator = _operator;
+            return s;
+        }
+
         void SingleProgram::satisfiableImpl(const PQL::SimplificationContext& context, temporalContext tcx, uint32_t solvetime)
         {
+            //std::cout << "single program\n";
             // this is where the magic needs to happen
             tcx.update(_operator, _next_ops);
             if (!program.isImpossible(context, solvetime))

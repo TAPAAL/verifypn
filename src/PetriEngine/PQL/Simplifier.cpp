@@ -533,7 +533,7 @@ namespace PetriEngine { namespace PQL {
     }*/
 
     Retval Simplifier::simplify_or(const LogicalCondition *element) {
-
+        //std::cout << "or\n";
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
         for (const auto &c: element->getOperands()) {
@@ -559,9 +559,12 @@ namespace PetriEngine { namespace PQL {
         }
     
         try {
+            //std::cout << "start neg or\n";
             if (!_context.timeout() && !neglps->satisfiable(_context, tcx)) {
+                //std::cout << "neg or is impossible\n";
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
+            //std::cout << "neg or possible\n";
         }
         catch (std::bad_alloc &e) {
             // we are out of memory, deal with it.
@@ -578,6 +581,7 @@ namespace PetriEngine { namespace PQL {
     }
 
     Retval Simplifier::simplify_and(const LogicalCondition *element) {
+        //std::cout << "and\n";
         std::vector<Condition_ptr> conditions;
         std::vector<AbstractProgramCollection_ptr> lpsv;
         std::vector<AbstractProgramCollection_ptr> neglps;
@@ -737,7 +741,7 @@ namespace PetriEngine { namespace PQL {
     template<>
     Retval Simplifier::simplify_simple_quantifier<XCondition>(Retval &r, bool strict){
         operator_found = LPOP::NEXT;
-        std::cout << "has next\n";
+        //std::cout << "has next\n";
         r.lps->update_operator(AbstractProgramCollection::operator_t::X);
         r.neglps->update_operator(AbstractProgramCollection::operator_t::X);
         /*if(strict){
@@ -759,6 +763,7 @@ namespace PetriEngine { namespace PQL {
 
     template<>
     Retval Simplifier::simplify_simple_quantifier<GCondition>(Retval &r){
+        //std::cout << "global\n";
         operator_found = LPOP::GLOBAL;
         r.lps->update_operator(AbstractProgramCollection::operator_t::G);
         r.neglps->update_operator(AbstractProgramCollection::operator_t::F);
@@ -774,6 +779,7 @@ namespace PetriEngine { namespace PQL {
     template<>
     Retval Simplifier::simplify_simple_quantifier<FCondition>(Retval &r){
         operator_found = LPOP::FINAL;
+        //std::cout << "final\n";
         r.lps->update_operator(AbstractProgramCollection::operator_t::F);
         r.neglps->update_operator(AbstractProgramCollection::operator_t::G);
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context, tcx)) {
@@ -1109,6 +1115,7 @@ namespace PetriEngine { namespace PQL {
 
     void Simplifier::_accept(const CompareConjunction *element) {
         // this case is unclear to me in the hyperltl construction
+        //std::cout << "compare conjunction\n";
         assert(_context.numPaths() == 1);
         if(_context.numPaths() != 1){
             std::cerr << "CompareConjunction simplification for HyperLTL is not implemented \n";
@@ -1426,6 +1433,24 @@ namespace PetriEngine { namespace PQL {
         }
     }
 
+
+    /* creates the LP overapproximation for the negation of phi U psi (the release),
+       which is G(!psi) or F(!psi and !phi) */
+    AbstractProgramCollection_ptr negated_until_overapproximation(Retval& r_phi, Retval& r_psi){
+        auto npsi = r_psi.neglps->clone();
+        auto nphi = r_phi.neglps->clone();
+        auto conj = std::make_shared<MergeCollection>(npsi, nphi);
+        conj->update_operator(AbstractProgramCollection::operator_t::F);
+        auto npsi_2 = r_psi.neglps->clone();
+        npsi_2->update_operator(AbstractProgramCollection::operator_t::G);
+
+        std::vector<AbstractProgramCollection_ptr> members;
+        members.push_back(conj);
+        members.push_back(npsi);
+
+        return std::make_shared<UnionCollection>(std::move(members));
+    }
+
     void Simplifier::_accept(const UntilCondition *condition) {
         bool neg = _context.negated();
         _context.setNegate(false);
@@ -1437,18 +1462,21 @@ namespace PetriEngine { namespace PQL {
         Visitor::visit(this, condition->getCond2());
         Retval r2 = std::move(_return_value);
         if (r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(_context, tcx)) {
+            //std::cout << "r2 trivial true\n";
             _context.setNegate(neg);
             tcx.set_prefix(pre);
             RETURN(neg ?
                            Retval(BooleanCondition::FALSE_CONSTANT) :
                            Retval(BooleanCondition::TRUE_CONSTANT))
         } else if (r2.formula->isTriviallyFalse() || !r2.lps->satisfiable(_context, tcx)) {
+            //std::cout << "r2 trivial false\n";
             _context.setNegate(neg);
             tcx.set_prefix(pre);
             RETURN(neg ?
                            Retval(BooleanCondition::TRUE_CONSTANT) :
                            Retval(BooleanCondition::FALSE_CONSTANT))
         }
+        //std::cout << "no trivial r2\n";
         operator_parent = LPOP::OTHER;
         Visitor::visit(this, condition->getCond1());
         
@@ -1459,27 +1487,37 @@ namespace PetriEngine { namespace PQL {
 
         if (_context.negated()) {
             if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context, tcx)) {
+                //std::cout << "r1 trivial true neg\n";
                 r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
                 r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
                 RETURN(Retval(std::make_shared<NotCondition>(
-                        std::make_shared<FCondition>(r2.formula))))
+                        std::make_shared<FCondition>(r2.formula)), r2.neglps, r2.lps))
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context, tcx)) {
+                //std::cout << "r1 trivial false neg\n";
                 RETURN(Retval(std::make_shared<NotCondition>(r2.formula), r2.neglps, r2.lps))
             } else {
+                //std::cout << "no trivail r1 neg\n";
+                r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
+                //r2.neglps->update_operator(AbstractProgramCollection::operator_t::F);
+                r2.neglps = negated_until_overapproximation(r1,r2);
                 operator_parent = LPOP::UNTIL;
                 RETURN(Retval(std::make_shared<NotCondition>(
                         std::make_shared<UntilCondition>(r1.formula, r2.formula)), r2.neglps, r2.lps))
             }
         } else {
             if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context, tcx)) {
+                //std::cout << "r1 trivial true\n";
                 r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
                 r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
                 RETURN(Retval(std::make_shared<FCondition>(r2.formula), r2.lps, r2.neglps))
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context, tcx)) {
+                //std::cout << "r1 trivial false\n";
                 RETURN(std::move(r2))
             } else {
+                //std::cout << "r1 no trivial\n";
                 r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
-                r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
+                //r2.neglps->update_operator(AbstractProgramCollection::operator_t::F);
+                r2.neglps = negated_until_overapproximation(r1,r2);
                 operator_parent = LPOP::UNTIL;
                 RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula), r2.lps, r2.neglps))
             }
@@ -1510,6 +1548,7 @@ namespace PetriEngine { namespace PQL {
     }
 
     void Simplifier::_accept(const FCondition *condition) {
+        //std::cout << "accept final\n";
         operators++;
         if(_context.negated()){
             operator_parent = LPOP::GLOBAL;
@@ -1532,6 +1571,7 @@ namespace PetriEngine { namespace PQL {
 
     void Simplifier::_accept(const GCondition *condition) {
         operators++;
+        //std::cout << "accept global\n";
         if(_context.negated()){
             operator_parent = LPOP::FINAL;
         }else{
@@ -1555,6 +1595,7 @@ namespace PetriEngine { namespace PQL {
 
     void Simplifier::_accept(const XCondition *condition) {
         operators++;
+        //std::cout << "X\n";
         operator_parent = LPOP::NEXT;
         int32_t pre_operators = operators;
         auto pre = tcx.push_prefix(AbstractProgramCollection::operator_t::X, _context.negated());
