@@ -252,6 +252,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
 }
 
 ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element, const ColorType* type) {
+    if (element == nullptr) {
+        throw base_error("Expected an arc expression, got no element");
+    }
     if (strcmp(element->name(), "numberof") == 0) {
         return parseNumberOfExpression(element, type);
     } else if (strcmp(element->name(), "add") == 0) {
@@ -737,6 +740,9 @@ void PNMLParser::parseMarking(const rapidxml::xml_document<>& doc, PetriEngine::
         const auto placeType = placeTypes.find(id);
         if (placeType == placeTypes.end()) {
             throw base_error("Unknown place in marking: ", id);
+        }
+        if (child->first_node() == nullptr) {
+            throw base_error("Missing marking expression for place: ", id);
         }
         auto ae = parseArcExpression(child->first_node(), placeType->second);
         auto initialMarking = EvaluationVisitor::evaluate(*ae, context);

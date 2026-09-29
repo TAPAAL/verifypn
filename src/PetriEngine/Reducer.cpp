@@ -248,7 +248,7 @@ namespace PetriEngine {
             Transition& t = parent->_transitions[i];
             assert(!t.skip || std::find(_skippedTransitions.begin(), _skippedTransitions.end(), i) != _skippedTransitions.end());
             assert(std::is_sorted(t.pre.begin(), t.pre.end()));
-            assert(std::is_sorted(t.post.end(), t.post.end()));
+            assert(std::is_sorted(t.post.begin(), t.post.end()));
             assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
             if (t.skip) strans++;
             for(Arc& a : t.pre)
