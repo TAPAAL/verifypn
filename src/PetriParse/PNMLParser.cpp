@@ -252,6 +252,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
 }
 
 ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element, const ColorType* type) {
+    if (element == nullptr) {
+        throw base_error("Expected an arc expression, got no element");
+    }
     if (strcmp(element->name(), "numberof") == 0) {
         return parseNumberOfExpression(element, type);
     } else if (strcmp(element->name(), "add") == 0) {
@@ -262,7 +265,13 @@ ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element, 
         return std::make_shared<AddExpression>(std::move(constituents));
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
+        if (left == nullptr) {
+            throw base_error("Expected an arc expression, got no element");
+        }
         auto right = left->next_sibling();
+        if (right == nullptr) {
+            throw base_error("Expected an arc expression, got no element");
+        }
         auto res = std::make_shared<SubtractExpression>(parseArcExpression(left, type), parseArcExpression(right, type));
         auto next = right;
         while ((next = next->next_sibling())) {
@@ -271,7 +280,13 @@ ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml::xml_node<>* element, 
         return res;
     } else if (strcmp(element->name(), "scalarproduct") == 0) {
         auto scalar = element->first_node();
+        if (scalar == nullptr) {
+            throw base_error("Expected a number constant, got no element");
+        }
         auto ms = scalar->next_sibling();
+        if (ms == nullptr) {
+            throw base_error("Expected an arc expression, got no element");
+        }
         return std::make_shared<ScalarProductExpression>(parseArcExpression(ms, type), parseNumberConstant(scalar));
     } else if (strcmp(element->name(), "all") == 0) {
         return parseNumberOfExpression(element->parent(), type);
@@ -738,6 +753,9 @@ void PNMLParser::parseMarking(const rapidxml::xml_document<>& doc, PetriEngine::
         if (placeType == placeTypes.end()) {
             throw base_error("Unknown place in marking: ", id);
         }
+        if (child->first_node() == nullptr) {
+            throw base_error("Missing marking expression for place: ", id);
+        }
         auto ae = parseArcExpression(child->first_node(), placeType->second);
         auto initialMarking = EvaluationVisitor::evaluate(*ae, context);
 
@@ -1003,9 +1021,15 @@ void PNMLParser::parseValue(rapidxml::xml_node<>* element, std::string& text) {
 }
 
 uint32_t PNMLParser::parseNumberConstant(rapidxml::xml_node<>* element) {
+    if (element == nullptr) {
+        throw base_error("Expected a number constant, got no element");
+    }
     if (strcmp(element->name(), "numberconstant") == 0) {
-        auto value = element->first_attribute("value")->value();
-        return (uint32_t)atoll(value);
+        auto value = element->first_attribute("value");
+        if (value == nullptr) {
+            throw base_error("Expected a value attribute on numberconstant");
+        }
+        return (uint32_t)atoll(value->value());
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseNumberConstant(element->first_node());
     }

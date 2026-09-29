@@ -422,7 +422,7 @@ namespace PetriEngine::ExplicitColored {
     }
 
     const std::vector<const Colored::ColorType *>& ExplicitColoredPetriNetBuilder::getUnderlyingVariableColorTypes() const {
-        return std::move(_underlyingVariableColorTypes);
+        return _underlyingVariableColorTypes;
     }
 
     const Colored::ColorType * ExplicitColoredPetriNetBuilder::getPlaceUnderlyingColorType(Place_t place) const {
