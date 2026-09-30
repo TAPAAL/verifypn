@@ -18,18 +18,8 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <limits>
 
 #include "PetriEngine/Colored/Multiset.h"
-
-namespace {
-uint32_t toBoundedTokenCount(uint64_t count) {
-    if (count > std::numeric_limits<uint32_t>::max()) {
-        throw base_error("Number of tokens exceeded ", std::numeric_limits<uint32_t>::max());
-    }
-    return static_cast<uint32_t>(count);
-}
-}
 
 namespace PetriEngine {
     namespace Colored {

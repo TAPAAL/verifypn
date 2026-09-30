@@ -142,7 +142,7 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
 		| INT			{
 		                    std::unique_ptr<std::string> token($1);
-		                    $$ = new LiteralExpr(parse_bounded_int32(token->c_str()));
+		                    $$ = new LiteralExpr(parse_bounded_int32(*token));
 		                }
     | named         { $$ = $1; }
 		;

@@ -1005,11 +1005,7 @@ void PNMLParser::parseValue(rapidxml::xml_node<>* element, std::string& text) {
 uint32_t PNMLParser::parseNumberConstant(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "numberconstant") == 0) {
         auto value = element->first_attribute("value")->value();
-        uint64_t parsed = atoll(value);
-        if (parsed > std::numeric_limits<uint32_t>::max()) {
-            throw base_error("Number of tokens exceeded ", std::numeric_limits<uint32_t>::max());
-        }
-        return static_cast<uint32_t>(parsed);
+        return toBoundedTokenCount(static_cast<uint64_t>(atoll(value)));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseNumberConstant(element->first_node());
     }
