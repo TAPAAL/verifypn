@@ -53,7 +53,7 @@ namespace PetriEngine {
         }
 
         std::string lp_variable_name(int32_t var_idx, const PQL::SimplificationContext& context){
-            std::cout << "(v:" << var_idx << ")";
+            //std::cout << "(v:" << var_idx << ")";
             const uint32_t paths = context.numPaths();
             const uint32_t transitions = context.net()->numberOfTransitions();
             const uint32_t places = context.net()->numberOfPlaces();
@@ -70,10 +70,18 @@ namespace PetriEngine {
             const uint32_t v_path = var_idx % (places + transitions);
 
             if(v_path < transitions){
-                ss << "X" << (v_path);
+                if(context.getPrintLevel() < 2){
+                    ss << "X" << (v_path);
+                }else{
+                    ss << *context.net()->transitionNames()[v_path].get();
+                }
             }
             else{
-                ss << "M" << (v_path - transitions);
+                if(context.getPrintLevel() < 2){
+                    ss << "M" << (v_path - transitions);
+                }else{
+                    ss << *context.net()->placeNames()[v_path - transitions].get();
+                }
             }
 
             if(var_idx >= variables){
@@ -569,21 +577,34 @@ namespace PetriEngine {
         }
 
         // allocates all needed memory and sets variable bounds
-        glp_prob* prepare_lp(std::vector<LinearProgram*>& lps, const PQL::SimplificationContext& context){
+        // copies base constraints to use when cleaning the lp
+        std::pair<glp_prob*,std::vector<std::pair<std::vector<int>, std::vector<REAL>>>> prepare_lp(std::vector<LinearProgram*>& lps, const PQL::SimplificationContext& context){
             bool use_ilp = true;
             glp_prob* lp = context.makeBaseLP();
+            std::vector<std::pair<std::vector<int>, std::vector<REAL>>> base;
             if(!lp)
-                return nullptr;
+                return std::make_pair(nullptr, base);
+
+            for(int i = 1; i <= context.getNumBaseConstraints(); i++){
+                std::vector<int> indir(context.getNumBaseVariables());
+                std::vector<REAL> row(context.getNumBaseVariables());
+
+                int l = glp_get_mat_row(lp, i, indir.data(), row.data());
+    
+                indir.resize(l+1);
+                indir.shrink_to_fit();
+                row.resize(l+1);
+                row.shrink_to_fit();
+
+                base.emplace_back(std::make_pair(std::move(indir), std::move(row)));
+            }   
             
             auto net = context.net();
 
             int total_equations = 0;
-            for(auto prog: lps){
-                std::cout << "eq: " << prog->equations().size() << "\n";
+            for(auto& prog: lps){
                 total_equations += prog->equations().size();
             }
-
-
 
             int total_rows = context.getNumBaseConstraints() * lps.size() + total_equations;
             int total_cols = context.getNumBaseVariables() * lps.size();
@@ -604,30 +625,32 @@ namespace PetriEngine {
                         colno++;
                     }
                     // place variables
-                    for(size_t p = 1; p <= net->numberOfPlaces(); p++){
-                        glp_set_obj_coef(lp, colno, 0);
-                        glp_set_col_kind(lp, colno, use_ilp ? GLP_IV : GLP_CV);
-                        glp_set_col_bnds(lp, colno, GLP_LO, 0, infty);
-                        colno++;
+                    // for the first lp, these are set by makeBaseLP() and are fixed to the initial marking
+                    if(i > 0){
+                        for(size_t p = 1; p <= net->numberOfPlaces(); p++){
+                            glp_set_obj_coef(lp, colno, 0);
+                            glp_set_col_kind(lp, colno, use_ilp ? GLP_IV : GLP_CV);
+                            glp_set_col_bnds(lp, colno, GLP_LO, 0, infty);
+                            colno++;
+                        }
+                    }else{
+                        colno += net->numberOfPlaces();
                     }
                 }
             }
 
-            return lp;
+            return std::make_pair(lp, base);
         }
 
-        void clean_lp(glp_prob* lp, const PQL::SimplificationContext& context){
+        void clean_lp(glp_prob* lp, std::vector<std::pair<std::vector<int>, std::vector<double>>>& base, const PQL::SimplificationContext& context){
             glp_std_basis(lp);
-            std::vector<REAL> row = std::vector<REAL>(glp_get_num_cols(lp));
-            std::vector<int32_t> indir(std::max(glp_get_num_rows(lp), glp_get_num_cols(lp)));
 
-            // remove auxiliary variable added to every base constraint
+            // remove auxilliary variable added to every base constraint
             for(int i = 1; i <= context.getNumBaseConstraints(); i++){
-                auto l = glp_get_mat_row(lp, i, indir.data(), row.data());
-                glp_set_mat_row(lp, i,  l - 1, indir.data(), row.data());
+                auto& [indir, row] = base[i-1];
+                glp_set_mat_row(lp, i,  static_cast<int>(indir.size() - 1), indir.data(), row.data());
             }
         }
-
 
         bool advance_permutations(std::vector<std::vector<uint32_t>>& perms){
             for(int i = 0; i < perms.size(); i++){
@@ -647,6 +670,23 @@ namespace PetriEngine {
             }
         }
 
+        bool permutationsOverLimit(std::vector<std::vector<uint32_t>>& perms, const PQL::SimplificationContext& context){
+            uint64_t total = 1;
+            for(int i = 0; i < perms.size(); i++){
+                if(perms[i].size() > 10){
+                    return true;
+                }
+                uint64_t fact = 1;
+                for(uint64_t j = 2; j <= perms[i].size(); j++)
+                    fact *= j;
+                
+                total *= fact;
+                if(total > context.getPermutationLimit())
+                    return true;
+            }
+            return false;
+        }
+
         bool LinearProgram::solveFinalConjunctionImpossible(std::vector<LinearProgram*>& lps, std::vector<std::vector<uint32_t>>& perms, std::vector<uint32_t>& starts,const PQL::SimplificationContext& context, uint32_t solvetime){
             if (lps.size() == 0 || context.timeout()){
                 return false;
@@ -662,49 +702,65 @@ namespace PetriEngine {
                 }
             }
 
+            if(permutationsOverLimit(perms, context)){
+                return false;
+            }
         
             bool sat = false;
             int lps_solved = 0;
 
             
-            glp_prob* lp = prepare_lp(lps, context);
-            std::cout << "prepared lp\n";
+            auto [lp, base] = prepare_lp(lps, context);
             if(!lp)
                 return false;
 
-            
             std::vector<uint32_t> order;
             for(int i = 0; i < lps.size();i++){
                 order.push_back(i);
             }
 
-
-            std::cout << "order pre : ";
+            /*std::cout << "order pre : ";
             for(int i = 0; i < order.size(); i++){
                 std::cout << order[i] << ",";
             }
             std::cout << "\n";
+            std::cout << "starts : ";
+            for(int i = 0; i < starts.size(); i++){
+                std::cout << starts[i] << ",";
+            }
+            std::cout << "\n";
 
+            std::cout << "perms size:" << perms.size() << "\n";*/
+            
             do{
                 //glp_prob* lp = context.makeBaseLP();
-                std::cout << "iter lp\n";
+                std::vector<int> ind_(glp_get_num_cols(lp));
+                int l = glp_get_mat_row(lp, 1, ind_.data(), nullptr);
+
                 write_order(order, perms, starts);
-                std::cout << "order written\n";
                 
-                std::cout << "order : ";
+                
+                /*std::cout << "order : ";
                 for(int i = 0; i < order.size(); i++){
                     std::cout << order[i] << ",";
                 }
-                std::cout << "\n";
-               
+                std::cout << "\n";*/
+
+                lps_solved += 1;
                 if(!isFinalPermutationImpossible(lp, order, lps, context, solvetime)){
-                    std::cout << "impossible!\n";
+                    //std::cout << "possible!\n";
                     sat = true;
                     break;
                 }
-                std::cout << "clean lp\n";
-                clean_lp(lp, context);
-                lps_solved += 1;
+
+                if(context.timeout()){
+                    sat = true;
+                    break;
+                }
+
+                l = glp_get_mat_row(lp, 1, ind_.data(), nullptr);
+                //std::cout << "impossible!\n";
+                clean_lp(lp, base, context); 
             }while(advance_permutations(perms));
             glp_delete_prob(lp);
             std::cout << "lps solved: " << lps_solved << "\n";
@@ -754,7 +810,7 @@ namespace PetriEngine {
 
             //glp_add_cols(lp, context.getNumBaseVariables() * (lps.size() + offset - 1));
             for(int perm_idx = 0; perm_idx < permutation.size(); perm_idx++){
-                std::cout << "perm idx " << perm_idx << "\n";
+                //std::cout << "perm idx " << perm_idx << "\n";
                 uint32_t lp_idx = permutation[perm_idx];
                 const int variable_shift = (perm_idx) * context.getNumBaseVariables();
                 if(perm_idx != 0){
@@ -787,18 +843,9 @@ namespace PetriEngine {
                         } 
                     }
                 }
-                std::cout << "add equations\n";
                 // add equations
-                std::cout << "shift: " << variable_shift << "\n";
-                std::cout << "cols: " << nCol << "\n";
-                std::cout << "rows: " << nRow << "\n";
-                std::cout << "rowno: " << rowno << "\n";
-                std::cout << "lp idx: " << lp_idx << "\n";
-                std::cout << "lp size: " << lps.size() << "\n";
-                std::cout << "lp eq: " << (lps[lp_idx]->size() > 1) << "\n"; 
                 if(emplaceEquationsShifted(lp, context, rowno, row, indir, lps[lp_idx]->equations(), variable_shift)){return true;}
                 if(context.timeout()){return false;}
-                std::cout << "past equations\n";
 
                 // Set objective, kind and bounds
                 /*for(size_t path = 0; path < static_cast<size_t>(context.numPaths()); path++){
@@ -840,14 +887,13 @@ namespace PetriEngine {
             
             printConstraints(context, lp);
 
-            std::cout << "solve\n";
             return solve_built_lp(lp, context, solvetime, false) == result_t::IMPOSSIBLE;
         }
 
         bool LinearProgram::isNStepsImpossible(double firelimit, bool strict, const PQL::SimplificationContext& context, uint32_t solvetime){
             bool use_ilp = true;
             auto net = context.net();
-
+            std::cout << "n steps\n";
             if (_equations.size() == 0 || context.timeout()){
                 return false;
             }

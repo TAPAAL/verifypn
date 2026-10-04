@@ -239,6 +239,7 @@ namespace PetriEngine {
                     Simplification::LPCache* cache)
                     :  SimplificationContext(marking, net, num_paths, queryTimeout, options.lpsolveTimeout, options.lpPrintLevel, cache){
                         _rules = {options.useGRule, options.useFRule, options.useXRule};
+                        _permutationLimit = static_cast<uint64_t>(options.permutationLimit);
                 
             }
 
@@ -323,6 +324,11 @@ namespace PetriEngine {
                 return _rules;
             } 
 
+            const uint64_t getPermutationLimit() const
+            {
+                return _permutationLimit;
+            }
+
             void addAllPathConstraint(glp_prob* lp, size_t t, size_t l, int32_t* ind, double* col) const;
             void addAllPathConstraint(glp_prob* lp, size_t t, size_t l, std::vector<int32_t>& ind, std::vector<double>& col) const;
 
@@ -333,6 +339,7 @@ namespace PetriEngine {
         private:
             uint32_t _num_paths = 1;
             simplificationRules _rules;
+            uint64_t _permutationLimit = 128;
             bool _negated;
             const MarkVal* _marking;
             bool _markingOutOfBounds;

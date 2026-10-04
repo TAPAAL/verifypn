@@ -744,7 +744,7 @@ namespace PetriEngine { namespace PQL {
         //std::cout << "has next\n";
         r.lps->update_operator(AbstractProgramCollection::operator_t::X);
         r.neglps->update_operator(AbstractProgramCollection::operator_t::X);
-        /*if(strict){
+        /*if(!tcx.has_prefix()){
             if(isNextImpossible(r.neglps, true)){
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
@@ -753,9 +753,9 @@ namespace PetriEngine { namespace PQL {
             }
         }*/
 
-        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context, tcx)) {
+        if (r.formula->isTriviallyTrue() || (!tcx.has_prefix() && !r.neglps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
-        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context, tcx)) {
+        } else if (r.formula->isTriviallyFalse() || (!tcx.has_prefix() && !r.lps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         }
         return Retval(std::make_shared<XCondition>(r.formula), r.lps, r.neglps);
@@ -767,7 +767,7 @@ namespace PetriEngine { namespace PQL {
         operator_found = LPOP::GLOBAL;
         r.lps->update_operator(AbstractProgramCollection::operator_t::G);
         r.neglps->update_operator(AbstractProgramCollection::operator_t::F);
-        if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context, tcx)) {
+        if (r.formula->isTriviallyTrue() || (!tcx.has_prefix() && !r.neglps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context, tcx)) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
@@ -784,7 +784,7 @@ namespace PetriEngine { namespace PQL {
         r.neglps->update_operator(AbstractProgramCollection::operator_t::G);
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context, tcx)) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
-        } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context, tcx)) {
+        } else if (r.formula->isTriviallyFalse() || (!tcx.has_prefix() && !r.lps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         } else {
             return Retval(std::make_shared<FCondition>(r.formula), r.lps, r.neglps);
@@ -1458,7 +1458,8 @@ namespace PetriEngine { namespace PQL {
         operator_parent = LPOP::OTHER;
         // TODO: set allow_basic_only here and disable once othe rules are implemented
         auto pre = tcx.clear_context();
-       
+        tcx.push_prefix(AbstractProgramCollection::operator_t::F, _context.negated());
+        
         Visitor::visit(this, condition->getCond2());
         Retval r2 = std::move(_return_value);
         if (r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(_context, tcx)) {
@@ -1595,7 +1596,7 @@ namespace PetriEngine { namespace PQL {
 
     void Simplifier::_accept(const XCondition *condition) {
         operators++;
-        //std::cout << "X\n";
+        //std::cout << "X accept\n";
         operator_parent = LPOP::NEXT;
         int32_t pre_operators = operators;
         auto pre = tcx.push_prefix(AbstractProgramCollection::operator_t::X, _context.negated());

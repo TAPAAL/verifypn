@@ -65,7 +65,8 @@ struct options_t {
     int queryReductionTimeout = 30, intervalTimeout = 10, partitionTimeout = 5, lpsolveTimeout = 10, lpPrintLevel = 0, initPotencyTimeout = 10;
     TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
-    bool useGRule = true, useFRule = false, useXRule = true;
+    bool useGRule = true, useFRule = true, useXRule = true;
+    int permutationLimit = 128;
 
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;

@@ -449,6 +449,13 @@ bool options_t::parse(int argc, const char** argv) {
             if(has_n && (useFRule || useGRule || useXRule)){
                 throw base_error("Argument Error: Invalid LPRule argument ", std::quoted(argv[i]), ", \'N\' is incompatible with other values");
             }
+        } else if (std::strcmp(argv[i], "-lpl") == 0 || std::strcmp(argv[i], "--lp-permutation-limit") == 0){
+             if (i == argc - 1) {
+                throw base_error("Missing number after ", std::quoted(argv[i]));
+            }
+            if (sscanf(argv[++i], "%d", &permutationLimit) != 1 || permutationLimit < 0) {
+                throw base_error("Argument Error: Invalid LP permutation limit argument ", std::quoted(argv[i]));
+            }
         } else if (std::strcmp(argv[i], "-e") == 0 || std::strcmp(argv[i], "--state-space-exploration") == 0) {
             statespaceexploration = true;
             computePartition = false;
