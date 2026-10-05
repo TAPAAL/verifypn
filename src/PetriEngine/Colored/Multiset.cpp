@@ -30,7 +30,7 @@ namespace PetriEngine {
                 : _set(), _type(nullptr)
         {
             for (auto& c : colors) {
-                (*this)[c.first] += c.second;
+                (*this)[c.first] = toBoundedTokenCount(static_cast<uint64_t>((*this)[c.first]) + c.second);
             }
         }
 
@@ -65,7 +65,7 @@ namespace PetriEngine {
                 const Color* color = &(*ColorType::dotInstance()->begin());
                 if (_type != nullptr)
                     color = &((*_type)[c.first]);
-                (*this)[color] += c.second;
+                (*this)[color] = toBoundedTokenCount(static_cast<uint64_t>((*this)[color]) + c.second);
             }
         }
 
@@ -86,7 +86,7 @@ namespace PetriEngine {
 
         void Multiset::operator *=(uint32_t scalar) {
             for (auto& c : _set) {
-                c.second *= scalar;
+                c.second = toBoundedTokenCount(static_cast<uint64_t>(c.second) * scalar);
             }
         }
 

@@ -1005,7 +1005,7 @@ void PNMLParser::parseValue(rapidxml::xml_node<>* element, std::string& text) {
 uint32_t PNMLParser::parseNumberConstant(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "numberconstant") == 0) {
         auto value = element->first_attribute("value")->value();
-        return (uint32_t)atoll(value);
+        return toBoundedTokenCount(static_cast<uint64_t>(atoll(value)));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseNumberConstant(element->first_node());
     }

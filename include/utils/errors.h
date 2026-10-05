@@ -26,6 +26,11 @@
 #define ERRORS_H
 
 #include <sstream>
+#include <limits>
+#include <cstdint>
+#include <charconv>
+#include <string_view>
+#include <system_error>
 
 enum class ReturnValue {
     SuccessCode = 0,
@@ -65,5 +70,35 @@ struct base_error : public std::exception {
         return os;
     }
 };
+
+inline uint32_t toBoundedTokenCount(uint64_t count) {
+    if (count > std::numeric_limits<uint32_t>::max()) {
+        throw base_error("Number of tokens exceeded ", std::numeric_limits<uint32_t>::max());
+    }
+    return static_cast<uint32_t>(count);
+}
+
+inline int32_t parse_bounded_int32(std::string_view text) {
+    if (text.empty()) {
+        throw base_error("Expected an integer constant, got \"\"");
+    }
+
+    int32_t value = 0;
+    const char* const first = text.data();
+    const char* const last = first + text.size();
+    const std::from_chars_result result = std::from_chars(first, last, value);
+    if (result.ec == std::errc::invalid_argument || result.ptr == first || result.ptr != last) {
+        throw base_error("Expected an integer constant, got \"", text, "\"");
+    }
+    if (result.ec == std::errc::result_out_of_range) {
+        if (text.front() == '-') {
+            throw base_error("Integer constant ", text, " is less than ",
+                             std::numeric_limits<int32_t>::min());
+        }
+        throw base_error("Integer constant ", text, " exceeded ",
+                         std::numeric_limits<int32_t>::max());
+    }
+    return value;
+}
 
 #endif /* ERRORS_H */
