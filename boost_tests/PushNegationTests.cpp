@@ -4,6 +4,8 @@
 #include <PetriEngine/PQL/Simplifier.h>
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/PQL/PushNegation.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
+#include <sstream>
 
 using namespace PetriEngine::PQL;
 
@@ -89,4 +91,21 @@ BOOST_AUTO_TEST_CASE(equal_zero_with_plus_is_rewritten_to_leq) {
 
     BOOST_REQUIRE_MESSAGE(std::dynamic_pointer_cast<LessThanOrEqualCondition>(res) != nullptr,
                           "Equality with non-negative expression should be rewritten to LessThanOrEqual");
+}
+
+BOOST_AUTO_TEST_CASE(print_negated_trace_scoped_fireability) {
+    std::vector<CompareConjunction::cons_t> constraints(2);
+    constraints[0]._name = std::make_shared<const std::string>("N__idle");
+    constraints[1]._name = std::make_shared<const std::string>("N__low_ready");
+    for (auto& constraint : constraints) constraint._lower = 1;
+    auto bounds = std::make_shared<CompareConjunction>(std::move(constraints), false);
+    auto condition = std::make_shared<NotCondition>(
+        std::make_shared<PathSelectCondition>("T1", bounds));
+    auto stats = negstat_t();
+    auto simplified = pushNegation(condition, stats, EvaluationContext(), false, false, false);
+
+    std::ostringstream os;
+    QueryPrinter printer(os);
+    Visitor::visit(printer, simplified);
+    BOOST_CHECK_EQUAL(os.str(), "(not ((1 <= T1.N__idle) and (1 <= T1.N__low_ready)))");
 }
