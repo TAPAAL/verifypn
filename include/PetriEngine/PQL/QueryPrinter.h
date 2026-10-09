@@ -122,6 +122,9 @@ namespace PetriEngine {
 
         protected:
             std::ostream &os;
+            std::string _path;
+
+            void print_name(const std::string& name);
 
             void _accept(const LogicalCondition *element, const std::string &op);
 

@@ -19,6 +19,11 @@
 
 namespace PetriEngine {
     namespace PQL {
+        void QueryPrinter::print_name(const std::string& name) {
+            if (!_path.empty()) os << _path << ".";
+            os << name;
+        }
+
         void QueryPrinter::_accept(const NotCondition *element) {
             os << "(not ";
             Visitor::visit(this, (*element)[0]);
@@ -69,23 +74,30 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const DeadlockCondition *element) {
-            os << "deadlock";
+            print_name("deadlock");
         }
 
         void QueryPrinter::_accept(const CompareConjunction *element) {
             os << "(";
-            if (element->isNegated()) os << "not";
+            if (element->isNegated()) os << "not (";
             bool first = true;
             for (const auto &cons : *element) {
                 if (!first) os << " and ";
-                if (cons._lower != 0)
-                    os << "(" << cons._lower << " <= " << *cons._name << ")";
+                if (cons._lower != 0) {
+                    os << "(" << cons._lower << " <= ";
+                    print_name(*cons._name);
+                    os << ")";
+                }
                 if (cons._lower != 0 && cons._upper != std::numeric_limits<uint32_t>::max())
                     os << " and ";
-                if (cons._upper != std::numeric_limits<uint32_t>::max())
-                    os << "(" << cons._upper << " >= " << *cons._name << ")";
+                if (cons._upper != std::numeric_limits<uint32_t>::max()) {
+                    os << "(" << cons._upper << " >= ";
+                    print_name(*cons._name);
+                    os << ")";
+                }
                 first = false;
             }
+            if (element->isNegated()) os << ")";
             os << ")";
         }
 
@@ -94,7 +106,7 @@ namespace PetriEngine {
             auto places = element->places();
             for (size_t i = 0; i < places.size(); ++i) {
                 if (i != 0) os << ", ";
-                os << *places[i]._name;
+                print_name(*places[i]._name);
             }
             os << ")";
         }
@@ -138,8 +150,10 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const PathSelectCondition* condition)
         {
-            os << condition->name() << ".";
+            auto old = _path;
+            _path = condition->name();
             Visitor::visit(this, condition->child());
+            _path = old;
         }
 
         void QueryPrinter::_accept(const EXCondition *condition) {
@@ -196,23 +210,28 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const UnfoldedFireableCondition *element) {
-            os << "is-fireable(" << *element->getName() << ")";
+            os << "is-fireable(";
+            print_name(*element->getName());
+            os << ")";
         }
 
         void QueryPrinter::_accept(const FireableCondition *element) {
-            if(element->getCompiled())
+            if (element->getCompiled()) {
                 Visitor::visit(this, element->getCompiled());
-            else
-                os << "is-fireable(" << *element->getName() << ")";
+                return;
+            }
+            
+            os << "is-fireable(";
+            print_name(*element->getName());
+            os << ")";
         }
 
         void QueryPrinter::_accept(const UpperBoundsCondition *element) {
             os << "bounds (";
             auto places = element->getPlaces();
-            for(size_t i = 0; i < places.size(); ++i)
-            {
+            for(size_t i = 0; i < places.size(); ++i) {
                 if(i != 0) os << ", ";
-                os << *places[i];
+                print_name(*places[i]);
             }
             os << ")";
         }
@@ -263,7 +282,7 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const UnfoldedIdentifierExpr *element) {
-            os << *element->name();
+            print_name(*element->name());
         }
 
         void QueryPrinter::_accept(const LiteralExpr *element) {
@@ -273,8 +292,10 @@ namespace PetriEngine {
         void QueryPrinter::_accept(const CommutativeExpr *element, const std::string &op) {
             os << "(" << element->constant();
             for (const auto &id: element->places()) {
-                os << " " << op << " " << *id.second;
+                os << " " << op << " ";
+                print_name(*id.second);
             }
+
             for (const auto &expr : element->expressions()) {
                 os << " " << op << " ";
                 Visitor::visit(this, expr);
@@ -311,15 +332,19 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const IdentifierExpr *element) {
-            if(element->compiled())
+            if (element->compiled()) {
                 Visitor::visit(this, element->compiled());
-            else
-                os << *element->name();
+                return;
+            }
+
+            print_name(*element->name());
         }
 
         void QueryPrinter::_accept(const PathSelectExpr *element) {
-            os << element->name() << ".";
+            auto old = _path;
+            _path = element->name();
             Visitor::visit(this, element->child());
+            _path = old;
         }
     }
 }
