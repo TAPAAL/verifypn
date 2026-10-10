@@ -4,6 +4,7 @@
 #include <functional>
 #include <cassert>
 #include <cstring>
+#include <cstdint>
 //#include "../PQL/PQL.h"
 
 namespace PetriEngine {
