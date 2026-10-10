@@ -741,38 +741,53 @@ namespace PetriEngine { namespace PQL {
     template<>
     Retval Simplifier::simplify_simple_quantifier<XCondition>(Retval &r, bool strict){
         operator_found = LPOP::NEXT;
-        //std::cout << "has next\n";
-        r.lps->update_operator(AbstractProgramCollection::operator_t::X);
-        r.neglps->update_operator(AbstractProgramCollection::operator_t::X);
-        /*if(!tcx.has_prefix()){
-            if(isNextImpossible(r.neglps, true)){
+
+        bool rules_enabled = _context.rules().F_rule && _context.rules().G_rule && _context.rules().X_rule;
+        if(_context.rules().X_rule){
+            r.lps->update_operator(AbstractProgramCollection::operator_t::X);
+            r.neglps->update_operator(AbstractProgramCollection::operator_t::X);
+        }
+       
+        if (r.formula->isTriviallyTrue() || ((!tcx.has_prefix() || !rules_enabled) && !r.neglps->satisfiable(_context, tcx))) {
+            if(_context.negated()){
+                return Retval(BooleanCondition::FALSE_CONSTANT);
+            }else{
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
-            else if(isNextImpossible(r.lps, true)){
+        } else if (r.formula->isTriviallyFalse() || (!tcx.has_prefix() && !r.lps->satisfiable(_context, tcx))) {
+            if(_context.negated()){
+                return Retval(BooleanCondition::TRUE_CONSTANT);
+            }else{
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             }
-        }*/
-
-        if (r.formula->isTriviallyTrue() || (!tcx.has_prefix() && !r.neglps->satisfiable(_context, tcx))) {
-            return Retval(BooleanCondition::TRUE_CONSTANT);
-        } else if (r.formula->isTriviallyFalse() || (!tcx.has_prefix() && !r.lps->satisfiable(_context, tcx))) {
-            return Retval(BooleanCondition::FALSE_CONSTANT);
         }
-        return Retval(std::make_shared<XCondition>(r.formula), r.lps, r.neglps);
+        if(_context.rules().X_rule){
+            return Retval(std::make_shared<XCondition>(r.formula), r.lps, r.neglps);
+        }else{
+            return Retval(std::make_shared<XCondition>(r.formula));
+        }
     }
 
     template<>
     Retval Simplifier::simplify_simple_quantifier<GCondition>(Retval &r){
         //std::cout << "global\n";
         operator_found = LPOP::GLOBAL;
-        r.lps->update_operator(AbstractProgramCollection::operator_t::G);
-        r.neglps->update_operator(AbstractProgramCollection::operator_t::F);
-        if (r.formula->isTriviallyTrue() || (!tcx.has_prefix() && !r.neglps->satisfiable(_context, tcx))) {
+        bool rules_enabled = _context.rules().F_rule && _context.rules().G_rule && _context.rules().X_rule;
+        if(_context.rules().F_rule && _context.rules().G_rule){
+            r.lps->update_operator(AbstractProgramCollection::operator_t::G);
+            r.neglps->update_operator(AbstractProgramCollection::operator_t::F);
+        }
+
+        if (r.formula->isTriviallyTrue() || ((!tcx.has_prefix() || !rules_enabled) && !r.neglps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
         } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(_context, tcx)) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         } else {
-            return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+            if(_context.rules().F_rule && _context.rules().G_rule){
+                return Retval(std::make_shared<GCondition>(r.formula), r.lps, r.neglps);
+            }else{
+                return Retval(std::make_shared<GCondition>(r.formula));
+            }
         }
     }
 
@@ -780,14 +795,22 @@ namespace PetriEngine { namespace PQL {
     Retval Simplifier::simplify_simple_quantifier<FCondition>(Retval &r){
         operator_found = LPOP::FINAL;
         //std::cout << "final\n";
-        r.lps->update_operator(AbstractProgramCollection::operator_t::F);
-        r.neglps->update_operator(AbstractProgramCollection::operator_t::G);
+        bool rules_enabled = _context.rules().F_rule && _context.rules().G_rule && _context.rules().X_rule;
+        if(_context.rules().F_rule && _context.rules().G_rule){
+            r.lps->update_operator(AbstractProgramCollection::operator_t::F);
+            r.neglps->update_operator(AbstractProgramCollection::operator_t::G);
+        }
+
         if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(_context, tcx)) {
             return Retval(BooleanCondition::TRUE_CONSTANT);
-        } else if (r.formula->isTriviallyFalse() || (!tcx.has_prefix() && !r.lps->satisfiable(_context, tcx))) {
+        } else if (r.formula->isTriviallyFalse() || ((!tcx.has_prefix() || !rules_enabled) && !r.lps->satisfiable(_context, tcx))) {
             return Retval(BooleanCondition::FALSE_CONSTANT);
         } else {
-            return Retval(std::make_shared<FCondition>(r.formula), r.lps, r.neglps);
+            if(_context.rules().F_rule && _context.rules().G_rule){
+                return Retval(std::make_shared<FCondition>(r.formula), r.lps, r.neglps);
+            }else{
+                return Retval(std::make_shared<FCondition>(r.formula));
+            }
         }
     }
 
@@ -1453,6 +1476,7 @@ namespace PetriEngine { namespace PQL {
 
     void Simplifier::_accept(const UntilCondition *condition) {
         bool neg = _context.negated();
+        bool rules_enabled = _context.rules().F_rule && _context.rules().G_rule && _context.rules().X_rule;
         _context.setNegate(false);
         operators++;
         operator_parent = LPOP::OTHER;
@@ -1489,38 +1513,57 @@ namespace PetriEngine { namespace PQL {
         if (_context.negated()) {
             if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context, tcx)) {
                 //std::cout << "r1 trivial true neg\n";
-                r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
-                r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
-                RETURN(Retval(std::make_shared<NotCondition>(
-                        std::make_shared<FCondition>(r2.formula)), r2.neglps, r2.lps))
+                if(rules_enabled){
+                    r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
+                    r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
+                    RETURN(Retval(std::make_shared<NotCondition>(
+                            std::make_shared<FCondition>(r2.formula)), r2.neglps, r2.lps))
+                }else{
+                     RETURN(Retval(std::make_shared<NotCondition>(
+                        std::make_shared<FCondition>(r2.formula))))
+                }
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context, tcx)) {
                 //std::cout << "r1 trivial false neg\n";
-                RETURN(Retval(std::make_shared<NotCondition>(r2.formula), r2.neglps, r2.lps))
+                if(rules_enabled){
+                    RETURN(Retval(std::make_shared<NotCondition>(r2.formula), r2.neglps, r2.lps))
+                }else{
+                    RETURN(Retval(std::make_shared<NotCondition>(r2.formula))) 
+                }
             } else {
-                //std::cout << "no trivail r1 neg\n";
-                r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
-                //r2.neglps->update_operator(AbstractProgramCollection::operator_t::F);
-                r2.neglps = negated_until_overapproximation(r1,r2);
-                operator_parent = LPOP::UNTIL;
-                RETURN(Retval(std::make_shared<NotCondition>(
-                        std::make_shared<UntilCondition>(r1.formula, r2.formula)), r2.neglps, r2.lps))
+                if(rules_enabled){
+                    r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
+                
+                    r2.neglps = negated_until_overapproximation(r1,r2);
+                    operator_parent = LPOP::UNTIL;
+                    RETURN(Retval(std::make_shared<NotCondition>(
+                            std::make_shared<UntilCondition>(r1.formula, r2.formula)), r2.neglps, r2.lps))
+                }else{
+                    RETURN(Retval(std::make_shared<NotCondition>(
+                            std::make_shared<UntilCondition>(r1.formula, r2.formula))))
+                }
             }
         } else {
             if (r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(_context, tcx)) {
                 //std::cout << "r1 trivial true\n";
-                r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
-                r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
-                RETURN(Retval(std::make_shared<FCondition>(r2.formula), r2.lps, r2.neglps))
+                if(rules_enabled){
+                    r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
+                    r2.neglps->update_operator(AbstractProgramCollection::operator_t::G);
+                    RETURN(Retval(std::make_shared<FCondition>(r2.formula), r2.lps, r2.neglps))
+                }else{
+                    RETURN(Retval(std::make_shared<FCondition>(r2.formula)))
+                }
             } else if (r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(_context, tcx)) {
                 //std::cout << "r1 trivial false\n";
                 RETURN(std::move(r2))
             } else {
-                //std::cout << "r1 no trivial\n";
-                r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
-                //r2.neglps->update_operator(AbstractProgramCollection::operator_t::F);
-                r2.neglps = negated_until_overapproximation(r1,r2);
-                operator_parent = LPOP::UNTIL;
-                RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula), r2.lps, r2.neglps))
+                if(rules_enabled){
+                    r2.lps->update_operator(AbstractProgramCollection::operator_t::F);
+                    r2.neglps = negated_until_overapproximation(r1,r2);
+                    operator_parent = LPOP::UNTIL;
+                    RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula), r2.lps, r2.neglps))
+                }else{
+                    RETURN(Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula)))
+                }
             }
         }
     }

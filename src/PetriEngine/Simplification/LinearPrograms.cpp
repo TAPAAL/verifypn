@@ -4,6 +4,123 @@
 
 namespace PetriEngine {
     namespace Simplification {
+        void AbstractProgramCollection::timepoint::print(){
+            print(0);
+        }
+        void AbstractProgramCollection::timepoint::print(int depth){
+            std::string tabs = "";
+            for(int i = 0; i < depth; i++)
+                tabs += "\t";
+            
+            std::cout << tabs << "LPS: [" << free_lps.size() << "," << final_lps.size() << "," << next_lps.size() << "," << global_lps.size() << "]\n";
+            for(auto& suc: next)
+                suc->print(depth + 1);
+        }
+
+        void AbstractProgramCollection::timepoint::make_union(LinearProgram& union_lp){
+            for(auto& [tcx_lp, lp]: free_lps){
+                lp.make_union(union_lp);
+            }
+            for(auto& [tcx_lp, lp]: next_lps){
+                lp.make_union(union_lp);
+            }
+            for(auto& [tcx_lp, lp]: final_lps){
+                lp.make_union(union_lp);
+            }
+            for(auto& [tcx_lp, lp]: global_lps){
+                lp.make_union(union_lp);
+            }
+
+            for(auto& suc : next){
+                suc->make_union(union_lp);
+            }
+        }
+
+        bool AbstractProgramCollection::timepoint::is_impossible(const PQL::SimplificationContext& context, temporalContext& tcx, uint32_t solvetime){
+            std::vector<LinearProgram*> progs;
+            std::vector<std::pair<uint32_t, uint32_t>> ivals;
+            return is_impossible(progs, ivals, context, tcx, solvetime);
+        }
+
+        bool AbstractProgramCollection::timepoint::is_impossible(std::vector<LinearProgram*>& progs, std::vector<std::pair<uint32_t, uint32_t>>& ivals, const PQL::SimplificationContext& context, temporalContext& tcx, uint32_t solvetime){
+            assert(is_compiled);
+
+            if(!free_lps.empty()){
+                assert(free_lps.size() == 1);
+                bool free_impossible = free_lps[0].prog.isImpossible(context, solvetime);
+                if(free_impossible){
+                    //std::cout << "free impossible\n";
+                    return true;
+                }
+
+                ivals.push_back(std::make_pair(progs.size(), progs.size()));
+                progs.push_back(&free_lps[0].prog);
+            }
+
+            const int start_interval = progs.size();
+
+            if(tcx.enable_X_rule){
+                for(auto& [lp_tcx, lp] : next_lps){
+                    if(!tcx.has_prefix() && !is_child){
+                        double lim = static_cast<double>(lp_tcx._next_ops);
+                        if(lp.isNStepsImpossible(lim, (!context.isDeadlocked() && lp_tcx._next_ops == 1), context, solvetime)){
+                            return true;
+                        }
+                    }else{
+                        if(lp.isImpossible(context, solvetime)){
+                            return true;
+                        }
+                    }
+
+                    progs.push_back(&lp);
+                }
+            }
+
+            if(tcx.enable_F_rule){
+                for(auto& [lp_tcx, lp] : final_lps){
+                    if(lp.isImpossible(context, solvetime)){
+                        return true;
+                    }
+                    progs.push_back(&lp);
+                }
+            
+                const int end_interval = progs.size();
+                if(start_interval != end_interval){
+                    ivals.push_back(std::make_pair(start_interval, end_interval));
+                }
+                
+                if(next.empty() && progs.size() > 1){
+                    std::vector<std::vector<uint32_t>> perms;
+                    std::vector<uint32_t> starts;
+                    for(auto& [s, e] : ivals){
+                        if(s == e)
+                            continue;
+                        
+                        starts.push_back(s);
+                        std::vector<uint32_t> p;
+                        for(uint32_t i = s; i < e; i++){
+                            p.push_back(i);
+                        }
+                        perms.emplace_back(std::move(p));
+                    }
+                    bool final_impossible = LinearProgram::solveFinalConjunctionImpossible(progs, perms, starts, context);
+                    if(final_impossible)
+                        return true;
+                }else{
+                    const auto num_prog = progs.size();
+                    const auto num_ivals = ivals.size();
+                    for(auto& suc : next){
+                        if(suc->is_impossible(progs, ivals, context, tcx, solvetime)){
+                            return true;
+                        }else{
+                            progs.resize(num_prog);
+                            ivals.resize(num_ivals);
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
         void AbstractProgramCollection::mergeBuffer::compile_program(){
             assert(!time_path->is_compiled);
@@ -19,31 +136,30 @@ namespace PetriEngine {
             for(const auto& [tcx, lp] : time_path->free_lps)
                 free_program.make_union(lp);
 
+            time_path->free_lps.clear();
+            time_path->free_lps.push_back({temporalContext(), free_program}); 
+
             if(!global_program.size() == 0){
-
-                free_program.make_union(global_program);
-
-                for(auto cur = time_path; cur != nullptr; cur = cur->next){
-                    if(cur != time_path){
-                        for(auto& [tcx, lp] : cur->free_lps)
-                            lp.make_union(global_program);
-                    }
-
-                    for(auto& [tcx, lp] : cur->final_lps)
-                        lp.make_union(global_program);
-                    
-                    for(auto& [tcx, lp] : cur->next_lps)
-                        lp.make_union(global_program);
-                }
+                time_path->make_union(global_program);
                 
                 time_path->global_lps.clear();
                 //time_path->global_lps.push_back({temporalContext(), std::make_shared<LinearProgram>(global_program)});
             }
-            
-            time_path->free_lps.clear();
-            time_path->free_lps.push_back({temporalContext(), free_program}); 
         }
 
+        void AbstractProgramCollection::mergeBuffer::merge(mergeBuffer& other){
+           
+            /*time_path->print();
+            other.time_path->print();
+            if(!other.time_path->is_empty() && !other.time_path->has_conditions()){
+                std::cout << "next only path\n";
+            }*/
+            std::copy(other.time_path->next.begin(), other.time_path->next.end(), std::back_inserter(time_path->next));
+            std::copy(other.time_path->free_lps.begin(), other.time_path->free_lps.end(), std::back_inserter(time_path->free_lps));
+            std::copy(other.time_path->final_lps.begin(), other.time_path->final_lps.end(), std::back_inserter(time_path->final_lps));
+            std::copy(other.time_path->global_lps.begin(), other.time_path->global_lps.end(), std::back_inserter(time_path->global_lps));
+            std::copy(other.time_path->next_lps.begin(), other.time_path->next_lps.end(), std::back_inserter(time_path->next_lps));
+        }
         void AbstractProgramCollection::mergeBuffer::apply_operator(operator_t update_op, int next_ops){
             switch(update_op){
                 case operator_t::FREE:{
@@ -99,7 +215,8 @@ namespace PetriEngine {
                 return false;
             }
             assert(time_path);
-            if(time_path->free_lps.size() != 0){
+            return time_path->is_impossible(context, tcx, solvetime);
+            /*if(time_path->free_lps.size() != 0){
                 assert(time_path->free_lps.size() == 1);
                 bool free_impossible = time_path->free_lps[0].prog.isImpossible(context, solvetime);
                 if(free_impossible){
@@ -136,10 +253,10 @@ namespace PetriEngine {
             if(tcx.enable_X_rule){
                 for(auto cur = time_path; cur != nullptr; cur = cur->next){
                     for(auto& [lp_tcx, lp] : cur->next_lps){
-                        if(false && !tcx.has_prefix()){
+                        if(cur == time_path && !tcx.has_prefix()){
                             double lim = static_cast<double>(lp_tcx.prefix_X);
                             std::cout << "fire limit " << lim << "\n";
-                            if(lp.isNStepsImpossible(lim, !context.isDeadlocked(), context, solvetime)){
+                            if(lp.isNStepsImpossible(lim, (!context.isDeadlocked() && lp_tcx.prefix_X == 1), context, solvetime)){
                                 return true;
                             }
                         }else{
@@ -150,7 +267,7 @@ namespace PetriEngine {
                     }
                 }
 
-            }
+            }*/
 
             return false;
         }
@@ -407,7 +524,7 @@ namespace PetriEngine {
                     more_left = left->merge(lempty, dry_buf, tcx, true);
                 }else{
                     more_left = left->merge(lempty, buf, tcx/*, dry_run || curr < nsat*/);
-                    buf.print();
+                    //buf.print();
                 }
 
                 if (!more_left) merge_right = true;
@@ -627,16 +744,18 @@ namespace PetriEngine {
             //std::cout << "sinsgle program\n";
             // this is where the magic needs to happen
             //tcx.update(_operator, _next_ops);
-            if(false && !tcx.has_prefix() && _next_ops >= 1 && _operator >= operator_t::X){
-                std::cout << "next ops " << _next_ops << "\n";
+            if(context.rules().X_rule && !tcx.has_prefix() && _next_ops >= 1 && _operator >= operator_t::X){
+                //std::cout << "next ops " << _next_ops << "\n";
                 double lim = static_cast<double>(_next_ops);
-                std::cout << "fire limit " << lim << "\n";
+                //std::cout << "fire limit " << lim << "\n";
                 if (!program.isNStepsImpossible(lim, (!context.isDeadlocked() && _next_ops == 1), context, solvetime))
                 {
+                    //std::cout << "possible x\n";
                     _result = POSSIBLE;
                 }
                 else
                 {
+                    //std::cout << "impossible x\n";
                     _result = IMPOSSIBLE;
                 }
             }else if (!program.isImpossible(context, solvetime))

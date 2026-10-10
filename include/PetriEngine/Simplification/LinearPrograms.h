@@ -85,7 +85,7 @@ namespace PetriEngine {
                     LinearProgram prog;
                 };
                 struct timepoint{
-                    std::shared_ptr<timepoint> next = nullptr;
+                    std::vector<std::shared_ptr<timepoint>> next;
                     std::vector<temporalProgram> free_lps = {};
                     std::vector<temporalProgram> final_lps = {};
                     std::vector<temporalProgram> next_lps = {};
@@ -93,13 +93,25 @@ namespace PetriEngine {
 
                     LinearProgram program;
                     bool is_compiled = false;
+                    bool is_child = false;
 
                     timepoint() = default;
 
-                    bool is_empty() const{
-                        return free_lps.size()  == 0 && final_lps.size()  == 0 && 
-                                next_lps.size() == 0 && global_lps.size() == 0;
+                    void print(int depth);
+                    void print();
+
+                    bool has_conditions() const{
+                        return free_lps.size()  > 0 || final_lps.size()  > 0 || 
+                                next_lps.size() > 0 || global_lps.size() > 0;
                     }
+
+                    bool is_empty() const{
+                        return next.size() == 0 && !has_conditions();
+                    }
+                    void make_union(LinearProgram& union_lp);
+                    void update_next_counter(int next_ops);
+                    bool is_impossible(std::vector<LinearProgram*>& progs, std::vector<std::pair<uint32_t, uint32_t>>& ivals, const PQL::SimplificationContext& context, temporalContext& tcx, uint32_t solvetime);
+                    bool is_impossible(const PQL::SimplificationContext& context, temporalContext& tcx, uint32_t solvetime);
                 };
 
             protected:
@@ -113,16 +125,18 @@ namespace PetriEngine {
                     mergeBuffer(temporalContext _ctx, LinearProgram _prog) : pre_ctx(_ctx), program(_prog){
                         post_ctx = temporalContext(true);
                     };
+                    
 
                     void advance_timepoint(){
                         assert(time_path);
                         if(time_path->is_empty())
                             return;
                         assert(time_path->is_compiled);
+                        time_path->is_child = true;
                         // create a new empty timepoint as the current timepoint, and appends the previous one
                         auto tp = std::make_shared<timepoint>(timepoint());
                 
-                        tp->next = time_path;
+                        tp->next.push_back(time_path);
                         time_path = tp;
                         
                     }
@@ -131,31 +145,17 @@ namespace PetriEngine {
 
                     void apply_operator(operator_t update_op, int next_ops);
 
-                    void merge(mergeBuffer& other){
-                        std::copy(other.time_path->free_lps.begin(), other.time_path->free_lps.end(), std::back_inserter(time_path->free_lps));
-                        std::copy(other.time_path->final_lps.begin(), other.time_path->final_lps.end(), std::back_inserter(time_path->final_lps));
-                        std::copy(other.time_path->global_lps.begin(), other.time_path->global_lps.end(), std::back_inserter(time_path->global_lps));
-                        std::copy(other.time_path->next_lps.begin(), other.time_path->next_lps.end(), std::back_inserter(time_path->next_lps));
-                    }
+                    void merge(mergeBuffer& other);
 
                     void print(){
                         if(!time_path){
                             std::cout << "LPS: [null]";
                             return;
                         }
-                        int i = 0;
-                        for(auto cur = time_path; cur != nullptr; cur = cur->next){
-                            for(int j = 0; j < i; j++)
-                                std::cout << "\t";
-                            
-                            if(i > 0)
-                                std::cout << "->";
-                            std::cout << "LPS: [" << cur->free_lps.size() << "," << cur->final_lps.size() << "," << cur->next_lps.size() << "," << cur->global_lps.size() << "]\n";
-                            i += 1;
-                        }
+                        time_path->print();
                     }
 
-                    std::tuple<std::vector<LinearProgram*>, std::vector<std::vector<uint32_t>>, std::vector<uint32_t>> setup_solve(){
+                    /*std::tuple<std::vector<LinearProgram*>, std::vector<std::vector<uint32_t>>, std::vector<uint32_t>> setup_solve(){
                         std::vector<LinearProgram*> lps;
 
                         std::vector<int> fixpoints;
@@ -211,7 +211,7 @@ namespace PetriEngine {
                         }
 
                         return std::make_tuple(lps, perms, starts);
-                    }
+                    }*/
                     
                     bool lpsImpossible(const PQL::SimplificationContext& context, temporalContext& tcx, uint32_t solvetime);
                     

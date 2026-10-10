@@ -709,7 +709,6 @@ namespace PetriEngine {
             bool sat = false;
             int lps_solved = 0;
 
-            
             auto [lp, base] = prepare_lp(lps, context);
             if(!lp)
                 return false;
@@ -718,19 +717,6 @@ namespace PetriEngine {
             for(int i = 0; i < lps.size();i++){
                 order.push_back(i);
             }
-
-            /*std::cout << "order pre : ";
-            for(int i = 0; i < order.size(); i++){
-                std::cout << order[i] << ",";
-            }
-            std::cout << "\n";
-            std::cout << "starts : ";
-            for(int i = 0; i < starts.size(); i++){
-                std::cout << starts[i] << ",";
-            }
-            std::cout << "\n";
-
-            std::cout << "perms size:" << perms.size() << "\n";*/
             
             do{
                 //glp_prob* lp = context.makeBaseLP();
@@ -763,16 +749,13 @@ namespace PetriEngine {
                 clean_lp(lp, base, context); 
             }while(advance_permutations(perms));
             glp_delete_prob(lp);
-            std::cout << "lps solved: " << lps_solved << "\n";
+            //std::cout << "lps solved: " << lps_solved << "\n";
             return !sat;
         }
 
         bool LinearProgram::isFinalPermutationImpossible(glp_prob* lp, const std::vector<uint32_t>& permutation, const std::vector<LinearProgram*>& lps,const PQL::SimplificationContext& context, uint32_t solvetime){
             bool use_ilp = true;
             auto net = context.net();
-
-            for(auto& lpprog: lps)
-                std::cout << lpprog->size() << "\n";
 
             if (context.timeout()){
                 return false;
@@ -893,7 +876,7 @@ namespace PetriEngine {
         bool LinearProgram::isNStepsImpossible(double firelimit, bool strict, const PQL::SimplificationContext& context, uint32_t solvetime){
             bool use_ilp = true;
             auto net = context.net();
-            std::cout << "n steps\n";
+           
             if (_equations.size() == 0 || context.timeout()){
                 return false;
             }
@@ -919,7 +902,7 @@ namespace PetriEngine {
 
            
 
-            if(pushEquations(lp, context, rowno, row, indir, _equations)){glp_delete_prob(lp);_result = result_t::IMPOSSIBLE;return true;}
+            if(emplaceEquations(lp, context, rowno, row, indir, _equations)){glp_delete_prob(lp);_result = result_t::IMPOSSIBLE;return true;}
             if(context.timeout()){glp_delete_prob(lp);return false;}
 
             // Set objective, kind and bounds
@@ -949,7 +932,9 @@ namespace PetriEngine {
                 ++rowno;
             }
 
-            return solve_built_lp(lp, context, solvetime, true);
+            printConstraints(context, lp);
+
+            return solve_built_lp(lp, context, solvetime, true) == result_t::IMPOSSIBLE;
         }
 
         void LinearProgram::solvePotency(const PQL::SimplificationContext& context, std::vector<uint32_t>& potencies)
