@@ -415,6 +415,12 @@ namespace PetriEngine {
             next = nextPlaceId(place_cons_count, place_prod_count, place_idmap, reorder);
         }
 
+        // Every non-skipped transition must have been placed; an unplaced slot would leave
+        // net->_transitions[freetrans..ntrans) with stale/inverted arc ranges (heap corruption in sort()).
+        if (freetrans != ntrans) {
+            throw base_error("Internal error while constructing the Petri net: placed only ", freetrans, " of ", ntrans,
+                             " transitions.");
+        }
 
         // Reindex for great justice!
         for(uint32_t i = 0; i < freeinv; i++)

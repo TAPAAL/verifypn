@@ -38,8 +38,8 @@ class PNMLParser {
     struct Arc {
         std::string source,
         target;
-        int weight;
-        bool inhib;
+        int weight = 1;
+        bool inhib = false;
         PetriEngine::Colored::ArcExpression_ptr expr;
     };
     typedef std::vector<Arc> ArcList;
