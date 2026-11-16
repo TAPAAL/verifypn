@@ -90,6 +90,21 @@ namespace PetriEngine {
                 return l;
             }
 
+            size_t write_indir_shifted(std::vector<double>& dest, std::vector<int32_t>& indir, int32_t shift) const
+            {
+                size_t l = 1;
+                for(const auto& el : _data)
+                {
+                    dest[l] = el.second;
+                    if(dest[l] != 0)
+                    {
+                        indir[l] = el.first + shift + 1;
+                        ++l;
+                    }
+                }
+                return l;
+            }
+
 
         private:
             Vector(const std::vector<int64_t>& data)
