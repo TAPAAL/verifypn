@@ -103,6 +103,9 @@ namespace PetriEngine { namespace PQL {
         }
 
         _placeInUse[it->second] = true;
+        if (_collectColors) {
+            _colorsInUse[it->second].insert(std::stoul(suffix));
+        }
     }
 
     void ColoredUseVisitor::_accept(const LiteralExpr *element) {

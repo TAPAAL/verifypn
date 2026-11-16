@@ -29,6 +29,9 @@
 #ifndef UNFOLDER_H
 #define UNFOLDER_H
 
+#include <unordered_map>
+#include <set>
+
 #include "PartitionBuilder.h"
 #include "SymmetryVisitor.h"
 #include "ForwardFixedPoint.h"
@@ -75,7 +78,7 @@ namespace PetriEngine {
               _print_bindings(print_bindings),
               _store_bindings(print_bindings || store_bindings) {}
 
-            PetriNetBuilder unfold();
+            PetriNetBuilder unfold(const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors = {});
 
             size_t number_of_arcs() const { return _nptarcs; }
 

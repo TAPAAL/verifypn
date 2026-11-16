@@ -54,7 +54,7 @@ namespace PetriEngine {
             return ignorantBuilder.getUnderlying();
         }
 
-        PetriNetBuilder Unfolder::unfold() {
+        PetriNetBuilder Unfolder::unfold(const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors) {
             PetriNetBuilder ptBuilder(_builder.string_set());
             if (_builder.isColored()) {
                 auto start = std::chrono::high_resolution_clock::now();
@@ -64,8 +64,16 @@ namespace PetriEngine {
                 }
 
                 const auto& unfoldedPlaceMap = ptBuilder.getPlaceNames();
-                for (auto& place : _builder.places()) {
+                for (uint32_t placeId = 0; placeId < _builder.places().size(); ++placeId) {
+                    const auto& place = _builder.places()[placeId];
                     if (place.skipped) continue;
+                    if (const auto colors = queryColors.find(placeId); colors != queryColors.end()) {
+                        for (auto colorId : colors->second) {
+                            if (_ptplacenames[place.name].count(colorId) == 0) {
+                                unfoldPlace(ptBuilder, &place, &(*place.type)[colorId], placeId, colorId);
+                            }
+                        }
+                    }
                     handleOrphanPlace(ptBuilder, place, unfoldedPlaceMap);
                 }
 

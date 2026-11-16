@@ -11,14 +11,17 @@
 #include "PetriEngine/PQL/Visitor.h"
 
 #include <vector>
+#include <set>
+#include <unordered_map>
 
 namespace PetriEngine { namespace PQL {
     class ColoredUseVisitor : public Visitor {
     public:
         ColoredUseVisitor(const shared_name_index_map &placeNameToIndexMap, size_t places,
-                          const shared_name_index_map &transitionNameToIndexMap, size_t transitions)
+                          const shared_name_index_map &transitionNameToIndexMap, size_t transitions,
+                          bool collectColors = false)
                 : _placeNameToIndexMap(placeNameToIndexMap), _transitionNameToIndexMap(transitionNameToIndexMap),
-                _placeInUse(places), _transitionInUse(transitions) {
+                _placeInUse(places), _transitionInUse(transitions), _collectColors(collectColors) {
 
         }
 
@@ -32,6 +35,10 @@ namespace PetriEngine { namespace PQL {
 
         bool anyTransitionUsed() const {
             return _anyTransitionInUse;
+        }
+
+        const std::unordered_map<uint32_t, std::set<uint32_t>>& colorsInUse() const {
+            return _colorsInUse;
         }
 
     protected:
@@ -89,6 +96,8 @@ namespace PetriEngine { namespace PQL {
         std::vector<bool> _placeInUse;
         std::vector<bool> _transitionInUse;
         bool _anyTransitionInUse = false;
+        bool _collectColors;
+        std::unordered_map<uint32_t, std::set<uint32_t>> _colorsInUse;
     };
 } }
 

@@ -39,7 +39,7 @@ namespace PetriEngine {
             }
         }
 
-        void PartitionBuilder::init() {
+        void PartitionBuilder::init(const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors) {
             //Instantiate partitions
             for(uint32_t i = 0; i < _places.size(); i++){
                 const PetriEngine::Colored::Place& place = _places[i];
@@ -54,15 +54,17 @@ namespace PetriEngine {
                 for(uint32_t j = 0; j < place.type->productSize(); j++){
                     _partition[i].push_back_diagonalTuplePos(false);
                 }
-                _partition[i].setDiagonal(place.inhibitor > 0);
+          
+                _partition[i].setDiagonal(place.inhibitor > 0 ||
+                    queryColors.count(i) != 0);
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
             }
         }
 
-        bool PartitionBuilder::compute(int32_t timeout) {
+        bool PartitionBuilder::compute(int32_t timeout, const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors) {
             const auto start = std::chrono::high_resolution_clock::now();
-            init();
+            init(queryColors);
             handleLeafTransitions();
             auto end = std::chrono::high_resolution_clock::now();
 
