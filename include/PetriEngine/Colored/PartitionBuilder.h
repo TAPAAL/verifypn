@@ -1,3 +1,5 @@
+#include <unordered_map>
+#include <set>
 #include "ColoredNetStructures.h"
 #include "EquivalenceVec.h"
 #include "IntervalGenerator.h"
@@ -22,7 +24,7 @@ namespace PetriEngine {
                 ~PartitionBuilder() {}
 
                 //void initPartition();
-                bool compute(int32_t timeout);
+                bool compute(int32_t timeout, const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors = {});
                 void printPartion() const;
                 void assignColorMap(std::vector<EquivalenceVec> &partition) const;
 
@@ -49,7 +51,7 @@ namespace PetriEngine {
                 double _time = 0;
                 const std::vector<Colored::ColorFixpoint> *_fixed_point = nullptr;
 
-                void init();
+                void init(const std::unordered_map<uint32_t, std::set<uint32_t>>& queryColors);
 
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 

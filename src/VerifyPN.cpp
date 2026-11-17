@@ -130,13 +130,19 @@ bool reduceColored(ColoredPetriNetBuilder &cpnBuilder, std::vector<std::shared_p
 
 std::tuple<PetriNetBuilder, shared_name_name_map, shared_place_color_map, Colored::TraceMapper>
 unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_symmetry, bool computed_fixed_point,
-    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx, bool print_bindings, bool map_original_trace) {
+    std::ostream& out, int32_t partitionTimeout, int32_t max_intervals, int32_t intervals_reduced, int32_t interval_timeout, bool over_approx, bool print_bindings, bool map_original_trace, const std::vector<Condition_ptr>& queries) {
     Colored::PartitionBuilder partition(cpnBuilder.transitions(), cpnBuilder.places());
 
     if(!cpnBuilder.isColored())
         return {cpnBuilder.pt_builder(), {}, {}, {}};
+    ColoredUseVisitor useVisitor(cpnBuilder.colored_placenames(), cpnBuilder.getPlaceCount(),
+                                 cpnBuilder.colored_transitionnames(), cpnBuilder.getTransitionCount(), !over_approx);
+    for (const auto& query : queries) {
+        Visitor::visit(useVisitor, query);
+    }
+    
     if (compute_partiton && !over_approx) {
-        partition.compute(partitionTimeout);
+        partition.compute(partitionTimeout, useVisitor.colorsInUse());
     }
 
     Colored::VariableSymmetry symmetry(cpnBuilder, partition);
@@ -161,7 +167,7 @@ unfold(ColoredPetriNetBuilder& cpnBuilder, bool compute_partiton, bool compute_s
     }
     else
     {
-        auto r = unfolder.unfold();
+        auto r = unfolder.unfold(useVisitor.colorsInUse());
         if (computed_fixed_point) {
             out << "\nColor fixpoint computed in " << fixed_point.time() << " seconds" << std::endl;
             out << "Max intervals used: " << fixed_point.max_intervals() << std::endl;

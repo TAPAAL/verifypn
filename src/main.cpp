@@ -175,7 +175,7 @@ int main(int argc, const char** argv) {
             options.computeCFP, out,
             options.partitionTimeout, options.max_intervals, options.max_intervals_reduced,
             options.intervalTimeout, options.cpnOverApprox, options.print_bindings,
-            options.trace_original_net);
+            options.trace_original_net, queries);
 
         const Colored::TraceMapper* traceMapper =
             options.trace_original_net && cpnBuilder.isColored() && !options.cpnOverApprox
